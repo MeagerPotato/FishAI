@@ -1,0 +1,118 @@
+/**
+ * THE STICKY-PIN SCROLL ACT.
+ *
+ *   .track   a tall element whose HEIGHT is the scrub length (set in JS,
+ *            because it depends on how many beats the act has)
+ *   .pin     `position: sticky` inside it, so it holds still while the track
+ *            scrolls past
+ *
+ * That is the entire mechanism. No wheel handler, no scroll hijack, no
+ * animation library: the browser scrolls normally and the act only reads the
+ * track's own `getBoundingClientRect().top`. A user who flicks to the bottom
+ * lands at the bottom, and their scrollbar never lies about where they are.
+ *
+ * While pinned, the pin paints its OWN opaque sheet ground — otherwise the
+ * fixed sheet layer underneath would show through the moment content moved
+ * over it — which means it also has to redraw the two sheet-edge hairlines
+ * itself, as background-image columns.
+ */
+
+.track {
+  position: relative;
+}
+
+.pin {
+  --pin-top: clamp(88px, 13vh, 150px);
+
+  position: sticky;
+  top: var(--pin-top);
+  z-index: 0;
+  display: grid;
+  place-items: center;
+  padding-block: clamp(40px, 5vh, 64px);
+  background-color: var(--fa-sheet);
+  border-top: 1px solid var(--fa-line-2);
+  border-bottom: 1px solid var(--fa-line-2);
+  background-image:
+    linear-gradient(var(--fa-frame), var(--fa-frame)),
+    linear-gradient(var(--fa-frame), var(--fa-frame));
+  background-repeat: no-repeat, no-repeat;
+  background-size:
+    1px 100%,
+    1px 100%;
+  background-position:
+    left var(--fa-rule-x) top 0,
+    right var(--fa-rule-x) top 0;
+}
+
+/* The ledger ruling, re-painted over the pin's opaque ground. `fixed`
+   attachment is load-bearing: it keeps this band registered to the viewport so
+   it lines up seamlessly with the page's own fixed ruling layer. */
+.pin::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--fa-rule-x);
+  right: var(--fa-rule-x);
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--fa-ruling);
+  background-attachment: fixed;
+}
+
+@media (min-width: 961px) {
+  .pin {
+    min-height: calc(100svh - var(--pin-top));
+  }
+}
+
+.body {
+  width: 100%;
+}
+
+/**
+ * THE FALLBACK, and the reason this is a component rather than a CSS class.
+ *
+ * Reduced motion (and a viewport too short to pin against) does not get the act
+ * with its transitions zeroed — it gets a different LAYOUT: the track collapses
+ * to auto height and the pin becomes a plain static section. Disabling the
+ * animation alone would leave a 265vh track of empty scroll.
+ */
+.flat .pin {
+  position: static;
+  min-height: 0;
+  padding-block: var(--fa-sp);
+}
+
+.head {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: clamp(18px, 2.4vw, 30px);
+  margin-bottom: calc(var(--fa-sp-head) + 40px);
+}
+
+/* The measure tightens again for a centred pinned headline: 20ch. */
+.head h2 {
+  max-width: 20ch;
+  margin-inline: auto;
+}
+
+.headAside {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  max-width: 52ch;
+  margin-inline: auto;
+  font-size: var(--fa-fs-body);
+  line-height: 1.7;
+  color: var(--fa-ink-2);
+}
+
+@media (max-width: 960px) {
+  .head {
+    margin-bottom: calc(var(--fa-sp-head) + 12px);
+  }
+}

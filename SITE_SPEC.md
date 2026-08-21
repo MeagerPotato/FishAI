@@ -4,9 +4,10 @@ Functional and design specification for the simulation-results site. Reads one c
 artifact; renders the style-spectrum research from [BOT_LAB.md](BOT_LAB.md) under the
 [RULES_US54.md](RULES_US54.md) rule set.
 
-**Design references** (grammar to adapt, never to copy): pleurat.com for page architecture;
+**Design references**: pleurat.com for page architecture **and palette** (see §2 — the earlier
+dark-felt constraint is void);
 [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) v2.6 for every
-diagram. **All skinning uses this repo's existing tokens** — see §2.
+diagram. **All skinning uses the `--fa-*` tokens in [src/styles/tokens.css](src/styles/tokens.css)** — see §2.
 
 ---
 
@@ -34,34 +35,61 @@ page) if the hash does not match the shipped `RULES_US54.md`.
 
 ---
 
-## 2. Design system — pleurat's grammar, this repo's skin
+## 2. Design system — pleurat's grammar and pleurat's skin
 
-**Hard constraint:** [src/styles/tokens.css:11-13](src/styles/tokens.css:11) declares the system
-**dark-only** — *"Do not add a light mode."* pleurat's warm-paper palette (`#FFFCF0` / `#16140E` /
-`#F3B44A`) is therefore **forbidden**. Take the structure; keep the felt.
+**This supersedes the dark-felt constraint that stood here.** FishAI is a standalone repository. The
+felt/brass token set was copied in from the Canadian-Fish-Demo app by mistake, it belonged to a
+different product, and it has been deleted — `src/styles/tokens.css` and `src/styles/global.css` were
+rewritten from zero. The project owner asked for pleurat's visual design *and its colours*, so the
+warm-paper palette is now the system rather than the forbidden thing.
 
-Three typefaces already load and **no fourth may be added** (a regression against
-[DESIGN_AUDIT.md](https://github.com/MeagerPotato/Canadian-Fish-Demo/blob/main/DESIGN_AUDIT.md)): **Bodoni Moda** (display), **Instrument Sans** (body),
-**IBM Plex Mono** (every label).
+**The palette.** Light is the default; dark is an explicit choice stored under `fa-theme` and applied
+as `data-theme="dark"` on `<html>`. There is deliberately no `prefers-color-scheme` fallback — the
+paper sheet is the reading surface the whole layout is built around.
+
+| Role | Token | Light | Dark |
+|---|---|---|---|
+| Page ground | `--fa-page` | `#FFFCF0` | `#13120D` |
+| Sheet | `--fa-sheet` | `#FFFDF3` | `#13120D` |
+| Panel | `--fa-paper` / `--fa-paper-2` | `#FBF7E6` / `#F3EDD6` | `#17160E` / `#1F1C11` |
+| Inset well | `--fa-tile` | `#EFE9D2` | `#221F13` |
+| Ink | `--fa-ink` / `--fa-ink-2` / `--fa-ink-3` | `#16140E` / `#57534A` / `#6C685D` | `#F1EEE6` / `#A4A097` / `#928C7E` |
+| Accent fill | `--fa-amber` | `#F3B44A` | `#F3B44A` |
+| Accent text + focus ring | `--fa-amber-2` | `#935D07` | `#DD922F` |
+| Hairlines | `--fa-line` / `--fa-line-2` / `--fa-frame` | 16% / 8% / 16% ink | 24% / 12% / 24% paper |
+
+Two values differ from the reference sheet, both for contrast, both documented and reverted in one
+line at [tokens.css §3.1](src/styles/tokens.css): `--fa-ink-3` (reference `#8B8577`, 3.62:1) and
+`--fa-amber-2` (reference `#C77E0A`, 3.23:1). Both carry 10.5px text, which needs 4.5:1, and both
+were re-derived against `--fa-tile` — the darkest light ground — not against the sheet.
+
+**The typeface.** One family: **General Sans** (Fontshare) at **400 and 500 only**. The micro-label
+voice is the same family shrunk to 10.5px and tracked 0.10–0.18em uppercase — it is made by shrinking
+type, not by adding a family. Bodoni Moda, Instrument Sans and IBM Plex Mono are gone with the felt
+tokens; `--fa-code` exists for data that must align by column and is otherwise unused.
+
+**No radii anywhere.** Buttons, cards, tiles, badges and panels are square. The only round things in
+the system are the nav's active-page dot and the theme toggle's hit area. After the crop marks this
+is the strongest identity signal, and it is a review item.
 
 ### 2.1 What to adapt
 
 | pleurat device | Implementation here |
 |---|---|
-| **The column rule** — `--sv-rule-x: max(gutter, calc(50% - max/2 + gutter))`. Build this first; everything else hangs off it. | Add `--lab-rule-x` to `tokens.css`. Pin nav sheet, section badges, crop marks and footer brackets to `left/right: var(--lab-rule-x)`. **Container 1200px**, matching diagram-design's `.frame max-width`, so SVGs sit at native scale without rescaling blur. |
-| **Crop marks + hairlines at ~16% ink** | Use the existing brass alpha ladder — `--brass-a14` is already the standard hairline. **Never** port a dark-on-light rule value: `rgba(45,49,66,0.12)` composites to 1.000:1 on `#050e0a` and vanishes. |
-| **The micro-label second voice** — 10.5px, uppercase, 0.10–0.18em, made by *shrinking type*, not adding a family | Already exists: `.eyebrow` at [controls.module.css:99](https://github.com/MeagerPotato/Canadian-Fish-Demo/blob/main/src/components/controls.module.css#L99) + the letter-spacing ladder at [tokens.css:274-284](src/styles/tokens.css:274). |
-| **Engineering-drawing copy** — the one borrowed device that carries real information | `FIG. 07 — PAYOFF MATRIX · 2,600 PAIRS · SE ≤ 0.005`; `RUN · style-v1 · rulesHash 4f2a…`; matrix cells addressed as `B3`. |
-| **Nav as a bounded sheet, not a full-bleed bar** — `::before` spanning only rule-to-rule with 1px L+R borders, `::after` bottom rule | Direct port into `AppShell`. |
-| **Exactly two sticky-pin scroll acts** | (1) the payoff matrix filling cell-by-cell as it pins; (2) the counter-graph resolving from a rank list into its cyclic layout. **IntersectionObserver + CSS transitions only.** pleurat uses no animation library, no canvas, and no scroll hijack; this repo has **no rAF loop anywhere** today. Keep it that way outside the single three.js surface. |
-| **Restraint as a measured budget** — pleurat: 2,557 of 2,776 elements one ink colour; accent as a text colour exactly 3 times | Same discipline with `--brass`: accent on the verdict banner, the one focal matrix cell, and the highlighted cycle. **Nothing else.** This is a review checklist item, not a vibe. |
+| **The column rule** — `--fa-rule-x: max(gutter, calc(50% - max/2 + gutter))`. Build this first; everything else hangs off it. | Declared on `:root` in `tokens.css`. Because `50%` resolves against the *using* element, it lands on the sheet edge for anything full-bleed and collapses to exactly `--fa-gutter` inside a `.wrap`. Nav sheet, section badges, crop marks and footer brackets all anchor to it. |
+| **Crop marks + hairlines at ~16% ink** | `--fa-frame` for page architecture (sheet edges, nav rule, section top rules), `--fa-line` / `--fa-line-2` for component chrome. Section top rules are **background-images**, not borders, so they stop at the gutter. |
+| **The micro-label second voice** — 10.5px, uppercase, 0.10–0.18em | `<Eyebrow>`, with tone by *role* (`muted` passive, `accent` active/focal, `body` beside prose) and a five-step tracking ladder. |
+| **Engineering-drawing copy** — the one borrowed device that carries real information | `FIG. 07 — PAYOFF MATRIX · 2,600 PAIRS · SE ≤ 0.005`; `RUN · style-v1 · rulesHash 4f2a…`; matrix cells addressed as `B3`. Badge copy stays sentence case and descriptive: `The roster`, `By the numbers`. |
+| **Nav as a bounded sheet, not a full-bleed bar** | `<SiteNav>`. The bar is transparent; its ground and its bottom rule are pseudo-elements clipped to `--fa-rule-x`. No shadow, no blur, no scroll state. |
+| **Exactly two sticky-pin scroll acts** | `<PinAct>`. A tall track whose height *is* the scrub length, with a `position: sticky` pin inside it; the hook only **reads** `getBoundingClientRect().top`. **IntersectionObserver + CSS transitions only** — no animation library, no canvas, no scroll hijack. Reduced motion and short viewports get a different **layout** (`flat`), not a disabled transition. |
+| **Restraint as a measured budget** | Amber is a budget. Crop marks, badges and bar fills are free; accent **text** is spent on the verdict banner, the one focal matrix cell, and the highlighted cycle. **Nothing else.** This is a review checklist item, not a vibe. |
 
 ### 2.2 What to refuse
 
-pleurat's ~90 bespoke `@keyframes` hand-drawn illustrations (walking commuter, self-drawing PCB
-traces) and its 20-tile mosaic zoom-out. High maintenance, zero informational content here.
-
----
+pleurat's bespoke `@keyframes` illustrations (the walking commuter, the self-drawing PCB traces, the
+robot rig) and its 20-tile mosaic zoom-out. High maintenance, zero informational content here. The
+*techniques* are in scope — stroke-dashoffset self-drawing, the reveal latch, the scrub — the
+artwork is not.
 
 ## 3. Diagram system
 
@@ -71,24 +99,30 @@ The system is explicitly built for this: every type refers to tokens by semantic
 
 ### 3.1 Token re-skin
 
+The felt/brass mapping that stood here is void — those tokens no longer exist (see §2). Diagrams
+skin to the `--fa-*` set, and they must read in **both** themes, so every role below refers to a
+token, never to a hex.
+
 | diagram-design role | This repo |
 |---|---|
-| `paper` | `--panel-bg` `#07130e` |
-| `paper-2` | `--card-inset` `#0a1a13` |
-| `ink` | `--cream` `#f3ecdd` |
-| `muted` | `--sage` `#a8bfb2` |
-| `soft` | `--tie-label` `#8fa79a` |
-| `rule` | `--brass-a14` |
-| `rule-solid` | `--brass-a28` |
-| `accent` | `--brass` `#e8c66a` |
-| `accent-tint` | `--brass-a08` |
-| serif / sans / mono | Bodoni Moda / Instrument Sans / IBM Plex Mono |
+| `paper` | `--fa-sheet` |
+| `paper-2` | `--fa-paper-2` |
+| `ink` | `--fa-ink` |
+| `muted` | `--fa-ink-2` |
+| `soft` | `--fa-ink-3` |
+| `rule` | `--fa-line-2` |
+| `rule-solid` | `--fa-line` |
+| `accent` | `--fa-amber` (fills, marks) |
+| `accent-strong` | `--fa-amber-2` (accent text, focal labels) |
+| `accent-tint` | `color-mix(in srgb, var(--fa-amber) 22%, transparent)` |
+| serif / sans / mono | `--fa-sans` for all three; the mono voice is `--fa-sans` at `--fa-fs-micro` with 0.12–0.16em tracking, uppercase |
 
-Series palette (multi-series charts only; accent stays reserved for the focal series) maps to the
-repo's `--sage`, `--mist`, `--gold-soft`, `--brass-dim`, `--sage-muted`.
+Series palette (multi-series charts only; accent stays reserved for the focal series): derive from
+`--fa-ink-2` and `--fa-ink-3` plus hatch/dash patterns rather than inventing hues. This system has
+**one** accent, and a five-colour series ramp would be a second palette.
 
-**Two carry-overs that survive any re-skin:** never truncate a value axis, and non-text marks need
-3:1 contrast **carried by the boundary, not the accent fill**.
+**Three carry-overs that survive any re-skin:** never truncate a value axis; non-text marks need 3:1
+contrast **carried by the boundary, not the accent fill**; and nothing gets a corner radius.
 
 ### 3.2 The five diagrams
 
@@ -127,7 +161,7 @@ It earns its place because cards are physical objects, the deck composition **is
 distinctive rule in this project, and it teaches the fact the whole site depends on.
 
 Scroll-scrubbed, no autoplay. Static SVG fallback. `React.lazy` + `Suspense`. `prefers-reduced-motion`
-honored **in JS** — [global.css:153-162](src/styles/global.css:153)'s `!important` does nothing to a
+honored **in JS** — [global.css](src/styles/global.css)'s reduced-motion block and its `!important` does nothing to a
 WebGL loop. **If it does not teach the 9-set structure, it does not ship.**
 
 ### 4.2 Conditional: the featured replay table

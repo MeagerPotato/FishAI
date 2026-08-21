@@ -1,0 +1,184 @@
+/**
+ * The specimen page. Layout that belongs to this route only — everything that
+ * is part of the SYSTEM lives in the component modules, not here.
+ */
+
+/* Doubled selector: this has to beat Section's own `padding-block`, and
+   specificity is the only order-independent way to do that across two
+   stylesheets whose bundle order is not guaranteed. */
+.hero.hero {
+  padding-top: calc(var(--fa-nav-h) + 120px);
+}
+
+.heroGrid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 60px;
+  align-items: start;
+}
+
+/* The right column is right-aligned inside its track rather than stretched, so
+   the deck sits under the end of the headline instead of drifting away from it. */
+.heroRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 44ch;
+  margin-left: auto;
+  padding-top: 18px;
+}
+
+.heroRight p {
+  font-size: var(--fa-fs-lead);
+  line-height: 1.55;
+  color: var(--fa-ink-2);
+}
+
+/* A readout strip: serial, name, role, baseline-aligned. The label voice doing
+   actual work — this is how an item is addressed elsewhere on the site. */
+.readout {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+  min-height: 30px;
+  margin-bottom: 12px;
+}
+
+.readoutName {
+  font-size: clamp(19px, 1.55vw, 24px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.readoutAhead {
+  margin-left: auto;
+}
+
+/* --- specimen tables ----------------------------------------------------- */
+
+.specimen {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(28px, 4vw, 56px);
+  margin-top: var(--fa-sp-head);
+}
+
+.spec {
+  border-top: 1px solid var(--fa-line);
+  padding-top: 18px;
+}
+
+.specHead {
+  display: block;
+  margin-bottom: 18px;
+}
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 1px;
+  background-color: var(--fa-line-2);
+  border: 1px solid var(--fa-line-2);
+}
+
+.swatch {
+  padding: 12px 10px 10px;
+  background-color: var(--fa-sheet);
+}
+
+.chip {
+  height: 44px;
+  border: 1px solid var(--fa-line);
+  margin-bottom: 10px;
+}
+
+.chipLabel {
+  display: block;
+}
+
+.chipValue {
+  display: block;
+  margin-top: 4px;
+  font-size: var(--fa-fs-micro);
+  letter-spacing: 0.06em;
+  color: var(--fa-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.scaleRow {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--fa-line-2);
+}
+
+.scaleRow:last-child {
+  border-bottom: 0;
+}
+
+.scaleKey {
+  flex: none;
+  width: 9ch;
+}
+
+.scaleSample {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.1;
+}
+
+.rowStack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  align-items: center;
+}
+
+/* --- pinned act header --------------------------------------------------- */
+
+.actNote {
+  max-width: 52ch;
+  margin-inline: auto;
+  text-align: center;
+  color: var(--fa-ink-2);
+  line-height: 1.7;
+}
+
+/* --- outro --------------------------------------------------------------- */
+
+.outro.outro {
+  padding-top: 0;
+  padding-bottom: clamp(48px, 6.5vh, 82px);
+}
+
+@media (max-width: 960px) {
+  .hero.hero {
+    padding-top: calc(var(--fa-nav-h) + 56px);
+  }
+
+  .heroGrid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .heroRight {
+    max-width: none;
+    margin-left: 0;
+    align-items: stretch;
+  }
+
+  .specimen {
+    grid-template-columns: 1fr;
+  }
+}

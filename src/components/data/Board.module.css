@@ -1,0 +1,116 @@
+/**
+ * THE BOARD — a grid whose seams ARE the layout.
+ *
+ * There are no cards here in the box sense: no border box, no radius, no
+ * shadow. Each cell draws a right and a bottom hairline and the nth-child rules
+ * cancel the ones on the outer edge, so what you see is a ruled table, drawn
+ * once, with the outer rule supplied by the board itself.
+ *
+ * The negative inline margin pulls the board out to the FRAME line while the
+ * section's heading stays at the text inset — the reason a board looks wider
+ * than the prose above it without either being misaligned.
+ */
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-block: 1px solid var(--fa-line);
+  margin-inline: calc(-1 * var(--fa-inset));
+}
+
+.card {
+  position: relative;
+  padding: 30px 24px 34px;
+  border-right: 1px solid var(--fa-line-2);
+  border-bottom: 1px solid var(--fa-line-2);
+  transition: background-color 0.25s;
+}
+
+.card:nth-child(3n) {
+  border-right: 0;
+}
+
+.card:nth-last-child(-n + 3) {
+  border-bottom: 0;
+}
+
+.card:hover {
+  background-color: var(--fa-paper-2);
+}
+
+/* The serial goes accent on hover — the same rule as everywhere else in the
+   system: an amber label means "this one". */
+.card:hover .ix {
+  color: var(--fa-amber-2);
+}
+
+.ix {
+  transition: color 0.25s;
+}
+
+.card h3 {
+  margin-top: 18px;
+  font-size: var(--fa-fs-h4);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.role {
+  display: block;
+  margin-top: 8px;
+}
+
+.card p {
+  margin-top: 18px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--fa-ink-2);
+}
+
+@media (max-width: 960px) {
+  .board {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .card {
+    border-right: 1px solid var(--fa-line-2);
+    border-bottom: 1px solid var(--fa-line-2);
+  }
+
+  .card:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .card:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+
+  .card h3 {
+    font-size: 19px;
+  }
+}
+
+@media (max-width: 760px) {
+  .board {
+    grid-template-columns: 1fr;
+  }
+
+  /* One column: the card is now the dominant element on screen, so its
+     heading and body both step up rather than down. */
+  .card {
+    border-right: 0;
+    border-bottom: 1px solid var(--fa-line-2);
+  }
+
+  .card:last-child {
+    border-bottom: 0;
+  }
+
+  .card h3 {
+    font-size: 26px;
+  }
+
+  .card p {
+    font-size: 16px;
+  }
+}

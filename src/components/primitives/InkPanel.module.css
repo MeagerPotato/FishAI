@@ -1,0 +1,132 @@
+/**
+ * THE INK PANEL — the one inverted block on the page.
+ *
+ * It is the sheet turned over: ink ground, paper text. Because it is the ONLY
+ * inversion, it can be spent exactly once (the sign-off) and it will read as
+ * emphasis. Used twice it becomes a colour scheme.
+ *
+ * In dark mode it inverts back to light, so it stays "the one that is the other
+ * way round" rather than becoming "the dark one" on a dark page. That is why
+ * the two literals below exist instead of reusing --fa-ink / --fa-paper: those
+ * tokens flip with the theme, and this panel has to flip against it.
+ *
+ * Everything inside derives from `--panel-fg`, and the panel re-declares the
+ * shared ink/line tokens on `.inner` so a stock ghost Button lands with a
+ * paper-coloured ring without knowing it is inside an inversion.
+ */
+
+.panel {
+  --panel-bg: #16140e;
+  --panel-fg: #fbf7e6;
+
+  position: relative;
+  overflow: hidden;
+  padding: clamp(32px, 4vw, 62px) clamp(24px, 3.4vw, 56px) clamp(34px, 4vw, 58px);
+  background-color: var(--panel-bg);
+  color: var(--panel-fg);
+}
+
+:root[data-theme='dark'] .panel {
+  --panel-bg: #fbf7e6;
+  --panel-fg: #16140e;
+}
+
+/* A 4px scanline, so the inverted block still reads as printed rather than as
+   a coloured rectangle. */
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    0deg,
+    color-mix(in srgb, var(--panel-fg) 5%, transparent) 0 1px,
+    transparent 1px 4px
+  );
+}
+
+/* A single amber registration corner: the crop-mark motif at panel scale. */
+.panel::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 18px;
+  height: 18px;
+  z-index: 1;
+  border-top: 2px solid var(--fa-amber);
+  border-left: 2px solid var(--fa-amber);
+  pointer-events: none;
+}
+
+.inner {
+  position: relative;
+  z-index: 2;
+
+  /* Re-point the shared tokens at the inverted palette. Anything generic
+     dropped in here now resolves correctly with no panel-specific overrides. */
+  --fa-ink: var(--panel-fg);
+  --fa-ink-2: color-mix(in srgb, var(--panel-fg) 72%, transparent);
+  --fa-ink-3: color-mix(in srgb, var(--panel-fg) 50%, transparent);
+  --fa-line: color-mix(in srgb, var(--panel-fg) 28%, transparent);
+  --fa-line-2: color-mix(in srgb, var(--panel-fg) 14%, transparent);
+  --fa-tile: color-mix(in srgb, var(--panel-fg) 10%, transparent);
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
+  padding-bottom: clamp(26px, 3vh, 40px);
+  /* The only dashed rule in the system. */
+  border-bottom: 1px dashed color-mix(in srgb, var(--panel-fg) 18%, transparent);
+}
+
+/**
+ * A live indicator: a 7px SQUARE, not a dot. Nothing here is round unless it is
+ * a nav dot or a hit area, and a pulsing circle would read as a status-page
+ * component borrowed from somewhere else.
+ */
+.head .live {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--fa-amber);
+}
+
+.live::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  background-color: var(--fa-amber);
+  animation: fa-pulse 2s ease infinite;
+}
+
+.body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 40px;
+  margin-top: clamp(30px, 4vh, 52px);
+}
+
+.body h2 {
+  color: var(--panel-fg);
+}
+
+.note {
+  margin-top: 26px;
+  max-width: 52ch;
+  font-size: var(--fa-fs-lead);
+  color: color-mix(in srgb, var(--panel-fg) 62%, transparent);
+}
+
+@media (max-width: 520px) {
+  .body {
+    gap: 24px;
+  }
+}

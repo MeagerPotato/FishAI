@@ -1,8 +1,28 @@
 /**
- * Global reset + base styles for Canadian Fish.
- * Mirrors the Hold'em Odds Engine global.css habits (see DESIGN_NOTES.md §3).
- * All values come from tokens.css.
+ * ============================================================================
+ * FishAI — GLOBAL BASE
+ * ============================================================================
+ * Reset, base typography, focus, motion and print. Every value resolves from
+ * tokens.css; no raw colour or size appears below except where a value is
+ * structurally fixed (hairline widths, the 1px focus geometry).
+ *
+ * FONT: General Sans 400/500 from Fontshare. Only those two weights load —
+ * 500 is the workhorse for every heading, button, nav link and name; 400 is
+ * body copy and micro-labels. The @import keeps the stylesheet self-contained;
+ * for a faster first paint, ALSO add to index.html <head>:
+ *
+ *   <link rel="preconnect" href="https://api.fontshare.com" />
+ *   <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
+ *   <link rel="stylesheet"
+ *     href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500&display=swap" />
+ *
+ * The fallback stack (Helvetica Neue -> Helvetica -> Arial) is a real stack,
+ * not a token of one: General Sans is a geometric grotesque and degrades to
+ * these with the least metric shift.
+ * ============================================================================
  */
+
+@import url('https://api.fontshare.com/v2/css?f[]=general-sans@400,500&display=swap');
 @import './tokens.css';
 
 *,
@@ -11,50 +31,101 @@
   box-sizing: border-box;
 }
 
-html,
-body,
-#root {
-  margin: 0;
-  padding: 0;
-  min-height: 100%;
-}
-
 html {
-  background: var(--page-bg);
+  background-color: var(--fa-page);
+  -webkit-text-size-adjust: 100%;
 }
 
+/* `clip` rather than `hidden`: it kills horizontal overflow without creating a
+   scroll container, so `position: sticky` still works for the pinned acts. */
 body {
-  font-family: var(--font-sans);
-  font-size: var(--font-size-body);
-  line-height: var(--leading-body);
-  color: var(--cream);
-  background: var(--page-bg);
+  margin: 0;
+  min-height: 100%;
+  overflow-x: clip;
+  background-color: var(--fa-page);
+  color: var(--fa-ink);
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-body);
+  font-weight: 400;
+  line-height: 1.55;
   text-wrap: pretty;
+  font-synthesis-weight: none;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --------------------------------------------------------------------------
+   HEADINGS
+   Only h1 and h2 are styled globally, and that is deliberate: the scale is
+   small, so every h3/h4 belongs to the component that owns it. The 24ch cap
+   on h2 is a global constraint, not a per-section decision.
+   -------------------------------------------------------------------------- */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure,
+blockquote,
+ul,
+ol,
+dl {
+  margin: 0;
 }
 
 h1,
 h2,
 h3,
-p {
-  margin: 0;
+h4,
+h5,
+h6 {
+  font-weight: 500;
+  text-wrap: balance;
 }
+
+h1 {
+  font-size: var(--fa-fs-display);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+}
+
+h2 {
+  font-size: var(--fa-fs-h2);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  max-width: 24ch;
+}
+
+@media (max-width: 760px) {
+  h1 {
+    line-height: 1.14;
+    letter-spacing: -0.032em;
+  }
+}
+
+/* The one emphasis device inside a heading: the second half goes muted, so a
+   line reads as a strong -> quiet gradient rather than needing a colour. */
+.fa-dim {
+  color: var(--fa-ink-3);
+}
+
+/* --------------------------------------------------------------------------
+   LINKS AND CONTROLS
+   -------------------------------------------------------------------------- */
 
 a {
-  color: var(--brass);
+  color: inherit;
+  text-decoration: none;
 }
 
-a:hover {
-  color: var(--link-hover);
-}
-
-/* Control reset — components restyle from zero (source global.css habit). */
 button {
-  border: none;
-  background: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
   font: inherit;
   color: inherit;
   cursor: pointer;
@@ -65,92 +136,145 @@ button:disabled {
   cursor: not-allowed;
 }
 
-input {
+input,
+select,
+textarea {
   font: inherit;
   color: inherit;
-  touch-action: manipulation;
 }
 
-[role='button'] {
-  touch-action: manipulation;
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
 }
 
-/* Focus — never removed without replacement (DESIGN_NOTES §6). */
+/* Numbers that sit in a column must not jitter as they count. */
+[data-numeric] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   FOCUS
+   Amber-2 rather than amber: this ring has to clear 3:1 against paper, and
+   #F3B44A does not. Offset 2px so the ring never touches a hairline.
+   -------------------------------------------------------------------------- */
+
 :focus-visible {
-  outline: var(--border-width-ring) solid var(--focus-ring);
+  outline: 2px solid var(--fa-amber-2);
   outline-offset: 2px;
 }
 
-input:focus-visible {
-  outline: none;
-  border-color: var(--brass);
+/* Scroll a focused target clear of the fixed nav. */
+:target,
+[id] {
+  scroll-margin-top: calc(var(--fa-nav-h) + 24px);
 }
 
-/* Scrollbars */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+html {
+  scroll-behavior: smooth;
 }
 
-*::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-*::-webkit-scrollbar-track {
-  background: var(--scroll-track);
-}
-
-*::-webkit-scrollbar-thumb {
-  background: var(--scroll-thumb);
-  border-radius: var(--radius-pill);
-}
-
-*::-webkit-scrollbar-thumb:hover {
-  background: var(--scroll-thumb-hover);
-}
-
-/* Shared keyframes (source global.css). */
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes riseIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes pulseGlow {
-  0%,
-  100% {
-    box-shadow: var(--turn-glow);
-  }
-  50% {
-    box-shadow: var(--turn-glow-strong);
-  }
-}
-
-.visually-hidden {
+.fa-sr-only {
   position: absolute;
   width: 1px;
   height: 1px;
   padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
 }
 
+/* A skip link that is invisible until focused, then lands on the sheet. */
+.fa-skip {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 200;
+  padding: 10px 16px;
+  background-color: var(--fa-amber);
+  color: var(--fa-on-amber);
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  transform: translateY(-200%);
+}
+
+/* `:focus`, not `:focus-visible`: a skip link that only appears under the
+   focus-visible heuristic is a skip link that sometimes does not appear. */
+.fa-skip:focus {
+  transform: none;
+}
+
+/* --------------------------------------------------------------------------
+   SHARED KEYFRAMES
+   The loop idiom across this system is: dead time, act, long hold, reset.
+   A looping ornament that draws instantly and restarts instantly reads as a
+   spinner; the hold is what makes it read as a deliberate act.
+   -------------------------------------------------------------------------- */
+
+@keyframes fa-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes fa-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes fa-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes fa-caret {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Self-drawing stroke. Pair with stroke-dasharray/-dashoffset on the path and
+   `vector-effect: non-scaling-stroke` so the hairline stays 1px at any scale. */
+@keyframes fa-draw {
+  0%,
+  8% {
+    stroke-dashoffset: var(--fa-draw-len, 200);
+  }
+  22%,
+  94% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: var(--fa-draw-len, 200);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   REDUCED MOTION
+   The discipline here is structural, not cosmetic: scroll acts take a real
+   fallback layout (see PinAct's `flat` state) rather than just having their
+   transitions zeroed.
+   -------------------------------------------------------------------------- */
+
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   *,
   *::before,
   *::after {
@@ -158,5 +282,49 @@ input:focus-visible {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   PRINT
+   The sheet model is already a print metaphor, so printing mostly means
+   removing the parts that only exist on a screen.
+   -------------------------------------------------------------------------- */
+
+@media print {
+  :root {
+    --fa-page: #fff;
+    --fa-sheet: #fff;
+    --fa-ruling: none;
+    --fa-dots: none;
+    --fa-scanline: none;
+  }
+
+  body {
+    color: #000;
+    font-size: 11pt;
+  }
+
+  .fa-skip,
+  nav,
+  [data-print='hide'] {
+    display: none !important;
+  }
+
+  a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 9pt;
+    color: #444;
+  }
+
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+
+  figure,
+  table {
+    break-inside: avoid;
   }
 }

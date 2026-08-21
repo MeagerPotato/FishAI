@@ -1,0 +1,340 @@
+/**
+ * THE NAV AS A BOUNDED SHEET.
+ *
+ * The bar itself is transparent. Its ground and its bottom rule are both
+ * pseudo-elements clipped to --fa-rule-x, so the nav visually IS the top of the
+ * sheet rather than a bar floating over it. There is no shadow, no blur and no
+ * scroll state: the sheet does not change when you scroll, so neither does its
+ * top edge.
+ */
+
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 90;
+  background: transparent;
+}
+
+.nav::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--fa-rule-x);
+  right: var(--fa-rule-x);
+  z-index: -1;
+  background-color: var(--fa-sheet);
+  border-left: 1px solid var(--fa-frame);
+  border-right: 1px solid var(--fa-frame);
+}
+
+/* The only nav divider in the system. */
+.nav::after {
+  content: '';
+  position: absolute;
+  left: var(--fa-rule-x);
+  right: var(--fa-rule-x);
+  bottom: 0;
+  height: 1px;
+  background-color: var(--fa-frame);
+}
+
+.in {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  max-width: var(--fa-max);
+  margin-inline: auto;
+  padding: 15px calc(var(--fa-gutter) + var(--fa-inset));
+}
+
+/* --- brand --------------------------------------------------------------- */
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: opacity var(--fa-dur-fast);
+}
+
+.brand:hover {
+  opacity: 0.72;
+}
+
+.brandMark {
+  width: 26px;
+  height: 26px;
+  flex: none;
+}
+
+.brandWord {
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--fa-ink);
+}
+
+/* --- links --------------------------------------------------------------- */
+
+.links {
+  display: flex;
+  gap: 24px;
+  margin-left: auto;
+}
+
+.link {
+  position: relative;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--fa-ink);
+  transition: opacity 0.25s;
+}
+
+.link:hover {
+  opacity: 0.62;
+}
+
+/**
+ * The nav's only ornament: a 6px amber dot under the current page. It scales
+ * and fades in rather than appearing, so switching pages reads as a move.
+ */
+.link::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--fa-radius-dot);
+  background-color: var(--fa-amber);
+  opacity: 0;
+  transform: translate(-50%, 3px) scale(0.4);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s var(--fa-ease);
+}
+
+.link[aria-current='page']::after {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+/* --- theme toggle -------------------------------------------------------- */
+
+.lights {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--fa-radius-dot);
+  background: none;
+  color: var(--fa-ink);
+  /* Negative margin so a 44px touch target does not widen the 30px flex gap. */
+  margin-inline: -14px;
+  transition: background-color 0.25s;
+}
+
+.lights:hover {
+  background-color: var(--fa-tile);
+}
+
+:root[data-theme='dark'] .lights {
+  color: var(--fa-amber);
+}
+
+.lights svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* --- CTA ----------------------------------------------------------------- */
+
+.cta {
+  padding: 6px 13px;
+  gap: 8px;
+  font-size: 16px;
+  min-height: 36px;
+}
+
+.cta svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* --- hamburger ----------------------------------------------------------- */
+
+.toggle {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 44px;
+  height: 44px;
+  margin-left: 16px;
+}
+
+.toggle span {
+  height: 2px;
+  width: 22px;
+  border-radius: 2px;
+  background-color: var(--fa-ink);
+  transition:
+    transform 0.34s cubic-bezier(0.7, 0, 0.2, 1),
+    opacity 0.18s,
+    width 0.34s cubic-bezier(0.7, 0, 0.2, 1);
+}
+
+/* The short middle bar is deliberate: a perfectly symmetric hamburger reads as
+   a generic control, and this one reads as drawn. */
+.toggle span:nth-child(2) {
+  width: 15px;
+  align-self: flex-end;
+}
+
+.toggle[aria-expanded='true'] span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.toggle[aria-expanded='true'] span:nth-child(2) {
+  opacity: 0;
+  width: 0;
+}
+
+.toggle[aria-expanded='true'] span:nth-child(3) {
+  width: 22px;
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/* --- mobile sheet -------------------------------------------------------- */
+
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: none;
+  background-color: var(--fa-page);
+  /* A clip-path wipe from the top, not a slide and not a fade: the menu is
+     the sheet being pulled down over the page. */
+  clip-path: inset(0 0 100% 0);
+  visibility: hidden;
+  transition:
+    clip-path 0.62s cubic-bezier(0.76, 0, 0.24, 1),
+    visibility 0.62s;
+}
+
+.sheetOpen {
+  clip-path: inset(0);
+  visibility: visible;
+}
+
+.sheetIn {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: calc(var(--fa-nav-h) + clamp(24px, 5vh, 44px))
+    calc(var(--fa-gutter) + var(--fa-inset)) clamp(28px, 5vh, 48px);
+}
+
+.row {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--fa-line-2);
+}
+
+.row > * {
+  transform: translateY(105%);
+  opacity: 0;
+  transition:
+    transform 0.5s cubic-bezier(0.22, 1, 0.3, 1),
+    opacity 0.3s;
+}
+
+.sheetOpen .row > * {
+  transform: none;
+  opacity: 1;
+  transition-delay: calc(0.22s + var(--i) * 0.07s);
+}
+
+.rowLink {
+  flex: 1;
+  padding: clamp(14px, 2.4vh, 22px) 0;
+  font-size: clamp(30px, 9vw, 44px);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.06;
+  color: var(--fa-ink);
+}
+
+.rowLink[aria-current='page'] {
+  color: var(--fa-amber-2);
+}
+
+.sheetFoot {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    transform 0.5s cubic-bezier(0.22, 1, 0.3, 1),
+    opacity 0.3s;
+}
+
+.sheetOpen .sheetFoot {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.5s;
+}
+
+/* --- the collapse -------------------------------------------------------- */
+
+@media (max-width: 960px) {
+  .links,
+  .cta {
+    display: none;
+  }
+
+  /* Tighter bar, but the 44px targets inside it stay 44px — so the padding is
+     what gives, and --fa-nav-h follows it (68px, not 56px). */
+  .in {
+    padding-block: 12px;
+  }
+
+  .lights {
+    margin-left: auto;
+  }
+
+  .toggle {
+    display: flex;
+  }
+
+  .sheet {
+    display: block;
+  }
+}
+
+/* Below the phone breakpoint the sheet edge IS the screen edge, so the nav
+   has to redraw the two frame hairlines itself. */
+@media (max-width: 760px) {
+  .in {
+    border-left: 1px solid var(--fa-frame);
+    border-right: 1px solid var(--fa-frame);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet,
+  .row > *,
+  .sheetFoot {
+    transition-duration: 0.01ms !important;
+  }
+}

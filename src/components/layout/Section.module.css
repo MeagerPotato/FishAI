@@ -1,0 +1,137 @@
+/**
+ * THE SECTION SHELL.
+ *
+ * A section is MARKED, never BOXED. There is no background change, no shadow
+ * and no border box — the sheet runs continuously from the nav to the footer
+ * and a section announces itself with exactly three things:
+ *
+ *   1. a 1px frame hairline across the top, inset to the gutters
+ *   2. two 20px amber crop-mark Ls at --fa-rule-x
+ *   3. --fa-sp of padding above and below
+ *
+ * The top rule is a BACKGROUND IMAGE rather than a border, because a border
+ * would run the full element width and a section rule must stop at the gutter.
+ */
+
+.section {
+  position: relative;
+}
+
+.pad {
+  padding-block: var(--fa-sp);
+}
+
+/* --- the top hairline ---------------------------------------------------- */
+
+.rule {
+  background-image: linear-gradient(var(--fa-frame), var(--fa-frame));
+  background-repeat: no-repeat;
+  background-size: calc(100% - 2 * var(--fa-gutter)) 1px;
+  background-position: var(--fa-gutter) 0;
+}
+
+/* An opening section (the hero, or a section that follows a pinned band which
+   already supplies its own edge) cancels the rule. */
+.noRule {
+  background-image: none;
+}
+
+/* Full-bleed sections have no gutter padding of their own, so they take a real
+   border instead of the inset background-image. */
+.borderTop {
+  border-top: 1px solid var(--fa-frame);
+}
+
+/* --- crop marks ---------------------------------------------------------- */
+
+/**
+ * Four gradient layers, two per corner: a 20x2px horizontal arm and a 2x20px
+ * vertical arm, forming an L. Gradients rather than borders because one
+ * pseudo-element cannot carry two independent corner brackets any other way.
+ */
+.marks::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: var(--fa-rule-x);
+  right: var(--fa-rule-x);
+  height: var(--fa-mark-size);
+  z-index: 3;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--fa-mark), var(--fa-mark)) 0 0 / var(--fa-mark-size)
+      var(--fa-mark-weight) no-repeat,
+    linear-gradient(var(--fa-mark), var(--fa-mark)) 0 0 / var(--fa-mark-weight)
+      var(--fa-mark-size) no-repeat,
+    linear-gradient(var(--fa-mark), var(--fa-mark)) 100% 0 / var(--fa-mark-size)
+      var(--fa-mark-weight) no-repeat,
+    linear-gradient(var(--fa-mark), var(--fa-mark)) 100% 0 / var(--fa-mark-weight)
+      var(--fa-mark-size) no-repeat;
+}
+
+/* --- the section badge --------------------------------------------------- */
+
+/**
+ * An amber tab that REPLACES the top-left crop mark rather than sitting beside
+ * it. The mark and the label are the same object at two levels of detail.
+ */
+.marks[data-badge]::before {
+  content: attr(data-badge);
+  position: absolute;
+  top: 0;
+  left: var(--fa-rule-x);
+  z-index: 4;
+  padding: 9px 13px 8px;
+  background-color: var(--fa-amber);
+  color: var(--fa-on-amber);
+  font-family: var(--fa-mono);
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-badge);
+  line-height: 1;
+  text-transform: uppercase;
+  font-style: normal;
+  pointer-events: none;
+}
+
+/* Drop the two LEFT gradient layers; the badge is now the left mark. */
+.marks[data-badge]::after {
+  background:
+    linear-gradient(var(--fa-mark), var(--fa-mark)) 100% 0 / var(--fa-mark-size)
+      var(--fa-mark-weight) no-repeat,
+    linear-gradient(var(--fa-mark), var(--fa-mark)) 100% 0 / var(--fa-mark-weight)
+      var(--fa-mark-size) no-repeat;
+}
+
+/* --- section header ------------------------------------------------------ */
+
+.head {
+  margin-bottom: var(--fa-sp-head);
+}
+
+.sub {
+  margin-top: 22px;
+  max-width: 54ch;
+  font-size: 18px;
+  line-height: 1.55;
+  color: var(--fa-ink-2);
+}
+
+/**
+ * The measure tightens as the header centres — 24ch left-aligned, 22ch
+ * centred — because a centred line has two ragged edges and needs to be
+ * shorter to stay readable.
+ */
+.headCentre {
+  text-align: center;
+}
+
+.headCentre h2 {
+  max-width: 22ch;
+  margin-inline: auto;
+}
+
+.headCentre .sub {
+  max-width: 52ch;
+  margin-inline: auto;
+}

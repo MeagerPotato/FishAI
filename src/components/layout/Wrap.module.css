@@ -1,0 +1,34 @@
+/**
+ * THE CONTAINER.
+ *
+ * The two-part inset is the whole idea: `--fa-gutter` is where the FRAME lines
+ * land (sheet edges, section rules, crop marks) and `--fa-inset` is the extra
+ * breathing room before text starts. Text is therefore never flush with a
+ * hairline, and every hairline is still perfectly registered across sections.
+ *
+ * A `.wrap` is exactly `--fa-max` wide, which makes `--fa-rule-x` collapse to
+ * `--fa-gutter` inside it — so crop marks on a wrapped section land on the
+ * gutter, while crop marks on a full-bleed element land on the sheet edge.
+ * Same token, no branching.
+ */
+
+.wrap {
+  max-width: var(--fa-max);
+  margin-inline: auto;
+  padding-inline: calc(var(--fa-gutter) + var(--fa-inset));
+}
+
+/* Pull a child out to the FRAME line while the surrounding text stays at the
+   text inset. Used by grids whose seams should meet the sheet edge. */
+.bleedToFrame {
+  margin-inline: calc(-1 * var(--fa-inset));
+}
+
+/* The measures the system actually uses. */
+.measure {
+  max-width: var(--fa-measure);
+}
+
+.measureFull {
+  max-width: var(--fa-measure-full);
+}

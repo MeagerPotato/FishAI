@@ -1,0 +1,409 @@
+/**
+ * The small parts. One stylesheet because they are one voice: square corners,
+ * hairline rings drawn with inset box-shadow, amber reserved for marks and
+ * state, and no shadow or scale on any hover anywhere.
+ */
+
+/* ==========================================================================
+   MICRO-LABEL ("eyebrow") — the signature second voice.
+   It is made by SHRINKING the one typeface and tracking it out, not by adding
+   a monospace family. 10.5px, uppercase, 0.10-0.18em. That is the whole trick,
+   and adding a second family would dissolve it.
+   ========================================================================== */
+
+.eyebrow {
+  display: inline-block;
+  font-family: var(--fa-mono);
+  font-size: var(--fa-fs-micro);
+  font-weight: 400;
+  letter-spacing: var(--fa-tr-legal);
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
+/* Tone by ROLE, not by taste:
+   muted  = a passive serial or a column head
+   accent = this item is active, current, or focal
+   body   = a name sitting next to body copy */
+.toneMuted {
+  color: var(--fa-ink-3);
+}
+
+.toneAccent {
+  color: var(--fa-amber-2);
+}
+
+.toneBody {
+  color: var(--fa-ink-2);
+}
+
+.trackTight {
+  letter-spacing: var(--fa-tr-tight);
+}
+
+.trackName {
+  letter-spacing: var(--fa-tr-name);
+}
+
+.trackLegal {
+  letter-spacing: var(--fa-tr-legal);
+}
+
+.trackBadge {
+  letter-spacing: var(--fa-tr-badge);
+}
+
+.trackHead {
+  letter-spacing: var(--fa-tr-head);
+}
+
+.eyebrowStrong {
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   HAIRLINE
+   ========================================================================== */
+
+.hairline {
+  border: 0;
+  height: 1px;
+  margin: 0;
+  background-color: var(--fa-line);
+}
+
+/* Page architecture rather than component chrome, inset to the frame. */
+.hairlineFrame {
+  background-color: transparent;
+  background-image: linear-gradient(var(--fa-frame), var(--fa-frame));
+  background-repeat: no-repeat;
+  background-size: calc(100% - 2 * var(--fa-gutter)) 1px;
+  background-position: var(--fa-gutter) 0;
+}
+
+.hairlineSoft {
+  background-color: var(--fa-line-2);
+}
+
+/* The only dashed rule in the system. Reserved for the inverted ink panel, so
+   that "dashed" always means the same thing wherever it appears. */
+.hairlineDashed {
+  height: 0;
+  background: none;
+  border-bottom: 1px dashed rgb(251 247 230 / 18%);
+}
+
+/* ==========================================================================
+   CROP MARKS as standalone elements. Use these to hang marks on something that
+   cannot take them itself — a sticky pin, or a footer.
+   ========================================================================== */
+
+.cropMarks {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--fa-mark-size);
+  z-index: 4;
+  pointer-events: none;
+}
+
+.cropMarks::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: var(--fa-rule-x);
+  right: var(--fa-rule-x);
+  height: var(--fa-mark-size);
+  background:
+    linear-gradient(var(--fa-mark), var(--fa-mark)) 0 0 / var(--fa-mark-size)
+      var(--fa-mark-weight) no-repeat,
+    linear-gradient(var(--fa-mark), var(--fa-mark)) 0 0 / var(--fa-mark-weight)
+      var(--fa-mark-size) no-repeat,
+    linear-gradient(var(--fa-mark), var(--fa-mark)) 100% 0 / var(--fa-mark-size)
+      var(--fa-mark-weight) no-repeat,
+    linear-gradient(var(--fa-mark), var(--fa-mark)) 100% 0 / var(--fa-mark-weight)
+      var(--fa-mark-size) no-repeat;
+}
+
+.cropMarks[data-badge]::before {
+  content: attr(data-badge);
+  position: absolute;
+  top: 0;
+  left: var(--fa-rule-x);
+  z-index: 4;
+  padding: 9px 13px 8px;
+  background-color: var(--fa-amber);
+  color: var(--fa-on-amber);
+  font-family: var(--fa-mono);
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-badge);
+  line-height: 1;
+  text-transform: uppercase;
+  font-style: normal;
+}
+
+.cropMarks[data-badge]::after {
+  background:
+    linear-gradient(var(--fa-mark), var(--fa-mark)) 100% 0 / var(--fa-mark-size)
+      var(--fa-mark-weight) no-repeat,
+    linear-gradient(var(--fa-mark), var(--fa-mark)) 100% 0 / var(--fa-mark-weight)
+      var(--fa-mark-size) no-repeat;
+}
+
+/**
+ * FOOTER BRACKETS — the bottom-of-page mirror of the crop marks. Real borders
+ * here rather than gradients: same 20px L, opposite orientation, and the
+ * border form is simply less code for two corners that do not need to share a
+ * single background.
+ */
+.footMarks {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--fa-mark-size);
+  pointer-events: none;
+}
+
+.footMarks::before,
+.footMarks::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  width: var(--fa-mark-size);
+  height: var(--fa-mark-size);
+  border-bottom: var(--fa-mark-weight) solid var(--fa-mark);
+}
+
+.footMarks::before {
+  left: var(--fa-rule-x);
+  border-left: var(--fa-mark-weight) solid var(--fa-mark);
+}
+
+.footMarks::after {
+  right: var(--fa-rule-x);
+  border-right: var(--fa-mark-weight) solid var(--fa-mark);
+}
+
+/* ==========================================================================
+   ARROW — one 24x24 glyph for the entire site, rotated into three directions.
+   ========================================================================== */
+
+.arrow {
+  width: 1.05em;
+  height: 1.05em;
+  flex: none;
+  transition: transform var(--fa-dur) var(--fa-ease);
+}
+
+.arrowE {
+  transform: rotate(45deg);
+}
+
+.arrowSw {
+  transform: rotate(180deg);
+}
+
+/* ==========================================================================
+   BUTTON
+   Rings are drawn with an INSET BOX-SHADOW, never a border, so a hover can
+   change the ring without shifting layout by a pixel.
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 22px;
+  border: 0;
+  border-radius: var(--fa-radius);
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--fa-dur-fast),
+    box-shadow var(--fa-dur-fast),
+    transform 0.15s;
+  /* 44px minimum target: 13+13 padding + ~18px line box. */
+  min-height: 44px;
+}
+
+.btn svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+
+.btnAmber {
+  background-color: var(--fa-amber);
+  color: var(--fa-on-amber);
+}
+
+.btnAmber:hover {
+  background-color: var(--fa-amber-lt);
+}
+
+.btnGhost {
+  background-color: transparent;
+  color: var(--fa-ink);
+  box-shadow: inset 0 0 0 1px var(--fa-line);
+}
+
+.btnGhost:hover {
+  box-shadow: inset 0 0 0 1px var(--fa-ink-3);
+}
+
+.btnLine {
+  background: none;
+  color: var(--fa-ink);
+  box-shadow: inset 0 0 0 1px var(--fa-frame);
+}
+
+.btnLine:hover {
+  background-color: var(--fa-tile);
+  box-shadow: inset 0 0 0 1px var(--fa-ink-3);
+}
+
+.btn:disabled {
+  opacity: 0.32;
+  cursor: not-allowed;
+}
+
+/* Arrows travel on hover; nothing scales, nothing casts a shadow. Rotated
+   variants compose, so the east arrow still travels north-east on screen. */
+.btn:hover .arrow,
+a:hover > .arrow,
+button:hover > .arrow {
+  transform: translate(3px, -3px);
+}
+
+.btn:hover .arrowE,
+a:hover > .arrowE {
+  transform: rotate(45deg) translate(3px, -3px);
+}
+
+.btn:hover .arrowSw,
+a:hover > .arrowSw {
+  transform: rotate(180deg) translate(3px, -3px);
+}
+
+/* A row of buttons. Stacks full-width on a phone, where two half-width
+   buttons would both be too small to hit. */
+.btnRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+@media (max-width: 760px) {
+  .btnRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .btnRow .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ==========================================================================
+   TEXT LINK
+   ========================================================================== */
+
+.tlink {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--fa-line);
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  color: var(--fa-ink);
+  transition:
+    color 0.25s,
+    border-color 0.25s;
+}
+
+.tlink .arrow {
+  width: 16px;
+  height: 16px;
+}
+
+.tlink:hover {
+  color: var(--fa-amber-2);
+  border-bottom-color: var(--fa-amber);
+}
+
+/* ==========================================================================
+   REVEAL
+   ========================================================================== */
+
+.rv {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity var(--fa-dur-slow) ease,
+    transform var(--fa-dur-slow) var(--fa-ease);
+}
+
+.rvIn {
+  opacity: 1;
+  transform: none;
+}
+
+/* ==========================================================================
+   MASKED LINE REVEAL — the signature entrance.
+   Each line is a clipping box; the inner span starts 140% below and slides up.
+   The padding/negative-margin pair gives descenders room to be clipped from
+   without adding a pixel of layout height.
+   ========================================================================== */
+
+.lines .ln {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.22em;
+  margin-bottom: -0.22em;
+}
+
+.lines .ln > span {
+  display: block;
+  text-wrap: balance;
+  transform: translateY(140%);
+  transition: transform var(--fa-dur-mask) var(--fa-ease-mask);
+}
+
+.linesIn .ln > span {
+  transform: none;
+}
+
+/* Stagger is hard-coded per line rather than computed. Three lines is the
+   practical maximum for a headline, and a fourth should be a shorter headline. */
+.lines .ln:nth-child(2) > span {
+  transition-delay: 0.08s;
+}
+
+.lines .ln:nth-child(3) > span {
+  transition-delay: 0.16s;
+}
+
+.lines .ln:nth-child(4) > span {
+  transition-delay: 0.24s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rv,
+  .lines .ln > span {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}

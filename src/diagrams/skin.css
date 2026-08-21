@@ -1,0 +1,199 @@
+/**
+ * ============================================================================
+ * DIAGRAM SKIN — cathrynlavery/diagram-design v2.6 grammar, this repo's skin
+ * ============================================================================
+ *
+ * The diagram system refers to colour by SEMANTIC ROLE only (paper, ink,
+ * muted, accent, ...). This file is the single place those roles resolve, and
+ * it resolves them to the `--fa-*` tokens in src/styles/tokens.css, per
+ * SITE_SPEC.md §3.1. No component file contains a hex value, and no diagram
+ * pins a colour that a theme flip should have moved.
+ *
+ *   diagram-design role   ->  token
+ *   paper                     --fa-sheet
+ *   paper-2                   --fa-paper-2
+ *   ink                       --fa-ink
+ *   muted                     --fa-ink-2
+ *   soft                      --fa-ink-3
+ *   rule                      --fa-line-2
+ *   rule-solid                --fa-line
+ *   accent (fills, marks)     --fa-amber
+ *   accent-strong (text)      --fa-amber-2
+ *   accent-tint               color-mix(--fa-amber 22%)
+ *
+ * BOTH THEMES. Every value below is derived with color-mix from a token that
+ * flips under [data-theme='dark'], so the diagrams follow the theme without a
+ * second block here. The literal fallbacks in the var() calls exist only so
+ * this module still renders if it is ever inlined without tokens.css.
+ *
+ * ONE FAMILY. General Sans throughout. diagram-design's three-family contract
+ * (serif title / sans name / mono technical) is expressed by WEIGHT and
+ * LETTER-SPACING instead — see the --dgm-*-weight / --dgm-*-track tokens. The
+ * "mono" role keeps tabular figures so columns of numbers still align.
+ *
+ * NO CORNER RADIUS. SITE_SPEC.md §3.1 makes square corners a carry-over that
+ * survives any re-skin, and §2 makes it the system's strongest identity
+ * signal after the crop marks. The upstream node box is rx=6 and the tag
+ * chip rx=2; both are zero here. The r=8 quarter-arcs on ELBOW CONNECTORS are
+ * untouched — that rule is about routing, not about corners, and it stays
+ * non-negotiable.
+ *
+ * SERIES PALETTE. Not five hues. SITE_SPEC.md §3.1: multi-series charts
+ * derive from the ink ramp plus dash patterns, because this system has one
+ * accent and a five-colour ramp would be a second palette. The floor is ink
+ * at 0.56 — an ink stroke crosses 3:1 against light paper at about 0.53, and
+ * every line in a chart is data, not decoration.
+ * ============================================================================
+ */
+
+:root {
+  /* -- surfaces ---------------------------------------------------------- */
+  --dgm-paper: var(--fa-sheet, #fffdf3);
+  --dgm-sheet: var(--fa-sheet, #fffdf3);
+  --dgm-paper-2: var(--fa-paper-2, #f3edd6);
+  --dgm-tile: var(--fa-tile, #efe9d2);
+
+  /* -- ink ramp ---------------------------------------------------------- */
+  --dgm-ink: var(--fa-ink, #16140e);
+  --dgm-muted: var(--fa-ink-2, #57534a);
+  --dgm-soft: var(--fa-ink-3, #767064);
+  --dgm-rule: var(--fa-line-2, rgba(22, 20, 14, 0.08));
+  --dgm-rule-solid: var(--fa-line, rgba(22, 20, 14, 0.16));
+
+  --dgm-ink-02: color-mix(in srgb, var(--fa-ink, #16140e) 2%, transparent);
+  --dgm-ink-03: color-mix(in srgb, var(--fa-ink, #16140e) 3%, transparent);
+  --dgm-ink-05: color-mix(in srgb, var(--fa-ink, #16140e) 5%, transparent);
+  --dgm-ink-08: color-mix(in srgb, var(--fa-ink, #16140e) 8%, transparent);
+  --dgm-ink-12: color-mix(in srgb, var(--fa-ink, #16140e) 12%, transparent);
+  --dgm-ink-20: color-mix(in srgb, var(--fa-ink, #16140e) 20%, transparent);
+  --dgm-ink-30: color-mix(in srgb, var(--fa-ink, #16140e) 30%, transparent);
+  /* Dumbbell connector: heavier than the axis on purpose — it has to clear
+     3:1 because it is what says "these two dots are one row". */
+  --dgm-ink-55: color-mix(in srgb, var(--fa-ink, #16140e) 55%, transparent);
+
+  /* -- the one accent ---------------------------------------------------- */
+  --dgm-accent: var(--fa-amber, #f3b44a);
+  --dgm-accent-text: var(--fa-amber-2, #a66807);
+  --dgm-accent-tint: color-mix(in srgb, var(--fa-amber, #f3b44a) 22%, transparent);
+  --dgm-accent-50: color-mix(in srgb, var(--fa-amber, #f3b44a) 50%, transparent);
+
+  /* -- series: ink ramp + dash, never hue -------------------------------- */
+  --dgm-series-1: color-mix(in srgb, var(--fa-ink, #16140e) 80%, transparent);
+  --dgm-series-2: color-mix(in srgb, var(--fa-ink, #16140e) 68%, transparent);
+  --dgm-series-3: color-mix(in srgb, var(--fa-ink, #16140e) 56%, transparent);
+  --dgm-series-4: color-mix(in srgb, var(--fa-ink, #16140e) 80%, transparent);
+
+  /* -- typography: one family, roles by weight + tracking ---------------- */
+  --dgm-family: var(--fa-sans, 'General Sans', 'Helvetica Neue', helvetica, arial, sans-serif);
+
+  --dgm-title-weight: 500;
+  --dgm-title-track: -0.01em;
+  --dgm-name-weight: 500;
+  --dgm-name-track: 0em;
+  --dgm-tech-weight: 500;
+  --dgm-tech-track: 0.12em;
+  --dgm-eyebrow-weight: 500;
+  --dgm-eyebrow-track: 0.16em;
+  --dgm-arrow-weight: 500;
+  --dgm-arrow-track: 0.14em;
+
+  /* -- geometry: square, per SITE_SPEC §2 and §3.1 ----------------------- */
+  --dgm-radius: var(--fa-radius, 0);
+}
+
+/* ==========================================================================
+   FRAME — the only element permitted to scroll horizontally.
+   A diagram wider than the viewport scrolls inside its own box; the page
+   body never does. 375px is the tested floor.
+   ========================================================================== */
+
+.dgm-figure {
+  margin: 0;
+  max-width: 100%;
+}
+
+.dgm-frame {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  /* The scroll affordance, in the system's own hairline. */
+  border-block: 1px solid var(--dgm-rule);
+}
+
+.dgm-frame > svg {
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+.dgm-figcaption {
+  margin: 12px 0 0;
+  color: var(--dgm-muted);
+  font-family: var(--dgm-family);
+  font-size: var(--fa-fs-meta, 12.5px);
+  font-weight: 400;
+  line-height: 1.55;
+  max-width: 78ch;
+}
+
+/* Engineering-drawing register: FIG. 07 — PAYOFF MATRIX · 2,600 PAIRS */
+.dgm-fig-slug {
+  display: block;
+  margin: 0 0 10px;
+  color: var(--dgm-soft);
+  font-family: var(--dgm-family);
+  font-size: var(--fa-fs-micro, 10.5px);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-badge, 0.16em);
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
+   SELF-DRAWING — pleurat's stroke-dashoffset technique. CSS keyframes only:
+   no rAF loop, no canvas, no WebGL, no animation library.
+   ========================================================================== */
+
+.dgm-draw {
+  stroke-dasharray: var(--dgm-len, 1000);
+  stroke-dashoffset: var(--dgm-len, 1000);
+  animation: dgm-draw-in var(--fa-dur-mask, 0.9s) var(--fa-ease-mask, cubic-bezier(0.2, 0.85, 0.2, 1))
+    forwards;
+  animation-delay: var(--dgm-delay, 0ms);
+}
+
+.dgm-fade {
+  opacity: 0;
+  animation: dgm-fade-in var(--fa-dur, 0.32s) var(--fa-ease, cubic-bezier(0.2, 0.8, 0.2, 1)) forwards;
+  animation-delay: var(--dgm-delay, 0ms);
+}
+
+@keyframes dgm-draw-in {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes dgm-fade-in {
+  to {
+    opacity: 1;
+  }
+}
+
+/**
+ * Reduced motion: land on the finished frame immediately. The static end
+ * state IS the diagram — the animation only sequences it, which is why it can
+ * simply be switched off rather than replaced.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .dgm-draw {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .dgm-fade {
+    animation: none;
+    opacity: 1;
+  }
+}

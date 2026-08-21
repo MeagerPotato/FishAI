@@ -1,0 +1,107 @@
+/**
+ * THE FOOTER.
+ *
+ * It carries the ledger ruling again (the band re-paints it over its own opaque
+ * ground), and it closes the page with the crop marks inverted — the same 20px
+ * L, drawn from the bottom corners. Opening marks at the top of every section,
+ * closing marks once at the very bottom.
+ */
+
+.footer {
+  position: relative;
+  z-index: 0;
+  background-color: var(--fa-sheet);
+  padding: 70px 0 44px;
+}
+
+.footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--fa-rule-x);
+  right: var(--fa-rule-x);
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--fa-ruling);
+  background-attachment: fixed;
+}
+
+.lead {
+  padding-bottom: clamp(24px, 4vh, 44px);
+}
+
+.leadTitle {
+  font-size: clamp(23px, 2.05vw, 32px);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  margin-top: 14px;
+  max-width: 22ch;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  gap: 40px;
+}
+
+.grid h4 {
+  margin-bottom: 16px;
+  font-weight: 400;
+}
+
+.grid a,
+.grid span {
+  display: block;
+  padding: 6px 0;
+  font-size: var(--fa-fs-sm);
+  color: var(--fa-ink-2);
+  transition: color 0.25s;
+}
+
+.grid a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.grid a:hover {
+  color: var(--fa-ink);
+}
+
+.grid a svg {
+  width: 14px;
+  height: 14px;
+}
+
+.identity p {
+  margin-top: 14px;
+  max-width: 34ch;
+  font-size: var(--fa-fs-sm);
+  color: var(--fa-ink-2);
+}
+
+.legal {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 64px;
+}
+
+@media (max-width: 960px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+  }
+
+  .legal {
+    margin-top: 44px;
+  }
+}
+
+@media (max-width: 520px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

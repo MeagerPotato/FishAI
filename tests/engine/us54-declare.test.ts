@@ -887,7 +887,11 @@ describe('us54 random play always terminates on a clinch (§5, §7 vector 10 in 
       expect(Object.values(s.books).every((b) => b.outcome !== 'void')).toBe(true)
       expect(conserved(s)).toBe(true)
     }
-  })
+    // 2,000 full games is seconds of real work, not milliseconds. Left on
+    // vitest's 5 s default this passes on an idle machine and fails under load —
+    // a flaky gate is worse than no gate. 120 s matches the explicit budget the
+    // other soak suites already use (tests/bots/*.test.ts).
+  }, 120_000)
 })
 
 /* ------------------------------- §5 safety requirement 2: the fallback arm --- */
