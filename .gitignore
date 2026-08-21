@@ -1,0 +1,19 @@
+# dependencies / build
+node_modules/
+dist/
+*.tsbuildinfo
+
+# secrets — this repo is PUBLIC, never commit env files
+.env
+.env.*
+
+# simulation output (regenerate with `npm run lab`)
+lab-out/
+
+# test artifacts
+coverage/
+
+# editor / os
+.DS_Store
+Thumbs.db
+*.log

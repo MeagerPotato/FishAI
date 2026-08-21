@@ -1,0 +1,96 @@
+/**
+ * Public surface of the Canadian Fish rules engine.
+ * Pure TypeScript — no framework or platform imports anywhere in lib/engine/.
+ */
+export type {
+  Suit,
+  Rank,
+  Card,
+  Half,
+  BookId,
+  Seat,
+  Team,
+  Variant,
+  RulesConfig,
+  Phase,
+  DeclareWindow,
+  BookResult,
+  PublicEvent,
+  GameState,
+  GameAction,
+  ErrorCode,
+  EngineError,
+  ReduceResult,
+  PublicState,
+} from './types.ts'
+export {
+  SUITS,
+  RANKS,
+  RANKS_WITH_EIGHT,
+  LOW_RANKS,
+  HIGH_RANKS,
+  JOKERS,
+  EIGHTS,
+  ALL_CARDS,
+  ALL_BOOKS,
+  ALL_SEATS,
+  deckFor,
+  allCards,
+  allBooks,
+  handSize,
+  isCard,
+  cardBook,
+  bookCards,
+  cardCompare,
+  cardComparator,
+  sortHand,
+  seatTeam,
+  teamSeats,
+} from './cards.ts'
+export type { Deck } from './cards.ts'
+export { hashSeed, mulberry32, rngFromSeed, randInt } from './rng.ts'
+export { shuffle, dealHands } from './deal.ts'
+export { defaultConfig, us54Config, validateConfig, newGame, reduce } from './reduce.ts'
+export { rulesFor, clinchTarget } from './variants.ts'
+export type { VariantRules } from './variants.ts'
+export { publicView, seatView } from './views.ts'
+export { checkInvariants } from './invariants.ts'
+export { legalAsks, legalAsksFromView, legalActionsSummary, turnHolderCanAsk } from './helpers.ts'
+export type { AskableView } from './helpers.ts'
+export {
+  decide,
+  buildKnowledge,
+  holderOf,
+  candidates,
+  certainCards,
+  rankAsks,
+  rankAsksWith,
+  unaskableBooks,
+  foreignProvableBooks,
+  askHitProbability,
+  refinedHitProbability,
+  BASELINE_ASK_WEIGHTS,
+  POLICY_CONSTANTS,
+  SKILL_PRESETS,
+  STYLE_PRESETS,
+  resolvePolicy,
+  validateStyle,
+  STYLE_ROSTER,
+  STYLE_IDS,
+  rosterStyles,
+} from './bots/index.ts'
+export type {
+  SeatView,
+  AskWeights,
+  BotDifficulty,
+  Knowledge,
+  KnowledgeConstraint,
+  KnowledgeOptions,
+  RankedAsk,
+  StyleParams,
+  StyleFamily,
+  SkillParams,
+  BotPolicy,
+  PolicySpec,
+  StyleId,
+} from './bots/index.ts'
