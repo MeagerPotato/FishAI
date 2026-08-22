@@ -27,8 +27,8 @@ export type Seat = 0 | 1 | 2 | 3 | 4 | 5
 export type Team = 0 | 1
 
 /**
- * Which pinned rule set a game runs. `pagat48` is [RULES.md](../../RULES.md) — the shipped
- * default for the live table, /learn and the drills. `us54` is
+ * Which pinned rule set a game runs. `pagat48` is [RULES.md](../../RULES.md) — this engine's
+ * default, and what the live table in the sibling repository plays. `us54` is
  * [RULES_US54.md](../../RULES_US54.md) — the US student 54-card dialect.
  * Deck, set list and hand size are *derived* from this (RULES_US54.md §6); nothing is hardcoded.
  */

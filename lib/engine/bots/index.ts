@@ -41,4 +41,12 @@ export {
   askHitProbability,
   refinedHitProbability,
 } from './knowledge.ts'
+export type { ContainedPassPlan, PassValuation } from './contained.ts'
+export {
+  containedBooks,
+  containedPassCard,
+  firstUseInfoCost,
+  planContainedPass,
+  valueContainedPass,
+} from './contained.ts'
 export { decide } from './decide.ts'

@@ -168,6 +168,19 @@ function runOne(style) {
 }
 
 const styles = run.meta.config.styles
+// These ids come out of `cells.json`, and everything below uses them as OBJECT KEYS —
+// `STYLE_ROSTER[s]`, `cache.entries[s]`, `fresh[s]`. All three are plain objects, so a key of
+// `constructor` or `toString` resolves up `Object.prototype` and comes back truthy: the cache
+// lookup would report a hit it does not have, and `fresh[s] ?? cache.entries[s].entry` would put
+// the `Object` constructor into the emitted artifact. Frozen is not null-prototyped. Rejecting
+// the id here is the one place that covers all three.
+if (!Array.isArray(styles) || styles.some((s) => typeof s !== 'string' || !Object.hasOwn(STYLE_ROSTER, s))) {
+  console.error(
+    `${runDir}/cells.json names a style this roster does not have: ` +
+      `${JSON.stringify(styles)} vs ${JSON.stringify(Object.keys(STYLE_ROSTER))}`,
+  )
+  process.exit(2)
+}
 let exploitability = []
 if (opt.noExploit === 'true') {
   exploitability = styles.map((s) => skippedExploitability(s, '--noExploit: search deliberately not run'))

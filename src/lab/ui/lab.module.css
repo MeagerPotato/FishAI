@@ -414,13 +414,24 @@
   align-items: start;
 }
 
+/* `minmax(0, 1fr)`, not the implicit `auto`, on both of these.
+   An implicit grid track is `auto`, which resolves to the item's MAX-CONTENT
+   width — and a `.dgm-figure` holding an 1120px SVG has a max-content width of
+   1120px. The track then sizes to the diagram instead of to the column, the
+   figure's own `max-width: 100%` resolves against that oversized track and
+   never binds, and `.dgm-frame` gets a width it can never need to scroll.
+   The diagram is then wider than the viewport with no scroll of its own, and
+   `body { overflow-x: clip }` silently cuts it off. Measured at 375px: FIG. 02,
+   FIG. 03, FIG. 05a and FIG. 05b were all unreachable past the fold line. */
 .stack {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
 }
 
 .stackWide {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: clamp(28px, 3.5vw, 48px);
 }
 

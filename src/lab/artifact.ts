@@ -1,15 +1,25 @@
 /**
- * The artifact: types, the boundary validator, and the three committed fixture cases.
+ * The artifact: types, the boundary validator, and the committed cases.
  *
  * SITE_SPEC.md §5 and BOT_LAB.md §7 make the site a **pure reader of one artifact**. Nothing
  * below fetches, and nothing below runs a simulation: each case is a committed JSON file
  * imported with `?raw`, so Vite emits it inside the lazily-loaded lab chunk under `/assets/`
- * and it never has to exist at the dist root (which `vercel.json` would not serve anyway).
+ * and it never has to exist at the dist root — which matters wherever this is deployed behind
+ * an SPA rewrite, since a rewrite that does not carve out the artifact path serves index.html
+ * for it. This repository ships no host config of its own; there is nothing to keep in sync.
  *
- * Three cases ship because three render paths have to be exercised before real data exists:
+ * Four cases ship. Three exercise the three render paths, which had to exist before real data
+ * did; the fourth is the second full-precision run, kept **alongside** the first rather than
+ * replacing it so the engine change between them is auditable from the committed bytes:
  *
  *   `cyclic`    the headline case. Criterion 3 fails, so the verdict is NOT a winner.
- *   `dominant`  all four §4.4 criteria hold. The only case allowed to crown anything.
+ *   `dominant`  **matrix v1** — the 36-cell x 4,300-pair run at `819eebb`, before the
+ *               CONTAINMENT.md turn-pass existed. All four §4.4 criteria hold.
+ *   `v2`        **matrix v2** — the same 36 cells on the same 4,300 seeds, re-run after the
+ *               turn-pass landed (`containedPass`, STYLES.md §6.3). Same seed set as `dominant`
+ *               on purpose: every deal is played by both engines, so the two artifacts differ
+ *               only by the policy change and `?case=v2` against `?case=dominant` is a
+ *               controlled comparison rather than two independent samples.
  *   `stale`     a deliberate `rulesHash` mismatch, so §1.1's refusal has something real to
  *               refuse. Without it "the site refuses to render stale results" is an untested
  *               claim about code nobody ever ran.
@@ -32,6 +42,7 @@ import type { Criterion } from '../../lib/lab/analysis/index.ts'
 
 import cyclicRaw from './data/style-results.json?raw'
 import dominantRaw from './data/style-results.dominant.json?raw'
+import v2Raw from './data/style-results.v2.json?raw'
 import staleRaw from './data/style-results.stale.json?raw'
 
 /* -- the deltas this site adds on top of the diagram contract ---------------------------- */
@@ -138,7 +149,7 @@ export interface LabArtifact extends StyleResults {
   replays: ReplayRecord[]
 }
 
-export type ArtifactCase = 'cyclic' | 'dominant' | 'stale'
+export type ArtifactCase = 'cyclic' | 'dominant' | 'v2' | 'stale'
 
 /* -- the boundary validator --------------------------------------------------------------- */
 
@@ -258,6 +269,20 @@ function matrixCell(value: unknown, at: string): MatrixCell {
   }
 }
 
+/**
+ * `family` is checked to be a string and then WIDENED into the closed
+ * `StyleFamily` union rather than validated against it. That is deliberate — a
+ * roster addition should not be refused at the boundary — but it is a cast, so
+ * the guarantee the type appears to give is not one this function makes.
+ *
+ * The obligation that buys: every consumer must handle a family it has never
+ * heard of, and none of them may look one up by indexing an object literal.
+ * `{...}[family]` walks `Object.prototype`, so `"constructor"` and
+ * `"__proto__"` come back truthy and defeat the `??` fallback that was supposed
+ * to catch exactly this. Both lookups (`FAMILY_CODE` in the counter-graph
+ * layout, `FAMILY_LABEL` on the report page) are `Map`s for that reason. If a
+ * third one is ever added, it is a `Map` too.
+ */
 function styleDef(value: unknown, at: string): StyleDef {
   const o = obj(value, at)
   return {
@@ -348,6 +373,22 @@ export function parseArtifact(text: string, source: string): LabArtifact {
 
   const styles = arr(root.styles, `${source}.styles`).map((s, i) => styleDef(s, `${source}.styles[${i}]`))
   const matrix = arr(root.matrix, `${source}.matrix`).map((c, i) => matrixCell(c, `${source}.matrix[${i}]`))
+
+  // The roster size is a boundary condition, not a preference. Every diagram
+  // type on the report has a hard range and enforces it by THROWING during
+  // layout: the counter-graph refuses more than 9 nodes, the bar chart and the
+  // dumbbell cap at 4..8 rows, the degradation line wants 4..12 x-positions.
+  // A throw during render is an uncaught exception and a blank page, which is
+  // exactly the failure mode `loadArtifact` exists to convert into a value —
+  // so the range is checked here, once, where a refusal has a message.
+  if (styles.length < 5 || styles.length > 9) {
+    throw new ArtifactError(
+      `${source}.styles has ${styles.length} entries. The report's figures are drawn for a ` +
+        'roster of 5 to 9: the counter-graph budget is 9 nodes, and the bar and dumbbell types ' +
+        'need at least 4 rows after their own slicing. Outside that range the diagrams throw ' +
+        'during layout, which would render as a blank page instead of as this message.',
+    )
+  }
 
   const known = new Set(styles.map((s) => s.id))
   for (const [i, cell] of matrix.entries()) {
@@ -484,6 +525,7 @@ export function parseArtifact(text: string, source: string): LabArtifact {
 const SOURCES: Record<ArtifactCase, { file: string; text: string }> = {
   cyclic: { file: 'src/lab/data/style-results.json', text: cyclicRaw },
   dominant: { file: 'src/lab/data/style-results.dominant.json', text: dominantRaw },
+  v2: { file: 'src/lab/data/style-results.v2.json', text: v2Raw },
   stale: { file: 'src/lab/data/style-results.stale.json', text: staleRaw },
 }
 
@@ -502,17 +544,18 @@ function load(which: ArtifactCase): LoadResult {
   }
 }
 
-const CASES: ArtifactCase[] = ['cyclic', 'dominant', 'stale']
+const CASES: ArtifactCase[] = ['cyclic', 'dominant', 'v2', 'stale']
 
 /**
  * Parsed once, at module load of the lab chunk. Eager rather than lazily cached on purpose: a
  * lazy cache would have to be written to during render, and a component that mutates module
- * state while rendering is exactly what the React Compiler rule set exists to catch. Three
+ * state while rendering is exactly what the React Compiler rule set exists to catch. Four
  * documents parse in single-digit milliseconds.
  */
 const LOADED: Record<ArtifactCase, LoadResult> = {
   cyclic: load('cyclic'),
   dominant: load('dominant'),
+  v2: load('v2'),
   stale: load('stale'),
 }
 
@@ -531,12 +574,6 @@ export function caseFromSearch(search: string): ArtifactCase {
 }
 
 export const ARTIFACT_CASES: readonly ArtifactCase[] = CASES
-
-export const CASE_NOTE: Record<ArtifactCase, string> = {
-  cyclic: 'the headline case — no dominant style, the counter-graph is the finding',
-  dominant: 'the case where all four §4.4 criteria hold and a style may be named',
-  stale: 'a deliberately mis-stamped artifact, so the rule-set refusal has something to refuse',
-}
 
 export function styleLabel(artifact: LabArtifact, id: string): string {
   return artifact.styles.find((s) => s.id === id)?.label ?? id

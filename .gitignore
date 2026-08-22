@@ -6,6 +6,15 @@ dist/
 # secrets — this repo is PUBLIC, never commit env files
 .env
 .env.*
+*.pem
+*.key
+.envrc
+
+# agent scratch: `.claude/worktrees/` is a second checkout of this repo living
+# inside the first one. It was only ever excluded through `.git/info/exclude`,
+# which is local to one clone and travels with nobody — so on a PUBLIC repo the
+# next person to run a worktree there commits a whole extra tree by accident.
+.claude/worktrees/
 
 # simulation output (regenerate with `npm run lab`)
 lab-out/

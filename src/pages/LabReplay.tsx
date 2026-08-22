@@ -29,6 +29,7 @@ import { shortHash } from '../lab/rules.ts'
 import { LabShell, withCase } from '../lab/ui/LabShell.tsx'
 import { ArtifactBroken, ReplayNotFound, RulesMismatch } from '../lab/ui/Refusal.tsx'
 import { RuleStamp, SyntheticNotice, Us54Facts } from '../lab/ui/RuleStamp.tsx'
+import { ScrollRegion } from '../lab/ui/ScrollRegion.tsx'
 import s from '../lab/ui/lab.module.css'
 
 const SEATS = [0, 1, 2, 3, 4, 5] as const
@@ -96,6 +97,7 @@ export function LabReplay() {
   return (
     <LabShell
       current={withCase(`/lab/replay/${record.id}`, which)}
+      docTitle={`Replay — ${styleLabel(artifact, record.pairing[0])} vs ${styleLabel(artifact, record.pairing[1])}`}
       which={which}
       ground="dots"
       stamp={`us54 · rulesHash ${shortHash(artifact.meta.rulesHash)}`}
@@ -109,7 +111,7 @@ export function LabReplay() {
         <RuleStamp artifact={artifact} check={check} />
         <SyntheticNotice artifact={artifact} />
 
-        <div className={s.scroll}>
+        <ScrollRegion label="The stored replay record">
           <table className={s.table}>
             <caption>The stored record · actions, not states</caption>
             <thead>
@@ -142,7 +144,7 @@ export function LabReplay() {
               </tr>
             </tbody>
           </table>
-        </div>
+        </ScrollRegion>
 
         {artifact.replays.length > 1 ? (
           <p className={s.figNote}>
@@ -248,7 +250,7 @@ export function LabReplay() {
           })}
         </div>
 
-        <div className={s.scroll} style={{ marginTop: 24 }}>
+        <ScrollRegion label="Position at this step" style={{ marginTop: 24 }}>
           <table className={s.table}>
             <caption>Position at this step</caption>
             <thead>
@@ -278,7 +280,7 @@ export function LabReplay() {
               </tr>
             </tbody>
           </table>
-        </div>
+        </ScrollRegion>
         <p className={s.figNote}>
           The clinch counts <strong>sets</strong>, not points. A clinched us54 game always
           finishes with sets unresolved and cards still in hand, so the score is reported as{' '}
@@ -297,7 +299,7 @@ export function LabReplay() {
             No set has been declared yet.
           </p>
         ) : (
-          <div className={s.scroll} style={{ marginTop: 14 }}>
+          <ScrollRegion label="Sets resolved so far" style={{ marginTop: 14 }}>
             <table className={s.table}>
               <caption>
                 Every resolved set goes to exactly one team — row 14 abolished the void outcome
@@ -325,7 +327,7 @@ export function LabReplay() {
                 )}
               </tbody>
             </table>
-          </div>
+          </ScrollRegion>
         )}
       </Section>
 

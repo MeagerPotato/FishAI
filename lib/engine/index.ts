@@ -78,6 +78,11 @@ export {
   STYLE_ROSTER,
   STYLE_IDS,
   rosterStyles,
+  containedBooks,
+  containedPassCard,
+  firstUseInfoCost,
+  planContainedPass,
+  valueContainedPass,
 } from './bots/index.ts'
 export type {
   SeatView,
@@ -93,4 +98,6 @@ export type {
   BotPolicy,
   PolicySpec,
   StyleId,
+  ContainedPassPlan,
+  PassValuation,
 } from './bots/index.ts'

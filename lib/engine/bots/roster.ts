@@ -49,6 +49,28 @@
  * between, which is precisely the "memorize half-suits you do not own" strategy the project
  * owner asked for and exactly where its unit test lives.
  *
+ * ## `containedPass` — one appetite, uniform, and why
+ *
+ * [CONTAINMENT.md](../../../CONTAINMENT.md) C3–C5 measure a repeatable turn-pass that no style
+ * used. It is now a policy option ([contained.ts](contained.ts)) whose trigger is derived from
+ * public data at every call, so the style contributes only an **appetite**: the expected number
+ * of uses the licence gets before the book is banked.
+ *
+ * Every entry carries **1** — the single-use break-even the derivation prices — except the
+ * Hoarder, whose 1.33 is read off this repo's own measurement of how much longer it holds a set
+ * (STYLES.md §3.1.1, `declareLatency` 31.02 vs 23.39). Uniform on purpose: the interesting
+ * question is which styles *reach* a contained book and *aim* at all, and both answers are
+ * already determined by knobs this roster had before — `hoardBooks`/`minHandSize` and
+ * `declareOnlyOwnHand` decide how long a book stays unclaimed, and `missTarget` decides whether
+ * aiming is worth anything (Blitz's `'most'` makes the aiming gain non-positive, so the mechanism
+ * is off for it without a single bespoke number). Handing each style its own appetite would have
+ * hidden that behind nine tuned constants.
+ *
+ * The Turtle also delays — `declareOnlyOwnHand` means it never banks a set split across its
+ * teammates — but that delay has never been measured here, so its appetite stays at the
+ * conservative 1. If it fires more often than the Hoarder, that is because it *reaches* the state
+ * more often, not because it prices it higher.
+ *
  * ## What is NOT tuned here
  *
  * The stall-breaker (`POLICY_CONSTANTS.stall`), the signalling look-back, the clinch response
@@ -123,6 +145,12 @@ const BALANCED: StyleParams = {
 
   hoardBooks: 0,
   minHandSize: 0,
+
+  // The CONTAINMENT.md turn-pass, at the derived break-even: take the guaranteed-miss ask into a
+  // team-contained book exactly when the cards-per-turn arithmetic says it beats the best
+  // ordinary ask, and never otherwise. 1 = "one use of the licence", which is what a style that
+  // banks the book at its next opportunity gets. See the header note below.
+  containedPass: 1,
 }
 
 function style(over: Partial<StyleParams> & { id: StyleId; label: string; family: StyleFamily; thesis: string }): StyleParams {
@@ -232,6 +260,13 @@ export const STYLE_ROSTER: Readonly<Record<StyleId, StyleParams>> = Object.freez
     thesis: 'Keep ask-licences, stay alive, delay.',
     hoardBooks: 3,
     minHandSize: 2,
+    // CONTAINMENT.md §3.1 — the benefit the style pays for. The appetite is the expected number
+    // of uses the licence gets before the book is banked, and this roster's own measurement
+    // supplies it: STYLES.md §3.1.1 puts the Hoarder's `declareLatency` at 31.02 against
+    // Balanced's 23.39, so it holds every set 1.33x as long and gets 1.33x the uses. Read off a
+    // measured ratio, not tuned — and it is the highest number in the roster because it is the
+    // only style whose delay has actually been measured.
+    containedPass: 1.33,
     declareThreshold: 0.975,
     declareThresholdStalled: 0.7,
     declareEagerness: 0.1,

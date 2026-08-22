@@ -9,7 +9,16 @@
       rel="stylesheet"
       href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500&display=swap"
     />
-    <title>FishAI — design specimen</title>
+    <!--
+      The pre-hydration title only. `/design` was the only route when this was
+      written; the default route is `/lab` now, and every route sets its own
+      title on mount (src/components/hooks/useDocumentTitle.ts).
+    -->
+    <title>The style report — FishAI</title>
+    <meta
+      name="description"
+      content="Nine Canadian Fish (Literature) bot styles over one shared inference engine, and the duplicate-dealt simulation lab that measures whether any of them is actually superior."
+    />
   </head>
   <body>
     <div id="root"></div>

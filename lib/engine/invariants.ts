@@ -11,9 +11,12 @@
  *
  * The last block is the deadlock gate demanded by RULES_US54.md §5 safety requirement 2:
  * *"a new invariant — no legal action exists but phase ≠ finished"*. A deadlock is the one
- * failure mode that is silent in production — [server/room.ts](../../server/room.ts)'s
- * `if (!r.ok) break` abandons the bot chain, leaving the room on `status: 'playing'` with
- * `GameOver` never rendering — so it is caught here, structurally, instead.
+ * failure mode that is silent in production. In the live table this engine also ships to —
+ * `server/room.ts` in the sibling repository
+ * [Canadian-Fish-Demo](https://github.com/MeagerPotato/Canadian-Fish-Demo), not a path in THIS
+ * repo — a bare `if (!r.ok) break` abandons the bot chain, leaving the room on
+ * `status: 'playing'` with `GameOver` never rendering. Nothing here can fix that host, so the
+ * condition is caught here, structurally, instead.
  */
 import type { GameState, Seat, Team } from './types.ts'
 import { allBooks, allCards, bookCards, isCard, seatTeam, sortHand, teamSeats } from './cards.ts'

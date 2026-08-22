@@ -129,6 +129,11 @@ describe('public-view-only proof', () => {
       // The STYLES.md §3 roster: frozen parameter data over the same vector, importing only
       // './style.ts' (which itself imports only './types.ts'). No engine state is reachable.
       './roster.ts',
+      // The CONTAINMENT.md turn-pass recogniser and valuation. Pure over the SeatView, the
+      // prebuilt Knowledge object and the style/skill vectors; it imports only '../types.ts',
+      // '../cards.ts', './style.ts' and './types.ts', so no engine state is reachable from it
+      // either — the same standard every other file in this module is held to.
+      './contained.ts',
     ])
     const forbiddenIdents = /\b(newGame|publicView|seatView|reduce|dealHands|legalAsks|checkInvariants|shuffle)\b/
     for (const f of files) {

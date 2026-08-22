@@ -430,7 +430,8 @@ function reduceClaim(
   // terminator** for `us54`, where RULES_US54.md §5 proves it unreachable: 9 resolved sets
   // with none void means some team holds ≥ 5 and clinched earlier. It is kept deliberately, as
   // §5 safety requirement 2 asks, so that a future rule edit that breaks the pigeonhole cannot
-  // silently reintroduce the hang (server/room.ts abandons a stuck bot chain in silence).
+  // silently reintroduce the hang — the live table this engine also ships to abandons a stuck
+  // bot chain in silence, and that host is a different repository (see invariants.ts).
   if (clinched || resolved === nBooks) {
     /** The ordinary "more is better, equal is a tie" comparison. */
     const ahead = (a: number, b: number): 0 | 1 | 'tie' => (a > b ? 0 : b > a ? 1 : 'tie')

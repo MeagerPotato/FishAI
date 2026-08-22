@@ -57,9 +57,23 @@ const stepCap = cellsRaw.meta.config.stepCap
  * Re-play one game of the matrix. `a` sits on team `orient`, exactly as `playGame` seats it.
  * Returns the action list plus the outcome, for checking against the record.
  */
+/**
+ * `Object.hasOwn` before every roster lookup. These ids arrive out of `cells.json` — a file, not a
+ * constant — and `STYLE_ROSTER[id]` on a plain object literal walks `Object.prototype`, so an id
+ * of `constructor` or `toString` would come back as a truthy FUNCTION and be handed to
+ * `policyFor` as a style vector. Frozen is not the same as null-prototyped: freezing stops the
+ * roster being written, not being read through.
+ */
+function styleOf(id) {
+  if (typeof id !== 'string' || !Object.hasOwn(STYLE_ROSTER, id)) {
+    throw new Error(`style-replays: cells.json names a style the roster does not have: ${String(id)}`)
+  }
+  return STYLE_ROSTER[id]
+}
+
 function capture(aId, bId, seed, startSeat, orient) {
-  const a = STYLE_ROSTER[aId]
-  const b = STYLE_ROSTER[bId]
+  const a = styleOf(aId)
+  const b = styleOf(bId)
   const aTeam = orient === 0 ? 0 : 1
   const policyA = policyFor(a)
   const policyB = policyFor(b)

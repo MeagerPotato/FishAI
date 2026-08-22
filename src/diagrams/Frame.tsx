@@ -10,8 +10,9 @@
  * scrolls inside `.dgm-frame`, never the page body.
  */
 
-import { createContext, useContext, useId } from 'react'
+import { createContext, useContext, useId, useRef } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
+import { useScrollable } from '../components/hooks/useScrollable.ts'
 import { C, T } from './tokens'
 import type { Scene } from './scene'
 
@@ -241,14 +242,33 @@ export interface DiagramFrameProps {
 /**
  * figure > fig-slug + scrolling frame + caption.
  *
- * The frame is the only element allowed to scroll horizontally; the page
- * body never does, at 375px or any other width.
+ * The frame is the only element allowed to scroll horizontally; the page body
+ * never does, at 375px or any other width. Any GRID that holds one of these
+ * must size its track `minmax(0, 1fr)` — an implicit `auto` track resolves to
+ * the SVG's max-content width, so the frame is never narrower than the diagram,
+ * never scrolls, and the overflow is cut off by the page's `overflow-x: clip`
+ * instead.
+ *
+ * While it is scrolling it takes a tab stop and a name. A region a mouse can
+ * pan and a keyboard cannot is a WCAG 2.1.1 failure, and there is no other way
+ * to reach the part of the diagram past the right edge.
  */
 export function DiagramFrame({ scene, children }: DiagramFrameProps) {
+  const frameRef = useRef<HTMLDivElement | null>(null)
+  const tabIndex = useScrollable(frameRef)
+  const scrolls = tabIndex !== undefined
   return (
     <figure className="dgm-figure">
       <span className="dgm-fig-slug">{scene.fig}</span>
-      <div className="dgm-frame">{children}</div>
+      <div
+        className="dgm-frame"
+        ref={frameRef}
+        tabIndex={tabIndex}
+        role={scrolls ? 'region' : undefined}
+        aria-label={scrolls ? scene.fig : undefined}
+      >
+        {children}
+      </div>
       <figcaption className="dgm-figcaption">{scene.caption}</figcaption>
     </figure>
   )

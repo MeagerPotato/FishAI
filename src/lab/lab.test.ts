@@ -4,7 +4,7 @@
  * These are the claims the three routes make that a reader cannot check by looking, so they are
  * checked here instead:
  *
- *   · both committed cases parse, and BOTH VERDICT PATHS render differently;
+ *   · every committed case parses, and BOTH VERDICT PATHS render differently;
  *   · the verdict is honest — `dominant` requires all four §4.4 criteria, and removing the
  *     evidence for one of them removes the verdict;
  *   · the counter-graph is drawn from `significant`, never from a raw p-value;
@@ -33,14 +33,14 @@ import { replayGame } from './replay.ts'
 import { checkRules, SHIPPED_RULES_HASH } from './rules.ts'
 import { derive, findCycles, reconcile, significantEdges } from './verdict.ts'
 
-function artifactOf(which: 'cyclic' | 'dominant' | 'stale'): LabArtifact {
+function artifactOf(which: 'cyclic' | 'dominant' | 'v2' | 'stale'): LabArtifact {
   const loaded = loadArtifact(which)
   if (!loaded.ok) throw new Error(`${which} failed to parse: ${loaded.detail}`)
   return loaded.artifact
 }
 
 describe('the committed artifacts', () => {
-  it('all three parse', () => {
+  it('all four parse', () => {
     for (const which of ARTIFACT_CASES) {
       const loaded = loadArtifact(which)
       expect(loaded.ok, `${which}: ${loaded.ok ? '' : loaded.detail}`).toBe(true)
@@ -118,9 +118,74 @@ describe('the us54 contract (SITE_SPEC.md §5)', () => {
   })
 })
 
+/**
+ * The artifact is data, and `styleDef` widens `family` into the closed `StyleFamily` union with a
+ * cast rather than validating it — deliberately, so a roster addition is not refused. What reaches
+ * the two family lookups is therefore whatever the document said.
+ *
+ * The engine has already shipped one bug of exactly this shape, in `deckFor`/`rulesFor`. Indexing
+ * an object literal walks `Object.prototype`: `family: "constructor"` comes back as a FUNCTION,
+ * which is truthy, so the `?? fallback` written to catch an unknown family never fires and a
+ * function is handed to React as an SVG text child. Both lookups are `Map`s for that reason, and
+ * this is the test that keeps them that way.
+ */
+describe('a family name out of the document cannot reach Object.prototype', () => {
+  const POISON = ['constructor', '__proto__', 'toString', 'hasOwnProperty', 'valueOf'] as const
+
+  it('gives a poisoned family the documented fallback tag, not an inherited member', () => {
+    for (const key of POISON) {
+      const doc = JSON.parse(JSON.stringify(artifactOf('cyclic')))
+      for (const style of doc.styles) style.family = key
+      const artifact = parseArtifact(JSON.stringify(doc), `poison:${key}`)
+      const model = layoutCounterGraph({ results: reconcile(artifact, derive(artifact)) })
+      expect(model.nodes.length).toBeGreaterThan(0)
+      for (const node of model.nodes) {
+        expect(typeof node.family).toBe('string')
+        expect(node.family).toBe('STYLE')
+      }
+    }
+  })
+
+  it('still carries an unknown-but-honest family through as a plain string', () => {
+    const doc = JSON.parse(JSON.stringify(artifactOf('cyclic')))
+    for (const style of doc.styles) style.family = 'a-family-added-next-year'
+    const artifact = parseArtifact(JSON.stringify(doc), 'test')
+    expect(artifact.styles[0].family).toBe('a-family-added-next-year')
+  })
+})
+
+/**
+ * Every diagram type on the report enforces its own roster range by THROWING during layout, and a
+ * throw during render is a blank page rather than the named refusal `loadArtifact` promises. So
+ * the range is a boundary condition, checked once, where a refusal has a message.
+ */
+describe('the roster size is checked at the boundary, not during render', () => {
+  it('refuses a roster too small for the figures', () => {
+    const doc = JSON.parse(JSON.stringify(artifactOf('cyclic')))
+    const kept = doc.styles.slice(0, 4)
+    const ids = new Set(kept.map((s: { id: string }) => s.id))
+    doc.styles = kept
+    doc.matrix = doc.matrix.filter((c: { a: string; b: string }) => ids.has(c.a) && ids.has(c.b))
+    expect(() => parseArtifact(JSON.stringify(doc), 'test')).toThrowError(/roster of 5 to 9/)
+  })
+
+  it('refuses a roster past the counter-graph node budget', () => {
+    const doc = JSON.parse(JSON.stringify(artifactOf('cyclic')))
+    doc.styles = [...doc.styles, { ...doc.styles[0], id: 'tenth', label: 'Tenth' }]
+    expect(() => parseArtifact(JSON.stringify(doc), 'test')).toThrowError(/roster of 5 to 9/)
+  })
+
+  it('accepts every committed case, which all sit inside the range', () => {
+    for (const which of ARTIFACT_CASES) {
+      expect(artifactOf(which).styles.length).toBeGreaterThanOrEqual(5)
+      expect(artifactOf(which).styles.length).toBeLessThanOrEqual(9)
+    }
+  })
+})
+
 describe('the rule-set guard (SITE_SPEC.md §1.1)', () => {
-  it('accepts the two live cases against the shipped RULES_US54.md', () => {
-    for (const which of ['cyclic', 'dominant'] as const) {
+  it('accepts the three live cases against the shipped RULES_US54.md', () => {
+    for (const which of ['cyclic', 'dominant', 'v2'] as const) {
       const a = artifactOf(which)
       expect(a.meta.rulesHash).toBe(SHIPPED_RULES_HASH)
       expect(checkRules(a.meta.rulesHash, 'x').ok).toBe(true)
@@ -212,7 +277,7 @@ describe('significance drives the counter-graph, not p-values', () => {
   })
 
   it('no edge is derived from a cell that failed correction', () => {
-    for (const which of ['cyclic', 'dominant'] as const) {
+    for (const which of ['cyclic', 'dominant', 'v2'] as const) {
       const a = artifactOf(which)
       const index = cellIndex(a.matrix)
       for (const e of significantEdges(
@@ -255,7 +320,7 @@ describe('significance drives the counter-graph, not p-values', () => {
   })
 
   it('the counter-graph layout only routes significant edges', () => {
-    for (const which of ['cyclic', 'dominant'] as const) {
+    for (const which of ['cyclic', 'dominant', 'v2'] as const) {
       const a = artifactOf(which)
       const model = layoutCounterGraph({ results: reconcile(a, derive(a)) })
       const index = cellIndex(a.matrix)
@@ -341,6 +406,7 @@ describe('case selection', () => {
     expect(caseFromSearch('')).toBe('cyclic')
     expect(caseFromSearch('?case=nonsense')).toBe('cyclic')
     expect(caseFromSearch('?case=dominant')).toBe('dominant')
+    expect(caseFromSearch('?case=v2')).toBe('v2')
     expect(caseFromSearch('?case=stale')).toBe('stale')
   })
 })

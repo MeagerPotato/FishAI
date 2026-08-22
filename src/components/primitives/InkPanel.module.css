@@ -7,8 +7,9 @@
  *
  * In dark mode it inverts back to light, so it stays "the one that is the other
  * way round" rather than becoming "the dark one" on a dark page. That is why
- * the two literals below exist instead of reusing --fa-ink / --fa-paper: those
- * tokens flip with the theme, and this panel has to flip against it.
+ * --panel-bg, --panel-fg and --panel-accent are literals instead of --fa-ink /
+ * --fa-paper / --fa-amber: those tokens flip with the theme, and this panel has
+ * to flip against it.
  *
  * Everything inside derives from `--panel-fg`, and the panel re-declares the
  * shared ink/line tokens on `.inner` so a stock ghost Button lands with a
@@ -18,6 +19,15 @@
 .panel {
   --panel-bg: #16140e;
   --panel-fg: #fbf7e6;
+  /* The accent has to flip with the PANEL, not with the theme, for the same
+     reason `--panel-bg` does. `--fa-amber` is 1.71:1 on `#fbf7e6` — it is the
+     accent for FILLS and for text on a dark ground, never for text on paper
+     (tokens.css §3). Light theme puts this panel on ink, so amber is right
+     there; dark theme puts it on paper, and the amber below is the darkened
+     one, 5.13:1 on `#fbf7e6`. It is a literal for the same reason the two
+     above are: `--fa-amber-2` flips with the theme and would arrive at
+     `#dd922f` here, which is 2.6:1 and no better. */
+  --panel-accent: var(--fa-amber);
 
   position: relative;
   overflow: hidden;
@@ -29,6 +39,7 @@
 :root[data-theme='dark'] .panel {
   --panel-bg: #fbf7e6;
   --panel-fg: #16140e;
+  --panel-accent: #935d07;
 }
 
 /* A 4px scanline, so the inverted block still reads as printed rather than as
@@ -55,8 +66,8 @@
   width: 18px;
   height: 18px;
   z-index: 1;
-  border-top: 2px solid var(--fa-amber);
-  border-left: 2px solid var(--fa-amber);
+  border-top: 2px solid var(--panel-accent);
+  border-left: 2px solid var(--panel-accent);
   pointer-events: none;
 }
 
@@ -94,14 +105,14 @@
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  color: var(--fa-amber);
+  color: var(--panel-accent);
 }
 
 .live::before {
   content: '';
   width: 7px;
   height: 7px;
-  background-color: var(--fa-amber);
+  background-color: var(--panel-accent);
   animation: fa-pulse 2s ease infinite;
 }
 

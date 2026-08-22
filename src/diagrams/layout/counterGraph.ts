@@ -37,15 +37,24 @@ const MAX_EDGES = 12
 /**
  * Family -> type-tag code. Truncating the words ("CONSE", "OPTIO") reads as a
  * rendering bug rather than as an abbreviation, so the codes are explicit.
+ *
+ * A `Map`, not an object literal, because the key comes from the results
+ * document and a document is untrusted input. `{...}[family]` inherits from
+ * `Object.prototype`, so `family: "constructor"` returns a FUNCTION — which is
+ * truthy, so the `?? 'STYLE'` fallback never fires, and a function is then
+ * assigned to a field typed `string` and handed to React as an SVG text child.
+ * `Map.get` has no prototype chain and returns `undefined` for every key that
+ * was not put in it. Same class of bug as the one fixed in the engine's
+ * `deckFor`/`rulesFor`.
  */
-const FAMILY_CODE: Record<string, string> = {
-  control: 'CTRL',
-  aggressive: 'AGGR',
-  conservative: 'CONS',
-  passive: 'PASV',
-  information: 'INFO',
-  optionality: 'OPTN',
-}
+const FAMILY_CODE = new Map<string, string>([
+  ['control', 'CTRL'],
+  ['aggressive', 'AGGR'],
+  ['conservative', 'CONS'],
+  ['passive', 'PASV'],
+  ['information', 'INFO'],
+  ['optionality', 'OPTN'],
+])
 
 export interface CounterNode {
   id: string
@@ -189,7 +198,7 @@ export function layoutCounterGraph({
       nodes.push({
         id,
         label: byId.get(id)?.label ?? id,
-        family: FAMILY_CODE[byId.get(id)?.family ?? ''] ?? 'STYLE',
+        family: FAMILY_CODE.get(byId.get(id)?.family ?? '') ?? 'STYLE',
         x: x0 + i * (NODE_W + COL_GAP),
         y: RANK_Y0 + rank * RANK_STRIDE,
         w: NODE_W,

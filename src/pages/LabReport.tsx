@@ -73,17 +73,28 @@ import { Beats } from '../lab/ui/Beats.tsx'
 import { LabShell, withCase } from '../lab/ui/LabShell.tsx'
 import { ArtifactBroken, RulesMismatch } from '../lab/ui/Refusal.tsx'
 import { RuleStamp, SyntheticNotice, Us54Facts } from '../lab/ui/RuleStamp.tsx'
+import { ScrollRegion } from '../lab/ui/ScrollRegion.tsx'
 import { VerdictBody } from '../lab/ui/Verdict.tsx'
 import s from '../lab/ui/lab.module.css'
 
-const FAMILY_LABEL: Record<string, string> = {
-  control: 'Control',
-  aggressive: 'Aggressive',
-  conservative: 'Conservative',
-  passive: 'Passive',
-  information: 'Information',
-  optionality: 'Optionality',
-}
+/**
+ * Family -> display label.
+ *
+ * A `Map`, not an object literal, for the same reason as `FAMILY_CODE` in the
+ * counter-graph layout: `family` is a value out of the results document, and
+ * `{...}[family]` walks `Object.prototype`. `family: "constructor"` would
+ * return the `Object` constructor, which is truthy, so `?? style.family` never
+ * fires and a function is passed as a React child. `Map.get` has no prototype
+ * chain.
+ */
+const FAMILY_LABEL = new Map<string, string>([
+  ['control', 'Control'],
+  ['aggressive', 'Aggressive'],
+  ['conservative', 'Conservative'],
+  ['passive', 'Passive'],
+  ['information', 'Information'],
+  ['optionality', 'Optionality'],
+])
 
 export function LabReport() {
   const { search } = useLocation()
@@ -155,6 +166,7 @@ export function LabReport() {
   return (
     <LabShell
       current={withCase('/lab', which)}
+      docTitle="The style report"
       which={which}
       stamp={`us54 · rulesHash ${shortHash(meta.rulesHash)}`}
     >
@@ -233,10 +245,54 @@ export function LabReport() {
           items={artifact.styles.map((style, i) => ({
             ix: `S${i + 1}`,
             title: style.label,
-            role: FAMILY_LABEL[style.family] ?? style.family,
+            role: FAMILY_LABEL.get(style.family) ?? style.family,
             body: style.rationale ? `${style.thesis}. ${style.rationale}.` : `${style.thesis}.`,
           }))}
         />
+
+        {/* STYLES.md §6: *"Both must be stated wherever the ranking is published."* This page
+            publishes the ranking, so they are stated here, beside the roster whose labels the
+            first one is about — not filed in a document a reader of this page never opens. */}
+        <div style={{ marginTop: 'var(--fa-sp-head)' }}>
+          <Eyebrow tone="muted" track="head" as="h2">
+            Two measured caveats on this roster
+          </Eyebrow>
+          <div className={s.split} style={{ marginTop: 20 }}>
+            <div className={s.stack}>
+              <h3 className={s.criterionLabel}>
+                The axis the labels advertise does not fire
+              </h3>
+              <p className={s.figNote}>
+                <em>Aggressive</em> and <em>conservative</em> above name a declare-threshold
+                spectrum, and across the range this roster actually spans that knob changes
+                nothing: swept on the control over 40 seeded games, every value from 0.775 upward
+                produced <strong>zero</strong> divergent decisions, and all nine styles sit at
+                0.775 or above. The path is not unreachable — the control makes 171 speculative
+                declares to 138 certain ones over the same games — the inference engine&rsquo;s
+                confidence estimates are simply bimodal, so any threshold inside the empty band
+                selects the identical set of declares. The styles are still measurably distinct,
+                between 0.39% and 2.89% of decisions differing from the control, but along{' '}
+                <code>gambleBonus</code>, <code>declareMaxUncertain</code> and the ask-targeting
+                weights rather than along the axis they are named after (STYLES.md §6.1).
+              </p>
+            </div>
+            <div className={s.stack}>
+              <h3 className={s.criterionLabel}>
+                One style is measured without the benefit it exists to buy
+              </h3>
+              <p className={s.figNote}>
+                A book held entirely by one team cannot be asked into by an opponent, and leaving
+                it unclaimed keeps a repeatable, targetable turn-pass alive. That is the Hoarder
+                thesis — and no style in the roster <em>this run measured</em> used it. The
+                Hoarder therefore
+                pays hoarding&rsquo;s full cost, declare latency 22.90 → 31.02 and race losses
+                0.046 → 0.091, and collects none of its benefit. Its finish is a valid measurement
+                of <em>this implementation</em> and not a verdict on the strategy: the cost of
+                hoarding is measured, the benefit is not (CONTAINMENT.md, STYLES.md §6.2).
+              </p>
+            </div>
+          </div>
+        </div>
 
         <div style={{ marginTop: 'var(--fa-sp-head)' }}>
           <Eyebrow tone="muted" track="head">
@@ -361,7 +417,7 @@ export function LabReport() {
           </p>
         ) : (
           <>
-            <div className={s.scroll}>
+            <ScrollRegion label="Exploitability per style">
               <table className={s.table}>
                 <caption>
                   E(i) per style, lowest first · {count(exploit[0]?.evalGames ?? 0)} fresh games per
@@ -397,7 +453,7 @@ export function LabReport() {
                   })}
                 </tbody>
               </table>
-            </div>
+            </ScrollRegion>
             <p className={s.figNote}>
               E(i) is a <em>maximum over a search</em>, so a small value means nothing without the
               detectable δ beside it: the search could not have accepted an improvement smaller
@@ -437,7 +493,7 @@ export function LabReport() {
           </p>
         ) : (
           <>
-            <div className={s.scroll}>
+            <ScrollRegion label="Cross-play cells against foreign bots">
               <table className={s.table}>
                 <caption>Cross-play cells · shared seed list published before the match</caption>
                 <thead>
@@ -467,7 +523,7 @@ export function LabReport() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </ScrollRegion>
             {artifact.crossplay.map((row) => (
               <p key={`${row.us}-${row.them}-note`} className={s.figNote}>
                 {row.note}

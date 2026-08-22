@@ -16,7 +16,7 @@
  */
 
 import { useLocation } from 'react-router-dom'
-import { Eyebrow, Hairline, Section, SectionHead } from '../components/index.ts'
+import { Eyebrow, Hairline, Section, SectionHead, TextLink } from '../components/index.ts'
 import { cellIndex, scoreOf, type MatrixCell } from '../diagrams/index.ts'
 import { caseFromSearch, styleLabel, type LabArtifact } from '../lab/artifact.ts'
 import { count, interval, qValue, rate, rate3 } from '../lab/format.ts'
@@ -24,6 +24,7 @@ import { labModel } from '../lab/model.ts'
 import { shortHash } from '../lab/rules.ts'
 import { LabShell, withCase } from '../lab/ui/LabShell.tsx'
 import { ArtifactBroken, RulesMismatch } from '../lab/ui/Refusal.tsx'
+import { ScrollRegion } from '../lab/ui/ScrollRegion.tsx'
 import { RuleStamp, SyntheticNotice, Us54Facts } from '../lab/ui/RuleStamp.tsx'
 import { VerdictStrip } from '../lab/ui/Verdict.tsx'
 import s from '../lab/ui/lab.module.css'
@@ -66,7 +67,9 @@ const anchorFor = (cell: MatrixCell): string => `cell-${cell.a}-${cell.b}`
 
 function DiagnosticTable({ artifact, cell }: { artifact: LabArtifact; cell: MatrixCell }) {
   return (
-    <div className={s.scroll}>
+    <ScrollRegion
+      label={`§4.2 diagnostics — ${styleLabel(artifact, cell.a)} against ${styleLabel(artifact, cell.b)}`}
+    >
       <table className={s.table}>
         <caption>
           §4.2 diagnostics, both sides · {count(cell.pairs)} duplicate pairs · {count(cell.games)}{' '}
@@ -111,7 +114,7 @@ function DiagnosticTable({ artifact, cell }: { artifact: LabArtifact; cell: Matr
           </tr>
         </tbody>
       </table>
-    </div>
+    </ScrollRegion>
   )
 }
 
@@ -137,6 +140,7 @@ export function LabMatrix() {
   return (
     <LabShell
       current={withCase('/lab/matrix', which)}
+      docTitle="Full matrix"
       which={which}
       ground="dots"
       stamp={`us54 · rulesHash ${shortHash(artifact.meta.rulesHash)}`}
@@ -164,7 +168,7 @@ export function LabMatrix() {
           survive correction. Follow any cell to its full record. The table scrolls inside its own
           frame — the page never does.
         </p>
-        <div className={s.scroll}>
+        <ScrollRegion label="Payoff matrix, row style against column style">
           <table className={`${s.table} ${s.grid}`}>
             <caption>
               Payoff matrix P[row][col] · N = {artifact.styles.length} · {count(artifact.meta.gamesTotal)}{' '}
@@ -219,7 +223,7 @@ export function LabMatrix() {
               ))}
             </tbody>
           </table>
-        </div>
+        </ScrollRegion>
       </Section>
 
       {/* ---- every cell, one row each ---------------------------------------------------- */}
@@ -231,7 +235,7 @@ export function LabMatrix() {
           One row per stored orientation; the mirror is the complement by construction. Sorted by
           score rate, descending.
         </p>
-        <div className={s.scroll}>
+        <ScrollRegion label="Every stored cell: score rate, interval, sample size, q-value">
           <table className={s.table}>
             <caption>Cells · score rate, interval, sample size, q-value</caption>
             <thead>
@@ -273,7 +277,7 @@ export function LabMatrix() {
               ))}
             </tbody>
           </table>
-        </div>
+        </ScrollRegion>
       </Section>
 
       {/* ---- the full diagnostic table, per cell, both sides ------------------------------ */}
@@ -312,7 +316,18 @@ export function LabMatrix() {
           matchup — and criterion 2 is decided on the lower bound of that cell&rsquo;s interval,
           not on the point estimate.
         </p>
-        <div className={s.scroll}>
+        {/* STYLES.md §6: both caveats must be stated wherever the ranking is published, and this
+            table is a ranking. Stated in full on the report; named here, with the pointer. */}
+        <p className={s.figNote} style={{ marginBottom: 20 }}>
+          Two measured caveats qualify every row of this table, and they are stated in full on{' '}
+          <TextLink href={`${withCase('/lab', which)}#roster`}>the report</TextLink>. In short: the
+          declare-threshold axis the aggressive-to-passive labels advertise is
+          inert across the range this roster spans, so the styles differ along other knobs than the
+          ones they are named for; and the Hoarder is measured paying hoarding&rsquo;s cost without
+          the contained-book turn-pass that is its whole thesis, which no style in the roster
+          <em> this run measured</em> used.
+        </p>
+        <ScrollRegion label="Rankings, recomputed from the matrix on load">
           <table className={s.table}>
             <caption>Rankings · recomputed from the matrix on load</caption>
             <thead>
@@ -347,7 +362,7 @@ export function LabMatrix() {
               })}
             </tbody>
           </table>
-        </div>
+        </ScrollRegion>
 
         <Hairline variant="soft" />
         <Eyebrow tone="muted" track="head" as="h2">
@@ -359,7 +374,7 @@ export function LabMatrix() {
             {rate3(derived.cyclicEnergy)} against a threshold of {rate3(derived.cyclicThreshold)}.
           </p>
         ) : (
-          <div className={s.scroll}>
+          <ScrollRegion label="Three-cycles over significant edges">
             <table className={s.table}>
               <caption>
                 3-cycles · every edge significant after BH · widest minimum edge first
@@ -382,7 +397,7 @@ export function LabMatrix() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </ScrollRegion>
         )}
         <p className={s.figNote}>
           Cyclic energy {rate3(derived.cyclicEnergy)}, threshold {rate3(derived.cyclicThreshold)}.

@@ -38,7 +38,7 @@ export interface RefusalProps {
 
 function RefusalPage({ which, current, title, sub, rows, children }: RefusalProps) {
   return (
-    <LabShell current={current} which={which} stamp="Rule set us54 · refused">
+    <LabShell current={current} docTitle="Refused" which={which} stamp="Rule set us54 · refused">
       <Section noRule badge="Refused">
         <SectionHead level="h1" lines={title} sub={sub} />
         <div className={s.refuse}>

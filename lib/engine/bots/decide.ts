@@ -38,6 +38,15 @@
  * `decideInner`. `pagat48` never opens a window and `allBooks(defaultConfig)` /
  * `bookCards(b, defaultConfig)` are the same values `ALL_BOOKS` / `bookCards(b)` always were,
  * so the 48-card tiers are bit-for-bit the policies they were before the variant existed.
+ *
+ * ## The contained-book turn-pass
+ *
+ * One ask-time option lives outside this file: [contained.ts](contained.ts), the CONTAINMENT.md
+ * turn-pass. It is offered on the `us54` ask path only (`decideUs54Ask`), after the ordinary ask
+ * has been chosen and only where it beats it on that file's derivation, and it is refused
+ * outright at `containedPass: 0` — which every shipped preset carries — and under `pagat48`,
+ * whose row 15 voids a wrong declare instead of gifting it and so does not make a contained book
+ * absorbing. Every 48-card game, at every style, is therefore bit-for-bit unchanged by it.
  */
 import type { BookId, Card, GameAction, Seat } from '../types.ts'
 import { allBooks, bookCards, cardBook, isCard, seatTeam, teamSeats } from '../cards.ts'
@@ -52,6 +61,7 @@ import {
   refinedHitProbability,
   unaskableBooks,
 } from './knowledge.ts'
+import { planContainedPass } from './contained.ts'
 import { POLICY_CONSTANTS, resolvePolicy } from './style.ts'
 import type { BotPolicy, PolicySpec, SkillParams, StyleParams } from './style.ts'
 import type { Knowledge, KnowledgeOptions, RankedAsk, SeatView } from './types.ts'
@@ -886,6 +896,13 @@ function decideWithPlanner(view: SeatView, pol: BotPolicy): GameAction {
   }
 
   // 7. Best-ranked ask, re-scored and tie-broken per the style (see pickAsk).
+  //
+  //    The CONTAINMENT.md turn-pass is deliberately NOT offered here. This function is the
+  //    `ownTurn` flow, i.e. `pagat48` (its other caller, `endgame`, is unreachable under
+  //    `us54` — RULES_US54.md §4), and CONTAINMENT.md C1–C6 are measured under `us54` alone.
+  //    `planContainedPass` refuses the 48-card rule set for the reason stated there: row 15
+  //    voids a wrong declare instead of gifting it, so an opponent CAN take a contained book
+  //    off the board and the licence is not the free, absorbing asset C2 measures.
   const pick = pickAsk(view, k, ranked, pol)
   return { type: 'ask', seat, target: pick.target, card: pick.card }
 }
@@ -1011,6 +1028,13 @@ function decideUs54Ask(view: SeatView, pol: BotPolicy, rng: Rng): GameAction {
   const ranked = rankAsksWith(view, k, style)
   if (ranked.length === 0) return { type: 'ask', seat, target: asks[0].target, card: asks[0].card }
   const pick = pickAsk(view, k, ranked, pol)
+  // The CONTAINMENT.md turn-pass, considered against the ask the style would otherwise play.
+  // This is the branch that matters under `us54`: the window is closed here, so a declare is
+  // illegal (`NO_DECLARE_WINDOW`) and the seat's only move is an ask — which is precisely the
+  // move a contained book converts from "spend a turn badly" into "hand the turn to a chosen
+  // opponent for nothing". Off at `containedPass: 0`.
+  const pass = planContainedPass(view, k, style, skill, pick)
+  if (pass !== null) return { type: 'ask', seat, target: pass.target, card: pass.card }
   return { type: 'ask', seat, target: pick.target, card: pick.card }
 }
 

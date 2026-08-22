@@ -154,6 +154,25 @@ export interface StyleParams extends AskWeights {
   hoardBooks: number
   /** 0 = off; refuse speculative declares that drop this seat's hand below N cards. */
   minHandSize: number
+
+  // --- the contained-book turn-pass (CONTAINMENT.md) -------------------------
+  /**
+   * Appetite for the guaranteed-miss ask into a team-contained unresolved book — the repeatable,
+   * targetable turn-pass CONTAINMENT.md C3–C5 measures and C6 destroys.
+   *
+   * **0 = off**, which is what every shipped preset carries, so the three tiers (and therefore
+   * every `pagat48` game they play) are bit-for-bit unchanged. **1 = act at the derived
+   * break-even** — the move is taken exactly when it beats the best ordinary ask on the
+   * cards-per-turn arithmetic in [contained.ts](contained.ts) `valueContainedPass`, and never
+   * merely because it is legal. Above 1 the style credits the licence with more than one use
+   * before the book is banked, which is the only thing the number means: it multiplies the
+   * *aiming gain*, not the threshold, so a style cannot buy itself a cheaper ask with it.
+   *
+   * Deliberately a single scalar. The *geometry* of the trigger — the hit-rate estimate, the
+   * hand-size proxy for a conceded turn, the §1.2 information price — is shared mechanism and is
+   * derived from public data at every call, never per style (STYLES.md §3.1).
+   */
+  containedPass: number
 }
 
 /**
@@ -305,6 +324,9 @@ const BASELINE: StyleParams = {
   passTarget: 'most',
   hoardBooks: 0,
   minHandSize: 0,
+  // The shipped policy has never played the CONTAINMENT.md turn-pass, and the three tiers must
+  // keep playing exactly the games they played before it existed — under both rule sets.
+  containedPass: 0,
 }
 
 /**
@@ -429,5 +451,8 @@ export function validateStyle(style: StyleParams): string[] {
   }
   if (style.declareMaxUncertain < 0) bad.push(`declareMaxUncertain ${style.declareMaxUncertain} < 0`)
   if (style.leakThreshold < 0) bad.push(`leakThreshold ${style.leakThreshold} < 0`)
+  // An appetite is a count of expected uses of the licence (CONTAINMENT.md C5), so it is
+  // non-negative; a negative value would invert the derived comparison rather than express taste.
+  if (!(style.containedPass >= 0)) bad.push(`containedPass ${style.containedPass} < 0`)
   return bad
 }

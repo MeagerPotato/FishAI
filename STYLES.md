@@ -99,6 +99,9 @@ interface StyleParams {
   // --- hoarding ---
   hoardBooks: number        // keep >=1 card in N sets before declaring
   minHandSize: number       // refuse declares that drop own hand below N
+
+  // --- the contained-book turn-pass (CONTAINMENT.md; §6.3) ---
+  containedPass: number     // 0 = off; appetite = expected uses of the licence before banking
 }
 ```
 
@@ -124,14 +127,22 @@ aggressive bot was written worse."
 Nine is deliberate: it is exactly the diagram-design node budget for the counter-graph
 ([SITE_SPEC.md §3.2](SITE_SPEC.md)), so the headline diagram fits without splitting.
 
-| # | Style | Family | Thesis | Defining settings |
+> **The `declareThreshold` numbers below are 48-card *appetites*, not the values the roster
+> ships.** Each is mapped through `t_us54 = (1 + t_pagat48)/2` before it reaches
+> [roster.ts](lib/engine/bots/roster.ts), which records the mapping in full — Blitz `0.70 → 0.85`,
+> Punter `0.55 → 0.775`, Hoarder `0.95 → 0.975`. Read as shipped values these would contradict
+> [§6.1](#61-the-declare-threshold-axis-is-inert-across-the-rosters-range), which reports that every
+> style sits at 0.775 or above and that the axis is therefore inert; read as appetites they are
+> exactly what §6.1 measured.
+
+| # | Style | Family | Thesis | Defining settings (§3 appetites — see the note above) |
 |---|---|---|---|---|
-| 1 | **Balanced** | control | The tuned `us54` baseline every other style is read against | baseline, `clinchAggression 0.5` |
+| 1 | **Balanced** | control | The tuned `us54` baseline every other style is read against | baseline, `clinchAggression 0.5`, `containedPass 1` (the roster default — see §6.3.3) |
 | 2 | **Blitz** | aggressive | Tempo and sets now; information is cheap | `wHit 90, wProgress 30, declareThreshold 0.70, declareEagerness 0.9, leakEpsilon 0, signalling false, missTarget 'most'` |
 | 3 | **Punter** | aggressive | Chase the completing card; accept the gift risk | `gambleBonus +25, minHitP 0, declareThreshold 0.55, declareMaxUncertain 2` |
 | 4 | **Banker** | conservative | Never gift a set; bank only certainties | `declareOnlyWhenCertain, minHitP 0.25, declareEagerness 0.2, missTarget 'fewest'` |
 | 5 | **Turtle** | passive | Minimum risk; declare only sets wholly in hand | `declareOnlyOwnHand, minHitP 0.4, signalling false, foreignDeclare false` |
-| 6 | **Hoarder** | optionality | Keep ask-licences, stay alive, delay | `hoardBooks 3, minHandSize 2, declareThreshold 0.95, declareEagerness 0.1` |
+| 6 | **Hoarder** | optionality | Keep ask-licences, stay alive, delay | `hoardBooks 3, minHandSize 2, declareThreshold 0.95, declareEagerness 0.1, containedPass 1.33` |
 | 7 | **Scout** | information | Deduce first, collect later | `wNarrow 40, wHit 55, declareOnlyWhenCertain` |
 | 8 | **Ghost** | information | Deny opponents the read | `leakEpsilon 6, leakThreshold 3, signalling false` |
 | 9 | **Archivist** | information | **Track sets you hold nothing in, and declare them for your teammates** | `foreignDeclare true, foreignDeclareThreshold 0.90, wNarrow 30, declareEagerness 0.7` |
@@ -318,8 +329,12 @@ the §4.3 health block, not in the style comparison.
 
 ## 6. Measured caveats on the roster **[measured]**
 
-Two results that qualify the headline finding. Both were found by measurement after the
-full-precision matrix ran, and both must be stated wherever the ranking is published.
+Four results that qualify the headline finding, all found by measurement after the first
+full-precision matrix ran, and all of which must be stated wherever the ranking is published:
+§6.1 an inert axis, §6.2 a prediction about the Hoarder **that measurement then refuted**, §6.3 the
+contained-book turn-pass as an implemented policy option, and §6.4 the second full-precision
+matrix — **matrix v2** — which re-runs the whole 36-cell grid with that option live and finds the
+verdict, the ranking and the transitivity all unchanged.
 
 ### 6.1 The declare-threshold axis is inert across the roster's range
 
@@ -353,16 +368,426 @@ that does not fire. Say so, or relabel the roster around the knobs that do.
 This also means §5's `(1 + q)/2` derivation, while arithmetically right, is currently unfalsifiable
 on this engine: every value it can produce in the plausible range yields identical play.
 
-### 6.2 The Hoarder is measured without the benefit it exists to buy
+### 6.2 The Hoarder was measured without the benefit it exists to buy — and now it has been measured with it
 
-§3.1 now reports the Hoarder as "real, purchasable, and priced above its worth." That verdict is
-**premature**, and [CONTAINMENT.md](CONTAINMENT.md) is why.
+**This section used to end in a prediction. It now ends in a measurement, and the prediction was
+wrong.** The original caveat is kept above the result so the two can be read against each other.
+
+#### 6.2.1 The prediction, as it stood
+
+§3.1 reports the Hoarder as "real, purchasable, and priced above its worth." That verdict was
+called **premature**, and [CONTAINMENT.md](CONTAINMENT.md) was why.
 
 The measured value of retaining a card in a team-contained book is a repeatable, targetable
-turn-pass that claiming destroys (CONTAINMENT.md C3–C6). **No style in the roster uses it.** The
-Hoarder therefore pays hoarding's full cost — delayed banking, `declareLatency` 22.90 → 31.02,
-`raceLosses` 0.046 → 0.091 — while collecting none of its benefit.
+turn-pass that claiming destroys (CONTAINMENT.md C3–C6). *No style in the roster used it.* The
+Hoarder therefore paid hoarding's full cost — delayed banking, `declareLatency` 22.90 → 31.02,
+`raceLosses` 0.046 → 0.091 — while collecting none of its benefit. Its finish was called a valid
+measurement of *this implementation*, not a verdict on the strategy: **the cost of hoarding is
+measured, the benefit is not implemented.**
 
-Its 7th-of-9 finish is a valid measurement of *this implementation*, not a verdict on the strategy.
-Until the known-miss turn-pass is a policy mechanism, the honest statement is: **the cost of
-hoarding is measured, the benefit is not implemented.**
+#### 6.2.2 The measurement that replaces it
+
+The turn-pass is now a policy option (§6.3), the Hoarder carries the roster's only above-break-even
+appetite, and the **full 36-cell × 4,300-pair matrix has been re-run with it on** — same seed set,
+same seat rotation, same precision, so every deal is played by both engines and the two runs differ
+only by the policy change.
+
+| | matrix **v1** (`819eebb`, before) | matrix **v2** (`1667a1d`, after) | paired Δ over the same 4,300 deals |
+|---|---:|---:|---:|
+| Hoarder `meanScore` | 0.4904 | **0.4885** | **−0.0018 ± 0.0014** (t = −1.35) |
+| Hoarder rank | **6th of 9** | **6th of 9** | no movement |
+| Hoarder maximin | 0.4202 (vs Punter) | 0.4205 (vs Punter) | +0.0003 |
+| `E(hoarder)` (BOT_LAB §5.7) | 0.0413 | 0.0563 | best response changed to `hoardBooks=0 minHandSize=0` |
+
+**The prediction did not hold.** Giving the Hoarder the benefit did not move it: the point estimate
+went *down*, by about a third of one standard error of the matrix's own cells and 1.35 SE of the
+paired difference — indistinguishable from zero, and certainly not the rise §6.2 anticipated. Not
+one of its eight cells moved significantly (largest |t| 1.80, `blitz-vs-hoarder`, and that one moves
+*against* it); its one marginal cell, `hoarder-vs-archivist`, fell out of significance under
+Benjamini–Hochberg (q 0.036 → 0.118), which is the whole of the matrix's 34 → 33 significant-cell
+change.
+
+The sharpest form of the result is the exploitability search, which was free to pick any single
+knob: the best response to the Hoarder-with-the-benefit is **`hoardBooks=0 minHandSize=0`** —
+*stop hoarding* — worth `0.5563 ± 0.0124`. The counter to the style is still to not be it.
+
+**So this is a result about the strategy, not about the implementation.** The benefit CONTAINMENT.md
+identified is real, it is reachable (the Hoarder holds a contained book at 14.95% of its ask
+decisions against Balanced's 3.89%), it fires, and it is worth nothing at this roster's level of
+play. §3.1's verdict — *optionality is real, purchasable, and priced above its worth under `us54`*
+— stands, and it no longer has an unimplemented benefit standing behind it as an excuse.
+
+*One correction while replacing the prediction:* this section previously said "7th of 9". That is
+§3.1.1's **200-pair pilot** figure (`meanScore 0.4738`), not the full-precision matrix's. In both
+full-precision runs the Hoarder finishes **6th of 9**, and it is the 6th-place finish that v2
+leaves untouched.
+
+### 6.3 The contained-book turn-pass, implemented and measured **[measured]**
+
+§6.2's gap is closed. [CONTAINMENT.md](CONTAINMENT.md) C3–C5 measure a repeatable, targetable
+turn-pass that no style used; it is now a policy option
+([lib/engine/bots/contained.ts](lib/engine/bots/contained.ts)), the Hoarder is the style that
+values it most, and this section reports what it does. **The result is negative**, and it is
+reported as a negative result rather than dressed up: the mechanism fires, it fires for the
+reasons the derivation gives, and it does not win games.
+
+#### 6.3.1 The move
+
+A **contained** book, for the policy, is an unresolved set of which the seat holds at least one
+card (row 6 — the licence), does *not* hold at least one card (row 7 — something legal to name),
+and **every** card of which is certainly on the seat's own team. That last predicate is weaker
+than CONTAINMENT.md's measured position, which pins all six cards to named seats, and the
+weakening is the point: a *pinned* contained book is one `certainClaim` has already banked, so a
+recogniser that required pinning would fire only for the two styles that refuse a certain
+declare. Under the weaker predicate the ask still cannot hit — no opponent holds any card of the
+set — and every style can reach the state.
+
+**The card is reused, never cycled** (CONTAINMENT.md §1.2). The policy prefers a card of the book
+whose absence from this hand is *already public*; failing that it takes the canonical-first card
+it does not hold, which — because a contained book's cards can never move — is fixed for the rest
+of the game, so every later use finds that same card already published. Measured, **97.6% of the
+Turtle's uses and 94.8% of the Hoarder's cost no information at all.**
+
+**The target is `missTarget`**, the knob §2 already carried for exactly this question.
+
+#### 6.3.2 The trigger, derived
+
+Write `p*` for the hit probability of the ask the style would otherwise play, `t_o` for the
+opponent that ask concedes the turn to on a miss, and `t_c` for the opponent `missTarget` picks.
+Then
+
+```
+value(ordinary) = p* · V_hit + (1 − p*) · V_miss(t_o)
+value(pass)     =                        V_miss(t_c)   − infoCost
+```
+
+so the pass wins iff **`p* < (a · gain − infoCost) / tempo`**, with every term in *cards*:
+
+| term | value | where it comes from |
+|---|---|---|
+| `E` | `hits / max(1, misses)` over the public log | row 9 keeps the turn on a hit and row 10 ends it on a miss, so a turn is a geometric run of hits and its expected length is `h/(1−h)` — on counts, exactly hits over misses |
+| `cost(t)` | `E · n_t / n̄` | a conceded turn is worth more to a seat holding more ask-licences (row 6); hand size is the public part of that, and is what `missTarget` already ranks on |
+| `gain` | `E · (n_o − n_c) / n̄` | what aiming the concession buys |
+| `tempo` | `1 + E · n_o / n̄` | the swing between hitting and missing: one card taken, plus the turn *not* conceded |
+| `infoCost` | `0` on a reuse, else `1/U` | CONTAINMENT.md §1.2, priced at the only channel C1 and C2 leave open — see §6.3.5 |
+| `a` | the style's `containedPass` | the appetite; see §6.3.3 |
+
+`n̄` is the mean live hand size and `U` the number of live cards whose holder is not yet publicly
+certain. Every input is public (row 17) and none is a tuned constant: an engine, a roster or a
+rule set that hits more often prices a conceded turn higher, automatically. `p*` is the seat's own
+best estimate — the constraint-refined probability where the skill has it, not the slot prior —
+so the ask being displaced is never undervalued. Two consequences fall straight out of the
+algebra, and they are the reason this is not *"fire whenever legal"*:
+
+- **`gain ≤ 0` whenever the ordinary ask already concedes where the style wants it**, and the
+  move is then refused however contained the book is. Measured, that is most of the time: the
+  licence exists at 0.4–54% of ask decisions depending on style, and the move is taken at **3.8%
+  to 16.0% of those**.
+- **A certain hit is never displaced.** It is riskless material *and* keeps the turn (row 9); the
+  threshold is clamped below 1 and the check is explicit.
+
+Blitz needs no exception written for it: §3 gives it `missTarget: 'most'`, so the ordinary ask
+already concedes to the largest hand, `gain ≤ 0`, and the mechanism is off for it at the same
+appetite every other style carries. `'random'` is likewise off — a style that expresses no aim
+buys nothing by aiming.
+
+#### 6.3.3 The appetite is one number, and eight of nine styles share it
+
+`containedPass` is an appetite in the same sense `hoardBooks` is: **the expected number of uses
+the licence gets before the book is banked.** The single-move comparison above prices one use, so
+a style that banks at its next opportunity takes **1**. The Hoarder takes **1.33**, read off this
+repo's own measurement of how much longer it holds a set — §3.1.1's `declareLatency` 31.02
+against Balanced's 23.39. It is the highest number in the roster and the only one above the
+break-even, because it is the only style whose delay has actually been measured.
+
+Uniformity is deliberate. Which styles *reach* a contained book, and whether aiming is worth
+anything, are already decided by knobs this roster had before — `hoardBooks`/`minHandSize` and
+`declareOnlyOwnHand` govern how long a book stays unclaimed, `missTarget` governs the aim.
+Handing each style its own appetite would have hidden that behind nine tuned constants.
+
+The Turtle also delays (`declareOnlyOwnHand` means it never banks a set split across teammates)
+but that delay has never been measured here, so its appetite stays at the conservative 1. It
+still ends up the heaviest user of the mechanism — because it *reaches* the state far more often,
+not because it prices it higher, which is exactly the separation the uniform appetite preserves.
+
+**Honest check on the derivation.** Measured, uses per contained book run Turtle 3.40, Hoarder
+2.64, Banker 2.56, Balanced 2.23, Punter 1.63. The *ordering* is what the appetite argument
+predicts; the Hoarder-to-Balanced ratio is **1.18**, not the 1.33 the `declareLatency` ratio
+implied. So the number is right in sign and roughly right in size, and it is not exactly the
+quantity it was read off. It has deliberately **not** been re-derived from 1.18, because fitting
+an appetite to the behaviour it produces is tuning against the outcome.
+
+#### 6.3.4 How often it fires, and how far it moves the policy
+
+100 mirror `us54` games per style. At *every* decision point both vectors — identical but for
+`containedPass` — are handed the same `SeatView` and the same seed and their two `GameAction`s
+compared, which is §3.1.1's instrument. `opp` counts ask decisions at which a contained book was
+available at all; `fire` counts decisions at which the valuation actually returned a plan.
+
+| style | appetite | aim | ask decisions | `opp` | `opp%` | `fire` | `fire`/`opp` | divergent decisions | `div%` |
+|---|---:|---|---:|---:|---:|---:|---:|---:|---:|
+| Balanced | 1 | fewest | 9,741 | 379 | 3.89% | 29 | 7.7% | 29 | 0.0414% |
+| Blitz | 1 | **most** | 9,345 | 472 | 5.05% | **0** | 0.0% | **0** | **0.0000%** |
+| Punter | 1 | fewest | 9,507 | 347 | 3.65% | 13 | 3.8% | 13 | 0.0190% |
+| Banker | 1 | fewest | 9,818 | 495 | 5.04% | 69 | 13.9% | 69 | 0.0981% |
+| **Turtle** | 1 | fewest | 17,285 | **9,310** | **53.86%** | **679** | 7.3% | **679** | **0.5575%** |
+| **Hoarder** | **1.33** | fewest | 11,418 | 1,707 | **14.95%** | 211 | **12.4%** | 211 | 0.2580% |
+| Scout | 1 | fewest | 11,292 | 43 | 0.38% | 0 | 0.0% | 0 | 0.0000% |
+| Ghost | 1 | fewest | 9,996 | 131 | 1.31% | 21 | 16.0% | 21 | 0.0293% |
+| Archivist | 1 | fewest | 10,383 | 105 | 1.01% | 5 | 4.8% | 5 | 0.0067% |
+
+Read three ways:
+
+1. **The opportunity is a property of the declare policy, not of the ask policy.** A contained
+   book exists at 54% of the Turtle's ask decisions and 0.38% of the Scout's. `declareOnlyOwnHand`
+   means the Turtle never banks a set split across its teammates, so it accumulates them; the
+   Scout's `wNarrow 40` pins holders early, and a pinned contained set goes straight through
+   `certainClaim`. **The Hoarder sits second at 14.95% — nearly four times Balanced's 3.89% —
+   which is precisely the benefit §6.2 said it was paying for and not collecting.**
+2. **It is mostly a refusal.** Even where the licence exists, it is spent 3.8–16% of the time.
+   Every one of those refusals is the `gain ≤ 0` arm: the ordinary ask was already conceding the
+   turn where the style wanted it, so there was nothing to buy.
+3. **Divergence is small.** The largest mover is the Turtle at 0.56% of all decisions and the
+   Hoarder at 0.26%; six of the nine move less than 0.1%, and three do not move at all. In every
+   style `fire` equals the divergence exactly — the mechanism never once chose the move the
+   ordinary policy was already going to play, which is what makes these columns interchangeable.
+
+#### 6.3.5 Develin's second framing, kept separate
+
+CONTAINMENT.md §2.1 records that Develin frames the same ask as **signalling** rather than turn
+control. Both are modelled, and they are **not added together**:
+
+- **Turn control** is the whole of §6.3.2, and it is what decides. Every term in the comparison is
+  a card of tempo or of material.
+- **Signalling** enters at exactly one place, `infoCost`. The published fact is *"the asker lacks
+  card X of book B"*. For a contained book the opponents cannot use it — C1 says they can never
+  ask into B, C2 says declaring B hands it back — so the only surviving channel is count
+  exhaustion, priced at `1/U` cards. The same publication reaches the *teammates*, who **can**
+  convert it: they may declare B, which C2 denies the opponents. A `signalling` style therefore
+  books the fact as delivered rather than spent, and pays 0.
+
+**Which is doing the work: turn control, entirely.** `infoCost` is bounded by `1/U`, under 0.05
+cards in these positions against a `tempo` above 1, and it is charged only on a **first** use —
+2.4% of the Turtle's uses and 5.2% of the Hoarder's. It never flipped a decision. It is in the
+model because §1.2 says the move is not information-free and the honest thing is to price it, not
+because it earns anything.
+
+**The convention line, which CONTAINMENT.md §2.1 says not to blur.** Develin records that
+prearranged conventions are forbidden in this tradition. Nothing here is one: **no partner model
+was added anywhere.** A teammate's `buildKnowledge` after a turn-pass is bit-for-bit the knowledge
+it builds after any other miss on the same card by the same seat — the row-17 public facts and
+nothing else — and [tests/bots/contained.test.ts](tests/bots/contained.test.ts) asserts that
+equality directly. The inference layer does not know the ask was a turn-pass, and must not be
+taught to.
+
+#### 6.3.6 Does it win? No.
+
+The style **with** `containedPass` against the identical style with it forced to 0, on 1,200
+duplicate-deal pairs each — both orientations of every seed, shared seat rotation
+(BOT_LAB.md §5.1/§5.2). The unit of analysis is the pair. `0.5` is no effect; `changed` counts
+games whose result or length differed from the same deal played by two copies of the *without*
+vector, i.e. games the mechanism actually touched.
+
+| style | `containedPass` | pairs (games) | score of the WITH vector | SE | games the mechanism changed |
+|---|---:|---:|---:|---:|---:|
+| Balanced | 1 | 1,200 (2,400) | 0.5046 | 0.0034 | 239 |
+| Blitz | 1 | 1,200 (2,400) | **0.5000** | 0.0000 | **0** |
+| Punter | 1 | 1,200 (2,400) | 0.4971 | 0.0029 | 142 |
+| Banker | 1 | 1,200 (2,400) | 0.5021 | 0.0035 | 281 |
+| **Turtle** | 1 | 1,200 (2,400) | 0.5008 | 0.0065 | 1,268 |
+| **Hoarder** | **1.33** | 1,200 (2,400) | **0.4938** | 0.0054 | 915 |
+| Scout | 1 | 1,200 (2,400) | **0.5000** | 0.0000 | **0** |
+| Ghost | 1 | 1,200 (2,400) | 0.4958 | 0.0027 | 156 |
+| Archivist | 1 | 1,200 (2,400) | 0.4996 | 0.0004 | 11 |
+
+**Verdict. No style is two standard errors from 0.5.** The largest deviation in either direction is 1.6 SE
+(Ghost, `0.4958 ± 0.0027`), and the two styles §6.3.4 shows actually using the mechanism land on
+and slightly below the control — Turtle `0.5008 ± 0.0065`, **Hoarder `0.4938 ± 0.0054`**. Across
+the seven styles that fire at all the point estimates straddle 0.5 (four below, three above; mean
+0.4991). Blitz and Scout return exactly `0.5000 ± 0.0000` over 2,400 games each, which is the
+`gamesChanged: 0` column restated: for those two the vectors are the same player.
+
+**The measured value of the CONTAINMENT.md turn-pass, as a policy option under `us54` against the
+roster it was built for, is zero.**
+
+That is a finding about the move, not about the wiring. The mechanism demonstrably fires
+(§6.3.4), demonstrably fires for the derived reason (the `gain ≤ 0` refusals dominate),
+demonstrably aims where the style asked, and demonstrably reuses one card. What it does not do is
+convert any of that into sets. The reason is visible in the arithmetic: a conceded turn is worth
+`E · n_t / n̄` cards and the measured `E` is around 1, so the *entire* spread between the best and
+the worst opponent to concede to is on the order of one card — against which the ordinary ask
+being given up is worth `p*` of a card plus the turn it would have retained. The move is real,
+and it is small.
+
+**What this settles for §6.2, and what it does not.** It settles the objection: the Hoarder's
+6th-of-9 finish can no longer be attributed to an unimplemented benefit, because the benefit is
+now implemented, the Hoarder is the style that most reaches it and the only one that prices it
+above the break-even, and it is worth nothing. **§6.4 confirms it at full precision** — the whole
+36-cell matrix re-run with the mechanism live leaves the Hoarder 6th, at −0.0018 ± 0.0014 against
+its own v1 score on the same deals. It does **not** settle the strategy. The bar the
+trigger must clear is *the best ordinary ask*, and §5's tuning protocol has still never been run —
+a roster with a weaker ask policy would leave more room for a turn-pass. And CONTAINMENT.md
+§3.2's *second* mechanism, hold-contained-books-by-default, is a change to the **declare** policy
+and is untouched here; §6.3.4's first reading is the evidence that it is where the leverage would
+be, since the opportunity rate is set almost entirely by how long a style leaves books unclaimed.
+
+#### 6.3.7 `pagat48` is untouched, and that is checked rather than asserted
+
+The policy refuses the 48-card rule set outright — but **not** for the reason an earlier draft of
+this section gave. That draft claimed RULES.md row 15 voids an opponent's declare of a contained
+book, so containment was not absorbing under `pagat48`. **That is false**, and measuring it says
+so: row 15 covers *"my own team holds all six and I misassigned"*, which cannot describe a seat
+whose opponents hold all six. The rule that fires is row 14 — opponent holds at least one, opposing
+team scores — worded identically in both rule sets. Executed under `pagat48`: outcome `team0`,
+score `[1, 0]`, the book handed straight back. C1 is row 6, also identical.
+
+**So containment is absorbing under both rule sets**, C1 and C2 hold in both, and
+`tests/engine/containment.test.ts` pins that rather than leaving it as folklore.
+
+The real reason for the gate is **compatibility**: this project holds the shipped 48-card game
+byte-identical, and enabling a new policy mechanism there would change it. The mechanism is valid
+under `pagat48` and is refused anyway. If the 48-card roster is ever re-tuned as its own
+experiment, this gate is the line to revisit — no rules argument stands in the way.
+
+CONTAINMENT.md §2's tier discipline still binds C3–C6, which price the *turn-pass* itself and were
+measured under `us54` only.
+
+Verified differentially rather than by assertion: 40 seeded games per policy, every action
+serialised in order and hashed, run against this working tree and against the commit before it.
+
+| population | digests |
+|---|---|
+| `pagat48`, the three shipped tiers | **identical** |
+| `pagat48`, all nine roster styles | **identical** |
+| `us54`, the three shipped tiers | **identical** — `containedPass: 0` on every preset |
+| `us54`, the roster | changed for **seven of nine**; identical only for Blitz and Scout |
+
+The last row is the mechanism, and the two unchanged entries in it are the two the model says
+should be unchanged: Blitz aims the wrong way (`missTarget: 'most'` makes the aiming gain
+non-positive at every appetite), and the Scout almost never holds a contained book (0.38% of its
+ask decisions).
+
+*Corrected at the wider sample.* The 40-game digest above originally also read the **Archivist** as
+identical. It is not — it is merely rare. §6.3.4 measures 5 fires in 100 games, so 40 games is
+below its firing rate; re-run at 250 duplicate pairs (500 games) per style, the Archivist's digest
+differs and Blitz's and the Scout's still do not. The corrected count is 7 of 9, and it is the one
+used everywhere below.
+
+### 6.4 The full matrix, re-run with the turn-pass on — **matrix v2** **[measured]**
+
+§6.3.6 measured the mechanism against a copy of the same style. This is the other half: the whole
+36-cell × 4,300-pair matrix re-run with it live, at v1's precision (SE ≤ 0.005), on **the same seed
+set**, so v1 and v2 differ by the policy change and by nothing else. Both artifacts are committed —
+`src/lab/data/style-results.dominant.json` is **v1**, `src/lab/data/style-results.v2.json` is
+**v2**, and the site renders either at `?case=dominant` / `?case=v2`.
+
+Health gate on v2 (BOT_LAB §4.3): `illegalActions 0 · cappedGames 0 · invariantViolations 0 ·
+ties 0 · voids 0 · nonClinch 0 · distinctSeeds 4300/4300`.
+
+#### 6.4.1 Nothing that matters moved
+
+| | v1 | v2 |
+|---|---|---|
+| **verdict** | **dominant — punter** | **dominant — punter**, all four §4.4 criteria |
+| ranking (mean score) | punter, blitz, balanced, banker, ghost, hoarder, archivist, scout, turtle | **identical, position for position** |
+| punter mean score | 0.5829 | 0.5829 |
+| punter maximin | 0.5193 vs blitz | 0.5190 vs **balanced** |
+| cyclic energy | 0.0097 | **0.0112** (threshold 0.15) |
+| 3-cycles | 1 directed (hoarder > archivist > ghost), 0 significant | **the same one**, 0 significant |
+| significant cells (BH) | 34 / 36 | 33 / 36 |
+| Nash / α-Rank | punter, mass 1.0 | punter, mass 1.0 |
+
+**No cell moved significantly.** Paired per-deal differences over all 36 cells: the largest is
+`blitz-vs-ghost` at +0.0030 ± 0.0015 (t = 2.07, p ≈ 0.04), which does not survive
+Benjamini–Hochberg over 36 comparisons — one |t| above 2 in 36 is what chance produces. The largest
+*point* movements are the Turtle's cells (`turtle-vs-ghost` −0.0073 ± 0.0042,
+`balanced-vs-turtle` −0.0060 ± 0.0039), which is where the mechanism fires most.
+
+**Per-style mean score, paired over the same 4,300 deals** (`delta` is v2 − v1; every one is inside
+1.5 SE of zero):
+
+| style | v1 | v2 | Δ | SE(Δ) | t | rank v1 → v2 |
+|---|---:|---:|---:|---:|---:|---|
+| punter | 0.5829 | 0.5829 | −0.0001 | 0.0009 | −0.07 | 1 → 1 |
+| blitz | 0.5594 | 0.5602 | +0.0008 | 0.0008 | +0.94 | 2 → 2 |
+| balanced | 0.5584 | 0.5581 | −0.0003 | 0.0009 | −0.34 | 3 → 3 |
+| banker | 0.5274 | 0.5285 | +0.0011 | 0.0011 | +1.00 | 4 → 4 |
+| ghost | 0.4928 | 0.4928 | +0.0000 | 0.0010 | +0.03 | 5 → 5 |
+| **hoarder** | 0.4904 | **0.4885** | **−0.0018** | 0.0014 | −1.35 | **6 → 6** |
+| archivist | 0.4791 | 0.4802 | +0.0011 | 0.0008 | +1.47 | 7 → 7 |
+| scout | 0.4064 | 0.4063 | −0.0001 | 0.0007 | −0.12 | 8 → 8 |
+| turtle | 0.4032 | 0.4025 | −0.0007 | 0.0019 | −0.38 | 9 → 9 |
+
+Two entries deserve a note because they are *not* evidence of anything. The Scout's and Blitz's
+rows are not exactly zero even though their own policies are byte-identical: their **opponents**
+changed, so their cells did. And punter's worst matchup moving from Blitz to Balanced is a
+re-ordering of two cells that were already tied — `punter-vs-blitz` 0.5193/0.5198 and
+`punter-vs-balanced` 0.5200/0.5190 — not a new counter.
+
+#### 6.4.2 Cyclic energy rose, and it is still nothing
+
+A new mechanism is a new way for the matrix to become intransitive, so this was worth checking
+rather than assuming. `cyclicEnergy` went 0.0097 → 0.0112 — up 15% in relative terms, and 1.1% of a
+matrix whose threshold is 15%. The single directed 3-cycle is **the same one** it was in v1
+(hoarder > archivist > ghost, min edge 0.5056) and it still fails BH (q 0.31 → 0.27). Criterion 3
+passes with the same margin it always had. **The turn-pass introduced no intransitivity.**
+
+#### 6.4.3 Exploitability: re-searched for every style, and it moved
+
+`E(i)` was re-run from scratch — the cache keys on a hash of every file under `lib/engine/`, so the
+new file invalidated all nine entries rather than any being carried over.
+
+| style | policy changed? | `E(v1)` | `E(v2)` | Δ | best response v1 → v2 |
+|---|---|---:|---:|---:|---|
+| turtle | yes | 0.1162 | **0.1500** | +0.0338 | `declareOnlyOwnHand=false` (unchanged) |
+| scout | **no** | 0.1162 | 0.1112 | −0.0050 | `wHit=90 wNarrow=0 minHitP=0.45` (unchanged) |
+| ghost | yes | 0.0887 | 0.0775 | −0.0112 | `wProgress=30 gambleBonus=15` → `…gambleBonus=30` |
+| archivist | yes | 0.0850 | **0.0325** | −0.0525 | `wHit=90 wNarrow=0` → `wHit=100` |
+| hoarder | yes | 0.0413 | 0.0563 | +0.0150 | `wProgress=45` → **`hoardBooks=0 minHandSize=0`** |
+| blitz | **no** | 0.0175 | 0.0175 | 0.0000 | `leakEpsilon=3` (unchanged) |
+| punter | yes | 0.0000 | 0.0025 | +0.0025 | mirror → `missTarget=random` |
+| banker | yes | 0.0000 | 0.0012 | +0.0012 | `gambleBonus=15` (unchanged) |
+| balanced | yes | 0.0000 | 0.0000 | 0.0000 | mirror (unchanged) |
+
+**Read this cautiously.** `E(i)` is a *max over a stochastic search* whose own final measurement
+carries `se` 0.011–0.017 and which can only accept a move worth at least `detect` ≈ 0.03. Every
+delta in that table is inside those bars, and the two largest — the Turtle up and the Archivist
+down — kept and changed their accepted move respectively without changing the search's verdict on
+the style. Criterion 4 passes in both runs; `E(punter)` moved from 0.0000 to 0.0025 against a
+rivals' median of 0.0444.
+
+**The Scout's row is the useful calibration and also a trap.** Its own policy is byte-identical
+between the runs, yet `E` moved by 0.0050 — because the *best response* the search builds from its
+vector has a different ask policy, so the attacker plays the turn-pass even though the Scout never
+does. Blitz's `E` is identical to the last digit for the complementary reason: its best response
+keeps `missTarget: 'most'`, so the mechanism is off on both sides.
+
+**The Hoarder's row is the interesting one.** The best single-knob counter to it is no longer a
+scoring weight but **`hoardBooks=0 minHandSize=0` — "do not hoard"** — which is §6.2.2's finding
+arriving from the other direction.
+
+#### 6.4.4 The one axis the search cannot turn — measured separately
+
+`KNOB_LADDER` (BOT_LAB §5.7) was written before `containedPass` existed and does not carry it, so
+neither `E(v1)` nor `E(v2)` is allowed to switch the mechanism on or off. That gap is closed here
+directly: the identical SPRT protocol (`d0 0`, `d1 0.03`, α = β = 0.05, min 24 / max 400 pairs, then
+a fixed-N 400-pair eval on seeds no search decision saw), run on that one coordinate against every
+style.
+
+**No candidate was accepted, for any style, at any appetite in {0, 2, 4}.** The two worth naming:
+
+| target | candidate | search Δ | eval score | reading |
+|---|---|---:|---:|---|
+| Turtle | `containedPass=0` | +0.0125 ± 0.0120, ran to `maxPairs` | 0.5225 ± 0.0121 | inconclusive — the one candidate the SPRT could not resolve |
+| Hoarder | `containedPass=0` | **−0.0200** ± 0.0176, rejected | **0.5275** ± 0.0098 | search and eval **disagree in sign**; treat as noise, not as a result |
+
+Both point the same way as §6.3.6 (the mechanism is worth nothing or slightly less than nothing to
+the seat that plays it) and neither is strong enough to be called an exploit. The Hoarder row is
+recorded precisely because it is the one number in this whole exercise that would have looked like
+a finding if only its second half had been reported: the search seeds say the candidate is *worse*
+by 0.02 and the eval seeds say it is *better* by 0.0275, and the honest summary of two contradictory
+0.01–0.02-sized effects is that neither is real. Raising the appetite is uniformly bad and does
+resolve: at `containedPass=4` the Turtle drops to 0.4600 ± 0.0148 and the Banker to 0.4850 ± 0.0083.
+
+Blitz and the Scout return exactly 0.5000 ± 0.0000 at appetites 0 and 2 — the same self-exclusion
+§6.3.2 predicts, now confirmed at every appetite rather than at the shipped one.

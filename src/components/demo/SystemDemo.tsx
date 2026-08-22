@@ -1,4 +1,5 @@
 import { PinAct, pinHead, pinHeadAside } from '../acts/PinAct.tsx'
+import { useDocumentTitle } from '../hooks/useDocumentTitle.ts'
 import { Board } from '../data/Board.tsx'
 import type { BoardItem } from '../data/Board.tsx'
 import { StatChart } from '../data/StatChart.tsx'
@@ -143,7 +144,7 @@ const FOOTER_COLUMNS = [
   },
   {
     title: 'Source',
-    items: [{ href: 'https://github.com/MeagerPotato', label: 'Repository' }],
+    items: [{ href: 'https://github.com/MeagerPotato/FishAI', label: 'Repository' }],
   },
 ]
 
@@ -155,6 +156,7 @@ const FOOTER_COLUMNS = [
  * design system nobody checks.
  */
 export function SystemDemo() {
+  useDocumentTitle('Design specimen')
   return (
     <SheetRoot>
       <a className="fa-skip" href="#main">

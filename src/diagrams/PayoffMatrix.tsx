@@ -127,12 +127,17 @@ export function PayoffMatrix(props: PayoffInput) {
                 {cell.value}
               </Label>
               {focal && cell.sub && (
+                /* No fill-opacity here. `--fa-amber-2` is the DARKENED accent
+                   picked so accent text clears AA (5.41:1 on sheet, 4.53:1 on
+                   tile — tokens.css §3.1), and multiplying it by 0.85 spends
+                   exactly the headroom that darkening bought: measured 4.01:1
+                   at 8px, under the 4.5:1 this size needs. The step down from
+                   the value above it is carried by size and weight instead. */
                 <Label
                   x={cell.x + cell.w / 2}
                   y={cell.y + 30}
                   role="tech"
                   fill={C.accentText}
-                  opacity={0.85}
                   anchor="middle"
                 >
                   {cell.sub}

@@ -4,11 +4,18 @@ A bot that plays **Canadian Fish** (Literature), and the simulation lab built to
 
 > **Is there a quantitatively superior play style — or do styles just counter each other?**
 
-Nine bot styles, from aggressive to passive, all sharing one identical inference engine so that
-*style* is measured rather than *skill*. They play tens of thousands of duplicate-dealt games against
-each other, and the resulting payoff matrix is decomposed into its transitive and cyclic parts. If it
-is mostly transitive, there is a best style and the lab names it. If it has real cyclic energy, there
-isn't one — and the counter-structure is the finding.
+Nine bot styles, labelled from aggressive to passive, all sharing one identical inference engine so
+that *style* is measured rather than *skill*. They play tens of thousands of duplicate-dealt games
+against each other, and the resulting payoff matrix is decomposed into its transitive and cyclic
+parts. If it is mostly transitive, there is a best style and the lab names it. If it has real cyclic
+energy, there isn't one — and the counter-structure is the finding.
+
+**Read the labels with [STYLES.md §6.1](STYLES.md) next to them.** The nine are measurably distinct
+— between 0.39% and 2.89% of decisions differ from the Balanced control — but *not along the
+declare-threshold axis the aggressive-to-passive naming advertises. Across the range the roster
+actually spans, that knob changes nothing at all*, because the inference engine's confidence
+estimates turn out to be bimodal. The distinctions are real; the axis they are named after is
+inert.
 
 This is deliberately **not** framed as "Stockfish for Fish." That analogy holds for the engineering
 (a pure deterministic engine, policy separated from knowledge, SPRT-gated A/B testing) and breaks for
@@ -96,8 +103,9 @@ Documents:
 |---|---|
 | [RULES_US54.md](RULES_US54.md) | The rule set, derived consequences, test vectors |
 | [RULES.md](RULES.md) | The 48-card pagat baseline, for comparison |
-| [STYLES.md](STYLES.md) | The nine styles and the `StyleParams` vector |
+| [STYLES.md](STYLES.md) | The nine styles, the `StyleParams` vector, and §6's two measured caveats on the roster |
 | [BOT_LAB.md](BOT_LAB.md) | Experimental design — duplicate deals, metrics, Nash averaging, α-Rank, exploitability |
+| [CONTAINMENT.md](CONTAINMENT.md) | The contained-book result: why an unclaimed team-held book is a resource |
 | [SITE_SPEC.md](SITE_SPEC.md) | The results site |
 
 ## Running it
@@ -118,7 +126,9 @@ npm run dev       # the results site
 The teaching-and-play side of this project — the rules walkthrough, practice drills, and live
 multiplayer table — lives separately in
 [Canadian-Fish-Demo](https://github.com/MeagerPotato/Canadian-Fish-Demo). This repository shares
-none of that code; it carries only the engine, the bots, and the lab.
+none of that code; it carries the engine, the bots, the lab, and the static site that reports the
+lab's results. Documents here cite that repository by file and line where a rule or a number was
+sourced from it — those are citations to a public repository, not a dependency.
 
 ## License
 

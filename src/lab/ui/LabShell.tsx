@@ -8,7 +8,7 @@
  */
 
 import type { ReactNode } from 'react'
-import { SheetRoot, SiteFooter, SiteNav } from '../../components/index.ts'
+import { SheetRoot, SiteFooter, SiteNav, useDocumentTitle } from '../../components/index.ts'
 import type { ArtifactCase } from '../artifact.ts'
 import { RULES_FILE } from '../rules.ts'
 
@@ -16,6 +16,14 @@ export interface LabShellProps {
   children: ReactNode
   /** `href` of the current route, for the nav's active dot. */
   current: string
+  /**
+   * `document.title` for this route, without the ` — FishAI` suffix. Required
+   * rather than defaulted: this is a client-routed site served from one
+   * `index.html`, so without it every route carries whatever that one static
+   * title says — in the tab, in history, in a bookmark, and in the title a
+   * screen reader reads out on navigation (WCAG 2.4.2).
+   */
+  docTitle: string
   /** `dots` for the dense routes — a rule every 5px fights a table row. */
   ground?: 'ruling' | 'dots'
   /** Stamped into the footer's right-hand slot, so provenance closes every page. */
@@ -28,7 +36,15 @@ export function withCase(href: string, which: ArtifactCase): string {
   return which === 'cyclic' ? href : `${href}?case=${which}`
 }
 
-export function LabShell({ children, current, ground = 'ruling', stamp, which }: LabShellProps) {
+export function LabShell({
+  children,
+  current,
+  docTitle,
+  ground = 'ruling',
+  stamp,
+  which,
+}: LabShellProps) {
+  useDocumentTitle(docTitle)
   const links = [
     { href: withCase('/lab', which), label: 'Report' },
     { href: withCase('/lab/matrix', which), label: 'Matrix' },
@@ -61,7 +77,7 @@ export function LabShell({ children, current, ground = 'ruling', stamp, which }:
             title: 'Reference',
             items: [
               { href: '/design', label: 'Design specimen' },
-              { href: 'https://github.com/MeagerPotato', label: 'Repository' },
+              { href: 'https://github.com/MeagerPotato/FishAI', label: 'Repository' },
             ],
           },
           {
