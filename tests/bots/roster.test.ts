@@ -155,6 +155,79 @@ function certainSpot(): SeatView {
 }
 
 /**
+ * `certainSpot` with the hand widened so that the same declare becomes **affordable**: seat 0
+ * holds the same five of EIGHTS plus one card each of `LOW-D`, `HIGH-D` and `HIGH-S`.
+ *
+ * Declaring EIGHTS therefore leaves three cards spanning three distinct unresolved sets — past
+ * the Hoarder's `minHandSize 2` and exactly on its `hoardBooks 3` — so the ask-licence gate lets
+ * it through and the Hoarder banks the set like everyone else.
+ *
+ * This is the position that keeps hoarding a *preference* rather than a blanket refusal, and it
+ * is the one that separates the Hoarder from the Turtle: `declareOnlyOwnHand` refuses a set
+ * sitting on a teammate however cheap it is, while hoarding refuses only the ones that cost the
+ * hand.
+ *
+ * Two sets are resolved (1–1), so 42 cards are live and neither team is near the clinch.
+ */
+function affordableCertainSpot(): SeatView {
+  return mkView({
+    seat: 0,
+    hand: ['8C', '8D', '8H', '8S', 'XR', '2D', '9D', '9S'],
+    counts: [8, 0, 25, 9, 0, 0],
+    turn: 3,
+    books: resolvedBooks(['LOW-C'], ['LOW-H']),
+    log: [gs, ask(0, 3, 'XB', false)],
+    config: us54Config,
+    declareWindow: { option: 0, declined: 0 },
+  })
+}
+
+/**
+ * **The wholly-in-hand spot.** Seat 0 holds all six of EIGHTS and one card of `HIGH-D`, so
+ * `completeOwnBook` fires — and declaring costs six cards, leaving one.
+ *
+ * The seat is *not* the turn-holder (seat 3 is) and it still has a legal ask into `HIGH-D`, so
+ * RULES_US54.md §3.2's `MUST_DECLARE` does not apply and declining is a legal move. That is what
+ * makes this a test of the style rather than of the forced path: `minHandSize 2` is free to
+ * refuse here, and the ask-licence arithmetic says it should — row 7 means the six EIGHTS cards
+ * buy the seat no ask at all, while the one `HIGH-D` card it would be left with is its entire
+ * remaining licence.
+ */
+function ownSetSpot(): SeatView {
+  return mkView({
+    seat: 0,
+    hand: ['8C', '8D', '8H', '8S', 'XR', 'XB', '9D'],
+    counts: [7, 5, 10, 10, 5, 5],
+    turn: 3,
+    books: resolvedBooks(['LOW-C'], ['LOW-H']),
+    log: [gs],
+    config: us54Config,
+    declareWindow: { option: 0, declined: 0 },
+  })
+}
+
+/**
+ * `ownSetSpot` with the hand cut to exactly the six cards of EIGHTS.
+ *
+ * Now seat 0 **is** the turn-holder and rows 6-7 leave it no legal ask (it holds every card of
+ * the only set it holds anything of), which is RULES_US54.md §3.2's second `MUST_DECLARE` case.
+ * `decline` is illegal, so the hoard gate must not be consulted — the assertion is that the
+ * Hoarder declares anyway.
+ */
+function forcedOwnSetSpot(): SeatView {
+  return mkView({
+    seat: 0,
+    hand: ['8C', '8D', '8H', '8S', 'XR', 'XB'],
+    counts: [6, 6, 10, 10, 5, 5],
+    turn: 0,
+    books: resolvedBooks(['LOW-C'], ['LOW-H']),
+    log: [gs],
+    config: us54Config,
+    declareWindow: { option: 0, declined: 0 },
+  })
+}
+
+/**
  * **The foreign spot** (STYLES.md §1.3). Seat 0 holds **no card of EIGHTS at all** — it can
  * never ask into the set (RULES_US54.md row 6) — yet the public log pins five of the six on
  * teammate seat 2 and narrows the sixth to the two teammates:
@@ -484,6 +557,71 @@ describe('every style differs from Balanced, in the way its thesis claims', () =
     expect(key(move(v, unhoarded))).toBe('claim EIGHTS')
   })
 
+  it('Hoarder refuses a CERTAIN set that would empty its hand — the gate is not speculative-only', () => {
+    // The behaviour that makes the style measurable at all. Gating `evClaim` alone left the
+    // Hoarder byte-identical to Balanced over 67,262 real `us54` decisions, because no
+    // speculative declare in that population ever cleared even `declareThreshold 0.775` and the
+    // knobs behind it were unreachable. See STYLES.md §3.1.
+    const v = certainSpot()
+    expect(key(move(v, BALANCED))).toBe('claim EIGHTS')
+    expect(key(move(v, STYLE_ROSTER.hoarder))).toBe('decline')
+    // ...and it is the hoard knobs doing it, not `declareOnlyOwnHand`, which the Hoarder is not
+    // carrying: turn the two knobs off and the same vector banks the set.
+    const unhoarded: StyleParams = { ...STYLE_ROSTER.hoarder, hoardBooks: 0, minHandSize: 0 }
+    expect(key(move(v, unhoarded))).toBe('claim EIGHTS')
+  })
+
+  it('Hoarder still banks a certain set it can AFFORD — hoarding is a preference, not a refusal', () => {
+    // The other side of the same knob, and the line between the Hoarder and the Turtle: three
+    // cards spanning three unresolved sets survive this declare, so both gates clear.
+    const v = affordableCertainSpot()
+    expect(key(move(v, BALANCED))).toBe('claim EIGHTS')
+    expect(key(move(v, STYLE_ROSTER.hoarder))).toBe('claim EIGHTS')
+    // Turtle refuses it for its own, different reason (the set is not wholly in its own hand).
+    expect(key(move(v, STYLE_ROSTER.turtle))).toBe('decline')
+    // One card fewer and the licence count drops to 2, under `hoardBooks 3`: it refuses again.
+    const thinner: SeatView = { ...v, hand: v.hand.filter((c) => c !== '9S'), counts: [7, 0, 25, 10, 0, 0] }
+    expect(key(move(thinner, BALANCED))).toBe('claim EIGHTS')
+    expect(key(move(thinner, STYLE_ROSTER.hoarder))).toBe('decline')
+  })
+
+  it('Hoarder refuses even a set wholly in its own hand when that would spend the hand', () => {
+    // RULES_US54.md row 7 means the six EIGHTS cards buy seat 0 no ask at all, so `hoardBooks`
+    // does not count them; it is `minHandSize 2` that bites, against the single `HIGH-D` card
+    // that is the seat's whole remaining ask-licence.
+    const v = ownSetSpot()
+    expect(key(move(v, BALANCED))).toBe('claim EIGHTS')
+    expect(key(move(v, STYLE_ROSTER.hoarder))).toBe('decline')
+    const unhoarded: StyleParams = { ...STYLE_ROSTER.hoarder, minHandSize: 0, hoardBooks: 0 }
+    expect(key(move(v, unhoarded))).toBe('claim EIGHTS')
+  })
+
+  it('...but declares it when RULES_US54.md §3.2 makes declining illegal (MUST_DECLARE)', () => {
+    // The turn-holder's hand is a union of complete unresolved sets, so it has no legal ask and
+    // `decline` is illegal. No style knob may refuse here — the table would hang. This is the
+    // safety property that lets the gate reach `completeOwnBook` at all.
+    const v = forcedOwnSetSpot()
+    expect(v.turn).toBe(0)
+    for (const s of rosterStyles()) {
+      expect(key(move(v, s)), `${s.id} must declare`).toBe('claim EIGHTS')
+    }
+  })
+
+  it('hoarding never blocks a FOREIGN declare, which spends nothing', () => {
+    // Seat 0 holds no card of EIGHTS, so declaring it cannot drop the hand or cost a licence.
+    // A Hoarder with the Archivist's foreign bar therefore declares exactly as the Archivist
+    // does — proof the gate prices the spend and not the risk.
+    const v = foreignSpot({ c2: 25, c4: 1, declined: 1 })
+    expect(unaskableBooks(v)).toContain('EIGHTS')
+    const foreignHoarder: StyleParams = {
+      ...STYLE_ROSTER.hoarder,
+      foreignDeclareThreshold: STYLE_ROSTER.archivist.foreignDeclareThreshold,
+      declareThreshold: STYLE_ROSTER.archivist.declareThreshold,
+      declareEagerness: STYLE_ROSTER.archivist.declareEagerness,
+    }
+    expect(key(move(v, foreignHoarder))).toBe('claim EIGHTS')
+  })
+
   it('Scout buys the information instead of the card (wNarrow 40, wHit 55)', () => {
     // `6C` is a 14% shot whose miss would locate it outright; `TD` is a 52% shot that narrows
     // almost nothing. Balanced takes the card, Scout takes the deduction.
@@ -525,6 +663,11 @@ describe('every style differs from Balanced, in the way its thesis claims', () =
       evSpot({ c2: 24, c4: 1, declined: 1 }),
       evSpot2({ c2: 20, c4: 1, declined: 5 }),
       certainSpot(),
+      // Without this one the Hoarder and the Turtle collapse onto the same fingerprint: every
+      // other declare position above is one the Hoarder cannot afford, and refusing is also
+      // what `declareOnlyOwnHand` does. This is the position where they part.
+      affordableCertainSpot(),
+      ownSetSpot(),
       foreignSpot({ c2: 25, c4: 1, declined: 1 }),
       raceSpot({ declined: 1 }),
       askSpot([6, 15, 20, 3, 8, 2]),

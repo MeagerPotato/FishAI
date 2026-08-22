@@ -88,6 +88,29 @@ function completeOwnBook(view: SeatView): BookId | null {
   return null
 }
 
+/**
+ * The wholly-in-hand set a style is actually willing to declare.
+ *
+ * At most one can ever exist — a set is six cards and no hand in either rule set is larger than
+ * nine (RULES_US54.md row 4; RULES.md row 4) — so there is nothing to search past.
+ *
+ * `forced` is the RULES_US54.md §3.2 escape: where `decline` is illegal the hoard gate is not
+ * consulted, because a style's reluctance there would hang the table rather than express a
+ * preference. Everywhere else a Hoarder may keep the hand and decline, which is the whole point
+ * of the style — and is safe precisely because §3.2's second case (*"the turn-holder's hand is a
+ * union of complete unresolved sets"*) is exactly a position with no legal ask, which
+ * `mustDeclareNow` reports.
+ *
+ * `forced` is a thunk because on the `ownTurn` path it costs a `legalAsksFromView` (up to 3 x 54
+ * entries), and every style but the Hoarder answers `withinHoardLimits` from the knobs alone.
+ */
+function declarableOwnBook(view: SeatView, style: StyleParams, forced: () => boolean): BookId | null {
+  const b = completeOwnBook(view)
+  if (b === null) return b
+  if (withinHoardLimits(view, b, style)) return b
+  return forced() ? b : null
+}
+
 function claimAllSelf(view: SeatView, book: BookId): GameAction {
   const assignments = {} as Record<Card, Seat>
   for (const c of bookCards(book, view.config)) assignments[c] = view.seat
@@ -233,23 +256,113 @@ function foreignBookSet(view: SeatView): Set<BookId> {
 }
 
 /**
- * STYLES.md §2 hoarding, applied to SPECULATIVE declares only.
+ * STYLES.md §2 hoarding — the ask-licence gate, applied to **every declare the style is free to
+ * refuse**: the speculative one (`evClaim`), the certain one (`certainClaim`), and the
+ * wholly-in-hand one (`completeOwnBook`). Never to a *forced* declare, where RULES_US54.md §3.2
+ * makes `decline` illegal and a style's reluctance cannot be honoured without hanging the table.
  *
- * A certain set is banked regardless: RULES_US54.md §3's race means a set you can prove is a set
- * a teammate may also be able to prove, and refusing free points to protect an ask-licence is
- * not optionality, it is a giveaway. Hoarding bites exactly where the trade-off is real — on a
- * guess. Both knobs are 0 in every preset, so this returns true before touching the hand.
+ * ## Why it is no longer speculative-only
+ *
+ * It used to gate `evClaim` alone, on the argument that refusing *free points* to protect an
+ * ask-licence is a giveaway rather than optionality. Measured, that argument left the style with
+ * no behaviour at all: across 51,420 decisions of real `us54` play no speculative declare ever
+ * cleared even `declareThreshold 0.775`, so `evClaim` never returned and every knob behind it —
+ * including both hoard knobs — was unreachable. See STYLES.md §3.1.
+ *
+ * The move is also the more faithful reading of the style. The owner's description is *"holds
+ * onto a single card until the rest are revealed"*, and the card a declare actually spends is
+ * usually a card of a set the seat is **certain** of: that is the moment the licence is real and
+ * the trade-off is real. Refusing has a genuine cost (the set is not banked yet, and
+ * RULES_US54.md §3's race means a teammate may declare it *wrongly* first — row 14 then gifts
+ * it) against a genuine benefit (row 6: the seat keeps the right to ask into the sets it still
+ * holds cards of, and row 18's elimination is deferred).
+ *
+ * ## Two knobs, two different rules
+ *
+ * - **`minHandSize`** prices RULES_US54.md row 18: at 0 cards the seat can no longer ask or be
+ *   asked. That is the only hand-size discontinuity in the rule set, so the elimination boundary
+ *   is 1 and every larger N is a buffer against the fact that *hits are compulsory* (BOT_LAB.md
+ *   §2.2) — an opponent can strip a card the seat wanted to keep. `N = 2` is therefore the
+ *   smallest hand that survives one involuntary strip and still holds a licence, which is
+ *   exactly the value STYLES.md §3 pins for the Hoarder.
+ * - **`hoardBooks`** prices row 6 directly: holding >= 1 card of a set is the only licence to
+ *   ask into it. Counted over the hand that would REMAIN, and a set the seat would hold
+ *   *entirely* is not counted — row 7 forbids asking for a card you hold, so six-of-six is a
+ *   licence with no legal ask behind it. That same fact is why `completeOwnBook` costs a Hoarder
+ *   nothing in licences and is refused only when `minHandSize` bites.
+ *
+ * A declare of a set the seat holds no card of spends nothing and is never gated: it cannot drop
+ * the hand and cannot cost a licence, so vetoing it would be caution, not hoarding.
+ *
+ * Both knobs are 0 in every preset and in eight of the nine roster styles, so this returns true
+ * before touching the hand for everything except the Hoarder.
  */
 function withinHoardLimits(view: SeatView, book: BookId, style: StyleParams): boolean {
   if (style.hoardBooks <= 0 && style.minHandSize <= 0) return true
   const members = new Set<Card>(bookCards(book, view.config))
   const remaining = view.hand.filter((c) => !members.has(c))
+  // Foreign declare: the hand is untouched, so there is nothing to hoard against.
+  if (remaining.length === view.hand.length) return true
   if (style.minHandSize > 0 && remaining.length < style.minHandSize) return false
   if (style.hoardBooks > 0) {
-    const sets = new Set<BookId>(remaining.map((c) => cardBook(c)))
-    if (sets.size < style.hoardBooks) return false
+    const perBook = new Map<BookId, number>()
+    for (const c of remaining) {
+      const b = cardBook(c)
+      perBook.set(b, (perBook.get(b) ?? 0) + 1)
+    }
+    let licences = 0
+    // Row 6 grants the licence; row 7 takes every ask back when the seat holds all six.
+    for (const n of perBook.values()) if (n < 6) licences++
+    if (licences < style.hoardBooks) return false
   }
   return true
+}
+
+/**
+ * Is a declare compulsory for THIS seat right now, on the public view alone?
+ *
+ * RULES_US54.md §3.2 makes `decline` illegal (`MUST_DECLARE`) while the turn-holder has no legal
+ * ask, because the window has nothing to close into. §3.2 names two ways that happens, and both
+ * are covered here:
+ *
+ *  1. every opponent of the turn-holder is out of cards — `windowCannotClose`, computed from the
+ *     public counts, and visible to *any* option seat;
+ *  2. the turn-holder's hand is a union of complete unresolved sets — visible only to the
+ *     turn-holder itself, which is fine, because §3 offers the option to the turn-holder
+ *     **first** in every window (and re-opens from the top after every declare), so a
+ *     turn-holder that cannot ask is refused its decline before the option can ever travel.
+ *
+ * Existed implicitly before as *"`completeOwnBook` makes that seat declare"*. It has to be
+ * explicit now that a style may refuse `completeOwnBook`.
+ */
+function mustDeclareNow(view: SeatView): boolean {
+  if (windowCannotClose(view)) return true
+  return view.turn === view.seat && !viewerCouldAskIfWindowClosed(view)
+}
+
+/**
+ * Would this seat have a legal ask **if the declare window closed onto it**?
+ *
+ * Not `legalAsksFromView`, which answers "may this seat ask *right now*" and is therefore `[]`
+ * for every seat while a window is open (RULES_US54.md §3 — nobody asks inside a window). The
+ * question §3.2 actually keys `MUST_DECLARE` on is the counterfactual one, and it is exactly the
+ * engine's own `turnHolderCanAsk`, restated over the public view: row 8 needs an opponent with
+ * cards, and rows 6-7 need a set the seat holds at least one but not all of.
+ */
+function viewerCouldAskIfWindowClosed(view: SeatView): boolean {
+  if (view.phase !== 'playing') return false
+  if (view.hand.length === 0) return false
+  if (!opponentTeamSeats(view.seat).some((s) => view.counts[s] > 0)) return false
+  if (view.config.toggles.askOwnCardAllowed) return true
+  const perBook = new Map<BookId, number>()
+  for (const c of view.hand) {
+    const b = cardBook(c)
+    perBook.set(b, (perBook.get(b) ?? 0) + 1)
+  }
+  for (const [b, n] of perBook) {
+    if (n < bookCards(b, view.config).length) return true
+  }
+  return false
 }
 
 /**
@@ -363,6 +476,10 @@ function certainClaim(view: SeatView, k: Knowledge, style: StyleParams): GameAct
     if (foreign !== null && foreign.has(b)) continue
     const plan = planClaim(view, k, b)
     if (plan.uncertain.length === 0 && plan.p === 1) {
+      // `continue`, not `return null`: a style that refuses to spend its licences on THIS set
+      // has said nothing about the next one, and a certain set it can bank for free is still
+      // free. See `withinHoardLimits` for why the gate reaches a certain declare at all.
+      if (!withinHoardLimits(view, b, style)) continue
       return { type: 'claim', seat: view.seat, book: b, assignments: plan.assignments }
     }
   }
@@ -514,7 +631,10 @@ function designateAction(view: SeatView, pol: BotPolicy): GameAction {
 function decideNoPlanner(view: SeatView, pol: BotPolicy, rng: Rng): GameAction {
   const seat = view.seat
   if (view.phase === 'endgame') return guessClaim(view, rng)
-  const complete = completeOwnBook(view)
+  // No legal ask is this rule set's version of "declining is not a move": the seat has to claim
+  // something, so the hoard gate is off (see `declarableOwnBook`). Lazily, so a style without
+  // hoard knobs still reaches `claimAllSelf` on exactly the path it always took.
+  const complete = declarableOwnBook(view, pol.style, () => legalAsksFromView(view).length === 0)
   if (complete !== null) return claimAllSelf(view, complete)
   if (isDeepStalled(view)) return guessClaim(view, rng)
   const asks = legalAsksFromView(view)
@@ -715,8 +835,11 @@ function decideWithPlanner(view: SeatView, pol: BotPolicy): GameAction {
     return forcedClaim(view, k)
   }
 
-  // 1. Books fully in own hand are free certainty, at every style.
-  const complete = completeOwnBook(view)
+  // 1. Books fully in own hand are free certainty at every style but the Hoarder, for which
+  //    `minHandSize` prices the six cards it costs (see `withinHoardLimits`). Under `ownTurn`
+  //    timing the escape hatch is "no legal ask left", which is also the branch that reaches
+  //    `forcedClaim` below, so refusing here can never leave the seat without a move.
+  const complete = declarableOwnBook(view, style, () => legalAsksFromView(view).length === 0)
   if (complete !== null) return claimAllSelf(view, complete)
 
   // 2. Claim as soon as a whole book is certainly located on the team — unless the style
@@ -818,20 +941,23 @@ function decideWindow(view: SeatView, pol: BotPolicy, rng: Rng): GameAction {
   // would hand the opponents the very set they are about to win anyway.
   if (ownTeamCards(view) === 0) return decline
 
+  // The situations in which declining is no longer free, and somebody must declare on best
+  // evidence or the table never progresses: the two §3.2 `MUST_DECLARE` positions
+  // (`mustDeclareNow`), and the ordinary dead position `isDeepStalled` detects. Under RULES.md
+  // the latter is broken by a forced claim on the stalled seat's own turn; under §3 the window
+  // is where that happens, and without it a `us54` table of pure decliners would run forever —
+  // the engine's own `resolved === nBooks` fallback cannot save it, because nothing ever
+  // resolves. Computed *before* the declare branches now, because every one of them may be
+  // refused by a style and this is the flag that says refusing is not on offer.
+  const forced = isDeepStalled(view) || mustDeclareNow(view)
+
   // A set entirely in the viewer's own hand is certain and free; take it the moment it is
   // offered, at every style. Racing for it also matters more here than under `pagat48`
   // (§3, "a slower teammate can be beaten to a set"), which is why `declareEagerness` does
-  // not gate it.
-  const complete = completeOwnBook(view)
+  // not gate it. `minHandSize` does, because six cards is the largest spend a declare can
+  // make and row 18 is a real cliff — but only where declining is a legal move at all.
+  const complete = declarableOwnBook(view, style, () => forced)
   if (complete !== null) return claimAllSelf(view, complete)
-
-  // The two situations in which declining is no longer free, and somebody must declare on
-  // best evidence or the table never progresses: a window that cannot close (above), and the
-  // ordinary dead position `isDeepStalled` detects. Under RULES.md the latter is broken by a
-  // forced claim on the stalled seat's own turn; under §3 the window is where that happens,
-  // and without it a `us54` table of pure decliners would run forever — the engine's own
-  // `resolved === nBooks` fallback cannot save it, because nothing ever resolves.
-  const forced = isDeepStalled(view) || windowCannotClose(view)
 
   if (!skill.planClaims) {
     // Without a claim planner the seat declares only what it can see outright (handled above).

@@ -73,6 +73,14 @@ export interface AnalyzeInput {
   engineCommit: string
   generatedAt: string
   exploitability?: readonly ExploitabilityEntry[]
+  /**
+   * True only for a hand-built fixture. Defaults to `false`, because everything that reaches this
+   * function through the runner IS simulator output, and a default of "synthetic" would let a
+   * real result be silently stamped as a mock.
+   */
+  synthetic?: boolean
+  /** The banner the site prints beside that stamp. Defaults to empty for real output. */
+  notice?: string
   options?: AnalyzeOptions
 }
 
@@ -372,6 +380,9 @@ export function buildStyleResults(input: AnalyzeInput, analysis: Analysis, rules
       rulesHash: rulesHashHex,
       rulesFile: input.rulesFile,
       variant: run.meta.config.variant,
+      ruleSet: run.meta.config.variant,
+      synthetic: input.synthetic ?? false,
+      notice: input.notice ?? '',
       config: {
         ...run.meta.config,
         toggles: run.meta.toggles,
@@ -388,6 +399,7 @@ export function buildStyleResults(input: AnalyzeInput, analysis: Analysis, rules
         significantCells: analysis.significant.filter(Boolean).length,
         cells: analysis.cells.length,
         cyclicThreshold: opts.cyclicThreshold ?? 0.15,
+        exploitabilityMargin: opts.exploitabilityMargin ?? 0.02,
         bootstrapSamples: opts.bootstrapSamples ?? 1000,
         bootstrapSeed: opts.bootstrapSeed ?? 'lab-bootstrap-v1',
         bootstrapRan: analysis.bootstrap.size > 0,

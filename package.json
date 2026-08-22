@@ -5,7 +5,9 @@
   "description": "A bot that plays Canadian Fish (Literature), and the simulation lab that measures whether any play style is actually superior.",
   "license": "MIT",
   "type": "module",
-  "engines": { "node": ">=23.6" },
+  "engines": {
+    "node": ">=23.6"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -14,7 +16,8 @@
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint . --max-warnings 0",
     "sim": "node scripts/simulate.mjs",
-    "lab": "node scripts/style-sim.mjs"
+    "lab": "node scripts/style-sim.mjs",
+    "analyze": "node scripts/style-analyze.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",

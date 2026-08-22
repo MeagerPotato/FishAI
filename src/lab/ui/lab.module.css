@@ -1,0 +1,643 @@
+/**
+ * ============================================================================
+ * LAB PAGE CHROME
+ * ============================================================================
+ * Everything the three lab routes need that the design system does not already
+ * own: the rule-set stamp, the verdict block, the refusal screen, dense data
+ * tables, and the two pin-act step rails.
+ *
+ * Rules this file keeps, all of them from SITE_SPEC.md §2:
+ *
+ *   · No radii. Nothing here rounds a corner.
+ *   · No colour outside the --fa-* tokens, and no amber except where a page
+ *     has deliberately spent one of its three accents.
+ *   · Wide things scroll INSIDE their own container. `.scroll` is the only
+ *     element on these pages allowed a horizontal scrollbar; the page body
+ *     never gets one, at 375px or any other width.
+ *   · Micro-label voice is General Sans shrunk and tracked, never a second
+ *     family. `--fa-code` appears exactly once, on card faces and seat serials
+ *     in the replay, where columns of glyphs have to align by column.
+ * ============================================================================
+ */
+
+/* ==========================================================================
+   THE RULE-SET STAMP — SITE_SPEC.md §1.1, on every results page
+   ========================================================================== */
+
+.stamp {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1px;
+  margin: 0 0 var(--fa-sp-head);
+  background-color: var(--fa-line-2);
+  border: 1px solid var(--fa-line);
+}
+
+.stampCell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  background-color: var(--fa-sheet);
+}
+
+.stampValue {
+  font-size: var(--fa-fs-meta);
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--fa-ink);
+  overflow-wrap: anywhere;
+}
+
+.stampValue[data-numeric] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The synthetic-data warning. A hatch, not a colour: the palette has one
+   accent and it is already spent. */
+.synthetic {
+  margin: 0 0 var(--fa-sp-head);
+  padding: 12px 16px;
+  border: 1px solid var(--fa-line);
+  background-image: var(--fa-hatch);
+  background-color: var(--fa-tile);
+}
+
+.syntheticBody {
+  margin: 6px 0 0;
+  font-size: var(--fa-fs-sm);
+  line-height: 1.6;
+  color: var(--fa-ink-2);
+  max-width: 72ch;
+}
+
+/* ==========================================================================
+   THE REFUSAL SCREEN — a clear message, never a blank page
+   ========================================================================== */
+
+.refuse {
+  display: grid;
+  gap: 22px;
+  max-width: 72ch;
+}
+
+.refuseBox {
+  padding: clamp(20px, 3vw, 32px);
+  border: 1px solid var(--fa-line);
+  background-color: var(--fa-paper);
+}
+
+.refuseRow {
+  display: grid;
+  grid-template-columns: minmax(120px, 22%) 1fr;
+  gap: 10px 18px;
+  padding: 10px 0;
+  border-top: 1px solid var(--fa-line-2);
+}
+
+.refuseRow:first-of-type {
+  border-top: 0;
+}
+
+.mono {
+  font-family: var(--fa-code);
+  font-size: var(--fa-fs-meta);
+  line-height: 1.5;
+  color: var(--fa-ink);
+  overflow-wrap: anywhere;
+}
+
+.prose {
+  max-width: 72ch;
+  font-size: var(--fa-fs-body);
+  line-height: 1.7;
+  color: var(--fa-ink-2);
+}
+
+.prose code {
+  font-family: var(--fa-code);
+  font-size: 0.92em;
+}
+
+/* ==========================================================================
+   THE VERDICT
+   ========================================================================== */
+
+.verdictHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px 28px;
+}
+
+.verdictWord {
+  margin: 0;
+  font-size: var(--fa-fs-display);
+  font-weight: 500;
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+  text-transform: lowercase;
+  color: var(--fa-ink);
+}
+
+.verdictSummary {
+  margin: 18px 0 0;
+  max-width: 62ch;
+  font-size: var(--fa-fs-lead);
+  line-height: 1.6;
+  color: var(--fa-ink-2);
+}
+
+/* The four §4.4 criteria. An ordered list, because they are numbered in the
+   source and a reader has to be able to cite "(3) failed". */
+.criteria {
+  margin: clamp(26px, 3vh, 38px) 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--fa-line);
+}
+
+.criterion {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  gap: 6px 16px;
+  align-items: baseline;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--fa-line-2);
+}
+
+.criterionNo {
+  font-size: var(--fa-fs-meta);
+  font-variant-numeric: tabular-nums;
+  color: var(--fa-ink-3);
+}
+
+.criterionLabel {
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  color: var(--fa-ink);
+}
+
+.criterionDetail {
+  grid-column: 2 / -1;
+  font-size: var(--fa-fs-meta);
+  line-height: 1.6;
+  color: var(--fa-ink-2);
+  overflow-wrap: anywhere;
+}
+
+/**
+ * Pass / fail / undetermined, told apart WITHOUT colour: a filled square, a
+ * hollow square, a hatched square, plus the word itself. On a one-accent
+ * system a red/green pair would be two new hues, and the verdict is the last
+ * place to encode meaning in a channel a reader might not have.
+ */
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-badge);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--fa-ink-2);
+}
+
+.mark::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid var(--fa-ink);
+}
+
+.markPass::before {
+  background-color: var(--fa-ink);
+}
+
+.markFail::before {
+  background-color: transparent;
+}
+
+.markUnknown::before {
+  background-image: var(--fa-hatch);
+  background-color: transparent;
+}
+
+.disagree {
+  margin: 22px 0 0;
+  padding: 14px 16px;
+  border: 1px dashed var(--fa-line);
+  font-size: var(--fa-fs-sm);
+  line-height: 1.6;
+  color: var(--fa-ink-2);
+}
+
+/* ==========================================================================
+   DENSE DATA — the only elements allowed to scroll horizontally
+   ========================================================================== */
+
+.scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  border-block: 1px solid var(--fa-line-2);
+}
+
+.table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: var(--fa-fs-meta);
+  font-variant-numeric: tabular-nums;
+  color: var(--fa-ink);
+}
+
+.table caption {
+  padding: 0 0 12px;
+  text-align: left;
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-badge);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
+.table th,
+.table td {
+  padding: 8px 12px;
+  text-align: right;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--fa-line-2);
+}
+
+.table th {
+  font-weight: 500;
+  font-size: var(--fa-fs-micro);
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+  border-bottom: 1px solid var(--fa-line);
+}
+
+.table th:first-child,
+.table td:first-child {
+  text-align: left;
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--fa-sheet);
+}
+
+.table tbody tr:hover td {
+  background-color: var(--fa-paper);
+}
+
+.numeric {
+  font-variant-numeric: tabular-nums;
+}
+
+.ns {
+  color: var(--fa-ink-3);
+}
+
+/* The N x N grid. Row and column heads are sticky so a cell keeps its address
+   while the grid scrolls under them. */
+.grid {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--fa-fs-micro);
+  font-variant-numeric: tabular-nums;
+}
+
+.grid th,
+.grid td {
+  border-right: 1px solid var(--fa-line-2);
+  border-bottom: 1px solid var(--fa-line-2);
+  padding: 0;
+}
+
+.grid thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 8px 10px;
+  background-color: var(--fa-sheet);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+  white-space: nowrap;
+}
+
+.grid tbody th {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  padding: 8px 12px 8px 10px;
+  background-color: var(--fa-sheet);
+  text-align: left;
+  font-weight: 500;
+  font-size: var(--fa-fs-meta);
+  color: var(--fa-ink);
+  white-space: nowrap;
+}
+
+.cell {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  min-width: 96px;
+  padding: 7px 9px;
+  background-color: transparent;
+  border: 0;
+  text-align: right;
+  font: inherit;
+  color: var(--fa-ink);
+  cursor: pointer;
+}
+
+.cell:hover {
+  background-color: var(--fa-paper-2);
+}
+
+.cellOn {
+  background-color: var(--fa-tile);
+  box-shadow: inset 0 0 0 1.5px var(--fa-ink);
+}
+
+.cellScore {
+  font-size: var(--fa-fs-meta);
+  font-weight: 500;
+}
+
+.cellSub {
+  font-size: var(--fa-fs-micro);
+  letter-spacing: 0.02em;
+  color: var(--fa-ink-3);
+}
+
+.diag {
+  padding: 7px 9px;
+  text-align: right;
+  color: var(--fa-ink-3);
+  background-image: var(--fa-hatch);
+}
+
+/* The ink ramp for the grid — four steps, and the number is printed in every
+   cell anyway, so the ramp is redundant rather than load-bearing. */
+.lvl1 {
+  background-color: color-mix(in srgb, var(--fa-ink) 9%, transparent);
+}
+.lvl2 {
+  background-color: color-mix(in srgb, var(--fa-ink) 5%, transparent);
+}
+.lvl3 {
+  background-color: color-mix(in srgb, var(--fa-ink) 2%, transparent);
+}
+.lvl4 {
+  background-color: transparent;
+}
+
+/* ==========================================================================
+   LAYOUT ODDS AND ENDS
+   ========================================================================== */
+
+.split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
+  gap: clamp(24px, 3vw, 44px);
+  align-items: start;
+}
+
+.stack {
+  display: grid;
+  gap: 18px;
+}
+
+.stackWide {
+  display: grid;
+  gap: clamp(28px, 3.5vw, 48px);
+}
+
+.figNote {
+  margin: 14px 0 0;
+  max-width: 78ch;
+  font-size: var(--fa-fs-meta);
+  line-height: 1.6;
+  color: var(--fa-ink-2);
+}
+
+.detail {
+  border-top: 1px solid var(--fa-line-2);
+}
+
+.detail > summary {
+  padding: 10px 0;
+  cursor: pointer;
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  color: var(--fa-ink);
+}
+
+.detail > summary:hover {
+  color: var(--fa-amber-2);
+}
+
+.detailBody {
+  padding: 6px 0 22px;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin: 0 0 20px;
+}
+
+.pill {
+  padding: 8px 14px;
+  min-height: 40px;
+  border: 1px solid var(--fa-line);
+  background-color: transparent;
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-2);
+  cursor: pointer;
+}
+
+.pill:hover {
+  border-color: var(--fa-ink);
+  color: var(--fa-ink);
+}
+
+.pillOn {
+  background-color: var(--fa-ink);
+  border-color: var(--fa-ink);
+  color: var(--fa-page);
+}
+
+/* ==========================================================================
+   THE PIN-ACT STEP RAIL
+   ========================================================================== */
+
+.beats {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--fa-line-2);
+}
+
+.beat {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 4px 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--fa-line-2);
+  opacity: 0.34;
+  transition: opacity var(--fa-dur) var(--fa-ease);
+}
+
+.beatOn {
+  opacity: 1;
+}
+
+.beatNo {
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-badge);
+  color: var(--fa-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.beatText {
+  font-size: var(--fa-fs-sm);
+  line-height: 1.6;
+  color: var(--fa-ink-2);
+}
+
+.beatText b {
+  font-weight: 500;
+  color: var(--fa-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beat {
+    opacity: 1;
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   THE REPLAY
+   ========================================================================== */
+
+.seats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1px;
+  background-color: var(--fa-line-2);
+  border: 1px solid var(--fa-line);
+}
+
+.seat {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  background-color: var(--fa-sheet);
+}
+
+.seatOn {
+  background-color: var(--fa-tile);
+}
+
+.seatCount {
+  font-family: var(--fa-code);
+  font-size: 26px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--fa-ink);
+}
+
+.seatMeta {
+  font-size: var(--fa-fs-micro);
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
+.log {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 420px;
+  overflow-y: auto;
+  border: 1px solid var(--fa-line);
+}
+
+.logRow {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 12px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--fa-line-2);
+  font-size: var(--fa-fs-meta);
+  line-height: 1.55;
+  color: var(--fa-ink-2);
+}
+
+.logIx {
+  font-variant-numeric: tabular-nums;
+  color: var(--fa-ink-3);
+}
+
+.logNow {
+  background-color: var(--fa-tile);
+  color: var(--fa-ink);
+}
+
+.scrub {
+  width: 100%;
+  margin: 8px 0 0;
+  accent-color: var(--fa-ink);
+}
+
+.stepLine {
+  margin: 0 0 6px;
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
+.stepAction {
+  margin: 0;
+  font-size: var(--fa-fs-h4);
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--fa-ink);
+}
+
+@media (max-width: 560px) {
+  .refuseRow {
+    grid-template-columns: 1fr;
+  }
+
+  .criterion {
+    grid-template-columns: 26px 1fr;
+  }
+
+  .criterion .mark {
+    grid-column: 2;
+  }
+}

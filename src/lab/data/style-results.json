@@ -1,0 +1,7723 @@
+{
+ "meta": {
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-22T00:00:00.000Z",
+  "engineCommit": "fixture-cyclic",
+  "rulesHash": "b4c7fef74d439fe29cbe4d4775fc4fbecdd95d0c9ce0218eb116a4b2b64b6f8d",
+  "rulesFile": "RULES_US54.md",
+  "ruleSet": "us54",
+  "gamesTotal": 187200,
+  "seedSet": {
+   "count": 2600,
+   "prefix": "style-v1-cyclic"
+  },
+  "synthetic": true,
+  "notice": "SYNTHETIC FIXTURE · NOT SIMULATION OUTPUT",
+  "analysis": {
+   "alpha": 0.05,
+   "cells": 36,
+   "significantCells": 33,
+   "cyclicThreshold": 0.15,
+   "exploitabilityMargin": 0.02,
+   "exploitabilityRan": true
+  },
+  "health": {
+   "illegalActions": 0,
+   "cappedGames": 0,
+   "invariantViolations": 0,
+   "distinctSeeds": 2600
+  }
+ },
+ "styles": [
+  {
+   "id": "balanced",
+   "label": "Balanced",
+   "family": "control",
+   "thesis": "The tuned us54 baseline every other style is read against",
+   "rationale": "STYLES.md §3 row 1 — the control, clinchAggression 0.5"
+  },
+  {
+   "id": "blitz",
+   "label": "Blitz",
+   "family": "aggressive",
+   "thesis": "Tempo and sets now; information is cheap",
+   "rationale": "RULES_US54 row 9 — a hit keeps the turn, so tempo compounds"
+  },
+  {
+   "id": "punter",
+   "label": "Punter",
+   "family": "aggressive",
+   "thesis": "Chase the completing card; accept the gift risk",
+   "rationale": "RULES_US54 row 14 — a wrong declare gifts the set, a 2-point swing"
+  },
+  {
+   "id": "banker",
+   "label": "Banker",
+   "family": "conservative",
+   "thesis": "Never gift a set; bank only certainties",
+   "rationale": "RULES_US54 row 14 — the gift is the whole cost model"
+  },
+  {
+   "id": "turtle",
+   "label": "Turtle",
+   "family": "passive",
+   "thesis": "Minimum risk; declare only sets wholly in hand",
+   "rationale": "STYLES.md §3.1 — the stall risk, gated by avgMoves"
+  },
+  {
+   "id": "hoarder",
+   "label": "Hoarder",
+   "family": "optionality",
+   "thesis": "Keep ask-licences, stay alive, delay",
+   "rationale": "RULES_US54 row 6 — holding a card is the licence to ask into that set"
+  },
+  {
+   "id": "scout",
+   "label": "Scout",
+   "family": "information",
+   "thesis": "Deduce first, collect later",
+   "rationale": "RULES_US54 row 17 — the public log is the whole information channel"
+  },
+  {
+   "id": "ghost",
+   "label": "Ghost",
+   "family": "information",
+   "thesis": "Deny opponents the read",
+   "rationale": "RULES_US54 row 17 — every ask leaks; Ghost prices the leak"
+  },
+  {
+   "id": "archivist",
+   "label": "Archivist",
+   "family": "information",
+   "thesis": "Track sets you hold nothing in, and declare them for teammates",
+   "rationale": "RULES_US54 row 15 — declaring without holding is legal and now live"
+  }
+ ],
+ "matrix": [
+  {
+   "a": "balanced",
+   "b": "blitz",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.5336,
+   "se": 0.0049,
+   "ci95": [
+    0.524,
+    0.5432
+   ],
+   "aWins": 2775,
+   "bWins": 2425,
+   "ties": 0,
+   "bookMargin": 0.2,
+   "significant": true,
+   "qValue": 0.0144,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.41,
+     "claimPrecision": 0.84,
+     "claimYield": 0.7,
+     "concedeRate": 0.11,
+     "leakIndex": 0.25,
+     "hoardIndex": 3.16,
+     "turnRetention": 1.84,
+     "avgMoves": 115,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 2.46
+    },
+    "b": {
+     "askHitRate": 0.44,
+     "claimPrecision": 0.77,
+     "claimYield": 0.75,
+     "concedeRate": 0.19,
+     "leakIndex": 0.3,
+     "hoardIndex": 1.72,
+     "turnRetention": 1.91,
+     "avgMoves": 102,
+     "foreignDeclareRate": 0.02,
+     "declareLatency": 1.3
+    }
+   }
+  },
+  {
+   "a": "balanced",
+   "b": "punter",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.6512,
+   "se": 0.0049,
+   "ci95": [
+    0.6416,
+    0.6608
+   ],
+   "aWins": 3386,
+   "bWins": 1814,
+   "ties": 0,
+   "bookMargin": 0.91,
+   "significant": true,
+   "qValue": 0.0001,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.41,
+     "claimPrecision": 0.84,
+     "claimYield": 0.7,
+     "concedeRate": 0.11,
+     "leakIndex": 0.25,
+     "hoardIndex": 3.16,
+     "turnRetention": 1.84,
+     "avgMoves": 115,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 2.46
+    },
+    "b": {
+     "askHitRate": 0.43,
+     "claimPrecision": 0.79,
+     "claimYield": 0.73,
+     "concedeRate": 0.17,
+     "leakIndex": 0.3,
+     "hoardIndex": 2.2,
+     "turnRetention": 1.97,
+     "avgMoves": 100,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 1.49
+    }
+   }
+  },
+  {
+   "a": "balanced",
+   "b": "banker",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.5504,
+   "se": 0.0049,
+   "ci95": [
+    0.5408,
+    0.56
+   ],
+   "aWins": 2862,
+   "bWins": 2338,
+   "ties": 0,
+   "bookMargin": 0.3,
+   "significant": true,
+   "qValue": 0.0012,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.41,
+     "claimPrecision": 0.84,
+     "claimYield": 0.7,
+     "concedeRate": 0.11,
+     "leakIndex": 0.25,
+     "hoardIndex": 3.16,
+     "turnRetention": 1.84,
+     "avgMoves": 115,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 2.46
+    },
+    "b": {
+     "askHitRate": 0.37,
+     "claimPrecision": 0.89,
+     "claimYield": 0.62,
+     "concedeRate": 0.06,
+     "leakIndex": 0.2,
+     "hoardIndex": 3.69,
+     "turnRetention": 1.54,
+     "avgMoves": 129,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 3.27
+    }
+   }
+  },
+  {
+   "a": "balanced",
+   "b": "turtle",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.66,
+   "se": 0.0049,
+   "ci95": [
+    0.6504,
+    0.6696
+   ],
+   "aWins": 3432,
+   "bWins": 1768,
+   "ties": 0,
+   "bookMargin": 0.96,
+   "significant": true,
+   "qValue": 0.0001,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.41,
+     "claimPrecision": 0.84,
+     "claimYield": 0.7,
+     "concedeRate": 0.11,
+     "leakIndex": 0.25,
+     "hoardIndex": 3.16,
+     "turnRetention": 1.84,
+     "avgMoves": 115,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 2.46
+    },
+    "b": {
+     "askHitRate": 0.38,
+     "claimPrecision": 0.92,
+     "claimYield": 0.57,
+     "concedeRate": 0.04,
+     "leakIndex": 0.18,
+     "hoardIndex": 3.9,
+     "turnRetention": 1.61,
+     "avgMoves": 141,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 3.68
+    }
+   }
+  },
+  {
+   "a": "balanced",
+   "b": "hoarder",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.5672,
+   "se": 0.0049,
+   "ci95": [
+    0.5576,
+    0.5768
+   ],
+   "aWins": 2949,
+   "bWins": 2251,
+   "ties": 0,
+   "bookMargin": 0.4,
+   "significant": true,
+   "qValue": 0.0001,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.41,
+     "claimPrecision": 0.84,
+     "claimYield": 0.7,
+     "concedeRate": 0.11,
+     "leakIndex": 0.25,
+     "hoardIndex": 3.16,
+     "turnRetention": 1.84,
+     "avgMoves": 115,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 2.46
+    },
+    "b": {
+     "askHitRate": 0.39,
+     "claimPrecision": 0.91,
+     "claimYield": 0.61,
+     "concedeRate": 0.06,
+     "leakIndex": 0.2,
+     "hoardIndex": 3.76,
+     "turnRetention": 1.54,
+     "avgMoves": 129,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 3.25
+    }
+   }
+  },
+  {
+   "a": "balanced",
+   "b": "scout",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.5588,
+   "se": 0.0049,
+   "ci95": [
+    0.5492,
+    0.5684
+   ],
+   "aWins": 2906,
+   "bWins": 2294,
+   "ties": 0,
+   "bookMargin": 0.35,
+   "significant": true,
+   "qValue": 0.0004,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.41,
+     "claimPrecision": 0.84,
+     "claimYield": 0.7,
+     "concedeRate": 0.11,
+     "leakIndex": 0.25,
+     "hoardIndex": 3.16,
+     "turnRetention": 1.84,
+     "avgMoves": 115,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 2.46
+    },
+    "b": {
+     "askHitRate": 0.4,
+     "claimPrecision": 0.86,
+     "claimYield": 0.65,
+     "concedeRate": 0.1,
+     "leakIndex": 0.23,
+     "hoardIndex": 3.34,
+     "turnRetention": 1.8,
+     "avgMoves": 121,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 2.89
+    }
+   }
+  },
+  {
+   "a": "balanced",
+   "b": "ghost",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.6176,
+   "se": 0.0049,
+   "ci95": [
+    0.608,
+    0.6272
+   ],
+   "aWins": 3212,
+   "bWins": 1988,
+   "ties": 0,
+   "bookMargin": 0.71,
+   "significant": true,
+   "qValue": 0.0001,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.41,
+     "claimPrecision": 0.84,
+     "claimYield": 0.7,
+     "concedeRate": 0.11,
+     "leakIndex": 0.25,
+     "hoardIndex": 3.16,
+     "turnRetention": 1.84,
+     "avgMoves": 115,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 2.46
+    },
+    "b": {
+     "askHitRate": 0.42,
+     "claimPrecision": 0.87,
+     "claimYield": 0.65,
+     "concedeRate": 0.12,
+     "leakIndex": 0.23,
+     "hoardIndex": 3.22,
+     "turnRetention": 1.77,
+     "avgMoves": 123,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 2.51
+    }
+   }
+  },
+  {
+   "a": "balanced",
+   "b": "archivist",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.6092,
+   "se": 0.0049,
+   "ci95": [
+    0.5996,
+    0.6188
+   ],
+   "aWins": 3168,
+   "bWins": 2032,
+   "ties": 0,
+   "bookMargin": 0.66,
+   "significant": true,
+   "qValue": 0.0001,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.41,
+     "claimPrecision": 0.84,
+     "claimYield": 0.7,
+     "concedeRate": 0.11,
+     "leakIndex": 0.25,
+     "hoardIndex": 3.16,
+     "turnRetention": 1.84,
+     "avgMoves": 115,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 2.46
+    },
+    "b": {
+     "askHitRate": 0.43,
+     "claimPrecision": 0.82,
+     "claimYield": 0.7,
+     "concedeRate": 0.14,
+     "leakIndex": 0.26,
+     "hoardIndex": 2.71,
+     "turnRetention": 1.84,
+     "avgMoves": 117,
+     "foreignDeclareRate": 0.32,
+     "declareLatency": 2.11
+    }
+   }
+  },
+  {
+   "a": "blitz",
+   "b": "punter",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.6176,
+   "se": 0.0049,
+   "ci95": [
+    0.608,
+    0.6272
+   ],
+   "aWins": 3212,
+   "bWins": 1988,
+   "ties": 0,
+   "bookMargin": 0.71,
+   "significant": true,
+   "qValue": 0.0001,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.44,
+     "claimPrecision": 0.77,
+     "claimYield": 0.75,
+     "concedeRate": 0.19,
+     "leakIndex": 0.3,
+     "hoardIndex": 1.72,
+     "turnRetention": 1.91,
+     "avgMoves": 102,
+     "foreignDeclareRate": 0.02,
+     "declareLatency": 1.3
+    },
+    "b": {
+     "askHitRate": 0.43,
+     "claimPrecision": 0.79,
+     "claimYield": 0.73,
+     "concedeRate": 0.17,
+     "leakIndex": 0.3,
+     "hoardIndex": 2.2,
+     "turnRetention": 1.97,
+     "avgMoves": 100,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 1.49
+    }
+   }
+  },
+  {
+   "a": "blitz",
+   "b": "banker",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.546,
+   "se": 0.0049,
+   "ci95": [
+    0.5364,
+    0.5556
+   ],
+   "aWins": 2839,
+   "bWins": 2361,
+   "ties": 0,
+   "bookMargin": 0.28,
+   "significant": true,
+   "qValue": 0.0023,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.44,
+     "claimPrecision": 0.77,
+     "claimYield": 0.75,
+     "concedeRate": 0.19,
+     "leakIndex": 0.3,
+     "hoardIndex": 1.72,
+     "turnRetention": 1.91,
+     "avgMoves": 102,
+     "foreignDeclareRate": 0.02,
+     "declareLatency": 1.3
+    },
+    "b": {
+     "askHitRate": 0.37,
+     "claimPrecision": 0.89,
+     "claimYield": 0.62,
+     "concedeRate": 0.06,
+     "leakIndex": 0.2,
+     "hoardIndex": 3.69,
+     "turnRetention": 1.54,
+     "avgMoves": 129,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 3.27
+    }
+   }
+  },
+  {
+   "a": "blitz",
+   "b": "turtle",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.66,
+   "se": 0.0049,
+   "ci95": [
+    0.6504,
+    0.6696
+   ],
+   "aWins": 3432,
+   "bWins": 1768,
+   "ties": 0,
+   "bookMargin": 0.96,
+   "significant": true,
+   "qValue": 0.0001,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.44,
+     "claimPrecision": 0.77,
+     "claimYield": 0.75,
+     "concedeRate": 0.19,
+     "leakIndex": 0.3,
+     "hoardIndex": 1.72,
+     "turnRetention": 1.91,
+     "avgMoves": 102,
+     "foreignDeclareRate": 0.02,
+     "declareLatency": 1.3
+    },
+    "b": {
+     "askHitRate": 0.38,
+     "claimPrecision": 0.92,
+     "claimYield": 0.57,
+     "concedeRate": 0.04,
+     "leakIndex": 0.18,
+     "hoardIndex": 3.9,
+     "turnRetention": 1.61,
+     "avgMoves": 141,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 3.68
+    }
+   }
+  },
+  {
+   "a": "blitz",
+   "b": "hoarder",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.468,
+   "se": 0.0049,
+   "ci95": [
+    0.4584,
+    0.4776
+   ],
+   "aWins": 2434,
+   "bWins": 2766,
+   "ties": 0,
+   "bookMargin": -0.19,
+   "significant": true,
+   "qValue": 0.0182,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.44,
+     "claimPrecision": 0.77,
+     "claimYield": 0.75,
+     "concedeRate": 0.19,
+     "leakIndex": 0.3,
+     "hoardIndex": 1.72,
+     "turnRetention": 1.91,
+     "avgMoves": 102,
+     "foreignDeclareRate": 0.02,
+     "declareLatency": 1.3
+    },
+    "b": {
+     "askHitRate": 0.39,
+     "claimPrecision": 0.91,
+     "claimYield": 0.61,
+     "concedeRate": 0.06,
+     "leakIndex": 0.2,
+     "hoardIndex": 3.76,
+     "turnRetention": 1.54,
+     "avgMoves": 129,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 3.25
+    }
+   }
+  },
+  {
+   "a": "blitz",
+   "b": "scout",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.5252,
+   "se": 0.0049,
+   "ci95": [
+    0.5156,
+    0.5348
+   ],
+   "aWins": 2731,
+   "bWins": 2469,
+   "ties": 0,
+   "bookMargin": 0.15,
+   "significant": true,
+   "qValue": 0.0493,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.44,
+     "claimPrecision": 0.77,
+     "claimYield": 0.75,
+     "concedeRate": 0.19,
+     "leakIndex": 0.3,
+     "hoardIndex": 1.72,
+     "turnRetention": 1.91,
+     "avgMoves": 102,
+     "foreignDeclareRate": 0.02,
+     "declareLatency": 1.3
+    },
+    "b": {
+     "askHitRate": 0.4,
+     "claimPrecision": 0.86,
+     "claimYield": 0.65,
+     "concedeRate": 0.1,
+     "leakIndex": 0.23,
+     "hoardIndex": 3.34,
+     "turnRetention": 1.8,
+     "avgMoves": 121,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 2.89
+    }
+   }
+  },
+  {
+   "a": "blitz",
+   "b": "ghost",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.584,
+   "se": 0.0049,
+   "ci95": [
+    0.5744,
+    0.5936
+   ],
+   "aWins": 3037,
+   "bWins": 2163,
+   "ties": 0,
+   "bookMargin": 0.5,
+   "significant": true,
+   "qValue": 0.0001,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.44,
+     "claimPrecision": 0.77,
+     "claimYield": 0.75,
+     "concedeRate": 0.19,
+     "leakIndex": 0.3,
+     "hoardIndex": 1.72,
+     "turnRetention": 1.91,
+     "avgMoves": 102,
+     "foreignDeclareRate": 0.02,
+     "declareLatency": 1.3
+    },
+    "b": {
+     "askHitRate": 0.42,
+     "claimPrecision": 0.87,
+     "claimYield": 0.65,
+     "concedeRate": 0.12,
+     "leakIndex": 0.23,
+     "hoardIndex": 3.22,
+     "turnRetention": 1.77,
+     "avgMoves": 123,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 2.51
+    }
+   }
+  },
+  {
+   "a": "blitz",
+   "b": "archivist",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.5756,
+   "se": 0.0049,
+   "ci95": [
+    0.566,
+    0.5852
+   ],
+   "aWins": 2993,
+   "bWins": 2207,
+   "ties": 0,
+   "bookMargin": 0.45,
+   "significant": true,
+   "qValue": 0.0001,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.44,
+     "claimPrecision": 0.77,
+     "claimYield": 0.75,
+     "concedeRate": 0.19,
+     "leakIndex": 0.3,
+     "hoardIndex": 1.72,
+     "turnRetention": 1.91,
+     "avgMoves": 102,
+     "foreignDeclareRate": 0.02,
+     "declareLatency": 1.3
+    },
+    "b": {
+     "askHitRate": 0.43,
+     "claimPrecision": 0.82,
+     "claimYield": 0.7,
+     "concedeRate": 0.14,
+     "leakIndex": 0.26,
+     "hoardIndex": 2.71,
+     "turnRetention": 1.84,
+     "avgMoves": 117,
+     "foreignDeclareRate": 0.32,
+     "declareLatency": 2.11
+    }
+   }
+  },
+  {
+   "a": "punter",
+   "b": "banker",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.3992,
+   "se": 0.0049,
+   "ci95": [
+    0.3896,
+    0.4088
+   ],
+   "aWins": 2076,
+   "bWins": 3124,
+   "ties": 0,
+   "bookMargin": -0.6,
+   "significant": true,
+   "qValue": 0.0001,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.43,
+     "claimPrecision": 0.79,
+     "claimYield": 0.73,
+     "concedeRate": 0.17,
+     "leakIndex": 0.3,
+     "hoardIndex": 2.2,
+     "turnRetention": 1.97,
+     "avgMoves": 100,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 1.49
+    },
+    "b": {
+     "askHitRate": 0.37,
+     "claimPrecision": 0.89,
+     "claimYield": 0.62,
+     "concedeRate": 0.06,
+     "leakIndex": 0.2,
+     "hoardIndex": 3.69,
+     "turnRetention": 1.54,
+     "avgMoves": 129,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 3.27
+    }
+   }
+  },
+  {
+   "a": "punter",
+   "b": "turtle",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.5924,
+   "se": 0.0049,
+   "ci95": [
+    0.5828,
+    0.602
+   ],
+   "aWins": 3080,
+   "bWins": 2120,
+   "ties": 0,
+   "bookMargin": 0.55,
+   "significant": true,
+   "qValue": 0.0001,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.43,
+     "claimPrecision": 0.79,
+     "claimYield": 0.73,
+     "concedeRate": 0.17,
+     "leakIndex": 0.3,
+     "hoardIndex": 2.2,
+     "turnRetention": 1.97,
+     "avgMoves": 100,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 1.49
+    },
+    "b": {
+     "askHitRate": 0.38,
+     "claimPrecision": 0.92,
+     "claimYield": 0.57,
+     "concedeRate": 0.04,
+     "leakIndex": 0.18,
+     "hoardIndex": 3.9,
+     "turnRetention": 1.61,
+     "avgMoves": 141,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 3.68
+    }
+   }
+  },
+  {
+   "a": "punter",
+   "b": "hoarder",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.416,
+   "se": 0.0049,
+   "ci95": [
+    0.4064,
+    0.4256
+   ],
+   "aWins": 2163,
+   "bWins": 3037,
+   "ties": 0,
+   "bookMargin": -0.5,
+   "significant": true,
+   "qValue": 0.0001,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.43,
+     "claimPrecision": 0.79,
+     "claimYield": 0.73,
+     "concedeRate": 0.17,
+     "leakIndex": 0.3,
+     "hoardIndex": 2.2,
+     "turnRetention": 1.97,
+     "avgMoves": 100,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 1.49
+    },
+    "b": {
+     "askHitRate": 0.39,
+     "claimPrecision": 0.91,
+     "claimYield": 0.61,
+     "concedeRate": 0.06,
+     "leakIndex": 0.2,
+     "hoardIndex": 3.76,
+     "turnRetention": 1.54,
+     "avgMoves": 129,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 3.25
+    }
+   }
+  },
+  {
+   "a": "punter",
+   "b": "scout",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.4076,
+   "se": 0.0049,
+   "ci95": [
+    0.398,
+    0.4172
+   ],
+   "aWins": 2120,
+   "bWins": 3080,
+   "ties": 0,
+   "bookMargin": -0.55,
+   "significant": true,
+   "qValue": 0.0001,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.43,
+     "claimPrecision": 0.79,
+     "claimYield": 0.73,
+     "concedeRate": 0.17,
+     "leakIndex": 0.3,
+     "hoardIndex": 2.2,
+     "turnRetention": 1.97,
+     "avgMoves": 100,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 1.49
+    },
+    "b": {
+     "askHitRate": 0.4,
+     "claimPrecision": 0.86,
+     "claimYield": 0.65,
+     "concedeRate": 0.1,
+     "leakIndex": 0.23,
+     "hoardIndex": 3.34,
+     "turnRetention": 1.8,
+     "avgMoves": 121,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 2.89
+    }
+   }
+  },
+  {
+   "a": "punter",
+   "b": "ghost",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.4664,
+   "se": 0.0049,
+   "ci95": [
+    0.4568,
+    0.476
+   ],
+   "aWins": 2425,
+   "bWins": 2775,
+   "ties": 0,
+   "bookMargin": -0.2,
+   "significant": true,
+   "qValue": 0.0144,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.43,
+     "claimPrecision": 0.79,
+     "claimYield": 0.73,
+     "concedeRate": 0.17,
+     "leakIndex": 0.3,
+     "hoardIndex": 2.2,
+     "turnRetention": 1.97,
+     "avgMoves": 100,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 1.49
+    },
+    "b": {
+     "askHitRate": 0.42,
+     "claimPrecision": 0.87,
+     "claimYield": 0.65,
+     "concedeRate": 0.12,
+     "leakIndex": 0.23,
+     "hoardIndex": 3.22,
+     "turnRetention": 1.77,
+     "avgMoves": 123,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 2.51
+    }
+   }
+  },
+  {
+   "a": "punter",
+   "b": "archivist",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.458,
+   "se": 0.0049,
+   "ci95": [
+    0.4484,
+    0.4676
+   ],
+   "aWins": 2382,
+   "bWins": 2818,
+   "ties": 0,
+   "bookMargin": -0.25,
+   "significant": true,
+   "qValue": 0.0042,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.43,
+     "claimPrecision": 0.79,
+     "claimYield": 0.73,
+     "concedeRate": 0.17,
+     "leakIndex": 0.3,
+     "hoardIndex": 2.2,
+     "turnRetention": 1.97,
+     "avgMoves": 100,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 1.49
+    },
+    "b": {
+     "askHitRate": 0.43,
+     "claimPrecision": 0.82,
+     "claimYield": 0.7,
+     "concedeRate": 0.14,
+     "leakIndex": 0.26,
+     "hoardIndex": 2.71,
+     "turnRetention": 1.84,
+     "avgMoves": 117,
+     "foreignDeclareRate": 0.32,
+     "declareLatency": 2.11
+    }
+   }
+  },
+  {
+   "a": "banker",
+   "b": "turtle",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.66,
+   "se": 0.0049,
+   "ci95": [
+    0.6504,
+    0.6696
+   ],
+   "aWins": 3432,
+   "bWins": 1768,
+   "ties": 0,
+   "bookMargin": 0.96,
+   "significant": true,
+   "qValue": 0.0001,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.37,
+     "claimPrecision": 0.89,
+     "claimYield": 0.62,
+     "concedeRate": 0.06,
+     "leakIndex": 0.2,
+     "hoardIndex": 3.69,
+     "turnRetention": 1.54,
+     "avgMoves": 129,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 3.27
+    },
+    "b": {
+     "askHitRate": 0.38,
+     "claimPrecision": 0.92,
+     "claimYield": 0.57,
+     "concedeRate": 0.04,
+     "leakIndex": 0.18,
+     "hoardIndex": 3.9,
+     "turnRetention": 1.61,
+     "avgMoves": 141,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 3.68
+    }
+   }
+  },
+  {
+   "a": "banker",
+   "b": "hoarder",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.538,
+   "se": 0.0049,
+   "ci95": [
+    0.5284,
+    0.5476
+   ],
+   "aWins": 2798,
+   "bWins": 2402,
+   "ties": 0,
+   "bookMargin": 0.23,
+   "significant": true,
+   "qValue": 0.0075,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.37,
+     "claimPrecision": 0.89,
+     "claimYield": 0.62,
+     "concedeRate": 0.06,
+     "leakIndex": 0.2,
+     "hoardIndex": 3.69,
+     "turnRetention": 1.54,
+     "avgMoves": 129,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 3.27
+    },
+    "b": {
+     "askHitRate": 0.39,
+     "claimPrecision": 0.91,
+     "claimYield": 0.61,
+     "concedeRate": 0.06,
+     "leakIndex": 0.2,
+     "hoardIndex": 3.76,
+     "turnRetention": 1.54,
+     "avgMoves": 129,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 3.25
+    }
+   }
+  },
+  {
+   "a": "banker",
+   "b": "scout",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.5084,
+   "se": 0.0049,
+   "ci95": [
+    0.4988,
+    0.518
+   ],
+   "aWins": 2644,
+   "bWins": 2556,
+   "ties": 0,
+   "bookMargin": 0.05,
+   "significant": false,
+   "qValue": 0.5821,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.37,
+     "claimPrecision": 0.89,
+     "claimYield": 0.62,
+     "concedeRate": 0.06,
+     "leakIndex": 0.2,
+     "hoardIndex": 3.69,
+     "turnRetention": 1.54,
+     "avgMoves": 129,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 3.27
+    },
+    "b": {
+     "askHitRate": 0.4,
+     "claimPrecision": 0.86,
+     "claimYield": 0.65,
+     "concedeRate": 0.1,
+     "leakIndex": 0.23,
+     "hoardIndex": 3.34,
+     "turnRetention": 1.8,
+     "avgMoves": 121,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 2.89
+    }
+   }
+  },
+  {
+   "a": "banker",
+   "b": "ghost",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.5672,
+   "se": 0.0049,
+   "ci95": [
+    0.5576,
+    0.5768
+   ],
+   "aWins": 2949,
+   "bWins": 2251,
+   "ties": 0,
+   "bookMargin": 0.4,
+   "significant": true,
+   "qValue": 0.0001,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.37,
+     "claimPrecision": 0.89,
+     "claimYield": 0.62,
+     "concedeRate": 0.06,
+     "leakIndex": 0.2,
+     "hoardIndex": 3.69,
+     "turnRetention": 1.54,
+     "avgMoves": 129,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 3.27
+    },
+    "b": {
+     "askHitRate": 0.42,
+     "claimPrecision": 0.87,
+     "claimYield": 0.65,
+     "concedeRate": 0.12,
+     "leakIndex": 0.23,
+     "hoardIndex": 3.22,
+     "turnRetention": 1.77,
+     "avgMoves": 123,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 2.51
+    }
+   }
+  },
+  {
+   "a": "banker",
+   "b": "archivist",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.5588,
+   "se": 0.0049,
+   "ci95": [
+    0.5492,
+    0.5684
+   ],
+   "aWins": 2906,
+   "bWins": 2294,
+   "ties": 0,
+   "bookMargin": 0.35,
+   "significant": true,
+   "qValue": 0.0004,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.37,
+     "claimPrecision": 0.89,
+     "claimYield": 0.62,
+     "concedeRate": 0.06,
+     "leakIndex": 0.2,
+     "hoardIndex": 3.69,
+     "turnRetention": 1.54,
+     "avgMoves": 129,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 3.27
+    },
+    "b": {
+     "askHitRate": 0.43,
+     "claimPrecision": 0.82,
+     "claimYield": 0.7,
+     "concedeRate": 0.14,
+     "leakIndex": 0.26,
+     "hoardIndex": 2.71,
+     "turnRetention": 1.84,
+     "avgMoves": 117,
+     "foreignDeclareRate": 0.32,
+     "declareLatency": 2.11
+    }
+   }
+  },
+  {
+   "a": "turtle",
+   "b": "hoarder",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.34,
+   "se": 0.0049,
+   "ci95": [
+    0.3304,
+    0.3496
+   ],
+   "aWins": 1768,
+   "bWins": 3432,
+   "ties": 0,
+   "bookMargin": -0.96,
+   "significant": true,
+   "qValue": 0.0001,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.38,
+     "claimPrecision": 0.92,
+     "claimYield": 0.57,
+     "concedeRate": 0.04,
+     "leakIndex": 0.18,
+     "hoardIndex": 3.9,
+     "turnRetention": 1.61,
+     "avgMoves": 141,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 3.68
+    },
+    "b": {
+     "askHitRate": 0.39,
+     "claimPrecision": 0.91,
+     "claimYield": 0.61,
+     "concedeRate": 0.06,
+     "leakIndex": 0.2,
+     "hoardIndex": 3.76,
+     "turnRetention": 1.54,
+     "avgMoves": 129,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 3.25
+    }
+   }
+  },
+  {
+   "a": "turtle",
+   "b": "scout",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.34,
+   "se": 0.0049,
+   "ci95": [
+    0.3304,
+    0.3496
+   ],
+   "aWins": 1768,
+   "bWins": 3432,
+   "ties": 0,
+   "bookMargin": -0.96,
+   "significant": true,
+   "qValue": 0.0001,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.38,
+     "claimPrecision": 0.92,
+     "claimYield": 0.57,
+     "concedeRate": 0.04,
+     "leakIndex": 0.18,
+     "hoardIndex": 3.9,
+     "turnRetention": 1.61,
+     "avgMoves": 141,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 3.68
+    },
+    "b": {
+     "askHitRate": 0.4,
+     "claimPrecision": 0.86,
+     "claimYield": 0.65,
+     "concedeRate": 0.1,
+     "leakIndex": 0.23,
+     "hoardIndex": 3.34,
+     "turnRetention": 1.8,
+     "avgMoves": 121,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 2.89
+    }
+   }
+  },
+  {
+   "a": "turtle",
+   "b": "ghost",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.374,
+   "se": 0.0049,
+   "ci95": [
+    0.3644,
+    0.3836
+   ],
+   "aWins": 1945,
+   "bWins": 3255,
+   "ties": 0,
+   "bookMargin": -0.76,
+   "significant": true,
+   "qValue": 0.0001,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.38,
+     "claimPrecision": 0.92,
+     "claimYield": 0.57,
+     "concedeRate": 0.04,
+     "leakIndex": 0.18,
+     "hoardIndex": 3.9,
+     "turnRetention": 1.61,
+     "avgMoves": 141,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 3.68
+    },
+    "b": {
+     "askHitRate": 0.42,
+     "claimPrecision": 0.87,
+     "claimYield": 0.65,
+     "concedeRate": 0.12,
+     "leakIndex": 0.23,
+     "hoardIndex": 3.22,
+     "turnRetention": 1.77,
+     "avgMoves": 123,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 2.51
+    }
+   }
+  },
+  {
+   "a": "turtle",
+   "b": "archivist",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.3656,
+   "se": 0.0049,
+   "ci95": [
+    0.356,
+    0.3752
+   ],
+   "aWins": 1901,
+   "bWins": 3299,
+   "ties": 0,
+   "bookMargin": -0.81,
+   "significant": true,
+   "qValue": 0.0001,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.38,
+     "claimPrecision": 0.92,
+     "claimYield": 0.57,
+     "concedeRate": 0.04,
+     "leakIndex": 0.18,
+     "hoardIndex": 3.9,
+     "turnRetention": 1.61,
+     "avgMoves": 141,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 3.68
+    },
+    "b": {
+     "askHitRate": 0.43,
+     "claimPrecision": 0.82,
+     "claimYield": 0.7,
+     "concedeRate": 0.14,
+     "leakIndex": 0.26,
+     "hoardIndex": 2.71,
+     "turnRetention": 1.84,
+     "avgMoves": 117,
+     "foreignDeclareRate": 0.32,
+     "declareLatency": 2.11
+    }
+   }
+  },
+  {
+   "a": "hoarder",
+   "b": "scout",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.4916,
+   "se": 0.0049,
+   "ci95": [
+    0.482,
+    0.5012
+   ],
+   "aWins": 2556,
+   "bWins": 2644,
+   "ties": 0,
+   "bookMargin": -0.05,
+   "significant": false,
+   "qValue": 0.5821,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.39,
+     "claimPrecision": 0.91,
+     "claimYield": 0.61,
+     "concedeRate": 0.06,
+     "leakIndex": 0.2,
+     "hoardIndex": 3.76,
+     "turnRetention": 1.54,
+     "avgMoves": 129,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 3.25
+    },
+    "b": {
+     "askHitRate": 0.4,
+     "claimPrecision": 0.86,
+     "claimYield": 0.65,
+     "concedeRate": 0.1,
+     "leakIndex": 0.23,
+     "hoardIndex": 3.34,
+     "turnRetention": 1.8,
+     "avgMoves": 121,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 2.89
+    }
+   }
+  },
+  {
+   "a": "hoarder",
+   "b": "ghost",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.5504,
+   "se": 0.0049,
+   "ci95": [
+    0.5408,
+    0.56
+   ],
+   "aWins": 2862,
+   "bWins": 2338,
+   "ties": 0,
+   "bookMargin": 0.3,
+   "significant": true,
+   "qValue": 0.0012,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.39,
+     "claimPrecision": 0.91,
+     "claimYield": 0.61,
+     "concedeRate": 0.06,
+     "leakIndex": 0.2,
+     "hoardIndex": 3.76,
+     "turnRetention": 1.54,
+     "avgMoves": 129,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 3.25
+    },
+    "b": {
+     "askHitRate": 0.42,
+     "claimPrecision": 0.87,
+     "claimYield": 0.65,
+     "concedeRate": 0.12,
+     "leakIndex": 0.23,
+     "hoardIndex": 3.22,
+     "turnRetention": 1.77,
+     "avgMoves": 123,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 2.51
+    }
+   }
+  },
+  {
+   "a": "hoarder",
+   "b": "archivist",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.542,
+   "se": 0.0049,
+   "ci95": [
+    0.5324,
+    0.5516
+   ],
+   "aWins": 2818,
+   "bWins": 2382,
+   "ties": 0,
+   "bookMargin": 0.25,
+   "significant": true,
+   "qValue": 0.0042,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.39,
+     "claimPrecision": 0.91,
+     "claimYield": 0.61,
+     "concedeRate": 0.06,
+     "leakIndex": 0.2,
+     "hoardIndex": 3.76,
+     "turnRetention": 1.54,
+     "avgMoves": 129,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 3.25
+    },
+    "b": {
+     "askHitRate": 0.43,
+     "claimPrecision": 0.82,
+     "claimYield": 0.7,
+     "concedeRate": 0.14,
+     "leakIndex": 0.26,
+     "hoardIndex": 2.71,
+     "turnRetention": 1.84,
+     "avgMoves": 117,
+     "foreignDeclareRate": 0.32,
+     "declareLatency": 2.11
+    }
+   }
+  },
+  {
+   "a": "scout",
+   "b": "ghost",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.5588,
+   "se": 0.0049,
+   "ci95": [
+    0.5492,
+    0.5684
+   ],
+   "aWins": 2906,
+   "bWins": 2294,
+   "ties": 0,
+   "bookMargin": 0.35,
+   "significant": true,
+   "qValue": 0.0004,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.4,
+     "claimPrecision": 0.86,
+     "claimYield": 0.65,
+     "concedeRate": 0.1,
+     "leakIndex": 0.23,
+     "hoardIndex": 3.34,
+     "turnRetention": 1.8,
+     "avgMoves": 121,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 2.89
+    },
+    "b": {
+     "askHitRate": 0.42,
+     "claimPrecision": 0.87,
+     "claimYield": 0.65,
+     "concedeRate": 0.12,
+     "leakIndex": 0.23,
+     "hoardIndex": 3.22,
+     "turnRetention": 1.77,
+     "avgMoves": 123,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 2.51
+    }
+   }
+  },
+  {
+   "a": "scout",
+   "b": "archivist",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.5504,
+   "se": 0.0049,
+   "ci95": [
+    0.5408,
+    0.56
+   ],
+   "aWins": 2862,
+   "bWins": 2338,
+   "ties": 0,
+   "bookMargin": 0.3,
+   "significant": true,
+   "qValue": 0.0012,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.4,
+     "claimPrecision": 0.86,
+     "claimYield": 0.65,
+     "concedeRate": 0.1,
+     "leakIndex": 0.23,
+     "hoardIndex": 3.34,
+     "turnRetention": 1.8,
+     "avgMoves": 121,
+     "foreignDeclareRate": 0.04,
+     "declareLatency": 2.89
+    },
+    "b": {
+     "askHitRate": 0.43,
+     "claimPrecision": 0.82,
+     "claimYield": 0.7,
+     "concedeRate": 0.14,
+     "leakIndex": 0.26,
+     "hoardIndex": 2.71,
+     "turnRetention": 1.84,
+     "avgMoves": 117,
+     "foreignDeclareRate": 0.32,
+     "declareLatency": 2.11
+    }
+   }
+  },
+  {
+   "a": "ghost",
+   "b": "archivist",
+   "pairs": 2600,
+   "games": 5200,
+   "aScore": 0.4916,
+   "se": 0.0049,
+   "ci95": [
+    0.482,
+    0.5012
+   ],
+   "aWins": 2556,
+   "bWins": 2644,
+   "ties": 0,
+   "bookMargin": -0.05,
+   "significant": false,
+   "qValue": 0.5821,
+   "metrics": {
+    "a": {
+     "askHitRate": 0.42,
+     "claimPrecision": 0.87,
+     "claimYield": 0.65,
+     "concedeRate": 0.12,
+     "leakIndex": 0.23,
+     "hoardIndex": 3.22,
+     "turnRetention": 1.77,
+     "avgMoves": 123,
+     "foreignDeclareRate": 0.03,
+     "declareLatency": 2.51
+    },
+    "b": {
+     "askHitRate": 0.43,
+     "claimPrecision": 0.82,
+     "claimYield": 0.7,
+     "concedeRate": 0.14,
+     "leakIndex": 0.26,
+     "hoardIndex": 2.71,
+     "turnRetention": 1.84,
+     "avgMoves": 117,
+     "foreignDeclareRate": 0.32,
+     "declareLatency": 2.11
+    }
+   }
+  }
+ ],
+ "ranking": {
+  "meanScore": [
+   {
+    "style": "balanced",
+    "value": 0.5935,
+    "ci95": [
+     0.5901,
+     0.5969
+    ]
+   },
+   {
+    "style": "blitz",
+    "value": 0.5554,
+    "ci95": [
+     0.552,
+     0.5588
+    ]
+   },
+   {
+    "style": "banker",
+    "value": 0.5421,
+    "ci95": [
+     0.5387,
+     0.5455
+    ]
+   },
+   {
+    "style": "scout",
+    "value": 0.5347,
+    "ci95": [
+     0.5313,
+     0.5381
+    ]
+   },
+   {
+    "style": "hoarder",
+    "value": 0.5319,
+    "ci95": [
+     0.5285,
+     0.5353
+    ]
+   },
+   {
+    "style": "archivist",
+    "value": 0.4811,
+    "ci95": [
+     0.4777,
+     0.4845
+    ]
+   },
+   {
+    "style": "ghost",
+    "value": 0.4717,
+    "ci95": [
+     0.4683,
+     0.4751
+    ]
+   },
+   {
+    "style": "punter",
+    "value": 0.4339,
+    "ci95": [
+     0.4305,
+     0.4373
+    ]
+   },
+   {
+    "style": "turtle",
+    "value": 0.3559,
+    "ci95": [
+     0.3525,
+     0.3593
+    ]
+   }
+  ],
+  "maximin": [
+   {
+    "style": "balanced",
+    "value": 0.5336,
+    "worstVs": "blitz",
+    "lower95": 0.524,
+    "significant": true
+   },
+   {
+    "style": "blitz",
+    "value": 0.4664,
+    "worstVs": "balanced",
+    "lower95": 0.4568,
+    "significant": true
+   },
+   {
+    "style": "banker",
+    "value": 0.4496,
+    "worstVs": "balanced",
+    "lower95": 0.44,
+    "significant": true
+   },
+   {
+    "style": "scout",
+    "value": 0.4412,
+    "worstVs": "balanced",
+    "lower95": 0.4316,
+    "significant": true
+   },
+   {
+    "style": "hoarder",
+    "value": 0.4328,
+    "worstVs": "balanced",
+    "lower95": 0.4232,
+    "significant": true
+   },
+   {
+    "style": "archivist",
+    "value": 0.3908,
+    "worstVs": "balanced",
+    "lower95": 0.3812,
+    "significant": true
+   },
+   {
+    "style": "ghost",
+    "value": 0.3824,
+    "worstVs": "balanced",
+    "lower95": 0.3728,
+    "significant": true
+   },
+   {
+    "style": "punter",
+    "value": 0.3488,
+    "worstVs": "balanced",
+    "lower95": 0.3392,
+    "significant": true
+   },
+   {
+    "style": "turtle",
+    "value": 0.34,
+    "worstVs": "balanced",
+    "lower95": 0.3304,
+    "significant": true
+   }
+  ],
+  "cyclicEnergy": 0.07,
+  "cycles": [
+   {
+    "styles": [
+     "blitz",
+     "banker",
+     "hoarder"
+    ],
+    "minEdge": 0.532
+   }
+  ],
+  "cyclesAll": 1,
+  "verdict": "cyclic",
+  "criteria": [
+   {
+    "id": 1,
+    "label": "highest mean score",
+    "pass": true,
+    "detail": "balanced at 0.5935, ahead of blitz at 0.5554 (margin 0.0381)"
+   },
+   {
+    "id": 2,
+    "label": "maximin > 0.5 (no losing matchup)",
+    "pass": true,
+    "detail": "maximin 0.5336 vs blitz, CI95 lower bound 0.5240 > 0.5; worst cell is significant after BH"
+   },
+   {
+    "id": 3,
+    "label": "cyclic energy < 0.15",
+    "pass": false,
+    "detail": "cyclicEnergy 0.0700; 1 significant 3-cycle(s) after BH"
+   },
+   {
+    "id": 4,
+    "label": "exploitability not materially worse than rivals'",
+    "pass": true,
+    "detail": "E(balanced) = 0.0554 vs rivals' median 0.1093 (margin 0.0200); not materially worse"
+   }
+  ],
+  "verdictSummary": "No dominant style. The matrix is cyclic (energy 0.0700, 1 significant 3-cycle(s)); criteria (3) fail. Publish the counter-graph and the Nash mixture, not a winner."
+ },
+ "exploitability": [
+  {
+   "style": "balanced",
+   "searched": true,
+   "score": 0.5554,
+   "se": 0.0044,
+   "ci95": [
+    0.5468,
+    0.564
+   ],
+   "gap": 0.0554,
+   "searchScore": 0.5594,
+   "searchGames": 200000,
+   "evalGames": 24000,
+   "candidatesTried": 185,
+   "inertCandidates": 10,
+   "detectableDelta": 0.0075
+  },
+  {
+   "style": "blitz",
+   "searched": true,
+   "score": 0.5882,
+   "se": 0.0044,
+   "ci95": [
+    0.5796,
+    0.5968
+   ],
+   "gap": 0.0882,
+   "searchScore": 0.5922,
+   "searchGames": 200000,
+   "evalGames": 24000,
+   "candidatesTried": 203,
+   "inertCandidates": 6,
+   "detectableDelta": 0.0075
+  },
+  {
+   "style": "punter",
+   "searched": true,
+   "score": 0.6444,
+   "se": 0.0044,
+   "ci95": [
+    0.6358,
+    0.653
+   ],
+   "gap": 0.1444,
+   "searchScore": 0.6484,
+   "searchGames": 200000,
+   "evalGames": 24000,
+   "candidatesTried": 172,
+   "inertCandidates": 0,
+   "detectableDelta": 0.0075
+  },
+  {
+   "style": "banker",
+   "searched": true,
+   "score": 0.5856,
+   "se": 0.0044,
+   "ci95": [
+    0.577,
+    0.5942
+   ],
+   "gap": 0.0856,
+   "searchScore": 0.5896,
+   "searchGames": 200000,
+   "evalGames": 24000,
+   "candidatesTried": 172,
+   "inertCandidates": 10,
+   "detectableDelta": 0.0075
+  },
+  {
+   "style": "turtle",
+   "searched": true,
+   "score": 0.6428,
+   "se": 0.0044,
+   "ci95": [
+    0.6342,
+    0.6514
+   ],
+   "gap": 0.1428,
+   "searchScore": 0.6468,
+   "searchGames": 200000,
+   "evalGames": 24000,
+   "candidatesTried": 185,
+   "inertCandidates": 3,
+   "detectableDelta": 0.0075
+  },
+  {
+   "style": "hoarder",
+   "searched": true,
+   "score": 0.5833,
+   "se": 0.0044,
+   "ci95": [
+    0.5747,
+    0.5919
+   ],
+   "gap": 0.0833,
+   "searchScore": 0.5873,
+   "searchGames": 200000,
+   "evalGames": 24000,
+   "candidatesTried": 171,
+   "inertCandidates": 0,
+   "detectableDelta": 0.0075
+  },
+  {
+   "style": "scout",
+   "searched": true,
+   "score": 0.6222,
+   "se": 0.0044,
+   "ci95": [
+    0.6136,
+    0.6308
+   ],
+   "gap": 0.1222,
+   "searchScore": 0.6262,
+   "searchGames": 200000,
+   "evalGames": 24000,
+   "candidatesTried": 197,
+   "inertCandidates": 7,
+   "detectableDelta": 0.0075
+  },
+  {
+   "style": "ghost",
+   "searched": true,
+   "score": 0.5964,
+   "se": 0.0044,
+   "ci95": [
+    0.5878,
+    0.605
+   ],
+   "gap": 0.0964,
+   "searchScore": 0.6004,
+   "searchGames": 200000,
+   "evalGames": 24000,
+   "candidatesTried": 198,
+   "inertCandidates": 10,
+   "detectableDelta": 0.0075
+  },
+  {
+   "style": "archivist",
+   "searched": true,
+   "score": 0.6309,
+   "se": 0.0044,
+   "ci95": [
+    0.6223,
+    0.6395
+   ],
+   "gap": 0.1309,
+   "searchScore": 0.6349,
+   "searchGames": 200000,
+   "evalGames": 24000,
+   "candidatesTried": 185,
+   "inertCandidates": 7,
+   "detectableDelta": 0.0075
+  }
+ ],
+ "crossplay": [
+  {
+   "us": "balanced",
+   "them": "friend-v1",
+   "mode": "team-vs-team",
+   "pairs": 2600,
+   "usScore": 0.5236,
+   "ci95": [
+    0.5138,
+    0.5334
+   ],
+   "seedSet": "shared-2026-09",
+   "rulesHashAgreed": "b4c7fef74d439fe29cbe4d4775fc4fbecdd95d0c9ce0218eb116a4b2b64b6f8d",
+   "note": "SYNTHETIC placeholder for the BOT_LAB §8 protocol handshake. No foreign bot has actually been played; this row exists so the cross-play table has a render path before a match exists."
+  }
+ ],
+ "replays": [
+  {
+   "id": "blitz-vs-banker",
+   "pairing": [
+    "blitz",
+    "banker"
+   ],
+   "seed": "style-v1-cyclic-0042",
+   "startSeat": 0,
+   "caption": "Blitz (seats 0/2/4) against Banker (seats 1/3/5) on one seeded us54 deal. Every declare in the log resolves to one team or the other — row 14 abolished the void, so no set is ever burned. This single deal clinched 2–5 to banker with 2 set(s) unresolved. One game is an anecdote: the cell it belongs to, with 2,600 duplicate pairs behind it, is on /lab/matrix.",
+   "seatStyles": [
+    "blitz",
+    "banker",
+    "blitz",
+    "banker",
+    "blitz",
+    "banker"
+   ],
+   "moves": 657,
+   "sets": [
+    2,
+    5
+   ],
+   "unresolved": 2,
+   "actions": [
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 1,
+     "card": "9C"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 2,
+     "card": "9C"
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "ask",
+     "seat": 2,
+     "target": 1,
+     "card": "TC"
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "ask",
+     "seat": 2,
+     "target": 3,
+     "card": "9C"
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "claim",
+     "seat": 0,
+     "book": "HIGH-C",
+     "assignments": {
+      "9C": 2,
+      "TC": 2,
+      "JC": 0,
+      "QC": 2,
+      "KC": 0,
+      "AC": 0
+     }
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "ask",
+     "seat": 2,
+     "target": 5,
+     "card": "4C"
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "ask",
+     "seat": 5,
+     "target": 4,
+     "card": "4D"
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "ask",
+     "seat": 5,
+     "target": 2,
+     "card": "5D"
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "ask",
+     "seat": 2,
+     "target": 1,
+     "card": "4C"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 2,
+     "card": "8C"
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "ask",
+     "seat": 2,
+     "target": 3,
+     "card": "4C"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 4,
+     "card": "4C"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 5,
+     "card": "4D"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 5,
+     "card": "2D"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 3,
+     "card": "2C"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 0,
+     "card": "4C"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 2,
+     "card": "2C"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 4,
+     "card": "3C"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 3,
+     "card": "2C"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 3,
+     "card": "4C"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 3,
+     "card": "5C"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 4,
+     "card": "2C"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 4,
+     "card": "4C"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 4,
+     "card": "7C"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 2,
+     "card": "3C"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 2,
+     "card": "5C"
+    },
+    {
+     "type": "claim",
+     "seat": 3,
+     "book": "LOW-C",
+     "assignments": {
+      "2C": 3,
+      "3C": 3,
+      "4C": 3,
+      "5C": 3,
+      "6C": 3,
+      "7C": 3
+     }
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 4,
+     "card": "8D"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 1,
+     "card": "3D"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 4,
+     "card": "8C"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 5,
+     "card": "3D"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 1,
+     "card": "7D"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 0,
+     "card": "8C"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 1,
+     "card": "2H"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 4,
+     "card": "2H"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 3,
+     "card": "7D"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 2,
+     "card": "2H"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 0,
+     "card": "3H"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 3,
+     "card": "2H"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 3,
+     "card": "4H"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 1,
+     "card": "3H"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 0,
+     "card": "2H"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 0,
+     "card": "4H"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 4,
+     "card": "3H"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 0,
+     "card": "6H"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 4,
+     "card": "7H"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 5,
+     "card": "7D"
+    },
+    {
+     "type": "claim",
+     "seat": 4,
+     "book": "LOW-D",
+     "assignments": {
+      "2D": 4,
+      "3D": 4,
+      "4D": 4,
+      "5D": 4,
+      "6D": 4,
+      "7D": 4
+     }
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 1,
+     "card": "9D"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 0,
+     "card": "7H"
+    },
+    {
+     "type": "claim",
+     "seat": 1,
+     "book": "LOW-H",
+     "assignments": {
+      "2H": 1,
+      "3H": 1,
+      "4H": 1,
+      "5H": 1,
+      "6H": 1,
+      "7H": 1
+     }
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 2,
+     "card": "8H"
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "ask",
+     "seat": 2,
+     "target": 1,
+     "card": "2S"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 2,
+     "card": "3S"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 4,
+     "card": "8H"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 1,
+     "card": "3S"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 1,
+     "card": "4S"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 3,
+     "card": "2S"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 4,
+     "card": "3S"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 4,
+     "card": "4S"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 0,
+     "card": "2S"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 0,
+     "card": "8H"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 1,
+     "card": "9H"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 0,
+     "card": "TH"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 4,
+     "card": "8S"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 1,
+     "card": "TH"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 3,
+     "card": "2S"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 3,
+     "card": "3S"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 3,
+     "card": "4S"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 3,
+     "card": "5S"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 4,
+     "card": "2S"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 4,
+     "card": "3S"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 4,
+     "card": "4S"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 4,
+     "card": "7S"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 2,
+     "card": "9D"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 4,
+     "card": "TD"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 3,
+     "card": "9D"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 1,
+     "card": "JH"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 4,
+     "card": "TH"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 4,
+     "card": "9H"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 1,
+     "card": "TH"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 1,
+     "card": "QH"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 3,
+     "card": "JD"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 4,
+     "card": "9D"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 4,
+     "card": "QD"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "claim",
+     "seat": 5,
+     "book": "HIGH-D",
+     "assignments": {
+      "9D": 3,
+      "TD": 5,
+      "JD": 5,
+      "QD": 3,
+      "KD": 3,
+      "AD": 5
+     }
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 2,
+     "card": "5S"
+    },
+    {
+     "type": "claim",
+     "seat": 3,
+     "book": "LOW-S",
+     "assignments": {
+      "2S": 3,
+      "3S": 3,
+      "4S": 3,
+      "5S": 3,
+      "6S": 3,
+      "7S": 3
+     }
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 4,
+     "card": "XR"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 3,
+     "card": "9H"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 4,
+     "card": "XB"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 5,
+     "card": "9H"
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "ask",
+     "seat": 5,
+     "target": 2,
+     "card": "9H"
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "ask",
+     "seat": 5,
+     "target": 4,
+     "card": "TH"
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "ask",
+     "seat": 5,
+     "target": 4,
+     "card": "QH"
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "ask",
+     "seat": 5,
+     "target": 0,
+     "card": "8S"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 1,
+     "card": "9S"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 4,
+     "card": "KH"
+    },
+    {
+     "type": "claim",
+     "seat": 1,
+     "book": "HIGH-H",
+     "assignments": {
+      "9H": 5,
+      "TH": 5,
+      "JH": 5,
+      "QH": 5,
+      "KH": 1,
+      "AH": 1
+     }
+    }
+   ]
+  },
+  {
+   "id": "hoarder-vs-blitz",
+   "pairing": [
+    "hoarder",
+    "blitz"
+   ],
+   "seed": "style-v1-cyclic-0117",
+   "startSeat": 3,
+   "caption": "The back-edge of the highlighted cycle — Hoarder against Blitz — played out once from seat 3. This single deal clinched 1–5 to blitz with 3 set(s) unresolved. One game is an anecdote: the cell it belongs to, with 2,600 duplicate pairs behind it, is on /lab/matrix.",
+   "seatStyles": [
+    "hoarder",
+    "blitz",
+    "hoarder",
+    "blitz",
+    "hoarder",
+    "blitz"
+   ],
+   "moves": 632,
+   "sets": [
+    1,
+    5
+   ],
+   "unresolved": 3,
+   "actions": [
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 0,
+     "card": "3D"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 3,
+     "card": "2D"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 1,
+     "card": "3D"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 0,
+     "card": "9C"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 5,
+     "card": "3D"
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "ask",
+     "seat": 5,
+     "target": 0,
+     "card": "2D"
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "ask",
+     "seat": 5,
+     "target": 2,
+     "card": "3D"
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "ask",
+     "seat": 5,
+     "target": 0,
+     "card": "5D"
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "ask",
+     "seat": 5,
+     "target": 4,
+     "card": "9C"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 1,
+     "card": "2H"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 2,
+     "card": "9C"
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "ask",
+     "seat": 2,
+     "target": 1,
+     "card": "2C"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 4,
+     "card": "3H"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 2,
+     "card": "3C"
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "ask",
+     "seat": 2,
+     "target": 1,
+     "card": "4C"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 2,
+     "card": "5C"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 0,
+     "card": "JC"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 1,
+     "card": "5C"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 3,
+     "card": "9C"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 5,
+     "card": "2D"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 5,
+     "card": "3D"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 5,
+     "card": "5D"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 1,
+     "card": "3H"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 5,
+     "card": "4D"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 1,
+     "card": "6C"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 0,
+     "card": "9C"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 0,
+     "card": "AC"
+    },
+    {
+     "type": "claim",
+     "seat": 1,
+     "book": "HIGH-C",
+     "assignments": {
+      "9C": 1,
+      "TC": 1,
+      "JC": 5,
+      "QC": 1,
+      "KC": 1,
+      "AC": 1
+     }
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 0,
+     "card": "5C"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 0,
+     "card": "3H"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 0,
+     "card": "2C"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 0,
+     "card": "2H"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 4,
+     "card": "3C"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 4,
+     "card": "4C"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 2,
+     "card": "6C"
+    },
+    {
+     "type": "claim",
+     "seat": 1,
+     "book": "LOW-C",
+     "assignments": {
+      "2C": 1,
+      "3C": 1,
+      "4C": 1,
+      "5C": 1,
+      "6C": 1,
+      "7C": 1
+     }
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 2,
+     "card": "4H"
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "ask",
+     "seat": 2,
+     "target": 3,
+     "card": "8D"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 0,
+     "card": "2D"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 0,
+     "card": "3D"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 0,
+     "card": "4D"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 0,
+     "card": "5D"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 0,
+     "card": "6D"
+    },
+    {
+     "type": "claim",
+     "seat": 3,
+     "book": "LOW-D",
+     "assignments": {
+      "2D": 3,
+      "3D": 3,
+      "4D": 3,
+      "5D": 3,
+      "6D": 3,
+      "7D": 3
+     }
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 2,
+     "card": "8C"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 4,
+     "card": "8D"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 2,
+     "card": "8S"
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "ask",
+     "seat": 2,
+     "target": 3,
+     "card": "8C"
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "ask",
+     "seat": 2,
+     "target": 3,
+     "card": "8D"
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "ask",
+     "seat": 2,
+     "target": 3,
+     "card": "8H"
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "ask",
+     "seat": 2,
+     "target": 5,
+     "card": "8S"
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "ask",
+     "seat": 5,
+     "target": 4,
+     "card": "4H"
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "ask",
+     "seat": 5,
+     "target": 2,
+     "card": "5H"
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "ask",
+     "seat": 2,
+     "target": 1,
+     "card": "8S"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "claim",
+     "seat": 4,
+     "book": "EIGHTS",
+     "assignments": {
+      "8C": 2,
+      "8D": 2,
+      "8H": 2,
+      "8S": 0,
+      "XR": 4,
+      "XB": 2
+     }
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 2,
+     "card": "6H"
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "ask",
+     "seat": 2,
+     "target": 5,
+     "card": "9D"
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "ask",
+     "seat": 5,
+     "target": 0,
+     "card": "6H"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 5,
+     "card": "9S"
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "ask",
+     "seat": 5,
+     "target": 4,
+     "card": "6H"
+    },
+    {
+     "type": "claim",
+     "seat": 5,
+     "book": "LOW-H",
+     "assignments": {
+      "2H": 1,
+      "3H": 1,
+      "4H": 5,
+      "5H": 1,
+      "6H": 5,
+      "7H": 5
+     }
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "ask",
+     "seat": 5,
+     "target": 2,
+     "card": "JD"
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "ask",
+     "seat": 2,
+     "target": 5,
+     "card": "TD"
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "ask",
+     "seat": 2,
+     "target": 3,
+     "card": "9S"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 2,
+     "card": "TD"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 2,
+     "card": "QD"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 0,
+     "card": "9D"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 1,
+     "card": "9S"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 4,
+     "card": "9S"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 0,
+     "card": "JD"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 1,
+     "card": "9S"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 1,
+     "card": "TS"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 0,
+     "card": "9S"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 0,
+     "card": "QS"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 2,
+     "card": "TS"
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "ask",
+     "seat": 1,
+     "target": 4,
+     "card": "JD"
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "ask",
+     "seat": 4,
+     "target": 5,
+     "card": "9H"
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "ask",
+     "seat": 5,
+     "target": 0,
+     "card": "2S"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 1,
+     "card": "9S"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 1,
+     "card": "TS"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 1,
+     "card": "QS"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 1,
+     "card": "JS"
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "ask",
+     "seat": 0,
+     "target": 5,
+     "card": "AS"
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "ask",
+     "seat": 5,
+     "target": 2,
+     "card": "2S"
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "ask",
+     "seat": 2,
+     "target": 3,
+     "card": "TD"
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "ask",
+     "seat": 2,
+     "target": 3,
+     "card": "JD"
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "ask",
+     "seat": 2,
+     "target": 3,
+     "card": "QD"
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "ask",
+     "seat": 2,
+     "target": 1,
+     "card": "9D"
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "ask",
+     "seat": 2,
+     "target": 3,
+     "card": "9H"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 2,
+     "card": "9D"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 2,
+     "card": "TD"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 2,
+     "card": "JD"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 2,
+     "card": "QD"
+    },
+    {
+     "type": "decline",
+     "seat": 3
+    },
+    {
+     "type": "decline",
+     "seat": 4
+    },
+    {
+     "type": "decline",
+     "seat": 5
+    },
+    {
+     "type": "decline",
+     "seat": 0
+    },
+    {
+     "type": "decline",
+     "seat": 1
+    },
+    {
+     "type": "decline",
+     "seat": 2
+    },
+    {
+     "type": "ask",
+     "seat": 3,
+     "target": 2,
+     "card": "AD"
+    },
+    {
+     "type": "claim",
+     "seat": 3,
+     "book": "HIGH-D",
+     "assignments": {
+      "9D": 3,
+      "TD": 3,
+      "JD": 3,
+      "QD": 3,
+      "KD": 3,
+      "AD": 3
+     }
+    }
+   ]
+  }
+ ]
+}

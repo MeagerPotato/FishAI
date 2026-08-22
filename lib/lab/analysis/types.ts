@@ -36,6 +36,21 @@ export interface ResultsMeta {
   /** Which file `rulesHash` was taken over — `us54` results are not `pagat48` results. */
   rulesFile: string
   variant: string
+  /**
+   * The same fact as `variant`, under the name the site's boundary validator actually reads
+   * (`src/lab/artifact.ts`; SITE_SPEC.md §5: *"This site reports us54 results only"*). Carrying
+   * one fact under two names is not ideal — the alternative, an emitter and a reader that
+   * disagree about the field deciding whether an artifact is from the right rule set, is worse.
+   */
+  ruleSet: string
+  /**
+   * True for a hand-built fixture, false for simulator output. The site stamps every figure with
+   * it, so it is emitted rather than inferred: an artifact that does not say cannot be trusted
+   * to be real.
+   */
+  synthetic: boolean
+  /** The banner printed beside that stamp. Empty for real simulator output. */
+  notice: string
   config: LabRunConfig & { toggles: Record<string, boolean>; books: readonly BookId[]; clinchTarget: number }
   gamesTotal: number
   seedSet: { count: number; prefix: string }
@@ -54,6 +69,8 @@ export interface AnalysisMeta {
   cells: number
   /** BOT_LAB.md §4.4 criterion 3's threshold. */
   cyclicThreshold: number
+  /** BOT_LAB.md §4.4 criterion 4's tolerance — how much worse than the rivals' median counts. */
+  exploitabilityMargin: number
   bootstrapSamples: number
   bootstrapSeed: string
   /** False when the per-game JSONL was not supplied, so the ratio CIs are absent. */
