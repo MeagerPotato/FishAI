@@ -4,6 +4,14 @@ A bot that plays **Canadian Fish** (Literature), and the simulation lab built to
 
 > **Is there a quantitatively superior play style — or do styles just counter each other?**
 
+Two engines now live here. **FishAI v0.5** is the style-conditioned engine that question is asked
+of: nine parameterized styles over one shared inference engine, playable at the site's `/play`
+table with a traced assistant. **FishAI v1.0** is the adaptive engine built on top — it classifies
+what the other seats appear to be playing from the public log and best-responds off the measured
+payoff table. Its measured verdict is a negative result reported with the same care as a positive
+one: over this roster the best response to *everything* is Punter, so adaptation converges to the
+dominant style and then underpays for its warmup ([ADAPTIVE.md](ADAPTIVE.md)).
+
 Nine bot styles, labelled from aggressive to passive, all sharing one identical inference engine so
 that *style* is measured rather than *skill*. They play tens of thousands of duplicate-dealt games
 against each other, and the resulting payoff matrix is decomposed into its transitive and cyclic
@@ -106,7 +114,12 @@ Documents:
 | [STYLES.md](STYLES.md) | The nine styles, the `StyleParams` vector, and §6's two measured caveats on the roster |
 | [BOT_LAB.md](BOT_LAB.md) | Experimental design — duplicate deals, metrics, Nash averaging, α-Rank, exploitability |
 | [CONTAINMENT.md](CONTAINMENT.md) | The contained-book result: why an unclaimed team-held book is a resource |
+| [ADAPTIVE.md](ADAPTIVE.md) | FishAI v1.0 — observe → classify → best-respond, the dominance degeneracy, and the measured verdict |
 | [SITE_SPEC.md](SITE_SPEC.md) | The results site |
+
+The `papers/` directory carries five research papers in LaTeX (v0.5, v1.0, the contained-book
+negative result, the inert axis, and style observability), each compiling standalone under
+pdflatex with every number traced to a committed artifact by digest.
 
 ## Running it
 
@@ -115,8 +128,9 @@ Requires Node ≥ 23.6 (the engine is erasable-syntax TypeScript that Node strip
 ```bash
 npm install
 npm test          # engine, bot, and lab suites
-npm run lab       # the style-vs-style simulation
-npm run dev       # the results site
+npm run lab       # the style-vs-style simulation (matrix)
+npm run adaptive  # the FishAI v1.0 experiment suite (gauntlet, mixed screen, oracle, classifier)
+npm run dev       # the results site — /lab report, /play solo table, /lab/live in-browser sims
 ```
 
 ---
