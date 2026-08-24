@@ -14,8 +14,10 @@ export function BarChart({ model }: { model: BarModel }) {
     <DiagramFrame scene={scene}>
       <DiagramSvg scene={scene}>
         {/* Gridlines and axes. */}
+        {/* Keyed by position, not label: ticks on a narrow domain can round to the same text
+            (the measured concede rates span ~0.01), and a duplicated key drops a gridline. */}
         {gridlines.map((g) => (
-          <g key={g.label}>
+          <g key={g.y}>
             <line
               x1={PLOT.left}
               y1={g.y}

@@ -9,7 +9,7 @@
 
 import type { ReactNode } from 'react'
 import { SheetRoot, SiteFooter, SiteNav, useDocumentTitle } from '../../components/index.ts'
-import type { ArtifactCase } from '../artifact.ts'
+import { loadArtifact, type ArtifactCase } from '../artifact.ts'
 import { RULES_FILE } from '../rules.ts'
 
 export interface LabShellProps {
@@ -31,9 +31,25 @@ export interface LabShellProps {
   which: ArtifactCase
 }
 
-/** `?case=` is carried across routes so a reader stays in the fixture they opened. */
+/**
+ * `?case=` is carried across routes so a reader stays in the case they opened. `v2` — the
+ * current measured run — is the default everywhere a case is resolved, so it alone travels
+ * without a parameter.
+ */
 export function withCase(href: string, which: ArtifactCase): string {
-  return which === 'cyclic' ? href : `${href}?case=${which}`
+  return which === 'v2' ? href : `${href}?case=${which}`
+}
+
+/**
+ * The nav's replay link, resolved against the case actually loaded: the stored replays are part
+ * of each artifact, and the ids differ between the measured runs and the synthetic fixture. A
+ * hard-coded id would 404 the nav the moment the default case changed — which is exactly how
+ * this helper came to exist.
+ */
+export function replayHref(which: ArtifactCase): string {
+  const loaded = loadArtifact(which)
+  const id = loaded.ok ? loaded.artifact.replays[0]?.id : undefined
+  return id === undefined ? withCase('/lab', which) : withCase(`/lab/replay/${id}`, which)
 }
 
 export function LabShell({
@@ -48,7 +64,8 @@ export function LabShell({
   const links = [
     { href: withCase('/lab', which), label: 'Report' },
     { href: withCase('/lab/matrix', which), label: 'Matrix' },
-    { href: withCase('/lab/replay/blitz-vs-banker', which), label: 'Replay' },
+    { href: replayHref(which), label: 'Replay' },
+    { href: withCase('/lab/live', which), label: 'Live' },
     { href: '/play', label: 'Play' },
     { href: '/design', label: 'Design' },
   ]
@@ -71,7 +88,8 @@ export function LabShell({
             items: [
               { href: withCase('/lab', which), label: 'The report' },
               { href: withCase('/lab/matrix', which), label: 'Full matrix' },
-              { href: withCase('/lab/replay/blitz-vs-banker', which), label: 'Replay a game' },
+              { href: replayHref(which), label: 'Replay a game' },
+              { href: withCase('/lab/live', which), label: 'Live simulator' },
             ],
           },
           {

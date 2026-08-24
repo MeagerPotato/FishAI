@@ -433,6 +433,10 @@ export function concedeRateBar(results: StyleResults, figNo = 'FIG. 12'): BarMod
     unitLabel: 'CONCEDE RATE',
     data,
     focalKey,
+    // Three places, not the default two: the measured runs' concede rates span ~0.01, and at
+    // two places adjacent axis ticks round to the same text — two gridlines labelled "0.01"
+    // is an axis-honesty failure, not just an aesthetic one.
+    format: (v) => v.toFixed(3),
   })
 }
 
