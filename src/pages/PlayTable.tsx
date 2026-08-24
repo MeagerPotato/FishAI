@@ -6,10 +6,10 @@
  * decision and the derived styles all follow from it deterministically (the lab's own seeding
  * convention), so the link IS the game.
  *
- * `?v=10` is accepted and honestly labelled: the adaptive engine has not landed, a Balanced
- * stand-in holds the seats (`policyForSeat`, the one seam a later task extends), and the page
- * says so in a hatched notice rather than pretending. `?assist=1` reserves the assistant pane —
- * see src/play/advisor.ts for that seam.
+ * `?v=10` seats the FishAI v1.0 adaptive engine at every bot seat (`policyForSeat`), with the
+ * measured degeneracy caveat stated in the notice rather than a footnote. `?assist=1` opens the
+ * assistant pane — the engine's own traced reasoning (src/play/advisor.ts), which also renders
+ * inside the declare dialog where the modal would otherwise hide it.
  *
  * The game itself lives in src/play/Table.tsx, remounted via `key` on any change of mode, seed,
  * styles or the rematch counter — a fresh `useGame` is the whole reset mechanism.
