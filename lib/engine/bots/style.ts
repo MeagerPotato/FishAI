@@ -397,9 +397,15 @@ export const SKILL_PRESETS: Readonly<Record<BotDifficulty, SkillParams>> = Objec
 })
 
 /**
- * What `decide()` accepts: a tier name, a bare style (played at full strength, per STYLES.md §2
- * — "every style shares one identical, full-strength inference engine"), or an explicit
+ * The STATIC policy shapes: a tier name, a bare style (played at full strength, per STYLES.md
+ * §2 — "every style shares one identical, full-strength inference engine"), or an explicit
  * skill x style pair for the §1.3 ablation.
+ *
+ * `decide()` accepts one shape more — the v1.0 `AdaptiveSpec` — and the widened union is
+ * defined in [adaptive.ts](adaptive.ts), which the barrels re-export as THE `PolicySpec`.
+ * It lives there, not here, to keep the module graph acyclic: adaptive.ts reaches this file
+ * through classify -> roster, so this file must know nothing of adaptive.ts. `resolvePolicy`
+ * below refuses the adaptive shape structurally instead.
  */
 export type PolicySpec = BotDifficulty | StyleParams | BotPolicy
 
@@ -407,12 +413,30 @@ function isBotPolicy(p: PolicySpec): p is BotPolicy {
   return typeof p === 'object' && p !== null && 'style' in p && 'skill' in p
 }
 
+/** The structural signature of an `AdaptiveSpec`, tested without importing adaptive.ts. */
+function isAdaptiveShaped(p: PolicySpec | { adaptive: true }): p is { adaptive: true } {
+  return typeof p === 'object' && p !== null && Object.hasOwn(p, 'adaptive')
+}
+
 /**
- * Resolve any accepted policy spec to a `{ skill, style }` pair. Total and pure: an unrecognised
- * tier name degrades to `medium`, matching how the rest of the stack defaults a missing
- * difficulty, rather than throwing inside a bot that must never throw.
+ * Resolve any accepted STATIC policy spec to a `{ skill, style }` pair. Total and pure over
+ * the static shapes: an unrecognised tier name degrades to `medium`, matching how the rest of
+ * the stack defaults a missing difficulty, rather than throwing inside a bot that must never
+ * throw.
+ *
+ * The one deliberate exception: an *adaptive* spec is refused with a `TypeError`. Adaptive
+ * policies resolve inside `decide`, with a view — the style they play is a function of the
+ * opponents' observed behaviour, and this function has no view to observe. Degrading it to
+ * some fixed style here would silently play the wrong engine and poison every measurement
+ * downstream; `decide` handles the adaptive branch *before* ever calling this, so the throw
+ * is unreachable from the bot path (and would be caught by decide's fallback if it were not).
  */
-export function resolvePolicy(spec: PolicySpec): BotPolicy {
+export function resolvePolicy(spec: PolicySpec | { adaptive: true }): BotPolicy {
+  if (isAdaptiveShaped(spec)) {
+    throw new TypeError(
+      'adaptive policies resolve inside decide, with a view — resolvePolicy has no opponents to read',
+    )
+  }
   if (typeof spec === 'string') {
     const key: BotDifficulty = Object.prototype.hasOwnProperty.call(STYLE_PRESETS, spec)
       ? spec

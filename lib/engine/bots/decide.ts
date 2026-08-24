@@ -66,6 +66,19 @@
  * `reason` strings from `rankAsksWith`, the `ClaimPlan` p / uncertain counts, and the
  * `PassValuation` the contained-book turn-pass prices its move with (previously discarded at the
  * call site — now the arithmetic a player is told is exactly the arithmetic the bot used).
+ *
+ * ## The adaptive layer — FishAI v1.0
+ *
+ * An `AdaptiveSpec` policy resolves *here*, not in `resolvePolicy`, because it needs the view:
+ * [adaptive.ts](adaptive.ts) reads the opponents off the public log, best-responds over the
+ * measured counter table, and this file then plays the chosen roster style at hard skill —
+ * the whole pipeline below is unchanged, the adaptive engine merely picks which vector enters
+ * it. The `chooseStyle` call sits inside the same try/catch as everything else, so a throwing
+ * classifier lands in the same fallback and both wrappers keep their never-throws /
+ * never-illegal contract by construction. `decideExplained` prepends the read — the chosen
+ * style with its expected payoff, and each opponent seat's top classification — before the
+ * ordinary branch narration, so the assistant pane shows *why this style* above *why this
+ * move*. The dependency is strictly one-way: this file imports adaptive.ts, never the reverse.
  */
 import type { BookId, Card, GameAction, Seat } from '../types.ts'
 import { allBooks, bookCards, cardBook, isCard, seatTeam, teamSeats } from '../cards.ts'
@@ -83,8 +96,11 @@ import {
 } from './knowledge.ts'
 import { planContainedPass } from './contained.ts'
 import type { ContainedPassPlan, PassValuation } from './contained.ts'
-import { POLICY_CONSTANTS, resolvePolicy } from './style.ts'
-import type { BotPolicy, PolicySpec, SkillParams, StyleParams } from './style.ts'
+import { POLICY_CONSTANTS, SKILL_PRESETS, resolvePolicy } from './style.ts'
+import type { BotPolicy, SkillParams, StyleParams } from './style.ts'
+import { STYLE_ROSTER } from './roster.ts'
+import { ADAPTIVE_DEFAULTS, chooseStyle, isAdaptiveSpec } from './adaptive.ts'
+import type { AdaptiveChoice, AdaptiveSpec, PolicySpec } from './adaptive.ts'
 import type { Knowledge, KnowledgeOptions, RankedAsk, SeatView } from './types.ts'
 
 type Rng = () => number
@@ -1577,6 +1593,28 @@ function concludeContainedPass(
   )
 }
 
+/**
+ * The adaptive read, prepended before any branch narration (this runs at resolution time, so
+ * its lines are the first the pane shows): which style the v1.0 engine chose and why, then
+ * one line per opponent seat with its top classification. The numbers are the ones the
+ * decision used — `choice.expected` includes the anchor bias, and the read's `events` is the
+ * phase-truncated count the posterior was actually evaluated on, not the raw log length.
+ */
+function noteAdaptive(t: Sink, spec: AdaptiveSpec, choice: AdaptiveChoice): void {
+  const observed = choice.reads[0]?.events ?? 0
+  const warmup = observed < (spec.warmupEvents ?? ADAPTIVE_DEFAULTS.warmupEvents)
+  const label = Object.hasOwn(STYLE_ROSTER, choice.style) ? STYLE_ROSTER[choice.style].label : choice.style
+  const ev = choice.expected[choice.style]
+  t.notes.push(
+    warmup
+      ? `Adaptive: in warmup (${observed} of ${n_(spec.warmupEvents ?? ADAPTIVE_DEFAULTS.warmupEvents, 'event')} observed) — playing the ${label} anchor (expected score rate ${fp(ev)}).`
+      : `Adaptive: playing ${label} — expected score rate ${fp(ev)} against the current reads, warm after ${n_(observed, 'observed event')}${choice.switched ? '; switched off the previous phase choice' : ''}.`,
+  )
+  for (const r of choice.reads) {
+    t.notes.push(`Seat ${r.seat} reads as ${r.top} (${fp(r.confidence)}) after ${n_(r.events, 'event')}.`)
+  }
+}
+
 /* ----------------------------------------------------------- validation --- */
 
 /** View-side legality check for the chosen action; anything false => fallback. */
@@ -1700,18 +1738,39 @@ function fallbackAction(view: SeatView, seed: number): GameAction {
 /* --------------------------------------------------------------- decide --- */
 
 /**
+ * Resolve a policy spec *with the view in hand* — the one resolution `resolvePolicy` cannot
+ * do. A static spec passes straight through; an `AdaptiveSpec` is answered by `chooseStyle`
+ * and played as the chosen roster style at hard skill (STYLES.md §2's "every style shares one
+ * identical, full-strength inference engine" — the adaptive engine picks the style, never a
+ * weaker inference). Called inside the wrappers' existing try/catch, so a throwing classifier
+ * degrades to the same fallback as any other policy failure. `Object.hasOwn` guards the
+ * roster lookup because the chosen id ultimately comes from generated table data; the anchor
+ * default is the documented degrade, not a new policy.
+ */
+function resolveWithView(view: SeatView, policy: PolicySpec, t?: Sink): BotPolicy {
+  if (!isAdaptiveSpec(policy)) return resolvePolicy(policy)
+  const choice = chooseStyle(view, policy)
+  if (t) noteAdaptive(t, policy, choice)
+  const style = Object.hasOwn(STYLE_ROSTER, choice.style)
+    ? STYLE_ROSTER[choice.style]
+    : STYLE_ROSTER[ADAPTIVE_DEFAULTS.anchor]
+  return { skill: SKILL_PRESETS.hard, style }
+}
+
+/**
  * The bot decision function. Pure over (view, policy, seed); never throws; never emits an
  * action the engine's reduce() would reject (validated against the view, with the placeholder
  * policy as final fallback).
  *
  * `policy` is a difficulty tier name (the three shipped presets), a bare `StyleParams` (played
- * at full-strength inference, STYLES.md §2), or an explicit `{ skill, style }` pair for the
- * BOT_LAB.md §1.3 skill ablation.
+ * at full-strength inference, STYLES.md §2), an explicit `{ skill, style }` pair for the
+ * BOT_LAB.md §1.3 skill ablation, or the FishAI v1.0 `AdaptiveSpec` (resolved against this
+ * view — see `resolveWithView`).
  */
 export function decide(view: SeatView, policy: PolicySpec, seed: number): GameAction {
   let action: GameAction | null = null
   try {
-    action = decideInner(view, resolvePolicy(policy), seed)
+    action = decideInner(view, resolveWithView(view, policy), seed)
   } catch {
     // decideInner failed; action stays null and the fallback takes over.
   }
@@ -1745,7 +1804,7 @@ export function decideExplained(view: SeatView, policy: PolicySpec, seed: number
   const t = newSink()
   let action: GameAction | null = null
   try {
-    action = decideInner(view, resolvePolicy(policy), seed, t)
+    action = decideInner(view, resolveWithView(view, policy, t), seed, t)
   } catch {
     // decideInner failed; action stays null and the fallback takes over.
   }
