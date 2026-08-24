@@ -1,0 +1,697 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1.1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{array}
+\usepackage[colorlinks=true, linkcolor=blue!50!black, citecolor=blue!50!black, urlcolor=blue!50!black]{hyperref}
+
+\captionsetup{font=small, labelfont=bf}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\usff}{\code{us54}}
+
+\title{\textbf{What a Public Log Reveals:\\ Observing Play Style in Literature (Canadian Fish)}}
+\author{Allen Hsieh\\[2pt] {\small FishAI project}}
+\date{August 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+In the \usff{} dialect of Literature (Canadian Fish), every action is broadcast: each ask and
+its result, each declaration with the true holders of all six cards, and the public hand
+counts. This paper studies the \emph{observation} problem in isolation from the adaptation
+problem treated by its companion: given only that public channel, how much of a seat's play
+style can be recovered from a single game, and what fundamentally limits the recovery? We
+specify the channel exactly --- including what it certifies (a hit locates a card; an ask
+certifies a licence; a declaration reveals its true holders, making foreign and own-hand-only
+declares \emph{exact} public observations, not inferences) and what it structurally omits
+(declining to declare emits no event, so declare-window patience is invisible to any log-based
+observer). From the channel we build a 14-dimensional feature vector of rates and shares per
+seat, calibrate a deliberately simple diagonal-Gaussian classifier on 1{,}350 mirror games,
+and report two small empirical methods findings: the Gaussian normaliser term must be dropped
+(it handed one style 40 of 60 control-game reads through a calibration-tightness bonus), and
+per-style variances must be shrunk halfway to pooled. In the calibrated observable space the
+roster's geometry is stark: four of the nine styles form a quadrangle nearly at a single point
+(pairwise pooled-$z$ distance $0.20$--$0.25$ --- the companion papers' inert-axis finding
+arriving in observable space), while the Turtle sits $3.2$--$3.7$ from that cluster.
+Measured on 1{,}800 held-out cross-play games, single-game top-1 accuracy over nine styles
+rises from $16.4\%$ at 40 events to $22.4\%$ at the full log against an $11.1\%$ chance rate
+--- twice chance, and no better than that --- with per-style accuracy from $50.4\%$ (Ghost)
+down to $5.6\%$ (Balanced). The ceiling is not the classifier's: styles that diverge from the
+control on $0.39$--$2.89\%$ of decisions --- roughly one to three policy-revealing decisions
+per seat per game, some of them invisible declines --- upper-bound what \emph{any} observer of
+this channel can recover in one game. We close by locating this instrument inside the
+opponent-detection program of the project's research synthesis: which panel statistics this
+implementation ships, and which remain future work.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+Literature (Canadian Fish) is a six-player, two-team card game in which all hidden information
+originates at the deal and every subsequent action is public. That makes it an unusually clean
+domain for a question that is usually confounded: \emph{how much of an opponent's temperament
+is visible in what they publicly do?} In most imperfect-information games the observer's
+problem is entangled with hidden state --- one cannot tell a bold player from a lucky one
+without knowing their cards. In Literature the log eventually tells you the cards too: every
+successful ask moves a named card face up, and every declaration reveals, by rule, the true
+holder of all six cards it names.
+
+The FishAI project's v0.5 paper \cite{v05} measured \emph{which} of nine parameterised play
+styles wins, holding skill fixed by giving every style one identical full-strength inference
+engine. Its forthcoming v1.0 companion \cite{v10} asks whether an agent that identifies its
+opponents' styles online and adapts can beat the fixed champion. Between those two questions
+sits a third, which this paper isolates: the observation problem itself. Before asking whether
+a read is \emph{useful}, one should measure whether a read is \emph{possible} --- and the
+answer turns out to have enough structure, and enough honest negative content, to warrant its
+own report.
+
+Concretely, this paper documents the observation layer shipped in the repository as
+\code{observe.ts} and \code{classify.ts} \cite{repo}: a single pass over the public log that
+produces a fixed feature vector per seat, and a diagonal-Gaussian classifier over those
+vectors calibrated offline from mirror games. Its contributions are:
+
+\begin{enumerate}
+\item \textbf{An exact specification of the observation channel}
+  (Section~\ref{sec:channel}): what the \usff{} public log certifies --- including the
+  result that foreign declares and own-hand-only declares are \emph{exact} public
+  observations because declarations reveal true holders --- and what it structurally cannot
+  show, chiefly that declining to declare emits no event.
+\item \textbf{A 14-feature behavioural fingerprint} (Section~\ref{sec:features}), every entry
+  a rate or share, with the measured game-length confound that forced that normalisation.
+\item \textbf{Two empirical methods findings from calibration}
+  (Section~\ref{sec:classifier}): dropping the Gaussian normaliser, and shrinking per-style
+  variances halfway to pooled. Both were made by measurement, not taste, and both are the
+  kind of small correction that vanishes from most write-ups.
+\item \textbf{The geometry of the roster in observable space}
+  (Section~\ref{sec:separability}): a pooled-$z$ distance matrix computed from the committed
+  fingerprints, in which the inert-axis finding of the companion papers
+  \cite{inertpaper,v05} reappears as four styles collapsed onto nearly a single point.
+\item \textbf{Measured single-game accuracy and its confusion structure}
+  (Section~\ref{sec:accuracy}): $22.4\%$ top-1 over nine styles against $11.1\%$ chance on
+  held-out cross-play games, with the Ghost and Scout acting as attractors that receive
+  $47.4\%$ of all reads.
+\item \textbf{The fundamental limit and the program} (Section~\ref{sec:limit}): decision
+  divergence rates of $0.39$--$2.89\%$ \cite{styles,v05} upper-bound any log-based observer,
+  and the instrument is located inside the opponent-detection panel of the project's research
+  synthesis \cite{playstyles}, with the shipped and unshipped panel rows stated explicitly.
+\end{enumerate}
+
+Throughout, ``the classifier'' means the committed implementation with the committed
+calibration \cite{fingerprints,repo}; every quantitative claim traces to a committed artifact
+\cite{artifact,fingerprints} or to the repository's measurement documents \cite{rules,styles}.
+
+\section{The observation channel}
+\label{sec:channel}
+
+\subsection{What the public log contains}
+
+The \usff{} engine's public log \cite{rules,repo} is a sequence of typed events:
+\code{game\_started}; \code{ask} with asker, target, the named card, and whether it hit;
+\code{claim} (a declaration) with the claimer, the book, the claimer's stated assignments,
+the \emph{true} holders of all six cards, and the outcome; and the bookkeeping events
+\code{pass}, \code{designate}, \code{player\_out}, \code{endgame}, \code{game\_over}. Hand
+counts are public at all times. This is exactly the payload a human at the table would have:
+bots consume only a \code{SeatView}, and a test enforces that no hidden hand is reachable
+\cite{v05,repo}.
+
+\subsection{What the log certifies exactly}
+\label{sec:exact}
+
+The observation layer records only facts the rules force to be true; nothing in the feature
+extractor is an estimate. Four certifications carry the whole construction \cite{rules}:
+
+\begin{enumerate}
+\item \textbf{A hit locates a card.} The named card transfers face up
+  (\code{RULES\_US54.md} row 9), so after a hit the card is publicly at the asker until it
+  moves again or its book resolves. This yields a public card-location map.
+\item \textbf{An ask certifies a licence.} Holding at least one card of the asked book is the
+  only licence to ask into it (row 6), so every ask proves the asker held such a card at that
+  moment --- and row 7 proves the asker \emph{lacked} the named card. The certification is
+  decayed conservatively: it is dropped when the book resolves, when the seat runs out of
+  cards, and when a hit strips a card of that book from the seat, since the stripped card may
+  have been the licence itself.
+\item \textbf{A declaration reveals its true holders.} The \code{claim} event carries the
+  actual holder of each of the six cards, whatever the outcome. Consequently a \emph{foreign}
+  declare (the claimer holds no card of the book: the claimer appears nowhere among the true
+  holders) and an \emph{own-hand-only} declare (every true holder is the claimer) are
+  \textbf{exact public observations}. These are precisely the public signatures of the
+  \code{foreignDeclare} and \code{declareOnlyOwnHand} style mechanisms of the roster
+  \cite{styles,v05}, and their exactness is what makes the corresponding features noiseless.
+\item \textbf{Hand counts replay.} Counts are re-derived from the log rather than read from
+  the view: every seat starts at the dealt hand size, a hit moves one card, and a claim
+  removes each of the six cards from whoever the reveal says held it. This is deliberate:
+  the classifier evaluates \emph{truncated} logs (Section~\ref{sec:classifier}), and a
+  truncated view's own top-level counts describe the end of the game, not the truncation
+  point. The replayed counts are correct at every prefix, and the test suite pins them
+  against the engine's counts at full length and at mid-game snapshots \cite{repo}.
+\end{enumerate}
+
+\subsection{What the log cannot show}
+\label{sec:blind}
+
+Declining to declare emits \textbf{no event}: the \usff{} declare window advances silently
+through seats that pass on their option \cite{rules,repo}. Declare-window \emph{patience} ---
+how long a seat sat on a declarable book before firing --- is therefore invisible to any
+observer of this channel, not merely to this implementation. No shipped feature depends on
+it. The feature that comes closest, \code{declareBackload}, measures where in the
+\emph{observed event stream} a seat's declares landed (mean declare event index over the
+final observed index), which is the observable stand-in for the decline-counting
+``declare move index'' a god's-eye harness would use.
+
+This blind spot matters more than it looks, and Section~\ref{sec:limit} returns to it: some
+of the very decisions on which styles differ are declines, and those decisions leave no trace
+at all.
+
+\section{The feature set}
+\label{sec:features}
+
+\begin{table}[t]
+\centering
+\caption{The 14 features of the shipped observation vector, in classifier order
+\cite{repo}. All are rates or shares; denominators are floored at 1.}
+\label{tab:features}
+\small
+\begin{tabular}{@{}llp{8.0cm}@{}}
+\toprule
+\# & Feature & Definition \\
+\midrule
+1 & \code{hitRate} & hits / asks \\
+2 & \code{askDiversity} & distinct books asked into / asks \\
+3 & \code{sameBookRepeatRate} & consecutive same-book asks by the seat / (asks $-$ 1) \\
+4 & \code{certainAskShare} & asks whose named card was publicly located at the target / asks
+    (a guaranteed public hit) \\
+5 & \code{deadAskShare} & asks whose named card was publicly located elsewhere / asks
+    (a guaranteed public miss) \\
+6 & \code{leakyAskShare} & asks into books where the asker's team already publicly accounted
+    for $\geq 4$ of six cards (located plus certified, never double-counted) / asks \\
+7 & \code{completionAskShare} & asks into books with five cards publicly located at the
+    asker's team / asks \\
+8 & \code{missFewestShare} & of the seat's misses, the fraction whose target held strictly
+    the fewest cards among live opponents (replayed counts at ask time) \\
+9 & \code{missMostShare} & \ldots{} strictly the most \\
+10 & \code{askShare} & the seat's asks / all observed events \\
+11 & \code{declareShare} & the seat's declares / all observed events \\
+12 & \code{foreignDeclareShare} & foreign declares / declares (exact; Section~\ref{sec:exact}) \\
+13 & \code{ownHandOnlyShare} & own-hand-only declares / declares (exact) \\
+14 & \code{declareBackload} & mean declare event index / final observed event index \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:features} lists the vector. Three design decisions deserve their measured
+justifications.
+
+\paragraph{Shares, never raw counts.} Every entry is a rate or a share, length-invariant by
+construction. This is a correction, not a preference: the first calibration ran over raw
+counts and read every short cross-play game as ``not the style'' simply because the mirror
+games it was calibrated on ran longer --- a fact about the \emph{opponents}, not the seat
+\cite{repo}. A count observed at 150 events is incommensurable with a fingerprint calibrated
+at a different game length; a share projects a 70-event clinch and a 200-event grind into the
+same space. Checkpoint buckets (Section~\ref{sec:classifier}) still matter on top, because
+shares themselves drift over a game: declares concentrate late, and public certainty
+accumulates.
+
+\paragraph{Deliberate exclusions.} Raw \code{asks}, \code{hits} and \code{declaresCorrect}
+are absent. The first two are already the denominators inside \code{hitRate} and
+\code{askShare}; correctness is near ceiling for every full-strength style (roster declare
+precision $0.946$--$0.990$ \cite{v05}), so it separates nothing and would only add
+correlated noise to a diagonal model.
+
+\paragraph{A feature that never fired.} In the entire calibration --- 8{,}100 seat-vectors
+from 1{,}350 mirror games --- \code{completionAskShare} is identically zero for all nine
+styles \cite{fingerprints}. The interpretation (offered as interpretation) is structural: a
+full-strength engine whose team publicly holds five cards of a book almost always has the
+certainty to declare it rather than ask into it. Within this roster the column separates
+nothing and, under the classifier's variance floor, penalises all styles equally; it is
+retained because it is aimed at play outside this roster --- weaker or human play, where
+chasing a publicly finished book is a real behaviour. Relatedly, \code{deadAskShare} is the
+public signature of the contained-book turn-pass studied in the second companion
+\cite{containedpaper}: that mechanism's deliberate guaranteed misses are exactly what
+feature~5 counts.
+
+\section{Calibration and the classifier}
+\label{sec:classifier}
+
+\subsection{Fingerprints from mirror games}
+
+Fingerprints are generated offline and committed \cite{fingerprints}: per style, 150 \usff{}
+mirror games (all six seats the same style), seeds \code{fingerprint-v1-<style>-<i>}, start
+seat $i \bmod 6$, observed through the \emph{same code path} the classifier uses --- the
+generator and the classifier share the extractor, or the fingerprints would describe a
+different instrument than the one that reads them \cite{repo}. Each game contributes six
+seat-vectors, so the full-log bucket holds 900 vectors per style.
+
+Because several behaviours drift over a game, each style carries one fingerprint per
+\emph{checkpoint bucket}: log prefixes of 60, 120, 200 and 300 events, plus \code{full}
+(completed games). A bucket only collects games whose log outlived it, and the committed
+provenance records how quickly the population thins: at 120 events, between 180 (Blitz) and
+882 (Turtle) of the 900 seat-vectors remain; only the Turtle's games reach 200 events in any
+number (246 vectors); \emph{no} game reached 300, so that bucket carries the full-game
+statistics with a recorded sample count of zero \cite{fingerprints}. Bucket selection at read
+time: a view whose log ends in \code{game\_over} reads \code{full} --- it \emph{is} a
+completed game, whatever its length --- otherwise the nearest checkpoint at or below the
+observed event count, falling back to 60 below 60 events \cite{repo}.
+
+\subsection{The model, and two corrections made by measurement}
+\label{sec:corrections}
+
+The model is deliberately the simplest thing that can be honest: a diagonal Gaussian per
+style over the 14-vector. For an observed vector $x$ and style $s$ with per-feature
+calibration mean $\mu_{s,i}$ and standard deviation $\sigma_{s,i}$,
+\[
+\ell_s(x) \;=\; -\tfrac12 \sum_{i=1}^{14} z_{s,i}^2,
+\qquad
+z_{s,i} \;=\; \frac{x_i - \mu_{s,i}}{\tilde\sigma_{s,i}},
+\]
+and a softmax over the nine $\ell_s$ gives the raw posterior. Diagonal on purpose: with 14
+features and a few hundred vectors per bucket, a full covariance would be an estimate of
+noise, and accuracy is \emph{measured} downstream (Section~\ref{sec:accuracy}), never assumed
+here. Two modelling choices were forced by calibration failures \cite{repo}:
+
+\begin{enumerate}
+\item \textbf{The Gaussian normaliser is dropped.} The textbook log-likelihood carries a
+  $-\ln\sigma_{s,i}$ term per feature. With sample SDs over a few hundred vectors,
+  $\sum_i -\ln\sigma_{s,i}$ is a large \emph{constant} bonus for whichever style happened to
+  calibrate tightest --- and in the first calibration it handed the Ghost 40 of 60
+  mirror-Balanced reads. Without the term the score is a pure $z$-distance, whose argmax at a
+  style's own calibration mean is that style itself. The cost is that the model is no longer
+  a normalised density; the benefit, measured, is that it stops rewarding calibration
+  tightness as if it were evidence.
+\item \textbf{Per-style SDs are shrunk halfway to pooled:}
+  $\tilde\sigma_{s,i}^2 = (\sigma_{s,i}^2 + \bar\sigma_i^2)/2$, where $\bar\sigma_i$ is the
+  root-mean-square of the nine styles' SDs for feature $i$. Raw per-style SDs make the
+  widest-variance style an outlier magnet --- everything unusual ``must be the Scout'' ---
+  while fully pooled SDs discard real information (the Turtle genuinely is more repetitive
+  than its mean alone says). The halfway blend beat both endpoints on cross-play calibration
+  probes and tied them on mirror self-reads.
+\end{enumerate}
+
+Both corrections are small, empirical, and the kind of thing a methods section usually omits.
+They are reported here because each one, left unfixed, produces a confidently wrong
+instrument, and because neither is specific to this game: any few-sample per-class Gaussian
+over behavioural rates faces both.
+
+\subsection{Honesty mechanisms}
+
+Two further mechanisms are structural rather than statistical \cite{repo}. \emph{Sample-size
+damping}: the posterior is blended toward uniform by $w = \min(1, \mathrm{asks}/12)$, so at
+zero observed asks the answer is exactly ``I don't know,'' and full confidence is reachable
+only once a seat has asked a dozen times --- asks, not events, because asks are the seat's
+own observed choices, and a seat that has barely moved in a long game is still unread.
+\emph{A variance floor} of $0.01$ prevents the one literally-constant calibration column
+(Section~\ref{sec:features}) from turning a single stray count into an infinite log-penalty;
+it becomes a very strong finite vote instead.
+
+The unit-test suite pins the contract rather than the accuracy: the posterior is a proper
+distribution; zero asks damp to exactly uniform; the bucket rule is pinned point by point;
+the classifier is deterministic and never mutates a frozen view; and one deliberately loose
+real-game smoke test asserts only better-than-chance on the roster's most separable axis
+(Turtle-family reads at roughly $0.31$ against a $2/9 \approx 0.22$ chance rate)
+\cite{repo}. Real accuracy is a measured number (Section~\ref{sec:accuracy}), not a unit-test
+assertion --- a tight bound there would be a number the suite cannot honestly own.
+
+\section{Separability: the roster's geometry in observable space}
+\label{sec:separability}
+
+\begin{table}[t]
+\centering
+\caption{Pairwise distances between the committed full-log fingerprints
+\cite{fingerprints}, in pooled-$z$ units: $d(a,b) = (\sum_i ((\mu_{a,i} -
+\mu_{b,i})/\bar\sigma_i)^2)^{1/2}$ with $\bar\sigma_i$ the RMS of the nine styles'
+calibration SDs for feature $i$ (floored at $0.01$; the floor binds only on the identically
+zero completion column). Computed directly from the committed table; reproducible with a
+few lines of \code{node}.}
+\label{tab:dist}
+\footnotesize
+\begin{tabular}{@{}lcccccccc@{}}
+\toprule
+ & Balanced & Blitz & Punter & Banker & Turtle & Hoarder & Scout & Ghost \\
+\midrule
+Blitz     & 0.22 &      &      &      &      &      &      &      \\
+Punter    & 0.24 & 0.25 &      &      &      &      &      &      \\
+Banker    & 0.20 & 0.23 & 0.24 &      &      &      &      &      \\
+Turtle    & 3.22 & 3.35 & 3.18 & 3.28 &      &      &      &      \\
+Hoarder   & 1.74 & 1.79 & 1.74 & 1.76 & 2.81 &      &      &      \\
+Scout     & 1.66 & 1.79 & 1.64 & 1.69 & 2.12 & 1.97 &      &      \\
+Ghost     & 1.02 & 1.04 & 1.15 & 0.97 & 3.70 & 2.15 & 2.07 &      \\
+Archivist & 0.95 & 1.08 & 0.96 & 0.99 & 2.58 & 1.74 & 0.75 & 1.42 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:dist} is the paper's central picture: the distance between every pair of
+committed full-log fingerprints, in pooled-$z$ units. Four structures stand out, and each has
+a mechanism.
+
+\paragraph{The quadrangle.} Balanced, Blitz, Punter and Banker sit pairwise
+$0.20$--$0.25$ apart --- over a fourteen-dimensional space, nearly a single point. This is
+the inert-axis finding of the companions \cite{inertpaper,v05} arriving in observable space.
+Those four styles are exactly the ones whose defining knob was the declare threshold, an axis
+measured to select identical declares across the roster's entire range; what behavioural
+difference survives (their ask-scoring weights) amounts to $0.39$--$1.19\%$ of decisions
+against the control \cite{styles}, and $\le 1.3\%$ of decisions leaves almost no trace in
+fourteen public rates. The tournament separates these styles by up to $5.4$ points of mean
+score \cite{v05}; the public log, in one game, essentially cannot.
+
+\paragraph{The far pole.} The Turtle sits $3.2$--$3.7$ from the quadrangle and the Ghost, and
+no closer than $2.1$ to anything --- the roster's one style an observer can genuinely expect
+to spot. Its per-feature signature is broad, not narrow: relative to Balanced,
+\code{missFewestShare} $+1.7\bar\sigma$, \code{leakyAskShare} $+1.6\bar\sigma$,
+\code{deadAskShare} $+1.4\bar\sigma$, \code{hitRate} $-0.9\bar\sigma$, \code{askDiversity}
+$-0.8\bar\sigma$. The mechanism is its own-hand-only declare gate \cite{v05}: refusing to
+bank split books keeps resolved information on the table, so its asks are measured against a
+position the whole table has already solved.
+
+\paragraph{The Hoarder, and what the hoard-gate fix bought.} The Hoarder sits $1.74$ from
+Balanced --- and essentially the whole distance is one axis, \code{foreignDeclareShare} at
+$+1.5\bar\sigma$ (calibration mean $0.225$ against the control's $0.009$). This is the
+audited hoard gate's measured side effect: a style that refuses declares which spend its
+licences ends up declaring disproportionately the books that cost it nothing, i.e.\ foreign
+ones \cite{styles,v05}. Two facts qualify the $1.74$. First, it exists only because of the
+audit: the first Hoarder implementation was byte-identical to Balanced --- zero divergent
+decisions in 275{,}380 --- so its observable distance was exactly $0$ \cite{v05}. A style
+must first \emph{exist} to be observed. Second, the distance is strongly time-dependent: at
+the 60-event bucket the Hoarder--Balanced distance is $0.15$, because declares --- the only
+place its signature lives --- concentrate late. Early-game reads of the Hoarder are close to
+structurally impossible.
+
+\paragraph{Scout $\approx$ Archivist.} The two information styles sit $0.75$ apart, with no
+single feature differing by more than $0.44\bar\sigma$. The Archivist is the interesting
+half of the pair: its name-giving move --- declaring books it holds no card of, for its
+teammates --- fires at a shipped threshold of $0.95$ and almost never triggers, so its
+measured foreign-declare rate ($0.007$) is actually \emph{below} the control's ($0.014$)
+\cite{v05}. Its public signature is therefore not its thesis but its ask-weight side
+effects, which resemble the Scout's. A style whose defining mechanism rarely fires is, to
+this channel, mostly its side effects.
+
+\section{Measured accuracy}
+\label{sec:accuracy}
+
+\subsection{Design}
+
+Accuracy is measured on games the calibration never saw, in a setting deliberately harder
+than calibration: \emph{cross-play}. All 36 unordered style pairings play 50 single games
+each (team~0 one style, team~1 the other; seeds \code{clsacc-v1-<i>}, disjoint from the
+calibration prefix; start seat rotating), for 1{,}800 games. Each game is classified from log
+prefixes of 40, 80, 150 and 250 events and from the full log, using the committed classifier
+and fingerprints end to end; a truncation is scored only for games whose log outlived it.
+Each checkpoint therefore yields up to $1{,}800 \times 6 = 10{,}800$ seat-reads, each scored
+top-1 against the seat's true style among nine candidates (chance $1/9 \approx 11.1\%$)
+\cite{artifact}. The distribution shift from mirror calibration to cross-play deployment is
+intentional --- it is the shift the adaptive engine \cite{v10} actually faces --- and its
+cost is visible in the numbers below.
+
+\subsection{The accuracy curve}
+
+\begin{table}[t]
+\centering
+\caption{Single-game top-1 accuracy over nine styles, by observed-event checkpoint
+\cite{artifact}. Chance is $1/9 \approx 0.111$. A checkpoint scores only games whose log
+outlived it; the 150-event row's small, style-skewed survivor population (112 of 1{,}800
+games, dominated by the long-game styles) is why its higher figure is not comparable to the
+others, and no game reached 250 events.}
+\label{tab:curve}
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Checkpoint (events) & Seat-reads & Top-1 & vs.\ chance \\
+\midrule
+40         & 10{,}800 & 0.164 & $1.5\times$ \\
+80         & 10{,}464 & 0.202 & $1.8\times$ \\
+150 (survivors only) & 672 & 0.375 & --- \\
+full log   & 10{,}800 & 0.224 & $2.0\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:curve}: accuracy rises from $16.4\%$ at 40 events through $20.2\%$ at 80 to
+$22.4\%$ on the full log --- twice chance, and no better than that. The curve's shape is the
+damping and the buckets doing their jobs (early reads are pulled toward uniform; later reads
+have more declares to work with), and its \emph{level} is the separability geometry of
+Section~\ref{sec:separability} made concrete. One row needs its caveat stated plainly: the
+$37.5\%$ at 150 events is computed over the 672 seat-reads of the 112 games that lasted that
+long, a population heavily skewed toward the long-game styles (Turtle 186 and Scout 180 of
+the 672 seats), which are also the separable ones. It is a fact about survivors, not a point
+on the same curve.
+
+\subsection{Per-style accuracy and the confusion structure}
+
+\begin{table}[t]
+\centering
+\caption{Full-log confusion, row-normalised to percent (1{,}200 seat-reads per row)
+\cite{artifact}. Rows are true styles, columns predictions; the diagonal is bold.}
+\label{tab:confusion}
+\footnotesize
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{@{}lccccccccc@{}}
+\toprule
+True $\backslash$ read & Bal & Bli & Pun & Ban & Tur & Hoa & Sco & Gho & Arc \\
+\midrule
+Balanced  & \textbf{5.6}  & 8.3 & 15.2 & 14.4 & 2.2  & 4.4  & 15.3 & 27.0 & 7.8 \\
+Blitz     & 5.3 & \textbf{9.3}  & 16.6 & 14.2 & 1.3  & 4.8  & 14.3 & 26.1 & 8.2 \\
+Punter    & 4.8 & 9.1 & \textbf{12.9} & 12.5 & 3.2  & 5.2  & 16.4 & 27.5 & 8.4 \\
+Banker    & 5.5 & 8.5 & 14.5 & \textbf{12.6} & 2.8  & 3.4  & 16.1 & 32.3 & 4.3 \\
+Turtle    & 2.2 & 2.8 & 4.4  & 7.7  & \textbf{27.2} & 7.8  & 23.1 & 19.3 & 5.7 \\
+Hoarder   & 1.2 & 3.7 & 6.3  & 9.0  & 9.3  & \textbf{30.9} & 17.3 & 18.3 & 3.9 \\
+Scout     & 2.5 & 4.1 & 4.1  & 4.9  & 15.2 & 1.2  & \textbf{41.3} & 16.9 & 9.9 \\
+Ghost     & 3.2 & 5.8 & 11.9 & 11.4 & 0.8  & 2.2  & 10.3 & \textbf{50.4} & 3.9 \\
+Archivist & 2.8 & 4.8 & 6.0  & 5.6  & 12.3 & 1.9  & 33.1 & 21.8 & \textbf{11.8} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The headline $22.4\%$ decomposes into two regimes (Table~\ref{tab:confusion}). The styles
+with a real observable signature are read far above chance: Ghost $50.4\%$, Scout $41.3\%$,
+Hoarder $30.9\%$, Turtle $27.2\%$. The quadrangle is read at $5.6$--$12.9\%$ ---
+\emph{at or below} chance for Balanced and Blitz --- exactly as the distance table predicts
+for four styles $0.2$ apart under calibration SDs an order of magnitude larger.
+
+This split was pre-stated. The run's committed predictions include (\code{P4}) that
+accuracy ``should be good for turtle, ghost and hoarder,'' and heavily confused inside the
+Balanced--Blitz--Punter--Banker quadrangle, on the Stage-1B separability read
+\cite{artifact}. The recorded verdict is \emph{mixed}, and honestly so: the quadrangle
+confusion held (mean $10.1\%$ against a $\le 35\%$ condition), but the separable trio
+under-shot its $\ge 50\%$ bar (mean $36.2\%$; only the Ghost cleared it) --- and quadrangle
+errors did \emph{not} mostly stay inside the quadrangle ($30$--$40\%$ against a $\ge 50\%$
+condition). Where they went instead is the table's most interesting structure.
+
+\paragraph{Ghost and Scout as attractors.} Summing columns: the Ghost is predicted for
+$2{,}875$ of $10{,}800$ reads ($26.6\%$) and the Scout for $2{,}245$ ($20.8\%$) ---
+together $47.4\%$ of all reads, for two styles that are $2/9$ of the truth. Every quadrangle
+style's single most common read is Ghost ($26$--$32\%$); the Archivist is read as Scout
+nearly three times as often as as itself ($33.1\%$ vs.\ $11.8\%$).
+
+We offer an interpretation, and flag it as interpretation rather than measurement. The
+per-feature decompositions of Section~\ref{sec:separability} show the roster's two strongest
+observable axes are the ones the Ghost and the Scout respectively own: the
+ask-repetition/hit-rate direction (Ghost: fewer same-book repeats, more certain asks, higher
+hit rate --- leak avoidance's public shadow) and the dead-ask/targeting direction (Scout:
+public misses and miss-target structure --- information buying's public shadow). A noisy
+seat-vector that wanders from the quadrangle's shared centre must wander \emph{in some
+direction}, and these two poles are the nearest distinct means in the two highest-variance
+observable directions; under a pure $z$-distance argmax, noise falls toward them. On this
+reading the attractor structure is a property of the observable space's geometry, not a
+defect of the model --- but distinguishing those two explanations would need a calibration
+ablation this paper does not contain.
+
+\section{The fundamental limit, and the program this instrument belongs to}
+\label{sec:limit}
+
+\subsection{The divergence ceiling}
+
+The decision-divergence instrument of the v0.5 paper \cite{v05,styles} measures, by
+replaying identical views and seeds, the exact fraction of decisions on which each style
+differs from the Balanced control: Scout $2.89\%$, Ghost $2.15\%$, Archivist $1.66\%$,
+Banker $1.19\%$, Turtle $0.83\%$, Punter $0.47\%$, Hoarder $0.47\%$, Blitz $0.39\%$
+\cite{styles}. Those same measurements put the decision density at roughly $675$ policy
+decisions per game across all six seats (declare-window decisions included), i.e.\ on the
+order of $110$ per seat.
+
+The arithmetic of the ceiling follows directly. A Blitz seat makes about $0.4$
+Blitz-revealing decisions per game; a Scout seat about $3$. Every other decision is, by
+construction, \emph{identical to the control's} --- carrying zero information about the
+style. No observer of any channel, public or god's-eye, can classify a seat from decisions
+the seat's style never influenced; one game of a $0.39\%$-divergent style simply does not
+contain the evidence, and the measured quadrangle accuracy of $5.6$--$12.9\%$ should be read
+as that fact, not as a classifier deficiency. The public channel then tightens the bound
+further: a share of the divergent decisions are declare-window choices, and a divergent
+\emph{decline} emits no event at all (Section~\ref{sec:blind}) --- some of the few
+style-revealing decisions are invisible in principle. Styles are distinguishable in one game
+roughly in proportion to where their divergence lands: the Turtle's $0.83\%$ is highly
+visible because it lands on asks and declares that reshape the whole public position, while
+the quadrangle's $0.39$--$1.19\%$ lands on ask-scoring margins that the log renders as the
+same kind of event either way.
+
+The constructive reading of the ceiling is about aggregation: at one game the observer is
+evidence-starved, not model-starved, so the natural upgrades are longitudinal ---
+accumulating observations across games of a persistent opponent --- rather than
+architectural. That is the direction the synthesis's program points, and it is future work.
+
+\subsection{The detection-panel program}
+
+The project's research synthesis \cite{playstyles} specifies (its \S VI.4) an
+opponent-detection statistics panel --- every statistic computable from the public log alone
+--- as the feature set of its cross-game opponent-profiling style, ``The Reader'' (its S35).
+This paper's instrument is best understood as implementing and \emph{measuring} a slice of
+that panel against a concrete roster. Shipped, with the panel's intended detection target:
+the dead-ask rate (its known-negative-ask detector), the certain-ask rate (its
+confirmation-ask / claim-imminent detector), ask diversity with hit rate (its signal-broker
+row), the same-book repeat rate (its chain-discipline row), the miss-target shares (the
+observable core of its turn-parking and targeting rows), declare timing via
+\code{declareBackload} (its claim-delay row, on the observable stand-in of
+Section~\ref{sec:blind}), and the exact foreign / own-hand-only declare shares (its claimer
+taxonomy).
+
+Unshipped, and honestly labelled future work: the blackballing detectors (collapse of a
+seat's inbound-target share); the evidence-age decay of hit rate --- the synthesis's
+candidate best single skill estimator --- which needs per-ask evidence dating; the possum
+detector (deducible certainties high while certain asks stay near zero), which requires
+running the full deduction engine over the log and is deliberately outside this observation
+layer's no-inference scope; claim-threshold estimation from provably contained books; and
+the entire convention-detection family --- the Salahuddin-convention detector and the
+permutation-null excess-mutual-information test --- which has nothing to detect here, since
+this roster plays no conventions, and which additionally needs revealed-hand data retained
+across games. None of the unshipped rows would lift the Section~\ref{sec:limit} ceiling for
+this roster in a single game; the panel's value concentrates in the cross-game, human-facing
+setting the synthesis designed it for.
+
+\section{Honest scope}
+\label{sec:scope}
+
+Everything above is conditional, and the conditions are worth stating as bluntly as the
+results.
+
+\begin{enumerate}
+\item \textbf{This roster, this rule set.} Features were designed and fingerprints calibrated
+  for the nine committed styles under \usff{} as pinned by the rules hash
+  \cite{artifact,rules}. The feature set was written by authors who knew the roster ---
+  \code{foreignDeclareShare} exists because foreign-declaring styles do --- so accuracy on a
+  novel, adversarial, or human style is unmeasured, and the design leakage means it cannot be
+  extrapolated from Table~\ref{tab:confusion}.
+\item \textbf{Full-strength shared inference.} Every observed seat runs the identical
+  full-strength inference engine \cite{v05}. Behavioural variation from \emph{skill} ---
+  memory limits, deduction errors --- is entirely absent from calibration. Human play varies
+  along exactly that axis; it is out of distribution, and the synthesis's panel rows for
+  skill estimation (evidence-age decay) are the missing instrument, not this one.
+\item \textbf{Mirror calibration, cross-play deployment.} Fingerprints come from mirror
+  games; accuracy is measured on cross-play, where game length and opponent behaviour differ.
+  This shift is intentional (it is the deployment condition) but it means the reported
+  accuracy is neither a ceiling nor a floor for other populations.
+\item \textbf{Single-game observation only.} Nothing here aggregates across games. The
+  divergence arithmetic of Section~\ref{sec:limit} says single-game reads of near-control
+  styles are evidence-starved in principle; cross-game profiles are the synthesis's S35
+  program and remain future work.
+\item \textbf{Deterministic policies.} All variation comes from seeds; a stochastic or
+  deliberately deceptive policy (the synthesis's possum) faces detectors this layer
+  deliberately does not include.
+\end{enumerate}
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+The \usff{} public log is an unusually generous observation channel --- it locates cards,
+certifies licences, and reveals declaration truth --- and this paper measured how much play
+style survives the trip through it. The answer has a clean shape. What the channel certifies,
+it certifies exactly: foreign and own-hand-only declares are noiseless observations, and a
+14-feature share vector over the log supports a simple, honest classifier once two measured
+corrections (no normaliser; half-pooled variances) are applied. What the channel recovers is
+governed by geometry that the roster's own companion findings predict: the four styles whose
+labelled axis is inert collapse to a point $0.20$--$0.25$ wide and read at or near chance,
+while the styles whose divergence lands on public, position-reshaping events --- Turtle,
+Hoarder, Scout, Ghost --- are read at $27$--$50\%$ against $11.1\%$ chance. And what limits
+the whole enterprise is not the model but the material: styles that diverge on
+$0.39$--$2.89\%$ of decisions offer an observer one to three revealing decisions per seat per
+game, some of them structurally invisible declines. Twice chance at one game is what this
+channel, this roster, and honest calibration yield; the road past it runs through cross-game
+aggregation, not a better single-game model. Whether even a perfect read would be worth
+anything to an adapting agent is the companion paper's question --- and its answer belongs to
+that paper, not this one \cite{v10}.
+
+\medskip
+\noindent\textbf{Reproducibility.} The engine and classifier are deterministic. The committed
+fingerprint table carries its full provenance (generator command, seed prefix, per-bucket
+sample counts) \cite{fingerprints}; the accuracy experiment's committed artifact carries the
+run configuration, health counters (all clean), records digest and engine commit
+\cite{artifact}; and the distance matrix of Table~\ref{tab:dist} recomputes from the
+committed fingerprints alone.
+
+\begin{thebibliography}{9}
+\small
+
+\bibitem{v05}
+A.~Hsieh.
+\newblock FishAI v0.5: Measuring play style without skill in a 54-card Literature variant.
+\newblock FishAI project; companion paper, published alongside this one, 2026.
+
+\bibitem{v10}
+A.~Hsieh.
+\newblock FishAI v1.0: When best-response adaptation is worth less than nothing.
+\newblock FishAI project; companion paper, 2026.
+
+\bibitem{inertpaper}
+A.~Hsieh.
+\newblock The inert axis: when a style parameter is wired, swept, and never reached.
+\newblock FishAI project; companion paper, 2026.
+
+\bibitem{containedpaper}
+A.~Hsieh.
+\newblock The contained book: an absorbing resource measured to be worth nothing.
+\newblock FishAI project; companion paper, 2026.
+
+\bibitem{playstyles}
+FishAI project.
+\newblock PLAYSTYLES.md --- Literature / Canadian Fish: play styles, rule dialects, and
+engine specification.
+\newblock Internal research synthesis with per-claim evidence tiers, 2026. \S VI.4 specifies
+the opponent-detection statistics panel; S35 (``The Reader'') the cross-game profiling
+program; S21 and S36 the possum and Salahuddin-convention detection targets.
+
+\bibitem{rules}
+FishAI project.
+\newblock RULES\_US54.md --- the ``US student'' 54-card variant.
+\newblock Repository rules specification with derived consequences and test vectors, 2026.
+Rows 6--7 (ask licences), row 9 (hit transfer), and the declare-window mechanics cited in
+Section~\ref{sec:channel}.
+
+\bibitem{styles}
+FishAI project.
+\newblock STYLES.md --- the play-style roster under \usff{}.
+\newblock Repository document; \S3.1.1 the Hoarder inertness audit, \S6.1 the inert
+declare-threshold axis and per-style decision-divergence rates, 2026.
+
+\bibitem{fingerprints}
+FishAI project.
+\newblock Committed fingerprint calibration \code{lib/engine/bots/data/fingerprints.ts}.
+\newblock Generated by \code{node scripts/gen-fingerprints.mjs --games 150}: 150 \usff{}
+mirror games per style, seed prefix \code{fingerprint-v1}, checkpoint buckets
+$\{60, 120, 200, 300, \code{full}\}$ with per-bucket sample provenance; generated
+2026-08-24.
+
+\bibitem{artifact}
+FishAI project.
+\newblock Adaptive-lab artifact \code{src/lab/data/adaptive-results.json}.
+\newblock Classifier-accuracy block: 36 cross-play style pairings $\times$ 50 games (seed
+prefix \code{clsacc-v1}), truncation checkpoints $\{40, 80, 150, 250\}$ plus full log;
+records digest \code{ce3316641a8f38fe}; engine commit \code{45ec9f3} (recorded
+\code{45ec9f3-dirty}); health counters all zero; generated 2026-08-24.
+
+\bibitem{repo}
+FishAI project.
+\newblock FishAI repository: engine, bots, simulation laboratory, and results site.
+\newblock \code{lib/engine/bots/observe.ts} (the observation layer and its header
+derivations), \code{lib/engine/bots/classify.ts} (the classifier and the two calibration
+corrections), \code{tests/bots/observe.test.ts} and \code{tests/bots/classify.test.ts} (the
+pinned contracts), 2026.
+
+\end{thebibliography}
+
+\end{document}
