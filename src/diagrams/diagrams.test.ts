@@ -13,6 +13,7 @@
 import { describe, expect, it } from 'vitest'
 import { FIXTURES } from './fixture'
 import { niceDomain, onGrid, orthoPath, placeLabel, scaleTo } from './geometry'
+import { layoutAdaptiveMechanism } from './layout/adaptiveMechanism'
 import { claimPrecisionDumbbell, concedeRateBar, degradationLine } from './layout/charts'
 import { layoutCounterGraph } from './layout/counterGraph'
 import { layoutDeck } from './layout/deck'
@@ -31,6 +32,7 @@ function scenesFor(key: (typeof CASES)[number]): Record<string, Scene> {
     'payoff matrix': layoutPayoffMatrix({ results }).scene,
     'counter-graph': layoutCounterGraph({ results }).scene,
     'analysis pipeline': layoutPipeline().scene,
+    'adaptive mechanism': layoutAdaptiveMechanism().scene,
     'turn machine': layoutTurnMachine().scene,
     'declare window': layoutDeclareMachine().scene,
     'bar chart': concedeRateBar(results).scene,

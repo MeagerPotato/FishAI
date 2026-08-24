@@ -61,10 +61,14 @@ export function LabShell({
   which,
 }: LabShellProps) {
   useDocumentTitle(docTitle)
+  // Seven links. Verified against the 960px collapse: at 961px the bar needs ~900px
+  // (brand ~92 + two 30px gaps + seven labels with 24px link gaps ~500 + toggle) and has
+  // ~921px inside the gutters, so the desktop row still fits where it last shows.
   const links = [
     { href: withCase('/lab', which), label: 'Report' },
     { href: withCase('/lab/matrix', which), label: 'Matrix' },
     { href: replayHref(which), label: 'Replay' },
+    { href: withCase('/lab/adaptive', which), label: 'Adaptive' },
     { href: withCase('/lab/live', which), label: 'Live' },
     { href: '/play', label: 'Play' },
     { href: '/design', label: 'Design' },
@@ -89,6 +93,7 @@ export function LabShell({
               { href: withCase('/lab', which), label: 'The report' },
               { href: withCase('/lab/matrix', which), label: 'Full matrix' },
               { href: replayHref(which), label: 'Replay a game' },
+              { href: withCase('/lab/adaptive', which), label: 'Adaptive engine' },
               { href: withCase('/lab/live', which), label: 'Live simulator' },
             ],
           },
