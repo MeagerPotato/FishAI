@@ -49,6 +49,7 @@ export function LabShell({
     { href: withCase('/lab', which), label: 'Report' },
     { href: withCase('/lab/matrix', which), label: 'Matrix' },
     { href: withCase('/lab/replay/blitz-vs-banker', which), label: 'Replay' },
+    { href: '/play', label: 'Play' },
     { href: '/design', label: 'Design' },
   ]
 
@@ -71,6 +72,13 @@ export function LabShell({
               { href: withCase('/lab', which), label: 'The report' },
               { href: withCase('/lab/matrix', which), label: 'Full matrix' },
               { href: withCase('/lab/replay/blitz-vs-banker', which), label: 'Replay a game' },
+            ],
+          },
+          {
+            title: 'Play',
+            items: [
+              { href: '/play', label: 'The lobby' },
+              { href: '/play/table', label: 'Solo table' },
             ],
           },
           {
