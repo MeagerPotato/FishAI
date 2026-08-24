@@ -372,13 +372,17 @@ describe('the gates', () => {
     }
   })
 
-  it('pagat48 is refused outright: C2 is a us54 rule (row 14 gifts, row 15 voids)', () => {
+  it('pagat48 is refused outright — a compatibility gate, not a rules argument (STYLES.md §6.3.7)', () => {
     const v = containedSpot(SPREAD, { config: defaultConfig })
     const k = buildKnowledge(v)
     // The book is still recognised — containment is a fact about the position, not the rules.
     expect(containedBooks(v, k)).toEqual(['LOW-C'])
-    // But the policy will not act on it: under RULES.md row 15 an opponent who declares a
-    // contained book VOIDS it, so it is not the absorbing, free asset C2 measured under us54.
+    // But the policy will not act on it. NOT because containment fails under pagat48 — it does
+    // not: an opponent's declare of a contained book falls under row 14 (opponents hold at
+    // least one card, the opposing team scores), worded identically in both rule sets, and
+    // tests/engine/containment.test.ts pins exactly that. The gate exists because this project
+    // holds the shipped 48-card game byte-identical, and enabling a new policy mechanism there
+    // would change it. §6.3.7 records that an earlier draft gave the wrong (row-15) reason.
     for (const id of STYLE_IDS) expect(plan(v, STYLE_ROSTER[id]), id).toBeNull()
   })
 
