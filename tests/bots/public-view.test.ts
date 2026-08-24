@@ -134,6 +134,13 @@ describe('public-view-only proof', () => {
       // '../cards.ts', './style.ts' and './types.ts', so no engine state is reachable from it
       // either — the same standard every other file in this module is held to.
       './contained.ts',
+      // The v1.0 observation layer: a pure single pass over the public log, importing only
+      // '../types.ts', '../cards.ts' and './types.ts'. It is precisely the module this test
+      // exists to make possible — behaviour read off the public record and nothing else.
+      './observe.ts',
+      // Generated classifier calibration (scripts/gen-fingerprints.mjs): frozen numeric data
+      // plus the StyleId type from './roster.ts'. No engine state is reachable from data.
+      './data/fingerprints.ts',
     ])
     const forbiddenIdents = /\b(newGame|publicView|seatView|reduce|dealHands|legalAsks|checkInvariants|shuffle)\b/
     for (const f of files) {
