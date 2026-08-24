@@ -28,7 +28,9 @@
  * 3. **Mixed screen** — 24 opponent compositions × 400 pairs on prefix `mixed-v1`, each played
  *    TWICE: adaptive team vs the composition, and punter team vs the same composition on the
  *    same seeds, start seats and orientations. The headline is the pooled per-deal delta
- *    (adaptive − punter), truly paired within this run. Compositions are the stride-7 sample
+ *    (adaptive − punter), truly paired within this run — with its SE clustered by seed,
+ *    because every composition replays the identical seed list and the per-deal deltas at one
+ *    seed share the deal (`mixedPooledFromRecords`). Compositions are the stride-7 sample
  *    of the 165 lexicographic 3-multisets of the roster — deterministic, documented, no seeded
  *    shuffle to argue about (see `mixedCompositionList`). A composition's three styles sit on
  *    the opposing team's three seats in ascending style-id order against ascending seat order.
@@ -93,6 +95,7 @@ import { ADAPTIVE_PREDICTIONS, ADAPTIVE_SCHEMA_VERSION } from './adaptive-types.
 import type {
   AccuracyByStyle,
   AccuracyCheckpoint,
+  AccuracyRow,
   AdaptiveCellAggregate,
   AdaptiveGameRecord,
   AdaptiveHealthSummary,
@@ -114,7 +117,7 @@ import type {
 /**
  * The full v1.0 experiment as pre-registered: gauntlet on matrix v2's exact seed set (4,300
  * pairs of `style-v1` — the paired benchmark), the smaller experiments at the budgets SPEC
- * Stage 2b names. ~163,000 games in total.
+ * Stage 2b names. 125,600 games in total (`adaptiveGamesTotal`, pinned in the tests).
  */
 export const DEFAULT_ADAPTIVE_CONFIG: AdaptiveLabConfig = {
   gauntletPairs: 4300,
@@ -693,6 +696,77 @@ function pairMeans(records: readonly AdaptiveGameRecord[]): Map<number, number> 
   return out
 }
 
+/** The mixed screen's pooled estimate, with the SE clustered by seed. */
+export interface MixedPooled {
+  pairedDelta: number
+  deltaSe: number
+  ci95: [number, number]
+  adaptiveMean: number
+  punterMean: number
+  /** Distinct seeds behind the SE — the cluster count. */
+  seeds: number
+}
+
+/**
+ * The mixed screen's pooled estimator, from per-game records alone. Every composition replays
+ * the IDENTICAL seed list, so the per-deal deltas at one seed share that deal and are not
+ * independent observations — treating all composition × pair deltas as independent would
+ * understate the pooled SE and overstate z. The estimator therefore clusters by seed: per-deal
+ * deltas are averaged within seed first, and the SE is `sd(seed-level deltas) / sqrt(seeds)`.
+ * The point estimate is the plain pooled mean — identical to the mean of seed-level means
+ * whenever every seed carries every composition, which the balanced design of every real run
+ * guarantees. Per-composition row SEs are within-composition and unaffected.
+ *
+ * Exported (and used by `assembleAdaptiveRun` itself) so `scripts/adaptive-analyze.mjs` can
+ * compute the same number from games.jsonl rather than trusting a stored aggregate.
+ */
+export function mixedPooledFromRecords(records: readonly AdaptiveGameRecord[]): MixedPooled {
+  const cells = new Map<string, { adaptive: AdaptiveGameRecord[]; punter: AdaptiveGameRecord[] }>()
+  for (const r of records) {
+    if (r.exp !== 'mixed' || r.arm === undefined) continue
+    let slot = cells.get(r.cell)
+    if (slot === undefined) {
+      slot = { adaptive: [], punter: [] }
+      cells.set(r.cell, slot)
+    }
+    slot[r.arm].push(r)
+  }
+  const pooledDeltas: number[] = []
+  const pooledAdaptive: number[] = []
+  const pooledPunter: number[] = []
+  const bySeed = new Map<string, number[]>()
+  for (const [, slot] of cells) {
+    const meansA = pairMeans(slot.adaptive)
+    const meansP = pairMeans(slot.punter)
+    const seedOfPair = new Map<number, string>()
+    for (const r of slot.adaptive) seedOfPair.set(r.pair, r.seed)
+    for (const [pair, ma] of meansA) {
+      const mp = meansP.get(pair)
+      if (mp === undefined) continue
+      const d = ma - mp
+      pooledDeltas.push(d)
+      pooledAdaptive.push(ma)
+      pooledPunter.push(mp)
+      const seed = seedOfPair.get(pair) ?? String(pair)
+      const seedSlot = bySeed.get(seed)
+      if (seedSlot === undefined) bySeed.set(seed, [d])
+      else seedSlot.push(d)
+    }
+  }
+  const seedDeltas: number[] = []
+  for (const [, ds] of bySeed) seedDeltas.push(mean(ds))
+  const pairedDelta = mean(pooledDeltas)
+  const deltaSe = seedDeltas.length > 0 ? sd(seedDeltas) / Math.sqrt(seedDeltas.length) : 0
+  return {
+    pairedDelta,
+    deltaSe,
+    ci95: [pairedDelta - 1.96 * deltaSe, pairedDelta + 1.96 * deltaSe],
+    adaptiveMean: mean(pooledAdaptive),
+    punterMean: mean(pooledPunter),
+    seeds: bySeed.size,
+  }
+}
+
 function sharesOf(counts: readonly number[]): Record<StyleId, number> {
   const total = counts.reduce((s, v) => s + v, 0)
   const out = {} as Record<StyleId, number>
@@ -750,20 +824,33 @@ export function scoreClassifier(
     }
   }
 
-  const accuracy = cps.map((events) => {
+  const accuracy: AccuracyRow[] = []
+  const deadCheckpoints: number[] = []
+  for (const events of cps) {
     const tally = rows.get(events)
+    const seats = tally?.seats ?? 0
+    if (seats === 0) {
+      // A checkpoint no game's log outlived recorded nothing. Encoding it as `top1: 0` would
+      // invent a measured zero, so it is named dead instead and carries no accuracy row.
+      deadCheckpoints.push(events)
+      continue
+    }
     const byStyle = {} as Record<StyleId, AccuracyByStyle>
     for (const style of STYLE_IDS) {
       const by = tally?.byStyle.get(style)
       byStyle[style] =
         by === undefined ? { seats: 0, top1: 0 } : { seats: by.seats, top1: by.seats === 0 ? 0 : by.correct / by.seats }
     }
-    const seats = tally?.seats ?? 0
     const correct = tally?.correct ?? 0
-    return { events, seats, top1: seats === 0 ? 0 : correct / seats, byStyle }
-  })
+    accuracy.push({ events, seats, top1: correct / seats, byStyle })
+  }
 
-  return { checkpoints: cps, accuracy, confusion: { events: 0, styles: [...STYLE_IDS], matrix: confusion } }
+  return {
+    checkpoints: cps,
+    accuracy,
+    deadCheckpoints,
+    confusion: { events: 0, styles: [...STYLE_IDS], matrix: confusion },
+  }
 }
 
 /* -- the run -------------------------------------------------------------------------------- */
@@ -856,9 +943,6 @@ export function assembleAdaptiveRun(
   // --- mixed screen -------------------------------------------------------------------------
   const comps = mixedCompositionList(config.mixedCompositions)
   const rows: MixedRow[] = []
-  const pooledDeltas: number[] = []
-  const pooledAdaptive: number[] = []
-  const pooledPunter: number[] = []
   for (let c = 0; c < comps.length; c++) {
     const cell = mixedCellId(c, comps[c])
     const recsA = group(`mixed:${cell}#adaptive`)
@@ -884,9 +968,6 @@ export function assembleAdaptiveRun(
       const mp = meansP.get(pair)
       if (mp === undefined) continue
       deltas.push(ma - mp)
-      pooledDeltas.push(ma - mp)
-      pooledAdaptive.push(ma)
-      pooledPunter.push(mp)
     }
     rows.push({
       composition: comps[c],
@@ -897,16 +978,18 @@ export function assembleAdaptiveRun(
       deltaSe: deltas.length > 0 ? sd(deltas) / Math.sqrt(deltas.length) : 0,
     })
   }
-  const pairedDelta = mean(pooledDeltas)
-  const deltaSe = pooledDeltas.length > 0 ? sd(pooledDeltas) / Math.sqrt(pooledDeltas.length) : 0
+  // The pooled numbers come from the shared seed-clustered estimator, so the runner and the
+  // re-analysis script cannot drift apart (mixedPooledFromRecords: every composition replays
+  // the identical seed list, so the SE must not treat its replays as independent).
+  const pooled = mixedPooledFromRecords(all)
   const mixed: MixedResult = {
     compositions: comps.length,
     pairsPer: config.mixedPairs,
-    adaptiveMean: mean(pooledAdaptive),
-    punterMean: mean(pooledPunter),
-    pairedDelta,
-    deltaSe,
-    ci95: [pairedDelta - 1.96 * deltaSe, pairedDelta + 1.96 * deltaSe],
+    adaptiveMean: pooled.adaptiveMean,
+    punterMean: pooled.punterMean,
+    pairedDelta: pooled.pairedDelta,
+    deltaSe: pooled.deltaSe,
+    ci95: pooled.ci95,
     rows,
   }
 
@@ -1138,7 +1221,10 @@ function computeVerdicts(
       detail:
         `pooled per-deal delta ${fmt(mixed.pairedDelta)} ± ${fmt(mixed.deltaSe)} over ` +
         `${mixed.compositions} compositions × ${mixed.pairsPer} pairs (z ${z.toFixed(2)}; ` +
-        `95% CI [${fmt(mixed.ci95[0])}, ${fmt(mixed.ci95[1])}]), truly paired within the run.`,
+        `95% CI [${fmt(mixed.ci95[0])}, ${fmt(mixed.ci95[1])}]), truly paired within the run. ` +
+        `The SE is clustered by seed: all ${mixed.compositions} compositions replay one ` +
+        `${mixed.pairsPer}-seed list, so per-deal deltas are averaged within seed before the SE ` +
+        'is taken over the seed-level means — replays of a deal are not counted as independent.',
     })
   }
 

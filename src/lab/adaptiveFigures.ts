@@ -9,11 +9,12 @@
  *   punter cell is the one whose benchmark is not a measured row: punter-vs-punter is the
  *   duplicate-pair identity, exactly 0.5000 by construction. The omission is stated in the
  *   caption and the cell is fully printed in the table beside the figure.
- * - **The classifier line drops empty checkpoints.** The 250-event checkpoint recorded zero
- *   seats — no game in the run produced 250 observable events — and plotting a recorded-nothing
- *   as a measured zero would be the exact lie the axis rules exist to prevent. The caption
- *   states the omission, and flags the 150-event checkpoint's survivorship (672 of 10,800
- *   seats) for the same reason.
+ * - **Dead checkpoints are absent, and named.** The artifact itself drops zero-seat
+ *   checkpoints from `classifier.accuracy` and lists them in `classifier.deadCheckpoints` —
+ *   plotting a recorded-nothing as a measured zero would be the exact lie the axis rules
+ *   exist to prevent — so the figure trusts the artifact and its caption states the omission,
+ *   flagging the 150-event checkpoint's survivorship (672 of 10,800 seats) for the same
+ *   reason.
  */
 
 import type { StyleId } from '../../lib/engine/index.ts'
@@ -124,8 +125,16 @@ export function gauntletDumbbell(results: AdaptiveResults, figNo = 'FIG. 02'): D
    ========================================================================== */
 
 export function classifierLine(results: AdaptiveResults, figNo = 'FIG. 03'): LineModel {
-  // Zero-seat checkpoints recorded nothing; plotting them as zero would invent a measurement.
-  const rows = results.classifier.accuracy.filter((r) => r.seats > 0)
+  // The artifact already omits zero-seat checkpoints from `accuracy` and names them in
+  // `deadCheckpoints` — trust it, and render the note rather than re-filtering.
+  const rows = results.classifier.accuracy
+  const dead = results.classifier.deadCheckpoints
+  const deadNote =
+    dead.length > 0
+      ? `The ${dead.join('/')}-event checkpoint${dead.length > 1 ? 's' : ''} recorded zero ` +
+        `seats (no game in the run produced that many observable events) and the artifact ` +
+        `names ${dead.length > 1 ? 'them' : 'it'} dead rather than encoding a measured zero. `
+      : ''
   const xLabels = rows.map((r) => (r.events === 0 ? 'END' : String(r.events)))
   const chance = 1 / 9
 
@@ -151,9 +160,9 @@ export function classifierLine(results: AdaptiveResults, figNo = 'FIG. 03'): Lin
     fig: `${figNo} — CLASSIFIER ACCURACY · ${xLabels.length} CHECKPOINTS`,
     caption:
       'X is the classifier’s log truncation in observed events, checkpoints at equal pitch — ' +
-      'an index, not time; END is the full log. The 250-event checkpoint recorded zero seats ' +
-      '(no game in the run produced 250 observable events) and is omitted rather than plotted ' +
-      'as zero. The 150 checkpoint covers only 672 of 10,800 seats — the longest games — so ' +
+      'an index, not time; END is the full log. ' +
+      deadNote +
+      'The 150 checkpoint covers only 672 of 10,800 seats — the longest games — so ' +
       'its rise is survivorship, not learning. Y axis runs from zero to one; chance is ' +
       '1/9 ≈ .111. 10,800 opponent-seat reads per full checkpoint.',
     xLabels,

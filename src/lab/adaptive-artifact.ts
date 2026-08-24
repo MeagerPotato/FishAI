@@ -267,6 +267,11 @@ function classifier(value: unknown, at: string): ClassifierResult {
   return {
     checkpoints: arr(o.checkpoints, `${at}.checkpoints`).map((v, i) => num(v, `${at}.checkpoints[${i}]`)),
     accuracy: arr(o.accuracy, `${at}.accuracy`).map((r, i) => accuracyRow(r, `${at}.accuracy[${i}]`)),
+    // A dead checkpoint scored zero seats and carries NO accuracy row — the emitter names it
+    // here instead of encoding a measured zero, and the reader renders the note.
+    deadCheckpoints: arr(o.deadCheckpoints, `${at}.deadCheckpoints`).map((v, i) =>
+      num(v, `${at}.deadCheckpoints[${i}]`),
+    ),
     confusion: { events: num(c.events, `${at}.confusion.events`), styles, matrix },
   }
 }

@@ -1,7 +1,7 @@
 /**
  * adaptive-lab.test.ts — the FishAI v1.0 experiment suite at tiny N (SPEC Stage 2b/2c).
  *
- * The full run is ~163,000 games; these tests run the SAME machinery — `planAdaptiveTasks` →
+ * The full run is 125,600 games; these tests run the SAME machinery — `planAdaptiveTasks` →
  * `runAdaptiveTask` → `assembleAdaptiveRun` → `buildAdaptiveResults` → the site's boundary
  * parser — at 1-2 pairs per cell, so every claim the artifact makes structurally is pinned
  * before a single reporting-scale game is played:
@@ -32,6 +32,7 @@ import {
   buildAdaptiveResults,
   mixedCellId,
   mixedCompositionList,
+  mixedPooledFromRecords,
   oracleStylesFor,
   planAdaptiveTasks,
   runAdaptiveTask,
@@ -133,6 +134,10 @@ describe('the plan', () => {
   it('refuses an oracle budget the gauntlet cannot pair', () => {
     expect(() => planAdaptiveTasks({ ...TINY, oraclePairs: 3 })).toThrow(/paired against the gauntlet/)
   })
+
+  it('the default config plays 125,600 games — the number every document quotes', () => {
+    expect(adaptiveGamesTotal(DEFAULT_ADAPTIVE_CONFIG)).toBe(125_600)
+  })
 })
 
 describe('the tiny run: health and shape', () => {
@@ -225,6 +230,69 @@ describe('the mixed screen pairing', () => {
     expect(n).toBe(TINY.mixedCompositions * TINY.mixedPairs)
     expect(RUN.mixed.pairedDelta).toBeCloseTo(sum / n, 12)
   })
+
+  it('the emitted pooled SE is the seed-clustered estimator over the run records', () => {
+    const pooled = mixedPooledFromRecords(RUN.records)
+    expect(RUN.mixed.pairedDelta).toBe(pooled.pairedDelta)
+    expect(RUN.mixed.deltaSe).toBe(pooled.deltaSe)
+    expect(RUN.mixed.ci95).toEqual(pooled.ci95)
+    // One cluster per seed: every composition replays the same TINY.mixedPairs-seed list.
+    expect(pooled.seeds).toBe(TINY.mixedPairs)
+  })
+
+  it('emits the clustered SE where the naive pooled SE would differ', () => {
+    // Two compositions replaying the same two seeds, the compositions AGREEING at each seed:
+    // +0.1 at seed 0, −0.1 at seed 1. Naive pooling reads sd([.1,−.1,.1,−.1])/√4 ≈ 0.0577 —
+    // counting each deal's replay as fresh evidence. Clustered by seed the evidence is two
+    // deltas, not four: sd([.1,−.1])/√2 = 0.1 exactly. The estimator must emit the latter.
+    const rec = (
+      cell: string,
+      arm: 'adaptive' | 'punter',
+      pair: number,
+      orient: 0 | 1,
+      aResult: number,
+    ): AdaptiveGameRecord => ({
+      exp: 'mixed',
+      cell,
+      pair,
+      orient,
+      seed: `mixed-t-${pair}`,
+      startSeat: 0,
+      aTeam: 0,
+      steps: 1,
+      finished: true,
+      capped: false,
+      illegal: 0,
+      invariantViolations: 0,
+      setsA: 5,
+      setsB: 0,
+      unresolved: 4,
+      voids: 0,
+      aResult,
+      clinch: true,
+      tie: false,
+      arm,
+    })
+    const records: AdaptiveGameRecord[] = []
+    for (const cell of ['mixed-00-a', 'mixed-01-b']) {
+      for (const [pair, adaptive] of [
+        [0, 0.6],
+        [1, 0.4],
+      ] as const) {
+        for (const orient of [0, 1] as const) {
+          records.push(rec(cell, 'adaptive', pair, orient, adaptive))
+          records.push(rec(cell, 'punter', pair, orient, 0.5))
+        }
+      }
+    }
+    const pooled = mixedPooledFromRecords(records)
+    expect(pooled.seeds).toBe(2)
+    expect(pooled.pairedDelta).toBeCloseTo(0, 12)
+    expect(pooled.deltaSe).toBeCloseTo(0.1, 12)
+    const naive = Math.sqrt(0.04 / 3) / Math.sqrt(4)
+    expect(naive).toBeCloseTo(0.0577, 3)
+    expect(Math.abs(pooled.deltaSe - naive)).toBeGreaterThan(0.04)
+  })
 })
 
 describe('the oracle ablation', () => {
@@ -298,9 +366,9 @@ describe('the accuracy scorer', () => {
     const at40 = scored.accuracy.find((r) => r.events === 40)
     expect(at40?.seats).toBe(6)
     expect(at40?.top1).toBe(1)
-    const at80 = scored.accuracy.find((r) => r.events === 80)
-    expect(at80?.seats).toBe(0)
-    expect(at80?.top1).toBe(0)
+    // Zero-seat checkpoints carry NO accuracy row — a recorded-nothing is not a measured 0.
+    expect(scored.accuracy.find((r) => r.events === 80)).toBeUndefined()
+    expect(scored.deadCheckpoints).toEqual([80, 150, 250])
     const end = scored.accuracy.find((r) => r.events === 0)
     expect(end?.seats).toBe(6)
     expect(end?.top1).toBeCloseTo(4 / 6, 12)
@@ -354,6 +422,9 @@ describe('the committed artifact', () => {
     expect(loaded.artifact.meta.health.ok).toBe(true)
     expect(loaded.artifact.gauntlet.length).toBe(9)
     expect(loaded.artifact.verdicts.map((v) => v.id)).toEqual(['P1', 'P2', 'P3', 'P4'])
+    // The 250-event checkpoint recorded zero seats: named dead, never encoded as top1 0.
+    expect(loaded.artifact.classifier.deadCheckpoints).toEqual([250])
+    expect(loaded.artifact.classifier.accuracy.every((r) => r.seats > 0)).toBe(true)
     // The committed counter table and the committed benchmark must describe the same matrix.
     expect(loaded.artifact.meta.counterTableProvenance.recordsDigest).toBe(
       loaded.artifact.meta.benchmark.recordsDigest,
@@ -387,6 +458,10 @@ describe('the artifact: build, round-trip, refusals', () => {
     const p3 = results.verdicts.find((v) => v.id === 'P3')
     expect(p3?.verdict).toBe('confirmed')
     expect(p3?.detail).toMatch(/exactly 0/)
+    // The P2 verdict states its clustering treatment — the SE's construction is part of the
+    // result, not a methods footnote the artifact keeps to itself.
+    const p2 = results.verdicts.find((v) => v.id === 'P2')
+    expect(p2?.detail).toMatch(/clustered by seed/)
   })
 
   it('round-trips through the site parser value-for-value', () => {

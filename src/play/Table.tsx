@@ -12,16 +12,17 @@
  * a fresh `useGame` is the entire reset mechanism, so no state ever needs manual clearing.
  */
 import { useState } from 'react'
-import type { BookId, Card, EngineError, Seat } from '../../lib/engine/index.ts'
-import { allBooks, cardBook, sortHand } from '../../lib/engine/index.ts'
+import type { BookId, Card, EngineError, Seat, StyleId } from '../../lib/engine/index.ts'
+import { allBooks, cardBook, hashSeed, sortHand } from '../../lib/engine/index.ts'
 import { Button, Eyebrow, buttonRow } from '../components/index.ts'
 import lab from '../lab/ui/lab.module.css'
+import { advise } from './advisor.ts'
 import { AdvisorPane } from './AdvisorPane.tsx'
 import { AskPanel } from './AskPanel.tsx'
 import { DeclareDialog } from './DeclareDialog.tsx'
 import { cardLabel, bookLabel, describePlayEvent, seatName, teamOf } from './format.ts'
 import type { PlayParams } from './params.ts'
-import { policyLabel } from './policies.ts'
+import { advisorPolicy, policyLabel } from './policies.ts'
 import s from './play.module.css'
 import { useGame } from './useGame.ts'
 
@@ -36,6 +37,10 @@ export interface TableProps {
 export function Table({ play, onRematch, onNewGame }: TableProps) {
   const game = useGame(play.mode, play.seed, play.stylesKey)
   const [humanError, setHumanError] = useState<EngineError | null>(null)
+  // The advisor's style lives here, not in the pane, so the pane and the declare dialog's
+  // advice strip reason with the SAME advisor: `advise` is pure over (view, policy, seed),
+  // and one shared policy input keeps the two surfaces provably in agreement.
+  const [advisorStyle, setAdvisorStyle] = useState<StyleId>('balanced')
 
   const { state, view, acting, kinds, sets, unresolved, finished, winner } = game
   const windowOpen = Boolean(state.declareWindow) && !finished
@@ -47,6 +52,14 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
     .filter((group) => group.cards.length > 0)
 
   const logRows = state.log.map((event, i) => ({ key: i, event })).reverse()
+
+  // The declare dialog is modal (`showModal` + backdrop), so the advisor pane behind it is
+  // inert exactly when the human most wants the advice. The suggestion therefore rides into
+  // the dialog itself when the assistant is on.
+  const dialogAdvice =
+    play.assist && game.declareOpen && !finished
+      ? advise(view, advisorPolicy(play.mode, advisorStyle), hashSeed(`${play.seed}:${view.moveIndex}`)())
+      : null
 
   const askTurn = !windowOpen && acting === 0 && kinds.includes('ask') && !finished
   // RULES_US54.md §4: the turn-holder whose own declare emptied their hand must pass to a
@@ -283,6 +296,8 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
               view={view}
               mode={play.mode}
               seed={play.seed}
+              style={advisorStyle}
+              onStyleChange={setAdvisorStyle}
               active={!finished && acting === 0 && (askTurn || passTurn || game.declareOpen)}
               playable={askTurn || passTurn}
               onPlay={(action) => {
@@ -310,9 +325,13 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
       </div>
 
       {game.declareOpen ? (
+        // Keyed per decision, exactly like AskPanel above: a remount resets the dialog's
+        // book/assignment state, so a second consecutive declare never inherits the first's.
         <DeclareDialog
+          key={state.moveIndex}
           view={view}
           mustDeclare={game.mustDeclare}
+          advice={dialogAdvice}
           onDeclare={onDeclare}
           onStandDown={game.standDown}
         />

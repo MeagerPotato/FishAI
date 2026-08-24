@@ -44,12 +44,13 @@ export {
   buildAdaptiveResults,
   mixedCellId,
   mixedCompositionList,
+  mixedPooledFromRecords,
   oracleStylesFor,
   planAdaptiveTasks,
   runAdaptiveTask,
   scoreClassifier,
 } from './adaptive.ts'
-export type { AdaptiveArtifactInputs, AdaptiveBenchmarkInput, AdaptiveTask } from './adaptive.ts'
+export type { AdaptiveArtifactInputs, AdaptiveBenchmarkInput, AdaptiveTask, MixedPooled } from './adaptive.ts'
 export { ADAPTIVE_PREDICTIONS, ADAPTIVE_SCHEMA_VERSION } from './adaptive-types.ts'
 export type {
   AccuracyByStyle,

@@ -13,7 +13,6 @@
  * at any position is the move the advisor bot would genuinely have played there — reproducible
  * from the URL like everything else at this table.
  */
-import { useState } from 'react'
 import type { GameAction, SeatView, StyleId } from '../../lib/engine/index.ts'
 import { STYLE_IDS, STYLE_ROSTER, hashSeed } from '../../lib/engine/index.ts'
 import { Eyebrow } from '../components/index.ts'
@@ -28,6 +27,9 @@ export interface AdvisorPaneProps {
   view: SeatView
   mode: PlayMode
   seed: string
+  /** The advisor style, owned by the table so the declare dialog's advice strip shares it. */
+  style: StyleId
+  onStyleChange: (style: StyleId) => void
   /** The human holds a decision the pane can advise on right now. */
   active: boolean
   /** The suggestion can be submitted directly (no modal dialog owns the interaction). */
@@ -35,7 +37,8 @@ export interface AdvisorPaneProps {
   onPlay: (action: GameAction) => void
 }
 
-function describeSuggestion(action: GameAction): string {
+/** One line naming the suggested move — shared with the declare dialog's advice strip. */
+export function describeSuggestion(action: GameAction): string {
   switch (action.type) {
     case 'ask':
       return `Ask ${seatName(action.target)} for ${cardLabel(action.card)}`
@@ -50,9 +53,16 @@ function describeSuggestion(action: GameAction): string {
   }
 }
 
-export function AdvisorPane({ view, mode, seed, active, playable, onPlay }: AdvisorPaneProps) {
-  const [style, setStyle] = useState<StyleId>('balanced')
-
+export function AdvisorPane({
+  view,
+  mode,
+  seed,
+  style,
+  onStyleChange,
+  active,
+  playable,
+  onPlay,
+}: AdvisorPaneProps) {
   const explained = active
     ? advise(view, advisorPolicy(mode, style), hashSeed(`${seed}:${view.moveIndex}`)())
     : null
@@ -73,7 +83,7 @@ export function AdvisorPane({ view, mode, seed, active, playable, onPlay }: Advi
             className={s.select}
             value={style}
             onChange={(e) => {
-              setStyle(e.target.value as StyleId)
+              onStyleChange(e.target.value as StyleId)
             }}
           >
             {STYLE_IDS.map((id) => (
@@ -98,14 +108,19 @@ export function AdvisorPane({ view, mode, seed, active, playable, onPlay }: Advi
         </p>
       ) : (
         <div className={s.panel} style={{ marginTop: 12 }}>
-          <h3 className={s.panelHead}>{describeSuggestion(explained.action)}</h3>
-          <p className={s.panelNote}>
-            <strong>{explained.trace.headline}</strong>
-          </p>
+          {/* Only the suggestion and its one-line reason are announced — the ranked and
+              refused lists below would drown a screen reader at every decision. */}
+          <div aria-live="polite">
+            <h3 className={s.panelHead}>{describeSuggestion(explained.action)}</h3>
+            <p className={s.panelNote}>
+              <strong>{explained.trace.headline}</strong>
+            </p>
+          </div>
           {explained.trace.notes.length > 0 ? (
             <ul className={s.advisorNotes}>
-              {explained.trace.notes.map((note) => (
-                <li key={note} className={lab.figNote}>
+              {explained.trace.notes.map((note, i) => (
+                // Positional per decision: engine prose can repeat verbatim within one trace.
+                <li key={`${view.moveIndex}:${i}`} className={lab.figNote}>
                   {note}
                 </li>
               ))}
@@ -137,8 +152,9 @@ export function AdvisorPane({ view, mode, seed, active, playable, onPlay }: Advi
             <details className={lab.detail}>
               <summary>Considered and refused ({explained.trace.refused.length})</summary>
               <div className={lab.detailBody}>
-                {explained.trace.refused.map((r) => (
-                  <p key={`${r.kind}:${r.reason}`} className={lab.figNote}>
+                {explained.trace.refused.map((r, i) => (
+                  // Positional per decision: two refusals can share kind AND reason.
+                  <p key={`${view.moveIndex}:${i}`} className={lab.figNote}>
                     <code>{r.kind}</code> — {r.reason}
                   </p>
                 ))}
@@ -158,8 +174,11 @@ export function AdvisorPane({ view, mode, seed, active, playable, onPlay }: Advi
           </button>
           {!playable ? (
             <p className={lab.figNote} style={{ margin: '8px 0 0' }}>
-              The declare dialog owns this decision — the suggestion above is what the advisor
-              would declare; commit or cancel in the dialog.
+              {explained.action.type === 'decline'
+                ? 'The declare dialog owns this decision — the advisor would stand down rather ' +
+                  'than declare; use the dialog’s stand-down if you agree.'
+                : 'The declare dialog owns this decision — the suggestion above is what the ' +
+                  'advisor would declare; commit or stand down in the dialog.'}
             </p>
           ) : null}
         </div>

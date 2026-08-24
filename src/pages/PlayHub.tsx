@@ -53,7 +53,12 @@ export function PlayHub() {
   const [lobby, setLobby] = useState(() => initialLobby(search))
   const { seed, styles } = lobby
 
-  const launchHref = `/play/table?v=05&seed=${encodeURIComponent(seed)}&styles=${styles.join(',')}`
+  // A cleared (or all-whitespace) seed field launches without a `seed` param at all: the table
+  // then draws a fresh seed and canonicalises it into the URL — the same path as a first
+  // visit, and less intrusive than disabling the launch over an empty box.
+  const trimmedSeed = seed.trim()
+  const seedQuery = trimmedSeed === '' ? '' : `&seed=${encodeURIComponent(trimmedSeed)}`
+  const launchHref = `/play/table?v=05${seedQuery}&styles=${styles.join(',')}`
 
   return (
     <LabShell
@@ -190,12 +195,12 @@ export function PlayHub() {
               degeneracy, is being measured and lands next door in the lab.
             </p>
             <div className={buttonRow} style={{ marginTop: 22 }}>
-              <Button variant="line" href={`/play/table?v=10&seed=${encodeURIComponent(seed)}`} arrow={false}>
+              <Button variant="line" href={`/play/table?v=10${seedQuery}`} arrow={false}>
                 Deal me in — adaptive
               </Button>
               <Button
                 variant="ghost"
-                href={`/play/table?v=10&seed=${encodeURIComponent(seed)}&assist=1`}
+                href={`/play/table?v=10${seedQuery}&assist=1`}
                 arrow={false}
               >
                 With the assistant

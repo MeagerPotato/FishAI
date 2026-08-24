@@ -54,10 +54,13 @@ export function PlayTable() {
   const which = caseFromSearch(search)
 
   // A first visit with no `?seed=` gets one drawn once and written into the URL, so the game a
-  // visitor is looking at is always the game their address bar reproduces.
+  // visitor is looking at is always the game their address bar reproduces. An empty or
+  // whitespace-only `?seed=` — a cleared lobby field — is treated exactly like a missing one:
+  // it canonicalises to the drawn seed rather than seeding the game with an empty string.
   const [drawn] = useState(() => freshSeed())
   const params = new URLSearchParams(search)
-  const seedParam = params.get('seed')
+  const rawSeed = params.get('seed')
+  const seedParam = rawSeed !== null && rawSeed.trim() !== '' ? rawSeed : null
   const seed = seedParam ?? drawn
 
   useEffect(() => {

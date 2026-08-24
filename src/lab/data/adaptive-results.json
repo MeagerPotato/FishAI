@@ -1,8 +1,8 @@
 {
   "meta": {
     "schemaVersion": 1,
-    "generatedAt": "2026-08-24T02:48:43.362Z",
-    "engineCommit": "45ec9f3-dirty",
+    "generatedAt": "2026-08-24T04:13:23.637Z",
+    "engineCommit": "77551a5-dirty",
     "rulesHash": "b4c7fef74d439fe29cbe4d4775fc4fbecdd95d0c9ce0218eb116a4b2b64b6f8d",
     "rulesFile": "RULES_US54.md",
     "ruleSet": "us54",
@@ -32,7 +32,7 @@
       "prefix": "style-v1",
       "count": 4300
     },
-    "wallMs": 579634,
+    "wallMs": 550659,
     "recordsDigest": "ce3316641a8f38fe",
     "health": {
       "ok": true,
@@ -794,10 +794,10 @@
     "adaptiveMean": 0.5625520833333333,
     "punterMean": 0.5761458333333334,
     "pairedDelta": -0.01359375,
-    "deltaSe": 0.0021575848959780033,
+    "deltaSe": 0.004274495489354211,
     "ci95": [
-      -0.017822616396116885,
-      -0.009364883603883115
+      -0.021971761159134254,
+      -0.005215738840865746
     ],
     "rows": [
       {
@@ -1339,49 +1339,6 @@
         }
       },
       {
-        "events": 250,
-        "seats": 0,
-        "top1": 0,
-        "byStyle": {
-          "balanced": {
-            "seats": 0,
-            "top1": 0
-          },
-          "blitz": {
-            "seats": 0,
-            "top1": 0
-          },
-          "punter": {
-            "seats": 0,
-            "top1": 0
-          },
-          "banker": {
-            "seats": 0,
-            "top1": 0
-          },
-          "turtle": {
-            "seats": 0,
-            "top1": 0
-          },
-          "hoarder": {
-            "seats": 0,
-            "top1": 0
-          },
-          "scout": {
-            "seats": 0,
-            "top1": 0
-          },
-          "ghost": {
-            "seats": 0,
-            "top1": 0
-          },
-          "archivist": {
-            "seats": 0,
-            "top1": 0
-          }
-        }
-      },
-      {
         "events": 0,
         "seats": 10800,
         "top1": 0.22425925925925927,
@@ -1424,6 +1381,9 @@
           }
         }
       }
+    ],
+    "deadCheckpoints": [
+      250
     ],
     "confusion": {
       "events": 0,
@@ -1815,7 +1775,7 @@
       "id": "P2",
       "prediction": "The adaptive-vs-punter mixed-population delta should be ≈ 0: both teams best-respond to every composition with the same style once warm, so adaptation buys nothing a fixed punter team does not already have.",
       "verdict": "refuted",
-      "detail": "pooled per-deal delta -0.0136 ± 0.0022 over 24 compositions × 400 pairs (z -6.30; 95% CI [-0.0178, -0.0094]), truly paired within the run."
+      "detail": "pooled per-deal delta -0.0136 ± 0.0043 over 24 compositions × 400 pairs (z -3.18; 95% CI [-0.0220, -0.0052]), truly paired within the run. The SE is clustered by seed: all 24 compositions replay one 400-seed list, so per-deal deltas are averaged within seed before the SE is taken over the seed-level means — replays of a deal are not counted as independent."
     },
     {
       "id": "P3",

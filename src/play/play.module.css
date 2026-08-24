@@ -321,6 +321,25 @@
   color: var(--fa-ink-3);
 }
 
+/* The assistant's strip inside the dialog: the pane's advice is inert behind the modal
+   backdrop, so the suggestion rides along to where the decision is actually taken. */
+.dialogAdvice {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--fa-line);
+  background-color: var(--fa-paper);
+}
+
+.dialogAdviceHead {
+  display: block;
+  margin: 0 0 6px;
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
 /* The row-14 warning. A dashed border, not a colour: the accent is budgeted. */
 .warn {
   margin: 18px 0 0;

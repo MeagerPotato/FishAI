@@ -4,7 +4,11 @@
  * A real `<dialog>` opened with `showModal()`, so focus trapping, inertness of the page behind
  * it and Escape handling come from the platform rather than from a hand-rolled trap. Escape is
  * allowed to stand the declare down (decline the offer) EXCEPT in a `MUST_DECLARE` position,
- * where declining is illegal (§3.2) and the dialog explains why instead of closing.
+ * where declining is illegal (§3.2) and the dialog explains why instead of closing. A `close`
+ * this component did not initiate — a force-close from outside — is resynced rather than
+ * ignored: treated as the stand-down it visually was where declining is legal, reopened where
+ * it is not, so the platform and `declareOpen` can never disagree about whether a MUST_DECLARE
+ * decision is still owed.
  *
  * The assignment grid prefills what `buildKnowledge` of the HUMAN'S OWN view can prove — own
  * hand plus the public log, the same inference the bots run — and says so honestly. A prefill
@@ -15,6 +19,8 @@ import { useEffect, useRef, useState } from 'react'
 import type { BookId, Card, Seat, SeatView } from '../../lib/engine/index.ts'
 import { allBooks, bookCards, buildKnowledge, holderOf } from '../../lib/engine/index.ts'
 import { Button } from '../components/index.ts'
+import type { ExplainedDecision } from './advisor.ts'
+import { describeSuggestion } from './AdvisorPane.tsx'
 import { bookLabel, cardLabel, cardName } from './format.ts'
 import s from './play.module.css'
 
@@ -23,20 +29,28 @@ const TEAMMATES: readonly Seat[] = [0, 2, 4]
 export interface DeclareDialogProps {
   view: SeatView
   mustDeclare: boolean
+  /** The assistant's suggestion for this decision (`?assist=1` only) — the pane behind the
+   *  modal backdrop is inert, so the advice renders here too. */
+  advice: ExplainedDecision | null
   onDeclare: (book: BookId, assignments: Record<Card, Seat>) => void
   onStandDown: () => void
 }
 
-export function DeclareDialog({ view, mustDeclare, onDeclare, onStandDown }: DeclareDialogProps) {
+export function DeclareDialog({ view, mustDeclare, advice, onDeclare, onStandDown }: DeclareDialogProps) {
   const ref = useRef<HTMLDialogElement | null>(null)
+  // Set while the unmount cleanup is closing the dialog itself, so the `close` listener below
+  // can tell our own teardown apart from a force-close and not recurse into a reopen.
+  const closing = useRef(false)
   const [book, setBook] = useState<BookId | null>(null)
   const [assign, setAssign] = useState<Partial<Record<Card, Seat>>>({})
 
   useEffect(() => {
     const dialog = ref.current
     if (!dialog) return
+    closing.current = false
     if (!dialog.open) dialog.showModal()
     return () => {
+      closing.current = true
       dialog.close()
     }
   }, [])
@@ -52,6 +66,28 @@ export function DeclareDialog({ view, mustDeclare, onDeclare, onStandDown }: Dec
     dialog.addEventListener('cancel', onCancel)
     return () => {
       dialog.removeEventListener('cancel', onCancel)
+    }
+  }, [mustDeclare, onStandDown])
+
+  // `close` without our teardown means the platform shut the dialog under us (Escape lands on
+  // `cancel` above and is prevented, but nothing stops a stray close()). Left alone that
+  // desyncs from `declareOpen` — the page believes the dialog is open — and a MUST_DECLARE
+  // position soft-locks with no way to act. Where declining is legal, a forced close is
+  // treated as the stand-down it visually was; where it is not, the dialog is reopened.
+  useEffect(() => {
+    const dialog = ref.current
+    if (!dialog) return
+    const onClose = () => {
+      if (closing.current) return
+      if (mustDeclare) {
+        if (!dialog.open) dialog.showModal()
+      } else {
+        onStandDown()
+      }
+    }
+    dialog.addEventListener('close', onClose)
+    return () => {
+      dialog.removeEventListener('close', onClose)
     }
   }, [mustDeclare, onStandDown])
 
@@ -95,6 +131,28 @@ export function DeclareDialog({ view, mustDeclare, onDeclare, onStandDown }: Dec
           and seat 4. You may declare a set you hold no card of (row 15).
         </p>
       )}
+
+      {advice ? (
+        <div className={s.dialogAdvice}>
+          <span className={s.dialogAdviceHead}>Assistant</span>
+          <p className={s.panelNote} style={{ margin: 0 }}>
+            <strong>{describeSuggestion(advice.action)}</strong> — {advice.trace.headline}
+          </p>
+          {advice.trace.claim ? (
+            <p className={s.panelNote} style={{ margin: '6px 0 0' }}>
+              Declare plan: {bookLabel(advice.trace.claim.book)} · p ={' '}
+              {advice.trace.claim.p.toFixed(2)} · {advice.trace.claim.uncertain} guessed
+              {advice.trace.claim.foreign ? ' · a set this seat holds no card of' : ''}
+            </p>
+          ) : null}
+          {advice.action.type === 'decline' ? (
+            <p className={s.panelNote} style={{ margin: '6px 0 0' }}>
+              The advisor would not declare from here — any error gifts the whole set (row 14),
+              and declining this offer is legal. Stand down below if you agree.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className={s.choiceRow} role="group" aria-label="Unresolved sets">
         {unresolved.map((b) => (

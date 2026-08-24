@@ -390,8 +390,12 @@ export function LabAdaptive() {
           </p>
           <p className={s.figNote}>
             Adaptive arm mean {rate(artifact.mixed.adaptiveMean)} · punter arm mean{' '}
-            {rate(artifact.mixed.punterMean)}. The interval excludes zero by a wide margin: on
-            mixed opposition the machinery does not merely fail to pay — it charges.
+            {rate(artifact.mixed.punterMean)}. The SE is clustered by seed: all{' '}
+            {count(artifact.mixed.compositions)} compositions replay one identical{' '}
+            {count(artifact.mixed.pairsPer)}-seed list, so a deal&rsquo;s replays are averaged
+            within seed before the SE is taken — never counted as independent evidence. The
+            interval still excludes zero: on mixed opposition the machinery does not merely fail
+            to pay — it charges.
           </p>
         </div>
         <div style={{ marginTop: 'var(--fa-sp-head)' }}>

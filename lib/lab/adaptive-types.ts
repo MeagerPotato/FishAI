@@ -244,6 +244,14 @@ export interface MixedResult {
   punterMean: number
   /** The headline: mean per-deal delta (adaptive − punter), truly paired within this run. */
   pairedDelta: number
+  /**
+   * SE of `pairedDelta`, clustered by seed: every composition replays the identical seed
+   * list, so the per-deal deltas at one seed share the deal and are not independent — they
+   * are averaged within seed first and the SE is sd(seed-level deltas)/sqrt(seeds). A naive
+   * pooled SE over all composition × pair deltas would count each deal's replays as
+   * independent evidence and understate the interval. Per-composition row SEs in `rows` are
+   * within-composition and unaffected.
+   */
   deltaSe: number
   ci95: [number, number]
   rows: MixedRow[]
@@ -277,7 +285,13 @@ export interface AccuracyRow {
 export interface ClassifierResult {
   /** The checkpoint list, end-of-game last as 0. */
   checkpoints: number[]
+  /** One row per checkpoint that scored at least one seat — never a `top1: 0` for no data. */
   accuracy: AccuracyRow[]
+  /**
+   * Checkpoints that scored zero seats (no game's public log outlived them). Named here
+   * rather than encoded as a measured zero in `accuracy` — a recorded-nothing is not a 0.
+   */
+  deadCheckpoints: number[]
   /** End-of-game confusion counts, `matrix[true][predicted]`, styles in STYLE_IDS order. */
   confusion: { events: number; styles: StyleId[]; matrix: number[][] }
 }

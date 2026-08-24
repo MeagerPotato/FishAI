@@ -34,7 +34,7 @@ if (major < 23 || (major === 23 && minor < 6)) {
   process.exit(1)
 }
 
-const { buildAdaptiveResults, digest } = await import('../lib/lab/index.ts')
+const { buildAdaptiveResults, digest, mixedPooledFromRecords } = await import('../lib/lab/index.ts')
 const { rulesHash } = await import('../lib/lab/analysis/index.ts')
 const { STYLE_IDS } = await import('../lib/engine/index.ts')
 
@@ -69,7 +69,8 @@ const jsonlPath = join(runDir, 'games.jsonl')
 if (existsSync(jsonlPath)) {
   // Integrity: the runner's digest is taken over exactly these bytes, so hashing the file text
   // is the same number and does not depend on re-serialising identically.
-  const readDigest = digest(await readFile(jsonlPath, 'utf8'))
+  const jsonlText = await readFile(jsonlPath, 'utf8')
+  const readDigest = digest(jsonlText)
   if (readDigest !== run.meta.recordsDigest) {
     console.error(
       `games.jsonl digest ${readDigest} != run.json recordsDigest ${run.meta.recordsDigest} — ` +
@@ -78,8 +79,34 @@ if (existsSync(jsonlPath)) {
     process.exit(2)
   }
   console.log(`run ${runDir}: ${run.meta.gamesTotal} games · digest ${readDigest} (matches)`)
+
+  // The mixed screen's pooled SE is recomputed here from the per-game records, seed-clustered
+  // (mixedPooledFromRecords in lib/lab/adaptive.ts: every composition replays the identical
+  // seed list, so a deal's replays are not independent evidence). Recomputing rather than
+  // trusting run.json means a run.json emitted by an older assembler — one that pooled
+  // naively — is corrected on re-analysis instead of copied forward.
+  const mixedRecords = jsonlText
+    .split('\n')
+    .filter((line) => line.includes('"exp":"mixed"'))
+    .map((line) => JSON.parse(line))
+  const pooled = mixedPooledFromRecords(mixedRecords)
+  if (Math.abs(pooled.pairedDelta - run.mixed.pairedDelta) > 1e-12) {
+    console.error(
+      `games.jsonl mixed pooled delta ${pooled.pairedDelta} != run.json ${run.mixed.pairedDelta} — ` +
+        'the JSONL and the aggregate disagree on the point estimate.',
+    )
+    process.exit(2)
+  }
+  run.mixed.adaptiveMean = pooled.adaptiveMean
+  run.mixed.punterMean = pooled.punterMean
+  run.mixed.deltaSe = pooled.deltaSe
+  run.mixed.ci95 = pooled.ci95
+  console.log(
+    `mixed pooled SE from games.jsonl, clustered over ${pooled.seeds} seeds: ` +
+      `${pooled.pairedDelta.toFixed(4)} ± ${pooled.deltaSe.toFixed(4)}`,
+  )
 } else {
-  console.log(`run ${runDir}: ${run.meta.gamesTotal} games · no games.jsonl (digest not re-verified)`)
+  console.log(`run ${runDir}: ${run.meta.gamesTotal} games · no games.jsonl (digest not re-verified; run.json's mixed SE trusted as emitted)`)
 }
 if (!run.health.ok) console.error('WARNING: this run FAILED its health gate; the artifact will say so.')
 

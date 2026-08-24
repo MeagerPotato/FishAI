@@ -50,7 +50,8 @@ static style. The measurement: the degenerate policy is strictly \emph{worse} th
 Punter, because its warmup anchor pays a tax. The adaptive team lands below the paired
 Punter benchmark in all nine gauntlet cells (mean $-0.0108$; sharpest cell
 $-0.0108 \pm 0.0031$, $z = -3.53$) and loses a truly-paired 24-composition mixed screen at
-$-0.0136 \pm 0.0022$ ($z = -6.3$). An oracle ablation prices perfect classification at
+$-0.0136 \pm 0.0043$ ($z = -3.2$, seed-clustered). An oracle ablation prices perfect
+classification at
 exactly zero: handed the true styles, the agent plays move-for-move identical games. The
 classifier has real but bounded skill --- $22.4\%$ end-of-game top-1 against an $11.1\%$
 chance floor, $50.4\%$ on Ghost, $5.6$--$12.9\%$ inside a quadrangle of styles that
@@ -95,7 +96,7 @@ warmup tax} (Section~\ref{sec:results}): degenerating to Punter would merely tie
 static benchmark, but the measured agent does worse, because its warmup anchor (Balanced,
 played until the public log matures) is a below-Punter style played for $52$--$58\%$ of
 the team's decisions. The tax is visible in all nine gauntlet cells (mean $-0.0108$),
-significant in the sharpest ($z = -3.53$), and confirmed at $z = -6.3$ in a truly-paired
+significant in the sharpest ($z = -3.53$), and confirmed at $z = -3.2$ in a truly-paired
 mixed-population screen. Two of the four pre-registered predictions --- written down,
 verbatim, before the run --- expected the tax to be negligible; both were refuted, and
 the refutation \emph{is} the headline.
@@ -447,8 +448,11 @@ start seat rotating $i \bmod 6$), the paired estimator, and the v0.5 health disc
   the same seeds, start seats and orientations. The headline is the pooled per-deal delta
   (adaptive $-$ Punter), \emph{truly paired within the run}; the harness verifies --- not
   assumes --- that both arms played identical (pair, orientation, seed, start-seat) sets.
-  The compositions are a fully specified deterministic sample: every 7th of the 165
-  lexicographic 3-multisets.
+  Because all 24 compositions replay the identical 400-seed list, the pooled SE is
+  clustered by seed --- per-deal deltas are averaged within seed before the SE is taken
+  over the 400 seed-level means --- so a deal's replays are never counted as independent
+  evidence (per-composition SEs remain within-composition). The compositions are a fully
+  specified deterministic sample: every 7th of the 165 lexicographic 3-multisets.
 \item \textbf{Oracle ablation} --- the nine gauntlet cells re-run at 400 pairs with the
   true opponent styles handed to the adaptive seats. The classifier arm is not re-run: the
   gauntlet's first 400 pairs \emph{are} the classifier arm on identical seeds.
@@ -536,16 +540,18 @@ Archivist & 0.5778 & 0.0046 & 0.5926 & 0.0047 & $-0.0148 \pm 0.0066$ & $-2.24$ \
 \end{tabular}
 \end{table}
 
-\subsection{P2: the mixed-population screen --- refuted, at $z = -6.3$}
+\subsection{P2: the mixed-population screen --- refuted, at $z = -3.2$}
 \label{sec:p2}
 
 The mixed screen removes both the pure-team simplification and the cross-run caveat: 24
 opponent compositions, each faced by the adaptive team and by a pure Punter team on
-identical deals within the same run. The pooled per-deal delta is $-0.0136 \pm 0.0022$
-($z = -6.30$; $95\%$ CI $[-0.0178, -0.0094]$) over $24 \times 400$ paired deals:
-\textbf{P2 is refuted}, and this is the paper's most precisely measured number. Per
-composition (Table~\ref{tab:mixed}), 21 of 24 deltas are negative; the three positive
-ones ($+0.0038$ to $+0.0100$) are each within one standard error of zero. Against
+identical deals within the same run. The pooled per-deal delta is $-0.0136 \pm 0.0043$
+($z = -3.18$; $95\%$ CI $[-0.0220, -0.0052]$) over $24 \times 400$ paired deals, with the
+SE clustered by seed (Section~\ref{sec:experiments}): the 24 compositions replay one
+400-seed list, so the effective sample is 400 seed-level deltas, not $9{,}600$ deltas
+counting each deal's replays as independent. \textbf{P2 is refuted}, at three standard
+errors. Per composition (Table~\ref{tab:mixed}), 21 of 24 deltas are negative; the three
+positive ones ($+0.0038$ to $+0.0100$) are each within one standard error of zero. Against
 heterogeneous opposition --- where a read could at least in principle matter ---
 adaptation costs about $1.4$ points of score rate, everywhere.
 
@@ -575,8 +581,8 @@ bli+ban+sco & 0.538 & 0.569 & $-0.0313$ & $\pm 0.0104$ & hoa+hoa+gho & 0.581 & 0
 bli+tur+arc & 0.584 & 0.604 & $-0.0200$ & $\pm 0.0101$ & hoa+arc+arc & 0.575 & 0.570 & $+0.0050$ & $\pm 0.0097$ \\
 bli+sco+arc & 0.568 & 0.571 & $-0.0038$ & $\pm 0.0102$ & gho+gho+gho & 0.555 & 0.569 & $-0.0138$ & $\pm 0.0126$ \\
 \midrule
-\multicolumn{5}{@{}l}{Pooled per-deal delta} &
-\multicolumn{5}{l@{}}{$-0.0136 \pm 0.0022$ \quad ($z = -6.30$)} \\
+\multicolumn{5}{@{}l}{Pooled per-deal delta (seed-clustered SE)} &
+\multicolumn{5}{l@{}}{$-0.0136 \pm 0.0043$ \quad ($z = -3.18$)} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -625,10 +631,11 @@ The classifier was measured for its own sake across the 36 cross-play pairings
 (Table~\ref{tab:clscurve}). Overall top-1 rises from $16.4\%$ at 40 observed events to
 $20.2\%$ at 80 and $22.4\%$ on the full log, against a $1/9 = 11.1\%$ chance floor ---
 real skill, roughly twice chance, and modest. Two structural notes: the 250-event
-checkpoint scored \emph{zero} seats, because no public log outlived 250 events; and the
-150-event figure ($37.5\%$) covers only the 672 surviving seats of the $6.2\%$ longest
-games --- a population selected toward the long-game styles, not comparable to the
-full-population rows.
+checkpoint scored \emph{zero} seats, because no public log outlived 250 events --- the
+artifact records it as a \emph{dead} checkpoint (\code{deadCheckpoints}), never as a
+measured zero; and the 150-event figure ($37.5\%$) covers only the 672 surviving seats of
+the $6.2\%$ longest games --- a population selected toward the long-game styles, not
+comparable to the full-population rows.
 
 \begin{table}[t]
 \centering
@@ -644,7 +651,7 @@ Checkpoint & Seats scored & Top-1 & Note \\
 40 events  & 10{,}800 & 0.164 & all games \\
 80 events  & 10{,}464 & 0.202 & nearly all games \\
 150 events & 672      & 0.375 & the $6.2\%$ longest games; selected population \\
-250 events & 0        & ---   & no public log reached 250 events \\
+250 events & ---      & ---   & dead: no public log reached 250 events \\
 full log   & 10{,}800 & 0.224 & the deployment-relevant figure \\
 \bottomrule
 \end{tabular}
@@ -826,7 +833,7 @@ worth less than nothing.
 \begin{enumerate}
 \item \textbf{Cross-run pairing (P1).} The gauntlet's delta SEs are conservative upper
   bounds (Section~\ref{sec:pairing}) --- which can only have hidden significance, not
-  manufactured it; the truly-paired P2 screen agrees at $z = -6.3$.
+  manufactured it; the truly-paired, seed-clustered P2 screen agrees at $z = -3.2$.
 \item \textbf{Dominance is of the committed table.} The theorem consumes point estimates;
   70 of 72 dominance comparisons clear the corrected bound, but the weakest margin
   ($0.0112$, Blitz row, Hoarder column) is only $1.86$ conservative SEs from zero
@@ -864,7 +871,7 @@ is linear in belief, and the warm agent delegated every one of twelve million me
 warm decisions to Punter --- the theorem observed in play. Adaptation over this roster
 \emph{costs}: the warmup anchor plays a dominated style for $52$--$58\%$ of decisions
 because the public log, which records no declines, matures far more slowly than the game,
-and the resulting tax --- $-0.0108$ mean across the gauntlet, $-0.0136 \pm 0.0022$ truly
+and the resulting tax --- $-0.0108$ mean across the gauntlet, $-0.0136 \pm 0.0043$ truly
 paired in mixed company --- is reproduced within one standard error, in every cell, by
 the crudest possible mixing model. And classification, the part of the architecture with
 genuine measured skill ($22.4\%$ top-1 against $11.1\%$ chance, half a coin-flip on the

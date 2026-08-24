@@ -11,7 +11,7 @@ every column, the adaptive expectation is linear in the opponent posterior, and 
 adaptive team provably delegates to Punter under every belief it can possibly hold. The
 experiments confirm the implication in play and price what is left: the engine pays a measurable
 warmup toll for the anchor it plays before it has evidence (every gauntlet delta negative; the
-mixed-population delta −0.0136 ± 0.0022), and perfect classification is worth **exactly zero** —
+mixed-population delta −0.0136 ± 0.0043), and perfect classification is worth **exactly zero** —
 all nine oracle cells measure 0.0000 with SE 0, because both arms delegate identically at every
 decision. Over this roster, at this level of play, adaptation converges to the dominant style and
 then underpays for the time it spent deciding to.
@@ -386,12 +386,16 @@ and §6.2 are.
 indices 0 to 161, deterministic and documented rather than seeded-shuffled), each played twice on
 identical seeds, start seats and orientations: adaptive team vs the composition, and a pure
 Punter team vs the same composition. The headline is the pooled per-deal delta, **truly paired
-within this run** — no cross-run caveat here:
+within this run** — no cross-run caveat here. Its SE is **clustered by seed**: all 24
+compositions replay the identical 400-seed list, so the per-deal deltas at one seed share the
+deal and are not independent — they are averaged within seed first, and the SE is taken over
+the 400 seed-level means rather than over 9,600 deltas that would count each deal's replays as
+fresh evidence.
 
-> **adaptive − punter = −0.0136 ± 0.0022** (z −6.30; 95% CI [−0.0178, −0.0094]);
+> **adaptive − punter = −0.0136 ± 0.0043** (z −3.18; 95% CI [−0.0220, −0.0052]);
 > pooled means 0.5626 (adaptive) vs 0.5761 (punter) over 24 × 400 pairs.
 
-**P2 is refuted**, at six standard errors. Per composition, 21 of 24 deltas are negative; the
+**P2 is refuted**, at three standard errors. Per composition, 21 of 24 deltas are negative; the
 three positive ones (+0.0037 vs balanced+balanced+ghost, +0.0100 vs banker+banker+scout, +0.0050
 vs hoarder+archivist+archivist) are each within ~1 SE of zero. The magnitude is consistent with
 the warmup story to first order: §6.6 measures ~52–58% of adaptive decisions spent on the
@@ -436,7 +440,7 @@ line:
 | 40 | 10,800 | 0.164 |
 | 80 | 10,464 | 0.202 |
 | 150 | 672 | 0.375 |
-| 250 | 0 | — (no game's log outlived 250 events) |
+| 250 | — | — (no game's log outlived 250 events; the artifact records it in `deadCheckpoints`, never as a measured zero) |
 | end of game | 10,800 | 0.224 |
 
 The 150-event column is read with its sample size in view: only 112 of 1,800 games ran that long,
@@ -492,7 +496,8 @@ and that, quantitatively, is the whole of the P1/P2 shortfall.
 for its warmup.** The observation layer is exact, the classifier is calibrated and honest about
 its ignorance, the policy best-responds correctly — and the measured matrix makes the composition
 of all three equal "play Punter, eventually" at a price of roughly a hundredth of a score-rate
-point per game (−0.0136 ± 0.0022 in the truly-paired screen; every gauntlet delta negative).
+point per game (−0.0136 ± 0.0043 in the truly-paired, seed-clustered screen; every gauntlet
+delta negative).
 **Perfect classification is worth exactly zero under dominance** — §6.3 measured 0.0000 with SE 0
 in all nine cells, because the read never changes the argmax. A dominant environment does not
 reward knowing your opponent; it rewards already being the counter.
