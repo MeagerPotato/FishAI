@@ -1,0 +1,874 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1.1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{array}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+
+\hypersetup{
+  pdftitle={The Contained Book: An Absorbing Resource Measured to Be Worth Nothing},
+  pdfauthor={Allen Hsieh}
+}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}
+\newtheorem{definition}{Definition}
+\newenvironment{proofenv}{\par\noindent\textit{Proof.}\ }{\hfill$\square$\par\medskip}
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{The Contained Book:\\An Absorbing Resource Measured to Be Worth Nothing}
+\author{Allen Hsieh\\[2pt]{\small FishAI project}}
+\date{August 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+In the six-player partnership game Literature (Canadian Fish), a half-suit whose
+six cards all sit with one team is an \emph{absorbing state}: the opponents can
+neither ask into it nor take it by declaring, so leaving it unclaimed is a
+resource rather than an oversight. The resource is concrete --- a holder may
+deliberately ask into the set, which is a guaranteed miss, and a miss hands the
+turn to an opponent of the asker's choosing without moving a card. This yields a
+renewable, aimable, nearly information-free turn-pass that only the containing
+team can play and that claiming the set destroys. We prove the absorbing
+property from the rules of both rule sets the FishAI engine supports ---
+correcting, along the way, the project's own earlier claim that it failed under
+the 48-card baseline --- derive a trigger inequality that prices the move in
+cards against the ordinary ask it would displace, implement it as a policy
+option with a strict no-convention discipline, and measure it at three scales:
+per-decision mirrors, 1{,}200 duplicate-deal pairs per style, and a full
+$36$-cell $\times$ 4{,}300-pair round-robin re-run. The mechanism fires, fires
+for exactly the reasons the derivation gives, aims where the style asks, and
+reuses one card so that 95--98\% of its uses publish nothing new. Its measured
+value is zero: no style moves two standard errors from $0.5$ in the paired
+mirror, and the full matrix re-run leaves the verdict, the ranking, and the
+cyclic structure unchanged, with the heaviest intended user shifting by
+$-0.0018 \pm 0.0014$. The arithmetic says why: at the roster's measured hit
+rate a conceded turn is worth about one card, so the entire spread between the
+best and worst opponent to concede to is about one card. We report this as a
+model negative result --- about the move at this level of play, not about the
+theorem.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+Negative results are cheap to assert and expensive to earn. This paper earns
+one. It concerns a single strategic mechanism in Literature (Canadian Fish)
+under the FishAI project's \code{us54} dialect: the \emph{contained book}, a
+half-suit wholly held by one team. The mechanism has three parts, each of which
+survives scrutiny --- and a value, which does not.
+
+The parts. First, a theorem: containment is absorbing. No opponent can legally
+ask into a contained book, and an opponent who declares it hands it to the
+holders, so the position can only be ended by the holders themselves
+(Section~\ref{sec:theorem}). Second, a move: a holder may ask into the book
+anyway. The ask is legal, cannot hit, and on the miss the turn passes to
+whichever opponent the asker named --- a renewable, aimable turn-pass that
+costs at most one card of hand information over its lifetime if one card is
+reused (Section~\ref{sec:move}). Third, a price: a derived inequality, with
+every term measured off public data in units of cards, that says when the pass
+beats the ordinary ask it would displace (Section~\ref{sec:trigger}).
+
+The value. Implemented with that pricing and handed to a nine-style roster, the
+move is worth nothing. Across 1{,}200 duplicate-deal pairs per style, no style
+equipped with the move beats its own unequipped twin by two standard errors
+(Section~\ref{sec:mirror}). Across a full-precision re-run of the project's
+$36$-cell round-robin \cite{v05} --- same 4{,}300 seeds, same rotation, the policy change
+and nothing else --- the verdict, the ranking, and the cyclic structure are all
+unchanged (Section~\ref{sec:matrix}). The measured value of the contained-book
+turn-pass, as a policy option under \code{us54} against the roster it was built
+for, is zero \cite{styles}.
+
+Two features make this negative result worth writing up rather than filing
+away. The first is that every stage of it is \emph{measured rather than
+asserted}, and twice the measurement corrected the project's own prose: the
+handoff's claim that the move is information-free (it is not, but the
+qualification makes the move better --- Section~\ref{sec:move}); and an earlier
+draft's claim that containment is not absorbing under the 48-card baseline
+rules (it is --- Section~\ref{sec:correction}). The second is that the
+mechanism demonstrably works. It fires at the derived rate, refuses in the
+derived cases, and never leaks --- so its worthlessness is a finding about the
+game at this level of play, not a bug report. The arithmetic bounding the
+effect at about one card (Section~\ref{sec:small}) tells us where value would
+have to come from if it exists at all: the declare policy, which is untouched
+here (Section~\ref{sec:open}).
+
+\section{The rules the result rests on}
+\label{sec:rules}
+
+Literature is played by six players in two teams of three (seats $0,2,4$
+versus $1,3,5$) \cite{pagat}. Under \code{us54} \cite{rules54} the deck is 54 cards ---
+the standard 52 plus two distinguishable jokers --- partitioned into nine
+\emph{books} (half-suits) of six cards: per suit, LOW $=$ 2--7 and HIGH $=$
+9--A, plus an EIGHTS book of the four 8s and both jokers. Nine cards are dealt
+to each player; the game ends the moment either team has been awarded five
+books. The project's shipped baseline, \code{pagat48} \cite{rules48}, is the
+48-card game (8s removed, eight books, play to the end).
+
+The theorem needs only a handful of rows from the \code{us54} decision table
+\cite{rules54}; we reproduce them by number, since the proof cites them.
+
+\begin{center}
+\small
+\begin{tabular}{@{}c p{0.86\textwidth}@{}}
+\toprule
+row & rule \\
+\midrule
+5  & \textbf{Ask target.} The target of an ask is always an opponent; a
+     teammate may never be asked. \\
+6  & \textbf{Ask licence.} An asker must hold at least one card of the asked
+     book. \\
+7  & \textbf{Own card.} You may not ask for a card you hold. \\
+9  & \textbf{Hit.} The card transfers; the asker keeps the turn and asks again. \\
+10 & \textbf{Miss.} The turn passes to the player who was asked. \\
+12 & \textbf{Declare content.} Name the book and the exact holder of all six
+     cards; every assignment must be a seat on the declarer's own team. \\
+14 & \textbf{Any error at all.} The opposing team scores the book. Under
+     \code{us54} this covers both ``an opponent held one of the six'' and ``my
+     team held all six but I misassigned''; the \code{pagat48} \emph{void}
+     outcome is abolished. \\
+15 & \textbf{Declare without holding.} Legal --- you may declare a book you
+     hold no card of. \\
+17 & \textbf{Information.} Card counts are public, with a full public log of
+     asks, results, and declares. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Under \code{pagat48} the corresponding declare rows split the error case: its
+row 14 awards the book to the opposing team when an opponent of the declarer
+holds at least one card, regardless of other locations, and its row 15
+\emph{voids} the book when the declarer's own team held all six but a location
+was wrong \cite{rules48}. The distinction matters in
+Section~\ref{sec:correction}. A further \code{us54}-specific rule bears on the
+economics: declares may be made at any time, including out of turn, so a
+teammate can beat you to a book you were saving \cite{rules54}.
+
+\section{The absorbing-containment theorem}
+\label{sec:theorem}
+
+\begin{definition}
+A book $B$ is \emph{contained} by team $T$ in a state $s$ if $B$ is unresolved
+and every one of its six cards is held by a seat of $T$.
+\end{definition}
+
+\begin{theorem}[Absorbing containment]
+\label{thm:absorb}
+Let $B$ be contained by team $T$. Then, under both \code{us54} and
+\code{pagat48}:
+\begin{enumerate}
+\item[(i)] no seat of the opposing team has a legal ask into $B$;
+\item[(ii)] any declare of $B$ by a seat of the opposing team awards $B$ to
+$T$; and
+\item[(iii)] containment persists until $T$ itself resolves $B$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proofenv}
+(i) Asking into $B$ requires holding at least one card of $B$ (row 6, identical
+in both rule sets); an opponent holds none.
+
+(ii) A declare must assign all six cards to seats on the declarer's own team
+(row 12). Since every card of $B$ sits with $T$, every assignment made by an
+opposing declarer is wrong. Under \code{us54}, row 14 awards a declare with any
+error to the opposing team --- which is $T$. Under \code{pagat48} the rule that
+fires is likewise its row 14: at least one card of $B$ is held by an opponent
+of the declarer (indeed all six are), so the opposing team --- again $T$ ---
+scores the book. The \code{pagat48} void (its row 15) cannot apply: it requires
+the \emph{declarer's own} team to hold all six, which contradicts containment.
+
+(iii) The cards of $B$ can move only through a hit on an ask into $B$ or
+through resolution of $B$. By (i) opponents cannot ask into $B$ at all. A
+holder's ask into $B$ must name a card the holder lacks (row 7) at an opponent
+--- who holds no card of $B$ --- so it can only miss, and a miss moves no
+cards (row 10). Hence every card of $B$ stays with $T$ until $B$ is resolved,
+and by (ii) an opponent's attempt to resolve it awards it to $T$. The only
+transition out of the contained state that does not score for $T$ is
+impossible; the state is absorbing.
+\end{proofenv}
+
+\begin{corollary}[The turn-pass]
+\label{cor:pass}
+Let a seat of $T$ hold $k$ cards of a contained $B$, $1 \le k \le 5$. Then that
+seat may legally ask any chosen opponent for any card of $B$ it does not hold
+(rows 5--7); the ask is a guaranteed miss, so the turn passes to the chosen
+opponent (row 10); the miss moves no cards, so the licence is never consumed
+and the move repeats indefinitely; and resolving $B$ destroys the move.
+\end{corollary}
+
+These are claims C1--C6 of the project's containment report \cite{containment},
+and their evidence tier there is \emph{measured}, not \emph{derived}: each is
+executed against the engine in \code{tests/engine/containment.test.ts} on every
+commit. In the pinned position (team A at seats $0,2,4$ containing LOW-C), the
+opponents have zero legal asks into the book (C1); an opponent's declare
+resolves with outcome \code{team0}, the book gifted back (C2); the holder's ask
+is legal, misses, and sends turn $0 \to 3$ as aimed (C3/C4); five consecutive
+uses leave the hand unchanged (C5); and after claiming, zero asks into the book
+remain (C6) \cite{containment}. The independent attestation is Develin's
+strategy text \cite{develin}, which advises holding a fully controlled suit
+without declaring --- the only way the opponents can win it is if you declare
+it wrong --- and separately names asking into it as a way to pass information
+to teammates. The project's tier discipline explicitly refuses to count the
+recent cluster of AI-generated Literature repositories, including its own
+siblings, as corroboration \cite{containment}.
+
+\subsection{The correction: \code{pagat48} is absorbing too, and a draft said otherwise}
+\label{sec:correction}
+
+An earlier draft of the project's own documentation claimed that containment
+was \emph{not} absorbing under \code{pagat48}, on the argument that its row 15
+would void an opponent's declare of a contained book \cite{styles}. That is
+false, and it was caught by measurement rather than by re-reading: row 15's
+void requires the declarer's own team to hold all six cards, which cannot
+describe a seat whose opponents hold all six; the rule that actually fires is
+row 14, worded identically in both rule sets. Executed under \code{pagat48},
+the opponent's declare of a contained book resolves with outcome \code{team0}
+and score $[1,0]$ --- gifted back, not voided --- and the test suite now pins
+both C1 and C2 under the 48-card rules so the corrected fact cannot decay into
+folklore \cite{styles}.\footnote{Prose decays faster than assertions. At the
+time of writing, one bot-level test in
+\code{tests/bots/contained.test.ts} still carries the superseded rationale in
+its name and comment (``row 14 gifts, row 15 voids'') while asserting behaviour
+that remains correct for a different reason; the engine-level suite carries the
+correction. The episode is a working example of why this project records
+evidence tiers and executes its claims.}
+
+The correction has a practical edge: the policy of
+Section~\ref{sec:discipline} refuses to run under \code{pagat48}, and the
+refusal is now honestly labelled a \emph{compatibility} gate --- the project
+holds the shipped 48-card game byte-identical, verified by differential digest
+--- rather than a rules gate. The mechanism is valid there and is declined
+anyway; no rules argument stands in the way of revisiting it if the 48-card
+roster is ever re-tuned \cite{styles}.
+
+\section{The move and its information price}
+\label{sec:move}
+
+The incoming research handoff described the turn-pass as information-free.
+Measured, it is not --- but the qualification is narrow and makes the move
+better, not worse \cite{containment}. Each ask publishes, via the public log
+(row 17), that the asker holds at least one card of the book and \emph{lacks
+the named card}. The first time a given card is named, the asker's hand is
+narrowed by one card. Naming the \emph{same} card again publishes nothing new,
+and the miss is equally guaranteed. The discipline that follows is the
+report's own: \emph{reuse one card as your turn-pass}. The first use spends
+one card of hand information; every repeat is genuinely free; cycling through
+distinct cards leaks a bit each time for no gain. In the measured position the
+holder had four distinct nameable cards --- four lifetimes of the move, if it
+were ever worth spending them \cite{containment}.
+
+Two framings of the same ask coexist and are deliberately kept apart
+\cite{containment,styles}. The rules-derivation frames it as \emph{turn
+control}: the miss chooses who acts next. Develin frames it as
+\emph{signalling}: the publication reaches the teammates, who --- unlike the
+opponents, whom C1 and C2 lock out --- can convert it, for instance by
+declaring the book, which C2 denies the other side. Both are modelled; only
+turn control decides (Section~\ref{sec:trigger}); signalling enters at exactly
+one term, the information price, which a \code{signalling} style books as
+delivered rather than spent.
+
+Under \code{us54} the theorem's ``no defensive value in claiming'' meets one
+genuine countervailing cost that \code{pagat48} does not share: declares are
+legal at any time, so \emph{a teammate may declare the contained book wrongly
+first}. That intra-team race --- measured by the roster's \code{raceLosses}
+diagnostic --- is the real price of waiting, and it binds the declare policy,
+not the ask policy \cite{containment}.
+
+\section{The trigger, derived}
+\label{sec:trigger}
+
+Passing the turn is normally bad: you surrender tempo for nothing. The move is
+worth playing only when the ordinary alternative is poor \emph{and} aiming the
+concession buys something. Both quantities are read off public data (row 17),
+in units of cards \cite{styles}.
+
+Write $p^{*}$ for the hit probability of the ask the style would otherwise
+play, $t_{o}$ for the opponent that ask concedes the turn to on a miss, and
+$t_{c}$ for the opponent the style's aim (\code{missTarget}) would pick. Let
+$V_{\mathrm{hit}} = 1$ card (the card taken; the asker also keeps the turn,
+row 9) and let $V_{\mathrm{miss}}(t) = -\,\mathrm{cost}(t)$, the cards a
+conceded turn is expected to hand seat $t$. Then
+\begin{align*}
+\mathrm{value}(\text{ordinary}) &= p^{*}\,V_{\mathrm{hit}}
+   + (1-p^{*})\,V_{\mathrm{miss}}(t_{o}),\\
+\mathrm{value}(\text{pass}) &= V_{\mathrm{miss}}(t_{c}) - \mathrm{infoCost},
+\end{align*}
+and the pass wins exactly when
+\begin{equation}
+\label{eq:trigger}
+p^{*} \;<\; \frac{a \cdot \mathrm{gain} - \mathrm{infoCost}}{\mathrm{tempo}},
+\end{equation}
+with every term defined and sourced as follows \cite{styles}:
+
+\begin{center}
+\small
+\begin{tabular}{@{}l l p{0.55\textwidth}@{}}
+\toprule
+term & value & where it comes from \\
+\midrule
+$E$ & $\mathrm{hits}/\max(1,\mathrm{misses})$ &
+  over the public log. Row 9 keeps the turn on a hit and row 10 ends it on a
+  miss, so a turn is a geometric run of hits with expected length $h/(1-h)$
+  --- on counts, exactly hits over misses. \\
+$\mathrm{cost}(t)$ & $E \cdot n_{t}/\bar{n}$ &
+  a conceded turn is worth more to a seat holding more ask licences (row 6);
+  hand size $n_{t}$ is the public part of that (row 17). \\
+$\mathrm{gain}$ & $E \cdot (n_{o}-n_{c})/\bar{n}$ &
+  what aiming the concession buys: $\mathrm{cost}(t_o)-\mathrm{cost}(t_c)$. \\
+$\mathrm{tempo}$ & $1 + E \cdot n_{o}/\bar{n}$ &
+  the swing between hitting and missing: one card taken, plus the turn
+  \emph{not} conceded to $t_o$. \\
+$\mathrm{infoCost}$ & $0$ on a reuse, else $1/U$ &
+  the Section~\ref{sec:move} price, charged at the only channel C1 and C2
+  leave the opponents: count exhaustion. \\
+$a$ & the style's \code{containedPass} &
+  the appetite (Section~\ref{sec:appetite}). \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Here $\bar{n}$ is the mean hand size over seats still holding cards and $U$
+the number of live cards whose holder is not yet publicly certain. Every input
+is public and none is a tuned constant: an engine, a roster, or a rule set
+that hits more often prices a conceded turn higher, automatically. $p^{*}$ is
+the seat's own \emph{best} estimate --- the constraint-refined probability
+where the skill model provides one, not the slot prior --- so the ask being
+displaced is never undervalued. Two consequences fall out of the algebra, and
+they are why this is not ``fire whenever legal'' \cite{styles}:
+
+\begin{itemize}
+\item $\mathrm{gain} \le 0$ whenever the ordinary ask already concedes where
+the style wants it, and the move is then refused however contained the book
+is. This switches the mechanism off wholesale for two styles with no bespoke
+code: Blitz aims at the \emph{largest} hand (\code{missTarget} \code{'most'}),
+so its ordinary concession is already its preferred one; a style with
+\code{missTarget} \code{'random'} expresses no aim and buys nothing by aiming.
+\item A certain hit is never displaced: it is riskless material \emph{and}
+keeps the turn (row 9). The threshold is clamped strictly below 1 and the
+check is explicit.
+\end{itemize}
+
+The implementation is deliberately small enough to quote. The valuation in
+\code{lib/engine/bots/contained.ts} is, in its entirety of consequence (lightly
+adapted: the file computes these same expressions and returns \code{threshold}
+as a field of its result object rather than assigning it):
+
+\begin{quote}
+\begin{verbatim}
+const E = hits / Math.max(1, misses)
+const meanHand = seats > 0 ? sum / seats : 0
+const perCard = meanHand > 0 ? E / meanHand : 0
+const gain  = perCard * (nOrd - nChosen)
+const tempo = 1 + perCard * nOrd
+const raw = (style.containedPass * gain - infoCost) / tempo
+threshold = Math.max(0, Math.min(1 - 1e-9, raw))
+\end{verbatim}
+\end{quote}
+
+One knob is deliberately \emph{not} consulted: \code{minHitP}, the roster's
+long-shot filter. That knob refuses asks whose chance of taking a card does
+not justify the turn they risk; this ask has no chance of taking a card by
+construction and risks nothing, because the turn is the entire content of the
+move rather than its downside. Applying a hit-probability floor to it would
+refuse it always, at every style that carries one \cite{contained-ts}.
+
+A worked instance, pinned by test \cite{tests-bots}: seat 0 holds five of
+LOW-C with the sixth placed on a teammate by three public misses, opponents at
+$20/5/2$ cards, and the log showing 3 hits to 3 misses, so $E = 1$ and
+$\bar{n} = 49/6$. Then $\mathrm{gain} = 18/\bar n \approx 2.20$,
+$\mathrm{tempo} = 1 + 20/\bar n \approx 3.45$, threshold $\approx 0.64$: the
+pass fires. Add six filler misses so $E = 1/3$ and the same position prices at
+$0.404$ for appetite 1 --- below the ordinary ask's $p^{*} = 0.465$, so
+Balanced keeps its material ask --- while the Hoarder's appetite of $1.33$
+lifts the bar to $0.538$ and it spends the turn to aim the concession at the
+two-card seat. The same knob, the same arithmetic, two different styles.
+
+\subsection{The appetite: one number, eight of nine styles share it}
+\label{sec:appetite}
+
+Inequality~\eqref{eq:trigger} prices a \emph{single} use, but the licence is
+renewable (C5): a style that will hold the book longer gets more uses out of
+the same first-use cost. The style's sole contribution is therefore
+\code{containedPass}, the \emph{expected number of uses the licence gets
+before the book is banked}. A style that banks at its next opportunity takes
+$1$; eight of the nine roster styles do. The Hoarder takes $1.33$, read off
+the project's own measurement of how much longer it holds a set ---
+\code{declareLatency} $31.02$ window-cycles against Balanced's $23.39$ --- and
+it is the only appetite above break-even because it is the only delay that has
+actually been measured \cite{styles}.
+
+The uniformity is deliberate: which styles \emph{reach} contained books, and
+whether aiming buys anything, are already governed by knobs the roster carried
+before (\code{hoardBooks}, \code{declareOnlyOwnHand}, \code{missTarget}), and
+nine per-style appetites would have hidden that behind nine tuned constants.
+An honest check on the number: measured uses per contained book run Turtle
+$3.40$, Hoarder $2.64$, Banker $2.56$, Balanced $2.23$, Punter $1.63$ --- the
+\emph{ordering} the appetite argument predicts, but a Hoarder-to-Balanced
+ratio of $1.18$, not the $1.33$ the latency ratio implied. The number is right
+in sign and roughly right in size, and it has deliberately not been re-derived
+from $1.18$, because fitting an appetite to the behaviour it produces is
+tuning against the outcome \cite{styles}.
+
+\subsection{Implementation discipline}
+\label{sec:discipline}
+
+Three lines the implementation refuses to cross, each pinned by test rather
+than asserted \cite{contained-ts,tests-bots}:
+
+\textbf{Card reuse, stateless.} The card chooser prefers a card of the book
+whose absence from this hand is already public; failing that it takes the
+canonical-first card the seat does not hold --- which, because a contained
+book's cards can never move (Theorem~\ref{thm:absorb}(iii)), is fixed for the
+rest of the game, so every later call finds that same card already in the log.
+The reuse discipline holds with no state carried between decisions. Measured
+in play, $97.6\%$ of the Turtle's uses and $94.8\%$ of the Hoarder's cost no
+information at all \cite{styles}.
+
+\textbf{No partner model.} Develin records that prearranged conventions are
+forbidden in this tradition, and the containment report says not to blur the
+line \cite{containment,develin}. Signalling through a legal public ask is not
+a prearranged convention --- but only as long as nothing decodes it. So
+nothing does: a teammate's knowledge state after a turn-pass is bit-for-bit
+the knowledge it builds after any other miss on the same card by the same seat
+--- the row-17 public facts and nothing else --- and the test suite asserts
+that equality directly, comparing the two knowledge objects. The inference
+layer does not know the ask was a turn-pass, and must not be taught to.
+
+\textbf{Gates before arithmetic.} The plan is refused, cheapest check first,
+on: a zero appetite (every shipped difficulty tier has \code{containedPass}
+$= 0$, keeping the live product untouched); the rule set (the
+Section~\ref{sec:correction} compatibility gate); a skill that cannot read
+hand counts (a seat that cannot compare hand sizes cannot aim); a certain hit;
+then the recogniser; then Inequality~\eqref{eq:trigger}. The recogniser's
+predicate is deliberately weaker than the report's measured position: it
+requires every card of the book to be \emph{certainly on the seat's team},
+not pinned to named seats --- a pinned book is one the certain-claim path has
+already banked, so a pinning recogniser would fire only for the two styles
+that refuse certain declares. Under the weaker predicate the ask still cannot
+hit, and every style can reach the state \cite{contained-ts}.
+
+\section{Measurements}
+\label{sec:measure}
+
+\subsection{Instruments}
+\label{sec:instruments}
+
+Four instruments, in increasing order of scale, following the lab's
+duplicate-deal and fixed-precision protocol \cite{styles,botlab}:
+(i)~\emph{decision mirrors}: 100 \code{us54} games per style in which two
+vectors identical but for \code{containedPass} are handed the same seat view
+and seed at every decision point and their chosen actions compared;
+(ii)~\emph{duplicate-deal pairs}: 1{,}200 pairs (2{,}400 games) per style,
+both orientations of every seed with a shared seat rotation, the pair as the
+unit of analysis; (iii)~\emph{matrix v2}: the full $36$-cell round-robin at
+4{,}300 pairs per cell (309{,}600 games, standard error $\le 0.005$ per cell)
+re-run on the same seed set as matrix v1, so the two runs differ by the policy
+change and nothing else --- both artifacts committed
+(\code{src/lab/data/style-results.dominant.json}, records digest
+\code{087b626cedc5845e}, engine commit recorded \code{819eebb-dirty};
+\code{style-results.v2.json}, digest \code{0c3cb524a3534d4a}, engine commit
+recorded \code{1667a1d-dirty} --- the \code{-dirty} suffixes reflecting
+generation from a modified working tree at those commits); and
+(iv)~\emph{differential digests}: seeded games
+serialised action-by-action and hashed against the prior commit. The v2 health
+gate is clean: 0 illegal actions, 0 capped games, 0 invariant violations, 0
+ties, 0 voids, 0 non-clinch terminations, 4{,}300 of 4{,}300 distinct seeds.
+
+The digests bound the blast radius exactly \cite{styles}: under
+\code{pagat48}, both the three shipped tiers and all nine roster styles are
+bit-identical to the prior commit; under \code{us54} the shipped tiers are
+bit-identical (every preset carries \code{containedPass} $=0$) and the roster
+changed for seven of nine styles --- the two unchanged, Blitz and Scout, being
+exactly the two the model predicts (aim already at the largest hand; almost
+never holds a contained book). Even that count needed correcting by
+measurement: at 40 games the Archivist also digested as unchanged, because 40
+games is below its firing rate; at 250 duplicate pairs (500 games) its digest
+differs, and 7-of-9 is the corrected figure.
+
+\subsection{Opportunity, fire, and refusal}
+\label{sec:fire}
+
+Table~\ref{tab:fire} gives the decision-mirror rates. \code{opp} counts ask
+decisions at which a contained book was available at all; \code{fire} counts
+decisions at which the valuation returned a plan; in every style the number of
+divergent decisions equals \code{fire} exactly --- the mechanism never once
+chose the move the ordinary policy was already going to play \cite{styles}.
+
+\begin{table}[ht]
+\centering
+\caption{Opportunity and fire rates, 100 mirror \code{us54} games per style
+\cite{styles}.}
+\label{tab:fire}
+\small
+\begin{tabular}{@{}l r l r r r r r r@{}}
+\toprule
+style & appetite & aim & decisions & opp & opp\,\% & fire & fire/opp & div\,\% \\
+\midrule
+Balanced  & 1    & fewest & 9{,}741  & 379    & 3.89\%  & 29  & 7.7\%  & 0.0414\% \\
+Blitz     & 1    & most   & 9{,}345  & 472    & 5.05\%  & 0   & 0.0\%  & 0.0000\% \\
+Punter    & 1    & fewest & 9{,}507  & 347    & 3.65\%  & 13  & 3.8\%  & 0.0190\% \\
+Banker    & 1    & fewest & 9{,}818  & 495    & 5.04\%  & 69  & 13.9\% & 0.0981\% \\
+Turtle    & 1    & fewest & 17{,}285 & 9{,}310 & 53.86\% & 679 & 7.3\%  & 0.5575\% \\
+Hoarder   & 1.33 & fewest & 11{,}418 & 1{,}707 & 14.95\% & 211 & 12.4\% & 0.2580\% \\
+Scout     & 1    & fewest & 11{,}292 & 43     & 0.38\%  & 0   & 0.0\%  & 0.0000\% \\
+Ghost     & 1    & fewest & 9{,}996  & 131    & 1.31\%  & 21  & 16.0\% & 0.0293\% \\
+Archivist & 1    & fewest & 10{,}383 & 105    & 1.01\%  & 5   & 4.8\%  & 0.0067\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three readings \cite{styles}. First, \emph{the opportunity is a property of
+the declare policy, not the ask policy}: a contained book exists at $53.86\%$
+of the Turtle's ask decisions (it never banks a set split across teammates,
+so it accumulates them) and $0.38\%$ of the Scout's (whose information
+weighting pins holders early, and a pinned contained set is banked
+immediately). The Hoarder sits second at $14.95\%$ --- nearly four times the
+control's $3.89\%$ --- which is precisely the benefit the project once said it
+was paying for and not collecting. Second, \emph{it is mostly a refusal}: even
+where the licence exists it is spent at $3.8$--$16.0\%$, and every refusal is
+the $\mathrm{gain} \le 0$ arm --- the ordinary ask was already conceding
+where the style wanted. Third, \emph{divergence is small}: the largest mover
+is the Turtle at $0.56\%$ of all decisions; seven of nine move less than
+$0.1\%$; exactly two --- Blitz and Scout --- do not move at all (the
+Archivist fires five times, $0.0067\%$). The information price, for completeness:
+charged only on first uses ($2.4\%$ of the Turtle's, $5.2\%$ of the
+Hoarder's), bounded by $1/U < 0.05$ cards in these positions against a tempo
+above 1, and it never flipped a decision.
+
+\subsection{Does it win? No.}
+\label{sec:mirror}
+
+Table~\ref{tab:null} is the head-to-head: each style \emph{with} the mechanism
+against the identical style with it forced off, 1{,}200 duplicate-deal pairs
+each; $0.5$ is no effect; \code{changed} counts games whose result or length
+differed from the same deal played by two copies of the unequipped vector ---
+games the mechanism actually touched \cite{styles}.
+
+\begin{table}[ht]
+\centering
+\caption{Per-style null result: WITH vs.\ WITHOUT \code{containedPass},
+1{,}200 duplicate-deal pairs (2{,}400 games) per style \cite{styles}.}
+\label{tab:null}
+\small
+\begin{tabular}{@{}l r r r r r@{}}
+\toprule
+style & appetite & pairs (games) & WITH score & SE & changed \\
+\midrule
+Balanced  & 1    & 1{,}200 (2{,}400) & 0.5046 & 0.0034 & 239 \\
+Blitz     & 1    & 1{,}200 (2{,}400) & 0.5000 & 0.0000 & 0 \\
+Punter    & 1    & 1{,}200 (2{,}400) & 0.4971 & 0.0029 & 142 \\
+Banker    & 1    & 1{,}200 (2{,}400) & 0.5021 & 0.0035 & 281 \\
+Turtle    & 1    & 1{,}200 (2{,}400) & 0.5008 & 0.0065 & 1{,}268 \\
+Hoarder   & 1.33 & 1{,}200 (2{,}400) & 0.4938 & 0.0054 & 915 \\
+Scout     & 1    & 1{,}200 (2{,}400) & 0.5000 & 0.0000 & 0 \\
+Ghost     & 1    & 1{,}200 (2{,}400) & 0.4958 & 0.0027 & 156 \\
+Archivist & 1    & 1{,}200 (2{,}400) & 0.4996 & 0.0004 & 11 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+No style is two standard errors from $0.5$. The largest deviation in either
+direction is $1.6$\,SE (Ghost, $0.4958 \pm 0.0027$); the two heaviest users
+land on and slightly below the control (Turtle $0.5008 \pm 0.0065$, Hoarder
+$0.4938 \pm 0.0054$); across the seven styles that fire at all, point
+estimates straddle $0.5$ (four below, three above, mean $0.4991$). Blitz and
+Scout return exactly $0.5000 \pm 0.0000$ over 2{,}400 games each, which is the
+zero-changed-games column restated: for those two, the vectors are the same
+player \cite{styles}.
+
+\subsection{The full matrix confirms it}
+\label{sec:matrix}
+
+The mirror isolates the mechanism against a twin; matrix v2 exposes it to the
+whole roster. Nothing that matters moved \cite{styles}: the verdict is
+unchanged (dominant style: Punter, all four criteria); the ranking is
+identical position for position; Punter's mean score is $0.5829$ in both runs
+and its maximin $0.5193 \to 0.5190$ (its worst matchup relabelled between two
+cells that were already tied); cyclic energy rose $0.0097 \to 0.0112$ against
+a threshold of $0.15$, with the same single directed 3-cycle
+(Hoarder $>$ Archivist $>$ Ghost) still failing Benjamini--Hochberg
+($q\ 0.31 \to 0.27$); significant cells went $34 \to 33$ of 36, entirely
+because one marginal Hoarder cell fell out of significance; Nash and
+$\alpha$-Rank both still put all mass on Punter. No cell moved significantly:
+the largest paired per-deal difference is \code{blitz-vs-ghost} at
+$+0.0030 \pm 0.0015$ ($t = 2.07$), which does not survive
+Benjamini--Hochberg over 36 comparisons --- one $|t|$ above 2 in 36 is what
+chance produces. Per style, paired over the same 4{,}300 deals, every mean
+score is within $1.5$\,SE of zero change (Table~\ref{tab:v2}); the headline
+row is the Hoarder --- the style built to exploit the mechanism --- at
+$\Delta = -0.0018 \pm 0.0014$ ($t = -1.35$), sixth of nine in both runs.
+
+\begin{table}[ht]
+\centering
+\caption{Matrix v2 vs.\ v1: per-style mean score, paired over the same
+4{,}300 deals per cell \cite{styles,artifacts}.}
+\label{tab:v2}
+\small
+\begin{tabular}{@{}l r r r r r l@{}}
+\toprule
+style & v1 & v2 & $\Delta$ & SE($\Delta$) & $t$ & rank \\
+\midrule
+Punter    & 0.5829 & 0.5829 & $-0.0001$ & 0.0009 & $-0.07$ & 1 $\to$ 1 \\
+Blitz     & 0.5594 & 0.5602 & $+0.0008$ & 0.0008 & $+0.94$ & 2 $\to$ 2 \\
+Balanced  & 0.5584 & 0.5581 & $-0.0003$ & 0.0009 & $-0.34$ & 3 $\to$ 3 \\
+Banker    & 0.5274 & 0.5285 & $+0.0011$ & 0.0011 & $+1.00$ & 4 $\to$ 4 \\
+Ghost     & 0.4928 & 0.4928 & $+0.0000$ & 0.0010 & $+0.03$ & 5 $\to$ 5 \\
+Hoarder   & 0.4904 & 0.4885 & $-0.0018$ & 0.0014 & $-1.35$ & 6 $\to$ 6 \\
+Archivist & 0.4791 & 0.4802 & $+0.0011$ & 0.0008 & $+1.47$ & 7 $\to$ 7 \\
+Scout     & 0.4064 & 0.4063 & $-0.0001$ & 0.0007 & $-0.12$ & 8 $\to$ 8 \\
+Turtle    & 0.4032 & 0.4025 & $-0.0007$ & 0.0019 & $-0.38$ & 9 $\to$ 9 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two rows of Table~\ref{tab:v2} are not evidence of anything and should not be
+read as such: Blitz's and Scout's deltas are nonzero even though their own
+policies are byte-identical between runs, because their \emph{opponents}
+changed \cite{styles}.
+
+\subsection{Exploitability, and the axis the search cannot turn}
+\label{sec:exploit}
+
+The single-knob exploitability search was re-run from scratch for all nine
+styles (its cache keys on a hash of the engine tree, so the new file
+invalidated every entry). The deltas are all inside the search's own noise
+--- its final measurements carry standard errors of $0.008$--$0.017$ and it
+only accepts moves worth at least $\approx 0.03$ --- and the verdict criterion
+passes in both runs, with the dominant style's exploitability moving
+$0.0000 \to 0.0025$ against a rivals' median of $0.0444$ \cite{styles}. The
+one qualitatively interesting row is the Hoarder's: the best single-knob
+counter to the Hoarder-with-the-benefit is no longer a scoring weight but
+\code{hoardBooks=0 minHandSize=0} --- \emph{stop hoarding} --- worth
+$0.5563 \pm 0.0124$. The counter to the style is still to not be it
+\cite{styles,artifacts}.
+
+One gap remained: the search's knob ladder predates \code{containedPass}, so
+neither run could switch the mechanism itself on or off. That axis was probed
+directly with the same sequential protocol used for tuning (SPRT,
+$d_0 = 0$, $d_1 = 0.03$, $\alpha = \beta = 0.05$, 24--400 pairs, then a
+fixed-$N$ 400-pair evaluation on unseen seeds), against every style, at
+appetites $\{0, 2, 4\}$. \textbf{No candidate was accepted, for any style, at
+any appetite.} The two rows worth naming: turning the mechanism \emph{off}
+against the Turtle ran to the pair cap unresolved
+($+0.0125 \pm 0.0120$ in search; $0.5225 \pm 0.0121$ in eval) --- the one
+candidate the SPRT could not decide; and the same candidate against the
+Hoarder produced a sign disagreement between search and eval
+($-0.0200 \pm 0.0176$ rejected, versus $0.5275 \pm 0.0098$), recorded
+precisely because it is the one number in the exercise that would have looked
+like a finding if only its second half had been reported --- the honest
+summary of two contradictory $0.01$--$0.02$-sized effects is that neither is
+real. What \emph{does} resolve is over-use: at appetite 4 the Turtle drops to
+$0.4600 \pm 0.0148$ and the Banker to $0.4850 \pm 0.0083$. The move is worth
+nothing, and spending turns on it anyway is worth less than nothing
+\cite{styles}.
+
+\section{Why the effect is small}
+\label{sec:small}
+
+The null is not mysterious; the trigger's own terms bound it. A conceded turn
+is worth $E \cdot n_t/\bar{n}$ cards, and the measured $E$ --- hits over
+misses on the public log --- is around 1 at this roster's level of play. So
+the \emph{entire} spread between the best and the worst opponent to concede
+to is on the order of one card, and the aimable fraction of that spread is
+all the move can ever buy. Against it stands everything the ordinary ask
+gives up: $p^{*}$ of a card of material, plus the turn a hit would have
+retained (row 9). The move is real, and it is small \cite{styles}. The
+firing profile of Table~\ref{tab:fire} says the same thing from the other
+side: most of the time the concession is already aimed correctly, so there is
+nothing to buy, and the valuation --- honestly computed --- mostly refuses.
+
+Under \code{us54} there is also an active cost to the holding pattern the
+move requires: the intra-team race. A contained book left unclaimed is a book
+a teammate can declare wrongly at any time, gifting it away (rows 11 and 14
+of \cite{rules54}); the Hoarder's \code{raceLosses} doubles ($0.046 \to
+0.091$ per game) when its hoarding is actually expressed \cite{styles}. The
+absorbing state is safe from the opponents, not from one's own side.
+
+\section{What is not settled}
+\label{sec:open}
+
+\textbf{The declare-policy mechanism.} Everything measured here changes the
+\emph{ask} policy: when a style already holds a contained book, it may spend
+a turn aiming a concession. The containment report's second recommendation
+--- hold contained books by default, trading tempo and race risk against the
+retained licence, instead of treating banking as automatically correct ---
+is a change to the \emph{declare} policy and is untouched
+\cite{containment,styles}. Table~\ref{tab:fire}'s first reading is the
+evidence that this is where the leverage would be: the opportunity rate is
+set almost entirely by how long a style leaves books unclaimed ($53.86\%$
+for the Turtle against $0.38\%$ for the Scout), i.e.\ by the declare policy.
+The report's expected-value analysis is on file for whoever attempts it:
+with $c = P(\text{contained})$ and
+$a = P(\text{assignment correct} \mid \text{contained})$, declare iff
+$c > 1/(1+a)$ under \code{pagat48}'s void rule and $c \cdot a > 1/2$ under
+\code{us54}'s gift rule --- and do not collapse $c$ and $a$ into one number,
+as the current claim planner does, since ``is this book on my team'' and
+``do I know which teammate holds each card'' have different distributions
+and different remedies, and conflating them biases the bot conservative
+\cite{containment}.
+
+\textbf{An untuned roster.} The bar Inequality~\eqref{eq:trigger} must clear
+is \emph{the best ordinary ask the style has}, and the project's tuning
+protocol has never been run over this roster; a roster with a weaker ask
+policy would leave more room for a turn-pass \cite{styles}. Relatedly, the
+deliberate known-miss ask has been independently flagged as a gap: the
+FishBot v0.3 paper's engine also permits known-miss asks and its policy
+``almost never'' chooses them \cite{containment}. Two independent sources
+plus a measured mechanism made the gap real; this paper measures what closing
+it is worth at one operating point, not at all of them.
+
+\section{Threats to validity}
+\label{sec:threats}
+
+\emph{The claims are about this rule set as implemented.} C1--C6 are
+measured against this engine; that is the strongest tier available here, and
+also its scope. The independent attestation (Develin, read directly) covers
+the absorbing property and both framings of the ask, not the quantitative
+results \cite{containment}.
+
+\emph{Self-play, one roster, one engine.} The null is measured between
+policy vectors sharing one inference engine, on a nine-style roster at one
+level of play. A stronger or weaker population could price the move
+differently; Section~\ref{sec:open} names the direction.
+
+\emph{The appetite is a proxy.} \code{containedPass} $= 1.33$ is read off a
+latency ratio, and the realised use ratio is $1.18$. The discrepancy is
+reported and deliberately left unfitted \cite{styles}.
+
+\emph{Search noise.} The exploitability deltas of Section~\ref{sec:exploit}
+sit inside the search's own error bars, and the one sign-contradictory
+result is reported as noise, not evidence. The SPRT probe of the
+\code{containedPass} axis closes the ladder gap but inherits the same
+detection floor ($\approx 0.03$); effects smaller than that would not have
+been accepted --- though the paired mirror of Table~\ref{tab:null}, with
+standard errors of $0.003$--$0.007$, would have seen them.
+
+\emph{Small-sample traps, twice.} Forty games misread the Archivist's digest
+as unchanged; a 200-pair pilot misplaced the Hoarder's rank (7th, against 6th
+in both full-precision runs). Both errors were caught by re-measuring at
+scale and both corrections are recorded in the source documents
+\cite{styles}. They are kept in this paper as calibration for how much to
+trust any single small run --- including the ones reported here.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+A theorem can be true, its mechanism implementable, its implementation
+faithful, and the whole thing worth nothing. The contained book is absorbing
+under both rule sets this project supports --- a fact strong enough to
+survive the project's own attempt to disprove half of it --- and the
+turn-pass it licenses is renewable, aimable, and after its first use free.
+Implemented with an honest price and handed to the style built to exploit
+it, it changed 915 of that style's 2{,}400 mirror games and moved its score
+by $-0.0062 \pm 0.0054$ against its twin and $-0.0018 \pm 0.0014$ against
+the field. The measured value of the move at this roster's level of play is
+zero, and the arithmetic that prices it says why: a conceded turn is worth
+about one card here, and one card, aimed or not, does not win races to five.
+
+The negative result is the deliverable. It converts ``the Hoarder
+underperforms because its benefit was never implemented'' --- a live
+objection, on the record --- into ``the benefit is implemented, reached
+nearly four times as often as baseline, priced above break-even, and worth
+nothing,'' and it does so with the objection's own instruments. What remains
+open is exactly one mechanism (the declare-side holding policy), and the
+measurements here say where its leverage would have to come from. Measuring
+rather than asserting cost two corrections on the way to a zero; both
+corrections, and the zero, are the point.
+
+\begin{thebibliography}{99}
+
+\bibitem{v05}
+A.~Hsieh,
+\emph{FishAI v0.5: measuring play style without skill in a 54-card Literature
+variant},
+companion paper, published alongside this one, 2026. The engine, the
+nine-style roster, the tournament design, and the full-matrix results this
+paper's measurements plug into.
+
+\bibitem{containment}
+A.~Hsieh,
+\emph{CONTAINMENT.md --- the contained-book result},
+FishAI project internal report, August 2026.
+Claims C1--C6 with evidence tiers, the information-cost correction (\S1.2),
+the Develin attestation (\S2), and the claim-EV thresholds (\S3.3).
+
+\bibitem{styles}
+A.~Hsieh,
+\emph{STYLES.md --- the play-style roster under \code{us54}},
+FishAI project internal report, August 2026.
+\S6.2 (the Hoarder prediction and its refutation), \S6.3 (the turn-pass
+implemented and measured; \S6.3.7 the \code{pagat48} correction), \S6.4
+(matrix v2).
+
+\bibitem{rules54}
+A.~Hsieh,
+\emph{RULES\_US54.md --- the ``US student'' 54-card variant},
+FishAI project internal report, August 2026. Decision-table rows cited by
+number throughout.
+
+\bibitem{rules48}
+FishAI project,
+\emph{RULES.md --- the 48-card pagat baseline},
+internal report, 2026. Rows 14--15 (the split declare-error outcomes,
+including the void).
+
+\bibitem{botlab}
+FishAI project,
+\emph{BOT\_LAB.md --- simulation-lab protocol},
+internal report, 2026. Duplicate-deal pairing (\S5.1--5.2), fixed-$N$ matrix
+precision (\S5.4), SPRT tuning (\S5.5), and the exploitability ladder
+(\S5.7).
+
+\bibitem{develin}
+M.~Develin,
+\emph{The Ten Best Card Games You've Never Heard Of}, ch.~9 (Canadian Fish),
+\url{http://www.bantha.org/~develin/cardgames.html}.
+Independent attestation of the absorbing property and of the signalling
+framing; records the tradition's ban on prearranged conventions.
+
+\bibitem{pagat}
+J.~McLeod (ed.),
+\emph{Literature (Canadian Fish)},
+Pagat card-game rules archive,
+\url{https://www.pagat.com/quartet/literature.html}.
+Folklore source for both rule sets' common core.
+
+\bibitem{contained-ts}
+FishAI project,
+\code{lib/engine/bots/contained.ts},
+the turn-pass policy: recogniser, card reuse, valuation, and gates. The
+mechanism claims are pinned by \code{tests/engine/containment.test.ts}
+(C1--C6 under \code{us54}; C1--C2 under \code{pagat48}; an end-to-end
+policy-through-reducer step).
+
+\bibitem{tests-bots}
+FishAI project,
+\code{tests/bots/contained.test.ts},
+the decision-level pins: the refusal on a level board, the measured-$E$
+worked positions, the certain-hit clamp, the appetite's scaling, the
+no-partner-model equality, and the shipped tiers' zero appetite.
+
+\bibitem{artifacts}
+FishAI project,
+committed measurement artifacts
+\code{src/lab/data/style-results.dominant.json} (matrix v1, engine commit
+recorded \code{819eebb-dirty}, records digest \code{087b626cedc5845e}) and
+\code{src/lab/data/style-results.v2.json} (matrix v2, engine commit
+recorded \code{1667a1d-dirty}, records digest \code{0c3cb524a3534d4a});
+309{,}600 games each, health gates clean.
+
+\end{thebibliography}
+
+\end{document}

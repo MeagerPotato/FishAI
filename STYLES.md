@@ -548,7 +548,8 @@ Read three ways:
    Every one of those refusals is the `gain ≤ 0` arm: the ordinary ask was already conceding the
    turn where the style wanted it, so there was nothing to buy.
 3. **Divergence is small.** The largest mover is the Turtle at 0.56% of all decisions and the
-   Hoarder at 0.26%; six of the nine move less than 0.1%, and three do not move at all. In every
+   Hoarder at 0.26%; seven of the nine move less than 0.1%, and two — Blitz and Scout — do not
+   move at all. In every
    style `fire` equals the divergence exactly — the mechanism never once chose the move the
    ordinary policy was already going to play, which is what makes these columns interchangeable.
 

@@ -1,0 +1,1199 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{microtype}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
+
+\newtheorem{theorem}{Theorem}
+\newenvironment{proofenv}{\noindent\textit{Proof.}\ }{\hfill$\square$\par\medskip}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\usff}{\code{us54}}
+
+\title{FishAI v0.5: Measuring Play Style Without Skill\\ in a 54-Card Literature Variant}
+\author{Allen Hsieh\\[2pt] {\small FishAI project}}
+\date{August 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+FishAI v0.5 is a style-conditioned engine and simulation laboratory for Canadian Fish
+(Literature) under the \usff{} rule dialect: 54 cards, nine half-suits of six, out-of-turn
+declares, any declaration error awarded to the opponents, and a race to five sets. Nine
+parameterized play styles share one identical full-strength inference engine, so that
+differences in outcome measure \emph{style} rather than \emph{skill}. The roster is evaluated
+in a full-precision duplicate-deal round-robin --- 36 cells, 4{,}300 mirrored deal pairs per
+cell, 309{,}600 games, per-cell standard error at most $0.005$ --- and the payoff matrix is
+analyzed with mean score, maximin, Bradley--Terry, Nash averaging, $\alpha$-Rank, and a Hodge
+decomposition into transitive and cyclic parts. The matrix is almost purely transitive (cyclic
+energy $0.0112$ against a $0.15$ threshold), and one style, \emph{Punter}, satisfies all four
+pre-stated dominance criteria: highest mean score ($0.5829$), maximin above one half
+($0.5190$), negligible cyclic energy, and exploitability $0.0025$ against a rivals' median of
+$0.0444$. Two measured caveats qualify the headline and are reported as first-class results.
+First, the declare-threshold axis that the roster's aggressive-to-conservative labels
+advertise is \emph{inert} across the range the roster spans: the shared engine's confidence
+estimates are bimodal, so every threshold in the occupied band selects an identical set of
+declares, and Punter wins through its ask-scoring gamble bonus and uncertainty tolerance, not
+through a lower declare bar. Second, the card-hoarding style's signature benefit --- a
+repeatable turn-pass through a team-contained book --- was derived, implemented, and measured
+to be worth nothing: the Hoarder finishes 6th of 9 with and without it, and the best measured
+counter to hoarding is simply not hoarding. To the best of our knowledge, resting on an
+internal literature synthesis that found no peer-reviewed prior work on the game, this is the
+first quantitative game-AI study of Literature.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+Literature (Canadian Fish) is a six-player, two-team card game of public asks and hidden
+hands, in which every action is broadcast to the whole table and inference --- not chance ---
+decides who knows what. Communities that play it argue, persistently and without data, about
+temperament: whether the aggressive declarer beats the certainty purist, whether hoarding
+ask-licences is wisdom or superstition, whether the styles simply counter one another in a
+rock--paper--scissors loop. FishAI v0.5 was built to make that argument quantitative for one
+concretely pinned dialect. The research question, fixed before any tournament ran, is:
+
+\begin{quote}
+\emph{Is there a quantitatively superior play style --- or do styles counter each other?}
+\end{quote}
+
+The question is harder to pose honestly than it looks, for two reasons. The first is a
+confound: a ``style'' implemented as a weaker bot measures nothing but its author's effort.
+FishAI's design rule is therefore that every style shares one identical, full-strength
+inference engine and differs only in the policy layer above it (Section~\ref{sec:style}).
+The second is that ``best'' is a meta-game notion, and meta-games are often intransitive:
+ranking systems that assume transitive skill, such as Elo, are actively misleading when the
+payoff matrix contains cycles \cite{balduzzi2018}. The laboratory therefore decomposes the
+matrix into transitive and cyclic parts and commits, in advance, to a four-criterion decision
+rule under which ``no dominant style; here is the counter-structure'' is a first-class
+outcome, not a failure (Section~\ref{sec:method}).
+
+This paper documents the v0.5 system and its measurements. Its contributions are:
+
+\begin{enumerate}
+\item \textbf{A rule-complete specification and engine for the \usff{} dialect} --- the
+  54-card ``US student'' variant --- with its derived consequences: the sign flip in
+  declaration risk, a tie-impossibility theorem, and the observation that whole-game
+  termination is a property of the acting policy rather than of the rules
+  (Section~\ref{sec:game}).
+\item \textbf{A style-not-skill experimental design}: nine parameterized styles over one
+  shared inference engine, a decision-divergence instrument that verifies each style is
+  measurably distinct from the control, and duplicate-deal evaluation with shared seed sets
+  and seat rotation (Sections~\ref{sec:style}--\ref{sec:method}).
+\item \textbf{A full-precision tournament and its verdict}: 309{,}600 games over 36 cells,
+  analyzed side by side with mean score, maximin, Bradley--Terry, Nash averaging,
+  $\alpha$-Rank and Hodge decomposition, yielding a \emph{dominant} verdict for the Punter
+  style under all four pre-stated criteria, together with the per-style diagnostics that
+  explain the win (Section~\ref{sec:results}).
+\item \textbf{Two negative results, reported as results.} The declare-threshold axis is inert
+  across the roster's range, with a measured bimodal-confidence mechanism
+  (Section~\ref{sec:inert}); and the Hoarder style's thesis is refuted end-to-end --- its
+  costs measured, its theorized benefit implemented, and the benefit measured to be worth
+  nothing (Section~\ref{sec:hoarder}).
+\end{enumerate}
+
+Throughout, every quantitative claim is traceable either to the committed tournament artifact
+\cite{artifact} or to the repository's measurement documents
+\cite{rules,styles,botlab,containment}; Section~\ref{sec:provenance} records the artifact's
+provenance digests.
+
+\section{Related work}
+\label{sec:related}
+
+\paragraph{Literature as a game-AI domain.}
+An internal research synthesis for this project \cite{playstyles} --- a 65-style taxonomy of
+Literature play compiled with explicit evidence tiers --- reports that targeted searches
+across arXiv, the ACM Digital Library, IEEE Xplore, AAAI proceedings, ResearchGate and
+university thesis repositories found \emph{zero peer-reviewed papers, theses or technical
+reports on Literature as a game-AI domain}: no baseline agent, no published environment, no
+state-space or equilibrium analysis, no benchmark. That synthesis's own access to non-GitHub
+sources was constrained and it flags many of its secondary citations as unverified; we treat
+its absence claim as a careful search's negative report, current as of mid-2026, rather than
+as proof. The only public Literature reinforcement-learning project we are aware of is a
+four-player Q-learning implementation that reports no win rates \cite{somani}. The deepest
+strategy text on the game remains Develin's chapter \cite{develin}, which independently
+attests the contained-book result used in Section~\ref{sec:hoarder}.
+
+\paragraph{Evaluating populations of agents.}
+The evaluation stack is assembled from the multi-agent evaluation literature: Nash averaging,
+which plays a meta-game on the evaluation data itself and is robust to redundant entrants
+\cite{balduzzi2018}; $\alpha$-Rank, an evolutionary ranking that survives intransitivity
+\cite{omidshafiei2019}; and the Hodge-theoretic decomposition of a pairwise-comparison matrix
+into gradient (transitive) and cyclic parts \cite{jiang2011,balduzzi2018}. Bradley--Terry
+ratings \cite{bradleyterry1952} are reported alongside as the classical transitive fit.
+Duplicate (mirrored) deals are the card-game form of common random numbers, standard in
+duplicate bridge; the poker literature's stronger variance-reduction machinery
+\cite{burch2018} was measured to be unnecessary at this game's deal-dependence
+(Section~\ref{sec:duplicate}). Sequential probability ratio tests \cite{wald1945} gate the
+tuning and exploitability searches, following modern chess-engine testing practice; the
+published matrix itself is fixed-$N$, since sequential stopping biases effect-size estimates.
+False-discovery control over the 36 simultaneous cells uses Benjamini--Hochberg
+\cite{benjamini1995}.
+
+\paragraph{Imperfect information and team play.}
+Formally, Literature is a two-team constant-sum imperfect-information game whose teams may
+coordinate only ex ante --- the regime whose solution concept is team-maxmin equilibrium with
+correlation \cite{celli2018}. All hidden information originates at the single chance node of
+the deal, and every subsequent event is public; the synthesis \cite{playstyles} notes that
+branching is tiny (at most 120 legal asks, typically 20--40) while one seat's deal-time
+information set in the 48-card baseline is on the order of $10^{24}$, so belief fidelity, not
+search depth, is the game's difficulty. Search-based agents --- ISMCTS \cite{cowling2012} and
+perfect-information Monte Carlo \cite{long2010} --- are deliberately out of scope for v0.5: a
+search bot has a budget, not a style, and it would answer a different question. PIMC in
+particular must never evaluate declarations here, since strategy fusion makes every sampled
+world report the declaration succeeding \cite{long2010,containment}. The style-vs-style
+setting also inherits the coordination literature's central warning: conventions formed in
+self-play need not transfer to novel partners \cite{hu2020,bard2020}, which is why cross-play
+against an independently written bot is part of the design --- and, not yet having been run,
+is listed as an open threat in Section~\ref{sec:threats}. The shared inference engine itself
+belongs to the constraint-propagation family developed for deduction games such as Clue
+\cite{neller2018}.
+
+\section{The game and the \usff{} dialect}
+\label{sec:game}
+
+\subsection{Base game}
+
+Six players in two teams of three, seated alternately, play with a deck partitioned into
+six-card \emph{half-suits} (``sets'' or ``books''). On your turn you ask one specific card of
+one specific opponent; you must yourself hold a card of the asked set, and may not ask for a
+card you hold. A hit transfers the card face up and you ask again; a miss passes the turn to
+the player you asked. At any point a team may \emph{declare} a set by naming the exact holder
+of all six cards, every assignment being a seat on the declarer's own team. Card counts and
+the full log of asks, results and declares are public. The team with more sets wins.
+
+\subsection{The \usff{} dialect}
+
+FishAI v0.5 plays the ``US student'' dialect, specified in full with derived consequences and
+test vectors in the repository's rules document \cite{rules}. Table~\ref{tab:dialect}
+summarizes the deltas against the 48-card baseline of the main reference rules text
+\cite{pagat}.
+
+\begin{table}[t]
+\centering
+\caption{The \usff{} dialect against the 48-card baseline \cite{rules}. The 48-card
+wrong-declare outcome splits by error type (its rows 14--15): a set any opponent holds a card
+of is scored by the opponents --- the same outcome as under \usff{} --- and only a set the
+declarer's own team wholly holds, misassigned, is void.}
+\label{tab:dialect}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+ & \usff{} (this work) & 48-card baseline \\
+\midrule
+Deck & 54 --- standard 52 plus two jokers & 48 (8s removed) \\
+Sets & 9 half-suits of 6; the ninth is
+  $8\clubsuit\,8\diamondsuit\,8\heartsuit\,8\spadesuit$ + both jokers & 8 \\
+Hand & 9 cards & 8 cards \\
+Declaring & any time, out of turn, in a declare window & own turn only \\
+Wrong declare & \textbf{the opponents score the set} &
+  \begin{tabular}[t]{@{}l@{}}opponent-held: they score;\\ misassigned: void\end{tabular} \\
+Game end & the moment a team is awarded 5 sets & when all sets are resolved \\
+Ties & impossible (Theorem~\ref{thm:tie}) & possible (4--4) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Out-of-turn declaring is resolved deterministically through a \emph{declare window}: after
+every action, each seat in cyclic order from the turn-holder is offered the chance to declare;
+declining is itself a move, and when the turn-holder has no legal ask, declining is illegal
+(\code{MUST\_DECLARE}) --- a rule that guarantees a declare window can never stall
+\cite{rules}. Two of the dialect's rows change the strategy space far more than they appear
+to, and the next two subsections make them precise.
+
+\subsection{The sign flip in declaration risk}
+\label{sec:signflip}
+
+Under the 48-card baseline, misassigning a set your own team holds produces a \emph{void}:
+zero for everyone. Under \usff{} any error at all awards the set to the opponents. Relative to
+simply holding the set, a failed declaration used to cost one point (yours, burned); it now
+costs one point \emph{and} hands the opponents one --- a two-point swing in a race to five
+\cite{styles}. Writing $c$ for the probability the set is contained by your team and $a$ for
+the probability your seat-assignment is exactly right given containment, the expected-value
+thresholds differ as in Table~\ref{tab:ev} \cite{containment}.
+
+\begin{table}[t]
+\centering
+\caption{Declaration expected-value thresholds under the two rule sets \cite{containment}.}
+\label{tab:ev}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Rule set & Outcome of any error & Declare iff \\
+\midrule
+48-card baseline & misassigned: void; opponent-held: they score & $c > 1/(1+a)$ \\
+\usff{} & opponents score ($-1$ us, $+1$ them) & $c \cdot a > 1/2$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Every declaration threshold tuned against the 48-card game is therefore too loose under
+\usff{}. The roster's thresholds are treated as 48-card \emph{appetites} and mapped through
+$t_{\mathrm{us54}} = (1 + t_{\mathrm{pagat48}})/2$ before shipping --- Blitz $0.70 \to 0.85$,
+Punter $0.55 \to 0.775$, Hoarder $0.95 \to 0.975$ \cite{styles}. Section~\ref{sec:inert}
+reports the measured, and unexpected, fate of this entire axis.
+
+\subsection{Ties are impossible --- and termination is a policy property}
+
+\begin{theorem}[Tie impossibility]
+\label{thm:tie}
+Under \usff{}, no final state is level: every game that terminates ends in a clinch at
+exactly five sets, and a tie can never be emitted.
+\end{theorem}
+
+\begin{proofenv}
+Because the void outcome is abolished, every resolved set is awarded to exactly one team.
+There are nine sets. If neither team has reached five, each holds at most four, so at most
+eight sets are resolved --- hence if all nine were resolved, some team reached five first, a
+contradiction with the game still running. The clinch target $\lfloor 9/2 \rfloor + 1 = 5$ is
+therefore always reached before the sets run out, and no final state can be level
+\cite{rules}.
+\end{proofenv}
+
+The qualifier in the theorem is deliberate. The pigeonhole argument guarantees that declares
+cannot run out before a clinch; it does not force declares to happen. Literature can
+\emph{livelock}: an adversarial ask policy that always takes the last legal ask ping-pongs
+misses between two seats forever, with the position repeating exactly --- no rule violated,
+every state holding a legal action. This reproduces under both rule sets and is a property of
+the game, not the dialect \cite{rules}. The architectural consequence is that whole-game
+termination belongs to the acting policy: the simulator's step cap (5{,}000) is load-bearing
+and instrumented, and in the reported tournament it never fired
+(Section~\ref{sec:provenance}). The engine itself is pure, deterministic TypeScript --- the
+same seed reproduces a byte-identical game --- and adversarially audited: a 250-game lockstep
+differential against the pre-variant engine (8{,}155 reduce steps, zero state mismatches),
+130{,}480 deliberately illegal actions confirming stable error codes, and a 10{,}000-game
+\usff{} fuzz gate asserting that every game terminates in a clinch at exactly five sets with
+no tie ever emitted \cite{repo}.
+
+\section{Measuring style without skill}
+\label{sec:style}
+
+\subsection{The design rule}
+
+The central confound in any style comparison is that a ``style'' may simply be a weaker bot.
+FishAI's rule: \textbf{every style shares one identical, full-strength inference engine} ---
+a constraint-propagation knowledge layer over the public log --- and styles differ only in the
+parameterized policy above it \cite{botlab}. Bots consume only \code{SeatView}, the exact
+public-information payload a human in that seat would see, and a test enforces that no other
+hand is reachable: cheating is structurally impossible rather than policed \cite{repo}. One
+guardrail is imposed on every style: the certainty bonus in ask scoring stays at or above its
+baseline, because below it a style can rank an uncertain ask above a certain hit --- which is
+not a style but a bug that would dominate the results \cite{styles}.
+
+\subsection{The parameter surface}
+
+A style is a \code{StyleParams} vector \cite{styles} over six groups of knobs:
+
+\begin{itemize}
+\item \emph{Ask scoring}: weights on hit probability (\code{wHit}), progress toward
+  nearly-secured sets (\code{wProgress}), information gain (\code{wNarrow}); a floor on
+  acceptable hit probability (\code{minHitP}); a bonus for asks that would complete a set
+  (\code{gambleBonus}); and the protected certainty bonus.
+\item \emph{Declare policy}: the confidence bar (\code{declareThreshold}), tolerated guessed
+  cards (\code{declareMaxUncertain}), and the certainty-only and own-hand-only extremes.
+\item \emph{Declare window} (new under \usff{}): how early in the window to fire
+  (\code{declareEagerness}); whether and at what separate bar to declare sets the seat holds
+  no card of (\code{foreignDeclare}, \code{foreignDeclareThreshold}).
+\item \emph{Clinch} (new under \usff{}): preference for the closing declare at four sets
+  (\code{clinchAggression}) and weight on denying the opponents' fifth (\code{denialWeight}).
+\item \emph{Information and targeting}: the leak-protection tiebreak (\code{leakEpsilon},
+  \code{leakThreshold}), signalling asks, and whom to promote on a likely miss
+  (\code{missTarget}).
+\item \emph{Hoarding and the turn-pass}: keep ask-licences in at least $N$ sets
+  (\code{hoardBooks}), refuse declares that shrink the hand below $N$ (\code{minHandSize}),
+  and the contained-book turn-pass appetite (\code{containedPass},
+  Section~\ref{sec:containedpass}).
+\end{itemize}
+
+\subsection{The roster}
+\label{sec:roster}
+
+Nine styles (Table~\ref{tab:roster}). Their full shipped vectors are embedded in the committed
+artifact \cite{artifact}; the table lists each style's defining deviations from the Balanced
+control.
+
+\begin{table}[t]
+\centering
+\caption{The nine-style roster. Settings are the shipped \usff{} values; declaration
+thresholds are 48-card appetites mapped through $(1+t)/2$ (Section~\ref{sec:signflip}).}
+\label{tab:roster}
+\footnotesize
+\begin{tabular}{@{}p{1.5cm}p{1.7cm}p{4.6cm}p{6.6cm}@{}}
+\toprule
+Style & Family & Thesis & Defining settings (shipped) \\
+\midrule
+Balanced & control & the tuned \usff{} baseline every other style is read against &
+  baseline weights; \code{declareThreshold} 0.90; \code{containedPass} 1 \\
+Blitz & aggressive & tempo and sets now; information is cheap &
+  \code{wHit} 90, \code{wProgress} 30, \code{declareThreshold} 0.85,
+  \code{declareEagerness} 0.9, \code{leakEpsilon} 0, no signalling,
+  \code{missTarget} \code{most} \\
+Punter & aggressive & chase the completing card; accept the gift risk &
+  \code{gambleBonus} 25, \code{minHitP} 0, \code{declareThreshold} 0.775,
+  \code{declareMaxUncertain} 2 \\
+Banker & conservative & never gift a set; bank only certainties &
+  \code{declareOnlyWhenCertain}, \code{minHitP} 0.25, \code{declareEagerness} 0.2 \\
+Turtle & passive & minimum risk; declare only sets wholly in hand &
+  \code{declareOnlyOwnHand}, \code{minHitP} 0.4, no signalling, no foreign declares \\
+Hoarder & optionality & keep ask-licences, stay alive, delay &
+  \code{hoardBooks} 3, \code{minHandSize} 2, \code{declareThreshold} 0.975,
+  \code{declareEagerness} 0.1, \code{containedPass} 1.33 \\
+Scout & information & deduce first, collect later &
+  \code{wNarrow} 40, \code{wHit} 55, \code{declareOnlyWhenCertain} \\
+Ghost & information & deny opponents the read &
+  \code{leakEpsilon} 6, \code{leakThreshold} 3, no signalling \\
+Archivist & information & track sets you hold nothing in; declare them for teammates &
+  \code{foreignDeclare} at threshold 0.95, \code{wNarrow} 30,
+  \code{declareEagerness} 0.7 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two roster notes matter for reading everything that follows. First, the family labels narrate
+an aggressive-to-conservative spectrum of \emph{declaring}; Section~\ref{sec:inert} shows by
+measurement that the axis those labels advertise does not fire anywhere in the roster's range,
+so the labels must be read as naming the styles' \emph{appetites}, not their realized
+declaring behaviour. The styles are nonetheless measurably distinct
+(Section~\ref{sec:distinct}) --- through their ask policies, their gating extremes, and their
+window and hoarding knobs. Second, the Archivist is the style \usff{} created: out-of-turn
+declaring makes it worthwhile to spend inference on sets one can never ask into, purely to
+declare them for teammates.
+
+\section{Methodology}
+\label{sec:method}
+
+\subsection{Duplicate deals, shared seeds, seat rotation}
+\label{sec:duplicate}
+
+One trial is one seeded deal played in both orientations --- the style assignment swapped
+between the teams, the start seat held identical --- so that a lucky deal cancels within the
+pair, exactly as in duplicate bridge; this is the common-random-numbers estimator. Measured on
+this engine at design time (500 mirrored pairs), pairing reduced the variance of the score
+estimate by a factor of $1.36$ relative to independent games \cite{botlab}; the realized
+per-cell variance ratios in the reported tournament average $1.33$ (range $1.14$--$2.23$)
+\cite{artifact}. This is far below the $30\times$ reductions achievable in poker with
+AIVAT-style control variates \cite{burch2018} --- expected, because the whole deck is dealt
+and outcomes are far less deal-dominated --- and the measured gain is why no heavier machinery
+was built. Every cell uses the same seed list (prefix \code{style-v1}), so cross-cell
+comparisons share deals too; start seats rotate $i \bmod 6$; and because the policies are
+deterministic, sample diversity comes entirely from seeds --- the harness asserts
+$\code{distinctSeeds} = \text{pairs}$.
+
+\subsection{Precision and primary metric}
+
+The published matrix is fixed-$N$ at 4{,}300 pairs (8{,}600 games) per cell --- above the
+2{,}600-pair budget derived for a target standard error of $0.005$ --- and the largest
+realized cell SE is exactly $0.0050$ \cite{artifact}. The primary metric is score rate (win
+$=1$, tie $=\tfrac12$, loss $=0$), adopted because the 48-card game produces ties in roughly a
+quarter of mirror games \cite{botlab}. Under \usff{} ties are impossible
+(Theorem~\ref{thm:tie}), so score rate coincides with win rate; the artifact asserts zero ties
+across all 309{,}600 games rather than rendering a column that cannot populate. Sequential
+tests are used only where they belong: SPRT ($\alpha=\beta=0.05$) gates tuning and
+exploitability-search candidates \cite{wald1945}, while the reported matrix is fixed-$N$
+because sequential stopping biases effect-size estimates \cite{botlab}.
+
+\subsection{Diagnostics}
+\label{sec:metrics}
+
+Alongside the payoff matrix, the lab records per-style diagnostics explaining \emph{why} a
+style wins or loses: ask hit rate, turn retention, declare precision and yield, and a set of
+\usff{}-specific metrics \cite{styles}: \code{concedeRate} (declares that gifted the set ---
+the successor of the 48-card void rate, measuring a different event), \code{foreignDeclareRate}
+(declares of sets the declarer held no card of), \code{declareLatency} (window-cycles between
+a set becoming provable and the team declaring it, separating ``knew and waited'' from ``never
+knew''), \code{raceLosses} (a teammate declared wrongly a set this seat could have declared
+correctly), and \code{clinchDenials}. One shipped metric is explicitly excluded from style
+comparisons: \code{hoardIndex}, a time-averaged count of sets held, does \emph{not} measure
+hoarding --- a hoarding style lengthens games, adding late small-hand samples that drag the
+mean down, a confound measured to be large enough to invert the sign \cite{styles}.
+
+\subsection{The verdict rule}
+\label{sec:verdict}
+
+The decision rule was fixed in the experimental-design document before the tournament ran
+\cite{botlab}: declare a superior style only if \emph{all four} hold ---
+
+\begin{enumerate}
+\item highest mean score; and
+\item maximin $> 0.5$ (no losing matchup); and
+\item cyclic energy of the matrix below $0.15$; and
+\item exploitability not materially worse than its rivals'.
+\end{enumerate}
+
+If (2) or (3) fails, the published answer is ``no dominant style; here is the counter-graph
+and the equilibrium mixture'' --- rendered as a first-class result. Cyclic energy is the
+cyclic fraction of the Hodge decomposition of the duplicate-averaged antisymmetric payoff
+matrix \cite{jiang2011,balduzzi2018}; the equilibrium mixture is the maximum-entropy Nash of
+that matrix \cite{balduzzi2018}; $\alpha$-Rank supplies the evolutionary ranking
+\cite{omidshafiei2019}. With 36 simultaneous cells, roughly $1.8$ would appear significant at
+$\alpha = 0.05$ by chance alone, so every significance label --- including the individual
+3-cycles behind criterion~3 --- is Benjamini--Hochberg corrected \cite{benjamini1995}.
+
+\subsection{The decision-divergence instrument}
+\label{sec:instrument}
+
+Distinctness is not assumed from parameters; it is measured at the decision level. Two policy
+vectors are compared by replaying real \usff{} games on the lab's own seed set and, at
+\emph{every} decision point, handing both vectors the identical \code{SeatView} and seed and
+comparing their two chosen \code{GameAction}s \cite{styles}. The instrument returns the exact
+fraction of decisions on which the vectors differ; zero means the vectors are the same player.
+It is used three ways below: to verify each style differs from the control
+(Section~\ref{sec:distinct}), to expose the inert threshold axis (Section~\ref{sec:inert}),
+and to detect that the first Hoarder implementation was byte-identical to Balanced
+(Section~\ref{sec:hoarder}).
+
+\subsection{Exploitability search}
+
+For each style $i$, a best-response search over \code{StyleParams} deviations from $i$'s own
+vector --- candidates drawn from a fixed knob ladder, each SPRT-gated, with an accepted
+candidate re-measured by a fixed-$N$ 400-pair evaluation on seeds no search decision saw ---
+reports $E(i) = \mathrm{SR}(\text{best response}, i) - 0.5$ \cite{botlab,styles}. $E$
+distinguishes ``champion of this roster'' from ``actually strong'': a style can top the table
+yet be maximally exploitable by a style nobody has written.
+
+\subsection{Health gates and provenance}
+\label{sec:provenance}
+
+A run is void unless its health counters are clean. For the reported tournament
+\cite{artifact}: \code{illegalActions} 0, \code{cappedGames} 0, \code{invariantViolations} 0,
+\code{ties} 0, \code{voids} 0, \code{nonClinch} 0, \code{distinctSeeds} 4{,}300/4{,}300. The
+artifact is committed at \code{src/lab/data/style-results.v2.json} with records digest
+\code{0c3cb524a3534d4a}, engine commit \code{1667a1d} (recorded \code{1667a1d-dirty}, the
+suffix reflecting generation from a modified working tree at that commit), and the SHA-256 of the
+rules document (\code{b4c7fef7\ldots}) so that results become detectably stale if the rules
+move. The full run --- 309{,}600 games plus analysis --- took roughly 16 minutes of wall
+clock. Two matrix artifacts exist: \emph{v1} (engine commit \code{819eebb}, likewise recorded
+\code{819eebb-dirty}), and \emph{v2},
+re-run on the same seed set after the contained-book turn-pass was implemented
+(Section~\ref{sec:containedpass}); all headline numbers in this paper are v2, with v1 cited
+where the paired comparison is itself the result.
+
+\section{Results}
+\label{sec:results}
+
+\subsection{The verdict: dominant --- Punter}
+
+All four criteria of Section~\ref{sec:verdict} hold, and the artifact's computed verdict is
+\emph{dominant} (Table~\ref{tab:criteria}). This is the criteria mechanism working as
+designed, not a narrative choice: the same pipeline renders ``cyclic'' or ``inconclusive''
+when the numbers say so.
+
+\begin{table}[t]
+\centering
+\caption{The four dominance criteria, as computed in the committed artifact \cite{artifact}.}
+\label{tab:criteria}
+\small
+\begin{tabular}{@{}clp{8.2cm}c@{}}
+\toprule
+\# & Criterion & Measured (matrix v2) & Pass \\
+\midrule
+1 & highest mean score & Punter $0.5829$, ahead of Blitz $0.5602$ (margin $0.0227$) & yes \\
+2 & maximin $> 0.5$ & $0.5190$ (worst matchup: Balanced); CI$_{95}$ lower bound $0.5119$;
+    worst cell significant after BH & yes \\
+3 & cyclic energy $< 0.15$ & $0.0112$; zero significant 3-cycles after BH & yes \\
+4 & exploitability not materially worse & $E(\text{Punter}) = 0.0025$ vs.\ rivals' median
+    $0.0444$ & yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The ranking, five ways}
+
+Table~\ref{tab:ranking} shows the five ranking systems side by side. They agree almost
+everywhere --- which is itself evidence of transitivity. The mean-score, Bradley--Terry and
+Hodge-rating orderings are identical position for position; $\alpha$-Rank differs only in
+swapping two adjacent pairs deep in the table: Hoarder/Archivist (mean-score gap $0.0083$,
+about $3.6$ combined standard errors of the means, though the pair's head-to-head cell is
+itself a statistical tie) and Scout/Turtle (gap $0.0038$, about $1.6$ combined standard errors
+--- a statistical tie in mean score). Nash averaging places all its mass
+on Punter, and $\alpha$-Rank concentrates on it likewise --- the degenerate mixtures that a
+transitive matrix with a strict maximin winner forces.
+
+\begin{table}[t]
+\centering
+\caption{Ranking systems side by side (matrix v2, 4{,}300 pairs per cell)
+\cite{artifact}. B--T is the Bradley--Terry rating in Elo-like units.}
+\label{tab:ranking}
+\footnotesize
+\begin{tabular}{@{}lcccccrc@{}}
+\toprule
+Style & Mean score & 95\% CI & Maximin & Worst vs. & Nash mass & B--T & $\alpha$-Rank \\
+\midrule
+Punter    & 0.5829 & [0.5798, 0.5860] & 0.5190 & Balanced & 1.000 & $52.2$ & 1 \\
+Blitz     & 0.5602 & [0.5570, 0.5633] & 0.4802 & Punter   & 0.000 & $37.8$ & 2 \\
+Balanced  & 0.5581 & [0.5551, 0.5612] & 0.4810 & Punter   & 0.000 & $36.5$ & 3 \\
+Banker    & 0.5285 & [0.5252, 0.5318] & 0.4531 & Punter   & 0.000 & $17.9$ & 4 \\
+Ghost     & 0.4928 & [0.4894, 0.4962] & 0.4133 & Punter   & 0.000 & $-4.4$ & 5 \\
+Hoarder   & 0.4885 & [0.4854, 0.4917] & 0.4205 & Punter   & 0.000 & $-7.1$ & 7 \\
+Archivist & 0.4802 & [0.4769, 0.4835] & 0.4074 & Punter   & 0.000 & $-12.3$ & 6 \\
+Scout     & 0.4063 & [0.4030, 0.4096] & 0.3397 & Punter   & 0.000 & $-59.1$ & 9 \\
+Turtle    & 0.4025 & [0.3992, 0.4058] & 0.3419 & Punter   & 0.000 & $-61.5$ & 8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The worst-vs.\ column carries a structural fact: every style's worst matchup is Punter. Punter
+itself has no losing matchup; its narrowest, against Balanced and Blitz, are two cells that
+are statistically tied with each other ($0.5190$ and $0.5198$) --- indeed, between matrix v1
+and v2 the identity of Punter's worst opponent flipped between these two, a re-ordering of
+tied cells rather than a new counter \cite{styles}. Punter's full row is
+Table~\ref{tab:punterrow}: every one of its eight cells is above $0.5$ and significant after
+BH correction.
+
+\begin{table}[t]
+\centering
+\caption{Punter's matchup row (score from Punter's side; all cells BH-significant)
+\cite{artifact}.}
+\label{tab:punterrow}
+\footnotesize
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Opponent & Punter's score & SE \\
+\midrule
+Balanced  & 0.5190 & 0.0036 \\
+Blitz     & 0.5198 & 0.0042 \\
+Banker    & 0.5469 & 0.0048 \\
+Hoarder   & 0.5795 & 0.0042 \\
+Ghost     & 0.5867 & 0.0049 \\
+Archivist & 0.5926 & 0.0047 \\
+Turtle    & 0.6581 & 0.0046 \\
+Scout     & 0.6603 & 0.0046 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Matrix structure: almost no cycles}
+
+Thirty-three of the 36 cells are significant after BH correction. The three that are not are
+exactly the near-ties one would hope a well-powered design exposes as near-ties:
+Balanced--Blitz ($0.4962$, $q = 0.33$), Hoarder--Archivist ($0.5074$, $q = 0.12$) and
+Ghost--Archivist ($0.4944$, $q = 0.26$). The Hodge decomposition puts the cyclic energy at
+$0.0112$ --- about $1.1\%$ of a matrix whose verdict threshold is $15\%$. Exactly one directed
+3-cycle exists in point estimates (Hoarder $>$ Archivist $>$ Ghost $>$ Hoarder, minimum edge
+$0.5056$), and it is not significant after BH ($q = 0.27$) \cite{styles,artifact}. The
+counter-structure that the laboratory was built to detect, had it existed, is measurably
+absent at this precision: the styles form a ladder, not a wheel.
+
+\subsection{Why Punter wins}
+\label{sec:why}
+
+Table~\ref{tab:diag} pools each style's diagnostics over its eight cells. Punter's profile is
+volume at near-control precision: it makes the most declares per game ($4.08$ against the
+control's $3.99$) and converts the most sets ($4.11$ against $4.02$), while its declare
+precision gives up only $0.2$ points against the control ($0.9884$ vs.\ $0.9901$) and its
+concession rate rises only from $0.0099$ to $0.0116$. It pays measurable costs --- more chosen
+concessions ($0.0066$ of its declares against the control's $0.0042$) and more race losses
+($0.045$ per game against $0.037$) --- and the two-point swing of
+Section~\ref{sec:signflip} prices those costs; they are simply smaller than the value of the
+extra conversions.
+
+The mechanism behind that profile is \emph{not} the one the style's label advertises.
+Section~\ref{sec:inert} shows that Punter's low declare threshold ($0.775$) selects exactly
+the same declares as the control's $0.90$: the axis is inert. What differs is the ask policy
+--- \code{gambleBonus} 25 steers Punter toward asks that would complete a set, and
+\code{declareMaxUncertain} 2 lets it tolerate a second guessed card where every other style
+tolerates at most one. Punter wins as the style that hunts completions and accepts the
+priced risk of the gift rule, not as the style that declares on thinner evidence.
+
+At the other end, the table explains the floor. Turtle's own-hand-only gate leaves it holding
+sets it cannot bank; its declares are forced ones over a third of the time ($0.367$ against
+the control's $0.069$), its precision collapses to $0.9456$, its concession rate is five times
+the control's, and it converts barely $2.94$ sets per game. Scout buys information with its
+ask weights ($\code{wHit}$ 55, $\code{wNarrow}$ 40) and pays for it in material: the
+second-lowest hit rate and the fewest conversions of the non-Turtle styles. Ghost is the
+mirror image --- the roster's \emph{highest} hit rate ($0.6025$), bought by leak-protection
+that steers its asks away from informative sets --- and still finishes below $0.5$: under
+\usff{}, protecting the read is worth less than the tempo it costs. The Hoarder's line is
+read in Section~\ref{sec:hoarder}.
+
+\begin{table}[t]
+\centering
+\caption{Per-style diagnostics, pooled over each style's eight cells (matrix v2)
+\cite{artifact}. ``Hit'' = ask hit rate; ``Prec'' = declare precision; ``Conc'' =
+concession rate (share of the style's declares gifted to the opponents); ``Frgn'' =
+foreign-declare rate; ``Lat'' = declare latency (window-cycles); ``Race'' = race losses per
+game; ``Sets'' and ``Decl'' = sets converted and declares made per game; ``Forced'' = share
+of declares that were compelled.}
+\label{tab:diag}
+\footnotesize
+\begin{tabular}{@{}lccccccccc@{}}
+\toprule
+Style & Hit & Prec & Conc & Frgn & Lat & Race & Sets & Decl & Forced \\
+\midrule
+Punter    & 0.564 & 0.988 & 0.012 & 0.013 & 22.8 & 0.045 & 4.11 & 4.08 & 0.066 \\
+Blitz     & 0.564 & 0.990 & 0.010 & 0.014 & 22.9 & 0.036 & 4.03 & 4.00 & 0.067 \\
+Balanced  & 0.568 & 0.990 & 0.010 & 0.014 & 23.2 & 0.037 & 4.02 & 3.99 & 0.069 \\
+Banker    & 0.563 & 0.990 & 0.010 & 0.014 & 22.8 & 0.035 & 3.93 & 3.90 & 0.072 \\
+Ghost     & 0.603 & 0.989 & 0.011 & 0.010 & 24.3 & 0.035 & 3.77 & 3.74 & 0.099 \\
+Hoarder   & 0.545 & 0.975 & 0.025 & 0.253 & 30.6 & 0.088 & 3.66 & 3.69 & 0.148 \\
+Archivist & 0.556 & 0.967 & 0.033 & 0.007 & 19.8 & 0.091 & 3.76 & 3.79 & 0.082 \\
+Scout     & 0.532 & 0.957 & 0.043 & 0.007 & 17.2 & 0.088 & 3.49 & 3.52 & 0.080 \\
+Turtle    & 0.523 & 0.946 & 0.054 & 0.060 & 63.4 & 0.162 & 2.94 & 3.00 & 0.367 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Exploitability}
+\label{sec:exploit}
+
+Table~\ref{tab:exploit} reports $E(i)$ for each style with the accepted best-response
+deviation. Punter's $E$ of $0.0025$ --- its best measured counter being merely to randomize
+the miss target --- confirms it is not a paper champion of this particular roster. The
+ordering tracks the ranking: the exploitable styles are the ones already at the bottom, with
+Turtle's single-knob repair (turn off the own-hand-only gate) worth a full $0.15$.
+
+Two honest cautions accompany the table \cite{styles}. $E$ is a maximum over a stochastic
+search whose final evaluations carry standard errors of $0.008$--$0.017$ and which only
+accepts moves worth at least ${\approx}0.03$, so small entries and small differences between
+runs are not meaningful. And the search's knob ladder predates the contained-book turn-pass,
+so that one axis was probed separately by the same SPRT protocol: no candidate was accepted
+for any style at any appetite --- consistent with Section~\ref{sec:containedpass}'s finding
+that the mechanism is worth nothing.
+
+\begin{table}[t]
+\centering
+\caption{Exploitability, matrix v2: $E(i)$ and the accepted best-response deviation from the
+style's own vector \cite{artifact,styles}.}
+\label{tab:exploit}
+\footnotesize
+\begin{tabular}{@{}lcl@{}}
+\toprule
+Style & $E$ & Accepted deviation \\
+\midrule
+Balanced  & 0.0000 & none (mirror) \\
+Banker    & 0.0012 & \code{gambleBonus} 15 \\
+Punter    & 0.0025 & \code{missTarget} \code{random} \\
+Blitz     & 0.0175 & \code{leakEpsilon} 3 \\
+Archivist & 0.0325 & \code{wHit} 100 \\
+Hoarder   & 0.0563 & \code{hoardBooks} 0, \code{minHandSize} 0 --- \emph{stop hoarding} \\
+Ghost     & 0.0775 & \code{wProgress} 30, \code{gambleBonus} 30 \\
+Scout     & 0.1112 & \code{wHit} 90, \code{wNarrow} 0, \code{minHitP} 0.45 \\
+Turtle    & 0.1500 & \code{declareOnlyOwnHand} off \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Caveat I: the declare-threshold axis is inert}
+\label{sec:inert}
+
+This section states the finding, its mechanism, and its consequences for reading the results;
+the full treatment --- instrument, attribution, repairs, and the methodological argument --- is
+a companion paper published alongside this one \cite{inertpaper}.
+
+\subsection{The styles are distinct\ldots}
+\label{sec:distinct}
+
+Run through the decision-divergence instrument (Section~\ref{sec:instrument}) against the
+Balanced control, every non-control style differs on a measurable fraction of decisions
+\cite{styles}:
+
+\begin{center}
+\footnotesize
+\begin{tabular}{@{}lcccccccc@{}}
+\toprule
+ & Scout & Ghost & Archivist & Banker & Turtle & Punter & Hoarder & Blitz \\
+\midrule
+\% of decisions differing & 2.89 & 2.15 & 1.66 & 1.19 & 0.83 & 0.47 & 0.47 & 0.39 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Between $0.39\%$ and $2.89\%$ of decisions may look small, but Literature is a game where a
+single redirected ask changes who holds the turn and what the whole table learns; the
+tournament shows these divergence rates compounding into mean-score gaps of up to 18 points.
+
+\subsection{\ldots but not along the axis their labels advertise}
+
+\code{declareThreshold} is the knob on which the roster's aggressive-to-conservative story is
+built. Varying it \emph{alone} on the Balanced control, over 40 \usff{} games with every
+decision compared under the instrument, gives Table~\ref{tab:sweep}: the divergence collapses
+to exactly zero at $0.775$ and stays zero at every measured point through $0.975$ (the pilot
+sweep's zero extends through threshold $1$) --- and \emph{every roster style's shipped
+threshold sits at $0.775$ or above}, the shipped span being $[0.775, 0.98]$. The axis is dead
+for all nine of them \cite{styles}.
+
+\begin{table}[t]
+\centering
+\caption{Decision divergence when only \code{declareThreshold} varies on the Balanced
+control (40 games) \cite{styles}. All roster styles ship thresholds in $[0.775, 0.98]$.}
+\label{tab:sweep}
+\footnotesize
+\begin{tabular}{@{}lccccccccc@{}}
+\toprule
+\code{declareThreshold} & 0.50 & 0.65 & 0.70 & 0.75 & \textbf{0.775} & 0.85 & 0.90 & 0.95 & 0.975 \\
+\midrule
+divergent decisions & 350 & 48 & 29 & 19 & \textbf{0} & 0 & 0 & 0 & 0 \\
+\% of decisions & 1.297 & 0.178 & 0.108 & 0.070 & \textbf{0.000} & 0.000 & 0.000 & 0.000 & 0.000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The mechanism is not an unreachable code path --- Balanced makes 171 speculative declares to
+138 certain ones over those same 40 games, so the thresholded branch fires constantly. (An
+earlier audit, described in Section~\ref{sec:hoarderaudit}, had read a related zero as the
+branch never being reached; the direct sweep corrected that reading.) The measured mechanism
+is that the shared inference engine's confidence estimates are \textbf{bimodal}: a candidate
+declaration is either well above ${\sim}0.975$ or well below ${\sim}0.775$, with almost
+nothing in between, so any threshold inside that band selects the identical set of declares
+\cite{styles}.
+
+Three consequences follow, and each is stated wherever the ranking is published. First,
+Punter did not win by declaring at $0.775$ rather than $0.90$; it won through
+\code{gambleBonus} and \code{declareMaxUncertain} (Section~\ref{sec:why}). Second, any
+description of this roster as a spectrum from aggressive to conservative \emph{declaring}
+describes a knob that does not fire; the labels survive only as names for appetites. Third,
+the $(1+t)/2$ appetite mapping of Section~\ref{sec:signflip}, while arithmetically right, is
+currently unfalsifiable on this engine: every value it can produce in the plausible range
+yields identical play \cite{styles}.
+
+\section{Caveat II: the Hoarder --- costs measured, benefit implemented, still worthless}
+\label{sec:hoarder}
+
+The Hoarder is the project's originally named style, and it is mechanically grounded: holding
+at least one card of a set is the \emph{only} licence to ask into it, so declaring a set
+revokes your own asking rights there. Its story across v0.5 is the paper's second negative
+result, and it runs in three acts: an implementation that turned out to be the control in
+disguise; an audited implementation that expresses the thesis and loses by it; and the
+style's theorized benefit, implemented and measured to be worth nothing. The third act's
+mechanism --- the contained-book turn-pass, its theorem, trigger, and measurements --- is
+treated in full in a second companion paper published alongside this one \cite{containedpaper}.
+
+\subsection{Act one: the inert implementation}
+\label{sec:hoarderaudit}
+
+In the 36-cell pilot (200 pairs per cell), the Hoarder's mean score was $0.5484$ --- identical
+to Balanced's in every digit --- its rows of the payoff and diagnostics tables were
+byte-identical to the control's, and the head-to-head cell measured $0.5000$ with a standard
+error of exactly zero. Rather than infer, the identity was instrumented: over 400 games and
+275{,}380 decision points, the Hoarder and Balanced vectors, handed identical views and seeds,
+chose \emph{zero} different actions \cite{styles}.
+
+Attributing the zero one parameter at a time (each of the Hoarder's seven behavioural deltas
+applied to Balanced alone, over 76{,}972 decisions) returned zero for all seven. The audit's
+first finding was structural: the two hoard knobs gated only the speculative-declare branch,
+on the argument that refusing \emph{free} points to protect an ask-licence is a giveaway
+rather than optionality --- but within the measured population that branch never selected
+differently across the whole threshold band (the flatness later explained by
+Section~\ref{sec:inert}'s bimodality), so the gate guarded a distinction without a
+difference, and with it the entire style. The fix moved the hoard gate in front of
+\emph{every} declare the style is free to refuse --- speculative, certain, or wholly in hand
+--- while never touching the compulsory \code{MUST\_DECLARE} positions. The two knob values
+were then derived from the rule set rather than tuned: \code{minHandSize} 2 is the smallest
+hand that survives one involuntary strip (hits are compulsory) and still holds a licence,
+the only hand-size discontinuity in the rules being at zero cards; \code{hoardBooks} 3 is the
+style's stated appetite, corrected to count only licences with a legal ask behind them
+(a set the seat would hold all six of grants a licence with nothing legal to name)
+\cite{styles}.
+
+\subsection{Act two: expressible, and wrong}
+
+After the audit the same instrument measures $9{,}315$ divergent decisions in $289{,}560$
+($3.22\%$): the style exists. Every diagnostic moves in the direction the thesis predicts
+(Table~\ref{tab:hoarderpilot}): it stays in the asking game longer (dropout rate $0.521 \to
+0.443$), waits $35\%$ longer to bank (declare latency $22.90 \to 31.02$ window-cycles), and --- because the sets
+it does declare are disproportionately the ones that cost it no licences --- its
+foreign-declare rate rises thirteen-fold, the project owner's ``memorize half-suits you do not
+own'' strategy arriving as a side effect of hoarding. And it pays for all of it: the
+head-to-head against Balanced moves from $0.5000 \pm 0.0000$ to $0.5775 \pm 0.0159$
+\emph{against} the Hoarder, and its pilot mean falls from $0.5484$ to $0.4738$. Ablated on
+identical deals, \code{hoardBooks} 3 alone reproduces the entire effect ($0.4225$ to the
+Hoarder, identical to both knobs together, because any declare leaving under two cards also
+leaves under three licences); with both knobs off the vector returns to $0.5000 \pm 0.0000$
+--- the inertness finding restated as an outcome \cite{styles}.
+
+\begin{table}[t]
+\centering
+\caption{The Hoarder before and after the audit --- pilot diagnostics pooled over its eight
+cells \cite{styles}. The inert version is byte-identical to the control. Two Balanced figures
+coexist in the source: $0.5484$ is the pooled value in the identity comparison that flagged the
+inert Hoarder, while this table's Balanced column pools Balanced's own eight cells ($0.5581$).
+The load-bearing identity is byte-identical play --- zero divergent decisions in 275{,}380 ---
+and the table reports both figures rather than resolving what the source does not.}
+\label{tab:hoarderpilot}
+\footnotesize
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Diagnostic (pilot) & Balanced & Hoarder, inert & Hoarder, audited \\
+\midrule
+mean score            & 0.5581 & 0.5484 (= Balanced) & 0.4738 \\
+foreign-declare rate  & 0.018  & 0.018  & 0.247 \\
+declare latency       & 23.39  & 22.90  & 31.02 \\
+race losses / game    & 0.044  & 0.046  & 0.091 \\
+declares / game       & 4.01   & 3.98   & 3.67 \\
+forced-declare share  & 0.074  & 0.076  & 0.153 \\
+concession rate       & 0.011  & 0.012  & 0.025 \\
+dropout rate          & 0.539  & 0.521  & 0.443 \\
+ask hit rate          & 0.568  & 0.569  & 0.545 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+In the full-precision matrices the audited Hoarder finishes 6th of 9 (the pilot's $0.4738$
+figure corresponds to a 7th-place pilot finish; both full-precision runs place it 6th
+\cite{styles}). At this point an objection remained open, and the project's containment
+analysis \cite{containment} had sharpened it: the verdict was measured on an implementation
+that paid hoarding's full costs while collecting none of its benefit.
+
+\subsection{Act three: the benefit, implemented --- the contained-book turn-pass}
+\label{sec:containedpass}
+
+Call a set \emph{contained} when all six of its cards sit with one team. Containment is an
+absorbing state with measured consequences \cite{containment}: no opponent can legally ask
+into the set (asking requires holding a card of it); an opponent declaring it necessarily
+assigns to their own team and thus gifts it straight back; a holder may still ask into it ---
+a legal, \emph{guaranteed} miss that passes the turn to a chosen opponent; the miss moves no
+cards, so the licence is never consumed; and declaring the set destroys the move. Claiming a
+contained set therefore has no defensive value, and leaving it unclaimed preserves a
+repeatable, aimable turn-pass --- advice independently attested by Develin's strategy text
+\cite{develin}. This is precisely the benefit a hoarder's unclaimed sets should be earning.
+
+v0.5 implements the turn-pass as a policy option with a derived, unturned trigger. Writing
+$p^\ast$ for the hit probability of the ask the style would otherwise play, the pass is taken
+iff
+\[
+p^\ast \;<\; \frac{a \cdot \mathrm{gain} - \mathrm{infoCost}}{\mathrm{tempo}},
+\]
+with every term in units of cards and read off the public log: the expected turn length
+$E = \mathrm{hits}/\max(1, \mathrm{misses})$ prices a conceded turn at $E \cdot n_t/\bar n$
+for an opponent holding $n_t$ cards (mean live hand $\bar n$), $\mathrm{gain}$ is the spread
+between the opponent the ordinary ask would concede to and the opponent the style's
+\code{missTarget} prefers, $\mathrm{tempo} = 1 + E \cdot n_o/\bar n$ is the swing between
+hitting and missing, and $\mathrm{infoCost}$ is zero on a reuse of an already-published card
+and $1/U$ otherwise ($U$ the count of live cards not yet publicly placed) \cite{styles}. The
+appetite $a$ is the expected number of uses before the set is banked: 1 for eight of the nine
+styles, and $1.33$ for the Hoarder --- the one style whose delay had actually been measured,
+the number read off its own declare-latency ratio. A certain hit is never displaced, and the
+policy reuses one card, so $94.8$--$97.6\%$ of uses by the heavy users cost no information at
+all. One honest check on the derivation: measured uses per contained book order the styles
+exactly as the appetite argument predicts, but the Hoarder-to-Balanced ratio comes out $1.18$,
+not the $1.33$ the latency ratio implied --- right in sign, roughly right in size, and
+deliberately \emph{not} re-fitted, since tuning an appetite to the behaviour it produces would
+be fitting to the outcome \cite{styles}.
+
+\begin{table}[t]
+\centering
+\caption{The contained-book turn-pass: opportunity, firing, and value \cite{styles}.
+Opportunity and firing rates are from 100 mirror games per style; the score is the style
+\emph{with} the mechanism against the identical style without it, over 1{,}200 duplicate
+pairs (2{,}400 games); ``changed'' counts games the mechanism actually touched.}
+\label{tab:contained}
+\footnotesize
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+Style & Appetite & Opportunity \% & Fired / opp.\ \% & Divergence \% & Score (with vs.\ without) & Changed \\
+\midrule
+Balanced  & 1    & 3.89  & 7.7  & 0.041 & $0.5046 \pm 0.0034$ & 239 \\
+Blitz     & 1    & 5.05  & 0.0  & 0.000 & $0.5000 \pm 0.0000$ & 0 \\
+Punter    & 1    & 3.65  & 3.8  & 0.019 & $0.4971 \pm 0.0029$ & 142 \\
+Banker    & 1    & 5.04  & 13.9 & 0.098 & $0.5021 \pm 0.0035$ & 281 \\
+Turtle    & 1    & 53.86 & 7.3  & 0.558 & $0.5008 \pm 0.0065$ & 1{,}268 \\
+Hoarder   & 1.33 & 14.95 & 12.4 & 0.258 & $0.4938 \pm 0.0054$ & 915 \\
+Scout     & 1    & 0.38  & 0.0  & 0.000 & $0.5000 \pm 0.0000$ & 0 \\
+Ghost     & 1    & 1.31  & 16.0 & 0.029 & $0.4958 \pm 0.0027$ & 156 \\
+Archivist & 1    & 1.01  & 4.8  & 0.007 & $0.4996 \pm 0.0004$ & 11 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:contained} reports what the mechanism does. Three readings. First, the
+opportunity is a property of the \emph{declare} policy: a contained set exists at $54\%$ of
+the Turtle's ask decisions (it never banks sets split across teammates) and $0.4\%$ of the
+Scout's (it pins holders early, and a pinned contained set is banked immediately) --- and the
+Hoarder sits second at $14.95\%$, nearly four times the control's $3.89\%$, which is exactly
+the benefit the objection said it was paying for and not collecting. Second, even where the
+licence exists it is mostly refused ($3.8$--$16\%$ taken), always on the derivation's
+$\mathrm{gain} \le 0$ arm: the ordinary ask was already conceding the turn where the style
+wanted it. Blitz needs no exception --- its \code{missTarget} \code{most} makes the aiming
+gain non-positive, so the mechanism turns itself off. Third, and decisively: \textbf{no style
+is two standard errors from $0.5$}. The largest deviation is $1.6$ SE (Ghost), the two heavy
+users land on and slightly below the null (Turtle $0.5008 \pm 0.0065$, Hoarder $0.4938 \pm
+0.0054$), and the styles that never fire return exactly $0.5000 \pm 0.0000$ over 2{,}400
+games each --- the with- and without-vectors are the same player. \emph{The measured value of
+the contained-book turn-pass, as a policy option under \usff{} against this roster, is zero.}
+The arithmetic says why: with measured $E \approx 1$, the whole spread between the best and
+worst opponent to concede to is on the order of one card, against which the displaced ask was
+worth $p^\ast$ of a card plus a retained turn. The move is real, and it is small.
+
+\subsection{The verdict on the strategy}
+
+The full 36-cell matrix was then re-run with the mechanism live, at the same precision on the
+same seed set, so v1 and v2 differ by the policy change and nothing else. Nothing that
+matters moved (Table~\ref{tab:v1v2}): the verdict, the complete ranking, the Nash and
+$\alpha$-Rank concentrations, and every rank are identical; no cell moved significantly (the
+largest paired per-deal difference, Blitz--Ghost at $+0.0030 \pm 0.0015$, $t = 2.07$, does
+not survive BH over 36 comparisons --- one $|t| > 2$ in 36 is what chance produces); cyclic
+energy went $0.0097 \to 0.0112$ with the same single non-significant 3-cycle; and the
+significant-cell count's $34 \to 33$ change is entirely the Hoarder--Archivist cell drifting
+out of significance ($q\ 0.036 \to 0.118$) \cite{styles}.
+
+\begin{table}[t]
+\centering
+\caption{Matrix v1 vs.\ v2: per-style mean score, paired over the same 4{,}300 deals
+\cite{styles}. Every delta is within $1.5$ SE of zero; every rank is unchanged.}
+\label{tab:v1v2}
+\footnotesize
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+Style & v1 & v2 & $\Delta$ & SE($\Delta$) & $t$ & Rank \\
+\midrule
+Punter    & 0.5829 & 0.5829 & $-0.0001$ & 0.0009 & $-0.07$ & $1 \to 1$ \\
+Blitz     & 0.5594 & 0.5602 & $+0.0008$ & 0.0008 & $+0.94$ & $2 \to 2$ \\
+Balanced  & 0.5584 & 0.5581 & $-0.0003$ & 0.0009 & $-0.34$ & $3 \to 3$ \\
+Banker    & 0.5274 & 0.5285 & $+0.0011$ & 0.0011 & $+1.00$ & $4 \to 4$ \\
+Ghost     & 0.4928 & 0.4928 & $+0.0000$ & 0.0010 & $+0.03$ & $5 \to 5$ \\
+Hoarder   & 0.4904 & 0.4885 & $-0.0018$ & 0.0014 & $-1.35$ & $6 \to 6$ \\
+Archivist & 0.4791 & 0.4802 & $+0.0011$ & 0.0008 & $+1.47$ & $7 \to 7$ \\
+Scout     & 0.4064 & 0.4063 & $-0.0001$ & 0.0007 & $-0.12$ & $8 \to 8$ \\
+Turtle    & 0.4032 & 0.4025 & $-0.0007$ & 0.0019 & $-0.38$ & $9 \to 9$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+For the Hoarder specifically, the prediction that the missing benefit explained its finish
+\emph{did not hold}. Its paired delta is $-0.0018 \pm 0.0014$ ($t = -1.35$) --- the point
+estimate went \emph{down}, indistinguishably from zero; not one of its eight cells moved
+significantly, and its one marginal cell moved against significance. The sharpest form of the
+result comes from the exploitability search, free to pick any single knob: the best response
+to the Hoarder-with-the-benefit is \code{hoardBooks} 0, \code{minHandSize} 0 --- \emph{stop
+hoarding} --- worth $0.5563 \pm 0.0124$ (Table~\ref{tab:exploit}). One number from the
+follow-up single-axis search deserves recording precisely because half of it would have
+looked like a finding: probing \code{containedPass} $= 0$ against the Hoarder, the SPRT
+search seeds said the candidate was \emph{worse} by $0.020 \pm 0.018$ while the held-out
+evaluation said \emph{better} by $0.0275 \pm 0.0098$; two contradictory effects of that size
+mean neither is real, and the honest summary is noise \cite{styles}.
+
+So the conclusion is about the strategy, not the implementation. The benefit the containment
+analysis identified is real, reachable, and fires for the derived reasons --- and it is worth
+nothing at this roster's level of play. The verdict stands with no unimplemented benefit
+behind it as an excuse: \textbf{optionality under \usff{} is real, purchasable, and priced
+above its worth}, and the two rules doing the pricing are the ones
+Section~\ref{sec:signflip} flagged --- the gift rule makes a teammate's wrong declare of your
+hoarded set a two-point event (the Hoarder's race losses double), and the right of cardless
+players to keep declaring means the elimination the hoard defends against is only elimination
+from the asking half of the game. What this does \emph{not} settle: the trigger competes
+against the roster's tuned ask policies, the systematic re-tuning protocol has never been run
+(Section~\ref{sec:threats}), and the second containment mechanism --- holding contained sets
+by default in the \emph{declare} policy, which the opportunity-rate column suggests is where
+the leverage actually lives --- is untouched in v0.5 \cite{styles}.
+
+\section{Threats to validity}
+\label{sec:threats}
+
+Stated as designed-for or open, per the laboratory's own checklist \cite{botlab}.
+
+\begin{enumerate}
+\item \textbf{Style as handicap.} Designed against: one shared full-strength inference engine;
+  distinctness verified at the decision level. \emph{Open:} the specified skill ablation ---
+  re-running every style over medium-strength inference to detect style-times-skill
+  interactions --- has not been run for this roster.
+\item \textbf{Self-play convention lock-in.} A style that wins this tournament may be a style
+  its own roster has learned to read \cite{hu2020}. \emph{Open:} the holdout roster and the
+  cross-play protocol against an independently written bot are specified but not yet run; the
+  artifact's cross-play block is empty.
+\item \textbf{Intransitivity misread as noise.} Designed against: explicit cyclic-energy
+  metric, BH-corrected cycle enumeration, and a verdict rule with a first-class cyclic
+  outcome.
+\item \textbf{Tie-blindness.} Moot under \usff{}: ties are impossible
+  (Theorem~\ref{thm:tie}) and the artifact asserts zero across 309{,}600 games.
+\item \textbf{Passive-style stalling.} The step cap is instrumented, the stall-breaker is
+  global (a per-style stall rule would be a hidden style parameter), and
+  \code{cappedGames} $= 0$ in the reported run.
+\item \textbf{Determinism mistaken for sampling.} Re-running a seed reproduces the game
+  byte-for-byte; the harness asserts 4{,}300 distinct seeds.
+\item \textbf{Multiplicity.} All 36 cells and all cycle tests are BH-corrected.
+\item \textbf{Conditional on the rule set.} Every conclusion is conditional on \usff{} as
+  pinned by the artifact's rules hash. The sign-flip analysis is itself evidence that results
+  do not transfer across dialects; nothing here is claimed for the 48-card game.
+\item \textbf{An untuned roster.} The styles are evaluated \emph{as specified}: the
+  SPRT-based re-tuning protocol (each style tuned against the control) has never been run, so
+  every per-style result --- including both negative results --- is about the specified
+  vector, not the best version of the style that exists. A roster with weaker ask policies
+  would, in particular, leave more room for the turn-pass of
+  Section~\ref{sec:containedpass}.
+\item \textbf{Uniform teams only.} All cells are pure teams of three. The mixed-composition
+  tier --- including the hypothesis that the Archivist is weak in mirrors but strong as a
+  single seat --- is specified and unexplored; the artifact's teams block is empty.
+\end{enumerate}
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+Under the \usff{} dialect, with style isolated from skill and the payoff matrix decomposed
+rather than assumed transitive, the question ``is there a superior play style?'' has a
+measured answer: yes --- at this roster, at this level of play, the completion-chasing Punter
+dominates by all four pre-stated criteria, the matrix carries almost no cyclic energy, and
+the anticipated counter-structure is absent. The two results that qualify the headline are as
+load-bearing as the headline itself: the declare-threshold axis the styles are named after is
+inert across the roster's entire range, because the shared engine's confidence estimates are
+bimodal; and the hoarding thesis fails end-to-end, its theorized benefit surviving
+implementation only to be measured at zero. Honest instrumentation did not merely decorate
+these findings --- the decision-divergence instrument caught a control masquerading as a
+style, and the paired v1/v2 re-run kept a nothing-result from being narrated into a
+something-result.
+
+The natural next question is dynamic rather than static: whether an agent that identifies its
+opponents' styles online and adapts its own can beat the fixed Punter. That is the subject of
+separate, forthcoming work --- distinct from the two companion papers on the inert axis and
+the contained book published alongside this one \cite{inertpaper,containedpaper}.
+
+\medskip
+\noindent\textbf{Reproducibility.} The engine is deterministic; the committed artifact
+\cite{artifact} carries the seed set, per-cell records digest, engine commit and rules hash;
+and every number in this paper is either in that artifact or in the repository's measurement
+documents \cite{rules,styles,botlab,containment}.
+
+\begin{thebibliography}{99}
+\small
+
+\bibitem{balduzzi2018}
+D.~Balduzzi, K.~Tuyls, J.~P\'erolat, and T.~Graepel.
+\newblock Re-evaluating evaluation.
+\newblock In \emph{Advances in Neural Information Processing Systems (NeurIPS)}, 2018.
+
+\bibitem{omidshafiei2019}
+S.~Omidshafiei, C.~Papadimitriou, G.~Piliouras, K.~Tuyls, M.~Rowland, J.-B.~Lespiau,
+W.~M.~Czarnecki, M.~Lanctot, J.~P\'erolat, and R.~Munos.
+\newblock $\alpha$-Rank: Multi-agent evaluation by evolution.
+\newblock \emph{Scientific Reports}, 9:9937, 2019.
+
+\bibitem{jiang2011}
+X.~Jiang, L.-H.~Lim, Y.~Yao, and Y.~Ye.
+\newblock Statistical ranking and combinatorial Hodge theory.
+\newblock \emph{Mathematical Programming}, 127(1):203--244, 2011.
+
+\bibitem{bradleyterry1952}
+R.~A.~Bradley and M.~E.~Terry.
+\newblock Rank analysis of incomplete block designs: I. The method of paired comparisons.
+\newblock \emph{Biometrika}, 39(3/4):324--345, 1952.
+
+\bibitem{wald1945}
+A.~Wald.
+\newblock Sequential tests of statistical hypotheses.
+\newblock \emph{Annals of Mathematical Statistics}, 16(2):117--186, 1945.
+
+\bibitem{benjamini1995}
+Y.~Benjamini and Y.~Hochberg.
+\newblock Controlling the false discovery rate: a practical and powerful approach to
+multiple testing.
+\newblock \emph{Journal of the Royal Statistical Society, Series B}, 57(1):289--300, 1995.
+
+\bibitem{burch2018}
+N.~Burch, M.~Schmid, M.~Morav\v{c}\'{\i}k, D.~Morrill, and M.~Bowling.
+\newblock AIVAT: A new variance reduction technique for agent evaluation in imperfect
+information games.
+\newblock In \emph{Proceedings of the AAAI Conference on Artificial Intelligence}, 2018.
+
+\bibitem{cowling2012}
+P.~I.~Cowling, E.~J.~Powley, and D.~Whitehouse.
+\newblock Information set Monte Carlo tree search.
+\newblock \emph{IEEE Transactions on Computational Intelligence and AI in Games},
+4(2):120--143, 2012.
+
+\bibitem{long2010}
+J.~Long, N.~R.~Sturtevant, M.~Buro, and T.~Furtak.
+\newblock Understanding the success of perfect information Monte Carlo sampling in game
+tree search.
+\newblock In \emph{Proceedings of the AAAI Conference on Artificial Intelligence}, 2010.
+
+\bibitem{celli2018}
+A.~Celli and N.~Gatti.
+\newblock Computational results for extensive-form adversarial team games.
+\newblock In \emph{Proceedings of the AAAI Conference on Artificial Intelligence}, 2018.
+
+\bibitem{hu2020}
+H.~Hu, A.~Lerer, A.~Peysakhovich, and J.~Foerster.
+\newblock ``Other-play'' for zero-shot coordination.
+\newblock In \emph{Proceedings of the International Conference on Machine Learning (ICML)},
+2020.
+
+\bibitem{bard2020}
+N.~Bard et al.
+\newblock The Hanabi challenge: A new frontier for AI research.
+\newblock \emph{Artificial Intelligence}, 280:103216, 2020.
+
+\bibitem{neller2018}
+T.~W.~Neller and Z.~Luo.
+\newblock Mixed logical and probabilistic reasoning in the game of Clue.
+\newblock \emph{ICGA Journal}, 40(4):406--416, 2018.
+
+\bibitem{develin}
+M.~Develin.
+\newblock \emph{The Ten Best Card Games You've Never Heard Of}, chapter~9 (Canadian Fish).
+\newblock Self-published manuscript, \url{http://www.bantha.org/~develin/cardgames.html}.
+
+\bibitem{pagat}
+J.~McLeod (ed.).
+\newblock Literature.
+\newblock Card game rules at pagat.com,
+\url{https://www.pagat.com/quartet/literature.html}.
+
+\bibitem{somani}
+N.~Somani.
+\newblock literature: a Q-learning Literature bot (four-player; no reported win rates).
+\newblock GitHub repository, \url{https://github.com/neelsomani/literature}, 2018.
+
+\bibitem{playstyles}
+FishAI project.
+\newblock PLAYSTYLES.md --- Literature / Canadian Fish: play styles, rule dialects, and
+engine specification.
+\newblock Internal research synthesis with per-claim evidence tiers, 2026. Its Part~V
+reports zero peer-reviewed prior work on Literature as a game-AI domain; several of its
+secondary citations are flagged unverified and are not relied on here.
+
+\bibitem{inertpaper}
+A.~Hsieh.
+\newblock The inert axis: when a style parameter is wired, swept, and never reached.
+\newblock FishAI project; companion paper, published alongside this one, 2026.
+
+\bibitem{containedpaper}
+A.~Hsieh.
+\newblock The contained book: an absorbing resource measured to be worth nothing.
+\newblock FishAI project; companion paper, published alongside this one, 2026.
+
+\bibitem{repo}
+FishAI project.
+\newblock FishAI repository: engine, bots, simulation laboratory, and results site.
+\newblock README and audit record, 2026.
+
+\bibitem{rules}
+FishAI project.
+\newblock RULES\_US54.md --- the ``US student'' 54-card variant.
+\newblock Repository rules specification with derived consequences and test vectors, 2026.
+
+\bibitem{styles}
+FishAI project.
+\newblock STYLES.md --- the play-style roster under \usff{}.
+\newblock Repository document; \S3.1.1 the Hoarder inertness audit, \S6.1 the inert
+declare-threshold axis, \S6.3 the contained-book turn-pass, \S6.4 matrix v2, 2026.
+
+\bibitem{botlab}
+FishAI project.
+\newblock BOT\_LAB.md --- play-style spectrum: research, experimental design, and metrics.
+\newblock Repository document; \S4.4 the verdict criteria, \S5 the experimental design,
+\S10 threats to validity, 2026.
+
+\bibitem{containment}
+FishAI project.
+\newblock CONTAINMENT.md --- the contained-book result.
+\newblock Repository document; claims C1--C6 measured against the engine, 2026.
+
+\bibitem{artifact}
+FishAI project.
+\newblock Tournament artifact \code{src/lab/data/style-results.v2.json}.
+\newblock 36 cells $\times$ 4{,}300 duplicate pairs (309{,}600 games); records digest
+\code{0c3cb524a3534d4a}; engine commit \code{1667a1d} (recorded \code{1667a1d-dirty});
+generated 2026-08-22.
+
+\end{thebibliography}
+
+\end{document}
