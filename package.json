@@ -17,7 +17,9 @@
     "lint": "eslint . --max-warnings 0",
     "sim": "node scripts/simulate.mjs",
     "lab": "node scripts/style-sim.mjs",
-    "analyze": "node scripts/style-analyze.mjs"
+    "analyze": "node scripts/style-analyze.mjs",
+    "adaptive": "node scripts/adaptive-sim.mjs",
+    "adaptive:analyze": "node scripts/adaptive-analyze.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",
