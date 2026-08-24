@@ -138,9 +138,22 @@ describe('public-view-only proof', () => {
       // '../types.ts', '../cards.ts' and './types.ts'. It is precisely the module this test
       // exists to make possible — behaviour read off the public record and nothing else.
       './observe.ts',
+      // The v1.0 classifier: plain Math over the observe.ts feature vector against the
+      // committed calibration. It imports only '../types.ts', './types.ts', './roster.ts',
+      // './observe.ts' and './data/fingerprints.ts' — every one already on this list — so no
+      // engine state is reachable from it either.
+      './classify.ts',
+      // The v1.0 adaptive selector: classify the opponents on the phase-truncated log, then
+      // best-respond over the committed counter table. Pure over the SeatView (the same
+      // standard as decide.ts, which is its only consumer); it imports nothing beyond modules
+      // on this list, so no engine state is reachable.
+      './adaptive.ts',
       // Generated classifier calibration (scripts/gen-fingerprints.mjs): frozen numeric data
       // plus the StyleId type from './roster.ts'. No engine state is reachable from data.
       './data/fingerprints.ts',
+      // Generated measured payoff table (scripts/gen-counter-table.mjs): frozen numeric data
+      // plus the StyleId type, held to the same standard as the fingerprints above.
+      './data/counter-table.ts',
     ])
     const forbiddenIdents = /\b(newGame|publicView|seatView|reduce|dealHands|legalAsks|checkInvariants|shuffle)\b/
     for (const f of files) {
