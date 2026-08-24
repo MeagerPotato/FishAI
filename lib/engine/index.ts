@@ -59,6 +59,7 @@ export { legalAsks, legalAsksFromView, legalActionsSummary, turnHolderCanAsk } f
 export type { AskableView } from './helpers.ts'
 export {
   decide,
+  decideExplained,
   buildKnowledge,
   holderOf,
   candidates,
@@ -69,6 +70,7 @@ export {
   foreignProvableBooks,
   askHitProbability,
   refinedHitProbability,
+  pc,
   BASELINE_ASK_WEIGHTS,
   POLICY_CONSTANTS,
   SKILL_PRESETS,
@@ -100,4 +102,6 @@ export type {
   StyleId,
   ContainedPassPlan,
   PassValuation,
+  DecisionTrace,
+  ExplainedDecision,
 } from './bots/index.ts'

@@ -40,6 +40,7 @@ export {
   foreignProvableBooks,
   askHitProbability,
   refinedHitProbability,
+  pc,
 } from './knowledge.ts'
 export type { ContainedPassPlan, PassValuation } from './contained.ts'
 export {
@@ -49,4 +50,5 @@ export {
   planContainedPass,
   valueContainedPass,
 } from './contained.ts'
-export { decide } from './decide.ts'
+export { decide, decideExplained } from './decide.ts'
+export type { DecisionTrace, ExplainedDecision } from './decide.ts'

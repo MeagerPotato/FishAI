@@ -47,6 +47,25 @@
  * outright at `containedPass: 0` — which every shipped preset carries — and under `pagat48`,
  * whose row 15 voids a wrong declare instead of gifting it and so does not make a contained book
  * absorbing. Every 48-card game, at every style, is therefore bit-for-bit unchanged by it.
+ *
+ * ## The explained surface — `decideExplained`
+ *
+ * The assistant pane needs the *reasoning*, not only the move, and the reasoning already exists:
+ * every branch below is taken for a reason this file states in prose in its comments. Rather than
+ * maintain a second, describe-only pipeline that would drift from the real one, the private
+ * helpers accept an optional trace sink (`Sink`) as their last parameter and narrate into it at
+ * the point each decision is actually made. `decide` passes nothing — the sink is `undefined` on
+ * every call it makes, every trace statement is guarded on it, and no trace statement draws from
+ * the seeded rng — so `decide`'s code path and its output are bit-for-bit what they were, which
+ * the digest tests pin and `tests/bots/explain.test.ts` re-proves by fuzz equivalence.
+ * `decideExplained` is the same wrapper as `decide` (same try/catch shape, same view-legality
+ * check, same fallback), so it inherits "never throws" and "never illegal" by construction
+ * rather than by a parallel promise.
+ *
+ * The trace reuses what the stack already computes instead of re-deriving it: the ranked-ask
+ * `reason` strings from `rankAsksWith`, the `ClaimPlan` p / uncertain counts, and the
+ * `PassValuation` the contained-book turn-pass prices its move with (previously discarded at the
+ * call site — now the arithmetic a player is told is exactly the arithmetic the bot used).
  */
 import type { BookId, Card, GameAction, Seat } from '../types.ts'
 import { allBooks, bookCards, cardBook, isCard, seatTeam, teamSeats } from '../cards.ts'
@@ -57,16 +76,119 @@ import {
   askHitProbability,
   buildKnowledge,
   holderOf,
+  pc,
   rankAsksWith,
   refinedHitProbability,
   unaskableBooks,
 } from './knowledge.ts'
 import { planContainedPass } from './contained.ts'
+import type { ContainedPassPlan, PassValuation } from './contained.ts'
 import { POLICY_CONSTANTS, resolvePolicy } from './style.ts'
 import type { BotPolicy, PolicySpec, SkillParams, StyleParams } from './style.ts'
 import type { Knowledge, KnowledgeOptions, RankedAsk, SeatView } from './types.ts'
 
 type Rng = () => number
+
+/* ------------------------------------------------------- the decision trace --- */
+
+/**
+ * The reasoning record `decideExplained` returns beside its action — one per decision, written
+ * for a human player in the assistant pane, in the same register as the `RankedAsk.reason`
+ * strings (cards through the `pc` renderer: 9♥, the red joker; probabilities with their
+ * thresholds beside them, so a number is never shown without the bar it was measured against).
+ *
+ * The shape is contractual for the play UI: fields are only ever *added*, never renamed.
+ */
+export interface DecisionTrace {
+  /** Which pipeline branch produced the action. */
+  kind:
+    | 'own-book-claim'
+    | 'certain-claim'
+    | 'ev-claim'
+    | 'forced-claim'
+    | 'guess-claim'
+    | 'certain-hit'
+    | 'ranked-ask'
+    | 'signalling-ask'
+    | 'contained-pass'
+    | 'decline'
+    | 'must-declare'
+    | 'pass'
+    | 'designate'
+    | 'error-branch'
+    | 'fallback'
+  /** One-sentence headline, human-readable, e.g. "Declared LOW-H — all six cards are certain." */
+  headline: string
+  /** Ordered supporting notes. Plain prose; card names via the pc() renderer (9♥, the red joker). */
+  notes: string[]
+  /** Top ranked asks at the moment of decision (<= 5), when an ask was considered. */
+  ranked?: RankedAsk[]
+  /** The claim plan (book, p, uncertain count) when a declare was considered/made. */
+  claim?: { book: BookId; p: number; uncertain: number; foreign: boolean }
+  /** Contained-pass valuation when that mechanism fired (the existing PassValuation, plumbed). */
+  passValue?: PassValuation
+  /** Branches that were considered and refused, in order, with the reason. */
+  refused: { kind: string; reason: string }[]
+}
+
+/** A decision and the reasoning that produced it — the `decideExplained` return shape. */
+export interface ExplainedDecision {
+  action: GameAction
+  trace: DecisionTrace
+}
+
+/**
+ * The module-internal mutable collector the helpers narrate into. `undefined` on every call
+ * `decide` makes; a fresh object on every `decideExplained` call, sealed into a `DecisionTrace`
+ * on the way out. Kept separate from `DecisionTrace` so the public shape can require `kind` and
+ * `headline` while the in-flight object is honest about not having them yet.
+ */
+interface Sink {
+  kind: DecisionTrace['kind'] | null
+  headline: string
+  notes: string[]
+  ranked?: RankedAsk[]
+  claim?: DecisionTrace['claim']
+  passValue?: PassValuation
+  refused: { kind: string; reason: string }[]
+}
+
+function newSink(): Sink {
+  return { kind: null, headline: '', notes: [], refused: [] }
+}
+
+/** Stamp the branch verdict. Called exactly once per decision, at the point the action is made. */
+function conclude(t: Sink, kind: DecisionTrace['kind'], headline: string): void {
+  t.kind = kind
+  t.headline = headline
+}
+
+/** The in-flight sink, made contractual. Defensive defaults: a trace is never empty. */
+function sealTrace(t: Sink): DecisionTrace {
+  const out: DecisionTrace = {
+    kind: t.kind ?? 'error-branch',
+    headline:
+      t.headline !== ''
+        ? t.headline
+        : 'No explanation was recorded for this branch — a tracing gap, worth reporting.',
+    notes: t.notes,
+    refused: t.refused,
+  }
+  if (t.ranked !== undefined) out.ranked = t.ranked
+  if (t.claim !== undefined) out.claim = t.claim
+  if (t.passValue !== undefined) out.passValue = t.passValue
+  return out
+}
+
+/** Probabilities and thresholds for prose: at most three decimals, no trailing zeros. */
+function fp(x: number): string {
+  return String(Math.round(x * 1000) / 1000)
+}
+
+/** Simple English pluralisation for counted nouns in trace prose. */
+function n_(n: number, noun: string): string {
+  return `${n} ${noun}${n === 1 ? '' : 's'}`
+}
 
 /* ------------------------------------------------------------ utilities --- */
 
@@ -114,11 +236,21 @@ function completeOwnBook(view: SeatView): BookId | null {
  * `forced` is a thunk because on the `ownTurn` path it costs a `legalAsksFromView` (up to 3 x 54
  * entries), and every style but the Hoarder answers `withinHoardLimits` from the knobs alone.
  */
-function declarableOwnBook(view: SeatView, style: StyleParams, forced: () => boolean): BookId | null {
+function declarableOwnBook(
+  view: SeatView,
+  style: StyleParams,
+  forced: () => boolean,
+  t?: Sink,
+): BookId | null {
   const b = completeOwnBook(view)
   if (b === null) return b
   if (withinHoardLimits(view, b, style)) return b
-  return forced() ? b : null
+  if (forced()) {
+    if (t) t.notes.push(`The hoard gate would keep ${b} in hand, but declining is not on offer here.`)
+    return b
+  }
+  if (t) t.refused.push({ kind: 'own-book-claim', reason: `${b} is wholly in this hand, but ${hoardReason(view, b, style)}` })
+  return null
 }
 
 function claimAllSelf(view: SeatView, book: BookId): GameAction {
@@ -444,16 +576,31 @@ function eagerEnoughToDeclare(
 ): boolean {
   const w = view.declareWindow
   if (!w) return true
+  return w.declined >= windowTicksWanted(view, k, style, plan, stalled)
+}
+
+/**
+ * The number of window ticks this style wants to see pass before firing `plan` — the arithmetic
+ * of `eagerEnoughToDeclare`, factored out so the trace can state the same number the decision
+ * used ("waited 1 of the 3 declines its patience wants") instead of re-deriving an approximation.
+ */
+function windowTicksWanted(
+  view: SeatView,
+  k: Knowledge,
+  style: StyleParams,
+  plan: ClaimPlan,
+  stalled: boolean,
+): number {
   const eagerness = Math.max(0, Math.min(1, style.declareEagerness))
   // Both rule sets are 6 players (RULES.md row 1 / RULES_US54.md §1 rows 1 and 22), and the
   // window closes after all six decline, so the option can travel at most five seats.
   let ticks = (1 - eagerness) * 5
-  if (ticks <= 0) return true
+  if (ticks <= 0) return 0
   if (!stalled && plan.uncertain.length > 0) {
     ticks *= 1 + POLICY_CONSTANTS.infoPatience * plan.uncertain.length
   }
   ticks *= Math.max(0, 1 - raceRisk(view, k, plan))
-  return w.declined >= Math.round(Math.min(5, ticks))
+  return Math.round(Math.min(5, ticks))
 }
 
 /**
@@ -476,7 +623,7 @@ function raceRisk(view: SeatView, k: Knowledge, plan: ClaimPlan): number {
 }
 
 /** Claim whose six cards are all CERTAIN and on the viewer's team, if any. */
-function certainClaim(view: SeatView, k: Knowledge, style: StyleParams): GameAction | null {
+function certainClaim(view: SeatView, k: Knowledge, style: StyleParams, t?: Sink): GameAction | null {
   const foreign = style.foreignDeclare ? null : foreignBookSet(view)
   for (const b of allBooks(view.config)) {
     if (view.books[b]) continue
@@ -489,7 +636,10 @@ function certainClaim(view: SeatView, k: Knowledge, style: StyleParams): GameAct
       // `continue`, not `return null`: a style that refuses to spend its licences on THIS set
       // has said nothing about the next one, and a certain set it can bank for free is still
       // free. See `withinHoardLimits` for why the gate reaches a certain declare at all.
-      if (!withinHoardLimits(view, b, style)) continue
+      if (!withinHoardLimits(view, b, style)) {
+        if (t) t.refused.push({ kind: 'certain-claim', reason: `${b} is certainly located on this team, but ${hoardReason(view, b, style)}` })
+        continue
+      }
       return { type: 'claim', seat: view.seat, book: b, assignments: plan.assignments }
     }
   }
@@ -522,6 +672,8 @@ function evClaim(
   k: Knowledge,
   style: StyleParams,
   stalled: boolean,
+  t?: Sink,
+  barTag?: string,
 ): GameAction | null {
   const myTeam = seatTeam(view.seat)
   const base = clinchAdjustedThreshold(
@@ -531,16 +683,16 @@ function evClaim(
   )
   const foreignSets = foreignBookSet(view)
   let best: ClaimPlan | null = null
+  let bestBar = 0
+  // Trace only: the highest-p plan that met every structural test but sat below its bar — the
+  // honest content of "nothing declarable above the bar".
+  let nearMiss: { plan: ClaimPlan; bar: number } | null = null
   for (const b of allBooks(view.config)) {
     if (view.books[b]) continue
     const foreign = foreignSets.has(b)
     if (foreign && !style.foreignDeclare) continue
     const plan = planClaim(view, k, b)
     if (plan.uncertain.length < 1 || plan.uncertain.length > style.declareMaxUncertain) continue
-    // `max`, not override: a 0 foreign bar means "no separate bar", and the ordinary threshold
-    // (stalled relaxation included) governs — which a plain assignment would have clobbered.
-    const threshold = foreign ? Math.max(base, style.foreignDeclareThreshold) : base
-    if (plan.p < threshold) continue
     // Every guessed card must be guessable onto a teammate, or the set is not certainly ours.
     let allOnTeam = true
     for (const c of plan.uncertain) {
@@ -551,15 +703,61 @@ function evClaim(
       }
     }
     if (!allOnTeam) continue
-    if (!withinHoardLimits(view, b, style)) continue
-    if (best === null || plan.p > best.p) best = plan
+    // `max`, not override: a 0 foreign bar means "no separate bar", and the ordinary threshold
+    // (stalled relaxation included) governs — which a plain assignment would have clobbered.
+    const threshold = foreign ? Math.max(base, style.foreignDeclareThreshold) : base
+    if (plan.p < threshold) {
+      if (t && (nearMiss === null || plan.p > nearMiss.plan.p)) nearMiss = { plan, bar: threshold }
+      continue
+    }
+    if (!withinHoardLimits(view, b, style)) {
+      if (t) t.refused.push({ kind: 'ev-claim', reason: `${b} clears the bar at p = ${fp(plan.p)}, but ${hoardReason(view, b, style)}` })
+      continue
+    }
+    if (best === null || plan.p > best.p) {
+      best = plan
+      bestBar = threshold
+    }
   }
-  if (best === null) return null
+  if (best === null) {
+    if (t) {
+      t.refused.push({
+        kind: 'ev-claim',
+        reason:
+          nearMiss !== null
+            ? `the best speculative plan is ${nearMiss.plan.book} at p = ${fp(nearMiss.plan.p)}, below the bar of ${fp(nearMiss.bar)}${stalled ? ` (${barTag ?? 'stalled'})` : ''}`
+            : `no unresolved set qualifies for a speculative declare (every guessed card must sit with a teammate, at most ${n_(style.declareMaxUncertain, 'guess')})`,
+      })
+    }
+    return null
+  }
   // The RULES_US54.md §3 race, decided against the plan actually on the table: how much waiting
   // could still resolve, against how likely a teammate is to reach the same set first. Checked
   // here rather than at the top of the search because both halves are properties of the plan.
   // No window (`pagat48`, or a closed one) => nothing to wait for, and this is always true.
-  if (!eagerEnoughToDeclare(view, k, style, best, stalled)) return null
+  if (!eagerEnoughToDeclare(view, k, style, best, stalled)) {
+    if (t) {
+      const wanted = windowTicksWanted(view, k, style, best, stalled)
+      const declined = view.declareWindow?.declined ?? 0
+      t.refused.push({
+        kind: 'ev-claim',
+        reason: `${best.book} clears the bar at p = ${fp(best.p)}, but the style is waiting for information: ${declined} of the ${n_(wanted, 'decline')} its patience wants have passed`,
+      })
+    }
+    return null
+  }
+  if (t) {
+    const foreign = foreignSets.has(best.book)
+    t.claim = { book: best.book, p: best.p, uncertain: best.uncertain.length, foreign }
+    conclude(
+      t,
+      'ev-claim',
+      `Declared ${best.book} speculatively — p = ${fp(best.p)} against a bar of ${fp(bestBar)}${stalled ? ` (${barTag ?? 'stalled'})` : ''}; ${n_(best.uncertain.length, 'card')} guessed (limit ${style.declareMaxUncertain}).`,
+    )
+    t.notes.push(`Holders: ${assignmentNote(view, best)}.`)
+    t.notes.push(`Guessed: ${best.uncertain.map(pc).join(', ')} — every candidate is a teammate, assigned to the one with the most unidentified cards.`)
+    if (foreign) t.notes.push('A foreign declare: this hand holds no card of the set, so the whole plan is public inference.')
+  }
   return { type: 'claim', seat: view.seat, book: best.book, assignments: best.assignments }
 }
 
@@ -615,17 +813,21 @@ function targetByCount(
 }
 
 /** RULES.md row 20 pass. */
-function passAction(view: SeatView, pol: BotPolicy): GameAction {
+function passAction(view: SeatView, pol: BotPolicy, t?: Sink): GameAction {
   const mates = teammateSeats(view.seat).filter((s) => view.counts[s] > 0)
   const pool = mates.length > 0 ? mates : teammateSeats(view.seat)
-  return { type: 'pass', seat: view.seat, to: targetByCount(view, pool, pol.style, pol.skill) }
+  const to = targetByCount(view, pool, pol.style, pol.skill)
+  if (t) conclude(t, 'pass', `Passed the hand to seat ${to}${targetWhy(view, to, pol)}.`)
+  return { type: 'pass', seat: view.seat, to }
 }
 
 /** RULES.md §4 endgame designate — the same "who to hand it to" heuristic, mirrored. */
-function designateAction(view: SeatView, pol: BotPolicy): GameAction {
+function designateAction(view: SeatView, pol: BotPolicy, t?: Sink): GameAction {
   const opps = opponentTeamSeats(view.seat).filter((s) => view.counts[s] > 0)
   const pool = opps.length > 0 ? opps : [...opponentTeamSeats(view.seat)]
-  return { type: 'designate', seat: view.seat, to: targetByCount(view, pool, pol.style, pol.skill) }
+  const to = targetByCount(view, pool, pol.style, pol.skill)
+  if (t) conclude(t, 'designate', `Designated seat ${to} to act for the opponents${targetWhy(view, to, pol)}.`)
+  return { type: 'designate', seat: view.seat, to }
 }
 
 /* ------------------------------------------------ low-skill (no planner) --- */
@@ -638,24 +840,44 @@ function designateAction(view: SeatView, pol: BotPolicy): GameAction {
  * The style still governs everything it chooses: the ask weights, and (through `errorRate` on
  * the skill side) how often the choice is thrown away for a uniformly random legal ask.
  */
-function decideNoPlanner(view: SeatView, pol: BotPolicy, rng: Rng): GameAction {
+function decideNoPlanner(view: SeatView, pol: BotPolicy, rng: Rng, t?: Sink): GameAction {
   const seat = view.seat
-  if (view.phase === 'endgame') return guessClaim(view, rng)
+  if (view.phase === 'endgame') {
+    const g = guessClaim(view, rng)
+    if (t && g.type === 'claim') concludeGuess(t, g.book, 'the endgame leaves claims as the only moves, and this skill has no claim planner.')
+    return g
+  }
   // No legal ask is this rule set's version of "declining is not a move": the seat has to claim
   // something, so the hoard gate is off (see `declarableOwnBook`). Lazily, so a style without
   // hoard knobs still reaches `claimAllSelf` on exactly the path it always took.
-  const complete = declarableOwnBook(view, pol.style, () => legalAsksFromView(view).length === 0)
-  if (complete !== null) return claimAllSelf(view, complete)
-  if (isDeepStalled(view)) return guessClaim(view, rng)
+  const complete = declarableOwnBook(view, pol.style, () => legalAsksFromView(view).length === 0, t)
+  if (complete !== null) {
+    if (t) conclude(t, 'own-book-claim', `Declared ${complete} — all six cards are in this hand.`)
+    return claimAllSelf(view, complete)
+  }
+  if (isDeepStalled(view)) {
+    const g = guessClaim(view, rng)
+    if (t && g.type === 'claim') concludeGuess(t, g.book, `the position is ${stallNote(view)}, and a claim is the only progress left.`)
+    return g
+  }
   const asks = legalAsksFromView(view)
-  if (asks.length === 0) return guessClaim(view, rng)
+  if (asks.length === 0) {
+    const g = guessClaim(view, rng)
+    if (t && g.type === 'claim') concludeGuess(t, g.book, 'no legal ask remains, so a claim is the only move.')
+    return g
+  }
   if (rng() < pol.skill.errorRate) {
     const a = asks[randInt(rng, asks.length)]
+    if (t) {
+      conclude(t, 'ranked-ask', `Asked seat ${a.target} for ${pc(a.card)} — a blunder: this skill misplays ${Math.round(pol.skill.errorRate * 100)}% of asks, and the seeded roll replaced the deliberate choice with a random legal one.`)
+    }
     return { type: 'ask', seat, target: a.target, card: a.card }
   }
   const k = buildKnowledge(view, knowledgeOptions(pol.skill))
   const ranked = rankAsksWith(view, k, pol.style)
-  const top = preferredAsk(ranked, pol.style)
+  if (t) t.ranked = ranked.slice(0, 5)
+  const top = preferredAsk(ranked, pol.style, t)
+  if (t) concludeAsk(t, k, top)
   return { type: 'ask', seat, target: top.target, card: top.card }
 }
 
@@ -689,10 +911,16 @@ function guessClaim(view: SeatView, rng: Rng): GameAction {
  * move: when every ask is below the bar the unfiltered list is used, so the seat always acts.
  * Baseline 0 returns the list unchanged without allocating.
  */
-function preferredAsk(ranked: RankedAsk[], style: StyleParams): RankedAsk {
+function preferredAsk(ranked: RankedAsk[], style: StyleParams, t?: Sink): RankedAsk {
   if (style.minHitP > 0) {
     const viable = ranked.filter((r) => r.p >= style.minHitP)
-    if (viable.length > 0) return viable[0]
+    if (viable.length > 0) {
+      if (t && viable.length < ranked.length) {
+        t.notes.push(`${n_(ranked.length - viable.length, 'ask')} below the ${fp(style.minHitP)} hit floor set aside.`)
+      }
+      return viable[0]
+    }
+    if (t) t.notes.push(`Every legal ask sits below the ${fp(style.minHitP)} hit floor; the floor is waived so the seat still acts.`)
   }
   return ranked[0]
 }
@@ -739,7 +967,7 @@ function leaky(k: Knowledge, view: SeatView, book: BookId, style: StyleParams): 
  *
  * Deterministic: refined score desc, then the base ranked order.
  */
-function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: BotPolicy): RankedAsk {
+function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: BotPolicy, t?: Sink): RankedAsk {
   const { skill, style } = pol
   interface Scored {
     r: RankedAsk
@@ -759,7 +987,17 @@ function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: BotPoli
     style.minHitP > 0 && scored.some((x) => x.r.p >= style.minHitP)
       ? scored.filter((x) => x.r.p >= style.minHitP)
       : scored
+  if (t && style.minHitP > 0) {
+    if (pool.length < scored.length) {
+      t.notes.push(`${n_(scored.length - pool.length, 'ask')} below the ${fp(style.minHitP)} hit floor set aside.`)
+    } else if (pool === scored && !scored.some((x) => x.r.p >= style.minHitP)) {
+      t.notes.push(`Every legal ask sits below the ${fp(style.minHitP)} hit floor; the floor is waived so the seat still acts.`)
+    }
+  }
   const top = pool[0]
+  if (t && skill.refinedInference && top.r !== ranked[0]) {
+    t.notes.push(`Constraint-refined probabilities promoted ${pc(top.r.card)} at seat ${top.r.target} over the slot-prior favourite ${pc(ranked[0].card)} at seat ${ranked[0].target}.`)
+  }
   // Two independent near-tie windows, deliberately not one. Information protection is worth
   // `leakEpsilon` of score; tempo targeting is worth `missTargetEpsilon` and is off entirely for
   // the shipped `missTarget: 'fewest'`, so every preset takes exactly the width it always took.
@@ -781,6 +1019,14 @@ function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: BotPoli
     }
     return a.idx - b.idx
   })
+  if (t && near[0] !== top) {
+    const chosen = near[0]
+    if (style.leakEpsilon > 0 && leaky(k, view, cardBook(top.r.card), style) && !leaky(k, view, cardBook(chosen.r.card), style)) {
+      t.notes.push(`A near-tie (within ${fp(width)} of score) broken for information protection: asking into ${cardBook(top.r.card)} would announce a set this team nearly accounts for, so the quieter ${pc(chosen.r.card)} is preferred.`)
+    } else {
+      t.notes.push(`A near-tie (within ${fp(width)} of score) broken by miss-targeting: the expected miss hands the turn to seat ${chosen.r.target} (${n_(view.counts[chosen.r.target], 'card')}${style.missTarget === 'fewest' ? ' — the smallest hand, so the surrendered turn is worth least' : ' — the largest hand'}).`)
+    }
+  }
   return near[0].r
 }
 
@@ -832,7 +1078,7 @@ function signallingAsk(view: SeatView, style: StyleParams): GameAction | null {
  * The flow for a skill that can plan claims (`planClaims: true`). Every branch below is gated
  * by the style, so this one function is `medium`, `hard`, and every STYLES.md §3 roster entry.
  */
-function decideWithPlanner(view: SeatView, pol: BotPolicy): GameAction {
+function decideWithPlanner(view: SeatView, pol: BotPolicy, t?: Sink): GameAction {
   const seat = view.seat
   const { skill, style } = pol
   const k = buildKnowledge(view, knowledgeOptions(skill))
@@ -842,25 +1088,42 @@ function decideWithPlanner(view: SeatView, pol: BotPolicy): GameAction {
     // exhaustion locate most of them outright, and the rest are assigned by count-consistency
     // (planClaim). Claim the most-certain book first — its reveal feeds the next
     // buildKnowledge call and pins further cards.
-    return forcedClaim(view, k)
+    const a = forcedClaim(view, k)
+    if (t && a.type === 'claim') {
+      concludeForced(t, view, k, a.book, 'forced-claim', 'the endgame: every remaining card is with the claiming team, and claims are the only moves left.')
+    }
+    return a
   }
 
   // 1. Books fully in own hand are free certainty at every style but the Hoarder, for which
   //    `minHandSize` prices the six cards it costs (see `withinHoardLimits`). Under `ownTurn`
   //    timing the escape hatch is "no legal ask left", which is also the branch that reaches
   //    `forcedClaim` below, so refusing here can never leave the seat without a move.
-  const complete = declarableOwnBook(view, style, () => legalAsksFromView(view).length === 0)
-  if (complete !== null) return claimAllSelf(view, complete)
+  const complete = declarableOwnBook(view, style, () => legalAsksFromView(view).length === 0, t)
+  if (complete !== null) {
+    if (t) conclude(t, 'own-book-claim', `Declared ${complete} — all six cards are in this hand.`)
+    return claimAllSelf(view, complete)
+  }
 
   // 2. Claim as soon as a whole book is certainly located on the team — unless the style
   //    declares only what is wholly in its own hand (the passive extreme, handled at step 1).
   if (!style.declareOnlyOwnHand) {
-    const certain = certainClaim(view, k, style)
-    if (certain !== null) return certain
+    const refusedBefore = t ? t.refused.length : 0
+    const certain = certainClaim(view, k, style, t)
+    if (certain !== null) {
+      if (t && certain.type === 'claim') concludeCertain(t, view, k, certain.book)
+      return certain
+    }
+    if (t && t.refused.length === refusedBefore) {
+      t.refused.push({ kind: 'certain-claim', reason: 'no unresolved set is certainly located on this team' })
+    }
+  } else if (t) {
+    t.refused.push({ kind: 'certain-claim', reason: 'this style declares only sets held wholly in its own hand' })
   }
 
   const stalled = isDeepStalled(view)
   const ranked = rankAsksWith(view, k, style)
+  if (t && ranked.length > 0) t.ranked = ranked.slice(0, 5)
 
   // 3. A certain hit is riskless progress — take it before any speculative declare.
   if (ranked.length > 0) {
@@ -868,21 +1131,41 @@ function decideWithPlanner(view: SeatView, pol: BotPolicy): GameAction {
     if (holderOf(k, top.card) === top.target) {
       // Certain hits sort strictly above everything else (`certaintyBonus >= 20`); the style
       // still applies its near-tie information-protection choice among them.
-      const pick = pickAsk(view, k, ranked, pol)
+      const pick = pickAsk(view, k, ranked, pol, t)
+      if (t) concludeAsk(t, k, pick)
       return { type: 'ask', seat, target: pick.target, card: pick.card }
     }
   }
 
   // 4. Speculative declare (see evClaim). Skipped entirely by a certainty-only style.
   if (!style.declareOnlyWhenCertain && !style.declareOnlyOwnHand) {
-    const ev = evClaim(view, k, style, stalled)
+    const ev = evClaim(view, k, style, stalled, t)
     if (ev !== null) return ev
+  } else if (t) {
+    t.refused.push({
+      kind: 'ev-claim',
+      reason: style.declareOnlyOwnHand
+        ? 'this style declares only sets held wholly in its own hand'
+        : 'this style never declares on a guess (certainty only)',
+    })
   }
 
   // 5. Dead position: claiming on best evidence is the only progress left.
-  if (stalled) return forcedClaim(view, k)
+  if (stalled) {
+    const a = forcedClaim(view, k)
+    if (t && a.type === 'claim') {
+      concludeForced(t, view, k, a.book, 'forced-claim', `the position is ${stallNote(view)}, and claiming on best evidence is the only progress left.`)
+    }
+    return a
+  }
 
-  if (ranked.length === 0) return forcedClaim(view, k)
+  if (ranked.length === 0) {
+    const a = forcedClaim(view, k)
+    if (t && a.type === 'claim') {
+      concludeForced(t, view, k, a.book, 'forced-claim', 'no legal ask remains, so a claim is the only move.')
+    }
+    return a
+  }
 
   // 6. The stalemate breaker: every legal ask is a KNOWN miss and nothing has hit recently —
   //    no ask can gain material, so a signalling style spends the dead turn on the most
@@ -891,7 +1174,10 @@ function decideWithPlanner(view: SeatView, pol: BotPolicy): GameAction {
     const allKnownMiss = ranked.every((r) => !(k.cands[r.card] ?? []).includes(r.target))
     if (allKnownMiss && noRecentHit(view, POLICY_CONSTANTS.signalLookback)) {
       const sig = signallingAsk(view, style)
-      if (sig !== null) return sig
+      if (sig !== null) {
+        if (t && sig.type === 'ask') concludeSignal(t, view, sig.target, sig.card)
+        return sig
+      }
     }
   }
 
@@ -903,7 +1189,8 @@ function decideWithPlanner(view: SeatView, pol: BotPolicy): GameAction {
   //    `planContainedPass` refuses the 48-card rule set for the reason stated there: row 15
   //    voids a wrong declare instead of gifting it, so an opponent CAN take a contained book
   //    off the board and the licence is not the free, absorbing asset C2 measures.
-  const pick = pickAsk(view, k, ranked, pol)
+  const pick = pickAsk(view, k, ranked, pol, t)
+  if (t) concludeAsk(t, k, pick)
   return { type: 'ask', seat, target: pick.target, card: pick.card }
 }
 
@@ -949,14 +1236,19 @@ function windowCannotClose(view: SeatView): boolean {
  * (row 15, §7 vector 9), and refusing there would throw away the variant's best play. It is a
  * RULE consequence, not a style preference, so no style knob can switch it off.
  */
-function decideWindow(view: SeatView, pol: BotPolicy, rng: Rng): GameAction {
+function decideWindow(view: SeatView, pol: BotPolicy, rng: Rng, t?: Sink): GameAction {
   const decline: GameAction = { type: 'decline', seat: view.seat }
   const { skill, style } = pol
 
   // §4: with the whole team cardless every assignment names an empty seat, so every declare
   // is necessarily wrong. Never declare — not even to break a stuck window, where declaring
   // would hand the opponents the very set they are about to win anyway.
-  if (ownTeamCards(view) === 0) return decline
+  if (ownTeamCards(view) === 0) {
+    if (t) {
+      conclude(t, 'decline', 'Declined — this whole team is out of cards, so any declare would name an empty seat, necessarily fail, and gift the set (RULES_US54.md §4).')
+    }
+    return decline
+  }
 
   // The situations in which declining is no longer free, and somebody must declare on best
   // evidence or the table never progresses: the two §3.2 `MUST_DECLARE` positions
@@ -965,39 +1257,93 @@ function decideWindow(view: SeatView, pol: BotPolicy, rng: Rng): GameAction {
   // is where that happens, and without it a `us54` table of pure decliners would run forever —
   // the engine's own `resolved === nBooks` fallback cannot save it, because nothing ever
   // resolves. Computed *before* the declare branches now, because every one of them may be
-  // refused by a style and this is the flag that says refusing is not on offer.
-  const forced = isDeepStalled(view) || mustDeclareNow(view)
+  // refused by a style and this is the flag that says refusing is not on offer. (Both tests are
+  // pure reads of the view, so evaluating them unconditionally rather than short-circuited
+  // changes nothing about the decision — and gives the trace the true reason, not the first.)
+  const stalled = isDeepStalled(view)
+  const must = mustDeclareNow(view)
+  const forced = stalled || must
+  if (t && forced) {
+    t.notes.push(
+      must
+        ? mustDeclareNote(view)
+        : `Declining is still legal, but the position is ${stallNote(view)} — somebody must claim on best evidence or the table never progresses.`,
+    )
+  }
 
   // A set entirely in the viewer's own hand is certain and free; take it the moment it is
   // offered, at every style. Racing for it also matters more here than under `pagat48`
   // (§3, "a slower teammate can be beaten to a set"), which is why `declareEagerness` does
   // not gate it. `minHandSize` does, because six cards is the largest spend a declare can
   // make and row 18 is a real cliff — but only where declining is a legal move at all.
-  const complete = declarableOwnBook(view, style, () => forced)
-  if (complete !== null) return claimAllSelf(view, complete)
+  const complete = declarableOwnBook(view, style, () => forced, t)
+  if (complete !== null) {
+    if (t) conclude(t, 'own-book-claim', `Declared ${complete} — all six cards are in this hand, and the §3 race makes waiting the only way to lose it.`)
+    return claimAllSelf(view, complete)
+  }
 
   if (!skill.planClaims) {
     // Without a claim planner the seat declares only what it can see outright (handled above).
     // It breaks a forced window with the same guess-the-holders claim it uses when RULES.md
     // forces one on it.
-    if (forced) return guessClaim(view, rng)
+    if (forced) {
+      const g = guessClaim(view, rng)
+      if (t && g.type === 'claim') {
+        conclude(t, must ? 'must-declare' : 'guess-claim', `Declared ${g.book} with guessed holders — ${must ? 'declining is illegal here (MUST_DECLARE)' : 'the stalled position demands a claim'}, and this skill has no claim planner.`)
+        t.notes.push('Cards in this hand are assigned here; every other card of the set is guessed onto a random teammate.')
+      }
+      return g
+    }
+    if (t) conclude(t, 'decline', 'Declined — this skill has no claim planner and no complete set in hand, so declining is its only window move.')
     return decline
   }
 
   const k = buildKnowledge(view, knowledgeOptions(skill))
   if (!style.declareOnlyOwnHand) {
-    const certain = certainClaim(view, k, style)
-    if (certain !== null) return certain
+    const refusedBefore = t ? t.refused.length : 0
+    const certain = certainClaim(view, k, style, t)
+    if (certain !== null) {
+      if (t && certain.type === 'claim') concludeCertain(t, view, k, certain.book)
+      return certain
+    }
+    if (t && t.refused.length === refusedBefore) {
+      t.refused.push({ kind: 'certain-claim', reason: 'no unresolved set is certainly located on this team' })
+    }
+  } else if (t) {
+    t.refused.push({ kind: 'certain-claim', reason: 'this style declares only sets held wholly in its own hand' })
   }
   if (!style.declareOnlyWhenCertain && !style.declareOnlyOwnHand) {
     // A `us54` window re-opens after every declare, so there is no tempo pressure to guess
     // early and the downside is a gifted set rather than a void — the un-stalled threshold
     // stays the style's own, and only a proven-dead position relaxes it, exactly as under
     // RULES.md.
-    const ev = evClaim(view, k, style, forced)
+    const ev = evClaim(view, k, style, forced, t, must && !stalled ? 'forced' : undefined)
     if (ev !== null) return ev
+  } else if (t) {
+    t.refused.push({
+      kind: 'ev-claim',
+      reason: style.declareOnlyOwnHand
+        ? 'this style declares only sets held wholly in its own hand'
+        : 'this style never declares on a guess (certainty only)',
+    })
   }
-  if (forced) return forcedClaim(view, k)
+  if (forced) {
+    const a = forcedClaim(view, k)
+    if (t && a.type === 'claim') {
+      concludeForced(
+        t,
+        view,
+        k,
+        a.book,
+        must ? 'must-declare' : 'forced-claim',
+        must
+          ? 'declining is illegal here (MUST_DECLARE), so the least-bad claim is made.'
+          : `the position is ${stallNote(view)}, and a claim in the window is the only thing that can ever resolve a set.`,
+      )
+    }
+    return a
+  }
+  if (t) conclude(t, 'decline', declineHeadline(view))
   return decline
 }
 
@@ -1006,36 +1352,229 @@ function decideWindow(view: SeatView, pol: BotPolicy, rng: Rng): GameAction {
  * there (`NO_DECLARE_WINDOW`), so unlike `pagat48` the turn-holder's only move is an ask, and
  * every claim branch of the ordinary flow has to be skipped rather than merely deprioritised.
  */
-function decideUs54Ask(view: SeatView, pol: BotPolicy, rng: Rng): GameAction {
+function decideUs54Ask(view: SeatView, pol: BotPolicy, rng: Rng, t?: Sink): GameAction {
   const seat = view.seat
   const { skill, style } = pol
   const asks = legalAsksFromView(view)
   // `reduceDecline` never closes the window into a state with no legal ask, so this is
   // unreachable; `checkInvariants` reports it as "no legal action exists ... not finished".
   // Emit the declare the engine will refuse rather than an ask that cannot be built.
-  if (asks.length === 0) return { type: 'decline', seat }
+  if (asks.length === 0) {
+    if (t) {
+      conclude(t, 'error-branch', 'No legal ask exists with the window closed — an engine invariant is broken; emitted the decline the engine will refuse so the failure stays visible.')
+    }
+    return { type: 'decline', seat }
+  }
   if (!skill.planClaims) {
     if (rng() < skill.errorRate) {
       const a = asks[randInt(rng, asks.length)]
+      if (t) {
+        conclude(t, 'ranked-ask', `Asked seat ${a.target} for ${pc(a.card)} — a blunder: this skill misplays ${Math.round(skill.errorRate * 100)}% of asks, and the seeded roll replaced the deliberate choice with a random legal one.`)
+      }
       return { type: 'ask', seat, target: a.target, card: a.card }
     }
     const kLow = buildKnowledge(view, knowledgeOptions(skill))
     const rankedLow = rankAsksWith(view, kLow, style)
-    const topLow = preferredAsk(rankedLow, style)
+    if (t) t.ranked = rankedLow.slice(0, 5)
+    const topLow = preferredAsk(rankedLow, style, t)
+    if (t) concludeAsk(t, kLow, topLow)
     return { type: 'ask', seat, target: topLow.target, card: topLow.card }
   }
   const k = buildKnowledge(view, knowledgeOptions(skill))
   const ranked = rankAsksWith(view, k, style)
-  if (ranked.length === 0) return { type: 'ask', seat, target: asks[0].target, card: asks[0].card }
-  const pick = pickAsk(view, k, ranked, pol)
+  if (ranked.length === 0) {
+    if (t) conclude(t, 'error-branch', 'The ranking is empty though legal asks exist — a defensive branch; played the first legal ask.')
+    return { type: 'ask', seat, target: asks[0].target, card: asks[0].card }
+  }
+  if (t) t.ranked = ranked.slice(0, 5)
+  const pick = pickAsk(view, k, ranked, pol, t)
   // The CONTAINMENT.md turn-pass, considered against the ask the style would otherwise play.
   // This is the branch that matters under `us54`: the window is closed here, so a declare is
   // illegal (`NO_DECLARE_WINDOW`) and the seat's only move is an ask — which is precisely the
   // move a contained book converts from "spend a turn badly" into "hand the turn to a chosen
   // opponent for nothing". Off at `containedPass: 0`.
-  const pass = planContainedPass(view, k, style, skill, pick)
-  if (pass !== null) return { type: 'ask', seat, target: pass.target, card: pass.card }
+  const why: { reason?: string } | undefined = t ? {} : undefined
+  const pass = planContainedPass(view, k, style, skill, pick, why)
+  if (pass !== null) {
+    if (t) concludeContainedPass(t, view, k, skill, pick, pass)
+    return { type: 'ask', seat, target: pass.target, card: pass.card }
+  }
+  if (t) {
+    if (why !== undefined && why.reason !== undefined) {
+      t.refused.push({ kind: 'contained-pass', reason: why.reason })
+    }
+    concludeAsk(t, k, pick)
+  }
   return { type: 'ask', seat, target: pick.target, card: pick.card }
+}
+
+/* ---------------------------------------------------------- trace prose --- */
+/*
+ * Everything below is narration: pure read-only prose over quantities the decision above
+ * already computed (or recomputes verbatim — `planClaim` and the stall scan are deterministic,
+ * so re-deriving a plan for its holders costs a few comparisons and can never disagree with the
+ * plan that was played). None of it is reachable from `decide`, none of it draws from the rng,
+ * and none of it writes to the view — the frozen-view test in tests/bots/explain.test.ts holds
+ * these functions to the same standard as the decision itself.
+ */
+
+/** Which hoard knob bit, in prose — the reason a Hoarder refused a declare it could make. */
+function hoardReason(view: SeatView, book: BookId, style: StyleParams): string {
+  const members = new Set<Card>(bookCards(book, view.config))
+  const remaining = view.hand.filter((c) => !members.has(c))
+  if (style.minHandSize > 0 && remaining.length < style.minHandSize) {
+    return `declaring it would drop this hand to ${n_(remaining.length, 'card')}, below the style's floor of ${style.minHandSize} (row 18: an empty hand is out of the game)`
+  }
+  const perBook = new Map<BookId, number>()
+  for (const c of remaining) {
+    const b = cardBook(c)
+    perBook.set(b, (perBook.get(b) ?? 0) + 1)
+  }
+  let licences = 0
+  for (const n of perBook.values()) if (n < 6) licences++
+  return `declaring it would leave ask-licences into only ${n_(licences, 'set')}, below the style's floor of ${style.hoardBooks} (row 6: holding a card is the only licence to ask)`
+}
+
+/** The `isDeepStalled` evidence, restated with its numbers for the trace. */
+function stallNote(view: SeatView): string {
+  const log = view.log
+  let lastHit = -1
+  let lastClaim = -1
+  for (let i = log.length - 1; i >= 0; i--) {
+    const ev = log[i]
+    if (lastHit === -1 && ev.type === 'ask' && ev.hit) lastHit = i
+    if (lastClaim === -1 && ev.type === 'claim') lastClaim = i
+    if (lastHit !== -1 && lastClaim !== -1) break
+  }
+  const last = log.length - 1
+  const noHitFor = last - lastHit
+  const noClaimFor = last - lastClaim
+  const [hitLimit, claimLimit, hardLimit] = POLICY_CONSTANTS.stall[rulesFor(view.config).declareTiming]
+  return `provably dead: no hit for ${n_(noHitFor, 'event')} and no declare for ${noClaimFor} (limits ${hitLimit}/${claimLimit}, hard limit ${hardLimit})`
+}
+
+/** Which RULES_US54.md §3.2 case made the decline illegal. */
+function mustDeclareNote(view: SeatView): string {
+  return windowCannotClose(view)
+    ? 'Declining is illegal here (MUST_DECLARE): every opponent of the turn-holder is out of cards, so the window can never close into an ask.'
+    : 'Declining is illegal here (MUST_DECLARE): the turn-holder has no legal ask, so the window has nothing to close into.'
+}
+
+/** The ordinary decline, with where the option goes next. */
+function declineHeadline(view: SeatView): string {
+  const w = view.declareWindow
+  const declined = w?.declined ?? 0
+  return declined >= 5
+    ? `Declined — nothing declarable above the bar; the window closes and seat ${view.turn} asks.`
+    : `Declined — nothing declarable above the bar; the option passes on (decline ${declined + 1} of 6), and once the window closes seat ${view.turn} asks.`
+}
+
+/** "2♥, 3♥ in this hand; 6♥ with seat 2" — a claim's assignments, grouped by seat in seat order. */
+function assignmentNote(view: SeatView, plan: ClaimPlan): string {
+  const bySeat = new Map<Seat, Card[]>()
+  for (const c of bookCards(plan.book, view.config)) {
+    const s = plan.assignments[c]
+    const list = bySeat.get(s)
+    if (list) list.push(c)
+    else bySeat.set(s, [c])
+  }
+  const parts: string[] = []
+  for (const [s, cards] of [...bySeat.entries()].sort((a, b) => a[0] - b[0])) {
+    parts.push(`${cards.map(pc).join(', ')} ${s === view.seat ? 'in this hand' : `with seat ${s}`}`)
+  }
+  return parts.join('; ')
+}
+
+/** Why `targetByCount` chose the seat it chose — shared by the pass and designate verdicts. */
+function targetWhy(view: SeatView, to: Seat, pol: BotPolicy): string {
+  if (!pol.skill.countTargeting) return ' — the first candidate; this skill does not compare hand sizes'
+  return pol.style.passTarget === 'most'
+    ? ` — the candidate with the most cards (${view.counts[to]}), who can convert the turn best`
+    : ` — the candidate with the fewest cards (${view.counts[to]})`
+}
+
+/** One-sentence ask verdicts, matching the RankedAsk reason register. */
+function askHeadline(r: RankedAsk): string {
+  if (r.p === 1) return `Asked seat ${r.target} for ${pc(r.card)} — a certain hit.`
+  if (r.p === 0) return `Asked seat ${r.target} for ${pc(r.card)} — a known miss, conceding the turn there.`
+  return `Asked seat ${r.target} for ${pc(r.card)} — ${Math.round(r.p * 100)}% to hit.`
+}
+
+/** Verdict for an ordinary chosen ask (certain hits get their own kind — the pane treats them differently). */
+function concludeAsk(t: Sink, k: Knowledge, pick: RankedAsk): void {
+  const certain = holderOf(k, pick.card) === pick.target
+  conclude(t, certain ? 'certain-hit' : 'ranked-ask', askHeadline(pick))
+  t.notes.push(pick.reason)
+  if (certain) t.notes.push('Riskless material: a hit takes the card and keeps the turn (row 9).')
+}
+
+/** Verdict for a certain declare — recomputes the (deterministic) plan for its holder list. */
+function concludeCertain(t: Sink, view: SeatView, k: Knowledge, book: BookId): void {
+  const plan = planClaim(view, k, book)
+  const foreign = !view.hand.some((c) => cardBook(c) === book)
+  t.claim = { book, p: 1, uncertain: 0, foreign }
+  conclude(t, 'certain-claim', `Declared ${book} — every card is certainly located on this team.`)
+  t.notes.push(`Holders, all certain: ${assignmentNote(view, plan)}.`)
+  if (foreign) t.notes.push('A foreign declare: this hand holds no card of the set — the whole proof is public inference.')
+}
+
+/** Verdict for a claim the position demanded (endgame, stall, no legal ask, MUST_DECLARE). */
+function concludeForced(
+  t: Sink,
+  view: SeatView,
+  k: Knowledge,
+  book: BookId,
+  kind: 'forced-claim' | 'must-declare',
+  why: string,
+): void {
+  const plan = planClaim(view, k, book)
+  t.claim = { book, p: plan.p, uncertain: plan.uncertain.length, foreign: !view.hand.some((c) => cardBook(c) === book) }
+  conclude(t, kind, `Declared ${book} on best evidence — ${why}`)
+  t.notes.push(`The strongest available plan: p = ${fp(plan.p)} with ${n_(plan.uncertain.length, 'guessed card')}; holders: ${assignmentNote(view, plan)}.`)
+}
+
+/** Verdict for the plannerless guess-the-holders claim. */
+function concludeGuess(t: Sink, book: BookId, why: string): void {
+  conclude(t, 'guess-claim', `Declared ${book} with guessed holders — ${why}`)
+  t.notes.push('This skill has no claim planner: cards in this hand are assigned here, and every other card of the set is guessed onto a random teammate.')
+}
+
+/** Verdict for the stalemate-breaking signalling ask. */
+function concludeSignal(t: Sink, view: SeatView, target: Seat, card: Card): void {
+  const book = cardBook(card)
+  const held = view.hand.filter((c) => cardBook(c) === book).length
+  conclude(t, 'signalling-ask', `Asked seat ${target} for ${pc(card)} — a known miss spent on signal.`)
+  t.notes.push(`Every legal ask is a known miss and nothing has hit in the last ${POLICY_CONSTANTS.signalLookback} events, so no ask can gain material.`)
+  t.notes.push(`The ask still publishes that this hand holds at least one card of ${book} — it holds ${held}, its strongest set, so teammates running the same inference learn the most from it.`)
+}
+
+/** Verdict for the contained-book turn-pass, with the arithmetic that chose it. */
+function concludeContainedPass(
+  t: Sink,
+  view: SeatView,
+  k: Knowledge,
+  skill: SkillParams,
+  ordinary: RankedAsk,
+  pass: ContainedPassPlan,
+): void {
+  // The same estimate the valuation compared against (contained.ts): the refined probability
+  // for a refinedInference skill, the slot prior otherwise.
+  const p = skill.refinedInference ? refinedHitProbability(k, ordinary.card, ordinary.target) : ordinary.p
+  const v = pass.value
+  t.passValue = v
+  t.refused.push({
+    kind: 'ranked-ask',
+    reason: `the ordinary ask — ${pc(ordinary.card)} at seat ${ordinary.target}, ${Math.round(p * 100)}% to hit — is worth less than aiming the conceded turn`,
+  })
+  conclude(t, 'contained-pass', `Passed the turn — asked seat ${pass.target} for ${pc(pass.card)}, a guaranteed miss: every card of ${pass.book} is certainly on this team.`)
+  t.notes.push(`A conceded turn yields about ${fp(v.E)} cards (hit rate measured from the public log); the mean live hand is ${fp(v.meanHand)} cards.`)
+  t.notes.push(`Aiming the miss at seat ${pass.target} (${n_(view.counts[pass.target], 'card')}) instead of seat ${ordinary.target} (${view.counts[ordinary.target]}) saves ${fp(v.gain)} cards against a tempo cost of ${fp(v.tempo)}.`)
+  t.notes.push(`The pass wins while the ordinary ask hits below ${fp(v.threshold)}; this one sits at ${fp(p)}.`)
+  t.notes.push(
+    pass.reused
+      ? `${pc(pass.card)} is already publicly missing from this hand, so repeating it publishes nothing new.`
+      : `First use: the ask publishes that this hand lacks ${pc(pass.card)}${v.infoCost > 0 ? ` (priced at ${fp(v.infoCost)} cards)` : ''}.`,
+  )
 }
 
 /* ----------------------------------------------------------- validation --- */
@@ -1185,7 +1724,64 @@ export function decide(view: SeatView, policy: PolicySpec, seed: number): GameAc
   }
 }
 
-function decideInner(view: SeatView, pol: BotPolicy, seed: number): GameAction {
+/**
+ * `decide`, with the reasoning attached — the v0.5 assistant surface.
+ *
+ * The wrapper is deliberately shaped statement-for-statement like `decide`: the same
+ * `decideInner` call (plus a sink), the same view-legality check, the same fallback ladder.
+ * That is what makes the two promises inherited rather than re-argued:
+ *
+ *  - **`action` is bit-identical to `decide(view, policy, seed)`.** The sink is only ever
+ *    *written to*, every write is behind an `if (t)` guard, and no trace statement draws from
+ *    the seeded rng — so the decision path consumes exactly the values it consumes when the
+ *    sink is absent. `tests/bots/explain.test.ts` fuzzes the equivalence across both rule sets,
+ *    every roster style and every tier.
+ *  - **It never throws and never returns an illegal action**, because the try/catch shape and
+ *    `isViewLegal` gate are `decide`'s own. A failure inside the styled decision (or, in
+ *    principle, inside the narration) lands in the same fallback, and the trace then says so
+ *    honestly (`kind: 'fallback'`) instead of describing a move that was not played.
+ */
+export function decideExplained(view: SeatView, policy: PolicySpec, seed: number): ExplainedDecision {
+  const t = newSink()
+  let action: GameAction | null = null
+  try {
+    action = decideInner(view, resolvePolicy(policy), seed, t)
+  } catch {
+    // decideInner failed; action stays null and the fallback takes over.
+  }
+  try {
+    if (action !== null && (view.phase === 'finished' || isViewLegal(view, action))) {
+      return { action, trace: sealTrace(t) }
+    }
+    // The styled decision failed or produced something the engine would refuse. Start the trace
+    // afresh: whatever the sink collected describes a decision that was NOT played, and showing
+    // its notes beside the placeholder would attribute reasoning to a move that has none.
+    const fb = fallbackAction(view, seed)
+    const f = newSink()
+    conclude(
+      f,
+      'fallback',
+      action === null
+        ? 'The styled policy failed outright; a legal-by-construction placeholder action was played instead.'
+        : `The styled policy chose ${action.type === 'ask' ? 'an ask' : `a ${action.type}`} the engine would refuse; a legal-by-construction placeholder was played instead.`,
+    )
+    f.notes.push('The placeholder consults no style: it exists because the styled decision failed, so it must not lean on the vector that just failed.')
+    return { action: fb, trace: sealTrace(f) }
+  } catch {
+    const seat = view !== null && typeof view === 'object' && typeof view.seat === 'number' ? view.seat : (0 as Seat)
+    return {
+      action: { type: 'pass', seat, to: seat },
+      trace: {
+        kind: 'error-branch',
+        headline: 'The view itself is malformed — emitted a pass the engine will refuse rather than throwing.',
+        notes: [],
+        refused: [],
+      },
+    }
+  }
+}
+
+function decideInner(view: SeatView, pol: BotPolicy, seed: number, t?: Sink): GameAction {
   // One stream per decision, drawn in the order the taken branch consumes it. Only a skill
   // with a non-zero error rate or no claim planner ever draws from it.
   const rng = mulberry32(seed >>> 0)
@@ -1194,20 +1790,21 @@ function decideInner(view: SeatView, pol: BotPolicy, seed: number): GameAction {
   // option holder, not the turn-holder); outside one the only legal move is an ask. `endgame`
   // is unreachable under this rule set (§4), so `playing` is the whole story.
   if (rulesFor(view.config).declareTiming === 'anyTime' && view.phase === 'playing') {
-    if (view.declareWindow) return decideWindow(view, pol, rng)
-    return decideUs54Ask(view, pol, rng)
+    if (view.declareWindow) return decideWindow(view, pol, rng, t)
+    return decideUs54Ask(view, pol, rng, t)
   }
   switch (view.phase) {
     case 'awaitPass':
-      return passAction(view, pol)
+      return passAction(view, pol, t)
     case 'awaitDesignate':
-      return designateAction(view, pol)
+      return designateAction(view, pol, t)
     case 'finished':
+      if (t) conclude(t, 'error-branch', 'The game is over — there is nothing to decide, and this placeholder pass will be refused by the engine.')
       return { type: 'pass', seat: view.seat, to: view.seat }
     case 'playing':
     case 'endgame': {
-      if (!pol.skill.planClaims) return decideNoPlanner(view, pol, rng)
-      return decideWithPlanner(view, pol)
+      if (!pol.skill.planClaims) return decideNoPlanner(view, pol, rng, t)
+      return decideWithPlanner(view, pol, t)
     }
   }
 }
