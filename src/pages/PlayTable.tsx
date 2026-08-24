@@ -103,14 +103,16 @@ export function PlayTable() {
         {play.mode === 'v10' ? (
           <div className={lab.synthetic}>
             <Eyebrow tone="muted" track="badge">
-              Stand-in policy · the adaptive engine has not landed
+              FishAI v1.0 · every bot seat is adaptive
             </Eyebrow>
             <p className={lab.syntheticBody}>
-              <code>?v=10</code> names the adaptive mode, which is still being built and measured.
-              Until it arrives, every bot at this table plays the Balanced style as a stand-in —
-              nothing here adapts, and no number this game produces says anything about the
-              adaptive engine. The mode goes live in the lobby when the engine and its evidence
-              land.
+              No styles can be assigned at this table. Each bot reads the public log, classifies
+              what the other seats appear to be playing, and best-responds with a roster style
+              chosen off the measured payoff table — re-derived from scratch at every decision,
+              so two seats with the same information reach the same read. One measured caveat,
+              stated up front: over this roster the best response to <em>everything</em> is
+              Punter, so a warm v1.0 seat converges there; its adaptivity matters against
+              opponents the matrix never measured — such as you.
             </p>
           </div>
         ) : null}

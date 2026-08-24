@@ -488,11 +488,28 @@
 }
 
 /* ==========================================================================
-   THE ADVISOR PANE — reserved; fills when decideExplained lands
+   THE ADVISOR PANE — the engine's own trace, rendered
    ========================================================================== */
 
 .advisor {
   border: 1px solid var(--fa-line);
   padding: 16px;
   margin: 0 0 22px;
+}
+
+.advisorNotes,
+.advisorRanked {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+}
+
+.advisorSub {
+  margin: 14px 0 0;
+  font-size: var(--fa-fs-meta);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
 }

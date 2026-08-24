@@ -7,14 +7,18 @@
  * five styles from it with the same map the table uses for `styles=random`, so even a surprise
  * line-up is reproducible.
  *
- * v1.0 — the adaptive engine — is a real card here because the difference between the modes is
- * the point of the page, but it is honestly disabled: the classifier, the counter-table and the
- * evidence for both are being built in a parallel task, and a launch button for an engine that
- * does not exist would be a lie with a hover state. The card ships enabled when the adaptive
- * artifact lands (the table's seam is `policyForSeat` in src/play/policies.ts).
+ * v1.0 — the adaptive engine — is live: every bot seat runs the classifier + best-response
+ * selection off the measured counter table (`policyForSeat` in src/play/policies.ts). Its card
+ * offers no style pickers, because choosing a style is the job the engine does for itself, and
+ * it states the measured caveat up front rather than in a footnote: over this roster the best
+ * response to everything is Punter, so its adaptivity matters mainly against off-roster
+ * opponents — the human.
+ *
+ * Both modes also launch with the assistant (`?assist=1`) — the engine's own traced reasoning
+ * beside the table.
  *
  * Amber budget: the one primary on this page is the v0.5 launch button. Everything else is
- * `ghost`/`line`, and the v1.0 card's not-yet state is a hatch, not a colour.
+ * `ghost`/`line`.
  */
 import { useState } from 'react'
 import { useLocation } from 'react-router-dom'
@@ -154,10 +158,18 @@ export function PlayHub() {
               <Button href={launchHref} arrow={false}>
                 Deal me in
               </Button>
+              <Button variant="line" href={`${launchHref}&assist=1`} arrow={false}>
+                With the assistant
+              </Button>
             </div>
+            <p className={lab.figNote}>
+              The assistant is the engine&apos;s own reasoning surface: at each of your decisions
+              it shows the move a chosen advisor style would play and why — from exactly the
+              information you have, nothing more.
+            </p>
           </div>
 
-          {/* ---- v1.0 — honestly not yet -------------------------------------------------- */}
+          {/* ---- v1.0 — adaptive, live ---------------------------------------------------- */}
           <div className={s.mode}>
             <Eyebrow tone="muted" track="badge">
               Mode 02 · FishAI v1.0
@@ -170,15 +182,23 @@ export function PlayHub() {
               other bot in this project. You cannot pick its style, because choosing one is the
               whole job it does for itself.
             </p>
-            <div className={s.pending}>
-              Arriving with the adaptive artifact. The classifier, the counter-table and the
-              evidence that adaptation actually helps are being built and measured now; this card
-              goes live when they land, and not before — an engine without its evidence does not
-              get a launch button here.
-            </div>
+            <p className={lab.figNote}>
+              One measured caveat, stated where the launch button is rather than in a footnote:
+              over this nine-style roster the measured best response to every style is Punter, so
+              a warm v1.0 bot converges there against the roster. What its adaptivity is actually
+              for is opponents the matrix never measured — you. The full evidence, including that
+              degeneracy, is being measured and lands next door in the lab.
+            </p>
             <div className={buttonRow} style={{ marginTop: 22 }}>
-              <Button variant="ghost" arrow={false} disabled>
-                Not yet at the table
+              <Button variant="line" href={`/play/table?v=10&seed=${encodeURIComponent(seed)}`} arrow={false}>
+                Deal me in — adaptive
+              </Button>
+              <Button
+                variant="ghost"
+                href={`/play/table?v=10&seed=${encodeURIComponent(seed)}&assist=1`}
+                arrow={false}
+              >
+                With the assistant
               </Button>
             </div>
           </div>

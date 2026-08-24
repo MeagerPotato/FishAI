@@ -278,7 +278,19 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
         </div>
 
         <div>
-          {play.assist ? <AdvisorPane view={view} /> : null}
+          {play.assist ? (
+            <AdvisorPane
+              view={view}
+              mode={play.mode}
+              seed={play.seed}
+              active={!finished && acting === 0 && (askTurn || passTurn || game.declareOpen)}
+              playable={askTurn || passTurn}
+              onPlay={(action) => {
+                const result = game.act(action)
+                setHumanError(result.ok ? null : result.error)
+              }}
+            />
+          ) : null}
           <Eyebrow tone="muted" track="head" as="h2">
             Public log — newest first
           </Eyebrow>
