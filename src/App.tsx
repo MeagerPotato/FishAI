@@ -17,6 +17,10 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 const LabReport = lazy(() => import('./pages/LabReport.tsx'))
 const LabMatrix = lazy(() => import('./pages/LabMatrix.tsx'))
 const LabReplay = lazy(() => import('./pages/LabReplay.tsx'))
+const LabAdaptive = lazy(() => import('./pages/LabAdaptive.tsx'))
+const LabLive = lazy(() => import('./pages/LabLive.tsx'))
+const PlayHub = lazy(() => import('./pages/PlayHub.tsx'))
+const PlayTable = lazy(() => import('./pages/PlayTable.tsx'))
 const SystemDemo = lazy(() => import('./components/demo/SystemDemo.tsx'))
 
 /**
@@ -54,6 +58,10 @@ export function App() {
         <Route path="/lab/matrix" element={<LabMatrix />} />
         <Route path="/lab/replay/:id" element={<LabReplay />} />
         <Route path="/lab/replay" element={<Navigate to="/lab" replace />} />
+        <Route path="/lab/adaptive" element={<LabAdaptive />} />
+        <Route path="/lab/live" element={<LabLive />} />
+        <Route path="/play" element={<PlayHub />} />
+        <Route path="/play/table" element={<PlayTable />} />
         <Route path="/design" element={<SystemDemo />} />
         <Route path="*" element={<Navigate to="/lab" replace />} />
       </Routes>

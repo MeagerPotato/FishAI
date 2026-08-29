@@ -77,9 +77,12 @@ export function SyntheticNotice({ artifact }: { artifact: LabArtifact }) {
       <p className={s.syntheticBody}>
         Every number on this page comes from the committed fixture in{' '}
         <code>src/diagrams/fixture.ts</code>, generated deterministically so two builds are
-        byte-identical. It satisfies the BOT_LAB.md §7.1 schema and exercises both verdict render
-        paths, and it is not simulation output. Nothing here is a finding about how Canadian Fish
-        is best played.
+        byte-identical. It is not simulation output. The fixture exists to prove the site can
+        render a <em>cyclic</em> verdict honestly — no real run to date has produced one, and a
+        render path nobody can exercise is a render path nobody has checked. The measured runs
+        are one parameter away: the current evidence is the default page, with no{' '}
+        <code>?case=</code> at all. Nothing here is a finding about how Canadian Fish is best
+        played.
       </p>
     </div>
   )

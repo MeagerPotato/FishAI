@@ -1,0 +1,1793 @@
+{
+  "meta": {
+    "schemaVersion": 1,
+    "generatedAt": "2026-08-24T04:13:23.637Z",
+    "engineCommit": "77551a5-dirty",
+    "rulesHash": "b4c7fef74d439fe29cbe4d4775fc4fbecdd95d0c9ce0218eb116a4b2b64b6f8d",
+    "rulesFile": "RULES_US54.md",
+    "ruleSet": "us54",
+    "config": {
+      "gauntletPairs": 4300,
+      "gauntletSeedPrefix": "style-v1",
+      "mirrorPairs": 400,
+      "mixedPairs": 400,
+      "mixedSeedPrefix": "mixed-v1",
+      "mixedCompositions": 24,
+      "oraclePairs": 400,
+      "accGames": 50,
+      "accSeedPrefix": "clsacc-v1",
+      "accCheckpoints": [
+        40,
+        80,
+        150,
+        250
+      ],
+      "chunkPairs": 25,
+      "variant": "us54",
+      "stepCap": 5000,
+      "invariantCheck": "every"
+    },
+    "gamesTotal": 125600,
+    "seedSet": {
+      "prefix": "style-v1",
+      "count": 4300
+    },
+    "wallMs": 550659,
+    "recordsDigest": "ce3316641a8f38fe",
+    "health": {
+      "ok": true,
+      "illegalActions": 0,
+      "cappedGames": 0,
+      "invariantViolations": 0,
+      "ties": 0,
+      "voids": 0,
+      "nonClinch": 0,
+      "capped": [],
+      "violations": []
+    },
+    "benchmark": {
+      "artifact": "style-results.v2.json",
+      "recordsDigest": "0c3cb524a3534d4a",
+      "seedPrefix": "style-v1",
+      "pairsPerCell": 4300,
+      "paired": true,
+      "note": "Per-deal: the gauntlet replayed the benchmark seed list exactly (both orientations, same start seats). The pairing is cross-run — per-game records are not joined — so the delta SE is the conservative independent combination, an upper bound on the true paired SE."
+    },
+    "counterTableProvenance": {
+      "artifact": "style-results.v2.json",
+      "recordsDigest": "0c3cb524a3534d4a",
+      "engineCommit": "1667a1d-dirty",
+      "generatedAt": "2026-08-22T21:49:51.484Z",
+      "pairsPerCell": 4300
+    },
+    "fingerprintProvenance": {
+      "generatedAt": "2026-08-24T01:42:39.865Z",
+      "command": "node scripts/gen-fingerprints.mjs --games 150",
+      "gamesPerStyle": 150,
+      "seedPrefix": "fingerprint-v1",
+      "variant": "us54",
+      "stepCap": 5000
+    },
+    "predictions": [
+      {
+        "id": "P1",
+        "text": "The counter table's punter row weakly dominates every column, so a warm adaptive team should match punter's matrix-v2 row against every pure style within CI. Any detectable shortfall is the price of the warmup anchor (Balanced until ~60 observed events)."
+      },
+      {
+        "id": "P2",
+        "text": "The adaptive-vs-punter mixed-population delta should be ≈ 0: both teams best-respond to every composition with the same style once warm, so adaptation buys nothing a fixed punter team does not already have."
+      },
+      {
+        "id": "P3",
+        "text": "Oracle classification should add ≈ nothing: the best response is punter regardless of the read, so a perfect read and a classifier read select the same play."
+      },
+      {
+        "id": "P4",
+        "text": "Classifier top-1 accuracy should be good for turtle, ghost and hoarder, and heavily confused inside the balanced/blitz/punter/banker quadrangle (the Stage-1B separability read: those four diverge from Balanced on under 1.3% of decisions)."
+      }
+    ]
+  },
+  "gauntlet": [
+    {
+      "id": "adaptive-vs-balanced",
+      "pairs": 4300,
+      "games": 8600,
+      "distinctSeeds": 4300,
+      "score": 0.5113953488372093,
+      "se": 0.002706812243131831,
+      "ci95": [
+        0.5060899968406709,
+        0.5167007008337476
+      ],
+      "seUnpaired": 0.005390551640148108,
+      "aWins": 4398,
+      "bWins": 4202,
+      "ties": 0,
+      "avgMoves": 683.3641860465116,
+      "maxMoves": 1080,
+      "health": {
+        "illegalActions": 0,
+        "cappedGames": 0,
+        "invariantViolations": 0,
+        "ties": 0,
+        "voids": 0,
+        "nonClinch": 0,
+        "distinctSeeds": 4300,
+        "expectedSeeds": 4300
+      },
+      "opponent": "balanced",
+      "metrics": {
+        "a": {
+          "askHitRate": 0.5682341727872617,
+          "turnRetention": 2.2505691886524355,
+          "claimPrecision": 0.9884946398912879,
+          "claimYield": 0.9884946398912879,
+          "concedeRate": 0.011505360108712065,
+          "concedeRateChosen": 0.0034041173609985413,
+          "foreignDeclareRate": 0.014827117620413709,
+          "foreignDeclareRateChosen": 0.01507537688442211,
+          "declareLatency": 21.663377527952587,
+          "raceLossesPerGame": 0.043372093023255814,
+          "clinchDenialsPerGame": 0.5061627906976744,
+          "leakIndex": 0.5640389345411199,
+          "hoardIndex": 3.848457827699246,
+          "giftsPerGame": 0.03662790697674419,
+          "setsPerGame": 3.842906976744186,
+          "declaresPerGame": 3.8505813953488373,
+          "forcedDeclareRate": 0.06854899592329759,
+          "dropoutStep": 709.6955607869514,
+          "dropoutRate": 0.4610077519379845
+        },
+        "b": {
+          "askHitRate": 0.5661266474746881,
+          "turnRetention": 2.2427283607655397,
+          "claimPrecision": 0.9902310435726469,
+          "claimYield": 0.9902310435726469,
+          "concedeRate": 0.009768956427353079,
+          "concedeRateChosen": 0.0012012012012012011,
+          "foreignDeclareRate": 0.01687083268723833,
+          "foreignDeclareRateChosen": 0.01728395061728395,
+          "declareLatency": 21.97566551832133,
+          "raceLossesPerGame": 0.03523255813953488,
+          "clinchDenialsPerGame": 0.5095348837209303,
+          "leakIndex": 0.5633482169085248,
+          "hoardIndex": 3.8522232216970855,
+          "giftsPerGame": 0.04430232558139535,
+          "setsPerGame": 3.757093023255814,
+          "declaresPerGame": 3.749418604651163,
+          "forcedDeclareRate": 0.07055357419755001,
+          "dropoutStep": 711.1159197609902,
+          "dropoutRate": 0.45406976744186045
+        }
+      },
+      "punterBenchmark": 0.518953488372093,
+      "punterBenchmarkSe": 0.0036084846959099637,
+      "delta": -0.007558139534883712,
+      "deltaSe": 0.004510875116890823
+    },
+    {
+      "id": "adaptive-vs-blitz",
+      "pairs": 4300,
+      "games": 8600,
+      "distinctSeeds": 4300,
+      "score": 0.5086046511627907,
+      "se": 0.0040128974889989165,
+      "ci95": [
+        0.5007393720843528,
+        0.5164699302412287
+      ],
+      "seUnpaired": 0.005391153655242264,
+      "aWins": 4374,
+      "bWins": 4226,
+      "ties": 0,
+      "avgMoves": 681.2418604651162,
+      "maxMoves": 1080,
+      "health": {
+        "illegalActions": 0,
+        "cappedGames": 0,
+        "invariantViolations": 0,
+        "ties": 0,
+        "voids": 0,
+        "nonClinch": 0,
+        "distinctSeeds": 4300,
+        "expectedSeeds": 4300
+      },
+      "opponent": "blitz",
+      "metrics": {
+        "a": {
+          "askHitRate": 0.5630111924235902,
+          "turnRetention": 2.2240669317681108,
+          "claimPrecision": 0.9875736961451247,
+          "claimYield": 0.9875736961451247,
+          "concedeRate": 0.012426303854875283,
+          "concedeRateChosen": 0.0037668452670888133,
+          "foreignDeclareRate": 0.016598639455782313,
+          "foreignDeclareRateChosen": 0.01691833089787303,
+          "declareLatency": 21.786370315944158,
+          "raceLossesPerGame": 0.04627906976744186,
+          "clinchDenialsPerGame": 0.5116279069767442,
+          "leakIndex": 0.5690892458811099,
+          "hoardIndex": 3.8573816475155636,
+          "giftsPerGame": 0.035348837209302326,
+          "setsPerGame": 3.833488372093023,
+          "declaresPerGame": 3.8459302325581395,
+          "forcedDeclareRate": 0.06893424036281179,
+          "dropoutStep": 711.2667407850851,
+          "dropoutRate": 0.4532170542635659
+        },
+        "b": {
+          "askHitRate": 0.560929012739792,
+          "turnRetention": 2.2170755343590414,
+          "claimPrecision": 0.9906317411402157,
+          "claimYield": 0.9906317411402157,
+          "concedeRate": 0.009368258859784283,
+          "concedeRateChosen": 0.0017545602012778495,
+          "foreignDeclareRate": 0.01682588597842835,
+          "foreignDeclareRateChosen": 0.017181448008739695,
+          "declareLatency": 22.097306041187085,
+          "raceLossesPerGame": 0.03348837209302326,
+          "clinchDenialsPerGame": 0.5197674418604651,
+          "leakIndex": 0.568671604113666,
+          "hoardIndex": 3.8478463478098344,
+          "giftsPerGame": 0.047790697674418604,
+          "setsPerGame": 3.785697674418605,
+          "declaresPerGame": 3.7732558139534884,
+          "forcedDeclareRate": 0.06912172573189522,
+          "dropoutStep": 710.2074810052601,
+          "dropoutRate": 0.4642248062015504
+        }
+      },
+      "punterBenchmark": 0.5197674418604652,
+      "punterBenchmarkSe": 0.004169181208555333,
+      "delta": -0.011162790697674452,
+      "deltaSe": 0.005786658639230823
+    },
+    {
+      "id": "adaptive-vs-punter",
+      "pairs": 4300,
+      "games": 8600,
+      "distinctSeeds": 4300,
+      "score": 0.4891860465116279,
+      "se": 0.0030657793586692313,
+      "ci95": [
+        0.4831771189686362,
+        0.4951949740546196
+      ],
+      "seUnpaired": 0.005390690920450807,
+      "aWins": 4207,
+      "bWins": 4393,
+      "ties": 0,
+      "avgMoves": 685.3648837209303,
+      "maxMoves": 1125,
+      "health": {
+        "illegalActions": 0,
+        "cappedGames": 0,
+        "invariantViolations": 0,
+        "ties": 0,
+        "voids": 0,
+        "nonClinch": 0,
+        "distinctSeeds": 4300,
+        "expectedSeeds": 4300
+      },
+      "opponent": "punter",
+      "metrics": {
+        "a": {
+          "askHitRate": 0.5592637431839372,
+          "turnRetention": 2.2073673378124274,
+          "claimPrecision": 0.9885610335152468,
+          "claimYield": 0.9885610335152468,
+          "concedeRate": 0.011438966484753184,
+          "concedeRateChosen": 0.0038822709626041077,
+          "foreignDeclareRate": 0.015601393642277927,
+          "foreignDeclareRateChosen": 0.015894083684507416,
+          "declareLatency": 22.29318195995259,
+          "raceLossesPerGame": 0.040697674418604654,
+          "clinchDenialsPerGame": 0.5338372093023256,
+          "leakIndex": 0.5692712121729876,
+          "hoardIndex": 3.848861829390387,
+          "giftsPerGame": 0.04313953488372093,
+          "setsPerGame": 3.771279069767442,
+          "declaresPerGame": 3.771279069767442,
+          "forcedDeclareRate": 0.07079209447168008,
+          "dropoutStep": 714.8590694538099,
+          "dropoutRate": 0.4598449612403101
+        },
+        "b": {
+          "askHitRate": 0.561255610611985,
+          "turnRetention": 2.2168307977416712,
+          "claimPrecision": 0.9887871369420014,
+          "claimYield": 0.9887871369420014,
+          "concedeRate": 0.01121286305799861,
+          "concedeRateChosen": 0.003958083249521461,
+          "foreignDeclareRate": 0.015081451929760934,
+          "foreignDeclareRateChosen": 0.015345683418226648,
+          "declareLatency": 21.66255043403839,
+          "raceLossesPerGame": 0.041627906976744185,
+          "clinchDenialsPerGame": 0.5009302325581395,
+          "leakIndex": 0.5690782678853066,
+          "hoardIndex": 3.845172980859907,
+          "giftsPerGame": 0.04313953488372093,
+          "setsPerGame": 3.847325581395349,
+          "declaresPerGame": 3.847325581395349,
+          "forcedDeclareRate": 0.0684256656692961,
+          "dropoutStep": 714.5135385132862,
+          "dropoutRate": 0.46093023255813953
+        }
+      },
+      "punterBenchmark": 0.5,
+      "punterBenchmarkSe": 0,
+      "delta": -0.010813953488372108,
+      "deltaSe": 0.0030657793586692313
+    },
+    {
+      "id": "adaptive-vs-banker",
+      "pairs": 4300,
+      "games": 8600,
+      "distinctSeeds": 4300,
+      "score": 0.5393023255813953,
+      "se": 0.004754407057714772,
+      "ci95": [
+        0.5299836877482744,
+        0.5486209634145163
+      ],
+      "seUnpaired": 0.0053752687409063665,
+      "aWins": 4638,
+      "bWins": 3962,
+      "ties": 0,
+      "avgMoves": 695.5467441860466,
+      "maxMoves": 1175,
+      "health": {
+        "illegalActions": 0,
+        "cappedGames": 0,
+        "invariantViolations": 0,
+        "ties": 0,
+        "voids": 0,
+        "nonClinch": 0,
+        "distinctSeeds": 4300,
+        "expectedSeeds": 4300
+      },
+      "opponent": "banker",
+      "metrics": {
+        "a": {
+          "askHitRate": 0.5666378191259195,
+          "turnRetention": 2.2418476233116933,
+          "claimPrecision": 0.9890990513228448,
+          "claimYield": 0.9890990513228448,
+          "concedeRate": 0.010900948677155147,
+          "concedeRateChosen": 0.0038670005388443374,
+          "foreignDeclareRate": 0.016027340757763242,
+          "foreignDeclareRateChosen": 0.01632381375003962,
+          "declareLatency": 21.882133921124748,
+          "raceLossesPerGame": 0.04174418604651163,
+          "clinchDenialsPerGame": 0.5133720930232558,
+          "leakIndex": 0.5665355847095354,
+          "hoardIndex": 3.848128399137899,
+          "giftsPerGame": 0.03558139534883721,
+          "setsPerGame": 3.9393023255813953,
+          "declaresPerGame": 3.946744186046512,
+          "forcedDeclareRate": 0.0705026221200872,
+          "dropoutStep": 728.3991717376606,
+          "dropoutRate": 0.4586046511627907
+        },
+        "b": {
+          "askHitRate": 0.5591539156524638,
+          "turnRetention": 2.209828959449937,
+          "claimPrecision": 0.9902940336854125,
+          "claimYield": 0.9902940336854125,
+          "concedeRate": 0.009705966314587497,
+          "concedeRateChosen": 0.0015052512743320447,
+          "foreignDeclareRate": 0.016874425095949504,
+          "foreignDeclareRateChosen": 0.017139338373644418,
+          "declareLatency": 22.08740911565933,
+          "raceLossesPerGame": 0.033255813953488374,
+          "clinchDenialsPerGame": 0.5359302325581395,
+          "leakIndex": 0.5487179734946395,
+          "hoardIndex": 3.8518717842894445,
+          "giftsPerGame": 0.04302325581395349,
+          "setsPerGame": 3.673372093023256,
+          "declaresPerGame": 3.6659302325581393,
+          "forcedDeclareRate": 0.07282646620357154,
+          "dropoutStep": 727.3819753293615,
+          "dropoutRate": 0.46189922480620155
+        }
+      },
+      "punterBenchmark": 0.5468604651162791,
+      "punterBenchmarkSe": 0.004771158513145904,
+      "delta": -0.007558139534883712,
+      "deltaSe": 0.006735602425025743
+    },
+    {
+      "id": "adaptive-vs-turtle",
+      "pairs": 4300,
+      "games": 8600,
+      "distinctSeeds": 4300,
+      "score": 0.6484883720930232,
+      "se": 0.00454547968052161,
+      "ci95": [
+        0.6395792319192009,
+        0.6573975122668456
+      ],
+      "seUnpaired": 0.005148692681094593,
+      "aWins": 5577,
+      "bWins": 3023,
+      "ties": 0,
+      "avgMoves": 766.9275581395349,
+      "maxMoves": 1388,
+      "health": {
+        "illegalActions": 0,
+        "cappedGames": 0,
+        "invariantViolations": 0,
+        "ties": 0,
+        "voids": 0,
+        "nonClinch": 0,
+        "distinctSeeds": 4300,
+        "expectedSeeds": 4300
+      },
+      "opponent": "turtle",
+      "metrics": {
+        "a": {
+          "askHitRate": 0.5413927070706205,
+          "turnRetention": 2.1198203965259714,
+          "claimPrecision": 0.9909736172492299,
+          "claimYield": 0.9909736172492299,
+          "concedeRate": 0.009026382750770055,
+          "concedeRateChosen": 0.009271978021978022,
+          "foreignDeclareRate": 0.011436989420115173,
+          "foreignDeclareRateChosen": 0.012190934065934066,
+          "declareLatency": 24.67300935185686,
+          "raceLossesPerGame": 0.031395348837209305,
+          "clinchDenialsPerGame": 0.07837209302325582,
+          "leakIndex": 0.5710681532945828,
+          "hoardIndex": 3.6147244180344886,
+          "giftsPerGame": 0.14906976744186046,
+          "setsPerGame": 4.4511627906976745,
+          "declaresPerGame": 4.341279069767442,
+          "forcedDeclareRate": 0.06404178384893532,
+          "dropoutStep": 765.0048048048048,
+          "dropoutRate": 0.7098837209302326
+        },
+        "b": {
+          "askHitRate": 0.5317382621294592,
+          "turnRetention": 2.0842844122808213,
+          "claimPrecision": 0.9467497403946002,
+          "claimYield": 0.9467497403946002,
+          "concedeRate": 0.053250259605399794,
+          "concedeRateChosen": 0.00674547983310153,
+          "foreignDeclareRate": 0.06043613707165109,
+          "foreignDeclareRateChosen": 0.009109874826147427,
+          "declareLatency": 59.458825077874785,
+          "raceLossesPerGame": 0.14709302325581394,
+          "clinchDenialsPerGame": 0.7969767441860465,
+          "leakIndex": 0.5964678701491953,
+          "hoardIndex": 4.267444248443535,
+          "giftsPerGame": 0.03918604651162791,
+          "setsPerGame": 2.6895348837209303,
+          "declaresPerGame": 2.7994186046511627,
+          "forcedDeclareRate": 0.4026998961578401,
+          "dropoutStep": 817.2212967708867,
+          "dropoutRate": 0.30248062015503874
+        }
+      },
+      "punterBenchmark": 0.6581395348837209,
+      "punterBenchmarkSe": 0.004631104066394177,
+      "delta": -0.009651162790697665,
+      "deltaSe": 0.006489107057200361
+    },
+    {
+      "id": "adaptive-vs-hoarder",
+      "pairs": 4300,
+      "games": 8600,
+      "distinctSeeds": 4300,
+      "score": 0.5709302325581396,
+      "se": 0.0038595567202149134,
+      "ci95": [
+        0.5633655013865183,
+        0.5784949637297608
+      ],
+      "seUnpaired": 0.005337421533412448,
+      "aWins": 4910,
+      "bWins": 3690,
+      "ties": 0,
+      "avgMoves": 720.3827906976744,
+      "maxMoves": 1186,
+      "health": {
+        "illegalActions": 0,
+        "cappedGames": 0,
+        "invariantViolations": 0,
+        "ties": 0,
+        "voids": 0,
+        "nonClinch": 0,
+        "distinctSeeds": 4300,
+        "expectedSeeds": 4300
+      },
+      "opponent": "hoarder",
+      "metrics": {
+        "a": {
+          "askHitRate": 0.5563186686469682,
+          "turnRetention": 2.191413337376494,
+          "claimPrecision": 0.9929323607050609,
+          "claimYield": 0.9929323607050609,
+          "concedeRate": 0.007067639294939116,
+          "concedeRateChosen": 0.00490594431903687,
+          "foreignDeclareRate": 0.012517385257301807,
+          "foreignDeclareRateChosen": 0.012671181339352897,
+          "declareLatency": 25.09078954891087,
+          "raceLossesPerGame": 0.02569767441860465,
+          "clinchDenialsPerGame": 0.3816279069767442,
+          "leakIndex": 0.5702461231907455,
+          "hoardIndex": 3.7272105933380217,
+          "giftsPerGame": 0.07744186046511628,
+          "setsPerGame": 4.145116279069767,
+          "declaresPerGame": 4.096627906976744,
+          "forcedDeclareRate": 0.056938491669268544,
+          "dropoutStep": 734.1717178272438,
+          "dropoutRate": 0.5972480620155038
+        },
+        "b": {
+          "askHitRate": 0.5516570469533442,
+          "turnRetention": 2.170619963771955,
+          "claimPrecision": 0.9776066709256582,
+          "claimYield": 0.9776066709256582,
+          "concedeRate": 0.022393329074341817,
+          "concedeRateChosen": 0.002750099641291351,
+          "foreignDeclareRate": 0.24642749066944622,
+          "foreignDeclareRateChosen": 0.2821841371064169,
+          "declareLatency": 27.535580395528804,
+          "raceLossesPerGame": 0.07604651162790697,
+          "clinchDenialsPerGame": 0.5662790697674419,
+          "leakIndex": 0.5774477966866035,
+          "hoardIndex": 3.848856035705608,
+          "giftsPerGame": 0.028953488372093023,
+          "setsPerGame": 3.409767441860465,
+          "declaresPerGame": 3.4582558139534885,
+          "forcedDeclareRate": 0.15638344373087656,
+          "dropoutStep": 751.398395450391,
+          "dropoutRate": 0.38166666666666665
+        }
+      },
+      "punterBenchmark": 0.5795348837209302,
+      "punterBenchmarkSe": 0.0041981405050611304,
+      "delta": -0.008604651162790633,
+      "deltaSe": 0.005702680227471204
+    },
+    {
+      "id": "adaptive-vs-scout",
+      "pairs": 4300,
+      "games": 8600,
+      "distinctSeeds": 4300,
+      "score": 0.6511627906976745,
+      "se": 0.004635651985386425,
+      "ci95": [
+        0.6420769128063171,
+        0.6602486685890319
+      ],
+      "seUnpaired": 0.005139634257062454,
+      "aWins": 5600,
+      "bWins": 3000,
+      "ties": 0,
+      "avgMoves": 743.2032558139534,
+      "maxMoves": 1271,
+      "health": {
+        "illegalActions": 0,
+        "cappedGames": 0,
+        "invariantViolations": 0,
+        "ties": 0,
+        "voids": 0,
+        "nonClinch": 0,
+        "distinctSeeds": 4300,
+        "expectedSeeds": 4300
+      },
+      "opponent": "scout",
+      "metrics": {
+        "a": {
+          "askHitRate": 0.5559136510329143,
+          "turnRetention": 2.189203319104034,
+          "claimPrecision": 0.9816119797401454,
+          "claimYield": 0.9816119797401454,
+          "concedeRate": 0.018388020259854657,
+          "concedeRateChosen": 0.01447865062514744,
+          "foreignDeclareRate": 0.010074873375908391,
+          "foreignDeclareRateChosen": 0.010350318471337579,
+          "declareLatency": 23.269097027481774,
+          "raceLossesPerGame": 0.07337209302325581,
+          "clinchDenialsPerGame": 0.4298837209302326,
+          "leakIndex": 0.5707506348222169,
+          "hoardIndex": 3.800422116503331,
+          "giftsPerGame": 0.09430232558139535,
+          "setsPerGame": 4.240813953488372,
+          "declaresPerGame": 4.224186046511628,
+          "forcedDeclareRate": 0.06650517507157014,
+          "dropoutStep": 770.4554376446182,
+          "dropoutRate": 0.48577519379844963
+        },
+        "b": {
+          "askHitRate": 0.5347099662823357,
+          "turnRetention": 2.100595756139077,
+          "claimPrecision": 0.9708964329290174,
+          "claimYield": 0.9708964329290174,
+          "concedeRate": 0.02910356707098256,
+          "concedeRateChosen": 0.018992050749892315,
+          "foreignDeclareRate": 0.004557525299648317,
+          "foreignDeclareRateChosen": 0.004620746368015037,
+          "declareLatency": 15.268009610053594,
+          "raceLossesPerGame": 0.06337209302325582,
+          "clinchDenialsPerGame": 0.48174418604651165,
+          "leakIndex": 0.5794333692713735,
+          "hoardIndex": 3.8533457408120473,
+          "giftsPerGame": 0.07767441860465116,
+          "setsPerGame": 3.2236046511627907,
+          "declaresPerGame": 3.240232558139535,
+          "forcedDeclareRate": 0.08357855451087347,
+          "dropoutStep": 772.2408781074579,
+          "dropoutRate": 0.38666666666666666
+        }
+      },
+      "punterBenchmark": 0.6603488372093024,
+      "punterBenchmarkSe": 0.004617794081191561,
+      "delta": -0.00918604651162791,
+      "deltaSe": 0.006543186647643862
+    },
+    {
+      "id": "adaptive-vs-ghost",
+      "pairs": 4300,
+      "games": 8600,
+      "distinctSeeds": 4300,
+      "score": 0.5690697674418604,
+      "se": 0.0049063142301726415,
+      "ci95": [
+        0.559453391550722,
+        0.5786861433329988
+      ],
+      "seUnpaired": 0.005340258307317498,
+      "aWins": 4894,
+      "bWins": 3706,
+      "ties": 0,
+      "avgMoves": 704.0833720930233,
+      "maxMoves": 1109,
+      "health": {
+        "illegalActions": 0,
+        "cappedGames": 0,
+        "invariantViolations": 0,
+        "ties": 0,
+        "voids": 0,
+        "nonClinch": 0,
+        "distinctSeeds": 4300,
+        "expectedSeeds": 4300
+      },
+      "opponent": "ghost",
+      "metrics": {
+        "a": {
+          "askHitRate": 0.6171787076859855,
+          "turnRetention": 2.528073572120039,
+          "claimPrecision": 0.9886021936481572,
+          "claimYield": 0.9886021936481572,
+          "concedeRate": 0.011397806351842836,
+          "concedeRateChosen": 0.004026928160831207,
+          "foreignDeclareRate": 0.010137747358171769,
+          "foreignDeclareRateChosen": 0.009867510989517691,
+          "declareLatency": 22.448046116856407,
+          "raceLossesPerGame": 0.045581395348837206,
+          "clinchDenialsPerGame": 0.4274418604651163,
+          "leakIndex": 0.5296857707233017,
+          "hoardIndex": 3.84926315911747,
+          "giftsPerGame": 0.035,
+          "setsPerGame": 4.0490697674418605,
+          "declaresPerGame": 4.060348837209302,
+          "forcedDeclareRate": 0.06838683811105702,
+          "dropoutStep": 728.7811807209131,
+          "dropoutRate": 0.4720542635658915
+        },
+        "b": {
+          "askHitRate": 0.6055437458716147,
+          "turnRetention": 2.453502351402001,
+          "claimPrecision": 0.9900122772671467,
+          "claimYield": 0.9900122772671467,
+          "concedeRate": 0.009987722732853303,
+          "concedeRateChosen": 0.0009941089837997054,
+          "foreignDeclareRate": 0.010717722401035272,
+          "foreignDeclareRateChosen": 0.01053019145802651,
+          "declareLatency": 22.4696339991956,
+          "raceLossesPerGame": 0.03313953488372093,
+          "clinchDenialsPerGame": 0.5562790697674419,
+          "leakIndex": 0.7564618987569808,
+          "hoardIndex": 3.8418811376938033,
+          "giftsPerGame": 0.04627906976744186,
+          "setsPerGame": 3.5155813953488373,
+          "declaresPerGame": 3.504302325581395,
+          "forcedDeclareRate": 0.09878222782626007,
+          "dropoutStep": 723.6025766470972,
+          "dropoutRate": 0.4753488372093023
+        }
+      },
+      "punterBenchmark": 0.5867441860465116,
+      "punterBenchmarkSe": 0.004885088591409262,
+      "delta": -0.017674418604651132,
+      "deltaSe": 0.00692358360035549
+    },
+    {
+      "id": "adaptive-vs-archivist",
+      "pairs": 4300,
+      "games": 8600,
+      "distinctSeeds": 4300,
+      "score": 0.5777906976744186,
+      "se": 0.004647218543780679,
+      "ci95": [
+        0.5686821493286085,
+        0.5868992460202287
+      ],
+      "seUnpaired": 0.005326294763119553,
+      "aWins": 4969,
+      "bWins": 3631,
+      "ties": 0,
+      "avgMoves": 714.9648837209303,
+      "maxMoves": 1289,
+      "health": {
+        "illegalActions": 0,
+        "cappedGames": 0,
+        "invariantViolations": 0,
+        "ties": 0,
+        "voids": 0,
+        "nonClinch": 0,
+        "distinctSeeds": 4300,
+        "expectedSeeds": 4300
+      },
+      "opponent": "archivist",
+      "metrics": {
+        "a": {
+          "askHitRate": 0.5681023801157694,
+          "turnRetention": 2.2493162366497157,
+          "claimPrecision": 0.9872687199118381,
+          "claimYield": 0.9872687199118381,
+          "concedeRate": 0.012731280088161939,
+          "concedeRateChosen": 0.007720084671896402,
+          "foreignDeclareRate": 0.010411229047039035,
+          "foreignDeclareRateChosen": 0.010552857676503548,
+          "declareLatency": 21.77610668859971,
+          "raceLossesPerGame": 0.049069767441860465,
+          "clinchDenialsPerGame": 0.4408139534883721,
+          "leakIndex": 0.557977178998761,
+          "hoardIndex": 3.7960965736901215,
+          "giftsPerGame": 0.09116279069767441,
+          "setsPerGame": 4.049651162790697,
+          "declaresPerGame": 4.009534883720931,
+          "forcedDeclareRate": 0.06838350443709762,
+          "dropoutStep": 733.8612761361006,
+          "dropoutRate": 0.5023643410852713
+        },
+        "b": {
+          "askHitRate": 0.5602896024543855,
+          "turnRetention": 2.215481258652455,
+          "claimPrecision": 0.9742908673553041,
+          "claimYield": 0.9742908673553041,
+          "concedeRate": 0.02570913264469585,
+          "concedeRateChosen": 0.010029837868929073,
+          "foreignDeclareRate": 0.006263321856041974,
+          "foreignDeclareRateChosen": 0.006039472265161592,
+          "declareLatency": 18.011174312544174,
+          "raceLossesPerGame": 0.0755813953488372,
+          "clinchDenialsPerGame": 0.522093023255814,
+          "leakIndex": 0.5660027203085836,
+          "hoardIndex": 3.8777035882819377,
+          "giftsPerGame": 0.05104651162790698,
+          "setsPerGame": 3.505813953488372,
+          "declaresPerGame": 3.5459302325581397,
+          "forcedDeclareRate": 0.08781767502869323,
+          "dropoutStep": 745.646534746319,
+          "dropoutRate": 0.4132945736434109
+        }
+      },
+      "punterBenchmark": 0.5925581395348837,
+      "punterBenchmarkSe": 0.004687395724073529,
+      "delta": -0.01476744186046508,
+      "deltaSe": 0.006600630187165603
+    }
+  ],
+  "mirror": {
+    "pairs": 400,
+    "games": 800,
+    "score": 0.5,
+    "se": 0
+  },
+  "mixed": {
+    "compositions": 24,
+    "pairsPer": 400,
+    "adaptiveMean": 0.5625520833333333,
+    "punterMean": 0.5761458333333334,
+    "pairedDelta": -0.01359375,
+    "deltaSe": 0.004274495489354211,
+    "ci95": [
+      -0.021971761159134254,
+      -0.005215738840865746
+    ],
+    "rows": [
+      {
+        "composition": [
+          "balanced",
+          "balanced",
+          "balanced"
+        ],
+        "pairs": 400,
+        "adaptive": 0.51375,
+        "punter": 0.52875,
+        "delta": -0.015,
+        "deltaSe": 0.010139997478904072
+      },
+      {
+        "composition": [
+          "balanced",
+          "balanced",
+          "ghost"
+        ],
+        "pairs": 400,
+        "adaptive": 0.57625,
+        "punter": 0.5725,
+        "delta": 0.00375,
+        "deltaSe": 0.011122572670341047
+      },
+      {
+        "composition": [
+          "balanced",
+          "blitz",
+          "scout"
+        ],
+        "pairs": 400,
+        "adaptive": 0.56125,
+        "punter": 0.58375,
+        "delta": -0.0225,
+        "deltaSe": 0.010259020115699981
+      },
+      {
+        "composition": [
+          "balanced",
+          "punter",
+          "scout"
+        ],
+        "pairs": 400,
+        "adaptive": 0.54,
+        "punter": 0.565,
+        "delta": -0.025,
+        "deltaSe": 0.01024450460914125
+      },
+      {
+        "composition": [
+          "balanced",
+          "banker",
+          "ghost"
+        ],
+        "pairs": 400,
+        "adaptive": 0.56125,
+        "punter": 0.57375,
+        "delta": -0.0125,
+        "deltaSe": 0.010601431548484041
+      },
+      {
+        "composition": [
+          "balanced",
+          "hoarder",
+          "hoarder"
+        ],
+        "pairs": 400,
+        "adaptive": 0.55125,
+        "punter": 0.5625,
+        "delta": -0.01125,
+        "deltaSe": 0.009918014482657094
+      },
+      {
+        "composition": [
+          "balanced",
+          "ghost",
+          "ghost"
+        ],
+        "pairs": 400,
+        "adaptive": 0.54375,
+        "punter": 0.56625,
+        "delta": -0.0225,
+        "deltaSe": 0.01221094356948487
+      },
+      {
+        "composition": [
+          "blitz",
+          "blitz",
+          "hoarder"
+        ],
+        "pairs": 400,
+        "adaptive": 0.53125,
+        "punter": 0.545,
+        "delta": -0.01375,
+        "deltaSe": 0.010221351859445341
+      },
+      {
+        "composition": [
+          "blitz",
+          "punter",
+          "hoarder"
+        ],
+        "pairs": 400,
+        "adaptive": 0.5225,
+        "punter": 0.54,
+        "delta": -0.0175,
+        "deltaSe": 0.0101299513714019
+      },
+      {
+        "composition": [
+          "blitz",
+          "banker",
+          "scout"
+        ],
+        "pairs": 400,
+        "adaptive": 0.5375,
+        "punter": 0.56875,
+        "delta": -0.03125,
+        "deltaSe": 0.0104291904664006
+      },
+      {
+        "composition": [
+          "blitz",
+          "turtle",
+          "archivist"
+        ],
+        "pairs": 400,
+        "adaptive": 0.58375,
+        "punter": 0.60375,
+        "delta": -0.02,
+        "deltaSe": 0.010118347314702791
+      },
+      {
+        "composition": [
+          "blitz",
+          "scout",
+          "archivist"
+        ],
+        "pairs": 400,
+        "adaptive": 0.5675,
+        "punter": 0.57125,
+        "delta": -0.00375,
+        "deltaSe": 0.010242784305344647
+      },
+      {
+        "composition": [
+          "punter",
+          "punter",
+          "hoarder"
+        ],
+        "pairs": 400,
+        "adaptive": 0.5325,
+        "punter": 0.545,
+        "delta": -0.0125,
+        "deltaSe": 0.009834947405868029
+      },
+      {
+        "composition": [
+          "punter",
+          "banker",
+          "scout"
+        ],
+        "pairs": 400,
+        "adaptive": 0.5425,
+        "punter": 0.56125,
+        "delta": -0.01875,
+        "deltaSe": 0.011084482763997787
+      },
+      {
+        "composition": [
+          "punter",
+          "turtle",
+          "archivist"
+        ],
+        "pairs": 400,
+        "adaptive": 0.5875,
+        "punter": 0.6075,
+        "delta": -0.02,
+        "deltaSe": 0.009962335082738017
+      },
+      {
+        "composition": [
+          "punter",
+          "scout",
+          "archivist"
+        ],
+        "pairs": 400,
+        "adaptive": 0.55125,
+        "punter": 0.56125,
+        "delta": -0.01,
+        "deltaSe": 0.00999999999999998
+      },
+      {
+        "composition": [
+          "banker",
+          "banker",
+          "scout"
+        ],
+        "pairs": 400,
+        "adaptive": 0.5825,
+        "punter": 0.5725,
+        "delta": 0.01,
+        "deltaSe": 0.011042183867397025
+      },
+      {
+        "composition": [
+          "banker",
+          "turtle",
+          "archivist"
+        ],
+        "pairs": 400,
+        "adaptive": 0.59875,
+        "punter": 0.61125,
+        "delta": -0.0125,
+        "deltaSe": 0.010601431548484041
+      },
+      {
+        "composition": [
+          "banker",
+          "scout",
+          "archivist"
+        ],
+        "pairs": 400,
+        "adaptive": 0.58375,
+        "punter": 0.58875,
+        "delta": -0.005,
+        "deltaSe": 0.011191542635687765
+      },
+      {
+        "composition": [
+          "turtle",
+          "turtle",
+          "ghost"
+        ],
+        "pairs": 400,
+        "adaptive": 0.6175,
+        "punter": 0.64,
+        "delta": -0.0225,
+        "deltaSe": 0.010707286769996317
+      },
+      {
+        "composition": [
+          "turtle",
+          "scout",
+          "ghost"
+        ],
+        "pairs": 400,
+        "adaptive": 0.60375,
+        "punter": 0.61625,
+        "delta": -0.0125,
+        "deltaSe": 0.010601431548484041
+      },
+      {
+        "composition": [
+          "hoarder",
+          "hoarder",
+          "ghost"
+        ],
+        "pairs": 400,
+        "adaptive": 0.58125,
+        "punter": 0.60375,
+        "delta": -0.0225,
+        "deltaSe": 0.010259020115699971
+      },
+      {
+        "composition": [
+          "hoarder",
+          "archivist",
+          "archivist"
+        ],
+        "pairs": 400,
+        "adaptive": 0.575,
+        "punter": 0.57,
+        "delta": 0.005,
+        "deltaSe": 0.009691352112291251
+      },
+      {
+        "composition": [
+          "ghost",
+          "ghost",
+          "ghost"
+        ],
+        "pairs": 400,
+        "adaptive": 0.555,
+        "punter": 0.56875,
+        "delta": -0.01375,
+        "deltaSe": 0.012559226855105151
+      }
+    ]
+  },
+  "oracle": [
+    {
+      "opponent": "balanced",
+      "pairs": 400,
+      "classifier": 0.52375,
+      "oracle": 0.52375,
+      "delta": 0,
+      "se": 0,
+      "ci95": [
+        0,
+        0
+      ]
+    },
+    {
+      "opponent": "blitz",
+      "pairs": 400,
+      "classifier": 0.51375,
+      "oracle": 0.51375,
+      "delta": 0,
+      "se": 0,
+      "ci95": [
+        0,
+        0
+      ]
+    },
+    {
+      "opponent": "punter",
+      "pairs": 400,
+      "classifier": 0.4975,
+      "oracle": 0.4975,
+      "delta": 0,
+      "se": 0,
+      "ci95": [
+        0,
+        0
+      ]
+    },
+    {
+      "opponent": "banker",
+      "pairs": 400,
+      "classifier": 0.545,
+      "oracle": 0.545,
+      "delta": 0,
+      "se": 0,
+      "ci95": [
+        0,
+        0
+      ]
+    },
+    {
+      "opponent": "turtle",
+      "pairs": 400,
+      "classifier": 0.65875,
+      "oracle": 0.65875,
+      "delta": 0,
+      "se": 0,
+      "ci95": [
+        0,
+        0
+      ]
+    },
+    {
+      "opponent": "hoarder",
+      "pairs": 400,
+      "classifier": 0.5775,
+      "oracle": 0.5775,
+      "delta": 0,
+      "se": 0,
+      "ci95": [
+        0,
+        0
+      ]
+    },
+    {
+      "opponent": "scout",
+      "pairs": 400,
+      "classifier": 0.66625,
+      "oracle": 0.66625,
+      "delta": 0,
+      "se": 0,
+      "ci95": [
+        0,
+        0
+      ]
+    },
+    {
+      "opponent": "ghost",
+      "pairs": 400,
+      "classifier": 0.5625,
+      "oracle": 0.5625,
+      "delta": 0,
+      "se": 0,
+      "ci95": [
+        0,
+        0
+      ]
+    },
+    {
+      "opponent": "archivist",
+      "pairs": 400,
+      "classifier": 0.5975,
+      "oracle": 0.5975,
+      "delta": 0,
+      "se": 0,
+      "ci95": [
+        0,
+        0
+      ]
+    }
+  ],
+  "classifier": {
+    "checkpoints": [
+      40,
+      80,
+      150,
+      250,
+      0
+    ],
+    "accuracy": [
+      {
+        "events": 40,
+        "seats": 10800,
+        "top1": 0.16398148148148148,
+        "byStyle": {
+          "balanced": {
+            "seats": 1200,
+            "top1": 0.015
+          },
+          "blitz": {
+            "seats": 1200,
+            "top1": 0.11833333333333333
+          },
+          "punter": {
+            "seats": 1200,
+            "top1": 0.10083333333333333
+          },
+          "banker": {
+            "seats": 1200,
+            "top1": 0.028333333333333332
+          },
+          "turtle": {
+            "seats": 1200,
+            "top1": 0.26916666666666667
+          },
+          "hoarder": {
+            "seats": 1200,
+            "top1": 0.04083333333333333
+          },
+          "scout": {
+            "seats": 1200,
+            "top1": 0.3441666666666667
+          },
+          "ghost": {
+            "seats": 1200,
+            "top1": 0.5458333333333333
+          },
+          "archivist": {
+            "seats": 1200,
+            "top1": 0.013333333333333334
+          }
+        }
+      },
+      {
+        "events": 80,
+        "seats": 10464,
+        "top1": 0.20212155963302753,
+        "byStyle": {
+          "balanced": {
+            "seats": 1152,
+            "top1": 0.0026041666666666665
+          },
+          "blitz": {
+            "seats": 1149,
+            "top1": 0.2689295039164491
+          },
+          "punter": {
+            "seats": 1137,
+            "top1": 0.10466138962181179
+          },
+          "banker": {
+            "seats": 1155,
+            "top1": 0.01645021645021645
+          },
+          "turtle": {
+            "seats": 1185,
+            "top1": 0.3594936708860759
+          },
+          "hoarder": {
+            "seats": 1176,
+            "top1": 0.06887755102040816
+          },
+          "scout": {
+            "seats": 1173,
+            "top1": 0.38448422847399827
+          },
+          "ghost": {
+            "seats": 1176,
+            "top1": 0.46683673469387754
+          },
+          "archivist": {
+            "seats": 1161,
+            "top1": 0.13608957795004306
+          }
+        }
+      },
+      {
+        "events": 150,
+        "seats": 672,
+        "top1": 0.375,
+        "byStyle": {
+          "balanced": {
+            "seats": 24,
+            "top1": 0
+          },
+          "blitz": {
+            "seats": 18,
+            "top1": 0
+          },
+          "punter": {
+            "seats": 21,
+            "top1": 0.14285714285714285
+          },
+          "banker": {
+            "seats": 33,
+            "top1": 0
+          },
+          "turtle": {
+            "seats": 186,
+            "top1": 0.46236559139784944
+          },
+          "hoarder": {
+            "seats": 93,
+            "top1": 0.23655913978494625
+          },
+          "scout": {
+            "seats": 180,
+            "top1": 0.6888888888888889
+          },
+          "ghost": {
+            "seats": 39,
+            "top1": 0.3333333333333333
+          },
+          "archivist": {
+            "seats": 78,
+            "top1": 0.05128205128205128
+          }
+        }
+      },
+      {
+        "events": 0,
+        "seats": 10800,
+        "top1": 0.22425925925925927,
+        "byStyle": {
+          "balanced": {
+            "seats": 1200,
+            "top1": 0.05583333333333333
+          },
+          "blitz": {
+            "seats": 1200,
+            "top1": 0.0925
+          },
+          "punter": {
+            "seats": 1200,
+            "top1": 0.12916666666666668
+          },
+          "banker": {
+            "seats": 1200,
+            "top1": 0.12583333333333332
+          },
+          "turtle": {
+            "seats": 1200,
+            "top1": 0.27166666666666667
+          },
+          "hoarder": {
+            "seats": 1200,
+            "top1": 0.30916666666666665
+          },
+          "scout": {
+            "seats": 1200,
+            "top1": 0.4125
+          },
+          "ghost": {
+            "seats": 1200,
+            "top1": 0.5041666666666667
+          },
+          "archivist": {
+            "seats": 1200,
+            "top1": 0.1175
+          }
+        }
+      }
+    ],
+    "deadCheckpoints": [
+      250
+    ],
+    "confusion": {
+      "events": 0,
+      "styles": [
+        "balanced",
+        "blitz",
+        "punter",
+        "banker",
+        "turtle",
+        "hoarder",
+        "scout",
+        "ghost",
+        "archivist"
+      ],
+      "matrix": [
+        [
+          67,
+          99,
+          182,
+          173,
+          26,
+          53,
+          183,
+          324,
+          93
+        ],
+        [
+          64,
+          111,
+          199,
+          170,
+          16,
+          58,
+          171,
+          313,
+          98
+        ],
+        [
+          58,
+          109,
+          155,
+          150,
+          38,
+          62,
+          197,
+          330,
+          101
+        ],
+        [
+          66,
+          102,
+          174,
+          151,
+          33,
+          41,
+          193,
+          388,
+          52
+        ],
+        [
+          26,
+          33,
+          53,
+          92,
+          326,
+          94,
+          277,
+          231,
+          68
+        ],
+        [
+          14,
+          44,
+          76,
+          108,
+          112,
+          371,
+          208,
+          220,
+          47
+        ],
+        [
+          30,
+          49,
+          49,
+          59,
+          182,
+          14,
+          495,
+          203,
+          119
+        ],
+        [
+          38,
+          70,
+          143,
+          137,
+          9,
+          27,
+          124,
+          605,
+          47
+        ],
+        [
+          33,
+          58,
+          72,
+          67,
+          148,
+          23,
+          397,
+          261,
+          141
+        ]
+      ]
+    }
+  },
+  "styleUsage": [
+    {
+      "opponent": "balanced",
+      "decisions": {
+        "warmup": 1704852,
+        "warm": 1234910
+      },
+      "warmupShares": {
+        "balanced": 1,
+        "blitz": 0,
+        "punter": 0,
+        "banker": 0,
+        "turtle": 0,
+        "hoarder": 0,
+        "scout": 0,
+        "ghost": 0,
+        "archivist": 0
+      },
+      "warmShares": {
+        "balanced": 0,
+        "blitz": 0,
+        "punter": 1,
+        "banker": 0,
+        "turtle": 0,
+        "hoarder": 0,
+        "scout": 0,
+        "ghost": 0,
+        "archivist": 0
+      }
+    },
+    {
+      "opponent": "blitz",
+      "decisions": {
+        "warmup": 1704734,
+        "warm": 1225974
+      },
+      "warmupShares": {
+        "balanced": 1,
+        "blitz": 0,
+        "punter": 0,
+        "banker": 0,
+        "turtle": 0,
+        "hoarder": 0,
+        "scout": 0,
+        "ghost": 0,
+        "archivist": 0
+      },
+      "warmShares": {
+        "balanced": 0,
+        "blitz": 0,
+        "punter": 1,
+        "banker": 0,
+        "turtle": 0,
+        "hoarder": 0,
+        "scout": 0,
+        "ghost": 0,
+        "archivist": 0
+      }
+    },
+    {
+      "opponent": "punter",
+      "decisions": {
+        "warmup": 1703474,
+        "warm": 1242376
+      },
+      "warmupShares": {
+        "balanced": 1,
+        "blitz": 0,
+        "punter": 0,
+        "banker": 0,
+        "turtle": 0,
+        "hoarder": 0,
+        "scout": 0,
+        "ghost": 0,
+        "archivist": 0
+      },
+      "warmShares": {
+        "balanced": 0,
+        "blitz": 0,
+        "punter": 1,
+        "banker": 0,
+        "turtle": 0,
+        "hoarder": 0,
+        "scout": 0,
+        "ghost": 0,
+        "archivist": 0
+      }
+    },
+    {
+      "opponent": "banker",
+      "decisions": {
+        "warmup": 1706581,
+        "warm": 1288572
+      },
+      "warmupShares": {
+        "balanced": 1,
+        "blitz": 0,
+        "punter": 0,
+        "banker": 0,
+        "turtle": 0,
+        "hoarder": 0,
+        "scout": 0,
+        "ghost": 0,
+        "archivist": 0
+      },
+      "warmShares": {
+        "balanced": 0,
+        "blitz": 0,
+        "punter": 1,
+        "banker": 0,
+        "turtle": 0,
+        "hoarder": 0,
+        "scout": 0,
+        "ghost": 0,
+        "archivist": 0
+      }
+    },
+    {
+      "opponent": "turtle",
+      "decisions": {
+        "warmup": 1723049,
+        "warm": 1580929
+      },
+      "warmupShares": {
+        "balanced": 1,
+        "blitz": 0,
+        "punter": 0,
+        "banker": 0,
+        "turtle": 0,
+        "hoarder": 0,
+        "scout": 0,
+        "ghost": 0,
+        "archivist": 0
+      },
+      "warmShares": {
+        "balanced": 0,
+        "blitz": 0,
+        "punter": 1,
+        "banker": 0,
+        "turtle": 0,
+        "hoarder": 0,
+        "scout": 0,
+        "ghost": 0,
+        "archivist": 0
+      }
+    },
+    {
+      "opponent": "hoarder",
+      "decisions": {
+        "warmup": 1707695,
+        "warm": 1393299
+      },
+      "warmupShares": {
+        "balanced": 1,
+        "blitz": 0,
+        "punter": 0,
+        "banker": 0,
+        "turtle": 0,
+        "hoarder": 0,
+        "scout": 0,
+        "ghost": 0,
+        "archivist": 0
+      },
+      "warmShares": {
+        "balanced": 0,
+        "blitz": 0,
+        "punter": 1,
+        "banker": 0,
+        "turtle": 0,
+        "hoarder": 0,
+        "scout": 0,
+        "ghost": 0,
+        "archivist": 0
+      }
+    },
+    {
+      "opponent": "scout",
+      "decisions": {
+        "warmup": 1714147,
+        "warm": 1494194
+      },
+      "warmupShares": {
+        "balanced": 1,
+        "blitz": 0,
+        "punter": 0,
+        "banker": 0,
+        "turtle": 0,
+        "hoarder": 0,
+        "scout": 0,
+        "ghost": 0,
+        "archivist": 0
+      },
+      "warmShares": {
+        "balanced": 0,
+        "blitz": 0,
+        "punter": 1,
+        "banker": 0,
+        "turtle": 0,
+        "hoarder": 0,
+        "scout": 0,
+        "ghost": 0,
+        "archivist": 0
+      }
+    },
+    {
+      "opponent": "ghost",
+      "decisions": {
+        "warmup": 1719558,
+        "warm": 1315805
+      },
+      "warmupShares": {
+        "balanced": 1,
+        "blitz": 0,
+        "punter": 0,
+        "banker": 0,
+        "turtle": 0,
+        "hoarder": 0,
+        "scout": 0,
+        "ghost": 0,
+        "archivist": 0
+      },
+      "warmShares": {
+        "balanced": 0,
+        "blitz": 0,
+        "punter": 1,
+        "banker": 0,
+        "turtle": 0,
+        "hoarder": 0,
+        "scout": 0,
+        "ghost": 0,
+        "archivist": 0
+      }
+    },
+    {
+      "opponent": "archivist",
+      "decisions": {
+        "warmup": 1709681,
+        "warm": 1369257
+      },
+      "warmupShares": {
+        "balanced": 1,
+        "blitz": 0,
+        "punter": 0,
+        "banker": 0,
+        "turtle": 0,
+        "hoarder": 0,
+        "scout": 0,
+        "ghost": 0,
+        "archivist": 0
+      },
+      "warmShares": {
+        "balanced": 0,
+        "blitz": 0,
+        "punter": 1,
+        "banker": 0,
+        "turtle": 0,
+        "hoarder": 0,
+        "scout": 0,
+        "ghost": 0,
+        "archivist": 0
+      }
+    }
+  ],
+  "verdicts": [
+    {
+      "id": "P1",
+      "prediction": "The counter table's punter row weakly dominates every column, so a warm adaptive team should match punter's matrix-v2 row against every pure style within CI. Any detectable shortfall is the price of the warmup anchor (Balanced until ~60 observed events).",
+      "verdict": "refuted",
+      "detail": "worst cell vs punter: delta -0.0108 ± 0.0031 (z -3.53); 1 of 9 cells reject at the Bonferroni bound |z| > 2.773; 2 between 1.96 and the bound (ghost, archivist). The delta SE is the conservative cross-run combination over shared deals, so the test is weaker than a jointly-recorded pairing would be; smallest rejectable shortfall ~0.0192 at the widest cell."
+    },
+    {
+      "id": "P2",
+      "prediction": "The adaptive-vs-punter mixed-population delta should be ≈ 0: both teams best-respond to every composition with the same style once warm, so adaptation buys nothing a fixed punter team does not already have.",
+      "verdict": "refuted",
+      "detail": "pooled per-deal delta -0.0136 ± 0.0043 over 24 compositions × 400 pairs (z -3.18; 95% CI [-0.0220, -0.0052]), truly paired within the run. The SE is clustered by seed: all 24 compositions replay one 400-seed list, so per-deal deltas are averaged within seed before the SE is taken over the seed-level means — replays of a deal are not counted as independent."
+    },
+    {
+      "id": "P3",
+      "prediction": "Oracle classification should add ≈ nothing: the best response is punter regardless of the read, so a perfect read and a classifier read select the same play.",
+      "verdict": "confirmed",
+      "detail": "every oracle cell measured a delta of exactly 0.0000: with a dominant counter-table row, the oracle and classifier arms delegate to the same style at every decision, so the paired games are identical move for move. Perfect classification bought nothing, measurably and exactly."
+    },
+    {
+      "id": "P4",
+      "prediction": "Classifier top-1 accuracy should be good for turtle, ghost and hoarder, and heavily confused inside the balanced/blitz/punter/banker quadrangle (the Stage-1B separability read: those four diverge from Balanced on under 1.3% of decisions).",
+      "verdict": "mixed",
+      "detail": "end-of-game top-1 — turtle 0.2717, ghost 0.5042, hoarder 0.3092 (mean 0.3617, condition >= 0.50: fails); quadrangle balanced 0.0558, blitz 0.0925, punter 0.1292, banker 0.1258 (mean 0.1008, condition <= 0.35: holds); quadrangle errors landing inside the quadrangle: 0.4007, 0.3976, 0.3033, 0.3260 (condition every >= 0.50: fails)."
+    }
+  ]
+}

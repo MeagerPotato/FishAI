@@ -22,6 +22,9 @@ lab-out/
 # test artifacts
 coverage/
 
+# local LaTeX compile output (papers/ sources are committed; PDFs build on Overleaf)
+papers/build/
+
 # editor / os
 .DS_Store
 Thumbs.db

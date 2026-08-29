@@ -583,8 +583,11 @@ const SUIT_SYMBOL: Record<string, string> = { C: '♣', D: '♦', H: '♥', S: '
  * four 8s still render suited ("8♥"), but a joker id carries no suit at all —
  * `'XR'[1]` is `'R'`, not a `Suit` — so the jokers are named outright instead of
  * being run through the suit table, which would have printed "XR".
+ *
+ * Exported for the policy layer's `decideExplained` traces, so every prose surface renders a
+ * card the same way and the assistant pane never shows "XR" beside "the red joker".
  */
-function pc(card: Card): string {
+export function pc(card: Card): string {
   if (card === 'XR') return 'the red joker'
   if (card === 'XB') return 'the black joker'
   return `${card[0]}${SUIT_SYMBOL[card[1]] ?? card[1]}`

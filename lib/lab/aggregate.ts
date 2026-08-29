@@ -38,7 +38,8 @@ function rate(num: number, den: number): number {
   return den === 0 ? 0 : num / den
 }
 
-function zeroCounters(): SideCounters {
+/** A zeroed `SideCounters`. Exported for the adaptive lab, which sums into the same shape. */
+export function zeroCounters(): SideCounters {
   return {
     asks: 0,
     hits: 0,
@@ -65,7 +66,8 @@ function zeroCounters(): SideCounters {
   }
 }
 
-function addCounters(acc: SideCounters, c: SideCounters): void {
+/** Sum `c` into `acc`, field by field. Exported for the adaptive lab's gauntlet cells. */
+export function addCounters(acc: SideCounters, c: SideCounters): void {
   acc.asks += c.asks
   acc.hits += c.hits
   acc.turnsGained += c.turnsGained
@@ -90,7 +92,13 @@ function addCounters(acc: SideCounters, c: SideCounters): void {
   for (const d of c.dropoutSteps) acc.dropoutSteps.push(d)
 }
 
-function sideMetrics(c: SideCounters, games: number): SideMetrics {
+/**
+ * The published rates for one side, from summed counters (see the file header: rates are formed
+ * once, here). Exported so the adaptive lab's gauntlet rows are priced by the *same* arithmetic
+ * as the matrix cells they are read against — a second implementation would be a second
+ * definition.
+ */
+export function sideMetrics(c: SideCounters, games: number): SideMetrics {
   const chosen = c.declares - c.declaresForced
   const dropSum = c.dropoutSteps.reduce((s, v) => s + v, 0)
   return {

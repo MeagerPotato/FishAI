@@ -13,6 +13,7 @@
 import { describe, expect, it } from 'vitest'
 import { FIXTURES } from './fixture'
 import { niceDomain, onGrid, orthoPath, placeLabel, scaleTo } from './geometry'
+import { layoutAdaptiveMechanism } from './layout/adaptiveMechanism'
 import { claimPrecisionDumbbell, concedeRateBar, degradationLine } from './layout/charts'
 import { layoutCounterGraph } from './layout/counterGraph'
 import { layoutDeck } from './layout/deck'
@@ -31,6 +32,7 @@ function scenesFor(key: (typeof CASES)[number]): Record<string, Scene> {
     'payoff matrix': layoutPayoffMatrix({ results }).scene,
     'counter-graph': layoutCounterGraph({ results }).scene,
     'analysis pipeline': layoutPipeline().scene,
+    'adaptive mechanism': layoutAdaptiveMechanism().scene,
     'turn machine': layoutTurnMachine().scene,
     'declare window': layoutDeclareMachine().scene,
     'bar chart': concedeRateBar(results).scene,
@@ -178,6 +180,19 @@ describe('charts must not lie', () => {
   it('anchors the bar baseline at zero', () => {
     const model = concedeRateBar(FIXTURES.cyclic)
     expect(model.domain.floor).toBe(0)
+  })
+
+  it('never prints two axis ticks with the same label on a narrow concede range', () => {
+    // The measured v2 run's concede rates span ~0.015-0.025; at the old two-place format two
+    // adjacent ticks rounded to the same "0.01", which both duplicated a React key and put a
+    // dishonest axis on the page. Reproduce that range by shrinking the fixture's rates.
+    const doc = structuredClone(FIXTURES.cyclic)
+    for (const cell of doc.matrix) {
+      cell.metrics.a.concedeRate *= 0.1
+      cell.metrics.b.concedeRate *= 0.1
+    }
+    const labels = concedeRateBar(doc).gridlines.map((g) => g.label)
+    expect(new Set(labels).size).toBe(labels.length)
   })
 
   it('accents the dumbbell series, not a row', () => {

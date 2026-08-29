@@ -9,7 +9,7 @@
 
 import type { ReactNode } from 'react'
 import { SheetRoot, SiteFooter, SiteNav, useDocumentTitle } from '../../components/index.ts'
-import type { ArtifactCase } from '../artifact.ts'
+import { loadArtifact, type ArtifactCase } from '../artifact.ts'
 import { RULES_FILE } from '../rules.ts'
 
 export interface LabShellProps {
@@ -31,9 +31,25 @@ export interface LabShellProps {
   which: ArtifactCase
 }
 
-/** `?case=` is carried across routes so a reader stays in the fixture they opened. */
+/**
+ * `?case=` is carried across routes so a reader stays in the case they opened. `v2` — the
+ * current measured run — is the default everywhere a case is resolved, so it alone travels
+ * without a parameter.
+ */
 export function withCase(href: string, which: ArtifactCase): string {
-  return which === 'cyclic' ? href : `${href}?case=${which}`
+  return which === 'v2' ? href : `${href}?case=${which}`
+}
+
+/**
+ * The nav's replay link, resolved against the case actually loaded: the stored replays are part
+ * of each artifact, and the ids differ between the measured runs and the synthetic fixture. A
+ * hard-coded id would 404 the nav the moment the default case changed — which is exactly how
+ * this helper came to exist.
+ */
+export function replayHref(which: ArtifactCase): string {
+  const loaded = loadArtifact(which)
+  const id = loaded.ok ? loaded.artifact.replays[0]?.id : undefined
+  return id === undefined ? withCase('/lab', which) : withCase(`/lab/replay/${id}`, which)
 }
 
 export function LabShell({
@@ -45,10 +61,16 @@ export function LabShell({
   which,
 }: LabShellProps) {
   useDocumentTitle(docTitle)
+  // Seven links. Verified against the 960px collapse: at 961px the bar needs ~900px
+  // (brand ~92 + two 30px gaps + seven labels with 24px link gaps ~500 + toggle) and has
+  // ~921px inside the gutters, so the desktop row still fits where it last shows.
   const links = [
     { href: withCase('/lab', which), label: 'Report' },
     { href: withCase('/lab/matrix', which), label: 'Matrix' },
-    { href: withCase('/lab/replay/blitz-vs-banker', which), label: 'Replay' },
+    { href: replayHref(which), label: 'Replay' },
+    { href: withCase('/lab/adaptive', which), label: 'Adaptive' },
+    { href: withCase('/lab/live', which), label: 'Live' },
+    { href: '/play', label: 'Play' },
     { href: '/design', label: 'Design' },
   ]
 
@@ -70,7 +92,16 @@ export function LabShell({
             items: [
               { href: withCase('/lab', which), label: 'The report' },
               { href: withCase('/lab/matrix', which), label: 'Full matrix' },
-              { href: withCase('/lab/replay/blitz-vs-banker', which), label: 'Replay a game' },
+              { href: replayHref(which), label: 'Replay a game' },
+              { href: withCase('/lab/adaptive', which), label: 'Adaptive engine' },
+              { href: withCase('/lab/live', which), label: 'Live simulator' },
+            ],
+          },
+          {
+            title: 'Play',
+            items: [
+              { href: '/play', label: 'The lobby' },
+              { href: '/play/table', label: 'Solo table' },
             ],
           },
           {

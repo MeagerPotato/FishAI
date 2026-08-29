@@ -402,9 +402,10 @@ describe('replays run through the shipped reducer', () => {
 })
 
 describe('case selection', () => {
-  it('defaults to the cyclic headline case and ignores anything unknown', () => {
-    expect(caseFromSearch('')).toBe('cyclic')
-    expect(caseFromSearch('?case=nonsense')).toBe('cyclic')
+  it('defaults to v2 — the measured run — and ignores anything unknown', () => {
+    expect(caseFromSearch('')).toBe('v2')
+    expect(caseFromSearch('?case=nonsense')).toBe('v2')
+    expect(caseFromSearch('?case=cyclic')).toBe('cyclic')
     expect(caseFromSearch('?case=dominant')).toBe('dominant')
     expect(caseFromSearch('?case=v2')).toBe('v2')
     expect(caseFromSearch('?case=stale')).toBe('stale')

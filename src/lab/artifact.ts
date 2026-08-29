@@ -8,18 +8,22 @@
  * an SPA rewrite, since a rewrite that does not carve out the artifact path serves index.html
  * for it. This repository ships no host config of its own; there is nothing to keep in sync.
  *
- * Four cases ship. Three exercise the three render paths, which had to exist before real data
- * did; the fourth is the second full-precision run, kept **alongside** the first rather than
- * replacing it so the engine change between them is auditable from the committed bytes:
+ * Four cases ship. The **default is `v2` — the current measured run**; the other three exist to
+ * keep every render path and the refusal honest, and each states what it is when loaded:
  *
- *   `cyclic`    the headline case. Criterion 3 fails, so the verdict is NOT a winner.
- *   `dominant`  **matrix v1** — the 36-cell x 4,300-pair run at `819eebb`, before the
- *               CONTAINMENT.md turn-pass existed. All four §4.4 criteria hold.
- *   `v2`        **matrix v2** — the same 36 cells on the same 4,300 seeds, re-run after the
- *               turn-pass landed (`containedPass`, STYLES.md §6.3). Same seed set as `dominant`
- *               on purpose: every deal is played by both engines, so the two artifacts differ
- *               only by the policy change and `?case=v2` against `?case=dominant` is a
- *               controlled comparison rather than two independent samples.
+ *   `v2`        **matrix v2, the default** — the 36-cell x 4,300-pair run re-played after the
+ *               contained-book turn-pass landed (`containedPass`, STYLES.md §6.3). This is the
+ *               committed evidence the site opens on.
+ *   `dominant`  **matrix v1** — the same 36 cells on the same 4,300 seeds at `819eebb`, before
+ *               the CONTAINMENT.md turn-pass existed. Kept **alongside** v2 rather than replaced
+ *               by it so the engine change between them is auditable from the committed bytes:
+ *               every deal is played by both engines, so `?case=v2` against `?case=dominant` is
+ *               a controlled comparison rather than two independent samples.
+ *   `cyclic`    the **synthetic fixture** — generated data, not simulation output, and stamped
+ *               as such on every page that loads it. It exists to prove the site can render a
+ *               cyclic verdict honestly (criterion 3 fails, so the verdict is NOT a winner),
+ *               which no real run to date has produced. The site was built against it before
+ *               real data existed, and it stays so that render path stays exercised.
  *   `stale`     a deliberate `rulesHash` mismatch, so §1.1's refusal has something real to
  *               refuse. Without it "the site refuses to render stale results" is an untested
  *               claim about code nobody ever ran.
@@ -566,11 +570,13 @@ export function loadArtifact(which: ArtifactCase): LoadResult {
 
 /**
  * Which case a URL asks for. The site reads ONE artifact; `?case=` only chooses which committed
- * fixture that one is, and every page states plainly which one it read.
+ * document that one is, and every page states plainly which one it read. The default is `v2` —
+ * the current measured run — so a first-time visitor lands on real simulation output, not on
+ * the synthetic render-path fixture.
  */
 export function caseFromSearch(search: string): ArtifactCase {
   const asked = new URLSearchParams(search).get('case')
-  return CASES.find((c) => c === asked) ?? 'cyclic'
+  return CASES.find((c) => c === asked) ?? 'v2'
 }
 
 export const ARTIFACT_CASES: readonly ArtifactCase[] = CASES

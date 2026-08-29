@@ -24,11 +24,12 @@ export function DumbbellChart({ model }: { model: DumbbellModel }) {
   return (
     <DiagramFrame scene={scene}>
       <DiagramSvg scene={scene}>
+        {/* Keyed by position, not label — ticks on a narrow domain can round to the same text. */}
         {gridlines.map((g, i) =>
           i === 0 ? (
             // At the domain floor the axis replaces the gridline, never doubles it.
             <line
-              key={g.label}
+              key={g.x}
               x1={g.x}
               y1={PLOT.top}
               x2={g.x}
@@ -38,7 +39,7 @@ export function DumbbellChart({ model }: { model: DumbbellModel }) {
             />
           ) : (
             <line
-              key={g.label}
+              key={g.x}
               x1={g.x}
               y1={56}
               x2={g.x}
@@ -102,7 +103,7 @@ export function DumbbellChart({ model }: { model: DumbbellModel }) {
         })}
 
         {gridlines.map((g) => (
-          <Label key={`t-${g.label}`} x={g.x} y={PLOT.tickY} role="tech" fill={C.muted} anchor="middle">
+          <Label key={`t-${g.x}`} x={g.x} y={PLOT.tickY} role="tech" fill={C.muted} anchor="middle">
             {g.label}
           </Label>
         ))}

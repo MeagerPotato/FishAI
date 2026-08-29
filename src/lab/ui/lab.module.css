@@ -443,6 +443,42 @@
   color: var(--fa-ink-2);
 }
 
+/* The Sources glossary: term | one-line meaning. A definition list, because that is what it is. */
+.glossary {
+  margin: 16px 0 0;
+  display: grid;
+  grid-template-columns: minmax(120px, 190px) minmax(0, 1fr);
+  gap: 12px 20px;
+  max-width: 86ch;
+}
+
+.glossary dt {
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink);
+  padding-top: 3px;
+}
+
+.glossary dd {
+  margin: 0;
+  font-size: var(--fa-fs-meta);
+  line-height: 1.6;
+  color: var(--fa-ink-2);
+}
+
+@media (max-width: 560px) {
+  .glossary {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px 0;
+  }
+
+  .glossary dd {
+    margin-bottom: 12px;
+  }
+}
+
 .detail {
   border-top: 1px solid var(--fa-line-2);
 }

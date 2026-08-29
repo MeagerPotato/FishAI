@@ -13,8 +13,10 @@ export function LineChart({ model }: { model: LineModel }) {
   return (
     <DiagramFrame scene={scene}>
       <DiagramSvg scene={scene}>
+        {/* Keyed by position, not label — two ticks can round to the same text on a narrow
+            domain, and React drops one of a duplicated key. */}
         {gridlines.map((g) => (
-          <g key={g.label}>
+          <g key={g.y}>
             <line
               x1={PLOT.left}
               y1={g.y}

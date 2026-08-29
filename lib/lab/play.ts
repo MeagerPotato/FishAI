@@ -63,6 +63,7 @@ import type {
   PolicySpec,
   RulesConfig,
   Seat,
+  SeatView,
   StyleParams,
   Team,
   Variant,
@@ -160,6 +161,30 @@ export interface PlayOptions {
 }
 
 /**
+ * One seat's assignment for the per-seat entry point below. `policy` is what `decide` receives;
+ * `leakStyle` is the style whose `leakThreshold` prices this seat's leak measurement (BOT_LAB.md
+ * §4.2 — the denominator style is the *asker's own* claimed discretion). The two are separate
+ * because a policy need not be a bare style: a skill-ablated pair, or an adaptive spec that
+ * delegates to different styles over the game, still needs one declared threshold for the
+ * harness to measure leaks against — an adaptive seat passes its anchor style and the file
+ * header's caveat applies: the leak index of a seat whose style moves is priced at the anchor.
+ */
+export interface SeatSpec {
+  policy: PolicySpec
+  leakStyle: StyleParams
+}
+
+export interface SeatPlayOptions extends PlayOptions {
+  /**
+   * Called once per decision with the acting seat, the exact view `decide` received, and the
+   * action the policy chose (before any emergency substitution). Measurement only — the game
+   * ignores anything it does. This is how the adaptive runner records which style a v1.0 seat
+   * delegated to without `play.ts` importing the adaptive machinery.
+   */
+  observe?: (seat: Seat, view: SeatView, action: GameAction) => void
+}
+
+/**
  * Play one game. `orient` fixes the seating: orientation 0 puts `a` on team 0, orientation 1
  * puts `a` on team 1. Seed and `startSeat` are supplied by the caller and are identical across
  * the two orientations of a duplicate pair (BOT_LAB.md §5.1).
@@ -172,14 +197,35 @@ export function playGame(
   orient: Orientation,
   opts: PlayOptions,
 ): PlayedGame {
-  const config = configFor(opts.variant)
-  const books = allBooks(config)
-  const target = clinchTarget(config)
   const aTeam: Team = orient === 0 ? 0 : 1
   const policyA = policyFor(a, opts.skill)
   const policyB = policyFor(b, opts.skill)
-  const styleOf = (t: Team): StyleParams => (t === aTeam ? a : b)
-  const policyOf = (t: Team): PolicySpec => (t === aTeam ? policyA : policyB)
+  const seats = ALL_SEATS.map(
+    (seat): SeatSpec =>
+      seatTeam(seat) === aTeam ? { policy: policyA, leakStyle: a } : { policy: policyB, leakStyle: b },
+  )
+  return playGameSeats(seats, seed, startSeat, opts)
+}
+
+/**
+ * Play one game with an explicit policy per seat — the general form `playGame` is a pure-team
+ * special case of. Exists for the Tier-2 mixed-composition cells (BOT_LAB.md §5.3) and the
+ * FishAI v1.0 experiments, where a team's three seats need not share a policy. Counters remain
+ * indexed by *team*; the caller owns the mapping from teams to whatever it is comparing. The
+ * loop, the seeding, the measurement, and the emergency handling are byte-identical to
+ * `playGame` — `tests/lab/play-seats.test.ts` pins that a pure-team call through this entry
+ * point reproduces `playGame` exactly.
+ */
+export function playGameSeats(
+  seats: readonly SeatSpec[],
+  seed: string,
+  startSeat: Seat,
+  opts: SeatPlayOptions,
+): PlayedGame {
+  if (seats.length !== 6) throw new TypeError(`playGameSeats needs exactly 6 seat specs, got ${seats.length}`)
+  const config = configFor(opts.variant)
+  const books = allBooks(config)
+  const target = clinchTarget(config)
 
   const counters: [SideCounters, SideCounters] = [emptyCounters(), emptyCounters()]
   const out: PlayedGame = {
@@ -262,7 +308,8 @@ export function playGame(
     if (windowOpen) counters[team].declareOffers++
 
     const view = seatView(s, seat)
-    const action = decide(view, policyOf(team), hashSeed(`${seed}:${s.moveIndex}`)())
+    const action = decide(view, seats[seat].policy, hashSeed(`${seed}:${s.moveIndex}`)())
+    opts.observe?.(seat, view, action)
 
     // --- pre-action measurement (needs the position as the actor saw it) --------------------
     let declareCtx: { book: BookId; forced: boolean; foreign: boolean; teamHeld: boolean; oppSets: number } | null =
@@ -277,7 +324,7 @@ export function playGame(
         const o = owner.get(c)
         if (o !== undefined && seatTeam(o) === team) held++
       }
-      if (held >= styleOf(team).leakThreshold) counters[team].leakyAsks++
+      if (held >= seats[seat].leakStyle.leakThreshold) counters[team].leakyAsks++
     } else if (action.type === 'claim') {
       const cards = bookCards(action.book, config)
       let teamHeld = cards.length > 0

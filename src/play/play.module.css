@@ -1,0 +1,534 @@
+/**
+ * ============================================================================
+ * PLAY SURFACE CHROME
+ * ============================================================================
+ * Everything the two play routes need that neither the design system nor the
+ * lab chrome already owns: the score strip, the hand row, the ask panel, the
+ * declare dialog, the lobby's style pickers and the game-over panel. The seat
+ * cards, log list, pills and dense tables come from lab.module.css — the play
+ * table is the replay page's grammar with the human seated in it, and reusing
+ * the classes keeps the two surfaces provably the same system.
+ *
+ * Rules kept, all from SITE_SPEC.md §2:
+ *
+ *   · No radii, no shadows, no new hues. Suits are ink, not red/black — a
+ *     second hue pair fails the one-accent budget for zero information (the
+ *     suit glyph already carries the suit).
+ *   · Amber TEXT on this surface: the score strip's leading team and the
+ *     game-over verdict. Nothing else.
+ *   · Touch targets >= 44px on every control a player must hit mid-game.
+ *   · Wide things scroll inside their own container, never the page.
+ * ============================================================================
+ */
+
+/* ==========================================================================
+   THE TABLE LAYOUT — action column + log column
+   ========================================================================== */
+
+.surface {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr);
+  gap: clamp(24px, 3vw, 44px);
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .surface {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ==========================================================================
+   THE SCORE STRIP — the "5–3 · 1 unresolved" register, RULES_US54.md §5.1
+   ========================================================================== */
+
+.score {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px 22px;
+  padding: 14px 16px;
+  border: 1px solid var(--fa-line);
+  margin: 0 0 22px;
+}
+
+.scoreTeam {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.scoreNum {
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--fa-ink);
+}
+
+/* The strip's ONE accent: the leading team's count. Spent nowhere else. */
+.scoreLead {
+  color: var(--fa-amber-2);
+}
+
+.scoreDash {
+  font-size: 24px;
+  color: var(--fa-ink-3);
+}
+
+.scoreMeta {
+  margin-left: auto;
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
+/* ==========================================================================
+   STATUS + CONTROLS
+   ========================================================================== */
+
+.status {
+  margin: 0 0 14px;
+  min-height: 1.5em;
+  font-size: var(--fa-fs-sm);
+  line-height: 1.5;
+  color: var(--fa-ink-2);
+}
+
+.status strong {
+  font-weight: 500;
+  color: var(--fa-ink);
+}
+
+/* ==========================================================================
+   THE HAND — sorted, grouped by book
+   ========================================================================== */
+
+.hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin: 0 0 20px;
+}
+
+.handBook {
+  display: grid;
+  gap: 4px;
+}
+
+.handBookName {
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
+.handCards {
+  display: flex;
+  gap: 1px;
+  background-color: var(--fa-line-2);
+  border: 1px solid var(--fa-line);
+  width: fit-content;
+}
+
+.card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0 6px;
+  background-color: var(--fa-sheet);
+  font-family: var(--fa-code);
+  font-size: var(--fa-fs-meta);
+  font-variant-numeric: tabular-nums;
+  color: var(--fa-ink);
+}
+
+/* ==========================================================================
+   THE ASK PANEL — pick an opponent, then a legal card, grouped by book
+   ========================================================================== */
+
+.panel {
+  border: 1px solid var(--fa-line);
+  padding: clamp(16px, 2.4vw, 24px);
+  background-color: var(--fa-paper);
+}
+
+.panelHead {
+  margin: 0 0 12px;
+  font-size: var(--fa-fs-h4);
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--fa-ink);
+}
+
+.panelNote {
+  margin: 0 0 16px;
+  font-size: var(--fa-fs-meta);
+  line-height: 1.6;
+  color: var(--fa-ink-2);
+  max-width: 64ch;
+}
+
+.choiceRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 18px;
+}
+
+/* A selectable chip: card faces, opponent seats, declare assignments. 44px. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--fa-line);
+  background-color: var(--fa-sheet);
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  color: var(--fa-ink-2);
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--fa-ink);
+  color: var(--fa-ink);
+}
+
+.chipOn {
+  background-color: var(--fa-ink);
+  border-color: var(--fa-ink);
+  color: var(--fa-page);
+}
+
+.chip:disabled {
+  cursor: not-allowed;
+  color: var(--fa-ink-3);
+  background-image: var(--fa-hatch);
+}
+
+.chipFace {
+  font-family: var(--fa-code);
+  font-variant-numeric: tabular-nums;
+}
+
+.chipSub {
+  font-size: var(--fa-fs-micro);
+  letter-spacing: var(--fa-tr-tight);
+  text-transform: uppercase;
+  color: inherit;
+  opacity: 0.75;
+}
+
+/* One book's row inside the card picker. */
+.bookBlock {
+  border-top: 1px solid var(--fa-line-2);
+  padding: 12px 0;
+}
+
+.bookHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 14px;
+  margin: 0 0 10px;
+}
+
+.bookName {
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink);
+}
+
+.bookWhy {
+  font-size: var(--fa-fs-micro);
+  letter-spacing: var(--fa-tr-tight);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
+.bookCards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ==========================================================================
+   THE DECLARE DIALOG — a real <dialog>, RULES_US54.md §3 made operable
+   ========================================================================== */
+
+.dialog {
+  width: min(720px, calc(100vw - 2 * var(--fa-gutter)));
+  max-height: min(86vh, 900px);
+  padding: clamp(20px, 3vw, 32px);
+  border: 1px solid var(--fa-line);
+  border-radius: var(--fa-radius);
+  background-color: var(--fa-sheet);
+  color: var(--fa-ink);
+  overflow-y: auto;
+}
+
+.dialog::backdrop {
+  background-color: rgba(22, 20, 14, 0.55);
+}
+
+:root[data-theme='dark'] .dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.62);
+}
+
+.assign {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0 0;
+}
+
+.assignRow {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 8px 14px;
+  align-items: center;
+  border-top: 1px solid var(--fa-line-2);
+  padding-top: 8px;
+}
+
+.assignCard {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.assignSeats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.known {
+  font-size: var(--fa-fs-micro);
+  letter-spacing: var(--fa-tr-tight);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
+/* The assistant's strip inside the dialog: the pane's advice is inert behind the modal
+   backdrop, so the suggestion rides along to where the decision is actually taken. */
+.dialogAdvice {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--fa-line);
+  background-color: var(--fa-paper);
+}
+
+.dialogAdviceHead {
+  display: block;
+  margin: 0 0 6px;
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
+/* The row-14 warning. A dashed border, not a colour: the accent is budgeted. */
+.warn {
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  border: 1px dashed var(--fa-line);
+  font-size: var(--fa-fs-sm);
+  line-height: 1.6;
+  color: var(--fa-ink-2);
+}
+
+.dialogActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+@media (max-width: 560px) {
+  .assignRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   GAME OVER
+   ========================================================================== */
+
+.over {
+  border: 1px solid var(--fa-line);
+  background-color: var(--fa-paper);
+  padding: clamp(20px, 3vw, 32px);
+  margin: 0 0 22px;
+}
+
+/* The page's second and last accent text: the verdict line. */
+.overVerdict {
+  margin: 0;
+  font-size: var(--fa-fs-h4);
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--fa-amber-2);
+}
+
+.overBody {
+  margin: 10px 0 0;
+  font-size: var(--fa-fs-sm);
+  line-height: 1.6;
+  color: var(--fa-ink-2);
+  max-width: 64ch;
+}
+
+/* ==========================================================================
+   THE LOBBY — mode cards and the style pickers
+   ========================================================================== */
+
+.modes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
+  gap: clamp(24px, 3vw, 44px);
+  align-items: start;
+}
+
+.mode {
+  border: 1px solid var(--fa-line);
+  background-color: var(--fa-paper);
+  padding: clamp(20px, 3vw, 32px);
+}
+
+.modeTitle {
+  margin: 10px 0 0;
+  font-size: var(--fa-fs-h4);
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--fa-ink);
+}
+
+.modeBody {
+  margin: 12px 0 0;
+  font-size: var(--fa-fs-sm);
+  line-height: 1.65;
+  color: var(--fa-ink-2);
+  max-width: 60ch;
+}
+
+/* The honest not-yet state: a hatch, not a colour, exactly like .synthetic. */
+.pending {
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  border: 1px solid var(--fa-line);
+  background-image: var(--fa-hatch);
+  background-color: var(--fa-tile);
+  font-size: var(--fa-fs-sm);
+  line-height: 1.6;
+  color: var(--fa-ink-2);
+}
+
+.picker {
+  display: grid;
+  gap: 14px;
+  margin: 18px 0 0;
+}
+
+.pickerRow {
+  display: grid;
+  grid-template-columns: minmax(120px, 150px) 1fr;
+  gap: 4px 14px;
+  align-items: center;
+  border-top: 1px solid var(--fa-line-2);
+  padding-top: 10px;
+}
+
+.pickerLabel {
+  display: grid;
+  gap: 2px;
+}
+
+.select {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--fa-line);
+  border-radius: var(--fa-radius);
+  background-color: var(--fa-sheet);
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  color: var(--fa-ink);
+}
+
+.pickerThesis {
+  grid-column: 2;
+  font-size: var(--fa-fs-micro);
+  letter-spacing: 0.02em;
+  color: var(--fa-ink-3);
+}
+
+.seedRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 0;
+}
+
+.seedInput {
+  flex: 1 1 160px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--fa-line);
+  border-radius: var(--fa-radius);
+  background-color: var(--fa-sheet);
+  font-family: var(--fa-code);
+  font-size: var(--fa-fs-sm);
+  color: var(--fa-ink);
+}
+
+@media (max-width: 560px) {
+  .pickerRow {
+    grid-template-columns: 1fr;
+  }
+
+  .pickerThesis {
+    grid-column: 1;
+  }
+}
+
+/* ==========================================================================
+   THE ADVISOR PANE — the engine's own trace, rendered
+   ========================================================================== */
+
+.advisor {
+  border: 1px solid var(--fa-line);
+  padding: 16px;
+  margin: 0 0 22px;
+}
+
+.advisorNotes,
+.advisorRanked {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+}
+
+.advisorSub {
+  margin: 14px 0 0;
+  font-size: var(--fa-fs-meta);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}

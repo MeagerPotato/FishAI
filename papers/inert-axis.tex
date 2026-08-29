@@ -1,0 +1,638 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1.1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{array}
+\usepackage[colorlinks=true, linkcolor=blue!50!black, citecolor=blue!50!black, urlcolor=blue!50!black]{hyperref}
+
+\captionsetup{font=small, labelfont=bf}
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{\textbf{The Inert Axis: When a Style Parameter Is\\ Wired, Swept, and Never Reached}}
+\author{Allen Hsieh\\[2pt] {\small FishAI project}}
+\date{August 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+The FishAI bot laboratory ships a roster of nine play styles for the \code{us54} variant of the
+card game Literature (Canadian Fish), named along an aggressive-to-conservative axis whose defining knob is
+\code{declareThreshold}, the confidence a policy demands before a speculative declare. Direct
+decision-level instrumentation --- replaying real games and handing two policy vectors the
+identical observation and random seed at every decision point --- shows that across the range the
+roster actually spans --- every shipped bar sits at $0.775$ or above, the span being
+$[0.775, 0.98]$ --- this knob changes \emph{nothing}: zero divergent decisions at every measured
+threshold from $0.775$ up (through $0.975$ at roster stage, and through $1$ in the pilot), in
+populations of up to 275{,}380 decisions. The mechanism is not an unreachable code
+path. The speculative-declare path fires constantly (171 speculative to 138 certain declares in
+one 40-game population); rather, the shared inference engine's confidence estimates are
+\emph{bimodal} --- a plan sits either well above ${\sim}0.975$ or well below ${\sim}0.775$, almost
+never between --- so every threshold inside the band selects the identical set of declares. We
+describe the instrument, the finding, the mechanism, and the repairs: a relocated behavioural
+gate, a relabelled narrative, a regression test asserting that no roster vector is inert, and a
+search-side statistic that counts byte-identical candidates. The general lesson is
+methodological: parameter sweeps that report only outcomes cannot distinguish ``no effect'' from
+``never consulted.'' Decision-level divergence is the honest unit.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+A common failure mode in studies of parameterised game-playing agents is quiet: a parameter is
+declared, plumbed through the code, swept across a grid, and reported in a results table --- and at
+no point in any of those steps does the software ever act differently because of it. The sweep
+returns flat outcomes; the flatness is read as ``this axis does not matter much''; and the
+conclusion, while accidentally true in its operational content, badly misstates \emph{why}. The
+knob was not weak. It was dead.
+
+This paper documents a fully worked instance of that failure, found and repaired inside the
+FishAI project --- an engine, bot laboratory, and results site for the six-player partnership card
+game Literature (Canadian Fish; colloquially just ``Fish''), in its 54-card ``\code{us54}'' variant
+\cite{rules}. The laboratory's nine-style roster \cite{styles, v05} was designed and \emph{named}
+around a single axis: how much confidence a style demands before making a speculative declare,
+the knob \code{declareThreshold}. Aggressive styles were given low bars, conservative styles high
+ones, and the roster's public narrative was a spectrum from one to the other.
+
+Measured at the level of individual decisions, that axis turns out to be inert across the entire
+range the roster spans. Every measured value of \code{declareThreshold} from $0.775$ through
+$0.975$ --- and through $1$ in the pilot, covering the shipped $[0.775, 0.98]$ span ---
+produces \emph{byte-identical play}: not statistically indistinguishable play, but the same
+action, at every decision point, in every game, on every seed. The styles do remain genuinely
+distinct --- between $0.39\%$ and $2.89\%$ of their decisions differ from the control's --- but
+through other knobs entirely, not along the axis their labels advertise.
+
+The finding has three parts, and the paper is organised around them:
+
+\begin{enumerate}
+  \item \textbf{The instrument} (Section~\ref{sec:instrument}): a decision-level divergence probe
+  that replays real games and, at every decision point, hands two policy vectors the identical
+  observation (\code{SeatView}) and identical random seed, then compares their two actions
+  exactly. Because the policy layer is a pure function of (view, policy, seed), a count of zero
+  divergent decisions is a certificate of behavioural identity, not a failed significance test.
+  \item \textbf{The finding and its mechanism} (Sections~\ref{sec:finding}
+  and~\ref{sec:mechanism}): the zero-divergence result, its attribution one knob at a time, the
+  threshold sweeps, and the reason --- the inference engine's confidence estimates for
+  speculative declare plans are bimodal, because certainty usually preempts speculation.
+  \item \textbf{The consequences} (Section~\ref{sec:consequences}): a behavioural gate relocated
+  so the one style built on it exists at all; the project's own labelling corrected in place
+  rather than quietly rewritten; a regression test that permanently asserts no roster vector is
+  inert; and a search-side statistic, \code{inertCandidates}, that measures the same phenomenon
+  from the other direction.
+\end{enumerate}
+
+Section~\ref{sec:lessons} draws the general lessons for parameter studies of agents, and
+Section~\ref{sec:limitations} states what this result does not show.
+
+\section{Setting: the game, the rule change, and the roster}
+\label{sec:setting}
+
+\subsection{The \code{us54} declare rule}
+
+Fish is a six-player, two-team game of asking opponents for specific cards and \emph{declaring}
+complete six-card sets (``books'') by naming the exact holder of every card. FishAI plays two
+rule sets. Under the 48-card default (\code{pagat48}) the error outcomes split: declaring a set
+an opponent holds a card of awards it to the opponents, while misassigning a set one's own team
+wholly holds \emph{voids} it --- nobody scores. The \code{us54} variant collapses the split in one
+decisive row of its decision table --- row~14: a declare with \emph{any error at all} awards the
+set to the \emph{opposing} team; the void outcome is abolished \cite{rules}. Combined with
+\code{us54}'s race-to-five win condition, a failed speculative declare is no longer at worst a
+lost opportunity but always a two-point swing.
+
+That sign change is what motivated the roster's threshold arithmetic. Writing $p$ for a
+speculative plan's success probability and $q$ for the probability the set gets banked correctly
+anyway if the seat waits, the declare-now-versus-wait comparison is
+\begin{equation*}
+\underbrace{p \cdot (+1) + (1-p)\cdot 0 = p > q}_{\text{\code{pagat48} (void)}}
+\qquad\text{versus}\qquad
+\underbrace{p \cdot (+1) + (1-p)\cdot(-1) = 2p - 1 > q
+  \;\Longleftrightarrow\; p > \tfrac{1+q}{2}}_{\text{\code{us54} (gift)}},
+\end{equation*}
+so a 48-card risk appetite $t$ maps to a \code{us54} declare threshold
+\begin{equation}
+t_{\mathrm{us54}} \;=\; \frac{1 + t_{\mathrm{pagat48}}}{2}.
+\label{eq:map}
+\end{equation}
+(The speculative plans this arithmetic governs guess only the intra-team assignment of a set
+already certainly the team's --- Section~\ref{sec:mechanism} --- so the \code{pagat48} failure
+outcome it models is precisely the void, and the derivation stands on the narrowed rule.)
+The roster's thresholds were re-derived through this map rather than ported \cite{roster}:
+Balanced $0.80 \to 0.90$, Blitz $0.70 \to 0.85$, Punter $0.55 \to 0.775$, Hoarder
+$0.95 \to 0.975$, and the Archivist's separate \emph{foreign} bar $0.90 \to 0.95$. The
+\code{declareOnlyWhenCertain} styles also ship bars of their own --- Banker $0.95$, Turtle
+$0.98$, Scout at the baseline $0.90$ --- values their certainty gate makes moot but that travel
+with the vectors. Note the range this induces: \textbf{every shipped style's bar sits at
+$0.775$ or above}, the shipped span being $[0.775, 0.98]$. That band is the protagonist of
+this paper.
+
+\subsection{Style is not skill}
+
+The laboratory's design rule, stated before any style was written \cite{botlab}: ``every style
+shares one identical, full-strength knowledge engine.'' Styles differ only in the policy layer
+above \code{buildKnowledge()}; inference depth, memory window, and error rate live on a separate
+\emph{skill} vector. The rationale is attribution --- if an aggressive bot loses, one must be able
+to say whether aggression is bad or whether the aggressive bot was merely written worse. The same
+separation is what makes the instrument of Section~\ref{sec:instrument} meaningful: two style
+vectors handed the same view and seed differ only by policy, so any divergence is attributable
+to the knobs and nothing else.
+
+\subsection{The \code{StyleParams} surface}
+
+A style is a flat vector of roughly two dozen knobs \cite{styles}: ask-scoring weights
+(\code{wHit}, \code{wProgress}, \code{wNarrow}, \code{certaintyBonus}, \code{gambleBonus},
+\code{minHitP}); declare policy (\code{declareThreshold}, \code{declareMaxUncertain},
+\code{declareOnlyWhenCertain}, \code{declareOnlyOwnHand}); window and clinch behaviour new under
+\code{us54} (\code{declareEagerness}, \code{foreignDeclare}, \code{foreignDeclareThreshold},
+\code{clinchAggression}, \code{denialWeight}); information policy, tempo targeting, and two
+hoarding knobs (\code{hoardBooks}, \code{minHandSize}). The nine roster entries --- Balanced,
+Blitz, Punter, Banker, Turtle, Hoarder, Scout, Ghost, Archivist --- are named presets over this
+vector, and their aggressive-to-conservative story is carried, nominally, by
+\code{declareThreshold}.
+
+\section{The instrument: decision-level divergence}
+\label{sec:instrument}
+
+The probe is simple to state and exact in what it certifies. Real \code{us54} games are played
+on the laboratory's own seed set. At \emph{every} decision point of every game, both policy
+vectors under comparison are handed the identical \code{SeatView} --- the public observation a
+human client would receive --- and the identical seed, and their two \code{GameAction}s are
+compared structurally. The game itself advances under one designated vector; the other is a
+shadow evaluated counterfactually at each point. The statistic is the count (and rate) of
+decision points at which the two actions differ.
+
+Three properties of the policy layer make this well-defined \cite{decide}:
+
+\begin{itemize}
+  \item \textbf{Purity.} \code{decide(view, policy, seed)} is a pure function: same view, policy,
+  and seed imply the same action. The only randomness is a seeded generator over \code{seed}.
+  \item \textbf{Shared inference.} Both vectors run the identical full-strength inference engine,
+  so the comparison isolates the policy layer by construction.
+  \item \textbf{Exactness.} Because the comparison is of actions, not outcomes, a result of zero
+  is a \emph{certificate}: the two vectors are the same player on this population. There is no
+  standard error to report, and none is needed.
+\end{itemize}
+
+The contrast with an outcome-level sweep is the methodological point of this paper. A sweep that
+varies a knob and reports win rates over $N$ games can, at best, bound the knob's effect by a
+confidence interval around zero. The divergence probe answers a strictly prior question --- did
+the knob change any decision at all? --- and answers it exactly, at the cost of replaying
+decisions rather than whole extra tournaments. Outcome differences require decision differences;
+a knob with zero divergence needs no games spent on it.
+
+\section{The finding}
+\label{sec:finding}
+
+\subsection{A roster entry indistinguishable from the control}
+
+The axis was caught because one style failed harder than flat: it vanished. In the pilot payoff
+matrix (36 cells $\times$ 200 duplicate-deal pairs), the Hoarder --- the roster's optionality
+style, bar at $0.975$, plus the two hoarding knobs --- scored a mean of $0.5484$, identical to
+Balanced's $0.5484$ \emph{in every digit}. Its entire row of the payoff matrix and its entire
+row of the diagnostics table were byte-identical to Balanced's; the head-to-head cell
+\code{balanced-vs-hoarder} measured $0.5000$ with a standard error of $0.0000$; and the
+$\alpha$-Rank evaluator had to be given a tie tolerance to stop ranking the two styles on
+floating-point noise \cite{styles, alpharank}. A roster entry that cannot be distinguished from
+the control is not a style, so the identity was instrumented directly rather than inferred from
+the score.
+
+\begin{table}[ht]
+\centering
+\caption{The divergence instrument on Hoarder versus Balanced, before and after the repair of
+Section~\ref{sec:repair}. ``Before,'' the two vectors were the same player: zero divergent
+decisions in 400 games.}
+\label{tab:beforeafter}
+\begin{tabular}{lrrr}
+\toprule
+Hoarder vs.\ Balanced & decisions & different actions & rate \\
+\midrule
+before & 275{,}380 & 0 & 0.0000\% \\
+after  & 289{,}560 & 9{,}315 & 3.2169\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Attribution, one knob at a time}
+
+Zero divergence over 275{,}380 decisions (Table~\ref{tab:beforeafter}) says the whole vector is
+inert; it does not say why. Attribution applied each of the Hoarder's seven behavioural deltas
+to Balanced \emph{alone} --- one knob at a time, over 76{,}972 decisions on identical views and
+seeds --- and every single-knob variant returned zero divergence. All seven knobs were dead
+individually, which rules out any story in which two deltas cancel.
+
+\subsection{The threshold sweep and the dead band}
+
+Sweeping \code{declareThreshold} on Balanced explains the zero
+(Table~\ref{tab:pilotsweep}). Below the roster's range, the knob is alive: at a threshold of
+$0$, 892 of 51{,}420 decisions change. Divergence decays as the threshold rises and reaches
+exactly zero at $0.775$ --- and stays zero at $0.8$, $0.9$, and $1$. In this pilot population,
+setting \code{declareThreshold} to $1$, or setting \code{declareOnlyWhenCertain}, or setting
+\code{declareMaxUncertain} to $0$, all changed nothing --- the same statement three ways: the
+speculative-declare routine, \code{evClaim}, never returned a plan that survived its gates.
+
+\begin{table}[ht]
+\centering
+\caption{Pilot sweep: decisions changed (of 51{,}420) when \code{declareThreshold} is varied on
+Balanced, against identical views and seeds. Every shipped bar in the roster ($[0.775, 0.98]$)
+sits in the zero region, whose measured extent runs through threshold $1$.}
+\label{tab:pilotsweep}
+\small
+\begin{tabular}{l*{11}{r}}
+\toprule
+\code{declareThreshold} & 0 & 0.5 & 0.55 & 0.6 & 0.65 & 0.7 & 0.75 & \textbf{0.775} & 0.8 & 0.9 & 1 \\
+\midrule
+decisions changed & 892 & 842 & 414 & 274 & 140 & 18 & 18 & \textbf{0} & 0 & 0 & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The immediate casualty list is wider than one knob. Five parameters ---
+\code{declareThreshold}, \code{declareThresholdStalled}, \code{declareEagerness},
+\code{clinchAggression}, and \code{denialWeight} --- are consumed only inside \code{evClaim}, so
+every one of them is inert for \emph{any} style whose bar sits at or above $0.775$. Blitz
+($0.85$), Punter ($0.775$), and the three \code{declareOnlyWhenCertain} styles are all affected;
+they remain distinguishable from the control only through their \emph{ask} knobs. The knobs are
+wired, swept, and reported; they are not reached.
+
+\subsection{The axis is dead for the whole roster}
+
+After the repair of Section~\ref{sec:repair} and at the full-precision matrix stage, the sweep
+was re-run on the shipped roster: \code{declareThreshold} varied on Balanced alone, over 40
+\code{us54} games, comparing every decision against the identical view and seed
+(Table~\ref{tab:rostersweep}) \cite{styles}.
+
+\begin{table}[ht]
+\centering
+\caption{Roster-stage sweep, 40 \code{us54} games: divergent decisions when
+\code{declareThreshold} is varied on Balanced. Every roster style's bar sits at $0.775$ or
+above.}
+\label{tab:rostersweep}
+\begin{tabular}{lrr}
+\toprule
+\code{declareThreshold} & divergent decisions & rate \\
+\midrule
+0.50 & 350 & 1.2968\% \\
+0.65 & 48 & 0.1779\% \\
+0.70 & 29 & 0.1075\% \\
+0.75 & 19 & 0.0704\% \\
+\textbf{0.775} & \textbf{0} & \textbf{0.0000\%} \\
+0.85 / 0.90 / 0.95 / 0.975 & 0 & 0.0000\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Every roster style sits at $0.775$ or above, so \textbf{the axis is dead for all nine of them}.
+The styles themselves are not: measured with the same instrument, Scout differs from Balanced on
+$2.89\%$ of decisions, Ghost $2.15\%$, Archivist $1.66\%$, Banker $1.19\%$, Turtle $0.83\%$,
+Punter $0.47\%$, Hoarder $0.47\%$, and Blitz $0.39\%$. The roster is genuinely diverse --- just
+not along the axis its labels advertise. Punter did not top the payoff matrix by declaring at
+$0.775$ rather than $0.90$; it won through \code{gambleBonus} and \code{declareMaxUncertain}.
+
+\section{The mechanism: bimodal confidence}
+\label{sec:mechanism}
+
+The pilot audit's first-order reading was ``the speculative path is unreachable: \code{evClaim}
+never returns.'' The roster-stage measurement sharpened that, and the sharper statement is the
+interesting one: \textbf{the path fires constantly.} Over the same 40 games as
+Table~\ref{tab:rostersweep}, Balanced made 171 speculative declares to 138 certain ones. What is
+unreachable is not the branch but the \emph{band}: the inference engine's confidence estimates
+are bimodal --- a plan sits either well above ${\sim}0.975$ or well below ${\sim}0.775$, almost
+never between --- so any threshold inside $[0.775, 0.975]$ --- and, because the upper mode sits
+at or arbitrarily near $1$, any measured threshold up through $1$, covering the shipped
+$[0.775, 0.98]$ span --- selects the identical set of declares.
+
+Why bimodal? The answer is in the declare pipeline's structure \cite{decide}:
+
+\begin{enumerate}
+  \item \textbf{How $p$ is built.} For each unresolved set, \code{planClaim} assigns cards with
+  known holders to those holders, and assigns each unknown card by \emph{count-consistency}:
+  greedily to the candidate teammate with the most remaining unidentified hand slots,
+  decrementing a working capacity map so multiple guesses stay jointly consistent with the
+  public hand sizes. The plan's $p$ multiplies per-card estimates --- certain-on-team $=1$,
+  certain-on-opponent $=0$, uncertain $=$ chosen capacity over total candidate capacity.
+  \item \textbf{What \code{evClaim} may even consider.} A speculative plan qualifies only if its
+  guessed cards number between $1$ and \code{declareMaxUncertain} (baseline $1$) \emph{and}
+  every guessed card's candidates are all teammates --- that is, the set is already
+  \emph{certainly the team's}, with only the intra-team assignment in doubt.
+  \item \textbf{Certainty preempts.} In both the own-turn flow and the \code{us54} declare
+  window, \code{certainClaim} --- which banks any plan with zero uncertain cards --- runs strictly
+  before \code{evClaim}. The public information that establishes ``certainly ours'' (asks, hits,
+  count exhaustion) is the same information that pins individual holders, so by the time a set
+  qualifies for step 2, its cards are usually located outright and the set exits through
+  \code{certainClaim} before \code{evClaim} ever prices it.
+\end{enumerate}
+
+What survives to \code{evClaim} is therefore polarised. At one pole, plans whose last card is
+forced by capacity arithmetic --- the alternative candidates have no unidentified slots left ---
+carry $p$ at or arbitrarily near $1$: nominally speculative, effectively certain. These are the
+171 declares that fire, and they clear \emph{every} threshold in the band, which is why the band
+is behaviourally uniform from above. At the other pole, plans whose last card genuinely cannot
+be pinned have two or more live candidate teammates, and $p$ is a ratio of small integer slot
+capacities: splits like $1{:}1$, $2{:}1$, and $3{:}1$ give $0.500$, $0.667$, and $0.750$ --- all
+below $0.775$. Estimates \emph{inside} the band require one candidate to hold an outlandish
+share of the remaining unidentified slots. The project's own regression suite is the best
+witness: to manufacture a mid-band speculative declare for testing, it had to construct a
+position with a 21-card teammate hand, yielding $p = 21/22 \approx 0.955$ --- a state real games
+essentially never produce \cite{styletest}.
+
+One further consequence deserves its own sentence. The derivation of
+equation~\eqref{eq:map} is arithmetically correct --- and, on this engine, currently
+\emph{unfalsifiable}: every threshold it can produce in the plausible range yields identical
+play, so no experiment run on this roster can confirm or refute the mapping \cite{styles}. A
+parameter can be right for reasons the system it governs never samples.
+
+\section{Consequences}
+\label{sec:consequences}
+
+\subsection{Repairing the one style built on the dead path}
+\label{sec:repair}
+
+The Hoarder's two hoarding knobs, \code{hoardBooks} and \code{minHandSize}, originally gated
+\code{evClaim} only --- on the argument that refusing \emph{free} points (a certain declare) to
+protect an ask-licence would be a giveaway rather than optionality. Given
+Section~\ref{sec:finding}, that argument had already conceded the entire style: the branch it
+guarded was never taken. It was also the weaker reading of the style's design intent, since the
+card a declare actually spends is nearly always a card of a set the seat is \emph{certain} of.
+The gate was therefore relocated to cover every declare the style is free to refuse --- the
+speculative one, the certain one, and the wholly-in-hand one --- and never a compulsory
+(\code{MUST\_DECLARE}) one \cite{decide, styles}.
+
+The relocation brought the style into existence, measurably
+(Tables~\ref{tab:beforeafter} and~\ref{tab:diagnostics}): divergence from Balanced went from
+$0.0000\%$ to $3.2169\%$, and every diagnostic moved in the direction the style's thesis
+predicts --- including its costs. The head-to-head cell moved from $0.5000 \pm 0.0000$ to
+$0.5775 \pm 0.0159$ in Balanced's favour, and the Hoarder's pilot mean score fell from $0.5484$
+(tied with the control) to $0.4738$: the style, once expressible, turned out to be priced above
+its worth under \code{us54}. That is a finding about the strategy, and a separate one; the
+methodological point here is that before the repair there was no strategy to measure.
+
+\begin{table}[ht]
+\centering
+\caption{Per-style diagnostics pooled over all eight pilot cells: the Hoarder before the gate
+relocation is byte-identical to the control; after it, every diagnostic moves. Two Balanced
+figures coexist in the source: $0.5484$ is the pooled value in the identity comparison that
+flagged the inert Hoarder, while this table's Balanced column pools Balanced's own eight cells
+($0.5581$). The load-bearing identity is byte-identical play --- zero divergent decisions in
+275{,}380 --- and the table reports both figures rather than resolving what the source does
+not.}
+\label{tab:diagnostics}
+\small
+\begin{tabular}{lrrr}
+\toprule
+diagnostic & Balanced & Hoarder before & Hoarder after \\
+\midrule
+mean score & 0.5581 & 0.5484 (= Balanced) & 0.4738 \\
+foreign-declare rate & 0.018 & 0.018 & 0.247 \\
+declare latency (window cycles) & 23.39 & 22.90 & 31.02 \\
+race losses / game & 0.044 & 0.046 & 0.091 \\
+declares / game & 4.01 & 3.98 & 3.67 \\
+forced-declare share & 0.074 & 0.076 & 0.153 \\
+concede rate & 0.011 & 0.012 & 0.025 \\
+dropout rate & 0.539 & 0.521 & 0.443 \\
+ask hit rate & 0.568 & 0.569 & 0.545 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Relabelling rather than hiding}
+
+A finding like Section~\ref{sec:finding} creates an obligation for every page that publishes the
+roster: any description of these nine styles as a spectrum from aggressive to conservative
+\emph{declaring} is describing a knob that does not fire. The project chose to relabel its
+narrative in place rather than quietly rewrite it. The roster table in the design document now
+carries an explicit note that its \code{declareThreshold} figures are 48-card \emph{appetites},
+not shipped values --- each is mapped through equation~\eqref{eq:map} before it reaches the
+engine --- and that read as shipped values they would contradict the measured inertness result,
+which the note cites. The measured-caveats section that records the finding is flagged as
+mandatory context ``wherever the ranking is published'' \cite{styles}. The correction is
+adjacent to the claim it corrects, which is the only place a correction reliably gets read.
+
+\subsection{A regression gate: no inert vectors}
+\label{sec:gate}
+
+An axis that died once can die again --- a refactor of the declare pipeline, a change to the
+inference layer's pinning behaviour, or a re-tuned threshold could silently push another knob out
+of reach. The laboratory therefore carries the finding forward as a test: for each of eight
+probe styles spanning the roster's defining settings, over real bot-game positions under both
+rule sets plus two hand-crafted declare-window positions, the suite asserts that the probe style
+diverges from the baseline \emph{somewhere} --- at least one position where its action differs
+from the control's \cite{styletest}. The test's rationale comment states the doctrine this paper
+argues for:
+
+\begin{quote}
+``A parameter that is wired but never reachable is worse than an absent one: it makes the
+Phase-S1 sweep look like it explored a space it never entered.''
+\end{quote}
+
+The two crafted positions are themselves evidence for Section~\ref{sec:mechanism}: they exist
+because the Hoarder's gate and the eagerness knob ``only bite on a speculative declare, which
+real hard games reach too rarely to rely on.'' Where nature does not supply the state, the
+regression net constructs it --- the gate tests reachability of the mechanism, deliberately not
+the frequency of the state.
+
+\subsection{The search-side view: \code{inertCandidates}}
+\label{sec:inertcand}
+
+The same phenomenon is visible from the opposite direction in the laboratory's exploitability
+search, which runs coordinate descent over a ladder of roughly sixty single-knob candidate moves
+against each style, accepting or rejecting each move by a sequential probability ratio test
+(SPRT; $d_0 = 0$, $d_1 = 0.03$, $\alpha = \beta = 0.05$, 24--400 duplicate pairs per candidate)
+and re-measuring accepted results at fixed $N$ on unseen seeds \cite{exploit, botlab, wald}. The
+artifact records, per style, the number of candidates whose games were \emph{byte-identical} to
+the incumbent's --- paired variance exactly zero --- under the field \code{inertCandidates}
+\cite{results}. Table~\ref{tab:inert} extracts the counts from the current full-precision
+artifact (matrix v2; its engine commit is recorded \code{1667a1d-dirty}, the suffix reflecting
+generation from a modified working tree at that commit).
+
+\begin{table}[ht]
+\centering
+\caption{Inert candidates in the v2 exploitability search: single-knob moves whose games were
+byte-identical to the incumbent's (paired variance $= 0$). Shares are computed from the two
+recorded counts.}
+\label{tab:inert}
+\begin{tabular}{lrrr}
+\toprule
+target style & candidates tried & inert candidates & share \\
+\midrule
+Balanced & 56 & 21 & 37.5\% \\
+Blitz & 56 & 24 & 42.9\% \\
+Punter & 59 & 22 & 37.3\% \\
+Banker & 60 & 32 & 53.3\% \\
+Turtle & 60 & 29 & 48.3\% \\
+Hoarder & 60 & 30 & 50.0\% \\
+Scout & 58 & 31 & 53.4\% \\
+Ghost & 56 & 22 & 39.3\% \\
+Archivist & 56 & 24 & 42.9\% \\
+\midrule
+total & 521 & 235 & 45.1\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two design decisions make this statistic honest rather than merely cheap. First, the candidate
+ladder is deliberately \emph{not} pruned to the knobs the divergence probe found live: ``inert
+at Balanced's settings'' is not ``inert,'' and the ladder visits settings the roster never used
+--- \code{declareThreshold} $0.50$, for instance, does move play
+(Table~\ref{tab:rostersweep}). Pruning would have made the search circular, able only to
+rediscover the axis it was pointed at. Second, the inert candidates cost almost nothing: a
+candidate that plays a byte-identical game has exactly zero paired variance and is rejected at
+the SPRT's minimum sample size. Decision-level identity is what makes the unpruned, honest
+ladder affordable --- and the recorded count is what keeps the search's ``no exploit found''
+claims calibrated, since a small exploitability value is only as strong as the number of
+candidates that were genuinely, rather than nominally, tried.
+
+\section{Lessons for parameter studies of agents}
+\label{sec:lessons}
+
+\begin{enumerate}
+  \item \textbf{Report reach, not just effect.} An outcome-level sweep cannot distinguish ``this
+  knob has no effect'' from ``this knob was never consulted at a value that mattered.'' The two
+  conclusions license very different actions --- the first says the axis is unimportant; the
+  second says the experiment never entered the space it claims to have explored. Only
+  decision-level instrumentation separates them.
+  \item \textbf{Divergence is the honest unit, and it is a certificate.} Zero divergence over
+  275{,}380 decisions is not a tight confidence interval around zero; it is exact behavioural
+  identity on that population. Conversely, when divergence is nonzero, its rate (here $0.39\%$
+  to $2.89\%$ across the roster) states precisely how much behavioural surface an outcome
+  experiment is actually powered against.
+  \item \textbf{Probe decisions before spending games.} Outcome differences require decision
+  differences, so a divergence probe is a cheap necessary-condition filter to run before any
+  tournament budget is committed. The exploitability search of Section~\ref{sec:inertcand}
+  operationalises the same principle statistically: zero paired variance rejects a candidate at
+  the minimum sample size. The laboratory's broader discipline --- SPRT for tuning decisions,
+  fixed-$N$ for published estimates, because sequential stopping biases effect sizes ---
+  composes cleanly with it \cite{botlab}.
+  \item \textbf{Attribute one knob at a time, on identical seeds.} A whole-vector comparison
+  detects that something is wrong; only single-delta attribution on paired decisions says which
+  knob, and rules out cancellation.
+  \item \textbf{Do not name a roster after an unmeasured axis.} The naming here preceded the
+  measurement, and the names then had to be walked back in public. Where the narrative axis and
+  the measured axis disagree, relabel around the knobs that fire --- and publish the caveat
+  wherever the ranking is published.
+  \item \textbf{Derived parameters can be unfalsifiable.} Equation~\eqref{eq:map} is correct
+  arithmetic whose every plausible output yields identical play. A parameter justified by
+  derivation rather than tuning should be checked for whether the system ever samples the region
+  where its value matters; if not, say so.
+  \item \textbf{Encode the finding as a gate.} A one-off audit decays; a regression test that
+  asserts every roster vector diverges from the control somewhere (Section~\ref{sec:gate}) makes
+  inertness a build failure instead of a rediscovery.
+\end{enumerate}
+
+\section{Limitations}
+\label{sec:limitations}
+
+\textbf{The certificate is population-relative.} Zero divergence is exact, but only over the
+decision distribution the probe visited: games generated by these policies, on this seed set,
+under this rule set. A different opponent population could in principle populate the empty
+$[0.775, 0.975]$ confidence band --- though the mechanism of Section~\ref{sec:mechanism} argues the
+bimodality follows from the estimator's structure, not from the particular opponents.
+
+\textbf{The result is band-relative, not global.} Below $0.775$ the knob is demonstrably alive
+(892 changed decisions at threshold $0$; $1.2968\%$ divergence at $0.50$). ``Inert axis'' here
+means inert \emph{across the range the roster spans}, which is the range the roster's narrative
+was built on.
+
+\textbf{The roster is untuned.} The design document's tuning protocol --- SPRT re-tuning of every
+style against the control --- has not been run; the styles measured are the styles as specified.
+A re-tuned roster could in principle move bars below $0.775$, at which point the axis would
+come alive and the labels would mean something again.
+
+\textbf{One engine, one estimator.} The bimodality is a property of this count-consistency
+confidence estimator under this rule set's information structure, with certainty-preemption in
+this pipeline order. The specific breakpoints ($0.775$, $0.975$) will not transfer; the failure
+pattern --- certainty preempting speculation until a threshold band depopulates --- plausibly
+will, in any deduction-heavy domain where the same evidence that qualifies a plan also resolves
+it.
+
+\textbf{Sample sizes differ by stage.} The zero-divergence certificate is strongest for the
+pilot audit (275{,}380 and 51{,}420 decisions); the roster-stage sweep of
+Table~\ref{tab:rostersweep} covers 40 games. Both agree exactly on the breakpoint.
+
+\section{Conclusion}
+
+A nine-style roster was named along an aggressive-to-conservative declare-threshold axis.
+Decision-level instrumentation --- exact comparison of two policies' actions on identical
+observations and seeds at every decision point of real games --- showed the axis changes nothing
+across the roster's entire range, because the shared inference engine's confidence estimates are
+bimodal and every threshold in the band selects the identical declares. The knob was wired,
+swept, and reported; it was never reached. The repairs were behavioural (a relocated gate),
+editorial (a relabelled narrative, corrected where the claims live), and institutional (a
+no-inert-vector regression gate, and a search-side count of byte-identical candidates). For
+parameter studies of agents generally: outcomes measure whether a knob \emph{matters}; only
+decisions measure whether it \emph{exists}. Measure decisions first.
+
+\begin{thebibliography}{10}
+\small
+
+\bibitem{styles}
+FishAI project.
+\emph{STYLES.md --- the play-style roster under \code{us54}}.
+Repository document; \S2 (the \code{StyleParams} surface), \S3.1.1 (the Hoarder inertness
+audit), \S6.1 (the inert declare-threshold axis), \S6.4 (matrix v2).
+
+\bibitem{botlab}
+FishAI project.
+\emph{BOT\_LAB.md --- play-style spectrum: research, experimental design, and metrics}.
+Repository document; \S1.3 (style is not skill), \S5.5 (SPRT for tuning, fixed-$N$ for
+reporting), \S5.7 (exploitability search).
+
+\bibitem{rules}
+FishAI project.
+\emph{RULES\_US54.md --- the ``US student'' 54-card variant}.
+Repository document; \S1 decision table, row 14 (a declare with any error awards the set to the
+opposing team).
+
+\bibitem{decide}
+FishAI project.
+\emph{lib/engine/bots/decide.ts --- the deterministic bot policy layer}.
+Source file: \code{planClaim}, \code{certainClaim}, \code{evClaim}, and the hoard gate
+\code{withinHoardLimits}.
+
+\bibitem{roster}
+FishAI project.
+\emph{lib/engine/bots/roster.ts --- the nine \code{us54} styles}.
+Source file; header derivation of $t_{\mathrm{us54}} = (1 + t_{\mathrm{pagat48}})/2$.
+
+\bibitem{styletest}
+FishAI project.
+\emph{tests/bots/style.test.ts --- the \code{StyleParams} regression net}.
+Source file; the no-inert-vector gate and the crafted \code{evWindowView} position.
+
+\bibitem{exploit}
+FishAI project.
+\emph{lib/lab/analysis/exploit.ts --- best-response search}.
+Source file; \code{KNOB\_LADDER} and the \code{inertCandidates} field.
+
+\bibitem{results}
+FishAI project.
+\emph{src/lab/data/style-results.v2.json --- matrix v2 artifact}.
+Data file, engine commit recorded \code{1667a1d-dirty};
+\code{exploitability[*].candidatesTried} and \code{.inertCandidates}.
+
+\bibitem{v05}
+A.~Hsieh.
+\emph{FishAI v0.5: measuring play style without skill in a 54-card Literature variant}.
+Companion paper, published alongside this one, 2026: the engine, the roster, and the
+full-precision tournament whose reading this paper's finding qualifies.
+
+\bibitem{wald}
+A.~Wald.
+Sequential tests of statistical hypotheses.
+\emph{Annals of Mathematical Statistics}, 16(2):117--186, 1945.
+
+\bibitem{alpharank}
+S.~Omidshafiei, C.~Papadimitriou, G.~Piliouras, K.~Tuyls, M.~Rowland, J.-B.~Lespiau,
+W.~M.~Czarnecki, M.~Lanctot, J.~Perolat, and R.~Munos.
+$\alpha$-Rank: multi-agent evaluation by evolution.
+\emph{Scientific Reports}, 9:9937, 2019.
+
+\end{thebibliography}
+
+\end{document}

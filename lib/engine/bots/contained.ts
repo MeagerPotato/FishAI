@@ -286,6 +286,18 @@ function aimedTarget(view: SeatView, style: StyleParams): Seat | null {
  *
  * (CONTAINMENT.md §2's tier discipline still applies to C3–C6, which price the *turn-pass* and
  * were measured under `us54` only.)
+ *
+ * ## The `why` probe
+ *
+ * `why` is a write-only out-parameter for `decideExplained`'s traces: when the plan is refused,
+ * the reason is written into it — in the same register as the RankedAsk reasons — so the
+ * assistant pane can show "considered but refused" without this file's derivation being
+ * duplicated in the policy layer. It is only ever *written*, never read, so a call without it
+ * (which is every call `decide` makes) is bit-for-bit the call it always was. Reasons are only
+ * recorded from the point the mechanism was genuinely live: the three configuration gates
+ * (appetite 0, the `pagat48` compatibility gate, a skill that cannot read counts) say the
+ * mechanism is off for this seat, not that a position was weighed and declined, so they stay
+ * silent and the pane is not told the tiers "considered" a move they can never make.
  */
 export function planContainedPass(
   view: SeatView,
@@ -293,6 +305,7 @@ export function planContainedPass(
   style: StyleParams,
   skill: SkillParams,
   ordinary: RankedAsk,
+  why?: { reason?: string },
 ): ContainedPassPlan | null {
   if (!(style.containedPass > 0)) return null
   if (rulesFor(view.config).wrongDeclare !== 'opponents') return null
@@ -304,11 +317,20 @@ export function planContainedPass(
   const p = skill.refinedInference
     ? refinedHitProbability(k, ordinary.card, ordinary.target)
     : ordinary.p
-  if (p >= 1) return null
+  if (p >= 1) {
+    if (why) why.reason = 'the ordinary ask is a certain hit — riskless material that keeps the turn, which nothing may displace'
+    return null
+  }
   const target = aimedTarget(view, style)
-  if (target === null) return null
+  if (target === null) {
+    if (why) why.reason = 'this style expresses no aim (missTarget random or no opponent holds cards), and an unaimed concession buys nothing'
+    return null
+  }
   const books = containedBooks(view, k)
-  if (books.length === 0) return null
+  if (books.length === 0) {
+    if (why) why.reason = 'no unresolved set is contained on this team, so no guaranteed-miss ask exists'
+    return null
+  }
   // Prefer a book that offers a reusable card (§1.2 — a free repeat), then canonical book order.
   let pick: { book: BookId; card: Card; reused: boolean } | null = null
   for (const b of books) {
@@ -317,9 +339,19 @@ export function planContainedPass(
     if (pick === null || (c.reused && !pick.reused)) pick = { book: b, card: c.card, reused: c.reused }
     if (pick.reused) break
   }
-  if (pick === null) return null
+  if (pick === null) {
+    if (why) why.reason = 'no contained set offers a card this seat may legally name'
+    return null
+  }
   const infoCost = pick.reused ? 0 : firstUseInfoCost(k, style)
   const value = valueContainedPass(view, style, ordinary.target, target, infoCost)
-  if (!(p < value.threshold)) return null
+  if (!(p < value.threshold)) {
+    if (why) {
+      const pct = Math.round(p * 100)
+      const bar = Math.round(value.threshold * 100)
+      why.reason = `the ordinary ask hits ${pct}% of the time, at or above the ${bar}% break-even the pass would need — the material ask is kept`
+    }
+    return null
+  }
   return { book: pick.book, card: pick.card, target, reused: pick.reused, value }
 }

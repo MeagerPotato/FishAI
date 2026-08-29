@@ -2,7 +2,11 @@
  * `/lab` — the report.
  *
  * SITE_SPEC.md §1: hero -> the rule set -> style roster -> method -> payoff matrix (pin act 1)
- * -> counter-graph (pin act 2) -> verdict -> exploitability -> cross-play -> sources.
+ * -> counter-graph (pin act 2) -> verdict -> exploitability -> cross-play -> sources. The
+ * interpretability overhaul adds a "How to read" strip between the hero and the rule set — six
+ * plain-language ideas that carry the whole report — plus one plain-language sentence of body
+ * prose ahead of every figure and a glossary in the Sources section. Plain language is not a
+ * different register here: the numbers are the same numbers, said once in words first.
  *
  * ## The accent budget (SITE_SPEC.md §2.1)
  *
@@ -198,6 +202,13 @@ export function LabReport() {
                 Full matrix
               </Button>
             </div>
+            <p className={s.figNote}>
+              The roster is not only measured — it is playable:{' '}
+              <TextLink href="/play" arrow={false}>
+                take a seat against it yourself
+              </TextLink>
+              , solo or assisted by the engine&rsquo;s own reasoning.
+            </p>
           </Reveal>
         </div>
 
@@ -207,12 +218,87 @@ export function LabReport() {
         </div>
       </Section>
 
+      {/* ---- how to read this page -------------------------------------------------------- */}
+      <Section id="how-to-read" badge="How to read">
+        <SectionHead
+          lines={['A minute of vocabulary,', 'and the evidence *reads itself*.']}
+          sub="Nothing on this page is dumbed down, but none of it needs prior jargon either. Six ideas carry the whole report; each is stated plainly here, and each term reappears in the glossary under Sources."
+        />
+        <Board
+          items={[
+            {
+              ix: '01',
+              title: 'A style is settings, not a bot',
+              role: 'Definition',
+              body:
+                'Every seat runs the same deduction engine. A style is a vector of parameters ' +
+                'over it — how eagerly to declare, whom to target, what to weigh — so when one ' +
+                'style beats another, the difference is policy, never one bot being better ' +
+                'written than the rest.',
+            },
+            {
+              ix: '02',
+              title: 'A duplicate deal cancels the cards',
+              role: 'Method',
+              body:
+                'Each seeded deal is played twice with the teams swapped, and the pair is scored ' +
+                'as one observation. A lucky hand lifts both sides equally and cancels out, so ' +
+                'what remains is what the styles did with identical cards.',
+            },
+            {
+              ix: '03',
+              title: 'Score rate is a plain win rate',
+              role: 'Measure',
+              body:
+                'The share of games a style’s team won, from 0 to 1, where .500 is an even ' +
+                'match. Under us54 a tie is arithmetically impossible — nine sets, first to five ' +
+                '— so nothing hides in a draw column.',
+            },
+            {
+              ix: '04',
+              title: 'The matrix and the counter-graph',
+              role: 'Figures',
+              body:
+                'The matrix prints each style’s score rate against every other. The ' +
+                'counter-graph is the same data redrawn as arrows — one per pairing whose ' +
+                'advantage survived statistical correction. A cycle there (A beats B beats C ' +
+                'beats A) would mean no ranking can be honest; this roster has none.',
+            },
+            {
+              ix: '05',
+              title: 'Four criteria, or no winner',
+              role: 'Decision rule',
+              body:
+                'A style is called dominant only if it tops the table, loses no matchup even at ' +
+                'the cautious end of the interval, sits in a matrix transitive enough for a ' +
+                'ranking to mean anything, and folds no worse than its rivals to a counter-' +
+                'strategy tuned against it. Fail one and nobody is crowned.',
+            },
+            {
+              ix: '06',
+              title: 'Two caveats, stated up front',
+              role: 'Caveats',
+              body:
+                'The declare-threshold axis the style names advertise turns out not to fire, so ' +
+                'the styles differ along other knobs than the ones they are named for; and the ' +
+                'Hoarder is measured paying its strategy’s full cost without the mechanism ' +
+                'that was meant to pay it back. Both are unpacked below the roster.',
+            },
+          ]}
+        />
+      </Section>
+
       {/* ---- the rule set --------------------------------------------------------------- */}
       <Section id="rules" badge="The rule set">
         <SectionHead
           lines={['54 cards, nine sets of six,', 'and *no way to draw*.']}
           sub={`Results are only meaningful against the rules that produced them. This page reports ${RULES_FILE}, stamped above from meta.rulesHash and verified in the browser against the shipped document's own bytes — not the pagat48 rule set the live table plays.`}
         />
+        <p className={s.prose}>
+          The figure below deals the 54 cards into their nine sets of six — eight ordinary
+          half-suits, then the odd ninth built from the four 8s and both jokers, which is the one
+          rule everything else on this page leans on.
+        </p>
         <DeckAssembly figNo="FIG. 01" />
         <Hairline variant="soft" />
         <div className={s.split} style={{ marginTop: 'var(--fa-sp-head)' }}>
@@ -299,7 +385,17 @@ export function LabReport() {
             What the styles actually do differently
           </Eyebrow>
           <div className={s.stackWide} style={{ marginTop: 20 }}>
+            <p className={s.prose}>
+              The first chart shows how often each style&rsquo;s declares handed the set to the
+              opposition — the costliest habit a style can have under us54, where any error in a
+              declare gifts the whole set.
+            </p>
             <BarChart model={concedeRateBar(results, 'FIG. 02')} />
+            <p className={s.prose}>
+              The second puts every style&rsquo;s declare precision beside the Balanced
+              control&rsquo;s on the same deals, so the distance between the two dots is the
+              style&rsquo;s own doing.
+            </p>
             <DumbbellChart model={claimPrecisionDumbbell(results, 'FIG. 03')} />
           </div>
         </div>
@@ -311,6 +407,11 @@ export function LabReport() {
           lines={['Duplicate deals, or', 'the result is *noise*.']}
           sub="Every pairing plays the same seeded deals from both sides, so a style is never credited for the cards it happened to be dealt. The engine is pure and deterministic: one seed, one byte-identical game."
         />
+        <p className={s.prose}>
+          One run flows left to right below, from the seed list to the published artifact this
+          page reads; the highlighted step is the analysis, because that is where a raw score
+          either survives correction or stops being a finding.
+        </p>
         <AnalysisPipeline figNo="FIG. 04" />
 
         <div className={s.split} style={{ marginTop: 'var(--fa-sp-head)' }}>
@@ -343,6 +444,11 @@ export function LabReport() {
             The turn structure and the declare window, as state machines (FIG. 05a, FIG. 05b)
           </summary>
           <div className={`${s.detailBody} ${s.stackWide}`}>
+            <p className={s.prose}>
+              Two loops, drawn separately so neither has to lie by omission: first the turn
+              itself — ask, hit, miss, turn passes — then what happens inside a declare window,
+              where the us54 rules actually bind.
+            </p>
             <TurnMachine figNo="FIG. 05a" />
             <DeclareWindowMachine figNo="FIG. 05b" />
           </div>
@@ -357,9 +463,10 @@ export function LabReport() {
               <MaskedLines lines={['Who beats whom,', 'and by *how much*.']} />
               <div className={pinHeadAside}>
                 <p>
-                  {count(meta.seedSet.count)} duplicate pairs per cell, SE ≤{' '}
-                  {rate3(Math.max(...artifact.matrix.map((c) => c.se)))}. The figure does not
-                  change as you scroll — only the reading does.
+                  Each cell below is the share of identical deals the row style&rsquo;s team won
+                  against the column style&rsquo;s. {count(meta.seedSet.count)} duplicate pairs
+                  per cell, SE ≤ {rate3(Math.max(...artifact.matrix.map((c) => c.se)))}. The
+                  figure does not change as you scroll — only the reading does.
                 </p>
               </div>
             </div>
@@ -377,9 +484,10 @@ export function LabReport() {
               <MaskedLines lines={['Every edge here', 'survived *correction*.']} />
               <div className={pinHeadAside}>
                 <p>
-                  Built from <code>matrix[].significant</code>, the Benjamini-Hochberg flag — never
-                  from a raw p-value. Uncorrected, four more cells in this matrix would have
-                  emitted an edge.
+                  Each arrow below points from a style to a style it reliably beats. Built from{' '}
+                  <code>matrix[].significant</code>, the Benjamini-Hochberg flag — never from a
+                  raw p-value. Uncorrected, four more cells in this matrix would have emitted an
+                  edge.
                 </p>
               </div>
             </div>
@@ -391,6 +499,10 @@ export function LabReport() {
 
       {/* ---- the verdict ---------------------------------------------------------------- */}
       <Section id="verdict" noMarks>
+        <p className={s.prose} style={{ marginBottom: 'var(--fa-sp-head)' }}>
+          Everything above compresses into one word, printed below beside the four tests it had
+          to pass — recomputed from the matrix in your browser, not read off the artifact.
+        </p>
         <InkPanel
           fig="FIG. 09 — The verdict"
           live={`VERDICT · ${derived.verdict.toUpperCase()}`}
@@ -472,7 +584,12 @@ export function LabReport() {
           </>
         )}
 
-        <div style={{ marginTop: 'var(--fa-sp-head)' }}>
+        <div className={s.stackWide} style={{ marginTop: 'var(--fa-sp-head)' }}>
+          <p className={s.prose}>
+            The last figure asks how each style&rsquo;s score rate holds up as the opposition
+            gets stronger, opponent by opponent: a flat line degrades gracefully, a steep one
+            only ever beat the weak.
+          </p>
           <LineChart model={degradationLine(results, 'FIG. 10')} />
         </div>
       </Section>
@@ -576,6 +693,58 @@ export function LabReport() {
             </p>
           </div>
         </div>
+
+        <Hairline variant="soft" />
+        <Eyebrow tone="muted" track="head" as="h3">
+          Glossary
+        </Eyebrow>
+        <dl className={s.glossary}>
+          <dt>Duplicate pair</dt>
+          <dd>
+            One seeded deal played twice with the teams swapped and scored as a single
+            observation, so the luck of the cards cancels.
+          </dd>
+          <dt>Score rate</dt>
+          <dd>
+            The share of games won, 0 to 1; .500 is an even match, and under us54 there are no
+            ties to blur it.
+          </dd>
+          <dt>Maximin</dt>
+          <dd>
+            A style&rsquo;s score rate in its worst matchup; above .500 means it loses to nobody
+            in the roster.
+          </dd>
+          <dt>Cyclic energy</dt>
+          <dd>
+            How much of the matrix is rock-paper-scissors rather than a ladder; past the
+            threshold, any single ranking misleads.
+          </dd>
+          <dt>Nash mixture</dt>
+          <dd>
+            The blend of styles that would be unbeatable within this roster; a dominant style is
+            the special case where one style takes all the weight.
+          </dd>
+          <dt>Exploitability</dt>
+          <dd>
+            How hard a style falls to an opponent tuned specifically against it; topping the
+            table without this check is only a claim about today&rsquo;s population.
+          </dd>
+          <dt>Concede rate</dt>
+          <dd>
+            The share of a style&rsquo;s declares that handed the set to the opposition — under
+            us54, any error in a declare gifts the whole set.
+          </dd>
+          <dt>Declare window</dt>
+          <dd>
+            The pause after every action in which each seat, in order, may declare a set or
+            decline; declining is itself a move.
+          </dd>
+          <dt>Clinch</dt>
+          <dd>
+            The game ends the moment a team&rsquo;s fifth set resolves, so a finished game always
+            leaves sets unresolved and cards in hand.
+          </dd>
+        </dl>
 
         <Hairline variant="soft" />
         <p className={s.figNote}>

@@ -1,0 +1,991 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{microtype}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}
+\newenvironment{proofenv}{\noindent\textit{Proof.}\ }{\hfill$\square$\par\medskip}
+
+% Float packing: let tables share pages with more text instead of drifting.
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.6}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.8}
+\setcounter{totalnumber}{4}
+\setcounter{topnumber}{3}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\usff}{\code{us54}}
+
+\title{FishAI v1.0: When Best-Response Adaptation\\ Is Worth Less Than Nothing}
+\author{Allen Hsieh\\[2pt] {\small FishAI project}}
+\date{August 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+FishAI v0.5 measured a nine-style roster for the \usff{} dialect of Literature (Canadian
+Fish) and found one style, Punter, dominant. FishAI v1.0 asks the natural follow-up: does
+an agent that identifies its opponents' styles online and best-responds beat committing to
+the best static style? The agent is built honestly --- fourteen behavioural features
+certified by the public log alone, calibrated diagonal-Gaussian posteriors per opponent
+seat, best response over the measured $9 \times 9$ counter table, delegation to the
+unchanged style-conditioned engine, all under determinism and statelessness constraints
+that force co-located seats to identical reads. The answer is a theorem plus a
+measurement. The theorem: the Punter row of the measured table dominates every column, and
+expected payoff is linear in the opponent posterior, so the warm best response is Punter
+under \emph{every} belief --- the adaptive policy provably degenerates to the dominant
+static style. The measurement: the degenerate policy is strictly \emph{worse} than static
+Punter, because its warmup anchor pays a tax. The adaptive team lands below the paired
+Punter benchmark in all nine gauntlet cells (mean $-0.0108$; sharpest cell
+$-0.0108 \pm 0.0031$, $z = -3.53$) and loses a truly-paired 24-composition mixed screen at
+$-0.0136 \pm 0.0043$ ($z = -3.2$, seed-clustered). An oracle ablation prices perfect
+classification at
+exactly zero: handed the true styles, the agent plays move-for-move identical games. The
+classifier has real but bounded skill --- $22.4\%$ end-of-game top-1 against an $11.1\%$
+chance floor, $50.4\%$ on Ghost, $5.6$--$12.9\%$ inside a quadrangle of styles that
+diverge from the control on under $3\%$ of decisions --- and under dominance none of it
+can matter. Adaptation over this roster is worth less than nothing, and every knob that
+repairs the tax does so by collapsing the policy into the static dominant style. That is a
+statement about this meta-game, not about adaptation as an idea, and we state which
+conditions --- intransitive rosters, off-roster opponents, rule-set shifts --- would give
+the machinery something to do.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+The FishAI v0.5 tournament \cite{v05paper} ended with a static answer to a static
+question: among nine parameterized play styles sharing one full-strength inference engine,
+the completion-chasing Punter dominates. The obvious rejoinder, standard in every
+community that argues about styles, is dynamic: \emph{a fixed style is a sitting target; a
+player who reads the table and adapts should beat any static commitment.} FishAI v1.0 was
+built to test that rejoinder under the same measurement discipline, with the question
+fixed before any experiment ran: \emph{does adapting to the opponents' identified styles
+beat committing to the best static style?}
+
+The v1.0 agent is the natural best-response architecture, built without shortcuts: an
+observation layer that extracts per-seat behavioural features the public log \emph{certifies}
+rather than estimates (Section~\ref{sec:observe}); a classifier that turns those features
+into a posterior over the nine roster styles, calibrated offline and honest about early-game
+ignorance (Section~\ref{sec:classify}); a best-response layer that scores every candidate
+style against the posterior using the measured $9 \times 9$ counter table and delegates the
+chosen style to the unchanged v0.5 engine (Section~\ref{sec:bestrespond}); and structural
+honesty constraints --- public information only, bit-level determinism, and statelessness
+via phase quantisation so co-located teammates reach identical reads
+(Section~\ref{sec:honesty}).
+
+The result is a negative one, and it arrives in an unusually clean two-part form. First,
+\textbf{a one-paragraph theorem} (Section~\ref{sec:theorem}): the Punter row of the
+measured counter table dominates every column, and the agent's expected payoff is linear
+in its opponent posterior, so the warm best response is Punter under \emph{every} belief
+--- uniform, oracle-exact, or anything the classifier can produce --- and the adaptive
+policy provably degenerates to the dominant static style. Second, \textbf{a measured
+warmup tax} (Section~\ref{sec:results}): degenerating to Punter would merely tie the
+static benchmark, but the measured agent does worse, because its warmup anchor (Balanced,
+played until the public log matures) is a below-Punter style played for $52$--$58\%$ of
+the team's decisions. The tax is visible in all nine gauntlet cells (mean $-0.0108$),
+significant in the sharpest ($z = -3.53$), and confirmed at $z = -3.2$ in a truly-paired
+mixed-population screen. Two of the four pre-registered predictions --- written down,
+verbatim, before the run --- expected the tax to be negligible; both were refuted, and
+the refutation \emph{is} the headline.
+
+The paper's contributions: the architecture as an honest reference implementation of
+online style identification in Literature (Section~\ref{sec:arch}); the
+dominance-degeneracy theorem and its corollary that perfect classification is worth exactly
+zero, confirmed by an oracle ablation whose per-deal deltas are identically $0.0000$
+(Sections~\ref{sec:theorem}, \ref{sec:oracle}); the pre-registered suite and its verdicts
+(Sections~\ref{sec:design}--\ref{sec:results}); and a mechanism-level account of the
+warmup tax, with the observation that every remedy collapses the adaptive policy into the
+static dominant style --- not a bug in the remedies but the finding itself
+(Section~\ref{sec:discussion}).
+
+\section{Related work}
+\label{sec:related}
+
+Opponent modelling --- fitting a model of another agent's policy or type and responding to
+it --- is surveyed by Albrecht and Stone \cite{albrechtstone2018}. In trick-taking card
+games, Rebstock et al.\ show that policy-based inference substantially improves state
+estimation in Skat \cite{rebstock2019}; the project's internal research synthesis
+\cite{playstyles} catalogues this family for Literature (its opponent-model exploiter,
+A14) and specifies a per-seat detection panel (S35, ``the Reader'') whose feature set
+anticipates the observation layer built here. This paper implements a deliberately narrow
+slice of that program --- type identification over a known, closed roster --- and measures
+what the slice is worth. The meta-game framing follows Balduzzi et al.\
+\cite{balduzzi2018}: the v0.5 matrix is the evaluation data, its maximum-entropy Nash
+places all mass on Punter, and $\alpha$-Rank \cite{omidshafiei2019} concentrates likewise,
+so a best-response dynamic over that matrix has a unique fixed point; this paper measures
+the cost of travelling to it. The self-play caveat of Hu et al.\ \cite{hu2020} ---
+behaviour optimised within a closed population need not transfer outside it --- is
+inherited in Section~\ref{sec:threats}. To our knowledge, resting on the synthesis's
+negative search report \cite{playstyles,v05paper}, no prior quantitative study of online
+style adaptation exists for Literature.
+
+\section{Background: the game, the dialect, and the v0.5 roster}
+\label{sec:background}
+
+Literature is a six-player, two-team card game of public asks and hidden hands. Under the
+\usff{} dialect --- specified rule-complete in the rules document \cite{rules} and
+summarized in the companion paper \cite{v05paper} --- the deck is 54 cards in nine
+half-suits (``sets'' or ``books'') of six; each seat is dealt nine; asks require holding a
+card of the asked set and not the named card; declares happen out of turn in a
+deterministic declare window; \emph{any} declaration error awards the set to the
+opponents; the game ends the moment a team is awarded five sets; ties are impossible. The
+engine is pure, deterministic TypeScript: one seed reproduces a byte-identical game.
+
+FishAI v0.5 \cite{v05paper} defined nine parameterized styles over one shared
+full-strength inference engine --- Balanced (the tuned control), Blitz and Punter
+(aggressive), Banker and Turtle (conservative), Hoarder (optionality), and Scout, Ghost
+and Archivist (information) --- and measured their full-precision round robin (36 cells
+$\times$ 4{,}300 duplicate deal pairs; per-cell SE at most $0.005$) \cite{matrixv2}. The
+verdict was \emph{dominant --- Punter} (mean $0.5829$,
+maximin $0.5190$, cyclic energy $0.0112$, exploitability $0.0025$), with two measured
+caveats that matter here: the declare-threshold axis the roster's labels advertise is
+inert across the roster's entire range \cite{inertpaper}, so the nine styles differ from
+the control on only $0.39$--$2.89\%$ of decisions \cite{styles}; and the Hoarder's
+theorized benefit, the contained-book turn-pass, was implemented and measured to be worth
+nothing \cite{containedpaper}. The first caveat returns in Section~\ref{sec:p4} as a
+quantitative bound on what any public-log classifier can see.
+
+\section{The adaptive architecture}
+\label{sec:arch}
+
+The v1.0 agent is a policy shape, not a new engine. At every decision it (i) observes the
+three opponent seats from the public log, (ii) classifies each into a posterior over the
+nine styles, (iii) best-responds by expected score rate over the measured counter table,
+and (iv) delegates: the chosen style is handed to the ordinary v0.5 engine, which decides
+exactly as for any static style at full strength \cite{repo}. Everything above the
+delegation boundary is a pure function of the seat's public view and the configuration.
+
+\subsection{Observation: features the public log certifies}
+\label{sec:observe}
+
+The observation layer is a single $O(\text{events})$ pass over the public log producing
+one feature vector per seat. Its design rule is that every feature is an \emph{exact}
+public observation, never an estimate: a hit locates the named card publicly at the asker
+until it moves again; an ask certifies that the asker held a card of the asked set (the
+only licence to ask) and proves they lacked the named card; a declaration's reveal lists
+the true holder of all six cards, so foreign and own-hand-only declares are exact events;
+and hand counts are \emph{replayed} from the log rather than read from the view, which is
+what makes truncated-log evaluation honest --- a prefix's replayed counts are correct at
+the truncation point while the view's end-of-game counts are not \cite{repo}.
+
+One omission shapes everything downstream: \textbf{declining to declare emits no event}.
+The declare window advances silently, so declare-window patience is invisible to any
+public observer, and --- as Section~\ref{sec:warmupanatomy} measures --- the public log
+grows several times slower than the decision count.
+
+\begin{table}[t]
+\centering
+\caption{The fourteen classifier features, all rates or shares --- length-invariant by
+construction (a first calibration over raw counts read every short game as ``not the
+style''). Denominators are clamped at one.}
+\label{tab:features}
+\footnotesize
+\begin{tabular}{@{}lp{9.6cm}@{}}
+\toprule
+Feature & Definition (per seat, over the observed log) \\
+\midrule
+\code{hitRate}             & hits / asks \\
+\code{askDiversity}        & distinct books asked into / asks \\
+\code{sameBookRepeatRate}  & consecutive same-book asks / (asks $-$ 1) \\
+\code{certainAskShare}     & asks for a card publicly located at the target / asks \\
+\code{deadAskShare}        & asks for a card publicly located elsewhere / asks (a guaranteed miss) \\
+\code{leakyAskShare}       & asks into books with own-team located$+$certified count $\ge 4$ / asks \\
+\code{completionAskShare}  & asks into books with own-team located count $= 5$ / asks \\
+\code{missFewestShare}     & share of misses where the target held strictly the fewest cards \\
+\code{missMostShare}       & \ldots strictly the most \\
+\code{askShare}            & asks / observed events \\
+\code{declareShare}        & declares / observed events \\
+\code{foreignDeclareShare} & declares of books the claimer held no card of / declares \\
+\code{ownHandOnlyShare}    & declares where every card was the claimer's / declares \\
+\code{declareBackload}     & mean declare position (event index / final index) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:features} lists the fourteen features. Several are direct public
+signatures of roster mechanisms: \code{deadAskShare} is the contained-book turn-pass of
+\cite{containedpaper} seen from outside; \code{foreignDeclareShare} and
+\code{declareBackload} are the Hoarder's audit trail; \code{ownHandOnlyShare} is the
+Turtle's gate made visible.
+
+\subsection{Classification: calibrated diagonal-Gaussian fingerprints}
+\label{sec:classify}
+
+The classifier is deliberately the simplest model that can be honest: one diagonal
+Gaussian per style per game-length bucket, calibrated offline from 150 \usff{} mirror
+games per style and committed with full provenance \cite{artifact}. For an observed vector
+$x$ and a style with per-feature mean $\mu$ and deviation $\sigma$, the score is the plain
+z-distance $\sum_i -\tfrac12 z_i^2$, $z_i = (x_i - \mu_i)/\sigma_i$, softmaxed over the
+nine styles. Four calibration decisions were made by measurement, not taste.
+\emph{The Gaussian normaliser is dropped}: with sample SDs over a few hundred calibration
+vectors, $\sum_i -\ln\sigma_i$ is a large constant bonus for whichever style calibrated
+tightest --- in the first calibration it handed the Ghost 40 of 60 mirror-Balanced reads
+--- and without it the argmax at a style's own mean is that style. \emph{Per-style
+variance is shrunk halfway to the pooled variance},
+$\sigma'^2 = (\sigma_{\text{style}}^2 + \sigma_{\text{pooled}}^2)/2$: raw per-style SDs
+make the widest-variance style an outlier magnet, fully pooled SDs discard real
+information, and the blend beat both ends in calibration probes. \emph{Checkpoint
+buckets}: a mid-game observation must be read against fingerprints taken at the same
+horizon, so the calibration stores buckets at $\{60, 120, 200, 300\}$ observed events plus
+a full-game bucket. \emph{Sample-size damping}: the posterior is blended toward uniform by
+$\min(1, \text{asks}/12)$ --- at zero observed asks the answer is exactly ``I don't
+know'', and full confidence requires a dozen of the seat's \emph{own} choices, not merely
+a long game. Determinism is absolute: the same view and fingerprints produce identical
+output, ties resolving to the earlier fingerprint in roster order.
+
+\subsection{Best response over the measured counter table}
+\label{sec:bestrespond}
+
+The payoffs are the committed counter table $P$: $P_{ij}$ is the duplicate-averaged score
+rate of style $i$ against style $j$ from the v0.5 full-precision matrix (matrix v2;
+diagonal $0.5$ by duplicate symmetry) \cite{matrixv2}, reproduced in
+Table~\ref{tab:counter}. Provenance travels with the table --- the source artifact's
+digest is exported beside the numbers, pinned by tests, and enforced by the experiment
+harness (Section~\ref{sec:provenance}).
+
+For opponent-seat posteriors $q_1, q_2, q_3$ over the styles, the agent scores every
+candidate row $i$:
+\begin{equation}
+\label{eq:expected}
+E(i) \;=\; \frac{1}{3}\sum_{k=1}^{3}\;\sum_{s} q_k(s)\, P_{is}
+\;=\; \sum_{s} \bar q(s)\, P_{is},
+\qquad \bar q = \tfrac{1}{3}(q_1 + q_2 + q_3),
+\end{equation}
+adds a hysteresis bias $\beta$ (\code{switchMargin}, default $0.01$) to the anchor
+style's entry --- a candidate must \emph{beat} the anchor, not merely tie it --- and
+plays the argmax. During \emph{warmup} (fewer than \code{warmupEvents} $= 40$ observed
+events) the anchor (default Balanced, the control) plays unconditionally: an early
+posterior is mostly the damping prior, and a best response to ignorance is noise.
+
+\begin{table}[t]
+\centering
+\caption{The measured counter table $P$ (row's score rate vs.\ column), matrix v2 at
+4{,}300 pairs per cell; diagonal $0.5$ by duplicate symmetry; paired SEs
+$0.0036$--$0.0050$; full precision in the committed table \cite{matrixv2}. The Punter row
+exceeds every other row in every column.}
+\label{tab:counter}
+\footnotesize
+\setlength{\tabcolsep}{4.4pt}
+\begin{tabular}{@{}lccccccccc@{}}
+\toprule
+ & Bal & Bli & Pun & Ban & Tur & Hoa & Sco & Gho & Arc \\
+\midrule
+Balanced  & 0.5    & 0.4962 & 0.4810 & 0.5270 & 0.6397 & 0.5624 & 0.6378 & 0.5549 & 0.5660 \\
+Blitz     & 0.5038 & 0.5    & 0.4802 & 0.5214 & 0.6427 & 0.5684 & 0.6356 & 0.5623 & 0.5669 \\
+\textbf{Punter} & \textbf{0.5190} & \textbf{0.5198} & \textbf{0.5} & \textbf{0.5469} & \textbf{0.6581} & \textbf{0.5795} & \textbf{0.6603} & \textbf{0.5867} & \textbf{0.5926} \\
+Banker    & 0.4730 & 0.4786 & 0.4531 & 0.5    & 0.6171 & 0.5287 & 0.6056 & 0.5307 & 0.5410 \\
+Turtle    & 0.3603 & 0.3573 & 0.3419 & 0.3829 & 0.5    & 0.4198 & 0.5159 & 0.3957 & 0.4460 \\
+Hoarder   & 0.4376 & 0.4316 & 0.4205 & 0.4713 & 0.5802 & 0.5    & 0.5817 & 0.4780 & 0.5074 \\
+Scout     & 0.3622 & 0.3644 & 0.3397 & 0.3944 & 0.4841 & 0.4183 & 0.5    & 0.4434 & 0.4438 \\
+Ghost     & 0.4451 & 0.4377 & 0.4133 & 0.4693 & 0.6043 & 0.5220 & 0.5566 & 0.5    & 0.4944 \\
+Archivist & 0.4340 & 0.4331 & 0.4074 & 0.4590 & 0.5540 & 0.4926 & 0.5562 & 0.5056 & 0.5    \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The chosen style is then \emph{played} by the unchanged v0.5 engine at full strength: the
+adaptive layer selects among existing policies and adds no policy content of its own. A
+lab-only \emph{oracle mode} substitutes a point-mass posterior with the true opponent
+styles, keeping warmup and phase behaviour identical, so the ablation of
+Section~\ref{sec:oracle} isolates exactly one thing: the posterior.
+
+\subsection{Honesty constraints}
+\label{sec:honesty}
+
+Three constraints are structural, inherited from v0.5 and extended. \emph{Public
+information only}: the agent consumes \code{SeatView}, the exact public payload a human in
+the seat would see; no other hand is reachable by construction \cite{v05paper,repo}.
+\emph{Determinism}: the style choice is a pure function of (view, configuration) --- no
+clock, no randomness, no state between calls --- so every reported game is reproducible
+from its seed. \emph{Statelessness, via phase quantisation}: a stateful bot would remember
+its last choice and demand a margin to move off it; this bot owns no state, because two
+adaptive seats given the same public information \emph{must} reach the same read --- the
+roster's one-shared-engine discipline \cite{styles} would otherwise die at the adaptive
+layer. Hysteresis is therefore expressed statelessly, twice over: the memoryless anchor
+bias $\beta$, and \emph{phase quantisation} --- the choice may only change when
+$\lfloor \text{events}/30 \rfloor$ changes. In the implementation's own words: the
+posterior ``is evaluated on the log cut to the last multiple of [30] events, so every view
+inside one phase --- and every seat looking at it --- evaluates the identical prefix and
+reaches the identical choice. A seat therefore cannot flip styles mid-phase, which is the
+behavioural point of hysteresis, without a single byte of remembered state'' \cite{repo}.
+The warmup gate reads the same truncation, so the whole selection is a function of the
+phase alone; with the defaults the first warm phase begins at 60 observed events --- the
+first multiple of 30 at or above 40.
+
+\section{The dominance-degeneracy theorem}
+\label{sec:theorem}
+
+One look at Table~\ref{tab:counter} gives the game away: the Punter row is the
+column-wise maximum everywhere. What that implies for the adaptive policy is one
+paragraph of linear algebra.
+
+\begin{theorem}[Dominance degeneracy]
+\label{thm:dominance}
+Let $P \in \mathbb{R}^{n \times n}$ be the counter table and suppose row $r$ weakly
+dominates every row: $P_{rs} \ge P_{is}$ for all styles $i$ and $s$. Then for every triple
+of opponent posteriors $(q_1, q_2, q_3)$, $r$ maximizes the expected payoff
+$E(\cdot)$ of Eq.~\eqref{eq:expected}; if the dominance is strict in every column, the
+argmax is unique. Moreover, with the anchor bias --- $E(a)$ replaced by $E(a) + \beta$ for
+the anchor $a \ne r$ --- $r$ remains the unique argmax whenever
+$\min_s\, (P_{rs} - P_{as}) > \beta$.
+\end{theorem}
+
+\begin{proofenv}
+By Eq.~\eqref{eq:expected}, $E$ is linear in the mean posterior $\bar q$, which lies in
+the probability simplex. For any $i$,
+$E(r) - E(i) = \sum_s \bar q(s)\,(P_{rs} - P_{is})$ is a convex combination of
+non-negative numbers, hence $\ge 0$; if every difference is strictly positive it is
+$> 0$, since $\bar q$ places mass somewhere. For the anchor,
+$E(r) - \big(E(a) + \beta\big) = \sum_s \bar q(s)\,(P_{rs} - P_{as}) - \beta
+\ge \min_s (P_{rs} - P_{as}) - \beta > 0$.
+\end{proofenv}
+
+\noindent
+The measured table instantiates the strict case: Punter's smallest margin over the best
+rival row is $0.0112$ (Blitz row, Hoarder column), and its smallest margin over the
+Balanced anchor row is $0.0171$ --- above the default $\beta = 0.01$, so not even the
+anchor bias can rescue another choice. Hence:
+
+\begin{corollary}[The warm policy is static]
+\label{cor:static}
+Under the committed table and defaults, the warm adaptive choice is Punter at every
+decision, under every posterior the classifier can produce and every oracle assignment.
+The adaptive policy is exactly: Balanced for the warmup phases, Punter thereafter.
+\end{corollary}
+
+\begin{corollary}[Perfect classification is worth exactly zero]
+\label{cor:oracle}
+Classifier and oracle modes share the warmup and phase rules and differ only in the
+posterior. By Corollary~\ref{cor:static} they delegate identically at every decision, so
+on the same seed they produce byte-identical games: the oracle ablation's per-deal delta
+is identically zero --- not approximately, exactly.
+\end{corollary}
+
+One statistical qualification, stated rather than buried. Dominance here is a property of
+the \emph{committed point-estimate table}, which is the object the engine consults. As a
+claim about the true matrix it is strongly but not perfectly supported: of the 72
+row-vs.-Punter-row comparisons (8 rival rows $\times$ 9 columns), 70 exceed even the
+Bonferroni-corrected two-sided bound $|z| > 2.773$ under a conservative independent
+combination of the paired cell SEs; the weakest, the Blitz row in the Hoarder column
+($0.0112$), sits at $z = 1.86$. If the true matrix inverted that margin, the argmax could
+depend on beliefs concentrated on the Hoarder --- and the value at stake would be bounded
+by roughly $0.011$ in score rate. The implementation anticipates this honestly: its tests
+re-derive the argmax from the table rather than hard-coding Punter, so a future table with
+an intransitive cycle flows through the same code and simply makes the adaptation
+non-trivial \cite{repo}.
+
+\section{Experimental design}
+\label{sec:design}
+
+\subsection{Pre-registration}
+\label{sec:prereg}
+
+The committed counter table already implied Theorem~\ref{thm:dominance}; the experiments
+check the implication against play, not discover it. Four predictions were written into
+the suite's source before the run and travel verbatim inside the artifact \cite{artifact}:
+
+\begin{itemize}
+\item[\textbf{P1}] The counter table's Punter row weakly dominates every column, so a warm
+  adaptive team should match Punter's matrix-v2 row against every pure style within CI.
+  Any detectable shortfall is the price of the warmup anchor (Balanced until ${\sim}60$
+  observed events).
+\item[\textbf{P2}] The adaptive-vs-Punter mixed-population delta should be ${\approx}\,0$:
+  both teams best-respond to every composition with the same style once warm, so
+  adaptation buys nothing a fixed Punter team does not already have.
+\item[\textbf{P3}] Oracle classification should add ${\approx}$ nothing: the best response
+  is Punter regardless of the read, so a perfect read and a classifier read select the
+  same play.
+\item[\textbf{P4}] Classifier top-1 accuracy should be good for Turtle, Ghost and Hoarder,
+  and heavily confused inside the balanced/blitz/punter/banker quadrangle (the
+  separability read: those four diverge from Balanced on under $1.3\%$ of decisions
+  \cite{styles}).
+\end{itemize}
+
+The verdict rules were committed alongside. P1 and P3 are nine simultaneous cells: a cell
+\emph{rejects} when $|z|$ exceeds the Bonferroni-corrected two-sided $5\%$ bound of
+$2.773$; any rejection refutes; cells between $1.96$ and the bound are named but do not
+refute (with nine cells, ${\sim}0.45$ land there by chance). P2 is one truly-paired
+comparison at $|z| \le 1.96$. P4 was operationalized as three conditions on the
+end-of-game reads: mean top-1 over $\{$Turtle, Ghost, Hoarder$\}$ $\ge 0.50$; mean top-1
+over the quadrangle $\le 0.35$; and, for every quadrangle style, at least half its errors
+landing inside the quadrangle. A refuted prediction is emitted as \code{refuted}, not
+massaged.
+
+\subsection{The five experiments}
+\label{sec:experiments}
+
+All experiments use duplicate deal pairs (each seeded deal played in both orientations,
+start seat rotating $i \bmod 6$), the paired estimator, and the v0.5 health discipline
+\cite{botlab,v05paper}. The full suite is 125{,}600 games \cite{artifact}:
+
+\begin{enumerate}
+\item \textbf{Gauntlet} --- the adaptive team against each of the nine pure styles, at
+  4{,}300 pairs per cell on \emph{matrix v2's exact seed list} (prefix \code{style-v1}),
+  both orientations, same start seats. That choice is the experiment: every deal behind
+  Punter's committed row is replayed by the adaptive team, making the Punter row a
+  per-deal benchmark (cross-run caveat below). Every gauntlet game also records which
+  style each adaptive decision delegated to, split warmup/warm by the engine's own phase
+  rule --- the recorded delegation \emph{is} what was played.
+\item \textbf{Adaptive mirror} --- 400 pairs of adaptive-vs-adaptive. The policy is
+  deterministic and identical on both teams, so the two orientations of a pair are
+  literally the same game: the paired score must be exactly $0.5$ with SE exactly $0$. A
+  plumbing symmetry check, and it passed ($0.5000 \pm 0.0000$ over 800 games).
+\item \textbf{Mixed-population screen} --- 24 opponent compositions $\times$ 400 pairs on
+  prefix \code{mixed-v1}, each played twice: the adaptive team, and a pure Punter team, on
+  the same seeds, start seats and orientations. The headline is the pooled per-deal delta
+  (adaptive $-$ Punter), \emph{truly paired within the run}; the harness verifies --- not
+  assumes --- that both arms played identical (pair, orientation, seed, start-seat) sets.
+  Because all 24 compositions replay the identical 400-seed list, the pooled SE is
+  clustered by seed --- per-deal deltas are averaged within seed before the SE is taken
+  over the 400 seed-level means --- so a deal's replays are never counted as independent
+  evidence (per-composition SEs remain within-composition). The compositions are a fully
+  specified deterministic sample: every 7th of the 165 lexicographic 3-multisets.
+\item \textbf{Oracle ablation} --- the nine gauntlet cells re-run at 400 pairs with the
+  true opponent styles handed to the adaptive seats. The classifier arm is not re-run: the
+  gauntlet's first 400 pairs \emph{are} the classifier arm on identical seeds.
+\item \textbf{Classifier accuracy} --- all 36 unordered style pairings, 50 single games
+  each on prefix \code{clsacc-v1}. Each finished game's public log is truncated at
+  $\{40, 80, 150, 250\}$ events (a checkpoint scores only games whose log outlived it)
+  plus the full log; top-1 is scored per seat against the seat's true style.
+\end{enumerate}
+
+\subsection{Paired benchmarks and the cross-run caveat}
+\label{sec:pairing}
+
+The gauntlet's benchmark is Punter's row of the committed matrix-v2 artifact
+\cite{matrixv2}, and the run's provenance block states the caveat verbatim
+\cite{artifact}: ``Per-deal: the gauntlet replayed the benchmark seed list exactly (both
+orientations, same start seats). The pairing is cross-run --- per-game records are not
+joined --- so the delta SE is the conservative independent combination, an upper bound on
+the true paired SE.'' The conservatism cuts one way: it makes the P1 test \emph{harder}
+to refute, so the refutation reported below is understated, not manufactured. The mixed
+screen and oracle ablation are paired within the run and carry no such caveat. One
+gauntlet cell is sharper than the rest: against Punter itself the benchmark is exactly
+$0.5$ with SE $0$ by duplicate symmetry.
+
+\subsection{Health gates and provenance}
+\label{sec:provenance}
+
+A run is void unless its counters are clean; for the reported run \cite{artifact}:
+\code{illegalActions} 0, \code{cappedGames} 0, \code{invariantViolations} 0, \code{ties}
+0, \code{voids} 0, \code{nonClinch} 0, and \code{distinctSeeds} equal to the expected pair
+count in every cell; the suite adds two pairing gates (the mixed arms' seed-set identity,
+and the oracle cells' identity with the gauntlet head), both passed. The artifact is
+committed at \code{src/lab/data/adaptive-results.json} with records digest
+\code{ce3316641a8f38fe}, engine commit \code{45ec9f3} (recorded \code{45ec9f3-dirty}), and
+the rules-document hash (\code{b4c7fef7\ldots}) shared with v0.5; the 125{,}600 games took
+about $9.7$ minutes of wall clock. Because an adaptive result is only as honest as the
+data it consulted, the artifact also carries the provenance of both committed calibrations
+--- the counter table (from matrix v2, digest \code{0c3cb524a3534d4a}) and the
+fingerprints (\code{gen-fingerprints}, prefix \code{fingerprint-v1}) --- and the assembly
+step \emph{throws} if the benchmark's digest differs from the counter table's source
+digest: the row the gauntlet is read against and the table the agent best-responded with
+must come from the same matrix.
+
+\section{Results}
+\label{sec:results}
+
+\subsection{P1: the gauntlet --- refuted, by the warmup tax}
+\label{sec:p1}
+
+Table~\ref{tab:gauntlet} is the headline measurement. The adaptive team lands below the
+paired Punter benchmark in \emph{all nine} cells --- mean shortfall $-0.0108$ --- and the
+sharpest cell rejects decisively: against Punter itself, where the benchmark is exactly
+$0.5$ by symmetry, the adaptive team scores $0.4892 \pm 0.0031$, a delta of
+$-0.0108 \pm 0.0031$, $z = -3.53$, past the pre-registered Bonferroni bound of $2.773$.
+Two further cells sit between $1.96$ and the bound (Ghost $z = -2.55$, Archivist
+$z = -2.24$). Under the committed rule, one rejection refutes: \textbf{P1 is refuted} ---
+and since the cross-run SEs are conservative (Section~\ref{sec:pairing}; smallest
+detectable shortfall ${\sim}0.0192$ at the widest cell), the true significance is if
+anything understated. The prediction's own escape clause named the mechanism in advance
+--- ``any detectable shortfall is the price of the warmup anchor'' --- and
+Section~\ref{sec:usage} confirms the anchor is the only mechanism there is: once warm,
+the team delegated every single decision to Punter.
+
+\begin{table}[t]
+\centering
+\caption{The gauntlet: adaptive team vs.\ each pure style, 4{,}300 pairs per cell on
+matrix v2's exact seed list, against Punter's committed row as a per-deal benchmark
+\cite{artifact}. $\Delta$ = adaptive $-$ benchmark, with the conservative cross-run SE;
+the pre-registered rejection bound is $|z| > 2.773$.}
+\label{tab:gauntlet}
+\footnotesize
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+Opponent & Adaptive & SE & Punter row & SE & $\Delta$ & $z$ \\
+\midrule
+Balanced  & 0.5114 & 0.0027 & 0.5190 & 0.0036 & $-0.0076 \pm 0.0045$ & $-1.68$ \\
+Blitz     & 0.5086 & 0.0040 & 0.5198 & 0.0042 & $-0.0112 \pm 0.0058$ & $-1.93$ \\
+Punter    & 0.4892 & 0.0031 & 0.5000 & 0      & $-0.0108 \pm 0.0031$ & $\mathbf{-3.53}$ \\
+Banker    & 0.5393 & 0.0048 & 0.5469 & 0.0048 & $-0.0076 \pm 0.0067$ & $-1.12$ \\
+Turtle    & 0.6485 & 0.0045 & 0.6581 & 0.0046 & $-0.0097 \pm 0.0065$ & $-1.49$ \\
+Hoarder   & 0.5709 & 0.0039 & 0.5795 & 0.0042 & $-0.0086 \pm 0.0057$ & $-1.51$ \\
+Scout     & 0.6512 & 0.0046 & 0.6603 & 0.0046 & $-0.0092 \pm 0.0065$ & $-1.40$ \\
+Ghost     & 0.5691 & 0.0049 & 0.5867 & 0.0049 & $-0.0177 \pm 0.0069$ & $-2.55$ \\
+Archivist & 0.5778 & 0.0046 & 0.5926 & 0.0047 & $-0.0148 \pm 0.0066$ & $-2.24$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{P2: the mixed-population screen --- refuted, at $z = -3.2$}
+\label{sec:p2}
+
+The mixed screen removes both the pure-team simplification and the cross-run caveat: 24
+opponent compositions, each faced by the adaptive team and by a pure Punter team on
+identical deals within the same run. The pooled per-deal delta is $-0.0136 \pm 0.0043$
+($z = -3.18$; $95\%$ CI $[-0.0220, -0.0052]$) over $24 \times 400$ paired deals, with the
+SE clustered by seed (Section~\ref{sec:experiments}): the 24 compositions replay one
+400-seed list, so the effective sample is 400 seed-level deltas, not $9{,}600$ deltas
+counting each deal's replays as independent. \textbf{P2 is refuted}, at three standard
+errors. Per composition (Table~\ref{tab:mixed}), 21 of 24 deltas are negative; the three
+positive ones ($+0.0038$ to $+0.0100$) are each within one standard error of zero. Against
+heterogeneous opposition --- where a read could at least in principle matter ---
+adaptation costs about $1.4$ points of score rate, everywhere.
+
+\begin{table}[t]
+\centering
+\caption{The mixed screen: each composition (the opposing team's three styles) faced by
+the adaptive and pure-Punter teams on identical deals, 400 pairs per arm \cite{artifact}.
+$\Delta$ = adaptive $-$ Punter, per-deal paired.}
+\label{tab:mixed}
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}lccr@{\ }l@{\qquad}lccr@{\ }l@{}}
+\toprule
+Composition & Adpt. & Punt. & \multicolumn{2}{c}{$\Delta$} &
+Composition & Adpt. & Punt. & \multicolumn{2}{c}{$\Delta$} \\
+\midrule
+bal+bal+bal & 0.514 & 0.529 & $-0.0150$ & $\pm 0.0101$ & pun+pun+hoa & 0.533 & 0.545 & $-0.0125$ & $\pm 0.0098$ \\
+bal+bal+gho & 0.576 & 0.573 & $+0.0038$ & $\pm 0.0111$ & pun+ban+sco & 0.543 & 0.561 & $-0.0188$ & $\pm 0.0111$ \\
+bal+bli+sco & 0.561 & 0.584 & $-0.0225$ & $\pm 0.0103$ & pun+tur+arc & 0.588 & 0.608 & $-0.0200$ & $\pm 0.0100$ \\
+bal+pun+sco & 0.540 & 0.565 & $-0.0250$ & $\pm 0.0102$ & pun+sco+arc & 0.551 & 0.561 & $-0.0100$ & $\pm 0.0100$ \\
+bal+ban+gho & 0.561 & 0.574 & $-0.0125$ & $\pm 0.0106$ & ban+ban+sco & 0.583 & 0.573 & $+0.0100$ & $\pm 0.0110$ \\
+bal+hoa+hoa & 0.551 & 0.563 & $-0.0113$ & $\pm 0.0099$ & ban+tur+arc & 0.599 & 0.611 & $-0.0125$ & $\pm 0.0106$ \\
+bal+gho+gho & 0.544 & 0.566 & $-0.0225$ & $\pm 0.0122$ & ban+sco+arc & 0.584 & 0.589 & $-0.0050$ & $\pm 0.0112$ \\
+bli+bli+hoa & 0.531 & 0.545 & $-0.0138$ & $\pm 0.0102$ & tur+tur+gho & 0.618 & 0.640 & $-0.0225$ & $\pm 0.0107$ \\
+bli+pun+hoa & 0.523 & 0.540 & $-0.0175$ & $\pm 0.0101$ & tur+sco+gho & 0.604 & 0.616 & $-0.0125$ & $\pm 0.0106$ \\
+bli+ban+sco & 0.538 & 0.569 & $-0.0313$ & $\pm 0.0104$ & hoa+hoa+gho & 0.581 & 0.604 & $-0.0225$ & $\pm 0.0103$ \\
+bli+tur+arc & 0.584 & 0.604 & $-0.0200$ & $\pm 0.0101$ & hoa+arc+arc & 0.575 & 0.570 & $+0.0050$ & $\pm 0.0097$ \\
+bli+sco+arc & 0.568 & 0.571 & $-0.0038$ & $\pm 0.0102$ & gho+gho+gho & 0.555 & 0.569 & $-0.0138$ & $\pm 0.0126$ \\
+\midrule
+\multicolumn{5}{@{}l}{Pooled per-deal delta (seed-clustered SE)} &
+\multicolumn{5}{l@{}}{$-0.0136 \pm 0.0043$ \quad ($z = -3.18$)} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{P3: the oracle ablation --- perfect classification worth exactly zero}
+\label{sec:oracle}
+
+Corollary~\ref{cor:oracle} predicted not a small oracle gain but a structurally exact
+zero, and the measurement delivered it: in all nine cells, over 400 paired deals each, the
+oracle arm's per-deal delta against the classifier arm is exactly $0.0000$ with SE exactly
+$0$ (Table~\ref{tab:oracle}) --- with a dominant row both arms delegate identically at
+every decision, so the paired games are identical move for move. \textbf{P3 is confirmed}
+--- and what was confirmed is worth pausing on: a \emph{perfect} classifier, an oracle no
+feature engineering could beat, buys nothing over the shipped one. Against this roster,
+the ceiling on the value of the entire observe-and-classify half of the architecture is
+the number in this table.
+
+\begin{table}[t]
+\centering
+\caption{The oracle ablation: true styles handed to the adaptive seats vs.\ the classifier
+arm on identical seeds, 400 pairs per cell \cite{artifact}. The two arms played
+byte-identical games.}
+\label{tab:oracle}
+\footnotesize
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Opponent & Classifier arm & Oracle arm & $\Delta$ (per-deal) \\
+\midrule
+Balanced  & 0.5238 & 0.5238 & $0.0000 \pm 0.0000$ \\
+Blitz     & 0.5138 & 0.5138 & $0.0000 \pm 0.0000$ \\
+Punter    & 0.4975 & 0.4975 & $0.0000 \pm 0.0000$ \\
+Banker    & 0.5450 & 0.5450 & $0.0000 \pm 0.0000$ \\
+Turtle    & 0.6588 & 0.6588 & $0.0000 \pm 0.0000$ \\
+Hoarder   & 0.5775 & 0.5775 & $0.0000 \pm 0.0000$ \\
+Scout     & 0.6663 & 0.6663 & $0.0000 \pm 0.0000$ \\
+Ghost     & 0.5625 & 0.5625 & $0.0000 \pm 0.0000$ \\
+Archivist & 0.5975 & 0.5975 & $0.0000 \pm 0.0000$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{P4: classifier accuracy --- mixed}
+\label{sec:p4}
+
+The classifier was measured for its own sake across the 36 cross-play pairings
+(Table~\ref{tab:clscurve}). Overall top-1 rises from $16.4\%$ at 40 observed events to
+$20.2\%$ at 80 and $22.4\%$ on the full log, against a $1/9 = 11.1\%$ chance floor ---
+real skill, roughly twice chance, and modest. Two structural notes: the 250-event
+checkpoint scored \emph{zero} seats, because no public log outlived 250 events --- the
+artifact records it as a \emph{dead} checkpoint (\code{deadCheckpoints}), never as a
+measured zero; and the 150-event figure ($37.5\%$) covers only the 672 surviving seats of
+the $6.2\%$ longest games --- a population selected toward the long-game styles, not
+comparable to the full-population rows.
+
+\begin{table}[t]
+\centering
+\caption{Classifier top-1 by observed-event checkpoint, over 36 pairings $\times$ 50
+games $\times$ 6 seats \cite{artifact}; a checkpoint scores only games whose log outlived
+it. Chance is $1/9 \approx 0.111$.}
+\label{tab:clscurve}
+\footnotesize
+\begin{tabular}{@{}lccl@{}}
+\toprule
+Checkpoint & Seats scored & Top-1 & Note \\
+\midrule
+40 events  & 10{,}800 & 0.164 & all games \\
+80 events  & 10{,}464 & 0.202 & nearly all games \\
+150 events & 672      & 0.375 & the $6.2\%$ longest games; selected population \\
+250 events & ---      & ---   & dead: no public log reached 250 events \\
+full log   & 10{,}800 & 0.224 & the deployment-relevant figure \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{End-of-game top-1 per true style, with each style's most frequent
+\emph{prediction} and its share --- the confusion attractors \cite{artifact}. Chance is
+$0.111$.}
+\label{tab:clsstyle}
+\footnotesize
+\begin{tabular}{@{}lccl@{}}
+\toprule
+True style & Top-1 & Most predicted (share) & Reading \\
+\midrule
+Ghost     & 0.504 & Ghost (0.504)  & the one genuinely recognisable style \\
+Scout     & 0.413 & Scout (0.413)  & recognisable \\
+Hoarder   & 0.309 & Hoarder (0.309) & recognisable via declare signatures \\
+Turtle    & 0.272 & Turtle (0.272) & recognisable via own-hand-only declares \\
+Punter    & 0.129 & Ghost (0.275)  & quadrangle: absorbed by Ghost \\
+Banker    & 0.126 & Ghost (0.323)  & quadrangle: absorbed by Ghost \\
+Archivist & 0.118 & Scout (0.331)  & absorbed by Scout \\
+Blitz     & 0.093 & Ghost (0.261)  & quadrangle: absorbed by Ghost \\
+Balanced  & 0.056 & Ghost (0.270)  & the control; below chance \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Per style (Table~\ref{tab:clsstyle}), the pre-registered three-condition verdict came out
+\textbf{mixed}. The quadrangle condition holds: Balanced, Blitz, Punter and Banker
+classify at $0.056$--$0.129$ (mean $0.101$, condition $\le 0.35$) --- exactly the
+near-indistinguishability the separability bound predicted. The distinctive-style
+condition fails: Turtle $0.272$, Ghost $0.504$, Hoarder $0.309$ average $0.362$ against
+the $\ge 0.50$ bar. And the error-geometry condition fails informatively: quadrangle
+errors do not land inside the quadrangle ($30$--$40\%$ do, against the $\ge 50\%$ bar) ---
+they land on \emph{Ghost}, and Archivist's land on \emph{Scout}. The confusion structure
+is not four styles mistaken for each other but a cloud of near-identical profiles absorbed
+by whichever fingerprint sits nearest in the pooled-z geometry; Balanced itself classifies
+\emph{below} chance ($0.056$), its central fingerprint leaving almost any noisy draw
+closer to some other style's mean.
+
+\subsection{The delegation record: the mechanism, observed}
+\label{sec:usage}
+
+The gauntlet instrumented every adaptive decision with the style it delegated to. The
+record is total and unambiguous \cite{artifact}: in all nine cells, $100\%$ of warmup
+decisions delegated to Balanced (the anchor) and $100\%$ of warm decisions delegated to
+Punter --- not one of the $12.1$ million warm decisions across the gauntlet chose anything
+else. This is Corollary~\ref{cor:static} observed in play, at every posterior the
+classifier actually produced. The warmup phase accounted for $52.2\%$ (vs.\ Turtle) to
+$58.2\%$ (vs.\ Blitz) of the adaptive team's decisions. Warm $=$ pure Punter plus warmup
+$=$ a majority of decisions on a dominated style is the entire causal story of
+Tables~\ref{tab:gauntlet} and~\ref{tab:mixed}, made quantitative next.
+
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Anatomy of the warmup tax}
+\label{sec:warmupanatomy}
+
+Why does a 40-event warmup swallow half the game? Because the public log grows far more
+slowly than the decision count: declining to declare emits no public event
+(Section~\ref{sec:observe}), and declare-window declines dominate play. Gauntlet games
+average $683$--$767$ engine moves, of which the adaptive team's three seats decide
+$342$--$384$, yet across the 1{,}800 accuracy games --- whose lengths are of the same
+scale --- not one public log reached 250 events and only $6.2\%$ reached 150
+(Table~\ref{tab:clscurve}). The warm threshold of 60 observed events therefore lands past
+the midpoint of the team's decisions: $52$--$58\%$ of them are taken by the anchor.
+
+\begin{table}[t]
+\centering
+\caption{The warmup tax, decomposed: warmup share $w$ of the adaptive team's decisions,
+Balanced deficit $g$ = (Punter row $-$ Balanced row) in the opponent's column, prediction
+$-w g$, and the measured gauntlet delta \cite{artifact}.}
+\label{tab:tax}
+\footnotesize
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+Opponent & $w$ & $g$ & Predicted $-w g$ & Measured $\Delta$ & $|$diff$|$/SE \\
+\midrule
+Balanced  & 0.580 & 0.0190 & $-0.0110$ & $-0.0076 \pm 0.0045$ & 0.76 \\
+Blitz     & 0.582 & 0.0236 & $-0.0137$ & $-0.0112 \pm 0.0058$ & 0.44 \\
+Punter    & 0.578 & 0.0190 & $-0.0110$ & $-0.0108 \pm 0.0031$ & 0.05 \\
+Banker    & 0.570 & 0.0199 & $-0.0113$ & $-0.0076 \pm 0.0067$ & 0.56 \\
+Turtle    & 0.522 & 0.0185 & $-0.0096$ & $-0.0097 \pm 0.0065$ & 0.00 \\
+Hoarder   & 0.551 & 0.0171 & $-0.0094$ & $-0.0086 \pm 0.0057$ & 0.14 \\
+Scout     & 0.534 & 0.0226 & $-0.0121$ & $-0.0092 \pm 0.0065$ & 0.44 \\
+Ghost     & 0.567 & 0.0319 & $-0.0180$ & $-0.0177 \pm 0.0069$ & 0.05 \\
+Archivist & 0.555 & 0.0265 & $-0.0147$ & $-0.0148 \pm 0.0066$ & 0.01 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A deliberately crude model prices this: suppose a game's score rate were linear in the
+mixture of styles played --- warmup share $w$ at the Balanced row's payoff, $(1-w)$ at
+the Punter row's --- so the predicted shortfall against pure Punter is $-w g$, where $g$
+is the Balanced deficit in that opponent's column of Table~\ref{tab:counter}. Table~\ref{tab:tax} runs this per cell: the zeroth-order
+prediction lands within $0.8$ standard errors of the measured delta in all nine cells,
+and the ordering is reproduced --- the worst measured cell (Ghost, $-0.0177$) is exactly
+the column where the Balanced-vs-Punter gap is widest ($0.0319$). Nothing subtle is
+happening: the tax is the anchor's known per-decision deficit times the fraction of
+decisions the anchor takes; the mixed screen's $-0.0136$ sits in the same range, as a
+deal-weighted average over 24 columns must.
+
+\subsection{The obvious remedies, and why each one is the finding}
+\label{sec:remedies}
+
+Two one-line configuration changes eliminate the tax, and both are instructive to refuse.
+
+\textbf{Set the anchor to Punter.} Then warmup plays Punter, the warm argmax is Punter
+(Theorem~\ref{thm:dominance}, with the anchor bias now \emph{reinforcing} the dominant
+row), and the ``adaptive'' policy is the static Punter with a classifier attached as
+ornamentation. \textbf{Set warmup to zero.} Then the earliest posteriors are the damping
+prior --- near-uniform --- and the argmax under uniform is still the dominant row: Punter
+from move one. Intermediate tunings behave the same way: shortening warmup, shrinking the
+phase, or raising the switch margin each moves the policy monotonically toward a static
+endpoint (always-anchor or always-Punter), because under dominance there is no belief at
+which the warm choice is anything else. Every knob that repairs the tax does so by
+deleting the adaptation.
+
+This is not a criticism of the knobs; it is the result. Over a dominance-solvable roster,
+the best policy in the adaptive family is its degenerate member, and any non-degenerate
+member pays for its flexibility with a measurable loss.
+
+\subsection{What the classifier can and cannot see}
+\label{sec:clslimits}
+
+The classifier's limits connect quantitatively to the inert-axis result
+\cite{inertpaper}. The decision-divergence instrument of v0.5 measured how often each
+style's chosen action differs from the control's on identical views: Scout $2.89\%$,
+Ghost $2.15\%$, Archivist $1.66\%$, Banker $1.19\%$, Turtle $0.83\%$, Punter $0.47\%$,
+Hoarder $0.47\%$, Blitz $0.39\%$ \cite{styles}. A public-log classifier sees only the
+accumulated consequences of divergent decisions, so styles that diverge on under $3\%$ of
+decisions --- all of them --- leave thin trails, and the quadrangle styles, at under
+$1.2\%$, leave almost none: their $0.056$--$0.129$ top-1 is the separability bound made
+flesh. But divergence \emph{rate} is not the whole story: Hoarder and Turtle diverge
+rarely yet classify at $0.31$ and $0.27$, their rare divergences concentrated in declare
+events with loud public signatures (\code{foreignDeclareShare}, \code{ownHandOnlyShare},
+\code{declareBackload}), while Archivist diverges three times as often yet classifies at
+$0.118$, its trail absorbed by Scout's neighbouring fingerprint. What a behavioural
+classifier reads is not how often a style is different but how \emph{loudly}, per event
+the log deigns to record. None of this matters to the payoff ---
+Section~\ref{sec:oracle} priced the whole apparatus at exactly zero against this roster
+--- but it is the part of v1.0 that would survive a roster where classification did
+matter; the measured accuracies calibrate what it could contribute.
+
+\subsection{What would make adaptation valuable}
+\label{sec:valuable}
+
+The degeneracy is a property of the meta-game, not of the machinery, which was
+deliberately built so that a different meta-game flows through unchanged (its tests
+re-derive the argmax from the table rather than pinning Punter \cite{repo}). Three
+departures would give the classifier's output a decision to influence:
+
+\begin{itemize}
+\item \textbf{An intransitive roster.} Theorem~\ref{thm:dominance} needs a dominant row.
+  A roster engineered with genuine counters --- which v0.5 measured this one not to be
+  (cyclic energy $0.0112$) \cite{v05paper} --- makes the argmax belief-dependent, and then
+  classifier accuracy and warmup cost become terms in a real trade-off.
+\item \textbf{Off-roster opponents.} Humans at the project's play table are the actual
+  target of the S35/A14 program \cite{playstyles}: they are not columns of any committed
+  table, their tendencies drift, and exploiting them requires exactly the
+  observe-classify-respond loop built here --- plus fingerprints calibrated from logged
+  human play, a data-collection decision the synthesis flags as prior to everything else.
+\item \textbf{Rule-set shifts.} The \usff{} gift rule is what prices Punter's risk
+  appetite correctly \cite{v05paper}; under the 48-card baseline the declaration economics
+  flip, the counter table would need re-measurement, and nothing guarantees the new table
+  a dominant row.
+\end{itemize}
+
+Until one of those holds, the honest statement stands: over this roster, under these
+rules, the best adaptive policy is the degenerate one, and every measured alternative is
+worth less than nothing.
+
+\section{Threats to validity}
+\label{sec:threats}
+
+\begin{enumerate}
+\item \textbf{Cross-run pairing (P1).} The gauntlet's delta SEs are conservative upper
+  bounds (Section~\ref{sec:pairing}) --- which can only have hidden significance, not
+  manufactured it; the truly-paired, seed-clustered P2 screen agrees at $z = -3.2$.
+\item \textbf{Dominance is of the committed table.} The theorem consumes point estimates;
+  70 of 72 dominance comparisons clear the corrected bound, but the weakest margin
+  ($0.0112$, Blitz row, Hoarder column) is only $1.86$ conservative SEs from zero
+  (Section~\ref{sec:theorem}). A true matrix inverting it would make the warm argmax
+  belief-dependent in a narrow region, changing the result's form but not its economics
+  (the value at stake is ${\lesssim}0.011$).
+\item \textbf{Fingerprints are calibrated in mirror games.} Deployed reads happen in
+  cross-play, where opponents shape game length and event mix. The checkpoint buckets and
+  length-invariant features mitigate this, and the accuracy experiment itself measures on
+  cross-play pairings, but the mismatch is real and untuned.
+\item \textbf{Warmup and phase constants are design choices, not tuned values.}
+  Section~\ref{sec:remedies} is why tuning was not pursued: under dominance every tuning
+  direction terminates in a static policy, so a tuned v1.0 would measure only the speed
+  of its own disappearance.
+\item \textbf{Statelessness is a design constraint with alternatives.} A stateful agent
+  could implement hysteresis with memory and act mid-phase; Theorem~\ref{thm:dominance}
+  does not depend on the phase construction, but the measured warmup boundary (60 events)
+  is an artifact of the stateless gate.
+\item \textbf{Closed population.} All conclusions are self-play within one roster, one
+  engine, one rule set (pinned by the artifact's rules hash); the transfer warning of
+  \cite{hu2020} applies in full, and Section~\ref{sec:valuable} lists the exits. The
+  classifier-accuracy numbers are additionally conditional on full-strength opponents.
+  (The adaptive mirror's exact $0.5000 \pm 0.0000$ certifies harness symmetry only;
+  correctness rests on the engine's audits \cite{v05paper,repo}.)
+\end{enumerate}
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+FishAI v1.0 built the adaptive agent the style debate keeps invoking --- observe the
+table, identify the styles, counter them --- and measured what it is worth against the
+measured meta-game. The answer has three layers. Adaptation over this roster
+\emph{converges}: the counter table's Punter row dominates every column, expected payoff
+is linear in belief, and the warm agent delegated every one of twelve million measured
+warm decisions to Punter --- the theorem observed in play. Adaptation over this roster
+\emph{costs}: the warmup anchor plays a dominated style for $52$--$58\%$ of decisions
+because the public log, which records no declines, matures far more slowly than the game,
+and the resulting tax --- $-0.0108$ mean across the gauntlet, $-0.0136 \pm 0.0043$ truly
+paired in mixed company --- is reproduced within one standard error, in every cell, by
+the crudest possible mixing model. And classification, the part of the architecture with
+genuine measured skill ($22.4\%$ top-1 against $11.1\%$ chance, half a coin-flip on the
+Ghost, structurally blind inside a quadrangle of styles that diverge on under $1.2\%$ of
+decisions), is worth exactly zero: the oracle deltas are $0.0000$ to the last digit,
+because under dominance no belief changes the play.
+
+Two of four pre-registered predictions were refuted, both in the informative direction:
+the project predicted convergence and got it, predicted the convergence would be free and
+was billed for it. The billing is the contribution. ``Just adapt'' is, over this roster
+and under these rules, strictly worse than picking the best static style and playing it
+--- worth less than nothing --- and every configuration that repairs the loss does so by
+quietly becoming that static style. That is a measured fact about this meta-game, not a
+verdict on adaptation as an idea: an intransitive roster, an off-roster human, or a rule
+shift would each hand the machinery a real decision, and the machinery is ready for the
+first opponent that gives it one.
+
+\medskip
+\noindent\textbf{Reproducibility.} The engine is deterministic; the artifact
+\cite{artifact} carries the seed prefixes, configuration, digests, commits, rules hash,
+the verbatim predictions and both calibrations' provenance; every number here is in it,
+the counter table \cite{matrixv2}, or the measurement documents \cite{rules,styles,botlab}.
+
+\begin{thebibliography}{99}
+\footnotesize
+
+\bibitem{balduzzi2018}
+D.~Balduzzi, K.~Tuyls, J.~P\'erolat, and T.~Graepel.
+\newblock Re-evaluating evaluation.
+\newblock In \emph{Advances in Neural Information Processing Systems (NeurIPS)}, 2018.
+
+\bibitem{omidshafiei2019}
+S.~Omidshafiei, C.~Papadimitriou, G.~Piliouras, K.~Tuyls, M.~Rowland, J.-B.~Lespiau,
+W.~M.~Czarnecki, M.~Lanctot, J.~P\'erolat, and R.~Munos.
+\newblock $\alpha$-Rank: Multi-agent evaluation by evolution.
+\newblock \emph{Scientific Reports}, 9:9937, 2019.
+
+\bibitem{albrechtstone2018}
+S.~V.~Albrecht and P.~Stone.
+\newblock Autonomous agents modelling other agents: A comprehensive survey and open
+problems.
+\newblock \emph{Artificial Intelligence}, 258:66--95, 2018.
+
+\bibitem{rebstock2019}
+D.~Rebstock, C.~Solinas, M.~Buro, and N.~R.~Sturtevant.
+\newblock Policy based inference in trick-taking card games.
+\newblock In \emph{IEEE Conference on Games (CoG)}, 2019.
+
+\bibitem{hu2020}
+H.~Hu, A.~Lerer, A.~Peysakhovich, and J.~Foerster.
+\newblock ``Other-play'' for zero-shot coordination.
+\newblock In \emph{Proceedings of the International Conference on Machine Learning
+(ICML)}, 2020.
+
+\bibitem{v05paper}
+A.~Hsieh.
+\newblock FishAI v0.5: Measuring play style without skill in a 54-card Literature
+variant.
+\newblock FishAI project; companion paper, published alongside this one, 2026.
+
+\bibitem{inertpaper}
+A.~Hsieh.
+\newblock The inert axis: when a style parameter is wired, swept, and never reached.
+\newblock FishAI project; companion paper, published alongside this one, 2026.
+
+\bibitem{containedpaper}
+A.~Hsieh.
+\newblock The contained book: an absorbing resource measured to be worth nothing.
+\newblock FishAI project; companion paper, published alongside this one, 2026.
+
+\bibitem{playstyles}
+FishAI project.
+\newblock PLAYSTYLES.md --- Literature / Canadian Fish: play styles, rule dialects, and
+engine specification.
+\newblock Internal research synthesis, 2026. Part~V catalogues the opponent-modelling
+families (A14; the S35 detection panel) this paper implements a slice of; its unverified
+secondary citations are not relied on here.
+
+\bibitem{rules}
+FishAI project.
+\newblock RULES\_US54.md --- the ``US student'' 54-card variant.
+\newblock Repository rules specification with derived consequences and test vectors, 2026.
+
+\bibitem{styles}
+FishAI project.
+\newblock STYLES.md --- the play-style roster under \usff{}.
+\newblock Repository document; \S6.1 the inert axis and decision-divergence figures, 2026.
+
+\bibitem{botlab}
+FishAI project.
+\newblock BOT\_LAB.md --- play-style spectrum: research, experimental design, and metrics.
+\newblock Repository document; \S4.3 health gates, \S5 experimental design, 2026.
+
+\bibitem{matrixv2}
+FishAI project.
+\newblock Tournament artifact \code{src/lab/data/style-results.v2.json} and the derived
+counter table \code{lib/engine/bots/data/counter-table.ts}.
+\newblock 36 cells $\times$ 4{,}300 duplicate pairs; records digest
+\code{0c3cb524a3534d4a}; engine commit \code{1667a1d} (recorded \code{1667a1d-dirty});
+generated 2026-08-22.
+
+\bibitem{artifact}
+FishAI project.
+\newblock Adaptive artifact \code{src/lab/data/adaptive-results.json}.
+\newblock 125{,}600 games; records digest \code{ce3316641a8f38fe}; engine commit
+\code{45ec9f3} (recorded \code{45ec9f3-dirty}); rules hash \code{b4c7fef7\ldots};
+generated 2026-08-24.
+
+\bibitem{repo}
+FishAI project.
+\newblock FishAI repository: engine, bots, simulation laboratory, and results site.
+\newblock Adaptive layer: \code{lib/engine/bots/observe.ts}, \code{classify.ts},
+\code{adaptive.ts}; experiment suite: \code{lib/lab/adaptive.ts}, 2026.
+
+\end{thebibliography}
+
+\end{document}
