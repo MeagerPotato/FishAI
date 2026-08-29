@@ -148,6 +148,12 @@ describe('public-view-only proof', () => {
       // standard as decide.ts, which is its only consumer); it imports nothing beyond modules
       // on this list, so no engine state is reachable.
       './adaptive.ts',
+      // The v1.5 bounded-memory arm: the recorded walk of './knowledge.ts' read back as a
+      // budgeted fact pool, replayed through the same primitives. Pure over the SeatView; it
+      // imports only '../types.ts', '../cards.ts', './types.ts', './roster.ts', './adaptive.ts'
+      // (type-only, for the widened PolicySpec) and './knowledge.ts' — every one already on
+      // this list — so no engine state is reachable from it either.
+      './bounded.ts',
       // Generated classifier calibration (scripts/gen-fingerprints.mjs): frozen numeric data
       // plus the StyleId type from './roster.ts'. No engine state is reachable from data.
       './data/fingerprints.ts',

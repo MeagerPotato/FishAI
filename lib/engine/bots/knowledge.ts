@@ -91,6 +91,14 @@ const ORIGINAL = -1
 const GONE = -2
 const SEATS: readonly Seat[] = [0, 1, 2, 3, 4, 5]
 
+/**
+ * The `Work.pos` sentinels, exported for the bounded arm ([bounded.ts](bounded.ts)), which
+ * enumerates facts off a finished walk and applies kept facts to a fresh one. Engine-internal:
+ * neither name is re-exported by the barrels.
+ */
+export const POS_ORIGINAL = ORIGINAL
+export const POS_GONE = GONE
+
 function bit(s: Seat): number {
   return 1 << s
 }
@@ -106,8 +114,24 @@ function soleSeat(m: number): Seat {
   return 0
 }
 
+/**
+ * Timestamps of the walk's atomic certifications, filled in only when a `Work` carries a
+ * recorder (`recordedWalk`). The bounded arm reads these as the recency axis of its fact
+ * ranking; `buildKnowledge` itself never allocates one, so its path is untouched.
+ */
+export interface WalkRecord {
+  /** Per card index: the event index of the card's LAST public move (hit), -1 if never moved. */
+  movedAt: number[]
+  /** Per card index: the event index at which the deal holder was fixed, -1 while unfixed. */
+  fixedAt: number[]
+  /** Flattened `ci * 6 + seat`: the event index at which the seat was eliminated, -1 if never. */
+  clearedAt: number[]
+  /** Per recorded constraint (index-aligned with `Work.constraints` post-walk): its ask's event index. */
+  constraintAt: number[]
+}
+
 /** Mutable working state while building. */
-interface Work {
+export interface Work {
   /**
    * The deck this build runs on, derived once from the view's config
    * (`deckFor`, itself memoized per variant). Read-only and per-call: the deck
@@ -126,6 +150,10 @@ interface Work {
   xfix: number[]
   /** Live at-least-one-of-set constraints over deal variables. */
   constraints: { seat: Seat; cards: number[] }[]
+  /** The event index the walk is currently ingesting — read only by the recorder. */
+  at: number
+  /** Certification timestamps, present only under `recordedWalk`. `buildKnowledge` never sets it. */
+  rec?: WalkRecord
 }
 
 /**
@@ -138,13 +166,16 @@ function setCards(w: Work, book: BookId): readonly Card[] {
   return w.deck.bookCards.get(book) ?? []
 }
 
-function fixX(w: Work, ci: number, s: Seat): void {
+/** Fix a card's deal holder. Exported as a bounded-arm application primitive (fact replay). */
+export function fixX(w: Work, ci: number, s: Seat): void {
   if (w.xfix[ci] !== -1) return // keep the first derivation; conflicts = inconsistent input
   w.xfix[ci] = s
   w.cand[ci] = bit(s)
+  if (w.rec) w.rec.fixedAt[ci] = w.at
 }
 
-function clearCand(w: Work, ci: number, s: Seat): void {
+/** Eliminate a deal candidate. Exported as a bounded-arm application primitive (fact replay). */
+export function clearCand(w: Work, ci: number, s: Seat): void {
   if (w.xfix[ci] !== -1) return
   const next = w.cand[ci] & ~bit(s)
   if (next === 0 || next === w.cand[ci]) {
@@ -153,6 +184,7 @@ function clearCand(w: Work, ci: number, s: Seat): void {
     return
   }
   w.cand[ci] = next
+  if (w.rec) w.rec.clearedAt[ci * 6 + s] = w.at
   if (popcount6(next) === 1) fixX(w, ci, soleSeat(next))
 }
 
@@ -210,6 +242,7 @@ function addAskConstraint(
     return
   }
   w.constraints.push({ seat: asker, cards: alive })
+  if (w.rec) w.rec.constraintAt.push(w.at)
 }
 
 /** Walk one public event, updating the working state. */
@@ -230,6 +263,7 @@ function ingest(w: Work, ev: PublicEvent, runningCounts: number[], opts: Require
         if (w.pos[ci] === ORIGINAL) fixX(w, ci, ev.target)
         if (opts.useConstraints) addAskConstraint(w, ev.asker, book, ci, false)
         w.pos[ci] = ev.asker // public transfer target -> asker
+        if (w.rec) w.rec.movedAt[ci] = w.at
         if (trackCounts) {
           runningCounts[ev.target]--
           runningCounts[ev.asker]++
@@ -353,6 +387,81 @@ function propagate(w: Work, counts: readonly number[]): void {
 }
 
 /**
+ * A fresh working state for the view's deck. Exported as a bounded-arm seam: the fact-replay
+ * pass ([bounded.ts](bounded.ts)) applies kept facts to one of these and finishes it through
+ * `finishKnowledge`, so its output is materialized by exactly the code `buildKnowledge` runs.
+ */
+export function newWork(view: SeatView): Work {
+  // Everything deck-shaped comes from here. `deckFor` is total: a view with no
+  // config (or an unknown variant off the wire) yields the 48-card default,
+  // which is exactly the behaviour every existing caller already had.
+  const deck = deckFor(view.config)
+  const n = deck.cards.length
+  return {
+    deck,
+    n,
+    pos: new Array<number>(n).fill(ORIGINAL),
+    cand: new Array<number>(n).fill(FULL_MASK),
+    xfix: new Array<number>(n).fill(-1),
+    constraints: [],
+    at: 0,
+  }
+}
+
+/**
+ * Resolved books are public table state (view.books), not memory: their
+ * cards are out of play regardless of how much log the viewer retains.
+ * Under a truncated window the claim event may fall outside it, so GONE is
+ * seeded from view.books BEFORE the walk. Under a full walk the claim events
+ * handle it chronologically (seeding first would wrongly discard the real
+ * asks that preceded the claim); books are re-applied after as a safety net
+ * for views whose log is inconsistent with their books.
+ *
+ * The set list is the config's, not the 48-card one: under `us54` that is the
+ * eight half-suits **plus EIGHTS** (RULES_US54.md §1 row 3). Missing EIGHTS
+ * here would leave a resolved set's four 8s and both jokers circulating as
+ * live cards, which is the silent-corruption failure this file guards against.
+ */
+export function markResolvedGone(w: Work, view: SeatView): void {
+  for (const b of w.deck.books) {
+    if (!view.books?.[b]) continue
+    for (const c of setCards(w, b)) {
+      const ci = w.deck.order.get(c)
+      if (ci !== undefined) w.pos[ci] = GONE
+    }
+  }
+}
+
+/**
+ * The full-fidelity recorded walk — the bounded arm's derivation pass. Identical to the walk
+ * `buildKnowledge` runs at hard skill (whole log, constraints on, historical count exhaustion
+ * live), plus a `WalkRecord` of when each atomic certification landed. The returned Work is
+ * post-walk, pre-injection: `finishKnowledge` has NOT run, so the constraints are exactly the
+ * recorded ones (index-aligned with `rec.constraintAt`) and the candidate masks carry only what
+ * the log itself certifies.
+ */
+export function recordedWalk(view: SeatView): { w: Work; rec: WalkRecord } {
+  const opts: Required<KnowledgeOptions> = { logWindow: Number.POSITIVE_INFINITY, useConstraints: true }
+  const ownCardToggle = view.config?.toggles?.askOwnCardAllowed === true
+  const log: readonly PublicEvent[] = Array.isArray(view.log) ? view.log : []
+  const w = newWork(view)
+  const rec: WalkRecord = {
+    movedAt: new Array<number>(w.n).fill(-1),
+    fixedAt: new Array<number>(w.n).fill(-1),
+    clearedAt: new Array<number>(w.n * 6).fill(-1),
+    constraintAt: [],
+  }
+  w.rec = rec
+  const runningCounts = new Array<number>(6).fill(w.deck.handSize)
+  for (let i = 0; i < log.length; i++) {
+    w.at = i
+    ingest(w, log[i], runningCounts, opts, ownCardToggle, true)
+  }
+  markResolvedGone(w, view)
+  return { w, rec }
+}
+
+/**
  * Rebuild the knowledge state for `view.seat` from the public log, the public
  * counts, and the viewer's own hand. Pure and deterministic; never throws on
  * malformed input (degrades to weaker knowledge instead).
@@ -367,55 +476,33 @@ export function buildKnowledge(view: SeatView, options: KnowledgeOptions = {}): 
   const windowed = opts.logWindow < log.length
   const events = windowed ? log.slice(log.length - opts.logWindow) : log
 
-  // Everything deck-shaped comes from here. `deckFor` is total: a view with no
-  // config (or an unknown variant off the wire) yields the 48-card default,
-  // which is exactly the behaviour every existing caller already had.
-  const deck = deckFor(view.config)
-  const n = deck.cards.length
-
-  const w: Work = {
-    deck,
-    n,
-    pos: new Array<number>(n).fill(ORIGINAL),
-    cand: new Array<number>(n).fill(FULL_MASK),
-    xfix: new Array<number>(n).fill(-1),
-    constraints: [],
-  }
-
-  // Resolved books are public table state (view.books), not memory: their
-  // cards are out of play regardless of how much log the viewer retains.
-  // Under a truncated window the claim event may fall outside it, so GONE is
-  // seeded from view.books BEFORE the walk. Under a full walk the claim events
-  // handle it chronologically (seeding first would wrongly discard the real
-  // asks that preceded the claim); books are re-applied after as a safety net
-  // for views whose log is inconsistent with their books.
-  //
-  // The set list is the config's, not the 48-card one: under `us54` that is the
-  // eight half-suits **plus EIGHTS** (RULES_US54.md §1 row 3). Missing EIGHTS
-  // here would leave a resolved set's four 8s and both jokers circulating as
-  // live cards, which is the silent-corruption failure this file guards against.
-  const markResolvedGone = (): void => {
-    for (const b of deck.books) {
-      if (!view.books?.[b]) continue
-      for (const c of setCards(w, b)) {
-        const ci = deck.order.get(c)
-        if (ci !== undefined) w.pos[ci] = GONE
-      }
-    }
-  }
+  const w = newWork(view)
 
   // With a truncated window the replayed running counts would be wrong, so
   // historical count exhaustion is only applied when the whole log is walked.
   const trackCounts = !windowed
-  if (windowed) markResolvedGone()
+  if (windowed) markResolvedGone(w, view)
   // Deal-time hand size, from the deck: 8 under `pagat48`, 9 under `us54`
   // (RULES.md row 4 / RULES_US54.md §1 row 4). Seeding 8 for a 54-card game
   // would make every seat's count-exhaustion test fire one card early and start
   // eliminating seats that are still genuinely possible — false certainties,
   // with nothing thrown to notice them by.
-  const runningCounts = new Array<number>(6).fill(deck.handSize)
+  const runningCounts = new Array<number>(6).fill(w.deck.handSize)
   for (const ev of events) ingest(w, ev, runningCounts, opts, ownCardToggle, trackCounts)
-  markResolvedGone()
+  return finishKnowledge(w, view)
+}
+
+/**
+ * The shared tail: the post-walk resolved-book safety net, the own-hand injection, the
+ * fixpoint propagation over the CURRENT public counts, and the materialization. Split from
+ * `buildKnowledge` so the bounded arm's fact-replay finishes through the identical code — the
+ * large-budget equivalence pin (tests/bots/bounded.test.ts) holds by construction here, not by
+ * a parallel implementation staying in step.
+ */
+export function finishKnowledge(w: Work, view: SeatView): Knowledge {
+  const deck = w.deck
+  const n = w.n
+  markResolvedGone(w, view)
 
   // Own hand: fully known. Held live cards are mine (if unmoved, they were
   // dealt to me); every other unmoved card was never mine.

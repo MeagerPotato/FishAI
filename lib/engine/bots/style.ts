@@ -414,8 +414,13 @@ function isBotPolicy(p: PolicySpec): p is BotPolicy {
 }
 
 /** The structural signature of an `AdaptiveSpec`, tested without importing adaptive.ts. */
-function isAdaptiveShaped(p: PolicySpec | { adaptive: true }): p is { adaptive: true } {
+function isAdaptiveShaped(p: PolicySpec | { adaptive: true } | { bounded: true }): p is { adaptive: true } {
   return typeof p === 'object' && p !== null && Object.hasOwn(p, 'adaptive')
+}
+
+/** The structural signature of a `BoundedSpec`, tested without importing bounded.ts. */
+function isBoundedShaped(p: PolicySpec | { adaptive: true } | { bounded: true }): p is { bounded: true } {
+  return typeof p === 'object' && p !== null && Object.hasOwn(p, 'bounded')
 }
 
 /**
@@ -424,17 +429,23 @@ function isAdaptiveShaped(p: PolicySpec | { adaptive: true }): p is { adaptive: 
  * the stack defaults a missing difficulty, rather than throwing inside a bot that must never
  * throw.
  *
- * The one deliberate exception: an *adaptive* spec is refused with a `TypeError`. Adaptive
- * policies resolve inside `decide`, with a view — the style they play is a function of the
- * opponents' observed behaviour, and this function has no view to observe. Degrading it to
- * some fixed style here would silently play the wrong engine and poison every measurement
- * downstream; `decide` handles the adaptive branch *before* ever calling this, so the throw
- * is unreachable from the bot path (and would be caught by decide's fallback if it were not).
+ * The deliberate exceptions: an *adaptive* or *bounded* spec is refused with a `TypeError`.
+ * Both resolve inside `decide`, with a view — the adaptive style is a function of the
+ * opponents' observed behaviour, and a bounded seat's knowledge is a function of the log it is
+ * budgeted against; this function has neither. Degrading either to some fixed pair here would
+ * silently play the wrong engine and poison every measurement downstream; `decide` handles
+ * both branches *before* ever calling this, so the throws are unreachable from the bot path
+ * (and would be caught by decide's fallback if they were not).
  */
-export function resolvePolicy(spec: PolicySpec | { adaptive: true }): BotPolicy {
+export function resolvePolicy(spec: PolicySpec | { adaptive: true } | { bounded: true }): BotPolicy {
   if (isAdaptiveShaped(spec)) {
     throw new TypeError(
       'adaptive policies resolve inside decide, with a view — resolvePolicy has no opponents to read',
+    )
+  }
+  if (isBoundedShaped(spec)) {
+    throw new TypeError(
+      'bounded policies resolve inside decide, with a view — resolvePolicy has no log to budget against',
     )
   }
   if (typeof spec === 'string') {

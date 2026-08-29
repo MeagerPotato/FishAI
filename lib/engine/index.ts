@@ -99,6 +99,13 @@ export {
   ADAPTIVE_PHASE_EVENTS,
   chooseStyle,
   isAdaptiveSpec,
+  BOUNDED_DEFAULTS,
+  boundedRead,
+  deriveBoundedFacts,
+  isBoundedSpec,
+  keepWithinBudget,
+  rankBoundedFacts,
+  restrictedKnowledge,
 } from './bots/index.ts'
 export type {
   SeatView,
@@ -128,4 +135,9 @@ export type {
   CounterTable,
   AdaptiveChoice,
   AdaptiveSpec,
+  BoundedFact,
+  BoundedFactKind,
+  BoundedRanking,
+  BoundedRead,
+  BoundedSpec,
 } from './bots/index.ts'
