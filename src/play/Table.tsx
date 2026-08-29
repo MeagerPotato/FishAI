@@ -24,6 +24,7 @@ import { cardLabel, bookLabel, describePlayEvent, seatName, teamOf } from './for
 import type { PlayParams } from './params.ts'
 import { advisorPolicy, policyLabel } from './policies.ts'
 import s from './play.module.css'
+import { StyleMirror } from './StyleMirror.tsx'
 import { useGame } from './useGame.ts'
 
 const SEATS: readonly Seat[] = [0, 1, 2, 3, 4, 5]
@@ -132,25 +133,28 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
       </div>
 
       {finished ? (
-        <div className={s.over}>
-          <p className={s.overVerdict}>
-            {winner === 0 ? 'Your team clinches' : 'Team 1 clinches'} at {Math.max(sets[0], sets[1])}{' '}
-            sets — {sets[0]}–{sets[1]} · {unresolved} unresolved.
-          </p>
-          <p className={s.overBody}>
-            A clinched game always ends with sets unresolved and cards still in hand — the score
-            above is complete, not truncated. Rematch replays the identical deal; a new game draws
-            a fresh seed.
-          </p>
-          <div className={buttonRow} style={{ marginTop: 20 }}>
-            <Button variant="ghost" arrow={false} onClick={onRematch}>
-              Rematch — same seed
-            </Button>
-            <Button variant="line" arrow={false} onClick={onNewGame}>
-              New game — new seed
-            </Button>
+        <>
+          <div className={s.over}>
+            <p className={s.overVerdict}>
+              {winner === 0 ? 'Your team clinches' : 'Team 1 clinches'} at{' '}
+              {Math.max(sets[0], sets[1])} sets — {sets[0]}–{sets[1]} · {unresolved} unresolved.
+            </p>
+            <p className={s.overBody}>
+              A clinched game always ends with sets unresolved and cards still in hand — the score
+              above is complete, not truncated. Rematch replays the identical deal; a new game
+              draws a fresh seed.
+            </p>
+            <div className={buttonRow} style={{ marginTop: 20 }}>
+              <Button variant="ghost" arrow={false} onClick={onRematch}>
+                Rematch — same seed
+              </Button>
+              <Button variant="line" arrow={false} onClick={onNewGame}>
+                New game — new seed
+              </Button>
+            </div>
           </div>
-        </div>
+          <StyleMirror view={view} mode={play.mode} styles={play.styles} />
+        </>
       ) : null}
 
       <div className={s.surface}>
