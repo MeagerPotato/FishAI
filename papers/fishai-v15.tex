@@ -1,0 +1,1031 @@
+\documentclass[11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{microtype}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
+
+% Float packing: let tables share pages with more text instead of drifting.
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.6}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.8}
+\setcounter{totalnumber}{4}
+\setcounter{topnumber}{3}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\usff}{\code{us54}}
+
+\title{FishAI v1.5: A Bit-Budget Memory Ladder\\ as an Honest Difficulty Axis}
+\author{Allen Hsieh\\[2pt] {\small FishAI project}}
+\date{August 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+Until now the FishAI engine's easy tier was a six-event memory window plus a $25\%$
+uniform blunder rate --- a difficulty knob that is neither monotone, interpretable, nor
+human-shaped. FishAI v1.5 replaces it with the bounded-memory model of Sanjay Kannan's
+Literature framework: memory capacity capped \emph{in bits} under a fixed fact tariff (2
+bits per card fact, 1 per basis fact), with the eviction policy the strategy corpus
+recommends --- rank facts by contestability, not recency --- implemented as a stateless,
+pure re-derivation from the full public log at every decision. The design is measured
+under the project's pre-registration discipline, eight predictions with verdict rules
+fixed before each run. The ladder is confirmed monotone across all ten measured budgets
+(P1: every adjacent rung non-negative, the sharpest at $z = 46.8$; P2: the $\infty$ cell
+an exact mirror over 3{,}000 duplicate pairs). Calibrating the shipped tiers onto the
+ladder (P3, mixed): medium is worth $32.2$ bits $[30.8, 35.1]$; the old noise-based easy
+tier measures \emph{below the zero-bit floor} ($0.0446$ set-share against the floor's
+$0.1313$ --- a memoryless bot that reasons beats a remembering bot that dices); hard
+sits above every finite rung. Evidence-age analysis (P4--P6, all mixed as printed)
+finds the S45 signature where the model predicts it --- finite budgets decay with
+half-lives $5/13/17/33/49$ events, rising in bits where defined --- while the noise tier
+is cliff-edged at its window ($z = 258.9$) yet not flat inside it, and a composition
+effect makes the pooled and seed-clustered estimators disagree in sign for the
+full-memory policies. The headline refutation is P7: memory pressure was predicted to
+erode the behavioural style signature, and instead the v1.0 classifier reads bounded
+ecologies \emph{better} --- top-1 rises from $15.4\%$ at 16 bits to $23.0\%$ at 64 bits
+against $22.4\%$ at $\infty$, and the violating rung ($-0.0053 \pm 0.0019$) survives a
+Bonferroni~$\times 3$ annotation at $p = 0.00885$. A single-seat follow-up (E4b),
+registered after review, isolates the read seat: its 50-seed pilot confirmed a flat
+curve but at $52\%$ power --- its top rung's confidence interval contained the entire P7
+effect --- and the pilot's commit overclaimed; the correction is on the record, and the
+300-seed run of record ($99.97\%$ post-hoc power at the P7 effect size) confirms P8
+flat at matched read count. Within the designs measured, the P7 shift is a property of
+the bounded ecology, not of the bounded seat's own end-of-game signature; the
+cross-design difference ($z = 2.11$) is reported as exactly that and enters no verdict.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+Every difficulty system makes a claim about what a weaker player \emph{is}. The FishAI
+engine's shipped answer, inherited from v0.5 \cite{v05paper}, was the standard one: an
+easy bot remembers only the last six public events, skips constraint inference, and
+replaces $25\%$ of its asks with random legal ones. That answer is expedient and wrong
+in three measurable ways. It is not monotone --- noise interacts with position, so
+``more noise'' is not reliably ``weaker'' in any calibrated sense. It is not
+interpretable --- there is no single number a player can reason about. And it is not
+human-shaped: humans do not play well and then dice-roll into blunders; they
+\emph{forget}, oldest and least relevant facts first, and their errors inherit that
+structure \cite{playstyles,andersonschooler1991}.
+
+The project's research synthesis catalogues an alternative with all three properties
+\cite{playstyles}: the bounded-memory player of Sanjay Kannan's Literature framework
+(S44 in the synthesis's numbering), in which an agent's memory is capped in
+\emph{bits} under a fixed tariff per atomic fact, and the interesting decision --- given
+$k$ bits, what should you remember? --- is delegated to an explicit eviction policy. The
+synthesis pairs it with two neighbours that complete the design: the recency player
+(S45), whose observable signature is a decay of effectiveness with the age of the
+supporting evidence, and the triage memoriser (S47), the human-facing name for the
+eviction policy the strategy corpus actually recommends --- memorise the books you can
+contest, and flush what is resolved.
+
+FishAI v1.5 implements that model as a first-class policy arm of the deterministic
+\usff{} engine (Section~\ref{sec:engine}), and then measures it under the discipline the
+project's adaptive suite established \cite{v10paper}: pre-registered predictions with
+verdict rules fixed before each run, duplicate deals, paired and seed-clustered standard
+errors, health gates that void a run rather than qualify it, and one committed artifact
+\cite{artifact} from which every number in this paper is read. Four experiments and two
+registered follow-ups answer four questions. Is the ladder monotone? (Yes, at every
+rung.) Where do the shipped tiers land on it? (Medium at $32.2$ bits; the old easy tier
+below the ladder's own floor.) Are bounded bots human-shaped in the S45 sense? (Where
+the model has room to bind, yes, with half-lives that rise in bits; the full-memory
+verdicts are mixed for reasons worth stating exactly.) And does memory pressure erode a
+seat's behavioural style signature, as the v1.0 observation work \cite{obspaper} would
+suggest? Here the pre-registered prediction was \textbf{refuted}, and the refutation is
+this paper's headline: bounded ecologies are \emph{more} classifiable than full-strength
+ones, and a registered single-seat follow-up --- including a pilot whose conclusion had
+to be corrected on the record, a sequence Section~\ref{sec:timeline} reports in full ---
+localises the effect in the ecology rather than in the read seat's own signature,
+within the designs measured.
+
+\section{Related work}
+\label{sec:related}
+
+The primary source is Kannan's Literature framework and its reference implementation,
+both read in full by the project's research synthesis \cite{kannan,playstyles}: the
+framework specifies an agent ``constrained by imperfect memory'' via a bit parameter and
+a per-fact price list, and its reference \code{ActivePlayer} implements ranked retention
+with a \code{spotlight()} focus-book mechanism --- the direct ancestors of
+Section~\ref{sec:engine}. The idea that agents are resource-bounded reasoners rather
+than noisy optimal ones goes back to Simon \cite{simon1955}; the specific empirical
+shape assumed here --- retrieval success decaying with the age of the supporting
+evidence, at rates that track the environment --- is the memory literature's
+\cite{andersonschooler1991}, and the S45 entry of the synthesis \cite{playstyles} argues
+the decay curve is the single best skill estimator recoverable from a Literature log.
+Within the project, this paper leans on the v0.5 roster and measurement discipline
+\cite{v05paper}, the v1.0 classifier whose accuracy harness E4 reuses
+\cite{v10paper,obspaper,fingerprints}, and the inert-axis result that bounds what any
+public-log observer can see of this roster \cite{inertpaper,styles}.
+
+\section{Background}
+\label{sec:background}
+
+Literature (Canadian Fish) under the \usff{} dialect \cite{rules,v05paper}: 54 cards in
+nine half-suits (``books'') of six, six players in two teams, public asks gated by a
+holding licence, out-of-turn declares in a deterministic window, any declaration error
+awarded to the opponents, race to five sets, ties impossible. The engine is pure,
+deterministic TypeScript; one seed reproduces a byte-identical game \cite{repo}.
+
+Three prior measurements matter here. First, the v0.5 roster: nine parameterised styles
+over one shared full-strength inference engine, with Balanced the tuned control
+\cite{v05paper}. Second, the difficulty tiers as shipped: \code{easy} is a six-event log
+window without set constraints, a $25\%$ uniform ask-blunder rate, and no claim planner;
+\code{medium} runs the full knowledge engine; \code{hard} adds the constraint-refined
+hit probability --- the skill at which every roster style, and the bounded arm below,
+plays \cite{repo}. Third, the v1.0 observation layer: fourteen public-log features, a
+calibrated diagonal-Gaussian classifier, and a measured end-of-game top-1 of $22.4\%$
+over nine styles against an $11.1\%$ chance floor \cite{obspaper,adaptiveartifact}.
+Experiment E4 runs that exact instrument over bounded play.
+
+\section{The S44 model and the cost tariff}
+\label{sec:model}
+
+The model prices memory, not behaviour. An agent holds at most $k$ bits of derived
+facts, where the tariff --- fixed by the framework, not tuned by this project
+\cite{kannan,playstyles} --- is:
+
+\begin{center}
+\begin{tabular}{@{}llc@{}}
+\toprule
+Fact kind & Reading & Cost \\
+\midrule
+has-card   & player $X$ has card $Z$ & 2 bits \\
+lacks-card & player $X$ does not have card $Z$ & 2 bits \\
+basis      & player $X$ holds at least one card of book $Y$ & 1 bit \\
+no-basis   & player $X$ holds no card of book $Y$ & 1 bit \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The framework's specification names the first three prices; its reference
+implementation's fact tuples carry the negative basis fact as a fourth kind, priced like
+the positive \cite{kannan,playstyles}. Two properties of the tariff do real work. A
+basis fact costs half a card fact and is often worth more --- it is what gates ask
+legality and drives hit priors --- so a good eviction policy is not a compression
+problem but a valuation problem. And the framework does no enforcement: the agent gets
+\code{self.limit} bits, tracks \code{self.free}, and the discipline is its own; the
+reference \code{ActivePlayer} \emph{refills memory from scratch each turn}, re-deriving
+every fact and re-spending the budget down a relevance ranking anchored on a focus book
+chosen by its \code{spotlight()} routine. That refill semantics --- not an incremental
+store with evictions --- is what Section~\ref{sec:engine} implements faithfully.
+
+The synthesis's calibration argument \cite{playstyles} sets the scale: worst-case
+perfect recall of card facts alone runs to 2 bits per card per seat --- hundreds of bits
+(the framework's own constants are for its 52-card, seven-card-major deck; the model
+transfers to \usff{}, the constants do not). A two-digit budget is therefore a genuine
+handicap, and Section~\ref{sec:ladder} measures that on these deals the axis saturates
+by 128 bits.
+
+Why this replaces noise as the difficulty knob is the synthesis's argument, which the
+experiments test rather than assume: a bit budget is \emph{monotone} (more bits can only
+add facts; P1), \emph{interpretable} (one number a player can reason about),
+\emph{human-shaped} (a relevance-ranked bounded memory forgets the oldest,
+least-contestable facts, so the S45 decay curve arises by construction; P5), and
+\emph{composable} (a bounded Hoarder is still a Hoarder --- the budget caps the memory,
+never the style or the reasoning; E4 exercises exactly this).
+
+\section{The engine: a stateless bounded-memory arm}
+\label{sec:engine}
+
+The v1.5 arm is a fifth \code{PolicySpec} shape, \code{\{bounded: true, bits, style\}}
+--- budget in bits, roster style to play over the restricted knowledge (default
+Balanced) --- resolved inside \code{decide} exactly as the adaptive arm is
+\cite{v10paper,repo}. Everything below is a pure function of (view, policy, seed): no
+\code{Date}, no \code{Math.random}, no state between calls. The engine's own summary of
+the division of labour: the budget caps the memory, never the reasoning --- the chosen
+roster style runs at hard skill over whatever knowledge survives the budget
+\cite{repo}.
+
+\subsection{Derivation, then reconstruction}
+\label{sec:twopasses}
+
+The implementation is two passes over public information \cite{repo}.
+\textbf{Derivation}: the full-fidelity recorded walk of the knowledge engine --- the
+identical ingestion \code{buildKnowledge} runs at hard skill --- read back as
+timestamped atomic facts of the four tariff kinds. Nothing is invented: a hit locates a
+card; an ask certifies the asker's basis and their lack of the named card; a miss
+certifies the target's lack; historical count exhaustion certifies eliminations; a claim
+resolves its book and retires every fact on it --- exactly the certifications the
+observation layer documents for this log \cite{obspaper}. \textbf{Reconstruction}: the
+\emph{kept} facts are replayed in log order onto a fresh working state through the same
+primitives the knowledge engine uses, then finished by the shared
+\code{finishKnowledge} step --- own-hand injection, fixpoint propagation over the
+\emph{current} public counts, materialisation. The output is the same \code{Knowledge}
+shape every style policy consumes, so all nine roster styles run over it unchanged.
+
+Because the reconstruction reuses the knowledge engine's own machinery, the
+\textbf{large-budget equivalence anchor} holds by construction rather than by a parallel
+implementation staying in step: with every fact kept, the replay reproduces the full
+walk's state, and the arm's decisions are identical to the unbounded style's over whole
+games --- pinned by test, and re-verified at run scale by the $\infty$ cells of
+Sections~\ref{sec:ladder} and~\ref{sec:p8} \cite{repo,artifact}.
+
+\subsection{What is free, and what never enters the pool}
+\label{sec:free}
+
+Own hand is free --- the seat can see it, so the injection runs at every budget,
+including zero. The public board state is free --- resolved books are seeded gone from
+the view's book state, and current counts drive the final propagation --- because the
+synthesis's S48 entry keeps \emph{observation history} and \emph{display policy} as
+separate axes: what the table shows is not what the agent remembers \cite{playstyles}.
+The S45 subtlety identified for the old log-window tier applies with force here: a
+fact-filtered replay of running hand counts would be wrong the moment a hit's fact was
+evicted, so the reconstruction never replays counts at all --- count exhaustion runs
+only inside the full-fidelity derivation, and its conclusions reach the replay as kept
+lacks-card facts \cite{playstyles,repo}.
+
+Facts the free state reproduces at any budget are never enumerated, so the budget is
+never spent on them: everything on a resolved book; the viewer's own lacks and held
+cards; the viewer's own basis constraints. Subsumption keeps the accounting honest ---
+a card fact subsumes the eliminations on its card, and a no-basis fact compresses up to
+twelve bits of per-card lacks into one \cite{repo}.
+
+\subsection{Spotlight ranking and the budget}
+\label{sec:spotlight}
+
+The eviction policy is S47's, under the reference implementation's mechanism: each live
+book is scored by how much the seat's own hand plus the derived facts bear on it (2 per
+held card, plus the bit cost of every pool fact on the book); facts rank by book score
+descending, then recency descending, then a stable total order (card in deck order,
+seat, kind); the kept set is the longest ranked prefix whose total cost fits the budget
+\cite{repo,playstyles}. Contestability leads and recency tiebreaks --- the corpus's
+advice, not this project's invention: save your memory for the half-suits you can still
+contest, and flush what is resolved \cite{playstyles}. At \code{bits: 0} nothing is
+kept and the policy sees own hand plus public board only --- the synthesis's
+own-hand-only regime (S46), and still never an illegal move; the test suite pins the
+zero-budget floor, the budget accounting (kept cost never exceeds bits; the kept set is
+a ranking prefix; ties deterministic), \code{decide}/\code{decideExplained} parity for
+the new arm, and purity \cite{repo}. The explanation trace names the budget
+(``$k$-bit memory''), so downstream surfaces cannot misrepresent what played.
+
+\section{Experimental design and pre-registration}
+\label{sec:design}
+
+\subsection{Shared discipline}
+\label{sec:discipline}
+
+All experiments inherit the adaptive suite's discipline \cite{v10paper,botlab}:
+duplicate deals (each seeded deal played in both orientations, start seat rotating with
+the pair index), per-seed paired estimators for adjacent comparisons, seed-clustered
+standard errors wherever compositions share seeds, and health gates --- 0 illegal
+actions, 0 capped games, 0 invariant violations, and under \usff{} 0 ties, 0 voids, 0
+non-clinch endings, with \code{distinctSeeds} equal to the expected count in every cell
+--- that \emph{void} a run rather than footnote it. Decisions are seeded
+\code{hashSeed(`\$\{seed\}:\$\{moveIndex\}`)()}; the runner is a pure function of its
+task (the worker pool is a throughput device, not a source of variation); an FNV digest
+of the records travels in the artifact; and the committed artifact
+\code{src/lab/data/bounded-results.json} sits behind a boundary validator mirroring the
+adaptive one \cite{artifact,repo}. The base suite is 85{,}200 games in $308$ seconds of
+wall clock; the E4b pilot and power runs add 7{,}200 and 43{,}200 games
+\cite{artifact}. Every number in this paper is a field of that artifact (or of the
+committed v1.0 artifact where the baseline is cited \cite{adaptiveartifact}), quoted at
+the artifact's own precision.
+
+\subsection{The experiments}
+\label{sec:experiments}
+
+\begin{enumerate}
+\item \textbf{E1 --- ladder monotonicity.} A team of three bounded-Balanced seats
+  against an unbounded Balanced team at hard skill --- the same full-strength engine the
+  budget caps --- at ten budgets, $\text{bits} \in \{0, 8, 16, 24, 32, 48, 64, 96, 128,
+  \infty\}$ ($\infty$ implemented as $10^6$, provably above the derivable pool), 3{,}000
+  duplicate pairs per rung on \emph{one} shared seed list (prefix \code{bounded-v1}), so
+  every budget replays identical deals and adjacent rungs compare per seed. The metric
+  is mean set-share, $\text{sets}_A / (\text{sets}_A + \text{sets}_B)$, not win rate:
+  the ladder needs a dial that keeps moving after the win rate saturates.
+\item \textbf{E2 --- tier calibration.} The three shipped tiers against the same
+  reference opposition, on the head of the E1 seed list, so each tier's share sits on
+  the E1 curve per-deal and its bits-equivalent is read off by interpolation.
+\item \textbf{E3 --- evidence age.} No games of its own and no engine instrumentation:
+  computed post-hoc from the E1/E2 records, which retain the full public log. The
+  estimator, fixed in the registration: at ask event $i$, every card whose public
+  location a hit established at event $j$ (unmoved and unretired since) that the acting
+  seat could legally ask of the correct holder is one availability observation at age
+  $i - j$; the seat \emph{exploited} it iff its actual ask was exactly that card at that
+  holder; the hit column is the actual ask's outcome. Hands are reconstructed from the
+  seed's deal plus the log's hits and claims, so ask legality is decided from ground
+  truth. Clustered comparisons cluster by seed; the young band is ages 1--8, the old
+  band 33$+$; a half-life is the lower edge of the first band with at least 200
+  observations whose exploit rate is at or below half the youngest band's --- a curve
+  that never falls that far has none.
+\item \textbf{E4 --- style under memory pressure.} The v1.0 classifier-accuracy harness
+  \cite{v10paper,obspaper}, budget-capped: for each $\text{bits} \in \{16, 32, 64,
+  \infty\}$, all 36 unordered style pairings play 50 single games with \emph{both} teams
+  bounded at that budget, on the v1.0 accuracy seed list (\code{clsacc-v1}); the
+  classifier reads every seat once at end of game against the committed full-strength
+  fingerprints \cite{fingerprints} --- 1{,}800 games and 10{,}800 read seats per cell.
+  At $\infty$ the arm is decision-identical to the bare styles by the anchor pin, so
+  that cell is a re-run of the v1.0 accuracy experiment and must reproduce the committed
+  $22.4\%$ exactly.
+\item \textbf{E4b --- single-seat attribution} (registered after the Phase~2 review;
+  Section~\ref{sec:timeline}). E4's grid, seeds and pairings, but only one seat is
+  bounded: the \emph{read seat}, seat $2 \cdot (\text{game} \bmod 3)$ --- the three
+  team-0 seats in rotation --- always playing the pairing's team-0 style under the
+  budget while the other five seats play their bare full-strength styles exactly as the
+  v1.0 harness seats them. The start seat rotates $\text{game} \bmod 6$, so the read
+  seat occupies every relative table position uniformly. P8 scores the read seat only;
+  truth is always the pairing's first style, so the triangular pairing scheme gives
+  by-style read counts that fall with roster position, identically at every budget, and
+  the last roster style is never the read truth. The $\infty$ cell carries an in-run
+  health gate: every $\infty$-budget game is replayed with all six seats bare and
+  required to match event-for-event, read-for-read and step-for-step (replays are
+  checks, not records). The design holds the ecology --- opponents, partners, game
+  length --- at the full-strength distribution the fingerprints were calibrated on,
+  isolating the read seat's own signature.
+\item \textbf{E4b-power --- the P8 run of record} (registered after the E4b review;
+  Section~\ref{sec:timeline}). The same design at 300 seeds per pairing --- 10{,}800
+  reads per cell, matching P7's read count --- on a fresh seed prefix
+  (\code{clsacc-power-v1}) disjoint from the pilot's; mapping, grid, estimator and rule
+  unchanged.
+\end{enumerate}
+
+\subsection{Predictions and verdict rules}
+\label{sec:prereg}
+
+Eight predictions travel verbatim inside the artifact \cite{artifact}; they are typeset
+here with mathematical symbols but otherwise as registered. P1--P7 were registered
+2026-08-29, before any Phase~2 run; P8 on 2026-08-30, before any E4b run.
+
+\begin{itemize}
+\item[\textbf{P1}] E1 (ladder monotonicity): set-share is non-decreasing in bits,
+  within $2\cdot$(paired SE) at every adjacent pair.
+\item[\textbf{P2}] E1 (health, not prediction): at $\infty$ the pairing is an exact
+  mirror; duplicate-deal set-share is $0.5000$ exactly by construction. A deviation is
+  a harness bug, full stop.
+\item[\textbf{P3}] E2 (question, direction only): each shipped tier lands at a finite,
+  orderable bits-equivalent (easy $<$ medium $<$ hard). No numeric prediction --- this
+  is the measurement the ladder exists to provide.
+\item[\textbf{P4}] E3: full-memory policies are age-flat (the S48 log-reader regime, by
+  construction).
+\item[\textbf{P5}] E3: bounded policies decay with age, and the decay half-life
+  increases with bits (the S45 signature, by construction of spotlight $+$ recency
+  eviction).
+\item[\textbf{P6}] E3: the old easy tier (\code{logWindow} 6 $+$ $25\%$ uniform noise)
+  is age-flat inside its window and cliff-edged at it --- i.e.\ noise is not
+  human-shaped; the paper's motivating contrast.
+\item[\textbf{P7}] E4 (direction): top-1 accuracy is non-increasing as bits shrink ---
+  memory pressure erodes the behavioural signature. Where it lands relative to the
+  $22.4\%$ full-strength baseline is the measurement, not a prediction.
+\item[\textbf{P8}] E4b (single-seat attribution): top-1 accuracy at the bounded read
+  seat is non-increasing as its bits shrink, by the same adjacent-rung $2 \cdot$SE rule
+  as P7 (any violating rung refutes). The $\infty$ cell must reproduce the
+  corresponding full-strength read exactly (health, not prediction).
+\end{itemize}
+
+The verdict rules were fixed with the predictions and ship in the code that assembles
+the artifact \cite{repo}, all on the adaptive suite's $2 \cdot$SE discipline. P1, P7,
+P8: every adjacent rung must satisfy $\Delta \ge -2 \cdot \text{SE}$ (per-seed paired);
+any violation refutes. P2: integer-exact mirroring of every $\infty$ pair; a deviation
+refutes and independently voids the run. P3: confirmed iff all three tiers are finite
+and strictly ordered; ordered-but-not-all-finite is mixed. P4: a full-memory policy is
+age-flat iff $|\text{young} - \text{old}| \le 2 \cdot \text{SE}$ (seed-clustered); both
+of the two full-memory policies flat confirms, one is mixed. P5: every finite budget
+must decay significantly \emph{and} have a defined half-life, non-decreasing in bits
+with at least one strict increase; anything between ``all hold'' and ``none decays'' is
+mixed. P6: the old easy tier must be flat inside its window
+($|\text{rate}(1\text{--}3) - \text{rate}(4\text{--}6)| \le 2 \cdot \text{SE}$)
+\emph{and} cliff-edged at it; one of two is mixed. A refuted prediction is emitted as
+\code{refuted}, not massaged.
+
+\subsection{The registration timeline, and a correction of record}
+\label{sec:timeline}
+
+The sequence matters more than usual in this paper, because it includes a correction,
+and the correction is part of the method rather than a blemish on it.
+
+\begin{enumerate}
+\item \textbf{2026-08-29}: E1--E4 designs and P1--P7 registered; the base suite runs;
+  P7 is refuted (Section~\ref{sec:p7}).
+\item \textbf{Phase~2 review}: the review confirms that E4's both-teams design
+  \emph{cannot} attribute the P7 refutation --- bounding both teams changes the whole
+  ecology (opponents, partners, game length) along with the read seat's signature, and
+  the classifier's fingerprints were calibrated on full-strength play. The review also
+  recommends a multiplicity annotation: Bonferroni~$\times 3$ over each adjacent-rung
+  family, reported \emph{alongside} the committed verdicts, which are not changed.
+\item \textbf{2026-08-30, before any E4b run}: E4b registered --- the single-seat
+  design, the read-seat mapping fixed in the registration before running, P8, and the
+  annotation.
+\item \textbf{The pilot and its overclaim}: the 50-seed E4b pilot runs; P8 comes out
+  confirmed (flat). The commit recording it claimed the P7 shift was ``not of the read
+  seat's signature''. That claim was too strong: what a flat curve at 1{,}800 reads per
+  cell licenses is only that the effect \emph{does not appear in the single-seat design
+  at that read count}.
+\item \textbf{The E4b review}: computes the pilot's power at exactly the P7 effect
+  size: about $52\%$ (minimum detectable effect $0.0051$ against the P7 effect
+  $0.0053$; the pilot's 64${\to}\infty$ interval $[-0.0067, +0.0034]$ contains the
+  entire P7 effect). The pilot's CONFIRMED is therefore an underpowered null.
+\item \textbf{2026-08-30, after that review and before any run}: E4b-power registered.
+  Seeds 50 ${\to}$ 300 (reads 1{,}800 ${\to}$ 10{,}800 per cell, matching P7's read
+  count; MDE ${\approx}\,0.0021$ under the same rule), fresh disjoint seed prefix,
+  everything else unchanged. The 300-seed run becomes the P8 verdict of record; the
+  pilot is retained verbatim in the artifact, clearly labelled; both are reported
+  whatever they say. The registration notes the direction of the risk honestly:
+  raising $N$ after a null could only have refuted the project's own headline
+  attribution --- which is the direction honesty points. A correction commit states
+  the pilot conclusion's within-design limit; no history is rewritten.
+\item \textbf{Guard truthfulness}: the same review's integrity findings are fixed
+  before the power run --- the artifact-extension guards' prose narrowed to what they
+  actually check, the registered prediction texts authenticated against the code's own
+  copies, the base artifact pinned by records digest, and the analysis step made to
+  fail (not note-and-proceed) when the records file is absent \cite{repo}.
+\end{enumerate}
+
+\section{Results}
+\label{sec:results}
+
+Health first, because a run is void without it: across all three runs (base, pilot,
+power) the counters are clean --- \code{illegalActions}, \code{cappedGames},
+\code{invariantViolations}, \code{ties}, \code{voids} and \code{nonClinch} all zero,
+and \code{distinctSeeds} equal to the expected count in every cell \cite{artifact}.
+
+\subsection{P1 and P2: the ladder is monotone, and the anchor holds}
+\label{sec:ladder}
+
+\begin{table}[t]
+\centering
+\caption{E1, the ladder: three bounded-Balanced seats vs.\ an unbounded Balanced team
+at hard skill, 3{,}000 duplicate pairs per rung on one shared seed list
+\cite{artifact}. $\Delta$ is the per-seed paired delta from the previous rung; the
+pre-registered rule is $\Delta \ge -2 \cdot \text{SE}$ at every rung.}
+\label{tab:ladder}
+\footnotesize
+\begin{tabular}{@{}rccrrr@{}}
+\toprule
+Bits & Set-share & SE & Mean moves & $\Delta$ from prev. & $z$ \\
+\midrule
+0        & 0.1313 & 0.0017 & 798.2 & ---                  & --- \\
+8        & 0.2449 & 0.0022 & 768.9 & $+0.1135 \pm 0.0028$ & 41.11 \\
+16       & 0.3921 & 0.0026 & 741.1 & $+0.1472 \pm 0.0031$ & 46.76 \\
+24       & 0.4361 & 0.0023 & 720.5 & $+0.0440 \pm 0.0030$ & 14.50 \\
+32       & 0.4653 & 0.0020 & 704.5 & $+0.0292 \pm 0.0025$ & 11.49 \\
+48       & 0.4909 & 0.0011 & 688.5 & $+0.0257 \pm 0.0020$ & 12.52 \\
+64       & 0.4977 & 0.0006 & 685.1 & $+0.0068 \pm 0.0011$ & 6.04 \\
+96       & 0.4999 & 0.0001 & 683.3 & $+0.0022 \pm 0.0006$ & 3.80 \\
+128      & 0.5000 & 0      & 683.2 & $+0.0001 \pm 0.0001$ & 0.90 \\
+$\infty$ & 0.5000 & 0      & 683.2 & $+0.0000 \pm 0.0000$ & 0.00 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:ladder} is the axis. Set-share rises from $0.1313 \pm 0.0017$ at zero
+bits to exactly $0.5$ at the top, and every one of the nine adjacent deltas is
+non-negative --- the first seven each individually significant (the smallest at
+$z = 3.80$), the two top rungs statistically zero. \textbf{P1 is confirmed}: 0 of 9 rungs violate
+$\Delta \ge -2\cdot\text{SE}$; the most negative rung is $128 {\to} \infty$ at
+$z = 0.00$. \textbf{P2 holds as a health gate}: all 3{,}000 $\infty$-budget pairs
+mirrored integer-exactly (set counts and step counts compared as integers, never
+floats), 0 deviations, duplicate-mean set-share $0.5000$ --- the run-scale echo of the
+Phase~1 equivalence anchor.
+
+Two structural readings. The curve is concave with an elbow between 16 and 48 bits:
+the first 16 bits buy $0.26$ of set-share, the next 32 buy $0.10$, everything past 64
+buys $0.0023$. And the axis saturates early: at 128 bits every pair already mirrors
+exactly and the per-seed set counts match the $\infty$ cell's ($\Delta$ and SE both
+zero) --- not because the games are identical (the two cells' mean lengths differ by
+about $0.002$ moves), but because no retained-versus-evicted difference above 128 bits
+ever moved a set on these 3{,}000 deals. The worst-case pool is hundreds of bits
+(Section~\ref{sec:model}); the \emph{operative} pool, under this eviction policy and
+these deals, fits in 128. Bounded games are also longer: mean engine moves fall from
+$798.2$ at the floor to $683.2$ at $\infty$, about $17\%$ --- memory-poor tables take
+longer to finish, a fact that returns in Section~\ref{sec:p7}.
+
+\subsection{P3: where the shipped tiers land}
+\label{sec:tiers}
+
+\begin{table}[t]
+\centering
+\caption{E2, tier calibration: each shipped tier vs.\ the same reference opposition on
+the head of the ladder seed list, 3{,}000 pairs each, interpolated onto the E1 curve
+\cite{artifact}.}
+\label{tab:tiers}
+\footnotesize
+\begin{tabular}{@{}lccl@{}}
+\toprule
+Tier & Set-share & SE & Bits-equivalent \\
+\midrule
+easy   & 0.0446 & 0.0011 & 0 $[0, 0]$ --- clamped: below the 0-bit floor \\
+medium & 0.4656 & 0.0024 & $32.2$ $[30.8, 35.1]$ \\
+hard   & 0.5006 & 0.0007 & none finite --- above every finite rung \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:tiers} is the measurement the ladder exists to provide, and the verdict
+is \textbf{mixed}, exactly as the rule reads it: the ordering easy $<$ medium $<$ hard
+holds on point estimates, but not every tier is finitely placeable.
+
+The medium tier is worth $32.2$ bits $[30.8, 35.1]$ --- a genuinely useful number: the
+full knowledge engine without constraint-refined hit probability plays like a
+contestability-ranked memory of about sixteen card facts. The hard tier's share,
+$0.5006 \pm 0.0007$, sits above every finite rung (its interval maps to
+$[85.5, \infty)$ in bits); it is not the mirror of the reference --- the nonzero paired
+SE says the two disagree on some deals --- but no finite budget reproduces it.
+
+The easy tier is the headline of this table: $0.0446 \pm 0.0011$, \emph{below the
+ladder's own zero-bit floor} of $0.1313 \pm 0.0017$. The bits-equivalent is clamped at
+zero with the artifact's note printed as measured: the share sits at or below the 0-bit
+floor. Read plainly: a bot that remembers \emph{nothing} but reasons soundly over its
+own hand and the public board state, and never blunders, is worth nearly three times
+the set-share of a bot that remembers six events and dices away a quarter of its asks. The
+noise is not a memory model; it is a tax collected at random, and
+Section~\ref{sec:evidence} shows its shape is wrong too.
+
+\subsection{P4--P6: the evidence-age curves}
+\label{sec:evidence}
+
+E3 asks the S45 question of every policy in the E1/E2 records: when a certain ask is
+available --- a card whose holder the public log established at a known past event ---
+does the policy take it, and does the answer depend on how old the evidence is?
+Table~\ref{tab:decay} reports the committed statistics per policy.
+
+\begin{table}[t]
+\centering
+\caption{E3, evidence age: exploit rate of available certain asks, young band (ages
+1--8) and old band (33$+$), with the seed-clustered decay (young $-$ old within seed)
+and the half-life where defined \cite{artifact}. Pooled and clustered estimators can
+disagree (see text).}
+\label{tab:decay}
+\footnotesize
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Policy & Young rate & Old rate & Clustered decay $\pm$ SE & $z$ & Half-life \\
+\midrule
+bounded 0    & 0.1030 & 0.0186 & $+0.0661 \pm 0.0026$ & $25.22$ & 5 \\
+bounded 8    & 0.2798 & 0.0574 & $+0.1611 \pm 0.0052$ & $30.72$ & 13 \\
+bounded 16   & 0.3626 & 0.1154 & $+0.1055 \pm 0.0076$ & $13.92$ & 17 \\
+bounded 24   & 0.4553 & 0.1646 & $+0.0891 \pm 0.0104$ & $8.55$  & 33 \\
+bounded 32   & 0.5060 & 0.2632 & $+0.0572 \pm 0.0119$ & $4.81$  & 49 \\
+bounded 48   & 0.5491 & 0.3626 & $+0.0422 \pm 0.0131$ & $3.22$  & --- \\
+bounded 64   & 0.5576 & 0.4091 & $-0.0044 \pm 0.0130$ & $-0.34$ & --- \\
+bounded 96   & 0.5595 & 0.4244 & $-0.0145 \pm 0.0129$ & $-1.13$ & --- \\
+bounded 128  & 0.5595 & 0.4244 & $-0.0145 \pm 0.0129$ & $-1.13$ & --- \\
+bounded $\infty$ & 0.5595 & 0.4244 & $-0.0145 \pm 0.0129$ & $-1.13$ & --- \\
+\midrule
+reference (unbounded) & 0.5840 & 0.4561 & $-0.0212 \pm 0.0049$ & $-4.28$ & --- \\
+old easy tier & 0.4394 & 0.0266 & $+0.4115 \pm 0.0024$ & $170.20$ & 7 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{P5 --- mixed, with the predicted structure where the model binds.} Every budget
+from 0 through 48 bits decays significantly, and the half-lives, where defined, are
+$5/13/17/33/49$ events at $0/8/16/24/32$ bits --- strictly increasing in bits, the S45
+signature arriving exactly as the construction predicts: a bigger budget keeps old
+facts alive longer. But the registered rule demanded decay \emph{and} a defined
+half-life at \emph{every} finite budget, and from 48 bits up the curves never fall to
+half their youngest-band rate (48 bits still decays at $z = 3.22$ but earns no
+half-life; 64--128 bits are statistically flat). The verdict prints as mixed: every
+budget decays --- no; half-life defined everywhere and non-decreasing with a strict
+increase --- no.
+
+\textbf{P4 --- mixed, and instructive about estimators.} The $\infty$-budget bounded
+policy is age-flat under the registered rule ($-0.0145 \pm 0.0129$, $z = -1.13$ over 470
+seeds). The unbounded reference is \emph{not}: $-0.0212 \pm 0.0049$, $z = -4.28$ over
+2{,}571 seeds --- a small but
+significant tilt in the \emph{anti}-decay direction (within a seed, old-evidence
+certain asks are exploited slightly more often than young ones). One of two
+full-memory policies flat is, by the fixed rule, mixed. The instructive part is the
+\textbf{composition effect} the artifact makes visible: pooled, the reference's young
+and old rates are $0.5840$ and $0.4561$ --- an apparent $13$-point decay --- while the
+seed-clustered estimator, comparing within games, finds the opposite sign. Both
+numbers are printed because they measure different things: games in which 33$+$-aged
+certain asks are still \emph{available} at all are systematically unusual games (long,
+contested, with located cards left unconsumed), so the pooled old band conflates
+position quality with age. The clustered estimator is the verdict's input for exactly
+this reason, and wherever the two disagree in this paper, both are shown.
+
+\begin{table}[t]
+\centering
+\caption{E3, the old easy tier's exploit rate and hit rate by evidence age
+\cite{artifact}. The memory window is 6 events; the cliff between the 5--6 and 7--8
+bands is the window's edge, seen from outside.}
+\label{tab:cliff}
+\footnotesize
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Age band & Available & Exploit rate & Hit rate \\
+\midrule
+1--2    & 34{,}816 & 0.5097 & 0.8015 \\
+3--4    & 46{,}943 & 0.4936 & 0.8067 \\
+5--6    & 25{,}064 & 0.5265 & 0.8084 \\
+7--8    & 17{,}138 & 0.0205 & 0.5557 \\
+9--12   & 30{,}822 & 0.0359 & 0.4717 \\
+13--16  & 24{,}370 & 0.0300 & 0.4728 \\
+17--24  & 37{,}003 & 0.0279 & 0.4702 \\
+25--32  & 25{,}595 & 0.0251 & 0.4703 \\
+33--48  & 30{,}450 & 0.0252 & 0.4611 \\
+49--64  & 14{,}319 & 0.0260 & 0.4548 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{P6 --- mixed, and the motivating contrast lands.} Table~\ref{tab:cliff} is what
+``$25\%$ noise plus a window'' looks like as a memory model. Inside the six-event
+window the exploit rate holds near $0.51$; at age seven it falls off a cliff to
+$0.02$ and stays there for the rest of the game. The registered cliff statistic is
+$+0.4861 \pm 0.0019$, $z = 258.87$ --- for scale, the largest cliff any bounded budget
+shows at the same boundary is $0.1215 \pm 0.0033$ (8 bits), and the unbounded
+reference's is $0.0718 \pm 0.0027$. But the tier is \emph{not} flat inside its window:
+the ages 1--3 versus 4--6 split is $-0.0360 \pm 0.0035$ ($z = -10.31$) --- the rate
+\emph{rises} slightly with age inside the window --- so one of the two registered
+conditions fails and the verdict prints mixed. The substantive contrast survives the
+mixed verdict intact: human memory, and the bounded ladder built to imitate it, decays
+smoothly with half-lives that scale with capacity; the noise tier is a step function
+--- perfect recall to a hard edge, near-total amnesia beyond it --- and no human plays
+like that \cite{playstyles,andersonschooler1991}.
+
+\subsection{P7: memory pressure makes styles \emph{more} classifiable --- refuted}
+\label{sec:p7}
+
+\begin{table}[t]
+\centering
+\caption{E4: v1.0 classifier end-of-game top-1 over ecologies with both teams bounded,
+36 pairings $\times$ 50 games $\times$ 6 seats per cell \cite{artifact}. Chance is
+$1/9 \approx 0.111$; the committed full-strength baseline is $0.2243$
+\cite{adaptiveartifact}. $\Delta$ is the per-seed paired adjacent delta; rule
+$\Delta \ge -2 \cdot \text{SE}$.}
+\label{tab:e4}
+\footnotesize
+\begin{tabular}{@{}lccrr@{}}
+\toprule
+Bits & Seats & Top-1 & $\Delta$ from prev. & $z$ \\
+\midrule
+16       & 10{,}800 & 0.1542 & ---                  & --- \\
+32       & 10{,}800 & 0.2101 & $+0.0559 \pm 0.0073$ & $7.70$ \\
+64       & 10{,}800 & 0.2295 & $+0.0194 \pm 0.0050$ & $3.87$ \\
+$\infty$ & 10{,}800 & 0.2243 & $-0.0053 \pm 0.0019$ & $\mathbf{-2.75}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+P7 predicted that memory pressure erodes the behavioural signature: less memory, less
+characteristic play, lower classifier accuracy. Table~\ref{tab:e4} refutes it at both
+ends. At the bottom of the grid the direction is as predicted --- 16-bit ecologies read
+at $15.4\%$, well below the $22.4\%$ full-strength baseline. But the top of the grid
+inverts: \emph{64-bit ecologies are more classifiable than full-strength ones},
+$23.0\%$ against $22.4\%$, and the registered rung test rejects --- the
+$64 {\to} \infty$ delta is $-0.0053 \pm 0.0019$, $z = -2.75$, past the
+$\Delta \ge -2\cdot\text{SE}$ bound. One violating rung refutes: \textbf{P7 is
+refuted}. The review's multiplicity annotation does not soften it: over the three-rung
+family, the violating rung's one-sided $p = 0.0029$ becomes $p = 0.00885$ under
+Bonferroni~$\times 3$ --- still a violation at the corrected level. The $\infty$ cell
+reproduces the committed v1.0 baseline to the last digit ($0.22425925\ldots$ in both
+artifacts) --- the same games, by the anchor pin --- so the comparison against v1.0 is
+an identity, not a replication.
+
+\begin{table}[t]
+\centering
+\caption{E4 per-style end-of-game top-1 by budget \cite{artifact}. Descriptive --- the
+artifact commits no per-style SEs; 1{,}200 seats per entry. The $\infty$ column is the
+v1.0 baseline's per-style accuracy, reproduced exactly.}
+\label{tab:e4style}
+\footnotesize
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+True style & 16 bits & 32 bits & 64 bits & $\infty$ \\
+\midrule
+Balanced  & 0.0158 & 0.0433 & 0.0600 & 0.0558 \\
+Blitz     & 0.0592 & 0.0758 & 0.0925 & 0.0925 \\
+Punter    & 0.2742 & 0.1717 & 0.1333 & 0.1292 \\
+Banker    & 0.1075 & 0.1375 & 0.1250 & 0.1258 \\
+Turtle    & 0.2733 & 0.3525 & 0.3142 & 0.2717 \\
+Hoarder   & 0.1825 & 0.2575 & 0.3125 & 0.3092 \\
+Scout     & 0.2667 & 0.3675 & 0.4133 & 0.4125 \\
+Ghost     & 0.1608 & 0.3775 & 0.4983 & 0.5042 \\
+Archivist & 0.0475 & 0.1075 & 0.1167 & 0.1175 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Where does the extra classifiability come from? Table~\ref{tab:e4style} (descriptive
+--- no per-style SEs are committed) shows the readings redistribute rather than
+uniformly rise: under deep pressure the Ghost, v1.0's one recognisable style, collapses
+($0.5042$ at $\infty$ to $0.1608$ at 16 bits) while the Punter more than doubles
+($0.1292$ to $0.2742$) --- bounded ecologies push behaviour into regions where
+different fingerprints are nearest. Two mechanisms plausibly combine, and E4 cannot
+separate them: the read seat's own behaviour changes, and the \emph{ecology} changes
+--- with all six seats bounded, opponents miss more, games run longer
+(Section~\ref{sec:ladder} measured $17\%$ on the one-sided ladder), and every
+length-sensitive feature shifts against fingerprints calibrated on full-strength play
+\cite{fingerprints,obspaper}. Which of the two carries the P7 shift is precisely what
+E4 cannot say --- the Phase~2 review's finding, and the reason E4b exists.
+
+\subsection{P8: the single-seat design, at pilot and at power}
+\label{sec:p8}
+
+\begin{table}[t]
+\centering
+\caption{E4b: single-seat top-1 at the bounded read seat, pilot (50 seeds, 1{,}800
+reads per cell) and power run (300 seeds, 10{,}800 reads per cell; the P8 verdict of
+record) \cite{artifact}. Cell SEs are seed-clustered; $\Delta$ per-seed paired; rule
+$\Delta \ge -2 \cdot \text{SE}$.}
+\label{tab:e4b}
+\footnotesize
+\begin{tabular}{@{}lcr@{\qquad}cr@{}}
+\toprule
+ & \multicolumn{2}{c}{Pilot (1{,}800 reads)} & \multicolumn{2}{c}{Power run (10{,}800 reads)} \\
+\cmidrule(r){2-3}\cmidrule(l){4-5}
+Bits & Top-1 & $\Delta$ from prev. & Top-1 & $\Delta$ from prev. \\
+\midrule
+16       & $0.1678 \pm 0.0100$ & --- & $0.1622 \pm 0.0040$ & --- \\
+32       & $0.1678 \pm 0.0104$ & $+0.0000 \pm 0.0118$ & $0.1698 \pm 0.0044$ & $+0.0076 \pm 0.0046$ \\
+64       & $0.1700 \pm 0.0105$ & $+0.0022 \pm 0.0066$ & $0.1642 \pm 0.0043$ & $-0.0056 \pm 0.0031$ \\
+$\infty$ & $0.1683 \pm 0.0102$ & $-0.0017 \pm 0.0026$ & $0.1634 \pm 0.0043$ & $-0.0007 \pm 0.0010$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:e4b} carries both E4b runs, pilot and power, side by side --- both
+reported whatever they say, as registered. In the power run --- the P8 verdict of
+record --- the single-seat curve is flat: $16.22\%$, $16.98\%$, $16.42\%$, $16.34\%$
+across the grid, no adjacent rung violating the rule (the most negative,
+$32 {\to} 64$ at $-0.0056 \pm 0.0031$, $z = -1.83$, sits inside the $2 \cdot$SE bound;
+its Bonferroni-corrected one-sided $p$ is $0.1018$). \textbf{P8 is confirmed}, now at
+$99.97\%$ post-hoc power at the P7 effect size (MDE $0.0019$ under the registered
+rule) rather than the pilot's $52.4\%$ (MDE $0.0051$). The $\infty$ health gate held
+in both runs: every $\infty$-budget game --- 1{,}800 in the pilot, 10{,}800 in the
+power run --- reproduced the all-bare v1.0 harness game event-for-event,
+read-for-read and step-for-step, 0 deviations.
+
+Two features of the single-seat numbers deserve explicit note. First, the absolute
+level: a single bounded seat among five full-strength ones reads at about $16$--$17\%$
+at every budget. That level is not comparable to E4's cells or to the v1.0 baseline:
+P8's reads are always the pairing's \emph{first} style, so the
+triangular pairing scheme weights the read distribution toward the early roster
+(2{,}400 Balanced reads down to 300 Ghost, and the Archivist is never the read truth),
+identically at every budget. The within-column comparisons P8 is built on are
+unaffected; the level is not the v1.0 baseline's population and is not read against
+it. Second, the cross-design comparison the E4b-power registration required: at the
+violated rung ($64 {\to} \infty$), P7's delta is $-0.0053 \pm 0.0019$ and P8's is
+$-0.0007 \pm 0.0010$; the difference of deltas is $+0.0045 \pm 0.0021$, $z = 2.11$,
+two-sided $p = 0.035$ --- computed with independent errors, the power run's seed list
+being disjoint from E4's by construction. It is \emph{labelled cross-design and enters
+no verdict}: P7's rung lives in a world where both teams are bounded, P8's in a world
+where only the read seat is, and a difference between the two designs is exactly what
+the attribution story predicts rather than a within-design test of anything.
+
+\subsection{The attribution, stated at its licensed strength}
+\label{sec:attribution}
+
+Assembled: E4 measures that bounding \emph{everyone} at 64 bits makes end-of-game
+style reads better than full strength, refuting P7. E4b measures that bounding
+\emph{only the read seat} produces a flat curve, at a power (99.97\%) that would
+almost certainly have detected the P7-sized effect had it been present in that design.
+The licensed conclusion: within the designs measured, the P7 shift travels with the
+ecology --- opponents, partners, game length, the event mix the features are computed
+over --- and not with the read seat's own end-of-game signature. What remains
+unlicensed, and is not claimed: that the read seat's signature is unaffected in E4's
+bounded-vs-bounded world (no design here isolates that), or any cross-design equality
+(the $z = 2.11$ difference is reported as a labelled observation). The pilot alone
+licensed none of this --- its confidence interval contained the entire effect it was
+probing for --- which is why the record distinguishes the pilot from the run of
+record, and why the correction of Section~\ref{sec:timeline} was worth a commit.
+
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{What the ladder buys}
+\label{sec:buys}
+
+The replacement knob does what the old one could not, and the numbers are now attached.
+\emph{Monotone}: nine of nine adjacent rungs non-negative under a paired test
+(Table~\ref{tab:ladder}). \emph{Interpretable}: a tier is now a number --- medium
+\emph{is} $32.2$ bits $[30.8, 35.1]$ --- and a handicap can be stated in units a player
+can reason about. \emph{Human-shaped}: in the regime where the budget binds (0--32
+bits), effectiveness decays with evidence age at half-lives $5$--$49$ events that rise
+with capacity (Table~\ref{tab:decay}) --- the S45 curve, produced by construction
+rather than tuned. \emph{Composable}: E4 ran all nine styles under budgets without any
+per-style work, because the arm restricts the knowledge, not the policy.
+
+The concavity of the curve is itself a finding about \usff{}: the first 16 bits ---
+eight card facts, or a few facts plus a clutch of basis bits --- carry a quarter of the
+distance from amnesia to full strength, and everything past 64 bits is worth under a
+third of a point of set-share. Contestability-ranked memory is extraordinarily
+efficient at the bottom: what matters in this game is a small, current working set, not
+the archive.
+
+\subsection{The noise tier, priced and shaped}
+\label{sec:noisetier}
+
+The old easy tier now has two independent condemnations. Priced on the ladder, it is
+worth less than zero bits --- the memoryless-but-sound floor beats it by nearly a
+factor of three in set-share (Table~\ref{tab:tiers}), because a $25\%$ uniform blunder rate and
+a guessing declarer destroy more value than a six-event memory saves. And shaped on
+the evidence-age axis, it is a step function with a $z = 259$ cliff at its window edge
+(Table~\ref{tab:cliff}) where humans --- and the bounded ladder --- show smooth decay.
+A learner watching the noise tier sees perfect play interleaved with inexplicable
+blunders; a learner watching a 16-bit bot sees something recognisable: a player who
+follows the current fight closely and forgets what happened twenty asks ago. The
+replacement is not merely stronger-per-unit-of-difficulty; it fails the way the thing
+it simulates fails.
+
+\subsection{What P7's refutation means, and does not mean}
+\label{sec:p7meaning}
+
+The refutation is genuinely informative about the observation problem. The v1.0
+instrument \cite{obspaper} was calibrated on full-strength play, and its accuracy was
+bounded by how rarely styles diverge on identical views \cite{inertpaper,styles}.
+Bounded ecologies move play into regions the fingerprints never saw --- longer games,
+more misses, different feature distributions --- and the reads \emph{redistribute}: the
+classifier is not recovering more style signal at 64 bits so much as reading a shifted
+population against fixed references, and the shift happens to raise top-1. That
+interpretation is consistent with the E4b result: hold the population at full strength
+except for one seat, and the effect vanishes at high power. It is also a caution for
+any deployed read of handicapped play: a classifier calibrated at full strength does
+not degrade gracefully under ecology shift --- it changes its answers in structured
+ways (the Ghost collapse and Punter surge of Table~\ref{tab:e4style}) that look like
+signal.
+
+What the refutation does not support: any claim that memory pressure leaves individual
+signatures intact in general. P8's flatness is a statement at end-of-game reads, over
+this roster, against these fingerprints, in a design where five of six seats hold the
+ecology fixed. The v1.5 measurements say nothing about mid-game reads, cross-budget
+fingerprints, or classifiers recalibrated on bounded play --- all of which are the
+natural next instruments if bounded opponents ship at the play table.
+
+\section{Threats to validity}
+\label{sec:threats}
+
+\begin{enumerate}
+\item \textbf{The ladder is an operationalisation, not a canon.} ``Bits'' are the
+  framework's accounting units under one tariff, one retirement rule, one subsumption
+  rule, and one eviction policy; they are not Shannon information (a one-bit basis fact
+  can carry more decision value than a two-bit card fact --- the tariff prices storage,
+  not worth). A different defensible spotlight scoring or tie order would produce a
+  different --- presumably similar, but unmeasured --- curve. Bits-equivalents
+  (Table~\ref{tab:tiers}) are relative to \emph{this} ladder.
+\item \textbf{E4's both-teams design, and what E4b licenses.} P7's refutation is a
+  property of bounded-vs-bounded ecologies read by a full-strength-calibrated
+  classifier; E4b isolates the read seat only within its own single-seat design, at
+  end-of-game reads, at its measured power. The cross-design difference ($z = 2.11$)
+  is an observation, not a test; no design here measures the read seat's signature
+  \emph{inside} a bounded ecology.
+\item \textbf{Fingerprints are calibrated on full-strength play.} Every E4/E4b read
+  uses the committed v1.0 fingerprints \cite{fingerprints}. The P7 movement therefore
+  conflates behavioural change with calibration mismatch by construction; that
+  conflation is the finding's substance in Section~\ref{sec:p7meaning}, but it caps
+  what any accuracy number here says about intrinsic distinguishability.
+\item \textbf{The E3 estimator is itself an operationalisation.} ``Certain asks'' are
+  defined through public hits only; availability is conditional on the position, and
+  the composition effect of Section~\ref{sec:evidence} shows how strongly availability
+  selects on game character --- hence the seed-clustered estimator for every verdict,
+  with pooled rates printed beside it. Half-lives require 200-observation bands, so
+  their absence at 48$+$ bits partly reflects old-evidence availability thinning
+  (strong players consume certain asks young), not only flatness.
+\item \textbf{Retained logs elide two derivable payloads.} The E1/E2 records keep the
+  full public log event-for-event, but a claim's assignments and true holders, and the
+  final score snapshot, are elided as derivable or unused by the E3 estimator
+  \cite{artifact}. A future estimator needing them would need a re-run, not a re-read.
+\item \textbf{Single machine, single implementation, closed population.} One engine,
+  one rule set (pinned by the artifact's rules hash), self-play within one roster; the
+  usual transfer caveats \cite{v10paper} apply in full. The equivalence anchors and
+  mirror gates certify harness symmetry and the bounded arm's consistency with the
+  unbounded engine --- not the engine's own correctness, which rests on its audits
+  \cite{v05paper,repo}.
+\item \textbf{The E4 grid is coarse.} Four budgets, and the P7 violation is one rung;
+  the shape between 64 bits and $\infty$ is uninstrumented. The Bonferroni annotation
+  addresses the family actually tested, not the grid that might have been.
+\end{enumerate}
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+FishAI v1.5 set out to replace a difficulty knob that lied --- noise dressed as
+weakness --- with one that tells the truth, and the measurements say it does: a
+bit-budget memory with contestability eviction is monotone at every measured rung,
+saturates by 128 bits, prices the shipped tiers (medium $= 32.2$ bits; the old easy
+tier below the zero-bit floor it was meant to sit above), and fails the way people
+fail, with decay half-lives that grow with capacity. The pre-registered suite kept the
+project honest twice over: P7's refutation --- memory pressure makes whole ecologies
+\emph{more} classifiable, not less --- survived its multiplicity annotation and became
+the paper's most interesting result; and the E4b pilot's overclaim was caught by its
+own review, corrected on the record, and settled by a 300-seed run of record at
+matched read count, which localised the effect in the ecology rather than the seat.
+The correction sequence is reported in full because it is the method working as
+designed: registrations before runs, reviews after them, and conclusions cut back to
+what the data licence --- whichever direction that points.
+
+\medskip
+\noindent\textbf{Reproducibility.} The engine is deterministic; the committed artifact
+\cite{artifact} carries the configuration, seed prefixes, records digests, engine
+commits, rules hash, the verbatim predictions and all verdicts, with the E4b pilot
+retained beside the run of record; every number here is a field of it or of the
+committed v1.0 artifact \cite{adaptiveartifact}, and the suite re-runs from
+\code{npm run bounded} \cite{repo}.
+
+\begin{thebibliography}{99}
+\footnotesize
+
+\bibitem{simon1955}
+H.~A.~Simon.
+\newblock A behavioral model of rational choice.
+\newblock \emph{Quarterly Journal of Economics}, 69(1):99--118, 1955.
+
+\bibitem{andersonschooler1991}
+J.~R.~Anderson and L.~J.~Schooler.
+\newblock Reflections of the environment in memory.
+\newblock \emph{Psychological Science}, 2(6):396--408, 1991.
+
+\bibitem{kannan}
+S.~Kannan.
+\newblock Literature game framework: specification and reference implementation
+(\code{wh\_impl.txt}; \code{wh\_lit.py}, the \code{ActivePlayer} memory accounting).
+\newblock Read in full by the project's research synthesis \cite{playstyles} (entry
+S44), which quotes the bit tariff verbatim. The framework's deck is the 52-card,
+seven-card-major variant; the memory model is independent of that choice, its
+constants are not.
+
+\bibitem{v05paper}
+A.~Hsieh.
+\newblock FishAI v0.5: Measuring play style without skill in a 54-card Literature
+variant.
+\newblock FishAI project; companion paper, 2026.
+
+\bibitem{v10paper}
+A.~Hsieh.
+\newblock FishAI v1.0: When best-response adaptation is worth less than nothing.
+\newblock FishAI project; companion paper, 2026.
+
+\bibitem{obspaper}
+A.~Hsieh.
+\newblock What a public log reveals: observing play style in Literature (Canadian
+Fish).
+\newblock FishAI project; companion paper, 2026.
+
+\bibitem{inertpaper}
+A.~Hsieh.
+\newblock The inert axis: when a style parameter is wired, swept, and never reached.
+\newblock FishAI project; companion paper, 2026.
+
+\bibitem{playstyles}
+FishAI project.
+\newblock PLAYSTYLES.md --- Literature / Canadian Fish: play styles, rule dialects, and
+engine specification.
+\newblock Internal research synthesis, 2026. Entries S44 (bounded memory; the Kannan
+framework and tariff), S45 (recency; the decay signature), S46 (own-hand-only), S47
+(triage memorisation; the contestability eviction policy), S48 (the log-reader regime;
+observation vs.\ display).
+
+\bibitem{rules}
+FishAI project.
+\newblock RULES\_US54.md --- the ``US student'' 54-card variant.
+\newblock Repository rules specification with derived consequences and test vectors,
+2026.
+
+\bibitem{styles}
+FishAI project.
+\newblock STYLES.md --- the play-style roster under \usff{}.
+\newblock Repository document; \S6.1 the inert axis and decision-divergence figures,
+2026.
+
+\bibitem{botlab}
+FishAI project.
+\newblock BOT\_LAB.md --- play-style spectrum: research, experimental design, and
+metrics.
+\newblock Repository document; \S4.3 health gates, \S5 experimental design, 2026.
+
+\bibitem{fingerprints}
+FishAI project.
+\newblock Committed fingerprint calibration \code{lib/engine/bots/data/fingerprints.ts}.
+\newblock 150 \usff{} mirror games per style at full strength, seed prefix
+\code{fingerprint-v1}; generated 2026-08-24.
+
+\bibitem{adaptiveartifact}
+FishAI project.
+\newblock Adaptive artifact \code{src/lab/data/adaptive-results.json}.
+\newblock 125{,}600 games; records digest \code{ce3316641a8f38fe}; the committed
+end-of-game classifier baseline (top-1 $0.22425925\ldots$) cited by the bounded
+artifact's baseline block; generated 2026-08-24.
+
+\bibitem{artifact}
+FishAI project.
+\newblock Bounded artifact \code{src/lab/data/bounded-results.json} (schema 3).
+\newblock Base suite: 85{,}200 games, records digest \code{fe829b581f665c9a}, engine
+commit \code{ab779f3} (recorded \code{ab779f3-dirty}); E4b pilot: 7{,}200 games,
+digest \code{52bfe90b52ea7029}; E4b power run: 43{,}200 games, digest
+\code{53668ad79186621d}; rules hash \code{b4c7fef7\ldots} shared with v0.5/v1.0;
+generated 2026-08-30.
+
+\bibitem{repo}
+FishAI project.
+\newblock FishAI repository: engine, bots, simulation laboratory, and results site.
+\newblock Bounded arm: \code{lib/engine/bots/bounded.ts} (and
+\code{tests/bots/bounded.test.ts}, the equivalence anchor); experiment suite:
+\code{lib/lab/bounded.ts}, artifact boundary \code{src/lab/bounded-artifact.ts},
+runner \code{scripts/bounded-sim.mjs}, 2026.
+
+\end{thebibliography}
+
+\end{document}
