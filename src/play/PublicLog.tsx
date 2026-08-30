@@ -60,6 +60,16 @@ export type LogView = 'recent' | 'all'
 /** How many asks the rulebook lets a player be reminded of. Two. */
 export const RECENT_ASKS = 2
 
+/**
+ * The view the table opens on, named rather than inlined so a test can hold it to account.
+ *
+ * This is the rule, not a preference: the owner's rulebook says *"You may ask what the previous
+ * two asks by players were if you forget. You cannot ask or reveal any previous information."* A
+ * default of `all` would be a table that quietly hands every player a perfect memory, and it
+ * would look like a one-word improvement to anyone who did not know that.
+ */
+export const DEFAULT_LOG_VIEW: LogView = 'recent'
+
 /** A log row keeps its ORIGINAL index, so a filtered view shows honestly where the gaps are. */
 export interface LogRow {
   index: number
@@ -125,7 +135,7 @@ export interface PublicLogProps {
 
 export function PublicLog({ events, names }: PublicLogProps) {
   const box = useRef<HTMLDivElement | null>(null)
-  const [view, setView] = useState<LogView>('recent')
+  const [view, setView] = useState<LogView>(DEFAULT_LOG_VIEW)
   const tabIndex = useScrollsVertically(box)
   const scrolls = tabIndex !== undefined
   const rows = visibleEvents(events, view).reverse()

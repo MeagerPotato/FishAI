@@ -24,7 +24,7 @@ import {
   us54Config,
 } from '../../lib/engine/index.ts'
 import { ADAPTIVE_POLICY } from '../../src/play/policies.ts'
-import { RECENT_ASKS, visibleEvents } from '../../src/play/PublicLog.tsx'
+import { DEFAULT_LOG_VIEW, RECENT_ASKS, visibleEvents } from '../../src/play/PublicLog.tsx'
 
 const NO_CARDS = {} as Record<Card, Seat>
 
@@ -142,4 +142,27 @@ describe('visibleEvents — over logs the engine actually produces', () => {
       expect(keptOther).toEqual(allOther)
     })
   }
+})
+
+/**
+ * The default is the rule.
+ *
+ * Every other assertion in this file passes the view explicitly, which is right for testing the
+ * filter but leaves the thing that actually governs a real game — what a player sees before
+ * touching anything — unpinned. A regression to `'all'` would have been a one-word edit that broke
+ * the rulebook and passed the whole suite.
+ */
+describe('the view the table opens on', () => {
+  it('is the restricted one, because that is what the rulebook allows', () => {
+    expect(DEFAULT_LOG_VIEW).toBe('recent')
+  })
+
+  it('shows no more than the last two asks on a long game', () => {
+    const log: PublicEvent[] = [{ type: 'game_started', startingSeat: 0 }]
+    for (let i = 0; i < 20; i++) {
+      log.push({ type: 'ask', asker: 0, target: 1, card: '3C', hit: false })
+    }
+    const shown = visibleEvents(log, DEFAULT_LOG_VIEW)
+    expect(shown.filter((r) => r.event.type === 'ask')).toHaveLength(RECENT_ASKS)
+  })
 })

@@ -267,12 +267,16 @@ export function LabBounded() {
                 The adaptive engine
               </Button>
             </div>
+            {/*
+              This paragraph used to say the ladder was "playable" and linked to the table's
+              Memory control. That control was removed when the play surface was cut back to the
+              v1.0 adaptive engine alone, and the sentence survived the cut — a research page
+              offering a clickable link to a thing that no longer exists. The measurement below is
+              untouched and still stands; only the claim about the table was ever false.
+            */}
             <p className={s.figNote}>
-              The ladder is not only measured — it is playable:{' '}
-              <TextLink href="/play" arrow={false}>
-                the table&rsquo;s Memory control
-              </TextLink>{' '}
-              hands the bot seats one budget from this page&rsquo;s curve.
+              The ladder is measured here, not played: the table runs the v1.0 adaptive engine at
+              full memory, and the bit budgets on this page belong to the simulations below.
             </p>
           </Reveal>
         </div>
@@ -465,9 +469,8 @@ export function LabBounded() {
           buys. Its measured set-share, {easy ? rate(easy.share) : '—'}, sits far below the
           0-bit rung&rsquo;s {floor ? rate(floor.share) : '—'} on the same deals: a memoryless
           bot that reasons beats a remembering bot that dices. Medium lands at{' '}
-          {medium?.bitsEquivalent.bits?.toFixed(1) ?? '—'} bits — the anchor the /play Memory
-          control quotes — and hard sits above every finite rung, indistinguishable from full
-          memory at this resolution.
+          {medium?.bitsEquivalent.bits?.toFixed(1) ?? '—'} bits, and hard sits above every finite
+          rung, indistinguishable from full memory at this resolution.
         </p>
         <ScrollRegion label="Shipped tiers interpolated onto the ladder">
           <table className={s.table}>
@@ -850,7 +853,11 @@ export function LabBounded() {
               })}
             </ol>
             <p className={s.figNote}>
-              What the suite licenses: bits as the difficulty knob for /play, with measured
+              {/* "for /play" until the table's Memory control was removed. The licence is
+                  unchanged — this suite does license bits as a difficulty knob — but naming a
+                  surface that no longer has one made a statement about evidence read as a
+                  statement about the product. */}
+              What the suite licenses: bits as a difficulty knob for a play surface, with measured
               anchors; the retirement case against the noise tier; and the P7/P8 pair as a
               measured caution that classifier accuracy is a property of the whole table, not
               of one seat. What it does not license: any claim about budgets between the rungs,
@@ -937,10 +944,10 @@ export function LabBounded() {
           v1.0 suite this one anchors to — its classifier, its fingerprints and the end-of-game
           top-1 the E4 ∞ cell reproduces exactly.{' '}
           <TextLink href={withCase('/lab', which)}>The style report</TextLink> carries the
-          nine-style roster this page&rsquo;s policies come from. And at{' '}
-          <TextLink href="/play">the table</TextLink> the ladder is a dial rather than a curve:
-          the Memory control applies one budget from this page to the bot seats, quoting the
-          measured anchors — and the advisor stays full-memory, which the pane says out loud.
+          nine-style roster this page&rsquo;s policies come from. And{' '}
+          <TextLink href="/play">the table</TextLink> plays the v1.0 adaptive engine at full
+          memory — the budgets on this page are a property of these simulations, not a dial a
+          player turns.
         </p>
         <p className={s.figNote}>
           Method vocabulary — duplicate pair, score rate, standard error, and this page&rsquo;s
