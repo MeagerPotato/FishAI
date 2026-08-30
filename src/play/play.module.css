@@ -3,23 +3,69 @@
  * PLAY SURFACE CHROME
  * ============================================================================
  * Everything the two play routes need that neither the design system nor the
- * lab chrome already owns: the score strip, the hand row, the ask panel, the
- * declare dialog, the lobby's style pickers and the game-over panel. The seat
- * cards, log list, pills and dense tables come from lab.module.css — the play
- * table is the replay page's grammar with the human seated in it, and reusing
- * the classes keeps the two surfaces provably the same system.
+ * lab chrome already owns: the score strip, the table in the round, the hand,
+ * the ask panel, the declare dialog, the lobby's style pickers and the
+ * game-over panel.
+ *
+ * This surface is deliberately MORE self-contained than it used to be. It once
+ * borrowed the replay page's seat grid, pills and log rows from lab.module.css
+ * on the argument that the play table is the replay page with a human seated in
+ * it. That argument was wrong in one direction: a replay is watched and a game
+ * is played, and the states a player must catch at a glance — whose turn it is,
+ * what is legal, what they hold — need weight the replay's read-only chrome
+ * never had to give them. The log and the ScrollRegion still come from the lab;
+ * everything a player touches is here.
  *
  * Rules kept, all from SITE_SPEC.md §2:
  *
- *   · No radii, no shadows, no new hues. Suits are ink, not red/black — a
- *     second hue pair fails the one-accent budget for zero information (the
- *     suit glyph already carries the suit).
- *   · Amber TEXT on this surface: the score strip's leading team and the
- *     game-over verdict. Nothing else.
+ *   · No radii, no shadows.
  *   · Touch targets >= 44px on every control a player must hit mid-game.
  *   · Wide things scroll inside their own container, never the page.
+ *
+ * Rules CHANGED, on the record:
+ *
+ *   · SUITS ARE RED AND BLACK. This file used to say: "Suits are ink, not
+ *     red/black — a second hue pair fails the one-accent budget for zero
+ *     information (the suit glyph already carries the suit)." The repo owner
+ *     played the table and reported the cards unreadable, and he is right on
+ *     the point the rule got wrong: a player reads a card's colour before its
+ *     glyph, so drawing suits in flat ink is not "zero information lost", it is
+ *     the primary recognition channel removed. The glyph still carries the
+ *     suit, so nothing here is conveyed by colour ALONE — the colour is a
+ *     recognition aid on a signal that is already complete without it, which is
+ *     the only form the rule ever needed to forbid. Tokens, and the contrast
+ *     ratio of every card colour against every ground it can sit on, are in
+ *     tokens.css §3.2. Overruled deliberately, by the person reading it.
+ *
+ *   · THE TURN HOLDER GETS THE ACCENT. The budget said amber TEXT appears on
+ *     the score strip's leading team and the game-over verdict and nowhere
+ *     else. The seat holding the turn now has it too. The previous signal was a
+ *     --fa-sheet -> --fa-tile ground swap at 1.20:1 — invisible, against the
+ *     3:1 WCAG 1.4.11 asks of a state indicator — plus the words "turn holder"
+ *     at 10.5px in the faintest ink on the page. This is the single fact a
+ *     player looks for most often. It is carried by a 3px ink ring AND the
+ *     words "Playing now" at readable size, so the accent is the third signal
+ *     rather than the only one.
  * ============================================================================
  */
+
+/* ==========================================================================
+   UTILITIES
+   ========================================================================== */
+
+/* Available to a screen reader, absent from the page. Used for the one live
+   region on the surface and for seat cards' one-sentence accessible names. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
 
 /* ==========================================================================
    THE TABLE LAYOUT — action column + log column
@@ -36,6 +82,45 @@
   .surface {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* The table and the hand sit side by side while there is room for both, so the
+   ask panel below them starts within a screen of the top of the page. Below
+   1100px the hand drops under the table and the ask panel follows it. */
+.tableRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(220px, 0.85fr);
+  gap: clamp(16px, 2vw, 28px);
+  align-items: start;
+  margin: 0 0 18px;
+}
+
+@media (max-width: 1100px) {
+  .tableRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.tableCol,
+.actCol {
+  min-width: 0;
+}
+
+/* The action area — ask panel, pass panel, or the note that says you are not
+   owed anything. Full column width, directly under the table and the hand. */
+.act {
+  margin: 0 0 18px;
+}
+
+/*
+ * The table's own section opens tighter than the site rhythm. --fa-sp is a
+ * reading rhythm for prose bands; this band is an instrument a player has to
+ * reach, and 108px of it was 108px of the ask panel's budget. The doubled class
+ * is there to win against Section's own .pad without depending on which order
+ * two CSS modules land in the bundle.
+ */
+.playSection.playSection {
+  padding-top: clamp(28px, 3.5vh, 44px);
 }
 
 /* ==========================================================================
@@ -66,7 +151,7 @@
   color: var(--fa-ink);
 }
 
-/* The strip's ONE accent: the leading team's count. Spent nowhere else. */
+/* The strip's ONE accent: the leading team's count. */
 .scoreLead {
   color: var(--fa-amber-2);
 }
@@ -86,31 +171,370 @@
 }
 
 /* ==========================================================================
-   STATUS + CONTROLS
+   WHOSE TURN IT IS — the first line of the surface, at reading size
    ========================================================================== */
 
-.status {
+.turnLine {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin: 0 0 14px;
-  min-height: 1.5em;
+  padding: 12px 16px;
+  border: 1px solid var(--fa-line);
+  background-color: var(--fa-paper);
+  font-size: var(--fa-fs-body);
+  line-height: 1.4;
+  color: var(--fa-ink-2);
+}
+
+/* The player is owed a decision: heavier border, ink text, amber marker. */
+.turnLineYours {
+  border-color: var(--fa-ink);
+  border-width: 2px;
+  padding: 11px 15px;
+  color: var(--fa-ink);
+  font-weight: 500;
+}
+
+.turnMark {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  background-color: var(--fa-ink-3);
+}
+
+.turnLineYours .turnMark {
+  background-color: var(--fa-amber);
+}
+
+/* ==========================================================================
+   THE TABLE, IN THE ROUND
+   --------------------------------------------------------------------------
+   Six seats on an ellipse; geometry.ts owns the angles and writes --seat-x /
+   --seat-y per seat. Nothing here knows which seat is which — the DOM stays in
+   seat order 0..5 and only the two custom properties move a card.
+   ========================================================================== */
+
+.table {
+  position: relative;
+  /*
+   * The floor is `minTableHeight(38, 34, 104)` rounded up — half a card past
+   * the extreme seats, and a clear gap between the two seats sharing each
+   * column. geometry.ts owns that arithmetic and a test pins it, so a change
+   * to the radii fails a test rather than stacking two seats on top of each
+   * other. Everything above the floor is the table being a table; every pixel
+   * of it is also a pixel the ask panel starts further down the page, which is
+   * why it is 24vw and not more.
+   */
+  min-height: clamp(330px, 24vw, 400px);
+  padding: 4px;
+  border: 1px solid var(--fa-line);
+  background-color: var(--fa-sheet);
+  /* Seat card width, as a share of the table box. The seats nearest each other
+     horizontally are 32.9% of the box apart (see geometry.ts), so anything
+     under that cannot collide however the box is sized. */
+  --seat-w: clamp(104px, 27%, 152px);
+}
+
+/* The felt: a plain ellipse so the ring reads as one object rather than six
+   floating cards. Decorative only. */
+.felt {
+  position: absolute;
+  inset: 14% 12%;
+  border: 1px solid var(--fa-line-2);
+  border-radius: 50%;
+  background-color: var(--fa-paper);
+}
+
+.seatRing {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+ * Centred on its point — the seat IS where the card is, which is the whole
+ * claim the ring makes. `minTableHeight` sizes the box so that centring is
+ * safe; anchoring cards to one edge instead only moved the collision from the
+ * box's rim to the middle of the felt.
+ */
+.seat {
+  position: absolute;
+  left: var(--seat-x);
+  top: var(--seat-y);
+  transform: translate(-50%, -50%);
+  width: var(--seat-w);
+  display: grid;
+  gap: 1px;
+  padding: 7px 9px 8px;
+  border: 1px solid var(--fa-line);
+  background-color: var(--fa-sheet);
+}
+
+/* Your team vs theirs, by texture and by the words on the card — never hue. */
+.seatTeam {
+  margin: -7px -9px 3px;
+  padding: 3px 9px;
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-tight);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+  border-bottom: 1px solid var(--fa-line-2);
+}
+
+.seatMine .seatTeam {
+  background-color: var(--fa-tile);
+}
+
+.seatTheirs .seatTeam {
+  background-color: var(--fa-sheet);
+  background-image: var(--fa-hatch);
+}
+
+.seatWho {
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--fa-ink);
+}
+
+/* Card count and policy on one line, in the demoted position: the count used to
+   be 26px and the largest thing in the card, which is the fact a player needs
+   least often rendered as the fact they could not miss. */
+.seatPolicy {
+  font-size: var(--fa-fs-meta);
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+  color: var(--fa-ink-2);
+}
+
+.seatState {
+  margin-top: 3px;
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* The turn: a 3px ink ring (18:1 against the seat ground) plus the words. */
+.seatTurn {
+  box-shadow: inset 0 0 0 3px var(--fa-ink);
+}
+
+.seatStateTurn {
+  color: var(--fa-amber-2);
+}
+
+/* The declare option: a DIFFERENT SHAPE of border, not a different hue. */
+.seatOption {
+  outline: 2px dashed var(--fa-ink-2);
+  outline-offset: -4px;
+}
+
+.seatStateOption {
+  color: var(--fa-ink);
+}
+
+/* ==========================================================================
+   LAST MOVE — the newest log line, lying in the middle of the felt
+   ========================================================================== */
+
+.lastMove {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  /* The clear space in the middle of the ring: the two side columns of seats
+     leave 38.8% of the box between them (geometry.ts, radii 38/34, seat cards
+     capped at 27%), and the top and bottom seats leave a comparable band. Any
+     wider and the newest log line lies across somebody's cards. */
+  width: min(37%, 190px);
+  margin: 0;
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  text-align: center;
+  font-size: var(--fa-fs-meta);
+  line-height: 1.5;
+  color: var(--fa-ink-2);
+}
+
+.lastMoveLabel {
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
+/*
+ * Below 700px the ellipse would overlap itself whatever the radii, so the ring
+ * is abandoned for a two-column grid. Same DOM, same content, no absolute
+ * positioning at all — the geometry simply stops being used.
+ */
+@media (max-width: 700px) {
+  .table {
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  .felt {
+    display: none;
+  }
+
+  .seatRing {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .seat {
+    position: static;
+    width: auto;
+    transform: none;
+  }
+
+  /* No felt to lie in the middle of: the last move becomes an ordinary line
+     under the grid of seats. */
+  .lastMove {
+    position: static;
+    width: auto;
+    transform: none;
+    margin-top: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--fa-line-2);
+    background-color: var(--fa-paper);
+  }
+}
+
+/* ==========================================================================
+   LAST MOVE — the log's newest line, next to the table where it happened
+   ========================================================================== */
+
+.lastMove {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--fa-line-2);
+  background-color: var(--fa-paper);
   font-size: var(--fa-fs-sm);
   line-height: 1.5;
   color: var(--fa-ink-2);
 }
 
-.status strong {
+.lastMoveLabel {
+  flex: none;
+  font-size: var(--fa-fs-micro);
   font-weight: 500;
-  color: var(--fa-ink);
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
 }
 
 /* ==========================================================================
-   THE HAND — sorted, grouped by book
+   CARD FACES — the one place a card is drawn. See tokens.css §3.2.
    ========================================================================== */
+
+.face {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--fa-code);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.faceMd {
+  font-size: 17px;
+  line-height: 1.1;
+}
+
+/* The hand: a card is a card, and 12.5px was the smallest type on the page. */
+.faceLg {
+  min-width: 44px;
+  min-height: 56px;
+  padding: 0 6px;
+  background-color: var(--fa-sheet);
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.faceRed {
+  color: var(--fa-suit-red);
+}
+
+.faceBlack {
+  color: var(--fa-suit-black);
+}
+
+/* A pressed chip and the primary button both invert to an ink ground, and the
+   suit inks invert with them — the `-inv` pair is gated against exactly these
+   two grounds in tokens.css §3.2. */
+.chipOn .faceRed,
+.submit .faceRed {
+  color: var(--fa-suit-red-inv);
+}
+
+.chipOn .faceBlack,
+.submit .faceBlack {
+  color: var(--fa-suit-black-inv);
+}
+
+/* ==========================================================================
+   YOUR HAND — what you hold, drawn as cards and not as buttons
+   ========================================================================== */
+
+.handWell {
+  border: 1px solid var(--fa-line);
+  background-color: var(--fa-paper-2);
+  padding: 12px 14px 14px;
+  margin: 0 0 18px;
+}
+
+.handHeadRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 14px;
+  margin: 0 0 10px;
+}
+
+.handHead {
+  margin: 0;
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink);
+}
+
+.handCount {
+  font-size: var(--fa-fs-meta);
+  color: var(--fa-ink-2);
+}
+
+.handEmpty {
+  margin: 0;
+  font-size: var(--fa-fs-sm);
+  line-height: 1.6;
+  color: var(--fa-ink-2);
+}
 
 .hand {
   display: flex;
   flex-wrap: wrap;
   gap: 10px 14px;
-  margin: 0 0 20px;
+  margin: 0;
 }
 
 .handBook {
@@ -129,56 +553,66 @@
 .handCards {
   display: flex;
   gap: 1px;
-  background-color: var(--fa-line-2);
+  background-color: var(--fa-line);
   border: 1px solid var(--fa-line);
   width: fit-content;
 }
 
-.card {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 40px;
-  min-height: 40px;
-  padding: 0 6px;
-  background-color: var(--fa-sheet);
-  font-family: var(--fa-code);
-  font-size: var(--fa-fs-meta);
-  font-variant-numeric: tabular-nums;
-  color: var(--fa-ink);
-}
-
 /* ==========================================================================
-   THE ASK PANEL — pick an opponent, then a legal card, grouped by book
+   PANELS — the ask panel, the pass panel, the advisor's suggestion block
    ========================================================================== */
 
 .panel {
   border: 1px solid var(--fa-line);
-  padding: clamp(16px, 2.4vw, 24px);
+  padding: clamp(14px, 2vw, 20px);
   background-color: var(--fa-paper);
 }
 
 .panelHead {
-  margin: 0 0 12px;
+  margin: 0 0 10px;
   font-size: var(--fa-fs-h4);
   font-weight: 500;
   line-height: 1.3;
   color: var(--fa-ink);
 }
 
+/* The panel heading takes focus when the turn arrives, so it needs a ring. */
+.panelHead:focus-visible {
+  outline: 2px solid var(--fa-amber-2);
+  outline-offset: 3px;
+}
+
 .panelNote {
-  margin: 0 0 16px;
+  margin: 0 0 14px;
   font-size: var(--fa-fs-meta);
   line-height: 1.6;
   color: var(--fa-ink-2);
   max-width: 64ch;
 }
 
+/* "1 · Who are you asking?" — the picker is two steps and says so. */
+.step {
+  margin: 14px 0 8px;
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--fa-ink);
+}
+
+.waiting {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px dashed var(--fa-line);
+  font-size: var(--fa-fs-sm);
+  line-height: 1.6;
+  color: var(--fa-ink-2);
+}
+
 .choiceRow {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin: 0 0 18px;
+  margin: 0 0 14px;
 }
 
 /* A selectable chip: card faces, opponent seats, declare assignments. 44px. */
@@ -199,7 +633,7 @@
   cursor: pointer;
 }
 
-.chip:hover {
+.chip:hover:not(:disabled) {
   border-color: var(--fa-ink);
   color: var(--fa-ink);
 }
@@ -217,8 +651,21 @@
 }
 
 .chipFace {
-  font-family: var(--fa-code);
-  font-variant-numeric: tabular-nums;
+  padding: 8px 10px;
+}
+
+/*
+ * A card chip that is out of play keeps its suit ink — the face still has to be
+ * readable, that is the whole point of the exercise — so it gets a solid tile
+ * ground and a heavier border instead of the hatch. The hatch is a 1-in-7px
+ * overlay, and over the dark theme's sheet it drags a red face to 4.02:1;
+ * --fa-tile is a real token and is gated at 6.10:1 (tokens.css §3.2).
+ */
+.chipFace:disabled {
+  background-image: none;
+  background-color: var(--fa-tile);
+  border-style: dashed;
+  border-color: var(--fa-line);
 }
 
 .chipSub {
@@ -229,18 +676,20 @@
   opacity: 0.75;
 }
 
-/* One book's row inside the card picker. */
-.bookBlock {
-  border-top: 1px solid var(--fa-line-2);
-  padding: 12px 0;
+/* One book per row: the label leads, the cards follow. This used to be a
+   heading block plus a wrapped grid per book, nine times over. */
+.books {
+  display: grid;
+  gap: 2px;
 }
 
-.bookHead {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 6px 14px;
-  margin: 0 0 10px;
+.bookRow {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  gap: 6px 12px;
+  align-items: center;
+  border-top: 1px solid var(--fa-line-2);
+  padding: 6px 0;
 }
 
 .bookName {
@@ -251,32 +700,179 @@
   color: var(--fa-ink);
 }
 
-.bookWhy {
+.bookCards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* The books you cannot ask into, at the size of the information. */
+.excluded {
+  margin: 12px 0 0;
+  font-size: var(--fa-fs-meta);
+  line-height: 1.6;
+  color: var(--fa-ink-2);
+}
+
+.excludedWhat {
+  font-weight: 500;
+  color: var(--fa-ink);
+}
+
+.panelActions {
+  margin: 18px 0 0;
+}
+
+/*
+ * The primary action. Deliberately NOT the shared Button: that one renders its
+ * disabled state at opacity 0.32, and on this surface the disabled label IS the
+ * instruction for the turn ("Pick a card above to ask for") — it has to be
+ * readable at exactly the moment it is disabled. Here the disabled state is
+ * carried by the hatch device the system already uses for "not available",
+ * with the label at full --fa-ink-2 strength.
+ */
+.submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 10px 20px;
+  border: 1px solid var(--fa-ink);
+  background-color: var(--fa-ink);
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--fa-page);
+  cursor: pointer;
+  text-align: center;
+}
+
+.submit:hover:not(:disabled) {
+  background-color: var(--fa-ink-2);
+  border-color: var(--fa-ink-2);
+}
+
+.submitOff,
+.submit:disabled {
+  background-color: var(--fa-sheet);
+  background-image: var(--fa-hatch);
+  border-color: var(--fa-line);
+  border-style: dashed;
+  color: var(--fa-ink-2);
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   THE PACE AND DECLARE CONTROLS
+   ========================================================================== */
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  margin: 0 0 12px;
+}
+
+/*
+ * A real control, at a real size. These were 10.5px uppercase pills under 40px
+ * tall, which is neither a touch target nor a readable label for something a
+ * player toggles mid-game.
+ */
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--fa-line);
+  background-color: var(--fa-sheet);
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  color: var(--fa-ink-2);
+  cursor: pointer;
+}
+
+.toggle:hover:not(:disabled) {
+  border-color: var(--fa-ink);
+  color: var(--fa-ink);
+}
+
+.toggleOn {
+  background-color: var(--fa-ink);
+  border-color: var(--fa-ink);
+  color: var(--fa-page);
+}
+
+/* A disabled control must not look live. Hatch, not opacity: opacity would
+   take the label's contrast down with it. */
+.toggle:disabled {
+  cursor: not-allowed;
+  color: var(--fa-ink-3);
+  background-image: var(--fa-hatch);
+  border-style: dashed;
+}
+
+.paceGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.paceLabel {
   font-size: var(--fa-fs-micro);
-  letter-spacing: var(--fa-tr-tight);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
   text-transform: uppercase;
   color: var(--fa-ink-3);
 }
 
-.bookCards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+.paceBtn {
+  padding: 8px 14px;
+}
+
+.controlNote {
+  margin: 0 0 18px;
+  font-size: var(--fa-fs-meta);
+  line-height: 1.6;
+  color: var(--fa-ink-2);
+  max-width: 72ch;
+}
+
+.controlNote strong {
+  font-weight: 500;
+  color: var(--fa-ink);
 }
 
 /* ==========================================================================
    THE DECLARE DIALOG — a real <dialog>, RULES_US54.md §3 made operable
+   --------------------------------------------------------------------------
+   A column: head, scrolling body, pinned foot. The six assignment rows are
+   ~480px at a phone width inside a dialog capped at min(86vh, 900px), so an
+   appended warning and button ended up below the fold of a MODAL — the one
+   surface with no page scrollbar to hint that there is more. The foot is now
+   pinned and the rows scroll under it.
    ========================================================================== */
 
 .dialog {
   width: min(720px, calc(100vw - 2 * var(--fa-gutter)));
   max-height: min(86vh, 900px);
-  padding: clamp(20px, 3vw, 32px);
+  padding: clamp(18px, 2.6vw, 28px);
   border: 1px solid var(--fa-line);
   border-radius: var(--fa-radius);
   background-color: var(--fa-sheet);
   color: var(--fa-ink);
-  overflow-y: auto;
+  overflow: hidden;
+}
+
+.dialog[open] {
+  display: flex;
+  flex-direction: column;
 }
 
 .dialog::backdrop {
@@ -287,6 +883,20 @@
   background-color: rgba(0, 0, 0, 0.62);
 }
 
+.dialogBody {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.dialogFoot {
+  flex: none;
+  border-top: 1px solid var(--fa-line);
+  margin-top: 4px;
+  padding-top: 12px;
+  background-color: var(--fa-sheet);
+}
+
 .assign {
   display: grid;
   gap: 8px;
@@ -295,7 +905,7 @@
 
 .assignRow {
   display: grid;
-  grid-template-columns: 72px 1fr;
+  grid-template-columns: 76px 1fr;
   gap: 8px 14px;
   align-items: center;
   border-top: 1px solid var(--fa-line-2);
@@ -324,7 +934,7 @@
 /* The assistant's strip inside the dialog: the pane's advice is inert behind the modal
    backdrop, so the suggestion rides along to where the decision is actually taken. */
 .dialogAdvice {
-  margin: 0 0 18px;
+  margin: 0 0 14px;
   padding: 12px 14px;
   border: 1px solid var(--fa-line);
   background-color: var(--fa-paper);
@@ -340,13 +950,13 @@
   color: var(--fa-ink-3);
 }
 
-/* The row-14 warning. A dashed border, not a colour: the accent is budgeted. */
+/* The row-14 warning. A dashed border, not a colour. */
 .warn {
-  margin: 18px 0 0;
-  padding: 12px 14px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
   border: 1px dashed var(--fa-line);
-  font-size: var(--fa-fs-sm);
-  line-height: 1.6;
+  font-size: var(--fa-fs-meta);
+  line-height: 1.55;
   color: var(--fa-ink-2);
 }
 
@@ -354,7 +964,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 20px;
 }
 
 @media (max-width: 560px) {
@@ -374,7 +983,7 @@
   margin: 0 0 22px;
 }
 
-/* The page's second and last accent text: the verdict line. */
+/* The page's second accent text: the verdict line. */
 .overVerdict {
   margin: 0;
   font-size: var(--fa-fs-h4);
@@ -508,6 +1117,10 @@
 
 /* ==========================================================================
    THE ADVISOR PANE — the engine's own trace, rendered
+   --------------------------------------------------------------------------
+   The suggestion and its one-line reason are always visible; the ranked and
+   refused lists are behind disclosures, closed. Open, they ran the pane past
+   2,000px and pushed the public log off the bottom of the world.
    ========================================================================== */
 
 .advisor {
@@ -524,13 +1137,28 @@
   gap: 4px;
 }
 
-.advisorSub {
-  margin: 14px 0 0;
-  font-size: var(--fa-fs-meta);
+.advisorDetail {
+  border-top: 1px solid var(--fa-line-2);
+  margin-top: 10px;
+}
+
+.advisorDetail > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  cursor: pointer;
+  font-size: var(--fa-fs-sm);
   font-weight: 500;
-  letter-spacing: var(--fa-tr-legal);
-  text-transform: uppercase;
-  color: var(--fa-ink-3);
+  color: var(--fa-ink);
+}
+
+.advisorDetail > summary:hover {
+  color: var(--fa-amber-2);
+}
+
+.advisorDetailBody {
+  padding: 4px 0 12px;
 }
 
 /* ==========================================================================
