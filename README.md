@@ -124,9 +124,9 @@ Documents:
 | [BOUNDED.md](BOUNDED.md) | FishAI v1.5 — memory in bits, the ladder that prices the tiers, and the P7/P8 attribution record |
 | [SITE_SPEC.md](SITE_SPEC.md) | The results site |
 
-The `papers/` directory carries five research papers in LaTeX (v0.5, v1.0, the contained-book
-negative result, the inert axis, and style observability), each compiling standalone under
-pdflatex with every number traced to a committed artifact by digest.
+The `papers/` directory carries six research papers in LaTeX (v0.5, v1.0, v1.5, the
+contained-book negative result, the inert axis, and style observability), each compiling
+standalone under pdflatex with every number traced to a committed artifact by digest.
 
 ## Running it
 

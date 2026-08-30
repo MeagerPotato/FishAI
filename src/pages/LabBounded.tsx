@@ -519,7 +519,8 @@ export function LabBounded() {
           <table className={s.table}>
             <caption>
               E3 per policy · young = ages 1–8, old = 33+ · decay = young − old, seed-clustered
-              SE · half-life = first band at half the youngest band&rsquo;s rate
+              SE · half-life = first band with ≥ 200 observations at or below half the youngest
+              band&rsquo;s rate
             </caption>
             <thead>
               <tr>
@@ -560,7 +561,9 @@ export function LabBounded() {
                 .map((c) => `${policyName(c.policy).replace(' bits', '')} bits → age ${c.halfLifeAge ?? 0}`)
                 .join(', ')}
               . But the prediction claimed <em>every</em> budget decays with a defined,
-              non-decreasing half-life, and from 64 bits up the curves are statistically
+              non-decreasing half-life, and it fails twice over: 48 bits decays significantly (z
+              3.22) yet no band meeting the 200-observation floor falls to half, so its
+              half-life is undefined; and from 64 bits up the curves are statistically
               indistinguishable from full memory — no significant decay, no half-life in range.
               The mechanism saturates once the budget holds essentially everything, which the
               prediction failed to anticipate. Mixed, as measured.

@@ -47,9 +47,9 @@ ladder (P3, mixed): medium is worth $32.2$ bits $[30.8, 35.1]$; the old noise-ba
 tier measures \emph{below the zero-bit floor} ($0.0446$ set-share against the floor's
 $0.1313$ --- a memoryless bot that reasons beats a remembering bot that dices); hard
 sits above every finite rung. Evidence-age analysis (P4--P6, all mixed as printed)
-finds the S45 signature where the model predicts it --- finite budgets decay with
-half-lives $5/13/17/33/49$ events, rising in bits where defined --- while the noise tier
-is cliff-edged at its window ($z = 258.9$) yet not flat inside it, and a composition
+finds the S45 signature where the model predicts it --- budgets up to $48$ bits decay,
+with half-lives $5/13/17/33/49$ events, rising in bits where defined --- while the
+noise tier is cliff-edged at its window ($z = 258.9$) yet not flat inside it, and a composition
 effect makes the pooled and seed-clustered estimators disagree in sign for the
 full-memory policies. The headline refutation is P7: memory pressure was predicted to
 erode the behavioural style signature, and instead the v1.0 classifier reads bounded
@@ -103,11 +103,11 @@ the model has room to bind, yes, with half-lives that rise in bits; the full-mem
 verdicts are mixed for reasons worth stating exactly.) And does memory pressure erode a
 seat's behavioural style signature, as the v1.0 observation work \cite{obspaper} would
 suggest? Here the pre-registered prediction was \textbf{refuted}, and the refutation is
-this paper's headline: bounded ecologies are \emph{more} classifiable than full-strength
-ones, and a registered single-seat follow-up --- including a pilot whose conclusion had
-to be corrected on the record, a sequence Section~\ref{sec:timeline} reports in full ---
-localises the effect in the ecology rather than in the read seat's own signature,
-within the designs measured.
+this paper's headline: under mild memory pressure, 64-bit ecologies are \emph{more}
+classifiable than full-strength ones, and a registered single-seat follow-up ---
+including a pilot whose conclusion had to be corrected on the record, a sequence
+Section~\ref{sec:timeline} reports in full --- localises the effect in the ecology
+rather than in the read seat's own signature, within the designs measured.
 
 \section{Related work}
 \label{sec:related}
@@ -342,8 +342,8 @@ the artifact's own precision.
   health gate: every $\infty$-budget game is replayed with all six seats bare and
   required to match event-for-event, read-for-read and step-for-step (replays are
   checks, not records). The design holds the ecology --- opponents, partners, game
-  length --- at the full-strength distribution the fingerprints were calibrated on,
-  isolating the read seat's own signature.
+  length --- approximately at the full-strength distribution the fingerprints were
+  calibrated on, isolating the read seat's own signature.
 \item \textbf{E4b-power --- the P8 run of record} (registered after the E4b review;
   Section~\ref{sec:timeline}). The same design at 300 seeds per pairing --- 10{,}800
   reads per cell, matching P7's read count --- on a fresh seed prefix
@@ -415,8 +415,9 @@ and the correction is part of the method rather than a blemish on it.
   recommends a multiplicity annotation: Bonferroni~$\times 3$ over each adjacent-rung
   family, reported \emph{alongside} the committed verdicts, which are not changed.
 \item \textbf{2026-08-30, before any E4b run}: E4b registered --- the single-seat
-  design, the read-seat mapping fixed in the registration before running, P8, and the
-  annotation.
+  design, P8, and the annotation; the read-seat mapping was chosen by the implementer
+  and documented in the run's \code{meta.notes} before running, as the registration
+  required.
 \item \textbf{The pilot and its overclaim}: the 50-seed E4b pilot runs; P8 comes out
   confirmed (flat). The commit recording it claimed the P7 shift was ``not of the read
   seat's signature''. That claim was too strong: what a flat curve at 1{,}800 reads per
@@ -497,9 +498,9 @@ zero) --- not because the games are identical (the two cells' mean lengths diffe
 about $0.002$ moves), but because no retained-versus-evicted difference above 128 bits
 ever moved a set on these 3{,}000 deals. The worst-case pool is hundreds of bits
 (Section~\ref{sec:model}); the \emph{operative} pool, under this eviction policy and
-these deals, fits in 128. Bounded games are also longer: mean engine moves fall from
-$798.2$ at the floor to $683.2$ at $\infty$, about $17\%$ --- memory-poor tables take
-longer to finish, a fact that returns in Section~\ref{sec:p7}.
+these deals, fits in 128. Bounded games are also longer: mean engine moves run from
+$683.2$ at $\infty$ up to $798.2$ at the floor, about $17\%$ longer --- memory-poor
+tables take longer to finish, a fact that returns in Section~\ref{sec:p7}.
 
 \subsection{P3: where the shipped tiers land}
 \label{sec:tiers}
@@ -584,9 +585,10 @@ from 0 through 48 bits decays significantly, and the half-lives, where defined, 
 $5/13/17/33/49$ events at $0/8/16/24/32$ bits --- strictly increasing in bits, the S45
 signature arriving exactly as the construction predicts: a bigger budget keeps old
 facts alive longer. But the registered rule demanded decay \emph{and} a defined
-half-life at \emph{every} finite budget, and from 48 bits up the curves never fall to
-half their youngest-band rate (48 bits still decays at $z = 3.22$ but earns no
-half-life; 64--128 bits are statistically flat). The verdict prints as mixed: every
+half-life at \emph{every} finite budget, and from 48 bits up no band meeting the
+registered 200-observation floor falls to half the youngest-band rate (48 bits still
+decays at $z = 3.22$ but earns no half-life; 64--128 bits are statistically flat).
+The verdict prints as mixed: every
 budget decays --- no; half-life defined everywhere and non-decreasing with a strict
 increase --- no.
 
@@ -646,7 +648,7 @@ smoothly with half-lives that scale with capacity; the noise tier is a step func
 --- perfect recall to a hard edge, near-total amnesia beyond it --- and no human plays
 like that \cite{playstyles,andersonschooler1991}.
 
-\subsection{P7: memory pressure makes styles \emph{more} classifiable --- refuted}
+\subsection{P7 refuted: memory pressure makes styles \emph{more} classifiable}
 \label{sec:p7}
 
 \begin{table}[t]
@@ -810,9 +812,10 @@ rather than tuned. \emph{Composable}: E4 ran all nine styles under budgets witho
 per-style work, because the arm restricts the knowledge, not the policy.
 
 The concavity of the curve is itself a finding about \usff{}: the first 16 bits ---
-eight card facts, or a few facts plus a clutch of basis bits --- carry a quarter of the
-distance from amnesia to full strength, and everything past 64 bits is worth under a
-third of a point of set-share. Contestability-ranked memory is extraordinarily
+eight card facts, or a few facts plus a clutch of basis bits --- carry about $71\%$ of
+the distance from amnesia to full strength ($0.26$ of the $0.37$ set-share gap), and
+everything past 64 bits is worth under a third of a point of set-share.
+Contestability-ranked memory is extraordinarily
 efficient at the bottom: what matters in this game is a small, current working set, not
 the archive.
 
@@ -908,11 +911,13 @@ bit-budget memory with contestability eviction is monotone at every measured run
 saturates by 128 bits, prices the shipped tiers (medium $= 32.2$ bits; the old easy
 tier below the zero-bit floor it was meant to sit above), and fails the way people
 fail, with decay half-lives that grow with capacity. The pre-registered suite kept the
-project honest twice over: P7's refutation --- memory pressure makes whole ecologies
-\emph{more} classifiable, not less --- survived its multiplicity annotation and became
+project honest twice over: P7's refutation --- mild memory pressure makes whole
+ecologies \emph{more} classifiable, not less --- survived its multiplicity annotation
+and became
 the paper's most interesting result; and the E4b pilot's overclaim was caught by its
 own review, corrected on the record, and settled by a 300-seed run of record at
-matched read count, which localised the effect in the ecology rather than the seat.
+matched read count, which localised the effect, within the designs measured, in the
+ecology rather than the seat.
 The correction sequence is reported in full because it is the method working as
 designed: registrations before runs, reviews after them, and conclusions cut back to
 what the data licence --- whichever direction that points.

@@ -147,7 +147,8 @@ authenticates `meta.predictions` against the code's own registered set before wr
    message had overclaimed ("not of the read seat's signature") where the licensed claim was
    only "does not appear in the single-seat design at its N". The registered corrections: the
    power run at 300 seeds per pairing (10,800 reads per cell — P7's own read count; MDE ≈
-   0.0019) on the fresh disjoint prefix `clsacc-power-v1`, mapping/grid/estimator/rule
+   0.0021 as registered, the run's measured MDE coming in at ≈ 0.0019) on the fresh disjoint
+   prefix `clsacc-power-v1`, mapping/grid/estimator/rule
    UNCHANGED, becoming the P8 verdict of record with the pilot retained verbatim and both
    reported whatever they say; a correction commit stating the pilot conclusion's within-design
    limit (873f9f9 — no history rewriting); and the labelled cross-design difference-of-deltas
@@ -192,9 +193,10 @@ Bounded Balanced (hard skill) vs unbounded Balanced-hard, mean duplicate-pair se
 | share | .1313 | .2449 | .3921 | .4361 | .4653 | .4909 | .4977 | .4999 | .5000 | .5000 |
 | SE | .0017 | .0022 | .0026 | .0023 | .0020 | .0011 | .0006 | .0001 | 0 | 0 |
 
-All nine adjacent deltas are positive outright (the steepest, 8→16, +.1472 ± .0031; the
-flattest, 96→128, +.0001 ± .0001) — no rung needed the −2·SE tolerance the registered rule
-allows. The money is at the low end: the first 16 bits buy more share than the next hundred.
+Eight of the nine adjacent deltas are positive outright and the ninth, 128→∞, is exactly zero
+(both rungs sit at .5000 exactly; the steepest, 8→16, is +.1472 ± .0031) — no rung needed the
+−2·SE tolerance the registered rule allows. The money is at the low end: the first 16 bits buy
+more share than the next hundred.
 P2's gate is checked on integers, not floats: 3,000 ∞ pairs, **0** mirror deviations, share
 .5000 exactly — at that budget both teams are bit-identical and each duplicate pair is
 literally the same game twice.
@@ -228,10 +230,12 @@ exactly that certain ask. Clustered comparisons cluster by seed.
 
 - **P5 — the S45 signature, where the budget bites.** Decay is significant at 0–48 bits and the
   half-life climbs the ladder exactly as designed: 5 → 13 → 17 → 33 → 49 events at
-  0/8/16/24/32 bits. But from 64 bits up the curves are statistically indistinguishable from
-  full memory (no significant decay, no half-life in range) — the mechanism saturates once the
-  budget holds essentially everything, which the prediction's "every budget decays, half-life
-  defined everywhere" failed to anticipate. Mixed.
+  0/8/16/24/32 bits. But the rule fails twice over: 48 bits decays (z 3.22) yet no band meeting
+  the 200-observation floor falls to half its youngest rate, so its half-life is undefined; and
+  from 64 bits up the curves are statistically indistinguishable from full memory (no
+  significant decay, no half-life in range) — the mechanism saturates once the budget holds
+  essentially everything, which the prediction's "every budget decays, half-life defined
+  everywhere" failed to anticipate. Mixed.
 - **P6 — noise is not human-shaped, and not even flat.** The easy tier's cliff at its 6-event
   window edge is the largest effect in the suite: exploit rate .5066 inside the window, .0304
   just outside — a drop of .4861 ± .0019, **z 258.9**. The motivating contrast confirmed. But
