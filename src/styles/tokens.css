@@ -209,10 +209,17 @@
      8. SPACE — the vertical rhythm is a vh clamp, so it scales with screen
      HEIGHT rather than width. That is what keeps a section feeling the same
      on a laptop and a monitor.
+
+     The rhythm was 12vh / 6vh, and on the research routes that arithmetic ran
+     away with the page: `/lab` alone spends this token twenty-two times, which
+     at 900px of viewport was 2,376px — an eighth of the document — of nothing.
+     7.5vh still opens a clear gap between two sections at a glance, which is
+     the whole job, and hands ~900px back on the long pages without moving a
+     word or a number.
      ========================================================================== */
 
-  --fa-sp: clamp(96px, 12vh, 152px); /* section padding, top and bottom */
-  --fa-sp-head: clamp(46px, 6vh, 78px); /* section header -> content */
+  --fa-sp: clamp(64px, 7.5vh, 112px); /* section padding, top and bottom */
+  --fa-sp-head: clamp(36px, 4.8vh, 60px); /* section header -> content */
   --fa-gutter: 44px; /* where the FRAME lines land */
   --fa-inset: 24px; /* extra breathing room before TEXT */
   --fa-sheet-pad: clamp(26px, 3.4vw, 54px); /* inner pad of a sheet panel */
@@ -351,8 +358,8 @@
     --fa-gutter: 13px;
     --fa-inset: 12px;
     --fa-nav-h: 68px; /* 12 + 44 + 12 — see SiteNav.module.css */
-    --fa-sp: clamp(64px, 8vh, 96px);
-    --fa-sp-head: clamp(32px, 4.6vh, 48px);
+    --fa-sp: clamp(48px, 6vh, 76px);
+    --fa-sp-head: clamp(26px, 3.6vh, 40px);
     --fa-fs-body: 16.5px;
     --fa-fs-lead: 17.5px;
     --fa-fs-h2: clamp(32px, 8.7vw, 41px);

@@ -2,11 +2,24 @@
  * `/lab` — the report.
  *
  * SITE_SPEC.md §1: hero -> the rule set -> style roster -> method -> payoff matrix (pin act 1)
- * -> counter-graph (pin act 2) -> verdict -> exploitability -> cross-play -> sources. The
- * interpretability overhaul adds a "How to read" strip between the hero and the rule set — six
- * plain-language ideas that carry the whole report — plus one plain-language sentence of body
- * prose ahead of every figure and a glossary in the Sources section. Plain language is not a
- * different register here: the numbers are the same numbers, said once in words first.
+ * -> counter-graph (pin act 2) -> verdict -> exploitability -> cross-play -> sources. Plain
+ * language is not a different register here: the numbers are the same numbers, said once in
+ * words first — one plain sentence of body prose ahead of every figure, the six-idea on-ramp in
+ * the hero, and the glossary under Sources.
+ *
+ * ## This page is also the index of the lab
+ *
+ * The nav used to carry six lab surfaces as sibling tabs, which told a visitor nothing: Report,
+ * Matrix, Adaptive, Bounded, Live and Replay read as six words for "numbers". They are not
+ * siblings — five of them are the evidence behind claims made here — so the nav now carries one
+ * Research entry pointing at this page, and `#evidence` below the hero is where they are named,
+ * each with the headline it found. Deleting a route was never on the table: every one of them is
+ * a live deep link, and the footer carries them too.
+ *
+ * The on-ramp and the glossary sit in `<details>`. Both restate, in shorter words, things this
+ * page says in full further down with their numbers attached; neither is the only place a fact
+ * appears. That is the test applied before anything here was folded — and folding is all that
+ * happened. No measurement, caveat or verdict word was cut, softened or moved.
  *
  * ## The accent budget (SITE_SPEC.md §2.1)
  *
@@ -76,6 +89,7 @@ import { RULES_FILE, shortHash } from '../lab/rules.ts'
 import { Beats } from '../lab/ui/Beats.tsx'
 import { LabContents, type LabSection } from '../lab/ui/LabContents.tsx'
 import { LabShell, withCase } from '../lab/ui/LabShell.tsx'
+import { replayHref } from '../lab/ui/replayHref.ts'
 import { ArtifactBroken, RulesMismatch } from '../lab/ui/Refusal.tsx'
 import { RuleStamp, SyntheticNotice, Us54Facts } from '../lab/ui/RuleStamp.tsx'
 import { ScrollRegion } from '../lab/ui/ScrollRegion.tsx'
@@ -104,16 +118,90 @@ const REPO = 'https://github.com/MeagerPotato/FishAI'
  * `position: sticky` inside the act is indifferent to.
  */
 const CONTENTS: readonly LabSection[] = [
-  { id: 'how-to-read', label: 'How to read this page', note: 'Six ideas, in plain language' },
+  { id: 'evidence', label: 'The evidence', note: 'Five deep surfaces, and the write-ups' },
   { id: 'rules', label: 'The rule set', note: 'us54, and why the ninth set decides everything' },
   { id: 'roster', label: 'The roster', note: 'Nine styles, and two caveats on them' },
   { id: 'method', label: 'Method', note: 'Duplicate deals and multiplicity control' },
   { id: 'matrix', label: 'The payoff matrix', note: 'Who beats whom, and by how much' },
   { id: 'counter-graph', label: 'The counter-graph', note: 'Only edges that survived correction' },
   { id: 'verdict', label: 'The verdict', note: 'Four criteria, recomputed in your browser' },
-  { id: 'exploitability', label: 'Exploitability', note: 'Topping the table is not being strong' },
-  { id: 'crossplay', label: 'Cross-play', note: 'Against a bot nobody here wrote' },
+  {
+    id: 'exploitability',
+    label: 'Exploitability and cross-play',
+    note: 'Topping the table is not being strong',
+  },
   { id: 'sources', label: 'Sources and glossary', note: 'Every document, every term' },
+]
+
+/**
+ * The plain-language on-ramp: six ideas that carry the whole report.
+ *
+ * It lives in a `<details>` in the hero rather than in a section of its own, and the reason is
+ * that every one of these six is said AGAIN, in full and with its numbers, further down — the
+ * caveats below the roster, the criteria in the verdict panel, duplicate deals under Method,
+ * score rate in the glossary. A reader who needs the vocabulary opens it once; a reader who
+ * does not is no longer scrolled a thousand pixels past a summary of a page they are about to
+ * read anyway. Nothing here is the only place a fact appears, which is the test for folding.
+ */
+const HOW_TO_READ = [
+  {
+    ix: '01',
+    title: 'A style is settings, not a bot',
+    role: 'Definition',
+    body:
+      'Every seat runs the same deduction engine. A style is a vector of parameters ' +
+      'over it — how eagerly to declare, whom to target, what to weigh — so when one ' +
+      'style beats another, the difference is policy, never one bot being better ' +
+      'written than the rest.',
+  },
+  {
+    ix: '02',
+    title: 'A duplicate deal cancels the cards',
+    role: 'Method',
+    body:
+      'Each seeded deal is played twice with the teams swapped, and the pair is scored ' +
+      'as one observation. A lucky hand lifts both sides equally and cancels out, so ' +
+      'what remains is what the styles did with identical cards.',
+  },
+  {
+    ix: '03',
+    title: 'Score rate is a plain win rate',
+    role: 'Measure',
+    body:
+      'The share of games a style’s team won, from 0 to 1, where .500 is an even ' +
+      'match. Under us54 a tie is arithmetically impossible — nine sets, first to five ' +
+      '— so nothing hides in a draw column.',
+  },
+  {
+    ix: '04',
+    title: 'The matrix and the counter-graph',
+    role: 'Figures',
+    body:
+      'The matrix prints each style’s score rate against every other. The ' +
+      'counter-graph is the same data redrawn as arrows — one per pairing whose ' +
+      'advantage survived statistical correction. A cycle there (A beats B beats C ' +
+      'beats A) would mean no ranking can be honest; this roster has none.',
+  },
+  {
+    ix: '05',
+    title: 'Four criteria, or no winner',
+    role: 'Decision rule',
+    body:
+      'A style is called dominant only if it tops the table, loses no matchup even at ' +
+      'the cautious end of the interval, sits in a matrix transitive enough for a ' +
+      'ranking to mean anything, and folds no worse than its rivals to a counter-' +
+      'strategy tuned against it. Fail one and nobody is crowned.',
+  },
+  {
+    ix: '06',
+    title: 'Two caveats, stated up front',
+    role: 'Caveats',
+    body:
+      'The declare-threshold axis the style names advertise turns out not to fire, so ' +
+      'the styles differ along other knobs than the ones they are named for; and the ' +
+      'Hoarder is measured paying its strategy’s full cost without the mechanism ' +
+      'that was meant to pay it back. Both are unpacked below the roster.',
+  },
 ]
 
 const FAMILY_LABEL = new Map<string, string>([
@@ -243,73 +331,88 @@ export function LabReport() {
         </div>
 
         <LabContents sections={CONTENTS} />
+
+        <details className={s.detail}>
+          <summary>
+            How to read this page — six ideas, in plain language, and no prior jargon
+          </summary>
+          <div className={s.detailBody}>
+            <Board items={HOW_TO_READ} />
+          </div>
+        </details>
       </Section>
 
-      {/* ---- how to read this page -------------------------------------------------------- */}
-      <Section id="how-to-read" badge="How to read">
+      {/* ---- the evidence index ----------------------------------------------------------- */}
+      {/*
+        This section is the six nav tabs, moved in-page and given room to say what they are.
+        As sibling links in the bar they read as synonyms — Matrix, Adaptive, Bounded, Live —
+        and a visitor could not tell which one answered which question. Here each one carries
+        its headline, so the index doubles as a summary of what the lab has actually found.
+      */}
+      <Section id="evidence" badge="The evidence">
         <SectionHead
-          lines={['A minute of vocabulary,', 'and the evidence *reads itself*.']}
-          sub="Nothing on this page is dumbed down, but none of it needs prior jargon either. Six ideas carry the whole report; each is stated plainly here, and each term reappears in the glossary under Sources."
+          lines={['Every claim on this page', 'has a page *behind it*.']}
+          sub="This report is the argument; below it are the five deep surfaces that hold the evidence, and the write-ups they feed. Every one is a deep link you can send to somebody. Four of the six write-ups are negative results, and they are listed here as the findings they are."
         />
         <Board
           items={[
             {
-              ix: '01',
-              title: 'A style is settings, not a bot',
-              role: 'Definition',
+              ix: 'E1',
+              title: 'The full matrix',
+              role: '/lab/matrix',
               body:
-                'Every seat runs the same deduction engine. A style is a vector of parameters ' +
-                'over it — how eagerly to declare, whom to target, what to weigh — so when one ' +
-                'style beats another, the difference is policy, never one bot being better ' +
-                'written than the rest.',
+                'The whole 9×9, every confidence interval and every q-value — the headline ' +
+                'figure below shows five columns of nine, and this is the other four.',
+              href: withCase('/lab/matrix', which),
             },
             {
-              ix: '02',
-              title: 'A duplicate deal cancels the cards',
-              role: 'Method',
+              ix: 'E2',
+              title: 'The adaptive engine',
+              role: '/lab/adaptive · v1.0',
               body:
-                'Each seeded deal is played twice with the teams swapped, and the pair is scored ' +
-                'as one observation. A lucky hand lifts both sides equally and cancels out, so ' +
-                'what remains is what the styles did with identical cards.',
+                'An engine that classifies its opponents and best-responds. It degenerates to ' +
+                'always-Punter, then underpays for its warmup: negative in all nine gauntlet ' +
+                'cells and on mixed tables too.',
+              href: withCase('/lab/adaptive', which),
             },
             {
-              ix: '03',
-              title: 'Score rate is a plain win rate',
-              role: 'Measure',
+              ix: 'E3',
+              title: 'The bounded-memory ladder',
+              role: '/lab/bounded · v1.5',
               body:
-                'The share of games a style’s team won, from 0 to 1, where .500 is an even ' +
-                'match. Under us54 a tie is arithmetically impossible — nine sets, first to five ' +
-                '— so nothing hides in a draw column.',
+                'Difficulty priced in bits instead of dice. The ladder is monotone at all nine ' +
+                'rungs, the shipped tiers carry measured prices, and the old noise tier prices ' +
+                'below the zero-bit floor.',
+              href: withCase('/lab/bounded', which),
             },
             {
-              ix: '04',
-              title: 'The matrix and the counter-graph',
-              role: 'Figures',
+              ix: 'E4',
+              title: 'Replay a game',
+              role: '/lab/replay',
               body:
-                'The matrix prints each style’s score rate against every other. The ' +
-                'counter-graph is the same data redrawn as arrows — one per pairing whose ' +
-                'advantage survived statistical correction. A cycle there (A beats B beats C ' +
-                'beats A) would mean no ranking can be honest; this roster has none.',
+                'One stored game, move by move, re-simulated from its seed by the same engine ' +
+                'the tournament ran — so a cell of the matrix can be watched rather than ' +
+                'taken on trust.',
+              href: replayHref(which),
             },
             {
-              ix: '05',
-              title: 'Four criteria, or no winner',
-              role: 'Decision rule',
+              ix: 'E5',
+              title: 'The live simulator',
+              role: '/lab/live',
               body:
-                'A style is called dominant only if it tops the table, loses no matchup even at ' +
-                'the cautious end of the interval, sits in a matrix transitive enough for a ' +
-                'ranking to mean anything, and folds no worse than its rivals to a counter-' +
-                'strategy tuned against it. Fail one and nobody is crowned.',
+                'Real duplicate pairs, run in this tab at demo scale. Put any two styles ' +
+                'against each other and watch the numbers land near the published cell.',
+              href: withCase('/lab/live', which),
             },
             {
-              ix: '06',
-              title: 'Two caveats, stated up front',
-              role: 'Caveats',
+              ix: 'E6',
+              title: 'The papers',
+              role: '/papers',
               body:
-                'The declare-threshold axis the style names advertise turns out not to fire, so ' +
-                'the styles differ along other knobs than the ones they are named for; and the ' +
-                'Hoarder is measured paying its strategy’s full cost without the mechanism ' +
-                'that was meant to pay it back. Both are unpacked below the roster.',
+                'Six write-ups with abstracts, PDFs and LaTeX sources — the tournament, the ' +
+                'adaptive result, the memory ladder, and the three focused findings the ' +
+                'caveats on this page became.',
+              href: '/papers',
             },
           ]}
         />
@@ -321,11 +424,9 @@ export function LabReport() {
           lines={['54 cards, nine sets of six,', 'and *no way to draw*.']}
           sub={`Results are only meaningful against the rules that produced them. This page reports ${RULES_FILE}, stamped above from meta.rulesHash and verified in the browser against the shipped document's own bytes — not the pagat48 rule set the live table plays.`}
         />
-        <p className={s.prose}>
-          The figure below deals the 54 cards into their nine sets of six — eight ordinary
-          half-suits, then the odd ninth built from the four 8s and both jokers, which is the one
-          rule everything else on this page leans on.
-        </p>
+        {/* The figure deals the 54 cards into their nine sets, and the panel underneath says
+            why the ninth one decides everything. The sentence that used to sit here said both
+            of those things first, in shorter words. */}
         <DeckAssembly figNo="FIG. 01" />
         <Hairline variant="soft" />
         <div className={s.split} style={{ marginTop: 'var(--fa-sp-head)' }}>
@@ -546,7 +647,13 @@ export function LabReport() {
         </InkPanel>
       </Section>
 
-      {/* ---- exploitability -------------------------------------------------------------- */}
+      {/* ---- exploitability and cross-play ------------------------------------------------ */}
+      {/*
+        One section, not two. Both halves ask the same question from opposite ends — how much of
+        the ranking above is an artefact of who happened to be in the room — so they were being
+        introduced twice with two headlines that made the same point. The cross-play half keeps
+        its own heading and every word it had.
+      */}
       <Section id="exploitability" badge="Exploitability">
         <SectionHead
           lines={['Topping the table is not', 'the same as being *strong*.']}
@@ -625,14 +732,16 @@ export function LabReport() {
           </p>
           <LineChart model={degradationLine(results, 'FIG. 10')} />
         </div>
-      </Section>
 
-      {/* ---- cross-play ------------------------------------------------------------------ */}
-      <Section id="crossplay" badge="Cross-play">
-        <SectionHead
-          lines={['Against a bot', 'nobody here *wrote*.']}
-          sub="Self-play measures a population against itself. The gap between a style's self-play score and its cross-play score is the size of the overfit, which is a different question from anything the matrix above can answer."
-        />
+        <Hairline variant="soft" />
+        <Eyebrow tone="muted" track="head" as="h3">
+          Cross-play — against a bot nobody here wrote
+        </Eyebrow>
+        <p className={s.prose} style={{ marginTop: 16 }}>
+          Self-play measures a population against itself. The gap between a style&rsquo;s
+          self-play score and its cross-play score is the size of the overfit, which is a
+          different question from anything the matrix above can answer.
+        </p>
         {artifact.crossplay.length === 0 ? (
           <p className={s.prose}>
             No cross-play run exists in this artifact. The protocol is specified — line-delimited
@@ -714,15 +823,13 @@ export function LabReport() {
           </div>
           <div className={s.stack}>
             <h3 className={s.criterionLabel}>The papers</h3>
+            {/* The three titles that used to be listed here are listed on /papers, with their
+                abstracts beside them. Naming them twice made this column a worse copy of a
+                page one link away. */}
             <p className={s.figNote}>
               This page&rsquo;s tournament, its verdict and both of its measured caveats are
-              written up in full — with the abstracts, the questions each one asks, the PDFs and
-              the LaTeX sources — at{' '}
-              <TextLink href="/papers">the research papers</TextLink>. The three that bear on
-              this page directly are <em>Measuring Play Style Without Skill</em> (the roster and
-              this matrix), <em>The Inert Axis</em> (why the declare-threshold labels do not
-              describe a knob that fires) and <em>The Contained Book</em> (the turn-pass that is
-              live in the v2 re-run and worth nothing).
+              written up in full — abstracts, PDFs and LaTeX sources — at{' '}
+              <TextLink href="/papers">the research papers</TextLink>.
             </p>
           </div>
           <div className={s.stack}>
@@ -749,79 +856,87 @@ export function LabReport() {
           </div>
         </div>
 
-        <Hairline variant="soft" />
-        <Eyebrow tone="muted" track="head" as="h3">
-          Glossary
-        </Eyebrow>
-        <dl className={s.glossary}>
-          <dt>Duplicate pair</dt>
-          <dd>
-            One seeded deal played twice with the teams swapped and scored as a single
-            observation, so the luck of the cards cancels.
-          </dd>
-          <dt>Score rate</dt>
-          <dd>
-            The share of games won, 0 to 1; .500 is an even match, and under us54 there are no
-            ties to blur it.
-          </dd>
-          <dt>Maximin</dt>
-          <dd>
-            A style&rsquo;s score rate in its worst matchup; above .500 means it loses to nobody
-            in the roster.
-          </dd>
-          <dt>Cyclic energy</dt>
-          <dd>
-            How much of the matrix is rock-paper-scissors rather than a ladder; past the
-            threshold, any single ranking misleads.
-          </dd>
-          <dt>Nash mixture</dt>
-          <dd>
-            The blend of styles that would be unbeatable within this roster; a dominant style is
-            the special case where one style takes all the weight.
-          </dd>
-          <dt>Exploitability</dt>
-          <dd>
-            How hard a style falls to an opponent tuned specifically against it; topping the
-            table without this check is only a claim about today&rsquo;s population.
-          </dd>
-          <dt>Concede rate</dt>
-          <dd>
-            The share of a style&rsquo;s declares that handed the set to the opposition — under
-            us54, any error in a declare gifts the whole set.
-          </dd>
-          <dt>Declare window</dt>
-          <dd>
-            The pause after every action in which each seat, in order, may declare a set or
-            decline; declining is itself a move.
-          </dd>
-          <dt>Clinch</dt>
-          <dd>
-            The game ends the moment a team&rsquo;s fifth set resolves, so a finished game always
-            leaves sets unresolved and cards in hand.
-          </dd>
-          <dt>Memory bits</dt>
-          <dd>
-            The v1.5 difficulty budget: facts derived from the public log are priced — 2 bits to
-            place a card, 1 to certify a basis — and a bounded seat keeps the highest-ranked
-            facts that fit. The ladder pricing it lives at /lab/bounded.
-          </dd>
-          <dt>Set-share</dt>
-          <dd>
-            A team&rsquo;s banked sets over all banked sets, per game, duplicate-averaged — the
-            ladder&rsquo;s metric, chosen because it keeps moving after a win rate saturates.
-          </dd>
-          <dt>Evidence age</dt>
-          <dd>
-            Public-log events since a hit located a card; the decay curves plot how often a
-            policy still exploits the fact as that distance grows.
-          </dd>
-          <dt>Bits-equivalent</dt>
-          <dd>
-            Where a shipped difficulty tier&rsquo;s set-share lands on the measured ladder,
-            interpolated over the finite rungs; a tier off the curve&rsquo;s ends is reported as
-            clamped or not finitely placeable, never invented.
-          </dd>
-        </dl>
+        {/* A glossary is a thing a reader goes TO, not a thing they read through. Open by
+            default it was 800px of definitions between the sources and the closing stamp for
+            everybody, including the reader who already knows what a maximin is. Every term is
+            still here, one click away, and the terms are still defined nowhere else. */}
+        <details className={s.detail} style={{ marginTop: 'var(--fa-sp-head)' }}>
+          {/* No count in this label. The list is static JSX, so a number here would be a
+              hand-maintained fact about the markup beside it — and the first term added would
+              make the page print something untrue about itself. */}
+          <summary>Glossary — every term this site uses as a measurement</summary>
+          <div className={s.detailBody}>
+            <dl className={s.glossary}>
+              <dt>Duplicate pair</dt>
+              <dd>
+                One seeded deal played twice with the teams swapped and scored as a single
+                observation, so the luck of the cards cancels.
+              </dd>
+              <dt>Score rate</dt>
+              <dd>
+                The share of games won, 0 to 1; .500 is an even match, and under us54 there are no
+                ties to blur it.
+              </dd>
+              <dt>Maximin</dt>
+              <dd>
+                A style&rsquo;s score rate in its worst matchup; above .500 means it loses to nobody
+                in the roster.
+              </dd>
+              <dt>Cyclic energy</dt>
+              <dd>
+                How much of the matrix is rock-paper-scissors rather than a ladder; past the
+                threshold, any single ranking misleads.
+              </dd>
+              <dt>Nash mixture</dt>
+              <dd>
+                The blend of styles that would be unbeatable within this roster; a dominant style is
+                the special case where one style takes all the weight.
+              </dd>
+              <dt>Exploitability</dt>
+              <dd>
+                How hard a style falls to an opponent tuned specifically against it; topping the
+                table without this check is only a claim about today&rsquo;s population.
+              </dd>
+              <dt>Concede rate</dt>
+              <dd>
+                The share of a style&rsquo;s declares that handed the set to the opposition — under
+                us54, any error in a declare gifts the whole set.
+              </dd>
+              <dt>Declare window</dt>
+              <dd>
+                The pause after every action in which each seat, in order, may declare a set or
+                decline; declining is itself a move.
+              </dd>
+              <dt>Clinch</dt>
+              <dd>
+                The game ends the moment a team&rsquo;s fifth set resolves, so a finished game always
+                leaves sets unresolved and cards in hand.
+              </dd>
+              <dt>Memory bits</dt>
+              <dd>
+                The v1.5 difficulty budget: facts derived from the public log are priced — 2 bits to
+                place a card, 1 to certify a basis — and a bounded seat keeps the highest-ranked
+                facts that fit. The ladder pricing it lives at /lab/bounded.
+              </dd>
+              <dt>Set-share</dt>
+              <dd>
+                A team&rsquo;s banked sets over all banked sets, per game, duplicate-averaged — the
+                ladder&rsquo;s metric, chosen because it keeps moving after a win rate saturates.
+              </dd>
+              <dt>Evidence age</dt>
+              <dd>
+                Public-log events since a hit located a card; the decay curves plot how often a
+                policy still exploits the fact as that distance grows.
+              </dd>
+              <dt>Bits-equivalent</dt>
+              <dd>
+                Where a shipped difficulty tier&rsquo;s set-share lands on the measured ladder,
+                interpolated over the finite rungs; a tier off the curve&rsquo;s ends is reported as
+                clamped or not finitely placeable, never invented.
+              </dd>
+            </dl>
+          </div>
+        </details>
 
         <Hairline variant="soft" />
         <p className={s.figNote}>

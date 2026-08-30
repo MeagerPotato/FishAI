@@ -153,7 +153,8 @@ export interface LabArtifact extends StyleResults {
   replays: ReplayRecord[]
 }
 
-export type ArtifactCase = 'cyclic' | 'dominant' | 'v2' | 'stale'
+import type { ArtifactCase } from './case.ts'
+export type { ArtifactCase } from './case.ts'
 
 /* -- the boundary validator --------------------------------------------------------------- */
 
@@ -548,7 +549,6 @@ function load(which: ArtifactCase): LoadResult {
   }
 }
 
-const CASES: ArtifactCase[] = ['cyclic', 'dominant', 'v2', 'stale']
 
 /**
  * Parsed once, at module load of the lab chunk. Eager rather than lazily cached on purpose: a
@@ -568,18 +568,9 @@ export function loadArtifact(which: ArtifactCase): LoadResult {
   return LOADED[which]
 }
 
-/**
- * Which case a URL asks for. The site reads ONE artifact; `?case=` only chooses which committed
- * document that one is, and every page states plainly which one it read. The default is `v2` —
- * the current measured run — so a first-time visitor lands on real simulation output, not on
- * the synthetic render-path fixture.
- */
-export function caseFromSearch(search: string): ArtifactCase {
-  const asked = new URLSearchParams(search).get('case')
-  return CASES.find((c) => c === asked) ?? 'v2'
-}
-
-export const ARTIFACT_CASES: readonly ArtifactCase[] = CASES
+// Both moved to `./case.ts`, which carries no data imports — see the note there. Re-exported so
+// pages that legitimately read the artifact can still take everything from one place.
+export { caseFromSearch, ARTIFACT_CASES } from './case.ts'
 
 export function styleLabel(artifact: LabArtifact, id: string): string {
   return artifact.styles.find((s) => s.id === id)?.label ?? id

@@ -40,8 +40,43 @@
 
 /* The serial goes accent on hover — the same rule as everywhere else in the
    system: an amber label means "this one". */
-.card:hover .ix {
+.card:hover .ix,
+.cardLink:focus-within .ix {
   color: var(--fa-amber-2);
+}
+
+/* --- the index variant --------------------------------------------------- */
+
+/**
+ * A card that IS a destination. The link stretches over the cell so the hit
+ * area is the whole card, while the accessible name stays the title — the
+ * alternative, wrapping the article in an anchor, would read the body copy
+ * out as part of the link text.
+ *
+ * `:focus-within` mirrors `:hover` because the overlay puts the focus ring on
+ * a zero-area inline box; without it a keyboard reader gets no cell feedback
+ * at all. The ring itself still comes from global.css's `:focus-visible`.
+ */
+.cardLink:focus-within {
+  background-color: var(--fa-paper-2);
+}
+
+.cardHit {
+  color: inherit;
+  text-decoration: none;
+}
+
+.cardHit::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.card:hover .cardHit,
+.cardLink:focus-within .cardHit {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
 }
 
 .ix {

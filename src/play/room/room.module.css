@@ -1,0 +1,827 @@
+/**
+ * ============================================================================
+ * THE SHARED ROOM
+ * ============================================================================
+ * Chrome for `/play/room` and `/play/room/:code`: the two entry forms, the
+ * lobby's two sides, the table seen from whichever seat you are in, and the
+ * refusal block every boundary in this feature ends at.
+ *
+ * ## Why this is a second stylesheet and not additions to play.module.css
+ *
+ * Two agents are working on the play surface at the same time as this one, and
+ * `src/play/*` belongs to them. Composing across the boundary — `composes:
+ * chip from '../play.module.css'`, or importing their module object — would
+ * have made a room's appearance depend on class names they are actively
+ * renaming, with nothing in the build to catch a break: CSS modules type as
+ * `Record<string, string>`, so a class that stopped existing would compile
+ * cleanly and render unstyled in production.
+ *
+ * The vocabulary is deliberately theirs, though. Chips, submit buttons, panels,
+ * seats and the log look and measure the same as on the solo table, because a
+ * player moving between the two surfaces should not have to learn a second set
+ * of controls. Where the two files agree, they agree on purpose, and the rules
+ * they both follow are SITE_SPEC.md §2:
+ *
+ *   · No radii, no shadows.
+ *   · Touch targets >= 44px on every control a player must hit mid-game.
+ *   · Wide things scroll inside their own container, never the page.
+ *   · Colour is never the only carrier of a state.
+ * ============================================================================
+ */
+
+/* ==========================================================================
+   UTILITIES
+   ========================================================================== */
+
+/* Available to a screen reader, absent from the page. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.link {
+  color: var(--fa-ink);
+  text-underline-offset: 3px;
+}
+
+/* ==========================================================================
+   PANELS — the one container this surface has
+   ========================================================================== */
+
+.panel {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--fa-line);
+}
+
+.panelHead {
+  margin: 0 0 8px;
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-h4);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-head);
+  color: var(--fa-ink);
+}
+
+.panelNote {
+  margin: 0 0 14px;
+  max-width: var(--fa-measure);
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-sm);
+  line-height: 1.55;
+  color: var(--fa-ink-2);
+}
+
+.step {
+  margin: 18px 0 10px;
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-meta);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
+.panelActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.warn {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--fa-ink);
+  background-color: var(--fa-tile);
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-meta);
+  line-height: 1.5;
+  color: var(--fa-ink-2);
+}
+
+/* ==========================================================================
+   CONTROLS — chips, fields and the one primary button
+   ========================================================================== */
+
+.choiceRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--fa-line-control);
+  background-color: var(--fa-sheet);
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  color: var(--fa-ink-2);
+  cursor: pointer;
+}
+
+.chip:hover:not(:disabled) {
+  border-color: var(--fa-ink);
+  color: var(--fa-ink);
+}
+
+/* A pressed chip inverts to an ink ground; the suit inks invert with it, which
+   is why the descendant rule lives here rather than as a prop on CardFace. */
+.chipOn,
+.chipOn:hover:not(:disabled) {
+  border-color: var(--fa-ink);
+  background-color: var(--fa-ink);
+  color: var(--fa-page);
+}
+
+.chip:disabled {
+  border-style: dashed;
+  color: var(--fa-ink-3);
+  cursor: not-allowed;
+}
+
+.chipSub {
+  font-size: var(--fa-fs-micro);
+  font-weight: 400;
+  letter-spacing: var(--fa-tr-legal);
+  color: inherit;
+  opacity: 0.75;
+}
+
+.chipFace {
+  padding: 6px 8px;
+}
+
+.chip:focus-visible,
+.submit:focus-visible,
+.input:focus-visible {
+  outline: 2px solid var(--fa-ink);
+  outline-offset: 2px;
+}
+
+.submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 10px 20px;
+  border: 1px solid var(--fa-ink);
+  background-color: var(--fa-ink);
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--fa-page);
+  cursor: pointer;
+  text-align: center;
+}
+
+/* Not an opacity: a disabled control has to stay readable, because the label on
+   it is usually the explanation of why it is disabled. */
+.submitOff {
+  border-color: var(--fa-line-control);
+  border-style: dashed;
+  background-color: var(--fa-sheet);
+  color: var(--fa-ink-3);
+  cursor: not-allowed;
+}
+
+.field {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.fieldLabel {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-meta);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
+.input {
+  width: 100%;
+  max-width: 340px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--fa-line-control);
+  background-color: var(--fa-sheet);
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-body);
+  color: var(--fa-ink);
+}
+
+.codeInput {
+  font-family: var(--fa-mono);
+  font-size: var(--fa-fs-lead);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.shareInput {
+  flex: 1 1 260px;
+  max-width: none;
+  font-family: var(--fa-mono);
+  font-size: var(--fa-fs-meta);
+  color: var(--fa-ink-2);
+}
+
+/* ==========================================================================
+   REFUSALS — every boundary in this feature ends here
+   ========================================================================== */
+
+.refusal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px 14px;
+  margin-top: 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--fa-ink);
+  border-left-width: 4px;
+  background-color: var(--fa-tile);
+}
+
+.refusalCode {
+  font-family: var(--fa-mono);
+  font-size: var(--fa-fs-micro);
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
+.refusalText {
+  flex: 1 1 260px;
+  margin: 0;
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-sm);
+  line-height: 1.55;
+  color: var(--fa-ink);
+}
+
+/* ==========================================================================
+   THE ENTRY AND LOBBY GRIDS
+   ========================================================================== */
+
+.startGrid,
+.lobbyGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 0 clamp(24px, 4vw, 56px);
+  align-items: start;
+}
+
+.code {
+  margin: 6px 0 4px;
+  font-family: var(--fa-mono);
+  font-size: clamp(30px, 6vw, 46px);
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  color: var(--fa-ink);
+}
+
+.sides {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 18px;
+  margin: 4px 0 16px;
+}
+
+.sideName {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  color: var(--fa-ink);
+}
+
+.sideSeats {
+  font-size: var(--fa-fs-micro);
+  font-weight: 400;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
+.sideList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sideSeat {
+  padding: 8px 10px;
+  border: 1px solid var(--fa-line);
+  border-bottom: 0;
+  background-color: var(--fa-sheet);
+}
+
+.sideList .sideSeat:last-child {
+  border-bottom: 1px solid var(--fa-line);
+}
+
+/* An empty chair is a DASHED border, not a paler one: the difference has to
+   survive a monochrome print and a low-contrast display. */
+.sideSeatEmpty {
+  border-style: dashed;
+  background-color: transparent;
+}
+
+.sideSeatYou {
+  border-left: 3px solid var(--fa-ink);
+}
+
+.sideSeatWho {
+  display: block;
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  color: var(--fa-ink);
+}
+
+.sideSeatEmpty .sideSeatWho {
+  font-weight: 400;
+  color: var(--fa-ink-3);
+}
+
+.sideSeatMeta {
+  display: block;
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-micro);
+  letter-spacing: var(--fa-tr-legal);
+  color: var(--fa-ink-3);
+}
+
+/* ==========================================================================
+   THE TABLE — action column + log column
+   ========================================================================== */
+
+.surface {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr);
+  gap: clamp(24px, 3vw, 44px);
+  align-items: start;
+  margin-top: 24px;
+}
+
+@media (max-width: 960px) {
+  .surface {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.tableCol,
+.logCol {
+  min-width: 0;
+}
+
+.score {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--fa-line);
+}
+
+.scoreTeam {
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-micro);
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
+.scoreNum {
+  font-family: var(--fa-mono);
+  font-size: var(--fa-fs-h3);
+  font-weight: 500;
+  color: var(--fa-ink);
+}
+
+.scoreDash {
+  color: var(--fa-ink-3);
+}
+
+.scoreMeta {
+  margin-left: auto;
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-micro);
+  letter-spacing: var(--fa-tr-legal);
+  color: var(--fa-ink-3);
+}
+
+.turnLine {
+  margin: 12px 0 4px;
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-sm);
+  color: var(--fa-ink-2);
+}
+
+.turnLineYours {
+  font-weight: 500;
+  color: var(--fa-ink);
+}
+
+/* ==========================================================================
+   THE SEAT RING
+   ==========================================================================
+   Radii live in view.ts (RX/RY = 38/34) and the height floor below is
+   `minTableHeight` for them at a 104px card — derived rather than guessed, and
+   pinned by tests/room/room-view.test.ts, so widening the ring fails a test
+   instead of a player finding two seats on top of each other.
+   ========================================================================== */
+
+.table {
+  position: relative;
+  min-height: 340px;
+  margin: 18px 0 8px;
+}
+
+.felt {
+  position: absolute;
+  inset: 8% 6%;
+  border: 1px solid var(--fa-line);
+  background-color: var(--fa-tile);
+}
+
+.seatRing {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.seat {
+  position: absolute;
+  left: var(--seat-x);
+  top: var(--seat-y);
+  width: 132px;
+  transform: translate(-50%, -50%);
+  padding: 8px 10px;
+  border: 1px solid var(--fa-line);
+  background-color: var(--fa-sheet);
+}
+
+/* Two sides, two TEXTURES rather than two hues: the header band is solid on
+   your own side and hatched on theirs, and both cards say which in words. */
+.seatMine {
+  border-top: 3px solid var(--fa-ink);
+}
+
+.seatTheirs {
+  border-top: 3px dashed var(--fa-ink-3);
+}
+
+.seatNeutral {
+  border-top: 3px solid var(--fa-line);
+}
+
+.seatYou {
+  background-color: var(--fa-tile);
+}
+
+/* The turn holder: a 3px ink ring (>= 3:1 against the seat ground) plus the
+   words "Playing now". The declare option is a different SHAPE of border
+   rather than a different hue. */
+.seatTurn {
+  outline: 3px solid var(--fa-ink);
+  outline-offset: -1px;
+}
+
+.seatOption {
+  outline: 2px dashed var(--fa-ink-2);
+  outline-offset: -1px;
+}
+
+.seatTeam {
+  display: block;
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-micro);
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
+.seatWho {
+  display: block;
+  overflow-wrap: anywhere;
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--fa-ink);
+}
+
+.seatMeta {
+  display: block;
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-micro);
+  color: var(--fa-ink-3);
+}
+
+.seatState {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+}
+
+.seatStateTurn {
+  color: var(--fa-amber-2);
+}
+
+.seatStateOption {
+  color: var(--fa-ink-2);
+}
+
+.lastMove {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(58%, 320px);
+  margin: 0;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-meta);
+  line-height: 1.5;
+  color: var(--fa-ink-2);
+}
+
+.lastMoveLabel {
+  display: block;
+  margin-bottom: 4px;
+  font-size: var(--fa-fs-micro);
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
+/* Below 700px the ellipse overlaps itself, so the ring becomes a two-column
+   grid: same DOM, same content, no absolute positioning. */
+@media (max-width: 700px) {
+  .table {
+    min-height: 0;
+  }
+
+  .felt,
+  .lastMove {
+    position: static;
+    inset: auto;
+  }
+
+  .felt {
+    display: none;
+  }
+
+  .seatRing {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+  }
+
+  .seat {
+    position: static;
+    width: auto;
+    transform: none;
+  }
+
+  .lastMove {
+    width: auto;
+    margin-top: 12px;
+    transform: none;
+    text-align: left;
+  }
+}
+
+/* ==========================================================================
+   THE ASK PICKER AND THE DECLARE DIALOG
+   ========================================================================== */
+
+.books {
+  display: grid;
+  gap: 10px;
+}
+
+.bookRow {
+  display: grid;
+  grid-template-columns: minmax(70px, auto) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.bookName {
+  font-family: var(--fa-mono);
+  font-size: var(--fa-fs-meta);
+  color: var(--fa-ink-2);
+}
+
+.bookCards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.excluded {
+  margin: 14px 0 0;
+  max-width: var(--fa-measure);
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-meta);
+  line-height: 1.5;
+  color: var(--fa-ink-3);
+}
+
+.excludedWhat {
+  font-weight: 500;
+  color: var(--fa-ink-2);
+}
+
+.dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: min(80vh, 720px);
+  padding: 0;
+  border: 1px solid var(--fa-ink);
+  background-color: var(--fa-page);
+  color: var(--fa-ink);
+  /* The dialog is a column so the foot can be pinned: at narrow widths six
+     assignment rows run past max-height, which put the row-14 warning and the
+     commit button below the fold OF A MODAL — the one place a reader has no
+     page scrollbar to tell them there is more. */
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog::backdrop {
+  background-color: rgb(0 0 0 / 45%);
+}
+
+.dialog > .panelHead {
+  margin: 0;
+  padding: 18px 20px 0;
+  border: 0;
+}
+
+.dialog > .panelNote,
+.dialog > .choiceRow {
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+.dialogBody {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 0 20px;
+}
+
+.dialogFoot {
+  flex: 0 0 auto;
+  padding: 12px 20px 18px;
+  border-top: 1px solid var(--fa-line);
+  background-color: var(--fa-page);
+}
+
+.dialogActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.assign {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.assignRow {
+  display: grid;
+  grid-template-columns: minmax(60px, auto) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--fa-line);
+}
+
+.assignCard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.assignSeats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ==========================================================================
+   THE LOG AND THE GAME-OVER PANEL
+   ========================================================================== */
+
+.logBox {
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 10px 12px;
+  border: 1px solid var(--fa-line);
+  background-color: var(--fa-sheet);
+}
+
+.logBox:focus-visible {
+  outline: 2px solid var(--fa-ink);
+  outline-offset: 2px;
+}
+
+.log {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.logRow {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--fa-line);
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-meta);
+  line-height: 1.5;
+  color: var(--fa-ink-2);
+}
+
+.logRow:last-child {
+  border-bottom: 0;
+}
+
+.logIx {
+  font-family: var(--fa-mono);
+  font-size: var(--fa-fs-micro);
+  color: var(--fa-ink-3);
+}
+
+.over {
+  margin-top: 24px;
+  padding: 16px;
+  border: 1px solid var(--fa-ink);
+  background-color: var(--fa-tile);
+}
+
+.overBody {
+  margin: 0 0 12px;
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-sm);
+  line-height: 1.55;
+  color: var(--fa-ink);
+}
+
+.bookList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bookListRow {
+  display: grid;
+  grid-template-columns: minmax(70px, auto) minmax(0, 1fr);
+  gap: 12px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--fa-line);
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-meta);
+  color: var(--fa-ink-2);
+}
+
+.bookListRow:last-child {
+  border-bottom: 0;
+}

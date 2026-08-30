@@ -691,9 +691,13 @@
   gap: 2px;
 }
 
+/* The label column fits the LONGEST book name — "HIGH DIAMONDS ♦" — rather than the
+   shortest. It was 78px, sized for the old `LOW ♥`; spelling the suit out is what the
+   name is FOR, so the column moved and the name did not get abbreviated back to fit it.
+   Abbreviating would have re-created exactly the glyph-decoding problem it fixed. */
 .bookRow {
   display: grid;
-  grid-template-columns: 78px minmax(0, 1fr);
+  grid-template-columns: 124px minmax(0, 1fr);
   gap: 6px 12px;
   align-items: center;
   border-top: 1px solid var(--fa-line-2);
@@ -842,6 +846,28 @@
 
 .paceBtn {
   padding: 8px 14px;
+}
+
+/*
+ * The pace field. Sized for "10" and no wider — a two-digit number in a box the
+ * width of a paragraph reads as a place to write prose. 44px tall like every
+ * other control on this row, so the group has one baseline and one touch target
+ * size rather than a button height and an input height.
+ */
+.paceInput {
+  width: 68px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--fa-line);
+  background-color: var(--fa-paper);
+  font-family: var(--fa-mono);
+  font-size: var(--fa-fs-sm);
+  color: var(--fa-ink);
+}
+
+.paceInput:focus-visible {
+  outline: 2px solid var(--fa-ink);
+  outline-offset: 1px;
 }
 
 .controlNote {
@@ -1012,13 +1038,9 @@
    THE LOBBY — mode cards and the style pickers
    ========================================================================== */
 
-.modes {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
-  gap: clamp(24px, 3vw, 44px);
-  align-items: start;
-}
-
+/* `.modes` — the two-column grid the lobby's v0.5 and v1.0 cards sat in — went with
+   the v0.5 card. One card needs no grid, and a rule nothing selects is a rule that
+   will be read as a constraint by whoever tries to lay this page out next. */
 .mode {
   border: 1px solid var(--fa-line);
   background-color: var(--fa-paper);
@@ -1176,6 +1198,27 @@
    (WCAG 2.1.1) and the site's ScrollRegion measures horizontal overflow while
    this one overflows in height. PublicLog.tsx measures its own.
    ========================================================================== */
+
+/* The two views. Same toggle idiom as the pace and Declare controls, because
+   one surface should ask a player to learn one shape of control, not three. */
+.logViews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+
+.logNote {
+  margin: 0 0 12px;
+  font-size: var(--fa-fs-meta);
+  line-height: 1.6;
+  color: var(--fa-ink-2);
+}
+
+.logNote strong {
+  font-weight: 500;
+  color: var(--fa-ink);
+}
 
 .logBox {
   max-height: 420px;

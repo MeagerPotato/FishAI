@@ -10,7 +10,7 @@
  * single turn most of a page below the fold. The rules-teaching those exclusions do is real, so
  * it is kept, but it is kept at the size of the information: a book you hold a licence in is
  * expanded and clickable; every book you do not is named on ONE line that says why. A player
- * still learns that LOW ♥ is closed to them, without paying six dead buttons for the lesson.
+ * still learns that LOW HEARTS ♥ is closed to them, without paying six dead buttons for it.
  *
  * ## The legality guarantee
  *
@@ -32,7 +32,8 @@ import type { BookId, Card, Seat, SeatView } from '../../lib/engine/index.ts'
 import { allBooks, bookCards, cardBook, legalAsksFromView } from '../../lib/engine/index.ts'
 import { cx } from '../components/index.ts'
 import { CardFace } from './CardFace.tsx'
-import { bookLabel, cardName, seatName } from './format.ts'
+import type { BotNames } from './format.ts'
+import { bookLabel, bookWords, cardName, seatName, seatNameCap } from './format.ts'
 import s from './play.module.css'
 
 const OPPONENTS: readonly Seat[] = [1, 3, 5]
@@ -40,9 +41,11 @@ const OPPONENTS: readonly Seat[] = [1, 3, 5]
 export interface AskPanelProps {
   view: SeatView
   onAsk: (target: Seat, card: Card) => void
+  /** What the player called the bots. Absent at the shared table, where there are none. */
+  names?: BotNames
 }
 
-export function AskPanel({ view, onAsk }: AskPanelProps) {
+export function AskPanel({ view, onAsk, names = [] }: AskPanelProps) {
   const [picked, setPicked] = useState<Seat | null>(null)
   const [card, setCard] = useState<Card | null>(null)
   // React's own "adjusting state when a prop changes" pattern: cheaper and less destructive than
@@ -104,6 +107,8 @@ export function AskPanel({ view, onAsk }: AskPanelProps) {
       <div className={s.choiceRow} role="group" aria-label="Opponent to ask">
         {OPPONENTS.map((seat) => {
           const out = view.counts[seat] === 0
+          const named = seatNameCap(seat, names) !== `Seat ${seat}`
+          const count = out ? 'out of cards' : `${view.counts[seat]} cards`
           return (
             <button
               key={seat}
@@ -115,10 +120,10 @@ export function AskPanel({ view, onAsk }: AskPanelProps) {
                 setPicked(seat)
               }}
             >
-              Seat {seat}
-              <span className={s.chipSub}>
-                {out ? 'out of cards' : `${view.counts[seat]} cards`}
-              </span>
+              {seatNameCap(seat, names)}
+              {/* A named chip carries its seat number down here rather than losing it: this is
+                  the panel where rows 5 and 8 are being obeyed, and they are written in seats. */}
+              <span className={s.chipSub}>{named ? `seat ${seat} · ${count}` : count}</span>
             </button>
           )
         })}
@@ -129,7 +134,9 @@ export function AskPanel({ view, onAsk }: AskPanelProps) {
         {open.map((book) => (
           <div key={book} className={s.bookRow}>
             <span className={s.bookName}>{bookLabel(book)}</span>
-            <div className={s.bookCards} role="group" aria-label={`Cards of ${bookLabel(book)}`}>
+            {/* The group's NAME drops the glyph: `bookLabel` is what you look at, `bookWords`
+                is what a screen reader says, and "HEARTS black heart suit" is neither. */}
+            <div className={s.bookCards} role="group" aria-label={`Cards of ${bookWords(book)}`}>
               {bookCards(book, view.config).map((c) => {
                 const mine = held.has(c)
                 const offered = askable.has(c)
@@ -191,7 +198,7 @@ export function AskPanel({ view, onAsk }: AskPanelProps) {
             'Pick a card above to ask for'
           ) : (
             <>
-              Ask {seatName(target)} for <CardFace card={chosen} />
+              Ask {seatName(target, names)} for <CardFace card={chosen} />
             </>
           )}
         </button>

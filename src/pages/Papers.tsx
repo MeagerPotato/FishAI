@@ -48,7 +48,7 @@ import {
   TextLink,
   buttonRow,
 } from '../components/index.ts'
-import { caseFromSearch, type ArtifactCase } from '../lab/artifact.ts'
+import { caseFromSearch, type ArtifactCase } from '../lab/case.ts'
 import { LabContents, type LabSection } from '../lab/ui/LabContents.tsx'
 import { LabShell, withCase } from '../lab/ui/LabShell.tsx'
 

@@ -25,11 +25,18 @@
  * one is the fact a player looks for most often, and every cheaper signal had been tried; see
  * Seats.tsx.
  *
- * Remounted by the page via `key` whenever mode, seed, styles or the rematch counter change —
- * a fresh `useGame` is the entire reset mechanism, so no state ever needs manual clearing.
+ * Remounted by the page via `key` whenever the seed or the rematch counter changes — a fresh
+ * `useGame` is the entire reset mechanism, so no state ever needs manual clearing.
+ *
+ * ## The controls, and what the owner asked them to say
+ *
+ * "Declare" is one word in both states, and the line under it is one sentence. That is the
+ * owner's wording, verbatim, and the two things it dropped were a state suffix and a paragraph
+ * about a pace menu that no longer exists — the pace is a number now, and a field labelled
+ * "Step every 3 seconds" needs no paragraph to explain it.
  */
 import { useState } from 'react'
-import type { BookId, Card, EngineError, Seat, StyleId } from '../../lib/engine/index.ts'
+import type { BookId, Card, EngineError, Seat } from '../../lib/engine/index.ts'
 import { hashSeed } from '../../lib/engine/index.ts'
 import { Button, Eyebrow, buttonRow, cx } from '../components/index.ts'
 import lab from '../lab/ui/lab.module.css'
@@ -37,22 +44,16 @@ import { advise } from './advisor.ts'
 import { AdvisorPane } from './AdvisorPane.tsx'
 import { AskPanel } from './AskPanel.tsx'
 import { DeclareDialog } from './DeclareDialog.tsx'
-import { describePlayEvent, seatName } from './format.ts'
+import { describePlayEvent, seatName, seatNameCap } from './format.ts'
 import { Hand } from './Hand.tsx'
 import type { PlayParams } from './params.ts'
-import { advisorPolicy, policyLabel } from './policies.ts'
+import { PACE_MAX, PACE_MIN, PACE_STEP } from './params.ts'
+import { ADAPTIVE_LABEL, ADAPTIVE_POLICY } from './policies.ts'
 import s from './play.module.css'
 import { PublicLog } from './PublicLog.tsx'
 import { Seats } from './Seats.tsx'
 import { StyleMirror } from './StyleMirror.tsx'
-import type { Pace } from './useGame.ts'
 import { useGame } from './useGame.ts'
-
-const PACE_LABELS: Record<Pace, string> = {
-  paused: 'Pause',
-  normal: 'Normal',
-  fast: 'Fast',
-}
 
 export interface TableProps {
   play: PlayParams
@@ -61,13 +62,17 @@ export interface TableProps {
 }
 
 export function Table({ play, onRematch, onNewGame }: TableProps) {
-  const game = useGame(play.mode, play.seed, play.stylesKey, play.bits)
+  const game = useGame(play.seed, play.paceSeconds)
   const [humanError, setHumanError] = useState<EngineError | null>(null)
-  // The advisor's style lives here, not in the pane, so the pane and the declare dialog's
-  // advice strip reason with the SAME advisor: `advise` is pure over (view, policy, seed),
-  // and one shared policy input keeps the two surfaces provably in agreement.
-  const [advisorStyle, setAdvisorStyle] = useState<StyleId>('balanced')
+  /**
+   * The pace field's TEXT, held apart from the committed number. A `type="number"` bound
+   * straight to state cannot be cleared — the empty string parses to nothing, the value snaps
+   * back mid-keystroke, and a player trying to type "10" over "3" fights the field for it. The
+   * text is what the input shows; the number only moves when the text parses to a legal one.
+   */
+  const [paceText, setPaceText] = useState(() => String(play.paceSeconds))
 
+  const names = play.names
   const { state, view, acting, kinds, sets, unresolved, finished, winner } = game
   const windowOpen = Boolean(state.declareWindow) && !finished
   const lead = sets[0] === sets[1] ? null : sets[0] > sets[1] ? 0 : 1
@@ -79,7 +84,7 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
   // the dialog itself when the assistant is on.
   const dialogAdvice =
     play.assist && game.declareOpen && !finished
-      ? advise(view, advisorPolicy(play.mode, advisorStyle), hashSeed(`${play.seed}:${view.moveIndex}`)())
+      ? advise(view, ADAPTIVE_POLICY, hashSeed(`${play.seed}:${view.moveIndex}`)())
       : null
 
   const askTurn = !windowOpen && acting === 0 && kinds.includes('ask') && !finished
@@ -116,8 +121,8 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
         : passTurn
           ? 'You are out of cards. Pass the turn to a teammate.'
           : windowOpen
-            ? `Declare window — the option is at ${seatName(acting)}.`
-            : `Seat ${acting} is thinking…`
+            ? `Declare window — the option is at ${seatName(acting, names)}.`
+            : `${seatNameCap(acting, names)} is thinking…`
 
   /**
    * What a screen reader is actually told. Deliberately constant while the table plays itself:
@@ -180,7 +185,7 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
               </Button>
             </div>
           </div>
-          <StyleMirror view={view} mode={play.mode} styles={play.styles} bits={play.bits} />
+          <StyleMirror view={view} names={names} />
         </>
       ) : null}
 
@@ -201,14 +206,17 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
             <div className={s.tableCol}>
               <Seats
                 view={view}
-                lastMove={lastEvent ? describePlayEvent(lastEvent) : 'The deal is done; play starts.'}
+                lastMove={
+                  lastEvent
+                    ? describePlayEvent(lastEvent, names)
+                    : 'The deal is done; play starts.'
+                }
                 acting={acting}
                 windowOpen={windowOpen}
                 turn={state.turn}
                 finished={finished}
-                policyLabelFor={(seat) =>
-                  seat === 0 ? 'You' : policyLabel(play.mode, seat, play.styles, play.bits)
-                }
+                names={names}
+                policyLabelFor={(seat) => (seat === 0 ? 'You' : ADAPTIVE_LABEL)}
               />
             </div>
 
@@ -221,7 +229,7 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
               and squeezed into a third of it they wrapped into a two-thousand-pixel tower —
               which is the shape of the problem this whole surface was rebuilt to fix. */}
           <div className={s.act}>
-            {askTurn ? <AskPanel view={view} onAsk={onAsk} /> : null}
+            {askTurn ? <AskPanel view={view} onAsk={onAsk} names={names} /> : null}
 
             {passTurn ? (
               <section className={s.panel} aria-labelledby="pass-head">
@@ -246,7 +254,7 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
                           onPass(seat)
                         }}
                       >
-                        Seat {seat}
+                        {seatNameCap(seat, names)}
                         <span className={s.chipSub}>
                           {out ? 'out of cards' : `${view.counts[seat]} cards`}
                         </span>
@@ -266,6 +274,10 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
           </div>
 
           <div className={s.controls} role="group" aria-label="Table controls">
+            {/* One label in both states, at the owner's word. The armed state is carried by
+                `aria-pressed` for a screen reader and by `.toggleOn`'s full ground INVERSION
+                for everyone else — a luminance flip, not a hue change, so it survives the
+                same colour-blindness the seat ring's solid-vs-hatched bands were built for. */}
             <button
               type="button"
               className={cx(s.toggle, game.armed && s.toggleOn)}
@@ -274,40 +286,57 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
                 game.setArmed(!game.armed)
               }}
             >
-              {game.armed ? 'Declare: armed' : 'Arm declare'}
+              Declare
             </button>
 
             <div className={s.paceGroup} role="group" aria-label="Table pace">
-              <span className={s.paceLabel}>Pace</span>
-              {(['paused', 'normal', 'fast'] as const).map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  className={cx(s.toggle, s.paceBtn, game.pace === p && s.toggleOn)}
-                  aria-pressed={game.pace === p}
-                  onClick={() => {
-                    game.setPace(p)
-                  }}
-                >
-                  {PACE_LABELS[p]}
-                </button>
-              ))}
+              <button
+                type="button"
+                className={cx(s.toggle, s.paceBtn, game.paused && s.toggleOn)}
+                aria-pressed={game.paused}
+                onClick={() => {
+                  game.setPaused(!game.paused)
+                }}
+              >
+                Pause
+              </button>
+              <label className={s.paceLabel} htmlFor="pace-seconds">
+                Step every
+              </label>
+              <input
+                id="pace-seconds"
+                className={s.paceInput}
+                type="number"
+                inputMode="decimal"
+                min={PACE_MIN}
+                max={PACE_MAX}
+                step={PACE_STEP}
+                value={paceText}
+                onChange={(event) => {
+                  const text = event.target.value
+                  setPaceText(text)
+                  const n = Number(text)
+                  if (text !== '' && Number.isFinite(n) && n >= PACE_MIN && n <= PACE_MAX)
+                    game.setPaceSeconds(n)
+                }}
+                onBlur={() => {
+                  // Snap the field back to what the table is actually running at, so a half-
+                  // typed or out-of-range value never sits there claiming to be the setting.
+                  setPaceText(String(game.paceSeconds))
+                }}
+              />
+              <span className={s.paceLabel}>seconds</span>
               <button
                 type="button"
                 className={cx(s.toggle, s.paceBtn)}
-                disabled={game.pace !== 'paused' || !game.canStep}
+                disabled={!game.paused || !game.canStep}
                 onClick={game.step}
               >
                 Step
               </button>
             </div>
           </div>
-          <p className={s.controlNote}>
-            A declare window opens after every action and your offers are declined for you. Arm
-            the control to take your next offer instead — the dialog opens at most one action
-            later. Pace holds the table, runs it at reading speed, or drops the cadence to zero;
-            paused, <strong>Step</strong> advances one move at a time.
-          </p>
+          <p className={s.controlNote}>You can declare after the next ask</p>
 
           {humanError ? (
             <p className={lab.disagree} role="alert">
@@ -332,11 +361,8 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
           {play.assist ? (
             <AdvisorPane
               view={view}
-              mode={play.mode}
               seed={play.seed}
-              botBits={play.bits}
-              style={advisorStyle}
-              onStyleChange={setAdvisorStyle}
+              names={names}
               active={!finished && acting === 0 && yours}
               playable={askTurn || passTurn}
               onPlay={(action) => {
@@ -348,11 +374,19 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
           <Eyebrow tone="muted" track="head" as="h2">
             Public log — newest first
           </Eyebrow>
+          {/*
+            This used to promise "the whole information channel under row 17", which stopped being
+            true the moment the two-ask view became the default — the reader would have been told
+            they were seeing everything while looking at a deliberately restricted log. What row 17
+            actually describes is what the *bots* read, and that is still worth saying, because the
+            asymmetry is the point: they reason over the full channel whether or not you do.
+          */}
           <p className={lab.figNote} style={{ margin: '10px 0 12px' }}>
-            Every ask, every result, every declare — the whole information channel under row 17,
-            and everything the bots reason over. Declines advance the window and emit nothing.
+            Every ask, every result, every declare. The bots reason over all of it under row 17;
+            what you are shown depends on the view you choose below. Declines advance the window
+            and emit nothing.
           </p>
-          <PublicLog events={state.log} />
+          <PublicLog events={state.log} names={names} />
         </div>
       </div>
 
@@ -366,6 +400,7 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
           view={view}
           mustDeclare={game.mustDeclare}
           advice={dialogAdvice}
+          names={names}
           onDeclare={onDeclare}
           onStandDown={game.standDown}
         />

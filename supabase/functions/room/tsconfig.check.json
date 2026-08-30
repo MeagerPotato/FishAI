@@ -1,0 +1,39 @@
+{
+  "//": [
+    "Typechecks the `room` Edge Function with this repository's own TypeScript.",
+    "",
+    "  npx tsc -p supabase/functions/room/tsconfig.check.json",
+    "",
+    "Deliberately NOT referenced from the root tsconfig. This code targets the Deno edge runtime,",
+    "imports supabase-js by an `npm:` specifier and calls a global `Deno` — none of which belong in",
+    "the browser build's project graph. Wiring it into `tsc -b` would have meant relaxing the app's",
+    "own settings to accommodate a bundle the app never loads.",
+    "",
+    "The settings below mirror tsconfig.app.json where it matters (strict, verbatimModuleSyntax,",
+    "erasableSyntaxOnly, allowImportingTsExtensions), so the vendored engine copies are held to the",
+    "same standard here as their originals are in lib/engine.",
+    "",
+    "`types: []` is load-bearing: this project has no @types/node, and picking up ambient globals",
+    "the edge runtime does not provide would let a mistake through."
+  ],
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "types": [],
+    "paths": {
+      "@supabase/supabase-js": ["../../../node_modules/@supabase/supabase-js/dist/module/index.d.ts"]
+    }
+  },
+  "include": ["**/*.ts"]
+}

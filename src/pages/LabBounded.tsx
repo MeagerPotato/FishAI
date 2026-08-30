@@ -96,7 +96,6 @@ const VERDICT_MARK: Record<VerdictValue, { cls: string; word: string }> = {
 }
 
 const CONTENTS: readonly LabSection[] = [
-  { id: 'how-to-read', label: 'How to read this page', note: 'Six ideas, in plain language' },
   { id: 'ladder', label: 'The ladder', note: 'Ten budgets, nine rungs, the P1 test' },
   { id: 'tiers', label: 'Tier calibration', note: 'The shipped tiers, priced in bits' },
   { id: 'evidence', label: 'Evidence age', note: 'Decay curves, and where P4 and P6 land' },
@@ -271,9 +270,9 @@ export function LabBounded() {
             <p className={s.figNote}>
               The ladder is not only measured — it is playable:{' '}
               <TextLink href="/play" arrow={false}>
-                the v0.5 table&rsquo;s Memory control
+                the table&rsquo;s Memory control
               </TextLink>{' '}
-              hands all five bots one budget from this page&rsquo;s curve.
+              hands the bot seats one budget from this page&rsquo;s curve.
             </p>
           </Reveal>
         </div>
@@ -283,78 +282,82 @@ export function LabBounded() {
         </div>
 
         <LabContents sections={CONTENTS} />
-      </Section>
 
-      {/* ---- how to read this page ------------------------------------------------------- */}
-      <Section id="how-to-read" badge="How to read">
-        <SectionHead
-          lines={['Six ideas,', 'and the ladder *reads itself*.']}
-          sub="Nothing below needs prior jargon. The measurement vocabulary shared with the rest of the lab — duplicate pairs, SE — is in the report's glossary; these six are what this page adds."
-        />
-        <Board
-          items={[
-            {
-              ix: '01',
-              title: 'A budget in bits, not a bot',
-              role: 'Definition',
-              body:
-                'A bounded seat runs the same engine and the same style policy as every other ' +
-                'seat; only its memory is capped. Facts derived from the public log are priced ' +
-                '— 2 bits to place a card, 1 to certify a basis — ranked by relevance and ' +
-                'recency, and kept until the budget runs out. ∞ keeps everything.',
-            },
-            {
-              ix: '02',
-              title: 'Set-share, not win rate',
-              role: 'Measure',
-              body:
-                'Each game scores setsA/(setsA + setsB) for the measured side, ' +
-                'duplicate-averaged. A win rate saturates long before the top budgets ' +
-                'separate; the share of banked sets keeps moving, which is what a strength ' +
-                'dial needs.',
-            },
-            {
-              ix: '03',
-              title: 'Every rung replays the same deals',
-              role: 'Method',
-              body:
-                'All ten budgets replay one identical 3,000-seed list, both orientations. ' +
-                'Adjacent-rung deltas are therefore formed per seed — the paired SE the P1 ' +
-                'rule names — and the tier cells replay the head of the same list, so the ' +
-                'bits-equivalent interpolation compares deal for deal.',
-            },
-            {
-              ix: '04',
-              title: 'Evidence age',
-              role: 'Measure',
-              body:
-                'When a hit publicly locates a card, every later turn it stays put is a ' +
-                'chance to exploit that fact. Age is the distance in public-log events from ' +
-                'the hit to the decision; the decay curves plot how often each policy takes ' +
-                'the certain ask as that distance grows.',
-            },
-            {
-              ix: '05',
-              title: 'Bits-equivalent',
-              role: 'Figure',
-              body:
-                'A shipped tier’s set-share is placed on the ladder by linear interpolation ' +
-                'over the finite rungs. A tier below the 0-bit rung clamps to the floor; one ' +
-                'above every finite rung has no finite equivalent, and the table says so ' +
-                'rather than inventing a number.',
-            },
-            {
-              ix: '06',
-              title: 'Verdicts are printed as measured',
-              role: 'Decision rule',
-              body:
-                'Eight predictions were registered before their runs, with the verdict rules ' +
-                'fixed alongside. Confirmed means the stated inequality held under the stated ' +
-                'SE discipline; anything else is refuted or mixed — and a MIXED verdict is ' +
-                'printed as MIXED, both sides shown, never rounded up.',
-            },
-          ]}
-        />
+        {/* Folded, not cut. Each of the six defines a term the sections below then use WITH its
+            numbers attached — bits in the ladder table, set-share in every cell, evidence age in
+            the decay curves, bits-equivalent in the tier table — so none of them is the only
+            place a fact appears. The report's glossary carries the same six terms again. */}
+        <details className={s.detail}>
+          <summary>
+            How to read this page — six ideas, in plain language, and no prior jargon
+          </summary>
+          <div className={s.detailBody}>
+            <Board
+              items={[
+                {
+                  ix: '01',
+                  title: 'A budget in bits, not a bot',
+                  role: 'Definition',
+                  body:
+                    'A bounded seat runs the same engine and the same style policy as every other ' +
+                    'seat; only its memory is capped. Facts derived from the public log are priced ' +
+                    '— 2 bits to place a card, 1 to certify a basis — ranked by relevance and ' +
+                    'recency, and kept until the budget runs out. ∞ keeps everything.',
+                },
+                {
+                  ix: '02',
+                  title: 'Set-share, not win rate',
+                  role: 'Measure',
+                  body:
+                    'Each game scores setsA/(setsA + setsB) for the measured side, ' +
+                    'duplicate-averaged. A win rate saturates long before the top budgets ' +
+                    'separate; the share of banked sets keeps moving, which is what a strength ' +
+                    'dial needs.',
+                },
+                {
+                  ix: '03',
+                  title: 'Every rung replays the same deals',
+                  role: 'Method',
+                  body:
+                    'All ten budgets replay one identical 3,000-seed list, both orientations. ' +
+                    'Adjacent-rung deltas are therefore formed per seed — the paired SE the P1 ' +
+                    'rule names — and the tier cells replay the head of the same list, so the ' +
+                    'bits-equivalent interpolation compares deal for deal.',
+                },
+                {
+                  ix: '04',
+                  title: 'Evidence age',
+                  role: 'Measure',
+                  body:
+                    'When a hit publicly locates a card, every later turn it stays put is a ' +
+                    'chance to exploit that fact. Age is the distance in public-log events from ' +
+                    'the hit to the decision; the decay curves plot how often each policy takes ' +
+                    'the certain ask as that distance grows.',
+                },
+                {
+                  ix: '05',
+                  title: 'Bits-equivalent',
+                  role: 'Figure',
+                  body:
+                    'A shipped tier’s set-share is placed on the ladder by linear interpolation ' +
+                    'over the finite rungs. A tier below the 0-bit rung clamps to the floor; one ' +
+                    'above every finite rung has no finite equivalent, and the table says so ' +
+                    'rather than inventing a number.',
+                },
+                {
+                  ix: '06',
+                  title: 'Verdicts are printed as measured',
+                  role: 'Decision rule',
+                  body:
+                    'Eight predictions were registered before their runs, with the verdict rules ' +
+                    'fixed alongside. Confirmed means the stated inequality held under the stated ' +
+                    'SE discipline; anything else is refuted or mixed — and a MIXED verdict is ' +
+                    'printed as MIXED, both sides shown, never rounded up.',
+                },
+              ]}
+            />
+          </div>
+        </details>
       </Section>
 
       {/* ---- the ladder ------------------------------------------------------------------ */}
@@ -924,38 +927,22 @@ export function LabBounded() {
         </div>
 
         <Hairline variant="soft" />
-        <Board
-          items={[
-            {
-              ix: 'L1',
-              title: 'The adaptive engine',
-              role: '/lab/adaptive',
-              body:
-                'The v1.0 suite this page anchors to: the classifier, its fingerprints, and ' +
-                'the 22.4% end-of-game accuracy the E4 ∞ cell reproduces exactly — plus the ' +
-                'degeneracy result the bounded suite inherits its discipline from.',
-            },
-            {
-              ix: 'L2',
-              title: 'The style report',
-              role: '/lab',
-              body:
-                'The nine-style roster and the measurement vocabulary — duplicate pairs, ' +
-                'score rate, SE — this page builds on, with the glossary that now carries ' +
-                'the ladder’s terms too.',
-            },
-            {
-              ix: 'L3',
-              title: 'The table',
-              role: '/play',
-              body:
-                'The ladder as a playable dial: the v0.5 mode’s Memory control applies one ' +
-                'budget from this page’s curve to all five bot seats, quoting the measured ' +
-                'anchors — and the advisor stays full-memory, which the pane says out loud.',
-            },
-          ]}
-        />
-        <p className={s.figNote} style={{ marginTop: 'var(--fa-sp-head)' }}>
+        {/* Was a three-card board of cross-links. The evidence index on /lab introduces every
+            lab surface once, and the footer carries all of them from every page; a third copy
+            of the same three names was navigation pretending to be content. The relationships
+            this page's argument actually depends on keep their sentence. */}
+        <p className={s.figNote}>
+          Where this page sits:{' '}
+          <TextLink href={withCase('/lab/adaptive', which)}>the adaptive engine</TextLink> is the
+          v1.0 suite this one anchors to — its classifier, its fingerprints and the end-of-game
+          top-1 the E4 ∞ cell reproduces exactly.{' '}
+          <TextLink href={withCase('/lab', which)}>The style report</TextLink> carries the
+          nine-style roster this page&rsquo;s policies come from. And at{' '}
+          <TextLink href="/play">the table</TextLink> the ladder is a dial rather than a curve:
+          the Memory control applies one budget from this page to the bot seats, quoting the
+          measured anchors — and the advisor stays full-memory, which the pane says out loud.
+        </p>
+        <p className={s.figNote}>
           Method vocabulary — duplicate pair, score rate, standard error, and this page&rsquo;s
           additions (memory bits, set-share, evidence age, bits-equivalent) — is defined in{' '}
           <TextLink href={withCase('/lab', which) + '#sources'}>

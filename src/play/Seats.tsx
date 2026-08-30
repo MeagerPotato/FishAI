@@ -33,6 +33,7 @@ import type { CSSProperties } from 'react'
 import type { Seat, SeatView } from '../../lib/engine/index.ts'
 import { cx } from '../components/index.ts'
 import { seatPlaces } from './geometry.ts'
+import type { BotNames } from './format.ts'
 import { teamOf } from './format.ts'
 import s from './play.module.css'
 
@@ -60,6 +61,8 @@ export interface SeatsProps {
   finished: boolean
   /** What each bot seat is playing; seat 0 renders as "You". */
   policyLabelFor: (seat: Seat) => string
+  /** What the player called the bots. Absent at the shared table, where there are none. */
+  names?: BotNames
 }
 
 export function Seats({
@@ -70,8 +73,21 @@ export function Seats({
   turn,
   finished,
   policyLabelFor,
+  names = [],
 }: SeatsProps) {
   const places = seatPlaces(RX, RY)
+
+  /**
+   * A named seat keeps its NUMBER as well as its name. The rules are written in seat numbers,
+   * the log and the ask panel are read against the ring, and a table where seat 3 is only ever
+   * "Nina" makes row 5 unreadable — a name is meant to add an identity, not replace the
+   * coordinate every other surface addresses the seat by.
+   */
+  const who = (seat: Seat): string => {
+    if (seat === 0) return 'You (seat 0)'
+    const name = names[seat - 1]
+    return name !== undefined && name !== '' ? `${name} (seat ${seat})` : `Seat ${seat}`
+  }
 
   return (
     <div className={s.table}>
@@ -100,7 +116,7 @@ export function Seats({
               style={{ '--seat-x': `${x}%`, '--seat-y': `${y}%` } as CSSProperties}
             >
               <span className={s.seatTeam}>{mine ? 'Your team' : 'Opponent'}</span>
-              <span className={s.seatWho}>{seat === 0 ? 'You (seat 0)' : `Seat ${seat}`}</span>
+              <span className={s.seatWho}>{who(seat)}</span>
               {/* Count and policy share a line: two facts, neither of them the one a player
                   scans for, and a line each is a line of table height each. */}
               <span className={s.seatPolicy}>
@@ -115,7 +131,7 @@ export function Seats({
               {/* The accessible name gets the same four facts as one sentence, so a screen
                   reader is not made to assemble them out of five sibling spans. */}
               <span className={s.srOnly}>
-                {`${seat === 0 ? 'You' : `Seat ${seat}`}, ${mine ? 'your team' : 'the opposing team'}, ` +
+                {`${who(seat)}, ${mine ? 'your team' : 'the opposing team'}, ` +
                   `${view.counts[seat]} cards${state ? `, ${state.toLowerCase()}` : ''}.`}
               </span>
             </li>

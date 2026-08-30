@@ -77,7 +77,6 @@ const VERDICT_MARK: Record<VerdictValue, { cls: string; word: string }> = {
 }
 
 const CONTENTS: readonly LabSection[] = [
-  { id: 'how-to-read', label: 'How to read this page', note: 'Six terms, in plain language' },
   { id: 'mechanism', label: 'The mechanism', note: 'Watch, classify, counter — and the counter is fixed' },
   { id: 'gauntlet', label: 'The gauntlet', note: 'Nine pure opponents against the punter benchmark' },
   { id: 'mixed', label: 'The mixed screen', note: 'Twenty-four mixed tables, one paired answer' },
@@ -89,12 +88,17 @@ const CONTENTS: readonly LabSection[] = [
 ]
 
 /**
- * The plain-language on-ramp, in the register `/lab`'s own "How to read" section established.
+ * The plain-language on-ramp, in the register `/lab`'s own on-ramp established.
  *
  * Only the terms THIS page's tables and prose actually use, defined and nothing more. The
  * measurement vocabulary shared with the rest of the lab — duplicate pair, score rate — is
  * repeated here rather than linked, because a reader who lands on `/lab/adaptive` from a search
- * result should not have to open a second 19,000px page to find out what a pair is.
+ * result should not have to open a second long page to find out what a pair is.
+ *
+ * It sits in a `<details>` in the hero rather than in a section of its own. Every one of the six
+ * is a definition of a term the sections below then use WITH its numbers — Δ and z in the
+ * gauntlet table, warm and warmup in the usage record, top-1 in the classifier section — so
+ * nothing here is the only place a fact appears. That is the test that let it fold.
  */
 const HOW_TO_READ = [
   {
@@ -309,15 +313,15 @@ export function LabAdaptive() {
         </div>
 
         <LabContents sections={CONTENTS} />
-      </Section>
 
-      {/* ---- how to read this page -------------------------------------------------------- */}
-      <Section id="how-to-read" badge="How to read">
-        <SectionHead
-          lines={['Six terms,', 'and the result *reads itself*.']}
-          sub="Nothing below is dumbed down, and none of it needs prior jargon either. These six are the terms this page's tables and prose actually use; the report's glossary carries the rest of the lab's vocabulary."
-        />
-        <Board items={HOW_TO_READ} />
+        <details className={s.detail}>
+          <summary>
+            How to read this page — six terms, in plain language, and no prior jargon
+          </summary>
+          <div className={s.detailBody}>
+            <Board items={HOW_TO_READ} />
+          </div>
+        </details>
       </Section>
 
       {/* ---- the mechanism --------------------------------------------------------------- */}
@@ -855,45 +859,24 @@ export function LabAdaptive() {
         </div>
 
         <Hairline variant="soft" />
-        <Board
-          items={[
-            {
-              ix: 'L1',
-              title: 'The style report',
-              role: '/lab',
-              body:
-                'The nine-style roster, the payoff matrix the counter table was cut from, and ' +
-                'the verdict machinery this page inherits its discipline from — including the ' +
-                'glossary for duplicate pairs, score rate and SE.',
-            },
-            {
-              ix: 'L2',
-              title: 'The live simulator',
-              role: '/lab/live',
-              body:
-                'Runs real duplicate pairs in this tab, and fishai-v1 is on its roster: put ' +
-                'the adaptive engine against any pure style at demo scale and watch the ' +
-                'numbers land near the cells above.',
-            },
-            {
-              ix: 'L3',
-              title: 'The table',
-              role: '/play',
-              body:
-                'v1.0 is a playable mode. A human is an off-roster opponent — exactly the ' +
-                'kind of population this page’s negative result does not cover, and the ' +
-                'reason the machinery is kept.',
-            },
-          ]}
-        />
-        <p className={s.figNote} style={{ marginTop: 'var(--fa-sp-head)' }}>
-          Method vocabulary — duplicate pair, score rate, standard error — is defined in{' '}
-          <TextLink href={withCase('/lab', which) + '#sources'}>
-            the report&rsquo;s glossary
-          </TextLink>
-          . The pre-registration discipline here is BOT_LAB.md §5&rsquo;s: predictions derived
-          from committed data before the run, and a refuted prediction emitted as{' '}
-          <code>refuted</code>, not massaged.
+        {/* This used to be a three-card board of cross-links. The evidence index on /lab now
+            introduces every lab surface in one place, and the footer carries all of them from
+            every page, so repeating three of them here was a third copy of the same list. The
+            two that this page's own argument actually reaches for keep their sentence. */}
+        <p className={s.figNote}>
+          Where this page sits: the counter table it plays from was cut from the payoff matrix on{' '}
+          <TextLink href={withCase('/lab', which)}>the style report</TextLink>, whose glossary
+          also defines the method vocabulary — duplicate pair, score rate, standard error. The{' '}
+          <TextLink href={withCase('/lab/live', which)}>live simulator</TextLink> carries
+          fishai-v1 on its roster, so the gauntlet cells above can be re-run at demo scale in
+          this tab. And a human at <TextLink href="/play">the table</TextLink> is an off-roster
+          opponent — exactly the population this page&rsquo;s negative result does not cover, and
+          the reason the machinery is kept.
+        </p>
+        <p className={s.figNote}>
+          The pre-registration discipline here is BOT_LAB.md §5&rsquo;s: predictions derived from
+          committed data before the run, and a refuted prediction emitted as <code>refuted</code>,
+          not massaged.
         </p>
       </Section>
     </LabShell>

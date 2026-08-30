@@ -11,10 +11,11 @@
  *
  * `advise` inherits `decideExplained`'s contract: pure over `(view, policy, seed)`, never
  * throws, and its `action` is bit-identical to what `decide` would play with the same inputs.
- * The equivalence is pinned by `tests/bots/explain.test.ts` for every policy this table can
- * hand it — the nine roster styles, the three shipped tiers, and the adaptive spec, each
- * driven through whole games — so "play the suggestion" really does play the move the advisor
- * bot would have played from this seat, in `v05` and `v10` alike.
+ * The equivalence is pinned by `tests/bots/explain.test.ts` for every policy the engine has —
+ * the nine roster styles, the three shipped tiers, and the adaptive spec, each driven through
+ * whole games — so "play the suggestion" really does play the move the advisor bot would have
+ * played from this seat. This table now hands it exactly one of those: the adaptive spec, the
+ * same one its bot seats play (policies.ts).
  */
 import { decideExplained } from '../../lib/engine/index.ts'
 import type { ExplainedDecision, PolicySpec, SeatView } from '../../lib/engine/index.ts'
