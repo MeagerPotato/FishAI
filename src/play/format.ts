@@ -125,6 +125,29 @@ export function seatNameCap(seat: Seat, names: BotNames = []): string {
   return botName(seat, names) ?? `Seat ${seat}`
 }
 
+/**
+ * Rewrite the engine's `seat N` into the names this table is using.
+ *
+ * The advisor shows `decideExplained`'s own prose, and that prose is written in `lib/engine`,
+ * which knows nothing about nicknames and must not — its strings are part of the measured
+ * record. So the substitution happens here, at the display edge, on the way to the screen:
+ * naming a bot has to change every place its identity appears, or the feature is worse than
+ * not having it, with "Nina" in the ring and "seat 1" in the reasoning for the same player.
+ *
+ * Only `seat <digit>` is touched, and `Seat` keeps its capital, so a sentence that opened on a
+ * seat still opens on a capital letter. Seat 0 is the reader, and the engine already writes
+ * that one as `this hand` or `this seat` where it means them.
+ */
+export function withSeatNames(text: string, names: BotNames = []): string {
+  if (names.length === 0) return text
+  return text.replace(/\b(S|s)eat ([0-5])\b/g, (whole, initial: string, digit: string) => {
+    const seat = Number(digit) as Seat
+    const named = botName(seat, names)
+    if (named === null) return whole
+    return initial === 'S' ? seatNameCap(seat, names) : named
+  })
+}
+
 /** One line per public event, in the replay page's register, addressed to the seated reader. */
 export function describePlayEvent(event: PublicEvent, names: BotNames = []): string {
   switch (event.type) {

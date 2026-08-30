@@ -24,7 +24,7 @@ import { Eyebrow, cx } from '../components/index.ts'
 import { advise } from './advisor.ts'
 import { CardFace } from './CardFace.tsx'
 import type { BotNames } from './format.ts'
-import { bookLabel, cardLabel, seatName } from './format.ts'
+import { bookLabel, cardLabel, seatName, withSeatNames } from './format.ts'
 import { ADAPTIVE_POLICY } from './policies.ts'
 import lab from '../lab/ui/lab.module.css'
 import s from './play.module.css'
@@ -86,7 +86,7 @@ export function AdvisorPane({ view, seed, active, playable, onPlay, names = [] }
           <div aria-live="polite">
             <h3 className={s.panelHead}>{describeSuggestion(explained.action, names)}</h3>
             <p className={s.panelNote}>
-              <strong>{explained.trace.headline}</strong>
+              <strong>{withSeatNames(explained.trace.headline, names)}</strong>
             </p>
           </div>
           {explained.trace.notes.length > 0 ? (
@@ -94,7 +94,7 @@ export function AdvisorPane({ view, seed, active, playable, onPlay, names = [] }
               {explained.trace.notes.map((note, i) => (
                 // Positional per decision: engine prose can repeat verbatim within one trace.
                 <li key={`${view.moveIndex}:${i}`} className={lab.figNote}>
-                  {note}
+                  {withSeatNames(note, names)}
                 </li>
               ))}
             </ul>
@@ -118,7 +118,7 @@ export function AdvisorPane({ view, seed, active, playable, onPlay, names = [] }
               <ol className={s.advisorRanked}>
                 {explained.trace.ranked.slice(0, 5).map((r) => (
                   <li key={`${r.target}:${r.card}`} className={lab.figNote}>
-                    {seatName(r.target, names)} · <CardFace card={r.card} /> — {r.reason}
+                    {seatName(r.target, names)} · <CardFace card={r.card} /> — {withSeatNames(r.reason, names)}
                   </li>
                 ))}
               </ol>
@@ -132,7 +132,7 @@ export function AdvisorPane({ view, seed, active, playable, onPlay, names = [] }
                 {explained.trace.refused.map((r, i) => (
                   // Positional per decision: two refusals can share kind AND reason.
                   <p key={`${view.moveIndex}:${i}`} className={lab.figNote}>
-                    <code>{r.kind}</code> — {r.reason}
+                    <code>{r.kind}</code> — {withSeatNames(r.reason, names)}
                   </p>
                 ))}
               </div>
