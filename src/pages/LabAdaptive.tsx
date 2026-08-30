@@ -551,6 +551,13 @@ export function LabAdaptive() {
               </tbody>
             </table>
           </ScrollRegion>
+          <p className={s.figNote}>
+            The overall end-of-game figure is now also a cross-artifact anchor: the v1.5 bounded
+            suite replays these exact games as its E4 ∞ cell and must reproduce this top-1
+            bit-for-bit before its memory dial turns —{' '}
+            <TextLink href={withCase('/lab/bounded', which)}>the bounded-memory ladder</TextLink>{' '}
+            carries the agreement.
+          </p>
         </div>
         <div className={s.split} style={{ marginTop: 'var(--fa-sp-head)' }}>
           <div className={s.stack}>

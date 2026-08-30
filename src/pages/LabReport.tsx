@@ -744,6 +744,28 @@ export function LabReport() {
             The game ends the moment a team&rsquo;s fifth set resolves, so a finished game always
             leaves sets unresolved and cards in hand.
           </dd>
+          <dt>Memory bits</dt>
+          <dd>
+            The v1.5 difficulty budget: facts derived from the public log are priced — 2 bits to
+            place a card, 1 to certify a basis — and a bounded seat keeps the highest-ranked
+            facts that fit. The ladder pricing it lives at /lab/bounded.
+          </dd>
+          <dt>Set-share</dt>
+          <dd>
+            A team&rsquo;s banked sets over all banked sets, per game, duplicate-averaged — the
+            ladder&rsquo;s metric, chosen because it keeps moving after a win rate saturates.
+          </dd>
+          <dt>Evidence age</dt>
+          <dd>
+            Public-log events since a hit located a card; the decay curves plot how often a
+            policy still exploits the fact as that distance grows.
+          </dd>
+          <dt>Bits-equivalent</dt>
+          <dd>
+            Where a shipped difficulty tier&rsquo;s set-share lands on the measured ladder,
+            interpolated over the finite rungs; a tier off the curve&rsquo;s ends is reported as
+            clamped or not finitely placeable, never invented.
+          </dd>
         </dl>
 
         <Hairline variant="soft" />
