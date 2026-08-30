@@ -1,10 +1,11 @@
 /**
  * `/play/table` — one us54 game, human at seat 0, five bots, configured entirely by the URL.
  *
- * `?v=05|10&seed=...&styles=a,b,c,d,e|random&assist=0|1` — see src/play/params.ts. The seed is
- * canonicalised into the URL on arrival so every game is shareable: the deal, every bot's every
- * decision and the derived styles all follow from it deterministically (the lab's own seeding
- * convention), so the link IS the game.
+ * `?v=05|10&seed=...&styles=a,b,c,d,e|random&bits=<n>&assist=0|1` — see src/play/params.ts.
+ * The seed is canonicalised into the URL on arrival so every game is shareable: the deal, every
+ * bot's every decision and the derived styles all follow from it deterministically (the lab's
+ * own seeding convention), so the link IS the game. `bits` (v0.5 only) is the memory budget
+ * every bot seat plays under — the /lab/bounded ladder as a difficulty dial.
  *
  * `?v=10` seats the FishAI v1.0 adaptive engine at every bot seat (`policyForSeat`), with the
  * measured degeneracy caveat stated in the notice rather than a footnote. `?assist=1` opens the
@@ -121,7 +122,7 @@ export function PlayTable() {
         ) : null}
 
         <Table
-          key={`${play.mode}:${seed}:${play.stylesKey}:${run}`}
+          key={`${play.mode}:${seed}:${play.stylesKey}:${play.bits ?? 'full'}:${run}`}
           play={play}
           onRematch={() => {
             setRun((n) => n + 1)

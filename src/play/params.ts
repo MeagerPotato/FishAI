@@ -1,11 +1,13 @@
 /**
- * The table's search-param contract: `?v=05|10&seed=...&styles=a,b,c,d,e|random&assist=0|1`.
+ * The table's search-param contract:
+ * `?v=05|10&seed=...&styles=a,b,c,d,e|random&bits=<n>&assist=0|1`.
  *
  * The URL is the whole configuration — there is no hidden lobby state — so a shared link
  * reproduces the exact game: `seed` drives the deal AND every bot decision (the lab's own
- * seeding convention, see useGame.ts), and `styles` pins the five bot seats. `styles=random`
- * (or an absent/invalid value) derives the five styles deterministically from the seed, so even
- * the "surprise me" lobby is reproducible from the link alone.
+ * seeding convention, see useGame.ts), `styles` pins the five bot seats, and `bits` (v0.5
+ * only) caps every bot seat's memory at one measured budget from the /lab/bounded ladder.
+ * `styles=random` (or an absent/invalid value) derives the five styles deterministically from
+ * the seed, so even the "surprise me" lobby is reproducible from the link alone.
  *
  * Everything here is defensive: params arrive as untrusted strings, and every failure falls
  * back to something playable rather than to an error page — a game surface that refuses to deal
@@ -22,6 +24,12 @@ export interface PlayParams {
   styles: readonly StyleId[]
   /** Joined with commas — a stable string identity for effect deps and URL round-trips. */
   stylesKey: string
+  /**
+   * The memory budget applied to ALL FIVE bot seats, in bits — `null` is full memory. Always
+   * `null` in v1.0: bounded adaptation is undefined and unmeasured, so the mode refuses the
+   * knob rather than inventing behaviour for it. The advisor is never bounded either way.
+   */
+  bits: number | null
   assist: boolean
 }
 
@@ -43,6 +51,18 @@ function parseStyles(raw: string | null, seed: string): StyleId[] {
   return parts as StyleId[]
 }
 
+/**
+ * `?bits=` parsed defensively: a plain non-negative integer up to 1,000,000 (the ladder's own
+ * ∞ sentinel — anything above it buys nothing the engine can measure), else full memory. The
+ * lobby writes only the measured rungs, but a hand-edited URL may name any budget the engine
+ * accepts, exactly as `?seed=` may name any seed.
+ */
+export function parseBits(raw: string | null): number | null {
+  if (raw === null || !/^\d{1,7}$/.test(raw)) return null
+  const n = Number(raw)
+  return Number.isInteger(n) && n >= 0 && n <= 1_000_000 ? n : null
+}
+
 /** A fresh, non-deterministic seed — for "new game" and a first visit with no `?seed=`. */
 export function freshSeed(): string {
   return Math.random().toString(36).slice(2, 10)
@@ -58,6 +78,7 @@ export function parsePlayParams(search: string, seed: string): PlayParams {
     seed,
     styles,
     stylesKey: styles.join(','),
+    bits: mode === 'v10' ? null : parseBits(params.get('bits')),
     assist: params.get('assist') === '1',
   }
 }

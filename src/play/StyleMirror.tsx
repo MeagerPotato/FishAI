@@ -41,6 +41,8 @@ export interface StyleMirrorProps {
   mode: PlayMode
   /** Five ids, one per bot seat in seat order — what the bots actually played in v0.5. */
   styles: readonly StyleId[]
+  /** The v0.5 memory budget the bots played under, `null` for full — the Played column names it. */
+  bits: number | null
 }
 
 function pct(p: number): string {
@@ -54,7 +56,7 @@ function rankedPosterior(c: SeatClassification): { id: StyleId; p: number }[] {
     .sort((a, b) => b.p - a.p)
 }
 
-export function StyleMirror({ view, mode, styles }: StyleMirrorProps) {
+export function StyleMirror({ view, mode, styles, bits }: StyleMirrorProps) {
   const reads = classifySeats(view)
   const human = reads[0]
   const humanAsks = observeSeats(view)[0].asks
@@ -139,7 +141,7 @@ export function StyleMirror({ view, mode, styles }: StyleMirrorProps) {
               return (
                 <tr key={seat}>
                   <th scope="row">Seat {seat}</th>
-                  <td>{policyLabel(mode, seat, styles)}</td>
+                  <td>{policyLabel(mode, seat, styles, bits)}</td>
                   <td>{STYLE_ROSTER[read.top].label}</td>
                   <td data-numeric>{pct(read.confidence)}</td>
                   <td className={agrees === false ? undefined : lab.ns}>
@@ -165,6 +167,17 @@ export function StyleMirror({ view, mode, styles }: StyleMirrorProps) {
         exactly right 22.4% of the time over 10,800 seat reads, against an 11.1% chance floor —
         better than guessing, far from an oracle. Treat the mirror as a resemblance, not a
         verdict.
+        {bits !== null ? (
+          <>
+            {' '}
+            The bot seats above played under a {bits}-bit budget while the fingerprints are
+            full-strength calibrations; what budgets do to this read is measured at{' '}
+            <TextLink href="/lab/bounded" arrow={false}>
+              the bounded-memory ladder
+            </TextLink>
+            .
+          </>
+        ) : null}
       </p>
     </section>
   )

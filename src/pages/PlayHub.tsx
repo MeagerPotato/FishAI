@@ -5,7 +5,9 @@
  * for the whole game. The lobby's pickers write the whole configuration into the launch URL, so
  * a shared link reproduces the exact table — and "Randomise" draws a fresh seed and derives the
  * five styles from it with the same map the table uses for `styles=random`, so even a surprise
- * line-up is reproducible.
+ * line-up is reproducible. The Memory control applies one v1.5 bit budget to all five bot
+ * seats (`?bits=`); its option labels quote the measured anchors from the committed bounded
+ * artifact — quoted, not imported, so this chunk stays free of it (see MEMORY_OPTIONS).
  *
  * v1.0 — the adaptive engine — is live: every bot seat runs the classifier + best-response
  * selection off the measured counter table (`policyForSeat` in src/play/policies.ts). Its card
@@ -28,37 +30,62 @@ import { Button, Eyebrow, Section, SectionHead, TextLink, buttonRow } from '../c
 import { caseFromSearch } from '../lab/artifact.ts'
 import { LabShell } from '../lab/ui/LabShell.tsx'
 import lab from '../lab/ui/lab.module.css'
-import { deriveStyles, freshSeed } from '../play/params.ts'
+import { deriveStyles, freshSeed, parseBits } from '../play/params.ts'
 import s from '../play/play.module.css'
 
 const BOT_SEATS = [1, 2, 3, 4, 5] as const
 
-function initialLobby(search: string): { seed: string; styles: StyleId[] } {
+/**
+ * The Memory options, full first, then the measured rungs. The anchors are QUOTED with their
+ * provenance, never imported: the /play chunk must not carry the committed bounded artifact
+ * (SPEC v1.5 Phase 3 — chunk weight), so each label names its number and this comment names
+ * the field, exactly as the style mirror quotes the classifier's 22.4%. From
+ * src/lab/data/bounded-results.json (schema 3, digest fe829b581f665c9a), which /lab/bounded
+ * renders through the boundary validator and is the source of truth for:
+ *   tiers[medium].bitsEquivalent.bits = 32.18 — the shipped medium tier's bits-equivalent;
+ *   ladder[bits].share vs an unbounded team of the same style, 3,000 duplicate pairs/rung:
+ *   64 → .4977 · 32 → .4653 · 16 → .3921 · 8 → .2449 · 0 → .1313.
+ */
+const MEMORY_OPTIONS: ReadonlyArray<{ bits: number | null; label: string }> = [
+  { bits: null, label: 'Full memory — no budget' },
+  { bits: 64, label: '64 bits — near parity, set-share .498 vs full' },
+  { bits: 32, label: '32 bits — measured equal to the shipped medium tier' },
+  { bits: 16, label: '16 bits — set-share .392 vs full' },
+  { bits: 8, label: '8 bits — deep handicap, set-share .245 vs full' },
+  { bits: 0, label: '0 bits — reasons, never remembers; set-share .131' },
+]
+
+function initialLobby(search: string): { seed: string; styles: StyleId[]; bits: number | null } {
   const params = new URLSearchParams(search)
   const seed = params.get('seed') ?? freshSeed()
+  // Only budgets the lobby offers round-trip; a hand-edited odd budget still plays at the
+  // table, but the lobby select falls back to full rather than displaying a value it lacks.
+  const parsed = parseBits(params.get('bits'))
+  const bits = MEMORY_OPTIONS.some((o) => o.bits === parsed) ? parsed : null
   const raw = params.get('styles')
   if (raw && raw !== 'random') {
     const parts = raw.split(',')
     const ids = STYLE_IDS as readonly string[]
     if (parts.length === 5 && parts.every((p) => ids.includes(p))) {
-      return { seed, styles: parts as StyleId[] }
+      return { seed, styles: parts as StyleId[], bits }
     }
   }
-  return { seed, styles: deriveStyles(seed) }
+  return { seed, styles: deriveStyles(seed), bits }
 }
 
 export function PlayHub() {
   const { search } = useLocation()
   const which = caseFromSearch(search)
   const [lobby, setLobby] = useState(() => initialLobby(search))
-  const { seed, styles } = lobby
+  const { seed, styles, bits } = lobby
 
   // A cleared (or all-whitespace) seed field launches without a `seed` param at all: the table
   // then draws a fresh seed and canonicalises it into the URL — the same path as a first
   // visit, and less intrusive than disabling the launch over an empty box.
   const trimmedSeed = seed.trim()
   const seedQuery = trimmedSeed === '' ? '' : `&seed=${encodeURIComponent(trimmedSeed)}`
-  const launchHref = `/play/table?v=05${seedQuery}&styles=${styles.join(',')}`
+  const bitsQuery = bits === null ? '' : `&bits=${bits}`
+  const launchHref = `/play/table?v=05${seedQuery}&styles=${styles.join(',')}${bitsQuery}`
 
   return (
     <LabShell
@@ -128,6 +155,38 @@ export function PlayHub() {
               })}
             </div>
 
+            <div className={s.picker} style={{ marginTop: 0 }}>
+              <div className={s.pickerRow}>
+                <label className={s.pickerLabel} htmlFor="play-memory">
+                  <span className={lab.criterionLabel}>Memory</span>
+                  <span className={s.handBookName}>all five bots</span>
+                </label>
+                <select
+                  id="play-memory"
+                  className={s.select}
+                  value={bits === null ? 'full' : String(bits)}
+                  onChange={(event) => {
+                    const value = event.target.value
+                    const option = MEMORY_OPTIONS.find(
+                      (o) => (o.bits === null ? 'full' : String(o.bits)) === value,
+                    )
+                    if (!option) return
+                    setLobby((prev) => ({ ...prev, bits: option.bits }))
+                  }}
+                >
+                  {MEMORY_OPTIONS.map((o) => (
+                    <option key={o.bits === null ? 'full' : o.bits} value={o.bits === null ? 'full' : String(o.bits)}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+                <span className={s.pickerThesis}>
+                  One v1.5 bit budget for every bot seat — the anchors are measured on the
+                  bounded ladder, and the assistant is never bounded.
+                </span>
+              </div>
+            </div>
+
             <div className={s.seedRow}>
               <label className={lab.criterionLabel} htmlFor="play-seed">
                 Seed
@@ -147,7 +206,7 @@ export function PlayHub() {
                 className={lab.pill}
                 onClick={() => {
                   const next = freshSeed()
-                  setLobby({ seed: next, styles: deriveStyles(next) })
+                  setLobby((prev) => ({ seed: next, styles: deriveStyles(next), bits: prev.bits }))
                 }}
               >
                 Randomise styles
@@ -227,7 +286,12 @@ export function PlayHub() {
           </TextLink>
           . The table you just configured is the same engine with you in it — and when your game
           ends, the <strong>style mirror</strong> turns the v1.0 classifier on the finished log,
-          you included, and says which of the nine styles you played most like.
+          you included, and says which of the nine styles you played most like. The Memory
+          control&rsquo;s budgets are priced on the measured ladder at{' '}
+          <TextLink href="/lab/bounded" arrow={false}>
+            the bounded-memory page
+          </TextLink>
+          , anchor by anchor.
         </p>
       </Section>
     </LabShell>

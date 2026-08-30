@@ -27,6 +27,12 @@ export interface AdvisorPaneProps {
   view: SeatView
   mode: PlayMode
   seed: string
+  /**
+   * The bot seats' memory budget, `null` for full — the pane never applies it to the advisor
+   * (advice should be the engine's best), but it must SAY so when the bots are handicapped
+   * and the advisor is not, or the asymmetry would be a silent thumb on the scale.
+   */
+  botBits: number | null
   /** The advisor style, owned by the table so the declare dialog's advice strip shares it. */
   style: StyleId
   onStyleChange: (style: StyleId) => void
@@ -57,6 +63,7 @@ export function AdvisorPane({
   view,
   mode,
   seed,
+  botBits,
   style,
   onStyleChange,
   active,
@@ -99,6 +106,13 @@ export function AdvisorPane({
           one policy.
         </p>
       )}
+
+      {botBits !== null ? (
+        <p className={lab.figNote} style={{ marginTop: 10 }}>
+          The bots are playing under a {botBits}-bit memory budget; the advisor is not — its
+          advice is the engine&rsquo;s best, full memory.
+        </p>
+      ) : null}
 
       {explained === null ? (
         <p className={lab.figNote}>
