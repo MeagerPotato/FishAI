@@ -47,8 +47,10 @@
  *    stays at the full-strength distribution the fingerprints were calibrated on and the P8
  *    read isolates the bounded seat's own signature. The registered read-seat mapping is
  *    {@link SINGLE_READ_MAPPING}; the ∞ cell is verified in-run against an all-bare replay.
- *    The artifact is extended ADDITIVELY by `extendBoundedResults`, which refuses to build if
- *    any pre-existing aggregate or verdict moved.
+ *    The artifact is extended ADDITIVELY by `extendBoundedResults`, whose guards are scoped,
+ *    not total — its docstring states exactly what is authenticated (the base's digest pin,
+ *    the registered prediction texts, re-derivable stored fields, the recomputed P1–P7
+ *    verdicts, and the carried sections after assembly) and what is copied through unread.
  *
  * ## Health discipline
  *
@@ -2202,9 +2204,18 @@ export function computeBoundedSingleVerdict(
   }
 }
 
-/** What `extendBoundedResults` needs beyond the run: the commit whose engine PLAYED the games. */
+/**
+ * What `extendBoundedResults` needs beyond the run: the commit whose engine PLAYED the games,
+ * and the caller's pin on the base being extended.
+ */
 export interface BoundedExtendInputs {
   engineCommit: string
+  /**
+   * The committed base artifact's `meta.recordsDigest`, supplied by the caller from the
+   * repository record. Extension refuses when the base in hand does not carry this digest —
+   * the guard that the artifact being extended IS the committed one, not a substitute.
+   */
+  expectedBaseDigest: string
 }
 
 function refuse(why: string): never {
@@ -2251,16 +2262,30 @@ function admitBase(baseText: string): BoundedResultsBase {
 }
 
 /**
- * Extend the committed base artifact with the E4b block — ADDITIVELY, and refusing to build if
- * anything pre-existing moved. Two byte-identity checks with real teeth:
+ * Extend the committed base artifact with the E4b block — ADDITIVELY. The guards are scoped,
+ * and their coverage is stated exactly (an earlier draft of this comment claimed "refuses if
+ * anything pre-existing moved", which was broader than what is checked):
  *
- * 1. **The verdicts are recomputed.** P1–P7 are re-derived from the base artifact's own
+ * 1. **Identity of the base.** `meta.recordsDigest` must equal the caller-supplied committed
+ *    value, and `meta.predictions` must serialise byte-identically to the code's own
+ *    {@link BOUNDED_PREDICTIONS} — the base in hand is the committed artifact of record
+ *    carrying the registered prediction texts, not a substitute or a paraphrase.
+ * 2. **Derived fields re-derive.** Stored fields computed from other stored fields — a cell's
+ *    ci95, a tier's bits-equivalent, every delta's z and pass — are recomputed from their
+ *    inputs and must match byte-for-byte.
+ * 3. **The verdicts are recomputed.** P1–P7 are re-derived from the base artifact's own
  *    aggregates through `computeBoundedVerdicts` — the same code, the same rules — and must
- *    reproduce the committed verdict objects byte-for-byte. A doctored aggregate (a share, a
- *    delta, an evidence rate) changes a recomputed detail string and is refused here.
- * 2. **The carried sections are compared after assembly.** Every pre-existing section of the
+ *    reproduce the committed verdict objects byte-for-byte. A doctored aggregate that any
+ *    verdict detail quotes (a share, a delta, an evidence rate) is refused here.
+ * 4. **The carried sections are compared after assembly.** Every pre-existing section of the
  *    output must serialise byte-identically to the base's — a guard on this function's own
- *    future edits, not just on the inputs.
+ *    future edits, not on the inputs.
+ *
+ * What these do NOT cover, stated plainly: a primary aggregate that no verdict detail quotes
+ * and no stored field re-derives from (a cell's game and move counts, its health tallies, an
+ * evidence band no rule reads) is copied through unauthenticated. The digest pin is the guard
+ * that the whole base is the committed one; the per-game records behind that digest are not
+ * re-read here.
  *
  * The additions: `accuracySingle` (the E4b run with its own provenance and health),
  * `multiplicity` (the ×3 Bonferroni annotation over BOTH rung families), the P8 verdict
@@ -2273,6 +2298,22 @@ export function extendBoundedResults(
   inputs: BoundedExtendInputs,
 ): BoundedResults {
   const base = admitBase(baseText)
+
+  // --- identity of the base: the caller's digest pin and the registered predictions ----------
+  if (base.meta.recordsDigest !== inputs.expectedBaseDigest) {
+    refuse(
+      `the base artifact's meta.recordsDigest ${base.meta.recordsDigest} does not match the ` +
+        `committed value ${inputs.expectedBaseDigest} the caller pinned — this is not the ` +
+        'committed base artifact',
+    )
+  }
+  if (JSON.stringify(base.meta.predictions) !== JSON.stringify(BOUNDED_PREDICTIONS)) {
+    refuse(
+      "the base artifact's meta.predictions do not reproduce the code's BOUNDED_PREDICTIONS " +
+        'byte-for-byte — the registered prediction texts are fixed in bounded-types.ts, and a ' +
+        'base that disagrees with them is not the committed artifact',
+    )
+  }
 
   // --- the run must be healthy and must be E4's grid on E4's seeds --------------------------
   if (!run.health.ok) {

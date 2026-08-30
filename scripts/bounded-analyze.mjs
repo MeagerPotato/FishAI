@@ -7,7 +7,9 @@
  * Since E4b (SPEC v1.5), what this emits is the BASE artifact — schema 1, the suite's E1–E4
  * sections and the P1–P7 verdicts. The artifact the SITE reads is schema 2: the base extended
  * with the E4b single-seat block by `scripts/bounded-single-analyze.mjs` (which consumes the
- * base through `extendBoundedResults` and refuses to build if anything pre-existing moved).
+ * base through `extendBoundedResults` — its docstring states the exact guard coverage: the
+ * base's digest is pinned, its predictions authenticated, its derived fields and P1–P7
+ * verdicts recomputed, and the carried sections compared after assembly).
  * The default here therefore no longer overwrites `src/lab/data/bounded-results.json`; pass
  * `--emit PATH` explicitly to write the base artifact somewhere, then extend it.
  *

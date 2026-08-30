@@ -456,7 +456,11 @@ export interface BoundedAccuracySingleMeta {
   notes: string[]
 }
 
-/** The E4b block of the published artifact — additive; nothing pre-existing moves. */
+/**
+ * The E4b block of the published artifact — additive: the extension appends it beside the base
+ * sections. `extendBoundedResults`'s docstring states exactly what is verified about the
+ * carried sections; this comment claims no more than that.
+ */
 export interface BoundedAccuracySingle {
   meta: BoundedAccuracySingleMeta
   /** The registered read-seat mapping, verbatim — {@link SingleReadMapping} in bounded.ts. */

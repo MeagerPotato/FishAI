@@ -840,7 +840,9 @@ describe('E4b: extendBoundedResults — additive, refusing anything that moved',
   }
   const base = buildBoundedResults(RUN, inputs)
   const baseText = JSON.stringify(base)
-  const ext = extendBoundedResults(baseText, SINGLE_RUN, { engineCommit: 'e4b-commit' })
+  /** The pin every honest call passes — the base's own digest, as a committed caller would. */
+  const pin = { engineCommit: 'e4b-commit', expectedBaseDigest: base.meta.recordsDigest }
+  const ext = extendBoundedResults(baseText, SINGLE_RUN, pin)
 
   it('appends P8 and the annotation; every carried section is byte-identical', () => {
     expect(ext.meta.schemaVersion).toBe(2)
@@ -862,24 +864,32 @@ describe('E4b: extendBoundedResults — additive, refusing anything that moved',
   it('refuses a doctored aggregate that feeds a verdict (accuracy top-1)', () => {
     const doctored = JSON.parse(baseText) as { accuracy: { cells: { top1: number }[] } }
     doctored.accuracy.cells[0].top1 += 0.01
-    expect(() => extendBoundedResults(JSON.stringify(doctored), SINGLE_RUN, { engineCommit: 'x' })).toThrow(
-      /moved/,
-    )
+    expect(() => extendBoundedResults(JSON.stringify(doctored), SINGLE_RUN, pin)).toThrow(/moved/)
   })
 
   it('refuses a doctored aggregate no verdict reads (a ladder cell share)', () => {
     const doctored = JSON.parse(baseText) as { ladder: { share: number }[] }
     doctored.ladder[0].share += 0.001
-    expect(() => extendBoundedResults(JSON.stringify(doctored), SINGLE_RUN, { engineCommit: 'x' })).toThrow(
-      /moved/,
-    )
+    expect(() => extendBoundedResults(JSON.stringify(doctored), SINGLE_RUN, pin)).toThrow(/moved/)
   })
 
   it('refuses a doctored committed verdict', () => {
     const doctored = JSON.parse(baseText) as { verdicts: { verdict: string }[] }
     doctored.verdicts[0].verdict = 'refuted'
-    expect(() => extendBoundedResults(JSON.stringify(doctored), SINGLE_RUN, { engineCommit: 'x' })).toThrow(
-      /moved/,
+    expect(() => extendBoundedResults(JSON.stringify(doctored), SINGLE_RUN, pin)).toThrow(/moved/)
+  })
+
+  it('refuses a base that does not carry the pinned committed digest', () => {
+    expect(() =>
+      extendBoundedResults(baseText, SINGLE_RUN, { engineCommit: 'x', expectedBaseDigest: 'deadbeefdeadbeef' }),
+    ).toThrow(/recordsDigest .* does not match the committed value/)
+  })
+
+  it('refuses a base whose prediction texts stray from the registered BOUNDED_PREDICTIONS', () => {
+    const doctored = JSON.parse(baseText) as { meta: { predictions: { text: string }[] } }
+    doctored.meta.predictions[0].text += ' (as amended)'
+    expect(() => extendBoundedResults(JSON.stringify(doctored), SINGLE_RUN, pin)).toThrow(
+      /BOUNDED_PREDICTIONS/,
     )
   })
 
@@ -888,22 +898,25 @@ describe('E4b: extendBoundedResults — additive, refusing anything that moved',
       ...SINGLE_RUN,
       health: { ...SINGLE_RUN.health, ok: false, violations: ['doctored'] },
     }
-    expect(() => extendBoundedResults(baseText, sick, { engineCommit: 'x' })).toThrow(/health gate/)
+    expect(() => extendBoundedResults(baseText, sick, pin)).toThrow(/health gate/)
 
     const offGrid = {
       ...SINGLE_RUN,
       meta: { ...SINGLE_RUN.meta, config: { ...SINGLE_RUN.meta.config, accGames: SINGLE_RUN.meta.config.accGames + 1 } },
     }
-    expect(() => extendBoundedResults(baseText, offGrid, { engineCommit: 'x' })).toThrow(/E4 grid/)
+    expect(() => extendBoundedResults(baseText, offGrid, pin)).toThrow(/E4 grid/)
 
     const unreproduced = { ...SINGLE_RUN, infReproduction: { ...SINGLE_RUN.infReproduction, deviations: 1 } }
-    expect(() => extendBoundedResults(baseText, unreproduced, { engineCommit: 'x' })).toThrow(/reproduction/)
+    expect(() => extendBoundedResults(baseText, unreproduced, pin)).toThrow(/reproduction/)
   })
 
   it('refuses to re-extend an already-extended artifact', () => {
-    expect(() => extendBoundedResults(JSON.stringify(ext), SINGLE_RUN, { engineCommit: 'x' })).toThrow(
-      /schema/,
-    )
+    expect(() =>
+      extendBoundedResults(JSON.stringify(ext), SINGLE_RUN, {
+        engineCommit: 'x',
+        expectedBaseDigest: ext.meta.recordsDigest,
+      }),
+    ).toThrow(/schema/)
   })
 })
 
@@ -976,7 +989,7 @@ describe('the artifact validator: round-trip and refusals', () => {
       }),
     ),
     SINGLE_RUN,
-    { engineCommit: 'e4b-commit' },
+    { engineCommit: 'e4b-commit', expectedBaseDigest: RUN.meta.recordsDigest },
   )
 
   it('round-trips through the site parser value-for-value', () => {
