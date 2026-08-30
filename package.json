@@ -23,7 +23,8 @@
     "bounded": "node scripts/bounded-sim.mjs",
     "bounded:analyze": "node scripts/bounded-analyze.mjs",
     "bounded:single": "node scripts/bounded-single-sim.mjs",
-    "bounded:single:analyze": "node scripts/bounded-single-analyze.mjs"
+    "bounded:single:analyze": "node scripts/bounded-single-analyze.mjs",
+    "papers:build": "node scripts/build-papers.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",

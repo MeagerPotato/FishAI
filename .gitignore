@@ -22,7 +22,9 @@ lab-out/
 # test artifacts
 coverage/
 
-# local LaTeX compile output (papers/ sources are committed; PDFs build on Overleaf)
+# local LaTeX compile output. The sources in papers/ and the built PDFs in public/papers/ are
+# both committed — `npm run papers:build` regenerates them — but the .aux/.log/.out churn the
+# two compile passes leave behind is not.
 papers/build/
 
 # editor / os

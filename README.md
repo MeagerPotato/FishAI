@@ -126,7 +126,15 @@ Documents:
 
 The `papers/` directory carries six research papers in LaTeX (v0.5, v1.0, v1.5, the
 contained-book negative result, the inert axis, and style observability), each compiling
-standalone under pdflatex with every number traced to a committed artifact by digest.
+standalone under pdflatex with every number traced to a committed artifact by digest. The site
+presents all six at `/papers` — each with the question it asks, its headline finding, its
+abstract, and links to the PDF, the source, and the lab page carrying its evidence.
+
+**The built PDFs are committed, under `public/papers/`, and must be rebuilt when a `.tex`
+changes.** `npm run papers:build` compiles every paper twice, fails the build if any log
+finishes with an undefined reference or citation, copies the PDFs into `public/` for the site to
+serve, and rewrites `src/pages/papers-manifest.json` with the page count and byte size `/papers`
+prints beside each link. A `.tex` edited without a rebuild leaves the site serving the old paper.
 
 ## Running it
 
@@ -138,6 +146,7 @@ npm test          # engine, bot, and lab suites
 npm run lab       # the style-vs-style simulation (matrix)
 npm run adaptive  # the FishAI v1.0 experiment suite (gauntlet, mixed screen, oracle, classifier)
 npm run bounded   # the FishAI v1.5 experiment suite (ladder, tiers, evidence age, accuracy)
+npm run papers:build  # compile papers/*.tex into the committed public/papers/*.pdf
 npm run dev       # the results site — /lab report, /play solo table, /lab/live in-browser sims
 ```
 
