@@ -61,12 +61,6 @@
   background-attachment: fixed;
 }
 
-@media (min-width: 961px) {
-  .pin {
-    min-height: calc(100svh - var(--pin-top));
-  }
-}
-
 .body {
   width: 100%;
 }
@@ -77,7 +71,8 @@
  * Reduced motion (and a viewport too short to pin against) does not get the act
  * with its transitions zeroed — it gets a different LAYOUT: the track collapses
  * to auto height and the pin becomes a plain static section. Disabling the
- * animation alone would leave a 265vh track of empty scroll.
+ * animation alone would leave a 190vh track of empty scroll.
+ *
  */
 .flat .pin {
   position: static;
@@ -114,5 +109,76 @@
 @media (max-width: 960px) {
   .head {
     margin-bottom: calc(var(--fa-sp-head) + 12px);
+  }
+}
+
+/**
+ * THE SLOT, AND WHAT HAS TO FIT IN IT.
+ *
+ * Declared last on purpose. A media query adds no specificity, so these rules
+ * only beat the base `.head` and `.pin` above by source order.
+ *
+ * A pinned act only works if the thing being scrubbed is on screen while you
+ * scrub it. Stacked — head, then figure, then beat rail — the rail sat a full
+ * figure-height below the fold and stayed there for the whole pin: the reader
+ * scrolled two screens watching a diagram that by design never changes, while
+ * the sentences that were actually advancing were off screen.
+ *
+ * Above 960px the figure and the rail are therefore SIDE BY SIDE, which puts
+ * the rail at the top of the slot instead of a figure-height down it.
+ *
+ * The column split is by CHILD COUNT, not by class, because `PinAct` does not
+ * know what it is wrapping — it hands a scrub position to a render prop and
+ * takes back whatever that returns. Two content children (a figure and a
+ * rail) split the row; one (the specimen page's stat chart) takes all of it.
+ */
+/**
+ * WHY THERE IS NO `max-height` HERE.
+ *
+ * A hard cap at the slot height was measured before it was ruled out. At
+ * 1440x900 the pinned block is 1,129px (matrix act) and 1,169px (counter-graph
+ * act) against a 781px slot, so `max-height` + `overflow: hidden` removed
+ * 411px and 451px of the FIGURE — not pushed it below the fold, cut it off,
+ * with no way to reach it. The floor on that height is the diagram itself: the
+ * payoff matrix's viewBox is 668px tall at its own minimum width, and the only
+ * way to shrink it is to scale the SVG down, which would put the 12px labels
+ * back under 9px and undo the type floor this pass exists to raise.
+ *
+ * Clipping evidence on a research site is a worse defect than the one being
+ * fixed, so the pin is bounded by what the layout below actually needs rather
+ * than by a clip: the rail moves out of the figure's column, the head gives
+ * back its extra 40px, and the padding tightens. Measured, that puts the whole
+ * beat rail inside the slot (it ends at 757px of 781px) where before it began
+ * roughly 900px below the fold and stayed there for the entire pin.
+ */
+@media (min-width: 961px) {
+  .pin {
+    min-height: calc(100svh - var(--pin-top));
+    padding-block: clamp(20px, 2.4vh, 34px);
+  }
+
+  .body {
+    display: grid;
+    /* minmax(0, …) is load-bearing, not defensive: an implicit `auto` track
+       resolves to the SVG's max-content width, and then the diagram frame is
+       never narrower than the diagram, never scrolls, and the page clips the
+       overflow instead. See DiagramFrame's note on the same rule. */
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+    column-gap: clamp(28px, 3vw, 56px);
+    align-items: start;
+  }
+
+  .body > .head,
+  /* A single content child has no rail to sit beside; it takes the row. */
+  .body > :nth-child(2):last-child {
+    grid-column: 1 / -1;
+  }
+
+  /* Stacked, the head could afford 40px of extra air under it. Side by side it
+     cannot: every pixel here pushes the beat rail toward the bottom edge of
+     the slot, and the rail is the one thing that has to fit. Measured at
+     1440x900 this puts the rail's last beat at 774px of the 783px slot. */
+  .head {
+    margin-bottom: clamp(28px, 3.4vh, 48px);
   }
 }
