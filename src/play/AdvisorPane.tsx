@@ -12,67 +12,54 @@
  * The advisor's seed follows the lab convention (`hashSeed(seed:moveIndex)`), so the suggestion
  * at any position is the move the advisor bot would genuinely have played there — reproducible
  * from the URL like everything else at this table.
+ *
+ * There is no advisor-style picker any more, and no memory-budget note. Both were v0.5 fixtures:
+ * a choice of which roster style should advise you, and a warning that the bots were bounded
+ * while the advisor was not. With one policy at the table the advisor and the opposition are
+ * provably the same engine, which is a stronger statement than either control was.
  */
-import type { GameAction, SeatView, StyleId } from '../../lib/engine/index.ts'
-import { STYLE_IDS, STYLE_ROSTER, hashSeed } from '../../lib/engine/index.ts'
+import type { GameAction, SeatView } from '../../lib/engine/index.ts'
+import { hashSeed } from '../../lib/engine/index.ts'
 import { Eyebrow, cx } from '../components/index.ts'
 import { advise } from './advisor.ts'
 import { CardFace } from './CardFace.tsx'
+import type { BotNames } from './format.ts'
 import { bookLabel, cardLabel, seatName } from './format.ts'
-import type { PlayMode } from './policies.ts'
-import { advisorPolicy } from './policies.ts'
+import { ADAPTIVE_POLICY } from './policies.ts'
 import lab from '../lab/ui/lab.module.css'
 import s from './play.module.css'
 
 export interface AdvisorPaneProps {
   view: SeatView
-  mode: PlayMode
   seed: string
-  /**
-   * The bot seats' memory budget, `null` for full — the pane never applies it to the advisor
-   * (advice should be the engine's best), but it must SAY so when the bots are handicapped
-   * and the advisor is not, or the asymmetry would be a silent thumb on the scale.
-   */
-  botBits: number | null
-  /** The advisor style, owned by the table so the declare dialog's advice strip shares it. */
-  style: StyleId
-  onStyleChange: (style: StyleId) => void
   /** The human holds a decision the pane can advise on right now. */
   active: boolean
   /** The suggestion can be submitted directly (no modal dialog owns the interaction). */
   playable: boolean
   onPlay: (action: GameAction) => void
+  /** What the player called the bots. Absent at the shared table, where there are none. */
+  names?: BotNames
 }
 
 /** One line naming the suggested move — shared with the declare dialog's advice strip. */
-export function describeSuggestion(action: GameAction): string {
+export function describeSuggestion(action: GameAction, names: BotNames = []): string {
   switch (action.type) {
     case 'ask':
-      return `Ask ${seatName(action.target)} for ${cardLabel(action.card)}`
+      return `Ask ${seatName(action.target, names)} for ${cardLabel(action.card)}`
     case 'claim':
       return `Declare ${bookLabel(action.book)}`
     case 'pass':
-      return `Pass the turn to ${seatName(action.to)}`
+      return `Pass the turn to ${seatName(action.to, names)}`
     case 'designate':
-      return `Designate ${seatName(action.to)}`
+      return `Designate ${seatName(action.to, names)}`
     case 'decline':
       return 'Decline the declare offer'
   }
 }
 
-export function AdvisorPane({
-  view,
-  mode,
-  seed,
-  botBits,
-  style,
-  onStyleChange,
-  active,
-  playable,
-  onPlay,
-}: AdvisorPaneProps) {
+export function AdvisorPane({ view, seed, active, playable, onPlay, names = [] }: AdvisorPaneProps) {
   const explained = active
-    ? advise(view, advisorPolicy(mode, style), hashSeed(`${seed}:${view.moveIndex}`)())
+    ? advise(view, ADAPTIVE_POLICY, hashSeed(`${seed}:${view.moveIndex}`)())
     : null
 
   return (
@@ -81,39 +68,10 @@ export function AdvisorPane({
         Assistant
       </Eyebrow>
 
-      {mode === 'v05' ? (
-        <div className={s.pickerRow} style={{ marginTop: 10 }}>
-          <label className={s.pickerLabel} htmlFor="advisor-style">
-            Advisor style
-          </label>
-          <select
-            id="advisor-style"
-            className={s.select}
-            value={style}
-            onChange={(e) => {
-              onStyleChange(e.target.value as StyleId)
-            }}
-          >
-            {STYLE_IDS.map((id) => (
-              <option key={id} value={id}>
-                {STYLE_ROSTER[id].label}
-              </option>
-            ))}
-          </select>
-        </div>
-      ) : (
-        <p className={lab.figNote} style={{ marginTop: 10 }}>
-          The v1.0 advisor is the same engine the bot seats play — advice and opposition share
-          one policy.
-        </p>
-      )}
-
-      {botBits !== null ? (
-        <p className={lab.figNote} style={{ marginTop: 10 }}>
-          The bots are playing under a {botBits}-bit memory budget; the advisor is not — its
-          advice is the engine&rsquo;s best, full memory.
-        </p>
-      ) : null}
+      <p className={lab.figNote} style={{ marginTop: 10 }}>
+        The advisor is the same engine the bot seats play — advice and opposition share one
+        policy, at full memory on both sides.
+      </p>
 
       {explained === null ? (
         <p className={lab.figNote}>
@@ -126,7 +84,7 @@ export function AdvisorPane({
           {/* Only the suggestion and its one-line reason are announced — the ranked and
               refused lists below would drown a screen reader at every decision. */}
           <div aria-live="polite">
-            <h3 className={s.panelHead}>{describeSuggestion(explained.action)}</h3>
+            <h3 className={s.panelHead}>{describeSuggestion(explained.action, names)}</h3>
             <p className={s.panelNote}>
               <strong>{explained.trace.headline}</strong>
             </p>
@@ -160,7 +118,7 @@ export function AdvisorPane({
               <ol className={s.advisorRanked}>
                 {explained.trace.ranked.slice(0, 5).map((r) => (
                   <li key={`${r.target}:${r.card}`} className={lab.figNote}>
-                    {seatName(r.target)} · <CardFace card={r.card} /> — {r.reason}
+                    {seatName(r.target, names)} · <CardFace card={r.card} /> — {r.reason}
                   </li>
                 ))}
               </ol>

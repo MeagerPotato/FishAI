@@ -1,19 +1,21 @@
 /**
  * `/play/table` — one us54 game, human at seat 0, five bots, configured entirely by the URL.
  *
- * `?v=05|10&seed=...&styles=a,b,c,d,e|random&bits=<n>&assist=0|1` — see src/play/params.ts.
- * The seed is canonicalised into the URL on arrival so every game is shareable: the deal, every
- * bot's every decision and the derived styles all follow from it deterministically (the lab's
- * own seeding convention), so the link IS the game. `bits` (v0.5 only) is the memory budget
- * every bot seat plays under — the /lab/bounded ladder as a difficulty dial.
+ * `?seed=...&names=a,b,c,d,e&pace=<seconds>&assist=0|1` — see src/play/params.ts. The seed is
+ * canonicalised into the URL on arrival so every game is shareable: the deal and every bot's
+ * every decision follow from it deterministically (the lab's own seeding convention), so the
+ * link IS the game. `?assist=1` opens the assistant pane — the engine's own traced reasoning
+ * (src/play/advisor.ts), which also renders inside the declare dialog where the modal would
+ * otherwise hide it.
  *
- * `?v=10` seats the FishAI v1.0 adaptive engine at every bot seat (`policyForSeat`), with the
- * measured degeneracy caveat stated in the notice rather than a footnote. `?assist=1` opens the
- * assistant pane — the engine's own traced reasoning (src/play/advisor.ts), which also renders
- * inside the declare dialog where the modal would otherwise hide it.
+ * Every bot seat is the FishAI v1.0 adaptive engine. There is no mode picker because there is
+ * no second mode: v0.5 is retired from play (see policies.ts for what that did and did not
+ * touch), and a link that still names it is REFUSED here rather than quietly dealt as v1.0.
+ * The whole promise of this page is that the URL reproduces the game; honouring the seed while
+ * silently swapping the engine would break that promise in the one way a player could not see.
  *
- * The game itself lives in src/play/Table.tsx, remounted via `key` on any change of mode, seed,
- * styles or the rematch counter — a fresh `useGame` is the whole reset mechanism.
+ * The game itself lives in src/play/Table.tsx, remounted via `key` on a change of seed or the
+ * rematch counter — a fresh `useGame` is the whole reset mechanism.
  */
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -21,39 +23,15 @@ import { Eyebrow, Section, SectionHead, TextLink } from '../components/index.ts'
 import { caseFromSearch } from '../lab/artifact.ts'
 import { LabShell } from '../lab/ui/LabShell.tsx'
 import lab from '../lab/ui/lab.module.css'
-import { freshSeed, parsePlayParams } from '../play/params.ts'
+import { freshSeed, parsePlayParams, retiredMode } from '../play/params.ts'
 import playCss from '../play/play.module.css'
 import { Table } from '../play/Table.tsx'
-
-const PLAY_FACTS = [
-  {
-    head: 'Declares happen in windows, and declining is a move.',
-    body:
-      'After every action, each seat in turn order is offered the chance to declare (RULES_US54.md §3). ' +
-      'Your offers are declined for you unless you arm the standing Declare control; when the ' +
-      'turn-holder has no legal ask, declining is illegal and the seat holding the option must ' +
-      'declare — the table opens the dialog and says why.',
-  },
-  {
-    head: 'Any error in a declare gifts the whole set.',
-    body:
-      'Row 14 abolished the void outcome: an opponent holding one of the six, or one card placed ' +
-      'with the wrong teammate, awards the set to the opposing team. The declare dialog repeats ' +
-      'this before you commit.',
-  },
-  {
-    head: 'First to five of the nine sets clinches.',
-    body:
-      'The game ends the moment either team has been awarded five sets, so a finished game always ' +
-      'has sets unresolved and cards still in hand. The score reads "5–3 · 1 unresolved", never a ' +
-      'bare pair of numbers.',
-  },
-]
 
 export function PlayTable() {
   const { search } = useLocation()
   const navigate = useNavigate()
   const which = caseFromSearch(search)
+  const retired = retiredMode(search)
 
   // A first visit with no `?seed=` gets one drawn once and written into the URL, so the game a
   // visitor is looking at is always the game their address bar reproduces. An empty or
@@ -66,14 +44,51 @@ export function PlayTable() {
   const seed = seedParam ?? drawn
 
   useEffect(() => {
-    if (seedParam !== null) return
+    // A refused URL is left exactly as the visitor typed or received it. Rewriting a seed into
+    // a link this page is about to decline would edit the evidence in their address bar.
+    if (retired !== null || seedParam !== null) return
     const next = new URLSearchParams(search)
     next.set('seed', seed)
     navigate({ search: `?${next.toString()}` }, { replace: true })
-  }, [seedParam, seed, search, navigate])
+  }, [retired, seedParam, seed, search, navigate])
 
   const play = parsePlayParams(search, seed)
   const [run, setRun] = useState(0)
+
+  if (retired !== null) {
+    return (
+      <LabShell current="/play" docTitle="Retired mode" which={which} ground="dots" stamp="us54">
+        <Section noRule badge="The table">
+          <SectionHead
+            level="h1"
+            lines={['That link names', '*a mode this table retired.*']}
+            sub={
+              <>
+                The URL asks for <code>v={retired}</code>. This table now seats the FishAI v1.0
+                adaptive engine at all five bot seats and nothing else, so there is no honest way
+                to open your link: the seed would still deal, the game would still run, and every
+                decision in it would be a different bot&apos;s. You would be looking at someone
+                else&apos;s game under your own seed.
+              </>
+            }
+          />
+          <p className={lab.prose}>
+            Nothing measured under v0.5 has gone anywhere — the roster, the payoff matrix and the
+            bounded-memory ladder are all still in the lab, and the papers still argue from them.
+            It is only the play surface that stopped offering the choice. Start a fresh table{' '}
+            <TextLink href="/play" arrow={false}>
+              in the lobby
+            </TextLink>
+            , or read the measured record{' '}
+            <TextLink href="/lab" arrow={false}>
+              in the report
+            </TextLink>
+            .
+          </p>
+        </Section>
+      </LabShell>
+    )
+  }
 
   const onNewGame = () => {
     const next = new URLSearchParams(search)
@@ -108,45 +123,29 @@ export function PlayTable() {
           }
         />
 
-        {play.mode === 'v10' ? (
-          <div className={lab.synthetic}>
-            <Eyebrow tone="muted" track="badge">
-              FishAI v1.0 · every bot seat is adaptive
-            </Eyebrow>
-            <p className={lab.syntheticBody}>
-              No styles can be assigned at this table. Each bot reads the public log, classifies
-              what the other seats appear to be playing, and best-responds with a roster style
-              chosen off the measured payoff table — re-derived from scratch at every decision,
-              so two seats with the same information reach the same read. One measured caveat,
-              stated up front: over this roster the best response to <em>everything</em> is
-              Punter, so a warm v1.0 seat converges there; its adaptivity matters against
-              opponents the matrix never measured — such as you.
-            </p>
-          </div>
-        ) : null}
+        <div className={lab.synthetic}>
+          <Eyebrow tone="muted" track="badge">
+            FishAI v1.0 · every bot seat is adaptive
+          </Eyebrow>
+          <p className={lab.syntheticBody}>
+            No styles can be assigned at this table. Each bot reads the public log, classifies
+            what the other seats appear to be playing, and best-responds with a roster style
+            chosen off the measured payoff table — re-derived from scratch at every decision, so
+            two seats with the same information reach the same read. One measured caveat, stated
+            up front: over this roster the best response to <em>everything</em> is Punter, so a
+            warm v1.0 seat converges there; its adaptivity matters against opponents the matrix
+            never measured — such as you.
+          </p>
+        </div>
 
         <Table
-          key={`${play.mode}:${seed}:${play.stylesKey}:${play.bits ?? 'full'}:${run}`}
+          key={`${seed}:${run}`}
           play={play}
           onRematch={() => {
             setRun((n) => n + 1)
           }}
           onNewGame={onNewGame}
         />
-      </Section>
-
-      <Section badge="Rule set" noMarks>
-        <Eyebrow tone="muted" track="head" as="h2">
-          Three things about us54 this table depends on
-        </Eyebrow>
-        <div className={lab.stack} style={{ marginTop: 20 }}>
-          {PLAY_FACTS.map((fact) => (
-            <div key={fact.head}>
-              <h3 className={lab.criterionLabel}>{fact.head}</h3>
-              <p className={lab.figNote}>{fact.body}</p>
-            </div>
-          ))}
-        </div>
       </Section>
     </LabShell>
   )

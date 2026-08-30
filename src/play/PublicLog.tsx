@@ -1,6 +1,30 @@
 /**
  * The public log — every event the bots can see, and the whole information channel under row 17.
  *
+ * ## Two views, and which of them is the real rule
+ *
+ * The printed rulebook this dialect comes from says: *"You may ask what the previous two asks by
+ * players were if you forget. You cannot ask or reveal any previous information."* Row 17's
+ * unlimited public log is a DEVIATION from that — the one the rules audit found and this control
+ * answers — so **`recent` is the default**, because it is the accurate one. `all` is a
+ * convenience that goes beyond what a real table allows, and the view says so in words rather
+ * than leaving a player to discover they have been reading with an advantage.
+ *
+ * ## `recent` is not `slice(-2)`, and must never be simplified into it
+ *
+ * The rule restricts **asks**. The log also carries declares, out-of-cards notices and the
+ * game's start and end, and those are not "previous information" a player is being asked to
+ * forget — they are the state of the table, still sitting in front of everyone. A resolved set
+ * is a physical pile of six cards nobody can un-see; a seat with no cards is visibly empty; the
+ * score is on the strip above regardless of which view is chosen. So `recent` hides exactly one
+ * thing — ask history beyond the last two — and keeps every other event, however old.
+ *
+ * A `slice(-2)` over the whole log would be shorter, would look right on a quiet turn, and would
+ * be wrong in both directions at once: it would hide sets that were declared an hour ago and are
+ * still on the table, and it would spend one of the two remembered slots on a declare, leaving a
+ * player entitled to two asks able to see one. The original indices are kept and printed for the
+ * same reason — a numbered gap is honest about what is being withheld.
+ *
  * ## Why this is not the lab's log
  *
  * It used to be `lab.log`, whose box is `max-height: 420px; overflow-y: auto` with no tab stop.
@@ -25,8 +49,37 @@
  */
 import { useEffect, useRef, useState } from 'react'
 import type { PublicEvent } from '../../lib/engine/index.ts'
+import { cx } from '../components/index.ts'
+import type { BotNames } from './format.ts'
 import { describePlayEvent } from './format.ts'
 import s from './play.module.css'
+
+/** `recent` is the rule (the last two asks); `all` is the convenience that exceeds it. */
+export type LogView = 'recent' | 'all'
+
+/** How many asks the rulebook lets a player be reminded of. Two. */
+export const RECENT_ASKS = 2
+
+/** A log row keeps its ORIGINAL index, so a filtered view shows honestly where the gaps are. */
+export interface LogRow {
+  index: number
+  event: PublicEvent
+}
+
+/**
+ * The rows a view shows, oldest first. Pure and exported so the rule above is testable without
+ * a DOM — see tests/play/log-view.test.ts, which pins the two properties that matter: `recent`
+ * keeps at most RECENT_ASKS asks, and it keeps EVERY non-ask event no matter how old.
+ */
+export function visibleEvents(events: readonly PublicEvent[], view: LogView): LogRow[] {
+  const rows = events.map((event, index) => ({ index, event }))
+  if (view === 'all') return rows
+  const asks = rows.filter((row) => row.event.type === 'ask')
+  // The index of the older of the two asks a player may still be told about. With two or fewer
+  // asks played there is nothing to withhold, and -1 keeps them all.
+  const cutoff = asks.length > RECENT_ASKS ? asks[asks.length - RECENT_ASKS].index : -1
+  return rows.filter((row) => row.event.type !== 'ask' || row.index >= cutoff)
+}
 
 /**
  * Is this box actually scrolling vertically right now? The vertical twin of the site's
@@ -66,30 +119,79 @@ function useScrollsVertically(ref: React.RefObject<HTMLElement | null>): 0 | und
 export interface PublicLogProps {
   /** In engine order; the component reverses for display. */
   events: readonly PublicEvent[]
+  /** What the player called the bots. Absent at the shared table, where there are none. */
+  names?: BotNames
 }
 
-export function PublicLog({ events }: PublicLogProps) {
+export function PublicLog({ events, names }: PublicLogProps) {
   const box = useRef<HTMLDivElement | null>(null)
+  const [view, setView] = useState<LogView>('recent')
   const tabIndex = useScrollsVertically(box)
   const scrolls = tabIndex !== undefined
-  const rows = events.map((event, i) => ({ key: i, event })).reverse()
+  const rows = visibleEvents(events, view).reverse()
+  const hidden = events.length - rows.length
 
   return (
-    <div
-      ref={box}
-      className={s.logBox}
-      tabIndex={tabIndex}
-      role={scrolls ? 'region' : undefined}
-      aria-label={scrolls ? 'Public log, newest first' : undefined}
-    >
-      <ol className={s.log} aria-label={scrolls ? undefined : 'Public log, newest first'}>
-        {rows.map((row) => (
-          <li key={row.key} className={s.logRow}>
-            <span className={s.logIx}>{String(row.key).padStart(3, '0')}</span>
-            <span>{describePlayEvent(row.event)}</span>
-          </li>
-        ))}
-      </ol>
-    </div>
+    <>
+      {/* Not a radio group: two mutually exclusive buttons carrying `aria-pressed` are the same
+          toggle pattern as the pace and Declare controls three inches to the left, and one
+          surface should ask a player to learn one idiom. */}
+      <div className={s.logViews} role="group" aria-label="How much of the log to show">
+        <button
+          type="button"
+          className={cx(s.toggle, s.paceBtn, view === 'recent' && s.toggleOn)}
+          aria-pressed={view === 'recent'}
+          onClick={() => {
+            setView('recent')
+          }}
+        >
+          Last two asks
+        </button>
+        <button
+          type="button"
+          className={cx(s.toggle, s.paceBtn, view === 'all' && s.toggleOn)}
+          aria-pressed={view === 'all'}
+          onClick={() => {
+            setView('all')
+          }}
+        >
+          Everything
+        </button>
+      </div>
+
+      <p className={s.logNote}>
+        {view === 'recent' ? (
+          <>
+            The table&rsquo;s own rule: you may be reminded of the previous two asks, and nothing
+            older. Declares, out-of-cards notices and the score are not memory — they are the
+            board, and stay in both views.
+            {hidden > 0 ? ` ${hidden} older ask${hidden === 1 ? '' : 's'} withheld.` : ''}
+          </>
+        ) : (
+          <>
+            <strong>Beyond the table.</strong> Row 17&rsquo;s full log is more than a seated
+            player is allowed to recall; the bots reason over all of it, and this view lets you
+            check their work. Switch back to play by the rule.
+          </>
+        )}
+      </p>
+
+      <div
+        ref={box}
+        className={s.logBox}
+        tabIndex={tabIndex}
+        role={scrolls ? 'region' : undefined}
+        aria-label={scrolls ? 'Public log, newest first' : undefined}
+      >
+        <ol className={s.log} aria-label={scrolls ? undefined : 'Public log, newest first'}>
+          {rows.map((row) => (
+            <li key={row.index} className={s.logRow}>
+              <span className={s.logIx}>{String(row.index).padStart(3, '0')}</span>
+              <span>{describePlayEvent(row.event, names)}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </>
   )
 }
