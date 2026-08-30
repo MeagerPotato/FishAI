@@ -49,7 +49,21 @@ import {
   buttonRow,
 } from '../components/index.ts'
 import { caseFromSearch, type ArtifactCase } from '../lab/artifact.ts'
+import { LabContents, type LabSection } from '../lab/ui/LabContents.tsx'
 import { LabShell, withCase } from '../lab/ui/LabShell.tsx'
+
+/**
+ * This page is ~12,600px of index, so it carries the same contents rail the long lab pages do.
+ * Every id below exists on a `<Section>` further down; the component asserts nothing, so a
+ * renamed section would silently break the jump — keep the two in step.
+ */
+const CONTENTS: readonly LabSection[] = [
+  { id: 'how-to-read', label: 'How to read this page', note: 'what each entry carries' },
+  { id: 'series', label: 'The series', note: 'v0.5, v1.0, v1.5' },
+  { id: 'results', label: 'Focused results', note: 'three caveats, measured' },
+  { id: 'topics', label: 'Research topics', note: 'answered and open' },
+  { id: 'sources', label: 'Sources' },
+]
 import s from '../lab/ui/lab.module.css'
 import manifestRaw from './papers-manifest.json?raw'
 import p from './Papers.module.css'
@@ -511,6 +525,7 @@ export function Papers() {
             </p>
           </Reveal>
         </div>
+        <LabContents sections={CONTENTS} />
       </Section>
 
       {/* ---- how to read ------------------------------------------------------------------ */}

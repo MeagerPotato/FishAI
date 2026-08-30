@@ -45,9 +45,11 @@
   gap: 40px;
 }
 
+/* Spacing only. The weight belongs to Eyebrow's heading form (500) — this rule
+   used to force 400 back over it, which left the column heads a size larger but
+   no firmer than the links beneath them. */
 .grid h4 {
   margin-bottom: 16px;
-  font-weight: 400;
 }
 
 .grid a,
