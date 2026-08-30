@@ -122,15 +122,17 @@ import type {
 
 /**
  * The full v1.5 experiment as pre-registered: the ten-budget ladder and the three tiers on one
- * shared 2,000-seed list, the accuracy grid on the v1.0 seed list at 50 games per pairing.
- * Pair counts were sized by pilot (see the committed artifact's meta): the adjacent-rung
- * paired SE lands well under the 0.01 the P1 test needs to bite.
+ * shared 3,000-seed list, the accuracy grid on the v1.0 seed list at 50 games per pairing —
+ * 85,200 games. Pair counts were sized by pilot (48 pairs, all cells): the worst adjacent-rung
+ * paired SE measured ≈ 0.023 at 48 pairs (per-seed sd ≈ 0.16), so 3,000 pairs lands it near
+ * 0.003 — well under the 0.01 the P1 "within 2·SE" test needs to bite — inside the ~100k-game
+ * budget the spec allots.
  */
 export const DEFAULT_BOUNDED_CONFIG: BoundedLabConfig = {
   ladderBits: [0, 8, 16, 24, 32, 48, 64, 96, 128, BOUNDED_INF_BITS],
-  ladderPairs: 2000,
+  ladderPairs: 3000,
   ladderSeedPrefix: 'bounded-v1',
-  tierPairs: 2000,
+  tierPairs: 3000,
   accBits: [16, 32, 64, BOUNDED_INF_BITS],
   accGames: 50,
   accSeedPrefix: 'clsacc-v1',

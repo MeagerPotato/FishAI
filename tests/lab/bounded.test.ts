@@ -64,6 +64,8 @@ import {
   us54Config,
 } from '../../lib/engine/index.ts'
 import type { Card, PolicySpec, PublicEvent } from '../../lib/engine/index.ts'
+import { ArtifactError } from '../../src/lab/artifact.ts'
+import { loadBoundedArtifact, parseBoundedArtifact } from '../../src/lab/bounded-artifact.ts'
 
 const TINY: BoundedLabConfig = {
   ...DEFAULT_BOUNDED_CONFIG,
@@ -559,6 +561,90 @@ describe('verdicts', () => {
     expect(built.meta.notes.length).toBeGreaterThan(2)
     expect(built.meta.health.ok).toBe(true)
     expect(built.meta.baseline?.endTop1).toBe(0.224)
+  })
+})
+
+describe('the artifact validator: round-trip and refusals', () => {
+  const built = buildBoundedResults(RUN, {
+    engineCommit: 'test-commit',
+    rulesHash: 'test-rules-hash',
+    rulesFile: 'RULES_US54.md',
+    generatedAt: '2026-01-01T00:00:00.000Z',
+    baseline: { artifact: 'adaptive-results.json', recordsDigest: 'testdigest', endTop1: 0.224 },
+  })
+
+  it('round-trips through the site parser value-for-value', () => {
+    const parsed = parseBoundedArtifact(JSON.stringify(built), 'test')
+    expect(parsed).toEqual(built)
+  })
+
+  it('refuses a wrong schema version, a wrong rule set, and a missing field — each with a path', () => {
+    const base = JSON.parse(JSON.stringify(built)) as Record<string, unknown>
+
+    const wrongSchema = JSON.parse(JSON.stringify(base)) as { meta: { schemaVersion: number } }
+    wrongSchema.meta.schemaVersion = 2
+    expect(() => parseBoundedArtifact(JSON.stringify(wrongSchema), 'test')).toThrow(ArtifactError)
+    expect(() => parseBoundedArtifact(JSON.stringify(wrongSchema), 'test')).toThrow(/schemaVersion/)
+
+    const wrongRules = JSON.parse(JSON.stringify(base)) as { meta: { ruleSet: string } }
+    wrongRules.meta.ruleSet = 'pagat48'
+    expect(() => parseBoundedArtifact(JSON.stringify(wrongRules), 'test')).toThrow(/us54/)
+
+    const missing = JSON.parse(JSON.stringify(base)) as { ladder: Record<string, unknown>[] }
+    delete missing.ladder[0].se
+    expect(() => parseBoundedArtifact(JSON.stringify(missing), 'test')).toThrow(/test\.ladder\[0\]\.se/)
+  })
+
+  it('refuses an unknown style, an unknown tier, and an unsorted ladder', () => {
+    const badStyle = JSON.parse(JSON.stringify(built)) as {
+      accuracy: { cells: { byStyle: Record<string, unknown> }[] }
+    }
+    badStyle.accuracy.cells[0].byStyle.gambler = { seats: 1, top1: 0 }
+    expect(() => parseBoundedArtifact(JSON.stringify(badStyle), 'test')).toThrow(/not a roster style/)
+
+    const badTier = JSON.parse(JSON.stringify(built)) as { tiers: { tier: string }[] }
+    badTier.tiers[0].tier = 'nightmare'
+    expect(() => parseBoundedArtifact(JSON.stringify(badTier), 'test')).toThrow(/not a shipped tier/)
+
+    const badLadder = JSON.parse(JSON.stringify(built)) as { meta: { config: { ladderBits: number[] } } }
+    badLadder.meta.config.ladderBits = [24, 0]
+    expect(() => parseBoundedArtifact(JSON.stringify(badLadder), 'test')).toThrow(/ascend strictly/)
+  })
+
+  it('refuses a prediction outside P1–P7 and a verdict outside the three honest values', () => {
+    const badId = JSON.parse(JSON.stringify(built)) as { verdicts: { id: string }[] }
+    badId.verdicts[0].id = 'P8'
+    expect(() => parseBoundedArtifact(JSON.stringify(badId), 'test')).toThrow(/P1–P7 and closed/)
+
+    const badVerdict = JSON.parse(JSON.stringify(built)) as { verdicts: { verdict: string }[] }
+    badVerdict.verdicts[0].verdict = 'inconclusive'
+    expect(() => parseBoundedArtifact(JSON.stringify(badVerdict), 'test')).toThrow(/only honest values/)
+
+    const badInfinity = JSON.parse(JSON.stringify(built)) as { ladderDeltas: { z: unknown }[] }
+    badInfinity.ladderDeltas[0].z = null
+    expect(() => parseBoundedArtifact(JSON.stringify(badInfinity), 'test')).toThrow(/finite number/)
+  })
+})
+
+describe('the committed artifact', () => {
+  it('parses clean at the boundary, with a passing health gate and all seven verdicts', () => {
+    const loaded = loadBoundedArtifact()
+    expect(loaded.ok).toBe(true)
+    if (!loaded.ok) return
+    expect(loaded.artifact.meta.ruleSet).toBe('us54')
+    expect(loaded.artifact.meta.health.ok).toBe(true)
+    expect(loaded.artifact.ladder.length).toBe(10)
+    expect(loaded.artifact.ladderDeltas.length).toBe(9)
+    expect(loaded.artifact.mirrorExact.deviations).toBe(0)
+    expect(loaded.artifact.tiers.map((t) => t.tier)).toEqual(['easy', 'medium', 'hard'])
+    expect(loaded.artifact.verdicts.map((v) => v.id)).toEqual(['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'])
+    // The ∞ accuracy cell replays the v1.0 experiment byte-identically (the anchor pin), so
+    // when the committed baseline is present the two top-1 numbers must agree exactly.
+    const inf = loaded.artifact.accuracy.cells.find((c) => c.bits >= BOUNDED_INF_BITS)
+    expect(inf).toBeDefined()
+    if (loaded.artifact.meta.baseline !== null && inf !== undefined) {
+      expect(inf.top1).toBeCloseTo(loaded.artifact.meta.baseline.endTop1, 12)
+    }
   })
 })
 
