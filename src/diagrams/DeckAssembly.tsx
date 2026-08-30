@@ -68,10 +68,13 @@ export function DeckAssembly({ figNo }: { figNo?: string }) {
               >
                 {set.kind}
               </Label>
+              {/* 88, not 80: at the 12/16px floor the kind eyebrow's box runs
+                  to y=67 and the qualifier's cap starts 20px above its own
+                  baseline, so 80 overlapped the line above it by 7px. */}
               <Label
                 className="dgm-fade"
                 x={set.x + set.w / 2}
-                y={80}
+                y={88}
                 role="name"
                 fill={set.accent ? C.accentText : C.ink}
                 anchor="middle"

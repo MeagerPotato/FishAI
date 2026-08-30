@@ -20,6 +20,7 @@ const LabReplay = lazy(() => import('./pages/LabReplay.tsx'))
 const LabAdaptive = lazy(() => import('./pages/LabAdaptive.tsx'))
 const LabBounded = lazy(() => import('./pages/LabBounded.tsx'))
 const LabLive = lazy(() => import('./pages/LabLive.tsx'))
+const Papers = lazy(() => import('./pages/Papers.tsx'))
 const PlayHub = lazy(() => import('./pages/PlayHub.tsx'))
 const PlayTable = lazy(() => import('./pages/PlayTable.tsx'))
 const SystemDemo = lazy(() => import('./components/demo/SystemDemo.tsx'))
@@ -62,6 +63,12 @@ export function App() {
         <Route path="/lab/adaptive" element={<LabAdaptive />} />
         <Route path="/lab/bounded" element={<LabBounded />} />
         <Route path="/lab/live" element={<LabLive />} />
+        {/*
+          `/papers` is the page; `/papers/<name>.pdf` is a static file in `public/`, which the
+          dev server and Vercel both serve from the filesystem before any router sees it. The
+          two never collide, because this route has no `:param` segment for a PDF to match.
+        */}
+        <Route path="/papers" element={<Papers />} />
         <Route path="/play" element={<PlayHub />} />
         <Route path="/play/table" element={<PlayTable />} />
         <Route path="/design" element={<SystemDemo />} />

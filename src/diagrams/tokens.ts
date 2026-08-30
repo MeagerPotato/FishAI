@@ -53,6 +53,26 @@ export const C = {
  * Type roles. One family — the serif/sans/mono distinction of the source
  * system is carried by weight and tracking instead. Every size is divisible
  * by 4 (the upstream type files use 9/10/11px; the 4px grid rule wins).
+ *
+ * THESE ARE RENDERED PIXELS, NOT ABSTRACT UNITS.
+ *
+ * `DiagramSvg` sets `min-width: {viewW}px` on the root and `skin.css` gives
+ * it `width: 100%`, so a diagram whose viewBox is wider than its column —
+ * which is every diagram here on a laptop and all of them on a phone —
+ * renders at exactly 1 user unit = 1 CSS pixel and scrolls inside its frame.
+ * A `fontSize: 8` was therefore 8px of real type on the page: tick labels,
+ * printed data values, node sublabels and every legend entry, at 8px.
+ *
+ * The floor is now 12. Nothing that carries a number, a name or a reading is
+ * below it, and `name` — the role that carries human-readable node, row and
+ * category names, the text a reader actually navigates by — sits a step above
+ * at 16.
+ *
+ * WHY 16 AND NOT 14 for `name`: 14 is not divisible by four. The 4px grid is
+ * declared at the top of this block, enforced by `verifyScene` against
+ * `FONT_SIZES`, and tested in `diagrams.test.ts`; 16 is the next size on the
+ * ladder above the 14 floor, so it clears the floor without special-casing
+ * the grid.
  */
 export const T = {
   family: 'var(--dgm-family)',
@@ -60,13 +80,13 @@ export const T = {
   /** Figure title inside the SVG. */
   title: { fontSize: 28, fontWeight: 500, letterSpacing: 'var(--dgm-title-track)' },
   /** Human-readable node / row / category names. */
-  name: { fontSize: 12, fontWeight: 500, letterSpacing: 'var(--dgm-name-track)' },
+  name: { fontSize: 16, fontWeight: 500, letterSpacing: 'var(--dgm-name-track)' },
   /** Technical content: values, codes, hashes. Tabular figures. */
-  tech: { fontSize: 8, fontWeight: 500, letterSpacing: 'var(--dgm-tech-track)' },
+  tech: { fontSize: 12, fontWeight: 500, letterSpacing: 'var(--dgm-tech-track)' },
   /** The micro-label second voice: type tags, axis captions, zone labels. */
-  eyebrow: { fontSize: 8, fontWeight: 500, letterSpacing: 'var(--dgm-eyebrow-track)' },
+  eyebrow: { fontSize: 12, fontWeight: 500, letterSpacing: 'var(--dgm-eyebrow-track)' },
   /** Arrow annotations: all-caps, <= 14 chars. */
-  arrow: { fontSize: 8, fontWeight: 500, letterSpacing: 'var(--dgm-arrow-track)' },
+  arrow: { fontSize: 12, fontWeight: 500, letterSpacing: 'var(--dgm-arrow-track)' },
 } as const
 
 export const STROKE = { thin: 0.8, default: 1, strong: 1.2 } as const
@@ -82,5 +102,11 @@ export const STROKE = { thin: 0.8, default: 1, strong: 1.2 } as const
  */
 export const RADIUS = { sm: 0, md: 0, lg: 0 } as const
 
-/** Every font size the diagrams may use, for the 4px-grid gate. */
-export const FONT_SIZES = [8, 12, 16, 20, 24, 28] as const
+/**
+ * Every font size the diagrams may use, for the 4px-grid gate.
+ *
+ * 8 is gone. It is not merely unused — it is below the floor set in `T`, and
+ * leaving it in the allowlist would let a future label drop back to it and
+ * still pass the gate.
+ */
+export const FONT_SIZES = [12, 16, 20, 24, 28] as const

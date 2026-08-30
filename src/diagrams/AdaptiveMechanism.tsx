@@ -3,10 +3,9 @@
  * Arrows before boxes, per the paint-order contract.
  */
 
-import { DiagramFrame, DiagramSvg, Label, LegendStrip } from './Frame'
+import { DiagramFrame, DiagramSvg, LegendStrip } from './Frame'
 import { layoutAdaptiveMechanism } from './layout/adaptiveMechanism'
 import { Connector, NodeBox } from './primitives'
-import { C } from './tokens'
 
 export function AdaptiveMechanism({ figNo }: { figNo?: string }) {
   const { scene, nodes } = layoutAdaptiveMechanism(figNo)
@@ -30,11 +29,8 @@ export function AdaptiveMechanism({ figNo }: { figNo?: string }) {
             kind={n.focal ? 'focal' : 'backend'}
             name={n.title}
             sub={n.sub}
-          >
-            <Label x={n.x + n.w / 2} y={n.y + n.h - 10} role="tech" fill={C.soft} anchor="middle">
-              {n.tool}
-            </Label>
-          </NodeBox>
+            foot={n.tool}
+          />
         ))}
 
         <LegendStrip scene={scene} />

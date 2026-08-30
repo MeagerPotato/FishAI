@@ -1,0 +1,259 @@
+/**
+ * `/papers` — the paper entries and the topics list.
+ *
+ * This page is almost entirely text and links, so it borrows the lab's type scale
+ * (`lab.module.css` supplies `.prose`, `.figNote`, `.table`, `.mark*`) and adds only the
+ * structures that page does not have: a paper entry, a question/finding pair, and a row of
+ * departures. No radii, no shadows, no colour beyond the shared ink tokens — the marks that
+ * separate answered from open are shape and word, never hue.
+ */
+
+/* ==========================================================================
+   THE PAPER ENTRY
+   ========================================================================== */
+
+/* A plain block, not a list: each entry is an `<article>` with its own heading, and an
+   `<article>` cannot be an `<li>` — wrapping one in the other would need `display: contents`,
+   which drops the article out of the accessibility tree in more than one browser. */
+.papers {
+  display: block;
+}
+
+/**
+ * A serial rail beside the paper. The rail collapses under 900px rather than squeezing:
+ * a 90px column holding a tracked-out micro-label is a column of one word per line.
+ */
+.paper {
+  display: grid;
+  grid-template-columns: minmax(96px, 132px) minmax(0, 1fr);
+  gap: 10px clamp(20px, 3vw, 44px);
+  padding: clamp(28px, 3.6vh, 46px) 0;
+  border-top: 1px solid var(--fa-line);
+}
+
+.paper:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.railNote {
+  font-size: var(--fa-fs-meta);
+  line-height: 1.5;
+  color: var(--fa-ink-3);
+}
+
+.body {
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  max-width: 30ch;
+  font-size: var(--fa-fs-h4);
+  font-weight: 500;
+  line-height: 1.22;
+  letter-spacing: -0.015em;
+  color: var(--fa-ink);
+}
+
+/* The question and the finding: a two-row definition list, the label in the micro voice. */
+.qa {
+  margin: 18px 0 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+}
+
+.qa dt {
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-badge);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
+.qa dd {
+  margin: 0 0 14px;
+  max-width: 74ch;
+  font-size: var(--fa-fs-body);
+  line-height: 1.66;
+  color: var(--fa-ink-2);
+}
+
+.qa dd:last-of-type {
+  margin-bottom: 0;
+}
+
+/* The finding is the sentence the entry exists for, so it carries the ink weight. The selector
+   is `.qa .finding` rather than `.finding` because `.qa dd` above already beats a bare class. */
+.qa .finding {
+  color: var(--fa-ink);
+}
+
+/**
+ * The abstract, drawn from the paper's own. A left rule rather than a quotation mark: the
+ * system has one indentation device and this is it.
+ */
+.abstract {
+  margin: 20px 0 0;
+  padding-left: clamp(14px, 1.6vw, 22px);
+  border-left: 2px solid var(--fa-line);
+  max-width: 78ch;
+  font-size: var(--fa-fs-meta);
+  line-height: 1.72;
+  color: var(--fa-ink-2);
+}
+
+.abstract p {
+  margin: 0;
+}
+
+.abstract footer {
+  margin-top: 8px;
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
+.method {
+  margin: 16px 0 0;
+  max-width: 78ch;
+  font-size: var(--fa-fs-meta);
+  line-height: 1.66;
+  color: var(--fa-ink-2);
+}
+
+.method b {
+  font-weight: 500;
+  color: var(--fa-ink);
+}
+
+/* ==========================================================================
+   DEPARTURES — the PDF, the source, the evidence
+   ========================================================================== */
+
+.links {
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 26px;
+}
+
+.link {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  color: var(--fa-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--fa-line);
+  text-underline-offset: 4px;
+  transition:
+    color var(--fa-dur-fast),
+    text-decoration-color var(--fa-dur-fast);
+}
+
+.link:hover {
+  color: var(--fa-amber-2);
+  text-decoration-color: currentColor;
+}
+
+/* The size and page count ride inside the link, in the micro voice, so the link text a screen
+   reader announces already says what will be downloaded and how big it is. */
+.linkNote {
+  font-size: var(--fa-fs-micro);
+  font-weight: 400;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+  white-space: nowrap;
+}
+
+.link:hover .linkNote {
+  color: inherit;
+}
+
+/* A filename or a route, so it keeps its own case — `INERT-AXIS.TEX` is not a path that
+   exists, and a route printed in capitals invites a reader to type one that does not resolve. */
+.linkPath {
+  font-family: var(--fa-code);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--fa-ink-3);
+  white-space: nowrap;
+}
+
+.link:hover .linkPath {
+  color: inherit;
+}
+
+/* ==========================================================================
+   TOPICS
+   ========================================================================== */
+
+/* Question | finding | where to check it. `.mark` from lab.module.css carries the status. */
+.answered {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--fa-line);
+}
+
+.topic {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 20px;
+  align-items: baseline;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--fa-line-2);
+}
+
+.topicQ {
+  margin: 0;
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--fa-ink);
+}
+
+.topicA {
+  grid-column: 1 / -1;
+  margin: 0;
+  max-width: 82ch;
+  font-size: var(--fa-fs-meta);
+  line-height: 1.66;
+  color: var(--fa-ink-2);
+}
+
+.topicSrc {
+  grid-column: 1 / -1;
+  font-size: var(--fa-fs-micro);
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
+@media (max-width: 900px) {
+  .paper {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .rail {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 16px;
+  }
+}

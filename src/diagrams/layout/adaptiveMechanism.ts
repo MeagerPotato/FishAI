@@ -14,10 +14,12 @@
  * expectation is linear in the opponent posterior, so the argmax is Punter
  * under every belief a game can produce.
  *
- * Geometry: nodes 168×88 at y=40; x = 24 / 276 / 528 / 808. The wider third
- * gap (112px against 84px) is not rhythm for its own sake — the accent
- * arrow's 92px label mask must clear both endpoint boxes, and `verifyScene`
- * checks that it does.
+ * Geometry: nodes 168×88 at y=40; x = 24 / 276 / 528 / 856. The wider third
+ * gap (160px against 84px) is not rhythm for its own sake — the accent
+ * arrow's label mask must clear both endpoint boxes, and `verifyScene` checks
+ * that it does. At the 12px arrow role `PUNTER ALWAYS` masks 128px wide
+ * rather than the 92px it took at 8px, so the gap grew with it: 160 leaves
+ * 16px of clearance on each side.
  */
 
 import { withLabelMask, type Scene, type SceneArrow, type SceneRect } from '../scene'
@@ -28,7 +30,7 @@ const NODE_H = 88
 const NODE_Y = 40
 const ARROW_Y = NODE_Y + 44
 const LEGEND_Y = 160
-const VIEW_W = 1000
+const VIEW_W = 1056
 const VIEW_H = 208
 
 export interface MechanismNode {
@@ -52,7 +54,7 @@ const SPECS: Array<Omit<MechanismNode, 'y' | 'w' | 'h'>> = [
   { id: 'observe', x: 24, title: 'Observe', sub: 'public log', focal: false, tool: 'observe.ts' },
   { id: 'classify', x: 276, title: 'Classify', sub: 'per-seat posterior', focal: false, tool: 'fingerprints' },
   { id: 'respond', x: 528, title: 'Best-respond', sub: 'counter table', focal: true, tool: 'argmax E[p]' },
-  { id: 'play', x: 808, title: 'Play', sub: 'style engine', focal: false, tool: 'decide()' },
+  { id: 'play', x: 856, title: 'Play', sub: 'style engine', focal: false, tool: 'decide()' },
 ]
 
 export function layoutAdaptiveMechanism(figNo = 'FIG. 01'): AdaptiveMechanismModel {
@@ -99,7 +101,7 @@ export function layoutAdaptiveMechanism(figNo = 'FIG. 01'): AdaptiveMechanismMod
       { key: 'flow', label: 'HAND-OFF', mark: 'line', stroke: C.muted },
       { key: 'delegate', label: 'WARM DELEGATION', mark: 'line', stroke: C.accent },
     ],
-    fontSizes: [8, 12],
+    fontSizes: [12, 16],
     fig: `${figNo} — THE V1.0 MECHANISM · 4 STAGES · 1 DEGENERACY`,
     caption:
       'One decision flows left to right. The counter table consulted at the third stage is ' +

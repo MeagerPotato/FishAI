@@ -61,11 +61,13 @@ export function LabShell({
   which,
 }: LabShellProps) {
   useDocumentTitle(docTitle)
-  // Eight links. Verified against the 1080px collapse (SiteNav.module.css, and the matching
-  // matchMedia in SiteNav.tsx): at 1081px the bar needs ~990px (brand ~92 + two 30px gaps +
-  // eight labels with 24px link gaps ~590 + toggle) and has ~1041px inside the gutters, so
-  // the desktop row still fits where it last shows. The breakpoint moved from 960px when
-  // Bounded became the eighth link — seven fit at 961px, eight do not.
+  // NINE links, since Papers joined — and the 1080px collapse in SiteNav.module.css (with the
+  // matching matchMedia in SiteNav.tsx) did NOT have to move for it. Measured in the browser at
+  // General Sans 500/16px: the nine labels and their gaps occupy 636px, the whole bar needs
+  // ~823px, and at 1081px the gutters leave 979px. The row hard-wraps only around 860px.
+  //
+  // Papers sits between the evidence pages and the table on purpose: the reading order of this
+  // site is measure it, write it up, then play it.
   const links = [
     { href: withCase('/lab', which), label: 'Report' },
     { href: withCase('/lab/matrix', which), label: 'Matrix' },
@@ -73,6 +75,7 @@ export function LabShell({
     { href: withCase('/lab/adaptive', which), label: 'Adaptive' },
     { href: withCase('/lab/bounded', which), label: 'Bounded' },
     { href: withCase('/lab/live', which), label: 'Live' },
+    { href: '/papers', label: 'Papers' },
     { href: '/play', label: 'Play' },
     { href: '/design', label: 'Design' },
   ]
@@ -111,6 +114,7 @@ export function LabShell({
           {
             title: 'Reference',
             items: [
+              { href: '/papers', label: 'Research papers' },
               { href: '/design', label: 'Design specimen' },
               { href: 'https://github.com/MeagerPotato/FishAI', label: 'Repository' },
             ],

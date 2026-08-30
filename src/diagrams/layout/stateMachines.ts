@@ -18,6 +18,14 @@
  * characters. States are 160x80 and square (SITE_SPEC §3.1). The
  * turn loop is a dashed back-edge.
  *
+ * RE-SPACED FOR THE 12px ARROW ROLE. The gap between two states is not
+ * rhythm — it is exactly the room a transition label's mask needs, and that
+ * mask grew with the type. `ASK [LEGAL]` masks 112px at 12px against 78px at
+ * 8px, so the row pitch went 248 -> 288 (160 of state, 128 of gap) and the
+ * terminator moved out to give `[5 SETS]` its own 104px. `verifyScene`
+ * refuses a mask that is partly inside a node, so these are checked numbers
+ * rather than eyeballed ones.
+ *
  * Content source: RULES_US54.md rows 9-16 and §3-§5.
  */
 
@@ -66,10 +74,10 @@ export function layoutTurnMachine(figNo = 'FIG. 10'): MachineModel {
 
   const states: MachineState[] = [
     { id: 'holder', x: 96, y, w: SW, h: SH, tag: 'TURN', name: 'Turn Holder', sub: 'must ask' },
-    { id: 'ask', x: 344, y, w: SW, h: SH, tag: 'ACTION', name: 'Ask Resolves', sub: 'hit or miss' },
+    { id: 'ask', x: 384, y, w: SW, h: SH, tag: 'ACTION', name: 'Ask Resolves', sub: 'hit or miss' },
     {
       id: 'window',
-      x: 592,
+      x: 672,
       y,
       w: SW,
       h: SH,
@@ -78,12 +86,12 @@ export function layoutTurnMachine(figNo = 'FIG. 10'): MachineModel {
       sub: 'see fig. 11',
       focal: true,
     },
-    { id: 'clinch', x: 840, y, w: SW, h: SH, tag: 'CHECK', name: 'Clinch Check', sub: '5 sets ends it' },
+    { id: 'clinch', x: 960, y, w: SW, h: SH, tag: 'CHECK', name: 'Clinch Check', sub: '5 sets ends it' },
   ]
 
   const terminators: Terminator[] = [
     { id: 'start', kind: 'start', cx: 48, cy },
-    { id: 'end', kind: 'end', cx: 1072, cy },
+    { id: 'end', kind: 'end', cx: 1232, cy },
   ]
 
   const line = (x1: number, x2: number): Pt[] => [
@@ -93,16 +101,16 @@ export function layoutTurnMachine(figNo = 'FIG. 10'): MachineModel {
 
   const arrows: SceneArrow[] = [
     { id: 't-start', points: line(56, 96) },
-    withLabelMask({ id: 't-ask', points: line(256, 344), label: 'ASK [LEGAL]', labelGap: 8 }),
-    withLabelMask({ id: 't-reveal', points: line(504, 592), label: 'REVEAL', labelGap: 8 }),
-    withLabelMask({ id: 't-close', points: line(752, 840), label: 'NO DECLARE', labelGap: 8 }),
-    withLabelMask({ id: 't-end', points: line(1000, 1064), label: '[5 SETS]', labelGap: 8 }),
+    withLabelMask({ id: 't-ask', points: line(256, 384), label: 'ASK [LEGAL]', labelGap: 8 }),
+    withLabelMask({ id: 't-reveal', points: line(544, 672), label: 'REVEAL', labelGap: 8 }),
+    withLabelMask({ id: 't-close', points: line(832, 960), label: 'NO DECLARE', labelGap: 8 }),
+    withLabelMask({ id: 't-end', points: line(1120, 1224), label: '[5 SETS]', labelGap: 8 }),
     // Hit keeps the turn (RULES_US54 row 9): back-edge routed above.
     withLabelMask({
       id: 't-hit',
       points: [
-        { x: 424, y: 120 },
-        { x: 424, y: 64 },
+        { x: 464, y: 120 },
+        { x: 464, y: 64 },
         { x: 176, y: 64 },
         { x: 176, y: 120 },
       ],
@@ -113,8 +121,8 @@ export function layoutTurnMachine(figNo = 'FIG. 10'): MachineModel {
     withLabelMask({
       id: 't-miss',
       points: [
-        { x: 920, y: 200 },
-        { x: 920, y: 280 },
+        { x: 1040, y: 200 },
+        { x: 1040, y: 280 },
         { x: 216, y: 280 },
         { x: 216, y: 200 },
       ],
@@ -135,7 +143,7 @@ export function layoutTurnMachine(figNo = 'FIG. 10'): MachineModel {
       'keeps the turn; a miss returns along a dashed loop below, because the turn passes to the ' +
       'player who was asked. The declare window is highlighted and is expanded in the next ' +
       'figure. Reaching five sets ends the game.',
-    viewW: 1120,
+    viewW: 1264,
     viewH: legendY + 48,
     budget: { nodes: states.length + terminators.length, arrows: arrows.length, accents: 1 },
     rects: rectsOf(states),
@@ -147,7 +155,7 @@ export function layoutTurnMachine(figNo = 'FIG. 10'): MachineModel {
       { key: 'edge', label: 'TRANSITION', mark: 'line', stroke: C.muted },
       { key: 'loop', label: 'TURN PASSES', mark: 'line', stroke: C.muted, dashed: true },
     ],
-    fontSizes: [8, 12],
+    fontSizes: [12, 16],
     fig: `${figNo} — TURN STRUCTURE · 4 STATES · 7 TRANSITIONS`,
     caption:
       'A hit keeps the turn and a miss passes it to the player who was asked (RULES_US54 rows ' +
@@ -165,10 +173,10 @@ export function layoutTurnMachine(figNo = 'FIG. 10'): MachineModel {
 export function layoutDeclareMachine(figNo = 'FIG. 11'): MachineModel {
   const states: MachineState[] = [
     { id: 'open', x: 96, y: 96, w: SW, h: SH, tag: 'PHASE', name: 'Window Open', sub: 'from holder' },
-    { id: 'seat', x: 344, y: 96, w: SW, h: SH, tag: 'OPTION', name: 'Seat Option', sub: 'in seat order' },
+    { id: 'seat', x: 360, y: 96, w: SW, h: SH, tag: 'OPTION', name: 'Seat Option', sub: 'in seat order' },
     {
       id: 'declare',
-      x: 592,
+      x: 624,
       y: 96,
       w: SW,
       h: SH,
@@ -199,7 +207,7 @@ export function layoutDeclareMachine(figNo = 'FIG. 11'): MachineModel {
       id: 'd-offer',
       points: [
         { x: 256, y: 136 },
-        { x: 344, y: 136 },
+        { x: 360, y: 136 },
       ],
       label: 'OFFER',
       labelGap: 8,
@@ -208,10 +216,10 @@ export function layoutDeclareMachine(figNo = 'FIG. 11'): MachineModel {
     withLabelMask({
       id: 'd-decline',
       points: [
-        { x: 392, y: 96 },
-        { x: 392, y: 48 },
-        { x: 456, y: 48 },
-        { x: 456, y: 96 },
+        { x: 408, y: 96 },
+        { x: 408, y: 48 },
+        { x: 472, y: 48 },
+        { x: 472, y: 96 },
       ],
       label: 'DECLINE',
       labelGap: 8,
@@ -219,8 +227,8 @@ export function layoutDeclareMachine(figNo = 'FIG. 11'): MachineModel {
     withLabelMask({
       id: 'd-declare',
       points: [
-        { x: 504, y: 136 },
-        { x: 592, y: 136 },
+        { x: 520, y: 136 },
+        { x: 624, y: 136 },
       ],
       label: 'DECLARE',
       labelGap: 8,
@@ -228,8 +236,8 @@ export function layoutDeclareMachine(figNo = 'FIG. 11'): MachineModel {
     withLabelMask({
       id: 'd-exact',
       points: [
-        { x: 640, y: 176 },
-        { x: 640, y: 216 },
+        { x: 672, y: 176 },
+        { x: 672, y: 216 },
         { x: 576, y: 216 },
         { x: 576, y: 256 },
       ],
@@ -240,8 +248,8 @@ export function layoutDeclareMachine(figNo = 'FIG. 11'): MachineModel {
     withLabelMask({
       id: 'd-error',
       points: [
-        { x: 704, y: 176 },
-        { x: 704, y: 216 },
+        { x: 736, y: 176 },
+        { x: 736, y: 216 },
         { x: 800, y: 216 },
         { x: 800, y: 256 },
       ],
@@ -320,7 +328,7 @@ export function layoutDeclareMachine(figNo = 'FIG. 11'): MachineModel {
       { key: 'gift', label: 'GIFT TO OPPONENTS', mark: 'line', stroke: C.accent },
       { key: 'reopen', label: 'WINDOW RE-OPENS', mark: 'line', stroke: C.muted, dashed: true },
     ],
-    fontSizes: [8, 12],
+    fontSizes: [12, 16],
     fig: `${figNo} — DECLARE WINDOW · 6 STATES · 10 TRANSITIONS`,
     caption:
       'RULES_US54 row 14 abolishes the void outcome: a declare that is wrong in ANY way — an ' +

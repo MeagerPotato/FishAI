@@ -15,8 +15,9 @@
  */
 import type { GameAction, SeatView, StyleId } from '../../lib/engine/index.ts'
 import { STYLE_IDS, STYLE_ROSTER, hashSeed } from '../../lib/engine/index.ts'
-import { Eyebrow } from '../components/index.ts'
+import { Eyebrow, cx } from '../components/index.ts'
 import { advise } from './advisor.ts'
+import { CardFace } from './CardFace.tsx'
 import { bookLabel, cardLabel, seatName } from './format.ts'
 import type { PlayMode } from './policies.ts'
 import { advisorPolicy } from './policies.ts'
@@ -149,23 +150,27 @@ export function AdvisorPane({
             </p>
           ) : null}
 
+          {/* The two long lists are collapsed by default. Open, they ran to a couple of
+              thousand pixels and pushed the log off the bottom of the world; the suggestion and
+              its reason above are what a player reads every turn, and the working is what they
+              open when they want to argue with it. */}
           {explained.trace.ranked && explained.trace.ranked.length > 0 ? (
-            <>
-              <h4 className={s.advisorSub}>Top asks considered</h4>
+            <details className={s.advisorDetail}>
+              <summary>Top asks considered ({explained.trace.ranked.length})</summary>
               <ol className={s.advisorRanked}>
                 {explained.trace.ranked.slice(0, 5).map((r) => (
                   <li key={`${r.target}:${r.card}`} className={lab.figNote}>
-                    {seatName(r.target)} · {cardLabel(r.card)} — {r.reason}
+                    {seatName(r.target)} · <CardFace card={r.card} /> — {r.reason}
                   </li>
                 ))}
               </ol>
-            </>
+            </details>
           ) : null}
 
           {explained.trace.refused.length > 0 ? (
-            <details className={lab.detail}>
+            <details className={s.advisorDetail}>
               <summary>Considered and refused ({explained.trace.refused.length})</summary>
-              <div className={lab.detailBody}>
+              <div className={s.advisorDetailBody}>
                 {explained.trace.refused.map((r, i) => (
                   // Positional per decision: two refusals can share kind AND reason.
                   <p key={`${view.moveIndex}:${i}`} className={lab.figNote}>
@@ -178,7 +183,7 @@ export function AdvisorPane({
 
           <button
             type="button"
-            className={lab.pill}
+            className={cx(s.submit, !playable && s.submitOff)}
             disabled={!playable}
             onClick={() => {
               onPlay(explained.action)

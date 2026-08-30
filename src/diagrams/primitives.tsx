@@ -31,8 +31,18 @@ export const TREATMENT: Record<NodeKind, Treatment> = {
   optional: { fill: C.ink02, stroke: C.ink20, dash: '4,3', text: C.muted, tagText: C.soft },
 }
 
-/** Advance width of the 8px eyebrow role, tracked 0.16em, plus padding. */
-const tagW = (label: string): number => Math.max(36, snap(label.length * 7 + 12))
+/**
+ * Advance width of the 12px eyebrow role, tracked 0.16em, plus padding.
+ *
+ * Measured: 9.95px per character at the widest ("REDUCE"), so 10/char plus a
+ * 16px pad. The 48px floor is the four-character minimum at that rate — a
+ * fixed 36px box, sized for the old 8px role, clipped every tag.
+ */
+const tagW = (label: string): number => Math.max(48, snap(label.length * 10 + 16))
+
+/** Chip height and the baseline inside it, for one line of the 12px role. */
+const TAG_H = 20
+const TAG_BASELINE = 22
 
 export interface NodeBoxProps {
   x: number
@@ -45,11 +55,25 @@ export interface NodeBoxProps {
   name: string
   /** Technical sublabel: params, counts, codes. */
   sub?: string
+  /**
+   * A third line under `sub`, in the `tech` role — a tool, a module, a file.
+   *
+   * It exists so the vertical rhythm of a three-line node is computed HERE,
+   * with knowledge of how many lines there are, rather than by a caller
+   * hard-coding a y offset against the box's bottom edge. At 8px type a
+   * caller could get away with the latter; at 12/16px the lines collide.
+   */
+  foot?: string
   /** Fan-in badge, e.g. `3 IN`. Fully inside the node, so it is a chip. */
   badge?: string
   /** Extra content painted inside the box. */
   children?: ReactNode
 }
+
+/** Baseline pitch for the stacked lines inside a node. */
+const LINE_PITCH = 20
+/** Chip band height: the tag/badge chip plus its 8px top inset. */
+const CHIP_BAND = 28
 
 /**
  * The 5-layer node box.
@@ -69,13 +93,35 @@ export function NodeBox({
   tag,
   name,
   sub,
+  foot,
   badge,
   children,
 }: NodeBoxProps) {
   const t = TREATMENT[kind]
   const cx = x + w / 2
-  const cy = y + h / 2
-  const nameY = sub ? cy + 2 : cy + 4
+
+  /**
+   * THE LINE STACK.
+   *
+   * Name is 16px (a 20px box), sub and foot are 12px (15px boxes), and the
+   * baselines run on a 20px pitch — the smallest that keeps a name's
+   * descenders clear of the caps of the line under it.
+   *
+   * The stack is centred in whatever vertical space is actually free: the
+   * whole box normally, or the box BELOW the chip band when the node carries
+   * a tag or a badge. Centring on the box's own middle regardless is what put
+   * a 16px name through a tag chip on every state in both machines.
+   *
+   * The `+ 6` is the optical correction that puts a single 16px line on the
+   * centre line rather than hanging its baseline there.
+   */
+  const lines = 1 + (sub ? 1 : 0) + (foot ? 1 : 0)
+  const chipped = tag !== undefined || badge !== undefined
+  const freeTop = chipped ? y + CHIP_BAND : y
+  const freeH = chipped ? h - CHIP_BAND : h
+  const firstY = freeTop + freeH / 2 - ((lines - 1) * LINE_PITCH) / 2 + 6
+  const subY = firstY + LINE_PITCH
+  const footY = firstY + (sub ? 2 : 1) * LINE_PITCH
   return (
     <g>
       {/* 1 — opaque paper mask */}
@@ -99,13 +145,19 @@ export function NodeBox({
             x={x + 8}
             y={y + 8}
             width={tagW(tag)}
-            height={12}
+            height={TAG_H}
             fill="transparent"
             stroke={t.stroke}
             strokeOpacity={0.4}
             strokeWidth={STROKE.thin}
           />
-          <Label x={x + 8 + tagW(tag) / 2} y={y + 17} role="eyebrow" fill={t.tagText} anchor="middle">
+          <Label
+            x={x + 8 + tagW(tag) / 2}
+            y={y + TAG_BASELINE}
+            role="eyebrow"
+            fill={t.tagText}
+            anchor="middle"
+          >
             {tag}
           </Label>
         </g>
@@ -114,27 +166,33 @@ export function NodeBox({
       {badge && (
         <g>
           <rect
-            x={x + w - 36}
+            x={x + w - 52}
             y={y + 8}
-            width={28}
-            height={12}
+            width={44}
+            height={TAG_H}
             fill={C.ink08}
             stroke={C.ink12}
             strokeWidth={STROKE.thin}
           />
-          <Label x={x + w - 22} y={y + 17} role="tech" fill={C.muted} anchor="middle">
+          <Label x={x + w - 30} y={y + TAG_BASELINE} role="tech" fill={C.muted} anchor="middle">
             {badge}
           </Label>
         </g>
       )}
       {/* 4 — node name */}
-      <Label x={cx} y={nameY} role="name" fill={t.text} anchor="middle">
+      <Label x={cx} y={firstY} role="name" fill={t.text} anchor="middle">
         {name}
       </Label>
       {/* 5 — technical sublabel */}
       {sub && (
-        <Label x={cx} y={cy + 16} role="tech" fill={C.muted} anchor="middle">
+        <Label x={cx} y={subY} role="tech" fill={C.muted} anchor="middle">
           {sub}
+        </Label>
+      )}
+      {/* 6 — the third line, when there is one */}
+      {foot && (
+        <Label x={cx} y={footY} role="tech" fill={C.soft} anchor="middle">
+          {foot}
         </Label>
       )}
       {children}

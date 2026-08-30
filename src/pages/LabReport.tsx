@@ -74,12 +74,16 @@ import { count, edge, interval, rate, rate3 } from '../lab/format.ts'
 import { labModel } from '../lab/model.ts'
 import { RULES_FILE, shortHash } from '../lab/rules.ts'
 import { Beats } from '../lab/ui/Beats.tsx'
+import { LabContents, type LabSection } from '../lab/ui/LabContents.tsx'
 import { LabShell, withCase } from '../lab/ui/LabShell.tsx'
 import { ArtifactBroken, RulesMismatch } from '../lab/ui/Refusal.tsx'
 import { RuleStamp, SyntheticNotice, Us54Facts } from '../lab/ui/RuleStamp.tsx'
 import { ScrollRegion } from '../lab/ui/ScrollRegion.tsx'
 import { VerdictBody } from '../lab/ui/Verdict.tsx'
 import s from '../lab/ui/lab.module.css'
+
+/** The public repository, so the Sources list can link the documents it names. */
+const REPO = 'https://github.com/MeagerPotato/FishAI'
 
 /**
  * Family -> display label.
@@ -91,6 +95,27 @@ import s from '../lab/ui/lab.module.css'
  * fires and a function is passed as a React child. `Map.get` has no prototype
  * chain.
  */
+/**
+ * The contents of this page, in document order.
+ *
+ * Every `id` here is a real element below, and the two pin acts got wrapper elements to carry
+ * theirs — a `PinAct` owns its own `<section>` and takes no `id`, and the headline div inside it
+ * is far too short for the scroll observer to ever find. The wrapper is a plain `<div>`, which
+ * `position: sticky` inside the act is indifferent to.
+ */
+const CONTENTS: readonly LabSection[] = [
+  { id: 'how-to-read', label: 'How to read this page', note: 'Six ideas, in plain language' },
+  { id: 'rules', label: 'The rule set', note: 'us54, and why the ninth set decides everything' },
+  { id: 'roster', label: 'The roster', note: 'Nine styles, and two caveats on them' },
+  { id: 'method', label: 'Method', note: 'Duplicate deals and multiplicity control' },
+  { id: 'matrix', label: 'The payoff matrix', note: 'Who beats whom, and by how much' },
+  { id: 'counter-graph', label: 'The counter-graph', note: 'Only edges that survived correction' },
+  { id: 'verdict', label: 'The verdict', note: 'Four criteria, recomputed in your browser' },
+  { id: 'exploitability', label: 'Exploitability', note: 'Topping the table is not being strong' },
+  { id: 'crossplay', label: 'Cross-play', note: 'Against a bot nobody here wrote' },
+  { id: 'sources', label: 'Sources and glossary', note: 'Every document, every term' },
+]
+
 const FAMILY_LABEL = new Map<string, string>([
   ['control', 'Control'],
   ['aggressive', 'Aggressive'],
@@ -216,6 +241,8 @@ export function LabReport() {
           <RuleStamp artifact={artifact} check={check} />
           <SyntheticNotice artifact={artifact} />
         </div>
+
+        <LabContents sections={CONTENTS} />
       </Section>
 
       {/* ---- how to read this page -------------------------------------------------------- */}
@@ -456,46 +483,52 @@ export function LabReport() {
       </Section>
 
       {/* ---- pin act 1: the payoff matrix ------------------------------------------------ */}
-      <PinAct steps={matrixBeats.length} badge="Payoff matrix">
-        {(progress) => (
-          <>
-            <div className={pinHead} id="matrix">
-              <MaskedLines lines={['Who beats whom,', 'and by *how much*.']} />
-              <div className={pinHeadAside}>
-                <p>
-                  Each cell below is the share of identical deals the row style&rsquo;s team won
-                  against the column style&rsquo;s. {count(meta.seedSet.count)} duplicate pairs
-                  per cell, SE ≤ {rate3(Math.max(...artifact.matrix.map((c) => c.se)))}. The
-                  figure does not change as you scroll — only the reading does.
-                </p>
+      {/* The id lives on the wrapper, not on the headline inside: `#matrix` should mean the whole
+          act, which is what the contents list links to and what the scroll observer watches. */}
+      <div id="matrix">
+        <PinAct steps={matrixBeats.length} badge="Payoff matrix">
+          {(progress) => (
+            <>
+              <div className={pinHead}>
+                <MaskedLines lines={['Who beats whom,', 'and by *how much*.']} />
+                <div className={pinHeadAside}>
+                  <p>
+                    Each cell below is the share of identical deals the row style&rsquo;s team won
+                    against the column style&rsquo;s. {count(meta.seedSet.count)} duplicate pairs
+                    per cell, SE ≤ {rate3(Math.max(...artifact.matrix.map((c) => c.se)))}. The
+                    figure does not change as you scroll — only the reading does.
+                  </p>
+                </div>
               </div>
-            </div>
-            <PayoffMatrix results={results} figNo="FIG. 07" />
-            <Beats beats={matrixBeats} progress={progress} />
-          </>
-        )}
-      </PinAct>
+              <PayoffMatrix results={results} figNo="FIG. 07" />
+              <Beats beats={matrixBeats} progress={progress} />
+            </>
+          )}
+        </PinAct>
+      </div>
 
       {/* ---- pin act 2: the counter-graph ------------------------------------------------ */}
-      <PinAct steps={graphBeats.length} badge="Counter-graph">
-        {(progress) => (
-          <>
-            <div className={pinHead} id="counter-graph">
-              <MaskedLines lines={['Every edge here', 'survived *correction*.']} />
-              <div className={pinHeadAside}>
-                <p>
-                  Each arrow below points from a style to a style it reliably beats. Built from{' '}
-                  <code>matrix[].significant</code>, the Benjamini-Hochberg flag — never from a
-                  raw p-value. Uncorrected, four more cells in this matrix would have emitted an
-                  edge.
-                </p>
+      <div id="counter-graph">
+        <PinAct steps={graphBeats.length} badge="Counter-graph">
+          {(progress) => (
+            <>
+              <div className={pinHead}>
+                <MaskedLines lines={['Every edge here', 'survived *correction*.']} />
+                <div className={pinHeadAside}>
+                  <p>
+                    Each arrow below points from a style to a style it reliably beats. Built from{' '}
+                    <code>matrix[].significant</code>, the Benjamini-Hochberg flag — never from a
+                    raw p-value. Uncorrected, four more cells in this matrix would have emitted an
+                    edge.
+                  </p>
+                </div>
               </div>
-            </div>
-            <CounterGraph results={results} figNo="FIG. 08" />
-            <Beats beats={graphBeats} progress={progress} />
-          </>
-        )}
-      </PinAct>
+              <CounterGraph results={results} figNo="FIG. 08" />
+              <Beats beats={graphBeats} progress={progress} />
+            </>
+          )}
+        </PinAct>
+      </div>
 
       {/* ---- the verdict ---------------------------------------------------------------- */}
       <Section id="verdict" noMarks>
@@ -538,13 +571,13 @@ export function LabReport() {
                 <thead>
                   <tr>
                     <th scope="col">Style</th>
-                    <th scope="col">E(i)</th>
-                    <th scope="col">BR score</th>
-                    <th scope="col">CI 95%</th>
-                    <th scope="col">Search score</th>
+                    <th scope="col">E(i) — best-response gap</th>
+                    <th scope="col">Best-response score rate</th>
+                    <th scope="col">Best-response CI 95%</th>
+                    <th scope="col">Search score rate (biased high)</th>
                     <th scope="col">Detectable δ</th>
-                    <th scope="col">Maximin</th>
-                    <th scope="col">Worst vs</th>
+                    <th scope="col">Maximin score rate</th>
+                    <th scope="col">Worst matchup</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -615,12 +648,12 @@ export function LabReport() {
                 <caption>Cross-play cells · shared seed list published before the match</caption>
                 <thead>
                   <tr>
-                    <th scope="col">Us</th>
-                    <th scope="col">Them</th>
+                    <th scope="col">Our style</th>
+                    <th scope="col">Foreign bot</th>
                     <th scope="col">Mode</th>
-                    <th scope="col">Pairs</th>
-                    <th scope="col">Our score</th>
-                    <th scope="col">CI 95%</th>
+                    <th scope="col">Duplicate pairs</th>
+                    <th scope="col">Our score rate</th>
+                    <th scope="col">Our CI 95%</th>
                     <th scope="col">Seed set</th>
                     <th scope="col">rulesHash agreed</th>
                   </tr>
@@ -659,15 +692,37 @@ export function LabReport() {
         <div className={s.split}>
           <div className={s.stack}>
             <h3 className={s.criterionLabel}>Documents</h3>
+            {/*
+              These are links, not names. The deck above promises that nothing here is computed
+              from anything the reader cannot open, and a plain-text list of filenames is that
+              promise unkept — the reader has to go and find them.
+            */}
             <p className={s.figNote}>
-              <strong>{RULES_FILE}</strong> — the pinned rule set, hashed in the browser to{' '}
+              <TextLink href={`${REPO}/blob/main/${RULES_FILE}`}>{RULES_FILE}</TextLink> — the
+              pinned rule set, hashed in the browser to{' '}
               <span className={s.mono}>{shortHash(check.shipped)}</span>.<br />
-              <strong>BOT_LAB.md</strong> — §4 the metrics, §4.4 the decision rule this page
-              applies, §5 the experimental design, §7.1 the data contract.
+              <TextLink href={`${REPO}/blob/main/BOT_LAB.md`}>BOT_LAB.md</TextLink> — §4 the
+              metrics, §4.4 the decision rule this page applies, §5 the experimental design, §7.1
+              the data contract.
               <br />
-              <strong>STYLES.md</strong> — the nine-style roster and its parameter vectors.
+              <TextLink href={`${REPO}/blob/main/STYLES.md`}>STYLES.md</TextLink> — the
+              nine-style roster and its parameter vectors.
               <br />
-              <strong>SITE_SPEC.md</strong> — the routes, the design system, the accent budget.
+              <TextLink href={`${REPO}/blob/main/SITE_SPEC.md`}>SITE_SPEC.md</TextLink> — the
+              routes, the design system, the accent budget.
+            </p>
+          </div>
+          <div className={s.stack}>
+            <h3 className={s.criterionLabel}>The papers</h3>
+            <p className={s.figNote}>
+              This page&rsquo;s tournament, its verdict and both of its measured caveats are
+              written up in full — with the abstracts, the questions each one asks, the PDFs and
+              the LaTeX sources — at{' '}
+              <TextLink href="/papers">the research papers</TextLink>. The three that bear on
+              this page directly are <em>Measuring Play Style Without Skill</em> (the roster and
+              this matrix), <em>The Inert Axis</em> (why the declare-threshold labels do not
+              describe a knob that fires) and <em>The Contained Book</em> (the turn-pass that is
+              live in the v2 re-run and worth nothing).
             </p>
           </div>
           <div className={s.stack}>

@@ -70,18 +70,24 @@ export interface PayoffModel {
   cells: PayoffCell[]
 }
 
-/* -- constants, straight from the type reference ------------------------- */
+/* -- constants, straight from the type reference -------------------------
+   Three of them were re-derived for the 12/16px type floor. A cell is two
+   lines deep when it is the focal one (the score rate at 16px and its q-value
+   at 12px), and 36 was sized for those at 12/8: the two boxes overlapped by
+   4px at the new sizes. 48 of row with a 52 stride restores the same 4px seam
+   between rows that the type reference has. HEADER_H follows for the same
+   reason — a 16px column name over a 12px family code. */
 const LEFT_PAD = 12
 const RIGHT_PAD = 48
 const COMP_COL_W = 208
 const COMP_ROLE_GAP = 12
 const ROLE_COL_W = 148
 const ROLE_COL_GAP = 16
-const HEADER_H = 52
-const ROW_H = 36
-const ROW_STRIDE = 40
+const HEADER_H = 56
+const ROW_H = 48
+const ROW_STRIDE = 52
 const HEADER_Y = 72
-const ROW_Y0 = 140
+const ROW_Y0 = 144
 
 export interface PayoffInput {
   results: StyleResults
@@ -239,7 +245,7 @@ export function layoutPayoffMatrix({
       { key: 'ns', label: 'N.S. q>.05', mark: 'swatch', fill: C.paper, stroke: C.soft, dashed: true },
       { key: 'focal', label: 'LARGEST EDGE', mark: 'swatch', fill: C.accentTint, stroke: C.accent },
     ],
-    fontSizes: [8, 12],
+    fontSizes: [12, 16],
     fig:
       `${figNo} — PAYOFF MATRIX · ${results.matrix[0]?.pairs.toLocaleString('en-US') ?? '0'} PAIRS ` +
       `· SE <= ${results.matrix[0]?.se.toFixed(3) ?? '0.005'}`,

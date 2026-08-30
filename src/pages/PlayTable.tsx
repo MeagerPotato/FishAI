@@ -22,6 +22,7 @@ import { caseFromSearch } from '../lab/artifact.ts'
 import { LabShell } from '../lab/ui/LabShell.tsx'
 import lab from '../lab/ui/lab.module.css'
 import { freshSeed, parsePlayParams } from '../play/params.ts'
+import playCss from '../play/play.module.css'
 import { Table } from '../play/Table.tsx'
 
 const PLAY_FACTS = [
@@ -88,7 +89,10 @@ export function PlayTable() {
       ground="dots"
       stamp={`us54 · seed ${seed}`}
     >
-      <Section noRule badge="The table">
+      {/* The heading band is deliberately tight here: everything above the score strip is
+          budget the ask panel — the control a player touches every single turn — has to be
+          pushed down by, and this is a page you play rather than one you read. */}
+      <Section noRule badge="The table" className={playCss.playSection}>
         <SectionHead
           level="h1"
           lines={['One deal,', '*you against the roster.*']}

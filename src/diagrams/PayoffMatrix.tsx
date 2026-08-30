@@ -41,6 +41,8 @@ export function PayoffMatrix(props: PayoffInput) {
           stroke={C.ink12}
           strokeWidth={STROKE.thin}
         />
+        {/* Header cell: a 16px name over a 12px code, on the same 20px
+            baseline pitch a node's line stack uses. */}
         <Label
           x={header.labelX + header.labelW / 2}
           y={header.y + 24}
@@ -52,7 +54,7 @@ export function PayoffMatrix(props: PayoffInput) {
         </Label>
         <Label
           x={header.labelX + header.labelW / 2}
-          y={header.y + 40}
+          y={header.y + 44}
           role="tech"
           fill={C.muted}
           anchor="middle"
@@ -68,7 +70,7 @@ export function PayoffMatrix(props: PayoffInput) {
             </Label>
             <Label
               x={col.cx}
-              y={header.y + 40}
+              y={header.y + 44}
               role="tech"
               fill={C.paper}
               opacity={0.85}
@@ -91,10 +93,10 @@ export function PayoffMatrix(props: PayoffInput) {
               stroke={C.ink12}
               strokeWidth={STROKE.thin}
             />
-            <Label x={row.x + 12} y={row.y + 24} role="name" fill={C.ink}>
+            <Label x={row.x + 12} y={row.y + 30} role="name" fill={C.ink}>
               {row.label}
             </Label>
-            <Label x={row.x + row.w - 12} y={row.y + 24} role="tech" fill={C.soft} anchor="end">
+            <Label x={row.x + row.w - 12} y={row.y + 30} role="tech" fill={C.soft} anchor="end">
               {row.hint}
             </Label>
           </g>
@@ -118,7 +120,7 @@ export function PayoffMatrix(props: PayoffInput) {
               />
               <Label
                 x={cell.x + cell.w / 2}
-                y={focal ? cell.y + 18 : cell.y + 24}
+                y={focal ? cell.y + 22 : cell.y + 30}
                 role="name"
                 fill={focal ? C.accentText : style.text}
                 weight={focal ? 600 : style.weight}
@@ -130,12 +132,12 @@ export function PayoffMatrix(props: PayoffInput) {
                 /* No fill-opacity here. `--fa-amber-2` is the DARKENED accent
                    picked so accent text clears AA (5.41:1 on sheet, 4.53:1 on
                    tile — tokens.css §3.1), and multiplying it by 0.85 spends
-                   exactly the headroom that darkening bought: measured 4.01:1
-                   at 8px, under the 4.5:1 this size needs. The step down from
+                   exactly the headroom that darkening bought: measured 4.01:1,
+                   under the 4.5:1 a sub-18px label needs. The step down from
                    the value above it is carried by size and weight instead. */
                 <Label
                   x={cell.x + cell.w / 2}
-                  y={cell.y + 30}
+                  y={cell.y + 42}
                   role="tech"
                   fill={C.accentText}
                   anchor="middle"

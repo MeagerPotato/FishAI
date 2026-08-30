@@ -6,6 +6,10 @@
  * is "you" and card codes render as faces (`9H` -> `9♥`). The jokers keep their canonical `XR`/
  * `XB` names: RULES_US54.md §2.1 makes them individually nameable, and inventing a prettier
  * alias here would detach the surface from the notation every other page uses.
+ *
+ * `suitColor` is the other half of a card face: which of the two suit inks it is drawn in. The
+ * glyph above already carries the suit, so the colour is a recognition aid on top of a signal
+ * that is complete without it — see tokens.css §3.2.
  */
 import type { Card, PublicEvent, Seat, Team } from '../../lib/engine/index.ts'
 
@@ -20,6 +24,23 @@ const SUIT_GLYPH = new Map<string, string>([
 export function cardLabel(card: Card): string {
   if (card === 'XR' || card === 'XB') return card
   return `${card[0]}${SUIT_GLYPH.get(card[1]) ?? card[1]}`
+}
+
+/** Which ink a card face is drawn in. See tokens.css §3.2 for why there are two. */
+export type SuitColor = 'red' | 'black'
+
+/**
+ * Hearts and diamonds are red; clubs and spades are ink. The two jokers follow their own names
+ * — `XR` is the RED joker and `XB` the black one (RULES_US54.md §2.1 makes them individually
+ * nameable), so the colour is the card's identity here rather than a decoration.
+ *
+ * Anything unrecognised falls to black: a card face that cannot be classified should read as
+ * ordinary ink rather than silently claiming to be a red suit.
+ */
+export function suitColor(card: Card): SuitColor {
+  if (card === 'XR') return 'red'
+  if (card === 'XB') return 'black'
+  return card[1] === 'H' || card[1] === 'D' ? 'red' : 'black'
 }
 
 /** The long form for prose: `9♥`, `the red joker`. */

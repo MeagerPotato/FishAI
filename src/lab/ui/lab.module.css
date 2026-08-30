@@ -179,10 +179,16 @@
   color: var(--fa-ink);
 }
 
+/**
+ * The evidence line under each pre-registered prediction — the sentence that says *why* a
+ * verdict came out MIXED and which half held. That is the most load-bearing prose on either
+ * verdict panel, and it was set two steps below the body copy around it.
+ */
 .criterionDetail {
   grid-column: 2 / -1;
-  font-size: var(--fa-fs-meta);
-  line-height: 1.6;
+  max-width: 68ch;
+  font-size: var(--fa-fs-sm);
+  line-height: 1.65;
   color: var(--fa-ink-2);
   overflow-wrap: anywhere;
 }
@@ -238,29 +244,53 @@
    DENSE DATA — the only elements allowed to scroll horizontally
    ========================================================================== */
 
+/**
+ * `overflow-y: hidden` used to sit here, and it made every `position: sticky` in this file
+ * inert: a box whose vertical overflow is hidden is still a scrollport, but one with no room to
+ * scroll, so a sticky `thead th` had nothing to stick against and every dense table lost its
+ * column headers the moment the page moved. The two axes cannot be split — CSS computes a
+ * `visible` axis to `auto` whenever the other one is not `visible` — so the fix is to give the
+ * box a real height to scroll inside. Under `max-height` a short table simply never reaches it
+ * and shows no vertical scrollbar at all; a 36-row matrix does, and keeps its headings.
+ */
 .scroll {
   max-width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
+  max-height: min(72vh, 720px);
+  overflow: auto;
+  overscroll-behavior-x: contain;
   scrollbar-width: thin;
   border-block: 1px solid var(--fa-line-2);
 }
 
+/**
+ * `separate` with zero spacing rather than `collapse`. Visually identical here — every rule in
+ * these tables is a `border-bottom`, so there is nothing for collapsing to merge — but a
+ * collapsed border belongs to the table rather than the cell, and a sticky cell then scrolls out
+ * from under its own hairline. The row and column heads below are sticky, so the borders have to
+ * travel with them.
+ */
 .table {
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   width: 100%;
-  font-size: var(--fa-fs-meta);
+  font-size: var(--fa-fs-sm);
   font-variant-numeric: tabular-nums;
   color: var(--fa-ink);
 }
 
+/**
+ * Not the micro-label voice, despite looking like one. These captions are sentences — "E2 · 400
+ * pairs per tier · bits-equivalent by linear interpolation over the finite rungs" — and 10.5px
+ * ALL-CAPS at 0.16em is a treatment for a two-word tab, not for a clause a reader has to parse
+ * to know what the table is counting. Size and case are the readability fix; the muted ink and
+ * the medium weight keep it reading as apparatus rather than body copy.
+ */
 .table caption {
   padding: 0 0 12px;
   text-align: left;
-  font-size: var(--fa-fs-micro);
+  font-size: var(--fa-fs-meta);
   font-weight: 500;
-  letter-spacing: var(--fa-tr-badge);
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   color: var(--fa-ink-3);
 }
 
@@ -272,10 +302,13 @@
   border-bottom: 1px solid var(--fa-line-2);
 }
 
+/* 12.5px at 0.06em, up from 10.5px at 0.14em. A column head that has to carry a unit and a
+   direction — "Δ (adaptive − punter)" — is a phrase, and tracking a phrase out by 0.14em prices
+   every extra word in horizontal scroll. */
 .table th {
   font-weight: 500;
-  font-size: var(--fa-fs-micro);
-  letter-spacing: var(--fa-tr-legal);
+  font-size: var(--fa-fs-meta);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--fa-ink-3);
   border-bottom: 1px solid var(--fa-line);
@@ -286,14 +319,37 @@
   text-align: left;
 }
 
+/* Column heads wrap; body cells never do. A two-line head is normal in a data table, and it is
+   the only way a self-identifying header stays affordable — the numbers underneath are what must
+   not break. `vertical-align: bottom` keeps a one-line head on the baseline of a two-line one. */
 .table thead th {
   position: sticky;
   top: 0;
+  z-index: 2;
+  background-color: var(--fa-sheet);
+  white-space: normal;
+  vertical-align: bottom;
+  min-width: 8ch;
+}
+
+/* The row label, sticky against the horizontal scroll. Without this a reader tracking one style
+   across a 13-column table loses the name of the row they are in as soon as they pan right,
+   which is most of the reason these tables are hard to read at all. */
+.table tbody th {
+  position: sticky;
+  left: 0;
   z-index: 1;
   background-color: var(--fa-sheet);
 }
 
-.table tbody tr:hover td {
+/* The corner: sticky in both directions, so it outranks both of the above. */
+.table thead th:first-child {
+  left: 0;
+  z-index: 3;
+}
+
+.table tbody tr:hover td,
+.table tbody tr:hover th {
   background-color: var(--fa-paper);
 }
 
@@ -310,7 +366,7 @@
 .grid {
   border-collapse: separate;
   border-spacing: 0;
-  font-size: var(--fa-fs-micro);
+  font-size: var(--fa-fs-meta);
   font-variant-numeric: tabular-nums;
 }
 
@@ -342,16 +398,19 @@
   background-color: var(--fa-sheet);
   text-align: left;
   font-weight: 500;
-  font-size: var(--fa-fs-meta);
+  font-size: var(--fa-fs-sm);
   color: var(--fa-ink);
   white-space: nowrap;
 }
 
+/* The min-width tracks the type: the score is now 15px and the q-value under it 12.5px, so a
+   96px column would clip `q .0031`. The grid gets wider and scrolls further inside its own
+   frame, which is the trade this page is built to make. */
 .cell {
   display: grid;
   gap: 2px;
   width: 100%;
-  min-width: 96px;
+  min-width: 108px;
   padding: 7px 9px;
   background-color: transparent;
   border: 0;
@@ -365,18 +424,25 @@
   background-color: var(--fa-paper-2);
 }
 
+/* The mark for a cell a reader has singled out: tile ground plus an inset ink outline, no
+   colour. Used by the `:target` rule further down, which is where a matrix cell link lands. */
 .cellOn {
   background-color: var(--fa-tile);
   box-shadow: inset 0 0 0 1.5px var(--fa-ink);
 }
 
+/**
+ * The printed score is the reading — the ink ramp behind it is explicitly redundant — so it had
+ * no business being the smallest type on the page. 15px here and 12.5px on the q-value beneath,
+ * up from 12.5 and 10.5.
+ */
 .cellScore {
-  font-size: var(--fa-fs-meta);
+  font-size: var(--fa-fs-sm);
   font-weight: 500;
 }
 
 .cellSub {
-  font-size: var(--fa-fs-micro);
+  font-size: var(--fa-fs-meta);
   letter-spacing: 0.02em;
   color: var(--fa-ink-3);
 }
@@ -401,6 +467,60 @@
 }
 .lvl4 {
   background-color: transparent;
+}
+
+/**
+ * WHERE A MATRIX CELL LANDS.
+ *
+ * Every cell of the N×N grid is a link into the per-cell table below it, and until now the jump
+ * put the right row at the top of the viewport and then said nothing: no mark, no `:target`
+ * rule, thirty-six near-identical rows of digits and no way to tell which one you had asked for.
+ *
+ * The mark is `.cellOn`'s device — tile ground, inset ink outline, no colour — drawn on the
+ * cells rather than on the `<tr>`, because a row box is not a reliable painting surface for a
+ * shadow. The outline is assembled per cell so the run of them reads as one rectangle: top and
+ * bottom on every cell, plus the left edge on the first and the right edge on the last.
+ */
+.cellRow:target > * {
+  background-color: var(--fa-tile);
+  box-shadow:
+    inset 0 1.5px 0 var(--fa-ink),
+    inset 0 -1.5px 0 var(--fa-ink);
+}
+
+.cellRow:target > *:first-child {
+  box-shadow:
+    inset 1.5px 0 0 var(--fa-ink),
+    inset 0 1.5px 0 var(--fa-ink),
+    inset 0 -1.5px 0 var(--fa-ink);
+}
+
+.cellRow:target > *:last-child {
+  box-shadow:
+    inset -1.5px 0 0 var(--fa-ink),
+    inset 0 1.5px 0 var(--fa-ink),
+    inset 0 -1.5px 0 var(--fa-ink);
+}
+
+/* The way back. Hidden until the row is the target, so it costs no column and no ink on the
+   other thirty-five rows — a reader who arrived by clicking a cell is the only one who needs it.
+   Ink, not accent: the matrix page spends no amber at all, on the grounds that on a page which
+   is entirely numbers an accent picks a winner by typography. */
+.backToGrid {
+  display: none;
+}
+
+.cellRow:target .backToGrid {
+  display: inline-block;
+  margin-left: 10px;
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--fa-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* ==========================================================================
@@ -435,12 +555,28 @@
   gap: clamp(28px, 3.5vw, 48px);
 }
 
+/**
+ * `.figNote` stopped being a caption a long time ago. It carries the composition-effect caveat,
+ * the P5/P6 readings, the Bonferroni annotation, the attribution rider — the actual argument of
+ * these pages — and it was carrying it at 12.5px on a 78ch measure, which at that size runs to
+ * roughly 90 characters a line. Both numbers were wrong for the job.
+ *
+ * 15px and 68ch is the floor. Where the note sits in a `.stack` it is running argument rather
+ * than apparatus — that column is the two-up explanation block, never a figure caption — so it
+ * goes to full body size. One selector rather than a second class threaded through six pages,
+ * and it tracks the distinction the layout already makes.
+ */
 .figNote {
   margin: 14px 0 0;
-  max-width: 78ch;
-  font-size: var(--fa-fs-meta);
-  line-height: 1.6;
+  max-width: 68ch;
+  font-size: var(--fa-fs-sm);
+  line-height: 1.65;
   color: var(--fa-ink-2);
+}
+
+.stack > .figNote {
+  font-size: var(--fa-fs-body);
+  line-height: 1.7;
 }
 
 /* The Sources glossary: term | one-line meaning. A definition list, because that is what it is. */
@@ -452,10 +588,12 @@
   max-width: 86ch;
 }
 
+/* Same correction as `.figNote`: this is the definition a reader came here to look up, so it is
+   set at reading size, and the term it defines is legible enough to scan the column for. */
 .glossary dt {
-  font-size: var(--fa-fs-micro);
+  font-size: var(--fa-fs-meta);
   font-weight: 500;
-  letter-spacing: var(--fa-tr-legal);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--fa-ink);
   padding-top: 3px;
@@ -463,8 +601,8 @@
 
 .glossary dd {
   margin: 0;
-  font-size: var(--fa-fs-meta);
-  line-height: 1.6;
+  font-size: var(--fa-fs-sm);
+  line-height: 1.65;
   color: var(--fa-ink-2);
 }
 
@@ -532,6 +670,229 @@
 }
 
 /* ==========================================================================
+   THE IN-PAGE CONTENTS — see LabContents.tsx for why it is shaped like this
+   ========================================================================== */
+
+.toc {
+  margin: var(--fa-sp-head) 0 0;
+  border-top: 1px solid var(--fa-line);
+  border-bottom: 1px solid var(--fa-line);
+}
+
+/* The default triangle is removed on both engines — `list-style` for the modern one, the
+   `-webkit-` pseudo for Safari — and replaced by the Show/Hide word below, which says what it
+   does at a size a reader can actually hit. */
+.tocSummary {
+  display: flex;
+  align-items: baseline;
+  gap: 8px 18px;
+  padding: 15px 0;
+  min-height: 44px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.tocSummary::-webkit-details-marker {
+  display: none;
+}
+
+.tocSummary::after {
+  content: 'Show';
+  margin-left: auto;
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-2);
+}
+
+.toc[open] .tocSummary::after {
+  content: 'Hide';
+}
+
+.tocSummary:hover .tocTitle,
+.tocSummary:hover::after {
+  color: var(--fa-ink);
+}
+
+.tocTitle {
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-badge);
+  text-transform: uppercase;
+  color: var(--fa-ink);
+}
+
+.tocMeta {
+  font-size: var(--fa-fs-micro);
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The seam grid the stamp and the seat row already use: one hairline of background showing
+   through a 1px gap, so the list reads as a block of cells rather than a column of links. */
+.tocList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1px;
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+  background-color: var(--fa-line-2);
+  border: 1px solid var(--fa-line-2);
+}
+
+.tocList > li {
+  display: flex;
+}
+
+.tocLink {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  gap: 3px 10px;
+  align-items: baseline;
+  flex: 1;
+  padding: 11px 13px;
+  background-color: var(--fa-sheet);
+  text-decoration: none;
+  color: var(--fa-ink-2);
+}
+
+.tocLink:hover {
+  background-color: var(--fa-paper);
+  color: var(--fa-ink);
+}
+
+/* The current section. A ground and a rule, the same device the beats use — never colour, and
+   never opacity on everything else. */
+.tocLinkOn {
+  background-color: var(--fa-tile);
+  box-shadow: inset 2px 0 0 var(--fa-ink);
+  color: var(--fa-ink);
+}
+
+.tocNo {
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
+  color: var(--fa-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.tocLinkOn .tocNo {
+  color: var(--fa-ink);
+}
+
+.tocLabel {
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.tocNote {
+  display: block;
+  margin-top: 3px;
+  font-size: var(--fa-fs-meta);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--fa-ink-3);
+}
+
+/* --------------------------------------------------------------------------
+   THE POSITION CHIP — where you are, and the two ways out
+   -------------------------------------------------------------------------- */
+
+/**
+ * `--fa-rule-x` on a fixed element resolves to the sheet edge, which is the whole reason that
+ * token is written the way it is: the chip lines up with the page's own frame at every width
+ * without a single media query. It sits under the nav's z-index (90) and under the mobile sheet
+ * menu (60) — it is the least important thing on screen and must never cover either.
+ */
+.jump {
+  position: fixed;
+  right: var(--fa-rule-x);
+  bottom: 14px;
+  z-index: 50;
+  display: flex;
+  align-items: stretch;
+  gap: 1px;
+  max-width: min(400px, calc(100vw - 26px));
+  background-color: var(--fa-line);
+  border: 1px solid var(--fa-line);
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity var(--fa-dur-fast) var(--fa-ease),
+    transform var(--fa-dur-fast) var(--fa-ease),
+    visibility var(--fa-dur-fast) var(--fa-ease);
+}
+
+/* `visibility`, not `display`: it takes the chip out of the accessibility tree and the tab order
+   while it is away, and unlike `display` it can be transitioned. */
+.jumpOn {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+}
+
+.jumpTo,
+.jumpTop {
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  min-height: 44px;
+  padding: 7px 14px;
+  background-color: var(--fa-sheet);
+  text-decoration: none;
+  color: var(--fa-ink);
+}
+
+.jumpTo:hover,
+.jumpTop:hover {
+  background-color: var(--fa-paper);
+}
+
+.jumpTo {
+  min-width: 0;
+}
+
+.jumpEyebrow {
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
+.jumpNow {
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jumpTop {
+  align-content: center;
+  font-size: var(--fa-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* On paper there is no scroll position to report, and the index is the pages themselves. */
+@media print {
+  .jump {
+    display: none;
+  }
+}
+
+/* ==========================================================================
    THE PIN-ACT STEP RAIL
    ========================================================================== */
 
@@ -544,18 +905,34 @@
   border-top: 1px solid var(--fa-line-2);
 }
 
+/**
+ * The beats are no longer dimmed.
+ *
+ * `opacity: 0.34` put three of every four beats at roughly 1.6:1 against the sheet — text that
+ * is not low-contrast so much as absent, and it was carrying the reading of the figure beside
+ * it. A reader who scrolls past the act, or who simply reads ahead, met a paragraph they could
+ * not see.
+ *
+ * Raising the floor would have fixed the contrast and kept the premise, which is the part that
+ * was wrong: the beats are a numbered list of four things about one figure, all four true at
+ * once, and there is no reason the reader may only have one of them. So every beat is at full
+ * strength and the CURRENT one is marked instead — an ink rule down its left edge and the text
+ * at full ink. Emphasis by addition, not by subtraction.
+ */
 .beat {
   display: grid;
   grid-template-columns: 40px 1fr;
   gap: 4px 14px;
-  padding: 12px 0;
+  padding: 12px 0 12px 13px;
+  border-left: 2px solid transparent;
   border-bottom: 1px solid var(--fa-line-2);
-  opacity: 0.34;
-  transition: opacity var(--fa-dur) var(--fa-ease);
+  transition:
+    border-left-color var(--fa-dur) var(--fa-ease),
+    color var(--fa-dur) var(--fa-ease);
 }
 
 .beatOn {
-  opacity: 1;
+  border-left-color: var(--fa-ink);
 }
 
 .beatNo {
@@ -566,22 +943,23 @@
   font-variant-numeric: tabular-nums;
 }
 
+.beatOn .beatNo {
+  color: var(--fa-ink);
+}
+
 .beatText {
   font-size: var(--fa-fs-sm);
   line-height: 1.6;
   color: var(--fa-ink-2);
 }
 
-.beatText b {
-  font-weight: 500;
+.beatOn .beatText {
   color: var(--fa-ink);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .beat {
-    opacity: 1;
-    transition: none;
-  }
+.beatText b {
+  font-weight: 500;
+  color: var(--fa-ink);
 }
 
 /* ==========================================================================

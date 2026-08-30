@@ -16,12 +16,13 @@
  */
 
 import { useLocation } from 'react-router-dom'
-import { Eyebrow, Hairline, Section, SectionHead, TextLink } from '../components/index.ts'
+import { Board, Eyebrow, Hairline, Section, SectionHead, TextLink } from '../components/index.ts'
 import { cellIndex, scoreOf, type MatrixCell } from '../diagrams/index.ts'
 import { caseFromSearch, styleLabel, type LabArtifact } from '../lab/artifact.ts'
 import { count, interval, qValue, rate, rate3 } from '../lab/format.ts'
 import { labModel } from '../lab/model.ts'
 import { shortHash } from '../lab/rules.ts'
+import { LabContents, type LabSection } from '../lab/ui/LabContents.tsx'
 import { LabShell, withCase } from '../lab/ui/LabShell.tsx'
 import { ArtifactBroken, RulesMismatch } from '../lab/ui/Refusal.tsx'
 import { ScrollRegion } from '../lab/ui/ScrollRegion.tsx'
@@ -55,6 +56,84 @@ const DIAGNOSTICS: Array<{ key: keyof MatrixCell['metrics']['a']; label: string;
   { key: 'avgMoves', label: 'Average moves', note: 'game length — the passive-deadlock guard' },
 ]
 
+const CONTENTS: readonly LabSection[] = [
+  { id: 'how-to-read', label: 'How to read this page', note: 'The six terms every table uses' },
+  { id: 'payoff-matrix', label: 'The N × N grid', note: 'Score rate of row against column' },
+  { id: 'cells', label: 'Every stored cell', note: 'Interval, sample size, q-value' },
+  { id: 'diagnostics', label: '§4.2 diagnostics', note: 'Both sides of every pairing' },
+  { id: 'rankings', label: 'Rankings and cycles', note: 'Mean score, maximin, 3-cycles' },
+  { id: 'rules', label: 'The rule set', note: 'Two us54 facts these numbers rest on' },
+]
+
+/**
+ * The plain-language on-ramp, in the register `/lab`'s own "How to read" section established.
+ *
+ * This page used to open on `derived.cells` cells, Benjamini-Hochberg and an α, with the shared
+ * glossary sixteen thousand pixels away at the foot of a different route. These six are only the
+ * terms THIS page's tables actually use, defined and nothing more — no claim about the run is
+ * made here that is not made, with its numbers, in the sections below.
+ */
+const HOW_TO_READ = [
+  {
+    ix: '01',
+    title: 'Score rate is a plain win rate',
+    role: 'Measure',
+    body:
+      'The share of games a style’s team won, from 0 to 1, where .500 is an even match. Every ' +
+      'cell of the grid is the ROW style’s score rate against the COLUMN style, so a cell and ' +
+      'its mirror sum to exactly 1. Under us54 a tie is arithmetically impossible, so nothing ' +
+      'hides in a draw column.',
+  },
+  {
+    ix: '02',
+    title: 'A duplicate deal cancels the cards',
+    role: 'Method',
+    body:
+      'Each seeded deal is played twice with the teams swapped, and the pair is scored as one ' +
+      'observation. A lucky hand lifts both sides equally and cancels out. “Pairs” counts those ' +
+      'observations; “games” counts the individual games behind them, always twice the pairs.',
+  },
+  {
+    ix: '03',
+    title: 'SE and the 95% interval',
+    role: 'Uncertainty',
+    body:
+      'The standard error is how much the measured score rate would wobble if the same design ' +
+      'were run again on fresh seeds; the interval is roughly the estimate ± 2 SE. An interval ' +
+      'that straddles .500 is a matchup this many deals could not call either way.',
+  },
+  {
+    ix: '04',
+    title: 'The q-value, and what “ns” means',
+    role: 'Multiplicity',
+    body:
+      'Testing every cell at once would turn up apparent winners by chance alone. ' +
+      'Benjamini-Hochberg re-scores all the cells together so that the share of false calls ' +
+      'among those declared significant stays under α. The q-value is a cell’s score after that ' +
+      'correction; “ns” marks a cell that did not survive it. Those cells are kept and printed, ' +
+      'never dropped.',
+  },
+  {
+    ix: '05',
+    title: 'Mean score and maximin',
+    role: 'Rankings',
+    body:
+      'Mean score is a style’s average across its row — a valid ranking only if the matrix is ' +
+      'transitive. Maximin is its score in its single worst matchup, which asks a different ' +
+      'question: not “how well does this do on average” but “how badly can this be beaten”.',
+  },
+  {
+    ix: '06',
+    title: 'Cycles and cyclic energy',
+    role: 'Structure',
+    body:
+      'A 3-cycle is A beats B beats C beats A — rock-paper-scissors, where no single ranking can ' +
+      'be honest. Cyclic energy measures how much of the whole matrix is cyclic rather than a ' +
+      'ladder. Cycles here are built only from edges that survived the correction above: an edge ' +
+      'that merely looked significant uncorrected is not an edge.',
+  },
+]
+
 /** Four steps, floor to ceiling. The printed number is the reading; this is only the texture. */
 function level(score: number): string {
   if (score >= 0.55) return s.lvl1
@@ -80,7 +159,9 @@ function DiagnosticTable({ artifact, cell }: { artifact: LabArtifact; cell: Matr
             <th scope="col">Metric</th>
             <th scope="col">{styleLabel(artifact, cell.a)}</th>
             <th scope="col">{styleLabel(artifact, cell.b)}</th>
-            <th scope="col">Δ</th>
+            <th scope="col">
+              Δ ({styleLabel(artifact, cell.a)} − {styleLabel(artifact, cell.b)})
+            </th>
             <th scope="col">Definition</th>
           </tr>
         </thead>
@@ -154,10 +235,21 @@ export function LabMatrix() {
         <RuleStamp artifact={artifact} check={check} />
         <SyntheticNotice artifact={artifact} />
         <VerdictStrip derived={derived} />
+
+        <LabContents sections={CONTENTS} />
+      </Section>
+
+      {/* ---- how to read this page -------------------------------------------------------- */}
+      <Section id="how-to-read" badge="How to read">
+        <SectionHead
+          lines={['Six terms,', 'and the tables *read themselves*.']}
+          sub="This page is entirely numbers, and it should not need a second page open beside it. Every term its tables use is defined here; the shared method glossary on the report goes further."
+        />
+        <Board items={HOW_TO_READ} />
       </Section>
 
       {/* ---- the N x N grid --------------------------------------------------------------- */}
-      <Section badge="N × N">
+      <Section id="payoff-matrix" badge="N × N">
         <Eyebrow tone="muted" track="head" as="h2">
           Score rate of row against column
         </Eyebrow>
@@ -227,7 +319,7 @@ export function LabMatrix() {
       </Section>
 
       {/* ---- every cell, one row each ---------------------------------------------------- */}
-      <Section badge="Every cell">
+      <Section id="cells" badge="Every cell">
         <Eyebrow tone="muted" track="head" as="h2">
           The {derived.cells} stored cells
         </Eyebrow>
@@ -240,25 +332,32 @@ export function LabMatrix() {
             <caption>Cells · score rate, interval, sample size, q-value</caption>
             <thead>
               <tr>
-                <th scope="col">A</th>
-                <th scope="col">B</th>
-                <th scope="col">A score</th>
-                <th scope="col">SE</th>
-                <th scope="col">CI 95%</th>
-                <th scope="col">Pairs</th>
+                <th scope="col">Style A (row)</th>
+                <th scope="col">Style B (column)</th>
+                <th scope="col">A score rate</th>
+                <th scope="col">A SE</th>
+                <th scope="col">A CI 95%</th>
+                <th scope="col">Duplicate pairs</th>
                 <th scope="col">Games</th>
                 <th scope="col">A wins</th>
                 <th scope="col">B wins</th>
                 <th scope="col">Ties</th>
-                <th scope="col">Set margin</th>
-                <th scope="col">q</th>
+                <th scope="col">Set margin (A − B)</th>
+                <th scope="col">q-value</th>
                 <th scope="col">After BH</th>
               </tr>
             </thead>
             <tbody>
               {cells.map((cell) => (
-                <tr key={`${cell.a}-${cell.b}`} id={anchorFor(cell)}>
-                  <th scope="row">{styleLabel(artifact, cell.a)}</th>
+                <tr key={`${cell.a}-${cell.b}`} id={anchorFor(cell)} className={s.cellRow}>
+                  <th scope="row">
+                    {styleLabel(artifact, cell.a)}
+                    {/* Only rendered visibly while this row is the `:target` — the way back for a
+                        reader who arrived by clicking a cell of the grid. */}
+                    <a className={s.backToGrid} href="#payoff-matrix">
+                      ↑ Back to grid
+                    </a>
+                  </th>
                   <td style={{ textAlign: 'left' }}>{styleLabel(artifact, cell.b)}</td>
                   <td>{rate(cell.aScore)}</td>
                   <td>{cell.se.toFixed(4)}</td>
@@ -281,7 +380,7 @@ export function LabMatrix() {
       </Section>
 
       {/* ---- the full diagnostic table, per cell, both sides ------------------------------ */}
-      <Section badge="Diagnostics">
+      <Section id="diagnostics" badge="Diagnostics">
         <Eyebrow tone="muted" track="head" as="h2">
           §4.2 diagnostics — both sides of all {derived.cells} cells
         </Eyebrow>
@@ -306,7 +405,7 @@ export function LabMatrix() {
       </Section>
 
       {/* ---- rankings side by side ------------------------------------------------------- */}
-      <Section badge="Rankings">
+      <Section id="rankings" badge="Rankings">
         <Eyebrow tone="muted" track="head" as="h2">
           Mean score against maximin
         </Eyebrow>
@@ -333,11 +432,11 @@ export function LabMatrix() {
             <thead>
               <tr>
                 <th scope="col">Style</th>
-                <th scope="col">Mean score</th>
-                <th scope="col">CI 95%</th>
-                <th scope="col">Maximin</th>
-                <th scope="col">Worst vs</th>
-                <th scope="col">Worst CI lower</th>
+                <th scope="col">Mean score rate</th>
+                <th scope="col">Mean CI 95%</th>
+                <th scope="col">Maximin score rate</th>
+                <th scope="col">Worst matchup</th>
+                <th scope="col">Worst-cell CI lower bound</th>
                 <th scope="col">Worst cell after BH</th>
               </tr>
             </thead>
@@ -382,7 +481,7 @@ export function LabMatrix() {
               <thead>
                 <tr>
                   <th scope="col">Cycle</th>
-                  <th scope="col">Weakest edge</th>
+                  <th scope="col">Weakest edge (score rate)</th>
                 </tr>
               </thead>
               <tbody>
@@ -407,7 +506,7 @@ export function LabMatrix() {
         </p>
       </Section>
 
-      <Section badge="Rule set" noMarks>
+      <Section id="rules" badge="Rule set" noMarks>
         <Eyebrow tone="muted" track="head" as="h2">
           Two things about us54 that this page&rsquo;s numbers depend on
         </Eyebrow>
