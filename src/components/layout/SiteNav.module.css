@@ -211,11 +211,27 @@
 
 /* --- mobile sheet -------------------------------------------------------- */
 
+/**
+ * Below the collapse this sheet is the ONLY navigation — `.links` and `.cta` are gone — so
+ * anything it cannot show is a page nobody on a phone can reach.
+ *
+ * Two rules keep that from happening. `100dvh` rather than `inset: 0`, because `inset: 0`
+ * resolves against the LARGE viewport on iOS and the visible area is the small one, so the last
+ * rows sit under the browser chrome. And `overflow-y: auto`, because nine rows plus the
+ * colophon do not fit a 667px phone at any type size that keeps a 44px touch target — the sheet
+ * has to scroll, and `overscroll-behavior: contain` stops that scroll chaining to the locked
+ * page underneath it.
+ */
 .sheet {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100dvh;
   z-index: 60;
   display: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background-color: var(--fa-page);
   /* A clip-path wipe from the top, not a slide and not a fade: the menu is
      the sheet being pulled down over the page. */
@@ -231,13 +247,16 @@
   visibility: visible;
 }
 
+/* `min-height`, not `height`: at 100% the foot row is pinned to the fold and the rows below it
+   are simply clipped, which is the bug this pair of rules exists to fix. */
 .sheetIn {
-  height: 100%;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: calc(var(--fa-nav-h) + clamp(24px, 5vh, 44px))
-    calc(var(--fa-gutter) + var(--fa-inset)) clamp(28px, 5vh, 48px);
+  gap: clamp(16px, 3vh, 32px);
+  padding: calc(var(--fa-nav-h) + clamp(18px, 3.5vh, 40px))
+    calc(var(--fa-gutter) + var(--fa-inset)) clamp(20px, 3.5vh, 40px);
 }
 
 .row {
@@ -263,10 +282,13 @@
   transition-delay: calc(0.22s + var(--i) * 0.07s);
 }
 
+/* Sized so nine rows clear a 667px phone without scrolling and the row is still a 50px touch
+   target. The old clamp(30px, 9vw, 44px) put eight rows at ~550px before the sheet's own
+   padding, which is where "08 Design" went missing. */
 .rowLink {
   flex: 1;
-  padding: clamp(14px, 2.4vh, 22px) 0;
-  font-size: clamp(30px, 9vw, 44px);
+  padding: clamp(11px, 1.9vh, 18px) 0;
+  font-size: clamp(25px, 6.6vw, 34px);
   font-weight: 500;
   letter-spacing: -0.03em;
   line-height: 1.06;
@@ -296,10 +318,15 @@
 }
 
 /* --- the collapse --------------------------------------------------------
-   1080px, moved from 960px when the lab nav grew its eighth link (Bounded):
-   eight labels need ~990px of bar and the gutters leave ~1041px at 1081px.
-   Keep this in step with the matchMedia in SiteNav.tsx and the width note in
-   LabShell.tsx. */
+   1080px, and it STAYS at 1080px now that the lab nav carries a ninth link
+   (Papers) — measured rather than assumed. In the browser, at General Sans
+   500/16px, the nine labels plus their 24px gaps occupy 636px; with the brand
+   (83px), the two 30px flex gaps and the 44px toggle the bar needs ~823px, and
+   at 1081px the gutters leave 979px. The row keeps ~156px of slack where it
+   last shows, and does not hard-wrap until about 860px. Raising the breakpoint
+   for the ninth link would have hidden a nav that fits behind a hamburger on
+   every 1100px laptop. Keep this in step with the matchMedia in SiteNav.tsx and
+   the width note in LabShell.tsx. */
 
 @media (max-width: 1080px) {
   .links,
