@@ -16,18 +16,20 @@
  * adaptive artifact, because a mirror that implied more accuracy than the lab measured would
  * be marketing, not measurement.
  *
- * The bot seats are read too, against what they actually played: in v0.5 the styles are known
- * (the lobby pinned them), so each row is a live calibration check anyone can rerun from the
- * URL; in v1.0 every seat is the adaptive engine, so there is no fixed truth to agree with
- * and the column says so instead of pretending.
+ * The bot seats are read too, but there is no longer an Agreement column beside them. It only
+ * ever meant anything under v0.5, where the lobby pinned a known style per seat and the read
+ * could be scored against it; every seat is the adaptive engine now, so a column whose every
+ * cell says "no fixed truth" is a column that measures nothing. The calibration check it used
+ * to offer lives where it belongs — /lab/adaptive, over 10,800 reads rather than five.
  */
 import type { SeatClassification, SeatView, StyleId } from '../../lib/engine/index.ts'
 import { STYLE_IDS, STYLE_ROSTER, classifySeats, observeSeats } from '../../lib/engine/index.ts'
 import { Eyebrow, TextLink } from '../components/index.ts'
 import { ScrollRegion } from '../lab/ui/ScrollRegion.tsx'
 import lab from '../lab/ui/lab.module.css'
-import type { PlayMode } from './policies.ts'
-import { policyLabel } from './policies.ts'
+import type { BotNames } from './format.ts'
+import { seatNameCap } from './format.ts'
+import { ADAPTIVE_LABEL } from './policies.ts'
 import s from './play.module.css'
 
 const BOT_SEATS = [1, 2, 3, 4, 5] as const
@@ -38,11 +40,8 @@ const DAMP_ASKS = 12
 export interface StyleMirrorProps {
   /** The human's view of the FINISHED game — the log is complete, `game_over` included. */
   view: SeatView
-  mode: PlayMode
-  /** Five ids, one per bot seat in seat order — what the bots actually played in v0.5. */
-  styles: readonly StyleId[]
-  /** The v0.5 memory budget the bots played under, `null` for full — the Played column names it. */
-  bits: number | null
+  /** What the player called the bots. Absent at the shared table, where there are none. */
+  names?: BotNames
 }
 
 function pct(p: number): string {
@@ -56,7 +55,7 @@ function rankedPosterior(c: SeatClassification): { id: StyleId; p: number }[] {
     .sort((a, b) => b.p - a.p)
 }
 
-export function StyleMirror({ view, mode, styles, bits }: StyleMirrorProps) {
+export function StyleMirror({ view, names = [] }: StyleMirrorProps) {
   const reads = classifySeats(view)
   const human = reads[0]
   const humanAsks = observeSeats(view)[0].asks
@@ -131,22 +130,17 @@ export function StyleMirror({ view, mode, styles, bits }: StyleMirrorProps) {
               <th scope="col">Played</th>
               <th scope="col">Read as</th>
               <th scope="col">Posterior</th>
-              <th scope="col">Agreement</th>
             </tr>
           </thead>
           <tbody>
             {BOT_SEATS.map((seat) => {
               const read = reads[seat]
-              const agrees = mode === 'v05' ? styles[seat - 1] === read.top : null
               return (
                 <tr key={seat}>
-                  <th scope="row">Seat {seat}</th>
-                  <td>{policyLabel(mode, seat, styles, bits)}</td>
+                  <th scope="row">{seatNameCap(seat, names)}</th>
+                  <td>{ADAPTIVE_LABEL}</td>
                   <td>{STYLE_ROSTER[read.top].label}</td>
                   <td data-numeric>{pct(read.confidence)}</td>
-                  <td className={agrees === false ? undefined : lab.ns}>
-                    {agrees === null ? 'no fixed truth' : agrees ? 'agrees' : 'differs'}
-                  </td>
                 </tr>
               )
             })}
@@ -166,18 +160,9 @@ export function StyleMirror({ view, mode, styles, bits }: StyleMirrorProps) {
         : reading full-strength roster bots at end of game, the classifier&apos;s top read is
         exactly right 22.4% of the time over 10,800 seat reads, against an 11.1% chance floor —
         better than guessing, far from an oracle. Treat the mirror as a resemblance, not a
-        verdict.
-        {bits !== null ? (
-          <>
-            {' '}
-            The bot seats above played under a {bits}-bit budget while the fingerprints are
-            full-strength calibrations; what budgets do to this read is measured at{' '}
-            <TextLink href="/lab/bounded" arrow={false}>
-              the bounded-memory ladder
-            </TextLink>
-            .
-          </>
-        ) : null}
+        verdict. The bot rows carry no verdict at all: every seat above ran the adaptive engine,
+        which selects a style per decision, so there is no single style for the read to be right
+        or wrong about.
       </p>
     </section>
   )

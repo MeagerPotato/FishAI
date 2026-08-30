@@ -22,7 +22,8 @@ import { Button, cx } from '../components/index.ts'
 import type { ExplainedDecision } from './advisor.ts'
 import { describeSuggestion } from './AdvisorPane.tsx'
 import { CardFace } from './CardFace.tsx'
-import { bookLabel, cardName } from './format.ts'
+import type { BotNames } from './format.ts'
+import { bookLabel, cardName, seatNameCap } from './format.ts'
 import s from './play.module.css'
 
 const TEAMMATES: readonly Seat[] = [0, 2, 4]
@@ -35,9 +36,18 @@ export interface DeclareDialogProps {
   advice: ExplainedDecision | null
   onDeclare: (book: BookId, assignments: Record<Card, Seat>) => void
   onStandDown: () => void
+  /** What the player called the bots. Absent at the shared table, where there are none. */
+  names?: BotNames
 }
 
-export function DeclareDialog({ view, mustDeclare, advice, onDeclare, onStandDown }: DeclareDialogProps) {
+export function DeclareDialog({
+  view,
+  mustDeclare,
+  advice,
+  onDeclare,
+  onStandDown,
+  names = [],
+}: DeclareDialogProps) {
   const ref = useRef<HTMLDialogElement | null>(null)
   // Set while the unmount cleanup is closing the dialog itself, so the `close` listener below
   // can tell our own teardown apart from a force-close and not recurse into a reopen.
@@ -137,8 +147,9 @@ export function DeclareDialog({ view, mustDeclare, advice, onDeclare, onStandDow
         </p>
       ) : (
         <p className={s.panelNote}>
-          Name an unresolved set and place all six of its cards with your own team — you, seat 2
-          and seat 4. You may declare a set you hold no card of (row 15).
+          Name an unresolved set and place all six of its cards with your own team — you,{' '}
+          {seatNameCap(2, names)} and {seatNameCap(4, names)}. You may declare a set you hold no
+          card of (row 15).
         </p>
       )}
 
@@ -146,7 +157,7 @@ export function DeclareDialog({ view, mustDeclare, advice, onDeclare, onStandDow
         <div className={s.dialogAdvice}>
           <span className={s.dialogAdviceHead}>Assistant</span>
           <p className={s.panelNote} style={{ margin: 0 }}>
-            <strong>{describeSuggestion(advice.action)}</strong> — {advice.trace.headline}
+            <strong>{describeSuggestion(advice.action, names)}</strong> — {advice.trace.headline}
           </p>
           {advice.trace.claim ? (
             <p className={s.panelNote} style={{ margin: '6px 0 0' }}>
@@ -204,7 +215,7 @@ export function DeclareDialog({ view, mustDeclare, advice, onDeclare, onStandDow
                         setAssign((prev) => ({ ...prev, [c]: seat }))
                       }}
                     >
-                      {seat === 0 ? 'You' : `Seat ${seat}`}
+                      {seatNameCap(seat, names)}
                     </button>
                   ))}
                 </div>

@@ -4,12 +4,14 @@
  * ## Determinism
  *
  * The deal comes from `newGame(seed, us54Config, 0)` and every bot decision from
- * `decide(seatView(state, seat), policyForSeat(...), hashSeed(`${seed}:${moveIndex}`)())` —
- * the EXACT seeding convention the simulation lab uses, so a game at this table is reproducible
+ * `decide(seatView(state, seat), ADAPTIVE_POLICY, hashSeed(`${seed}:${moveIndex}`)())` — the
+ * EXACT seeding convention the simulation lab uses, so a game at this table is reproducible
  * from its URL and, given the same human actions, move-for-move identical on every visit. The
- * only non-determinism at the table is the human. The v0.5 memory budget (`bits`) rides into
- * `policyForSeat` and nowhere else — a bounded seat is the same pure decide over a restricted
- * knowledge, so the determinism story is unchanged.
+ * only non-determinism at the table is the human.
+ *
+ * Note what the pace control below is NOT allowed to touch: it changes when a step is applied,
+ * never which step. `advance` is pure over the state and never reads a clock, so two players
+ * watching the same seed at three seconds and at half a second see the identical game.
  *
  * ## The drive loop
  *
@@ -34,11 +36,20 @@
  *
  * ## Pace
  *
- * Three states, because the only control used to be one that made an already-fast table faster.
- * `normal` is the readable cadence, `fast` drops it to zero for a player who wants the result,
- * and `paused` schedules nothing at all — `step()` then applies exactly one visible step, so a
- * player can walk the game forward at their own speed. `step()` and the effect share one pure
- * `advance`, so stepping and running produce the identical sequence.
+ * ONE number the player sets — seconds between steps — plus Pause and Step, which are not paces
+ * at all and stayed. The three presets this replaced (Normal / Fast, over a fixed 1,200 ms)
+ * asked a player to pick from a menu of somebody else's reading speeds; a table that deals a
+ * new position every three seconds is a preference, not a mode, so it is a field.
+ *
+ * A folded declare window still gets a SHORTER beat than a material move, in the same 0.35
+ * proportion the two fixed constants used to stand in: a window emits nothing into the log, so
+ * it needs to register as a beat rather than be read. Holding the ratio rather than the old
+ * 420 ms keeps that true at both ends of the range — at half a second a fixed 420 ms would have
+ * made the silent step nearly as long as the loud one.
+ *
+ * `paused` schedules nothing at all — `step()` then applies exactly one visible step, so a
+ * player can walk the game forward by hand. `step()` and the effect share one pure `advance`,
+ * so stepping and running produce the identical sequence.
  *
  * Staleness is handled twice over: any state change re-runs the effect and clears the pending
  * timer, and the applier itself is a pure functional update that no-ops unless `moveIndex`
@@ -57,7 +68,6 @@ import type {
   ReduceResult,
   Seat,
   SeatView,
-  StyleId,
 } from '../../lib/engine/index.ts'
 import {
   allBooks,
@@ -69,22 +79,20 @@ import {
   seatView,
   us54Config,
 } from '../../lib/engine/index.ts'
-import type { PlayMode } from './policies.ts'
-import { policyForSeat } from './policies.ts'
+import { PACE_MAX, PACE_MIN } from './params.ts'
+import { ADAPTIVE_POLICY } from './policies.ts'
 
 /**
- * Visible-step cadence. A material move produces a sentence in the log, and 500 ms was half a
- * second to read one; 1,200 ms is reading speed. A folded declare window emits nothing at all,
- * so it only needs to register as a beat. Fast-forward is ~0 for both.
+ * How much of a step's interval a folded declare window costs. It emits nothing into the log,
+ * so it is a beat rather than a sentence — the proportion the old fixed 420/1200 stood in.
  */
-const MOVE_MS = 1200
-const WINDOW_MS = 420
-const FAST_MS = 0
+const QUIET_RATIO = 0.35
 
-/** How the table advances itself: held, readable, or as fast as the engine will go. */
-export type Pace = 'paused' | 'normal' | 'fast'
-
-export const PACES: readonly Pace[] = ['paused', 'normal', 'fast']
+/** The pace field, held to its offered range wherever a value arrives from. */
+export function clampPace(seconds: number): number {
+  if (!Number.isFinite(seconds)) return PACE_MIN
+  return Math.min(PACE_MAX, Math.max(PACE_MIN, seconds))
+}
 
 export interface GameFault {
   seat: Seat
@@ -100,10 +108,7 @@ interface Advance {
 }
 
 interface AdvanceInputs {
-  mode: PlayMode
   seed: string
-  stylesKey: string
-  bits: number | null
   /** The human's standing Declare control: armed stops a fold at the human's own offer. */
   armed: boolean
 }
@@ -118,10 +123,9 @@ function nextAction(state: GameState, io: AdvanceInputs): GameAction | null {
       return { type: 'decline', seat: 0 }
     return null
   }
-  const styles = io.stylesKey.split(',') as StyleId[]
   return decide(
     seatView(state, acting),
-    policyForSeat(io.mode, acting, styles, io.bits),
+    ADAPTIVE_POLICY,
     hashSeed(`${io.seed}:${state.moveIndex}`)(),
   )
 }
@@ -182,9 +186,12 @@ export interface Game {
   /** The standing "Declare" control: armed = take the next offer instead of declining it. */
   armed: boolean
   setArmed: (on: boolean) => void
-  /** How the table advances itself. `paused` schedules nothing; `step` walks it by hand. */
-  pace: Pace
-  setPace: (pace: Pace) => void
+  /** Held: the table schedules nothing, and `step` is the only thing that moves it. */
+  paused: boolean
+  setPaused: (on: boolean) => void
+  /** Seconds between the table's own steps. Always inside [PACE_MIN, PACE_MAX]. */
+  paceSeconds: number
+  setPaceSeconds: (seconds: number) => void
   /** Apply exactly one visible step. Only meaningful while paused; a no-op when it is not. */
   step: () => void
   /** True while the table has a step of its own to take — i.e. `step` would do something. */
@@ -210,10 +217,19 @@ function tallySets(state: GameState): { sets: [number, number]; unresolved: numb
   return { sets: [a, b], unresolved: allBooks(state.config).length - resolved }
 }
 
-export function useGame(mode: PlayMode, seed: string, stylesKey: string, bits: number | null): Game {
+/**
+ * `initialPaceSeconds` seeds the field the player then owns. It is read ONCE, deliberately: the
+ * URL's `?pace=` is where a table starts, not a leash on it, and re-seeding from the prop would
+ * fight every adjustment made at the table on a page whose URL is rewritten as the game runs.
+ */
+export function useGame(seed: string, initialPaceSeconds: number): Game {
   const [state, setState] = useState<GameState>(() => newGame(seed, us54Config, 0))
   const [armed, setArmed] = useState(false)
-  const [pace, setPace] = useState<Pace>('normal')
+  const [paused, setPaused] = useState(false)
+  const [paceSeconds, setPaceSecondsRaw] = useState(() => clampPace(initialPaceSeconds))
+  const setPaceSeconds = (seconds: number) => {
+    setPaceSecondsRaw(clampPace(seconds))
+  }
 
   // All derived values are recomputed per render; every function here is pure and cheap, and
   // hand-memoising them is exactly what the React Compiler lint forbids (see LabReplay.tsx:60).
@@ -232,7 +248,7 @@ export function useGame(mode: PlayMode, seed: string, stylesKey: string, bits: n
   // would be caching a value that can always be recomputed, and the only way to write it would
   // be a setState inside the drive effect. Nothing advances past a fault, so a derived one is
   // just as sticky as a stored one was.
-  const io = { mode, seed, stylesKey, bits, armed }
+  const io = { seed, armed }
   const pending = finished ? null : advance(state, io)
   const fault = pending !== null && 'fault' in pending ? pending.fault : null
   const canStep = pending !== null && !('fault' in pending)
@@ -240,18 +256,19 @@ export function useGame(mode: PlayMode, seed: string, stylesKey: string, bits: n
   // The drive loop: exactly one scheduled step at a time, cleared on any state change. Paused
   // schedules nothing — `step` below is then the only thing that moves the table.
   useEffect(() => {
-    if (state.phase === 'finished' || pace === 'paused') return
-    const result = advance(state, { mode, seed, stylesKey, bits, armed })
+    if (state.phase === 'finished' || paused) return
+    const result = advance(state, { seed, armed })
     if (result === null || 'fault' in result) return
     const at = state.moveIndex
-    const delay = pace === 'fast' ? FAST_MS : result.quiet ? WINDOW_MS : MOVE_MS
+    const move = paceSeconds * 1000
+    const delay = result.quiet ? Math.round(move * QUIET_RATIO) : move
     const timer = setTimeout(() => {
       setState((prev) => (prev.moveIndex === at ? result.next : prev))
     }, delay)
     return () => {
       clearTimeout(timer)
     }
-  }, [state, armed, pace, mode, seed, stylesKey, bits])
+  }, [state, armed, paused, paceSeconds, seed])
 
   /** One visible step, applied now. The same `advance` the loop uses, without the timer. */
   const step = () => {
@@ -292,8 +309,10 @@ export function useGame(mode: PlayMode, seed: string, stylesKey: string, bits: n
     declareOpen,
     armed,
     setArmed,
-    pace,
-    setPace,
+    paused,
+    setPaused,
+    paceSeconds,
+    setPaceSeconds,
     step,
     canStep,
     act,
