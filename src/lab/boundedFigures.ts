@@ -206,14 +206,17 @@ export function accuracyLine(results: BoundedResults, figNo = 'FIG. 03'): LineMo
    ========================================================================== */
 
 /**
- * Mean game length across every measured E1/E2 cell — the artifact's own `avgMoves` column.
- * The E4 attribution caveat leans on this: game length is itself a function of the budget,
- * so the both-teams design changes the whole ecology the classifier reads, not only the one
- * seat's signature. (E4's per-cell move counts were not aggregated into the artifact; the
- * ladder — where only ONE team is bounded — is the committed lower bound on the shift.)
+ * Mean game length across the E1 ladder — the artifact's own `avgMoves` column. The E4
+ * attribution caveat leans on this: game length is itself a function of the budget, so the
+ * both-teams design changes the whole ecology the classifier reads, not only the one seat's
+ * signature. The ladder alone is used, deliberately: its cells vary EXACTLY one thing — the
+ * budget, on one team — so the spread is attributable, where the tier cells' opposition
+ * differs in kind. E4's own per-cell move counts were never aggregated into the artifact, so
+ * this one-team spread is the committed, checkable lower bound on the both-teams shift —
+ * quoted as that, never as a measurement of E4's cells.
  */
 export interface MoveSpread {
-  /** Shortest mean game across ladder and tier cells, in engine steps. */
+  /** Shortest mean game across the ladder cells, in engine steps. */
   min: number
   /** Longest mean game. */
   max: number
@@ -222,8 +225,7 @@ export interface MoveSpread {
 }
 
 export function gridMoveSpread(results: BoundedResults): MoveSpread {
-  const cells = [...results.ladder, ...results.tiers]
-  const moves = cells.map((c) => c.avgMoves)
+  const moves = results.ladder.map((c) => c.avgMoves)
   const min = Math.min(...moves)
   const max = Math.max(...moves)
   return { min, max, spread: max / min - 1 }

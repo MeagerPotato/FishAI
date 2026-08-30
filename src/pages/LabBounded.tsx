@@ -74,9 +74,18 @@ function z2(v: number): string {
   return `${v < 0 ? '−' : '+'}${Math.abs(v).toFixed(2)}`
 }
 
-/** `.0089` / `<.0001` — a p-value, four places, never a rounded zero. */
+/** `.0348` / `<.0001` — a p-value, four places, never a rounded zero. */
 function pv(v: number): string {
   return v < 0.0001 ? '<.0001' : v.toFixed(4).replace(/^0/, '')
+}
+
+/**
+ * `.00885` — five places, for the two P7-rung p-values only: the artifact carries
+ * 0.0088497…, and the v1.5 paper prints .00885, so four places here (.0088) would put the
+ * two surfaces a rounding apart on the suite's single most-quoted number.
+ */
+function pv5(v: number): string {
+  return v < 0.00001 ? '<.00001' : v.toFixed(5).replace(/^0/, '')
 }
 
 const VERDICT_MARK: Record<VerdictValue, { cls: string; word: string }> = {
@@ -672,8 +681,8 @@ export function LabBounded() {
             <strong>Multiplicity.</strong> P7&rsquo;s rule tests three adjacent rungs, so a
             single violation carries a family-wise caveat, annotated at registration: under
             Bonferroni ×{p7Family?.comparisons ?? 3} the violated rung&rsquo;s one-sided p{' '}
-            {p7Rung ? pv(p7Rung.pOneSided) : '—'} corrects to{' '}
-            {p7Rung ? pv(p7Rung.pBonferroni) : '—'} — still under α ={' '}
+            {p7Rung ? pv5(p7Rung.pOneSided) : '—'} corrects to{' '}
+            {p7Rung ? pv5(p7Rung.pBonferroni) : '—'} — still under α ={' '}
             {p7Family?.alpha ?? 0.05}. <strong>The refutation survives the correction.</strong>{' '}
             The annotation changes no committed verdict; the registered rule already refuted on
             the raw rung.
@@ -681,12 +690,14 @@ export function LabBounded() {
           <p className={s.figNote}>
             <strong>Attribution.</strong> E4 bounds BOTH teams, so a budget changes everything
             the classifier reads at once — opponents, partners, and the games themselves. Game
-            length is itself a function of the budget: across the measured E1/E2 grid, mean
-            length runs from {moves.min.toFixed(0)} to {moves.max.toFixed(0)} engine steps — a{' '}
-            {pct(moves.spread, 0)} spread with only <em>one</em> team bounded, and E4 bounds
-            both, shifting its ecologies further still. The P7 shift is therefore a property of
-            bounded-vs-bounded <em>ecologies</em>; whether the read seat&rsquo;s own signature
-            moves is exactly what the single-seat design below was registered to isolate.
+            length is itself a function of the budget: across the measured ladder, mean length
+            runs from {moves.min.toFixed(0)} to {moves.max.toFixed(0)} engine steps — a{' '}
+            {pct(moves.spread, 0)} spread with only <em>one</em> team bounded (the artifact
+            aggregates no E4 game lengths, so the one-team ladder is the committed lower bound),
+            and E4 bounds both, shifting its ecologies further still. The P7 shift is therefore
+            a property of bounded-vs-bounded <em>ecologies</em>; whether the read seat&rsquo;s
+            own signature moves is exactly what the single-seat design below was registered to
+            isolate.
           </p>
         </div>
 
