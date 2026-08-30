@@ -740,12 +740,24 @@
   margin: 0 0 18px;
   padding: 0;
   list-style: none;
-  background-color: var(--fa-line-2);
-  border: 1px solid var(--fa-line-2);
 }
 
 .tocList > li {
   display: flex;
+  /*
+    The hairline grid is drawn per CELL, and it has to be.
+
+    It used to come from a line-coloured background on the list showing through a 1px gap. That
+    works only when every cell is occupied — and `auto-fill` means the column count changes with
+    the viewport, so the last row is short at most widths. Nine sections in four columns left
+    three empty cells, and the container painted them as one solid grey block beside the last
+    card. It was on every page carrying this index, at most window sizes.
+
+    An outline costs no layout, meets its neighbour's inside the 1px gap so interior lines stay
+    1px rather than doubling, and draws the outer edge the container's border used to. An empty
+    cell has no element in it, so it paints nothing at all.
+  */
+  outline: 1px solid var(--fa-line-2);
 }
 
 .tocLink {
