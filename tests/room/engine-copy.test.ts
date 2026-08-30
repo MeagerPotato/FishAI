@@ -36,6 +36,17 @@ const COPIES = import.meta.glob('../../supabase/functions/room/engine/*.ts', {
   eager: true,
 }) as Record<string, string>
 
+/**
+ * Line endings are the checkout's business, not the engine's.
+ *
+ * `?raw` hands back exactly what is on disk, and on Windows git checks these files out with CRLF.
+ * Comparing raw bytes therefore failed for a reason that has nothing to do with drift — and would
+ * have failed on every Windows clone, which is the platform this repository is developed on.
+ * Both sides are normalised, so the assertion still means "the same source", and a real edit still
+ * fails it. What it no longer does is fail over an invisible carriage return.
+ */
+const lf = (source: string): string => source.replace(/\r\n/g, '\n')
+
 /** The sync script's header, which is the only thing a copy may add to its original. */
 const BANNER =
   /^\/\/ GENERATED FILE — DO NOT EDIT\.\n\/\/ Copied verbatim from lib\/engine\/(\S+) by scripts\/sync-room-engine\.mjs\.\n\/\/ [^\n]*\n\n/
@@ -43,10 +54,12 @@ const BANNER =
 const basename = (path: string): string => path.slice(path.lastIndexOf('/') + 1)
 
 const copies = Object.entries(COPIES)
-  .map(([path, source]) => ({ name: basename(path), source }))
+  .map(([path, source]) => ({ name: basename(path), source: lf(source) }))
   .sort((a, b) => a.name.localeCompare(b.name))
 
-const originalsByName = new Map(Object.entries(ORIGINALS).map(([path, source]) => [basename(path), source]))
+const originalsByName = new Map(
+  Object.entries(ORIGINALS).map(([path, source]) => [basename(path), lf(source)]),
+)
 
 /** Every `from './x.ts'` in a module — what a flat copy has to be closed under. */
 function relativeImports(source: string): string[] {
