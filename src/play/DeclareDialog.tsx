@@ -18,10 +18,11 @@
 import { useEffect, useRef, useState } from 'react'
 import type { BookId, Card, Seat, SeatView } from '../../lib/engine/index.ts'
 import { allBooks, bookCards, buildKnowledge, holderOf } from '../../lib/engine/index.ts'
-import { Button } from '../components/index.ts'
+import { Button, cx } from '../components/index.ts'
 import type { ExplainedDecision } from './advisor.ts'
 import { describeSuggestion } from './AdvisorPane.tsx'
-import { bookLabel, cardLabel, cardName } from './format.ts'
+import { CardFace } from './CardFace.tsx'
+import { bookLabel, cardName } from './format.ts'
 import s from './play.module.css'
 
 const TEAMMATES: readonly Seat[] = [0, 2, 4]
@@ -48,10 +49,16 @@ export function DeclareDialog({ view, mustDeclare, advice, onDeclare, onStandDow
     const dialog = ref.current
     if (!dialog) return
     closing.current = false
+    // Where the keyboard was standing when the dialog took over. The platform restores focus on
+    // `close()` in modern engines, but this dialog is also REMOUNTED per decision (Table.tsx),
+    // and a remount is not a close as far as that restoration is concerned — so the return
+    // journey is made explicit rather than left to differ between browsers.
+    const opener = document.activeElement
     if (!dialog.open) dialog.showModal()
     return () => {
       closing.current = true
       dialog.close()
+      if (opener instanceof HTMLElement && document.contains(opener)) opener.focus()
     }
   }, [])
 
@@ -112,6 +119,9 @@ export function DeclareDialog({ view, mustDeclare, advice, onDeclare, onStandDow
       return holder !== null && TEAMMATES.includes(holder)
     }),
   )
+  // How much of this declare is inference and how much is hope. Row 14 makes the two cost the
+  // same, so the number belongs on the button rather than in a 10.5px tag six rows above it.
+  const guessed = cards.filter((c) => !certain.has(c)).length
 
   return (
     <dialog ref={ref} className={s.dialog} aria-labelledby="declare-title">
@@ -171,7 +181,7 @@ export function DeclareDialog({ view, mustDeclare, advice, onDeclare, onStandDow
       </div>
 
       {book ? (
-        <>
+        <div className={s.dialogBody}>
           <p className={s.panelNote} style={{ marginBottom: 0 }}>
             Prefilled where the public log and your hand make it certain; everything else is
             yours to place.
@@ -180,15 +190,15 @@ export function DeclareDialog({ view, mustDeclare, advice, onDeclare, onStandDow
             {cards.map((c) => (
               <div key={c} className={s.assignRow}>
                 <div className={s.assignCard}>
-                  <span className={`${s.chipFace}`}>{cardLabel(c)}</span>
-                  {certain.has(c) ? <span className={s.known}>certain</span> : null}
+                  <CardFace card={c} />
+                  <span className={s.known}>{certain.has(c) ? 'certain' : 'a guess'}</span>
                 </div>
                 <div className={s.assignSeats} role="group" aria-label={`Holder of ${cardName(c)}`}>
                   {TEAMMATES.map((seat) => (
                     <button
                       key={seat}
                       type="button"
-                      className={`${s.chip} ${assign[c] === seat ? s.chipOn : ''}`}
+                      className={cx(s.chip, assign[c] === seat && s.chipOn)}
                       aria-pressed={assign[c] === seat}
                       onClick={() => {
                         setAssign((prev) => ({ ...prev, [c]: seat }))
@@ -201,31 +211,45 @@ export function DeclareDialog({ view, mustDeclare, advice, onDeclare, onStandDow
               </div>
             ))}
           </div>
+        </div>
+      ) : null}
 
+      {/* Pinned to the bottom of the dialog, not appended after six assignment rows. At narrow
+          widths those rows run past the dialog's own max-height, which put both the row-14
+          warning and the button a player had to reach below the fold OF A MODAL — the one place
+          a reader has no page scrollbar to tell them there is more. */}
+      <div className={s.dialogFoot}>
+        {book ? (
           <p className={s.warn}>
             Row 14: any error at all — an opponent holding one of the six, or one card placed
             with the wrong teammate — gifts the whole set to the opposing team. There is no void
             outcome in this rule set.
           </p>
-        </>
-      ) : null}
-
-      <div className={s.dialogActions}>
-        <Button
-          variant="ghost"
-          arrow={false}
-          disabled={!allAssigned}
-          onClick={() => {
-            if (book && allAssigned) onDeclare(book, { ...assign } as Record<Card, Seat>)
-          }}
-        >
-          {book ? `Declare ${bookLabel(book)}` : 'Pick a set to declare'}
-        </Button>
-        {!mustDeclare ? (
-          <Button variant="line" arrow={false} onClick={onStandDown}>
-            Stand down — decline this offer
-          </Button>
         ) : null}
+
+        <div className={s.dialogActions}>
+          {/* The commit button carries the risk it is committing. It used to read identically
+              whether all six placements were proven by the log or all six were coin flips. */}
+          <button
+            type="button"
+            className={cx(s.submit, !allAssigned && s.submitOff)}
+            disabled={!allAssigned}
+            onClick={() => {
+              if (book && allAssigned) onDeclare(book, { ...assign } as Record<Card, Seat>)
+            }}
+          >
+            {book === null
+              ? 'Pick a set to declare'
+              : guessed === 0
+                ? `Declare ${bookLabel(book)} — all six proven`
+                : `Declare ${bookLabel(book)} — ${guessed} of 6 guessed`}
+          </button>
+          {!mustDeclare ? (
+            <Button variant="line" arrow={false} onClick={onStandDown}>
+              Stand down — decline this offer
+            </Button>
+          ) : null}
+        </div>
       </div>
     </dialog>
   )

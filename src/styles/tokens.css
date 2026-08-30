@@ -73,6 +73,54 @@
      -------------------------------------------------------------------------- */
 
   /* ==========================================================================
+     3.2 SUIT INK — the one hue pair outside the amber budget
+     --------------------------------------------------------------------------
+     A card is read by colour before it is read by glyph. The play surface
+     originally drew suits in flat ink on the grounds that the glyph already
+     carries the suit and a second hue pair buys no information; a human
+     playing the table said the opposite, and he is the one reading it. So:
+     hearts and diamonds red, clubs and spades ink, everywhere a card face is
+     drawn. The glyph still carries the suit, so nothing here is conveyed by
+     colour ALONE — this is a recognition aid layered on an already-sufficient
+     signal, which is the only form a colour cue is allowed to take.
+
+     The red is drawn INTO the warm-paper palette (a brick red off the same
+     warm axis as the amber), not a generic #f00, which would read as a third
+     system.
+
+     A pressed chip inverts to an ink ground, so the pair inverts with it:
+     `-inv` is what a card face becomes on `--fa-ink`. That is why there are
+     four tokens and not two.
+
+     CONTRAST, computed against every ground a card sits on (gate: 4.5:1):
+
+       LIGHT  --fa-suit-red #b4231a          --fa-suit-black #16140e
+         --fa-sheet   #fffdf3    6.44:1              18.06:1
+         --fa-page    #fffcf0    6.39:1              17.92:1
+         --fa-paper   #fbf7e6    6.12:1              17.14:1
+         --fa-paper-2 #f3edd6    5.60:1              15.69:1
+         --fa-tile    #efe9d2    5.40:1              15.13:1
+
+       DARK   --fa-suit-red #f27a6b          --fa-suit-black #f1eee6
+         --fa-sheet   #13120d    6.94:1              16.17:1
+         --fa-page    #13120d    6.94:1              16.17:1
+         --fa-paper   #17160e    6.71:1              15.65:1
+         --fa-paper-2 #1f1c11    6.31:1              14.70:1
+         --fa-tile    #221f13    6.10:1              14.22:1
+
+       PRESSED CHIP (ground = --fa-ink), using the `-inv` pair
+         light ink #16140e       6.81:1              17.92:1
+         dark  ink #f1eee6       5.67:1              16.17:1
+
+     Worst case anywhere: 5.40:1. Every cell clears 4.5:1.
+     ========================================================================== */
+
+  --fa-suit-red: #b4231a;
+  --fa-suit-black: #16140e;
+  --fa-suit-red-inv: #f27a6b;
+  --fa-suit-black-inv: #fffcf0;
+
+  /* ==========================================================================
      4. LINES — `frame` is page architecture, `line`/`line-2` are components
      ========================================================================== */
 
@@ -230,6 +278,14 @@
   --fa-amber: #f3b44a;
   --fa-amber-2: #dd922f;
   --fa-amber-lt: #f9cb80;
+
+  /* The suit pair swaps wholesale — see §3.2. Dark red is a warm coral off the
+     same axis; dark "black" is the theme's own ink, because an ink-black suit
+     on a near-black ground is not a suit, it is a hole. */
+  --fa-suit-red: #f27a6b;
+  --fa-suit-black: #f1eee6;
+  --fa-suit-red-inv: #b4231a;
+  --fa-suit-black-inv: #13120d;
 
   --fa-line: rgba(241, 238, 230, 0.24);
   --fa-line-2: rgba(241, 238, 230, 0.12);
