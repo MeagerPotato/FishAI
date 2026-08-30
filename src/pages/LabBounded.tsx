@@ -59,6 +59,7 @@ import {
 import { caseFromSearch } from '../lab/artifact.ts'
 import { count, interval, isoDate, pct, rate } from '../lab/format.ts'
 import { checkRules, shortHash } from '../lab/rules.ts'
+import { LabContents, type LabSection } from '../lab/ui/LabContents.tsx'
 import { LabShell, withCase } from '../lab/ui/LabShell.tsx'
 import { ArtifactBroken, RulesMismatch } from '../lab/ui/Refusal.tsx'
 import { ScrollRegion } from '../lab/ui/ScrollRegion.tsx'
@@ -93,6 +94,16 @@ const VERDICT_MARK: Record<VerdictValue, { cls: string; word: string }> = {
   refuted: { cls: s.markFail, word: 'Refuted' },
   mixed: { cls: s.markUnknown, word: 'Mixed' },
 }
+
+const CONTENTS: readonly LabSection[] = [
+  { id: 'how-to-read', label: 'How to read this page', note: 'Six ideas, in plain language' },
+  { id: 'ladder', label: 'The ladder', note: 'Ten budgets, nine rungs, the P1 test' },
+  { id: 'tiers', label: 'Tier calibration', note: 'The shipped tiers, priced in bits' },
+  { id: 'evidence', label: 'Evidence age', note: 'Decay curves, and where P4 and P6 land' },
+  { id: 'pressure', label: 'Style under pressure', note: 'The P7 refutation and the E4b answer' },
+  { id: 'verdict', label: 'The verdicts', note: 'P1–P8, as measured' },
+  { id: 'sources', label: 'Sources', note: 'Two runs, their health, the v1.0 anchor' },
+]
 
 /** One-line names for the pre-registered predictions; the full text sits in the detail. */
 const PREDICTION_LABEL: Record<string, string> = {
@@ -270,6 +281,8 @@ export function LabBounded() {
         <div style={{ marginTop: 'var(--fa-sp-head)' }}>
           <BoundedStamp artifact={artifact} shipped={check.shipped} ok={check.ok} />
         </div>
+
+        <LabContents sections={CONTENTS} />
       </Section>
 
       {/* ---- how to read this page ------------------------------------------------------- */}
@@ -367,12 +380,12 @@ export function LabBounded() {
             </caption>
             <thead>
               <tr>
-                <th scope="col">Bits</th>
-                <th scope="col">Pairs</th>
+                <th scope="col">Memory budget (bits)</th>
+                <th scope="col">Duplicate pairs</th>
                 <th scope="col">Set-share</th>
-                <th scope="col">SE</th>
-                <th scope="col">CI 95%</th>
-                <th scope="col">Mean moves</th>
+                <th scope="col">Set-share SE</th>
+                <th scope="col">Set-share CI 95%</th>
+                <th scope="col">Mean moves per game</th>
               </tr>
             </thead>
             <tbody>
@@ -407,10 +420,10 @@ export function LabBounded() {
             </caption>
             <thead>
               <tr>
-                <th scope="col">Rung</th>
-                <th scope="col">Δ share</th>
+                <th scope="col">Rung (from → to)</th>
+                <th scope="col">Δ set-share (to − from)</th>
                 <th scope="col">SE(Δ)</th>
-                <th scope="col">z</th>
+                <th scope="col">z (Δ ÷ SE)</th>
                 <th scope="col">P1 rule</th>
               </tr>
             </thead>
@@ -461,12 +474,12 @@ export function LabBounded() {
             </caption>
             <thead>
               <tr>
-                <th scope="col">Tier</th>
+                <th scope="col">Shipped tier</th>
                 <th scope="col">Set-share</th>
-                <th scope="col">SE</th>
+                <th scope="col">Set-share SE</th>
                 <th scope="col">Bits-equivalent</th>
-                <th scope="col">CI 95% (bits)</th>
-                <th scope="col">Placement</th>
+                <th scope="col">Bits-equivalent CI 95%</th>
+                <th scope="col">Placement note</th>
               </tr>
             </thead>
             <tbody>
@@ -526,12 +539,12 @@ export function LabBounded() {
               <tr>
                 <th scope="col">Policy</th>
                 <th scope="col">Observations</th>
-                <th scope="col">Young rate</th>
-                <th scope="col">Old rate</th>
-                <th scope="col">Decay</th>
-                <th scope="col">SE</th>
-                <th scope="col">z</th>
-                <th scope="col">Half-life (age)</th>
+                <th scope="col">Young-evidence exploit rate (ages 1–8)</th>
+                <th scope="col">Old-evidence exploit rate (ages 33+)</th>
+                <th scope="col">Decay (young − old)</th>
+                <th scope="col">Decay SE</th>
+                <th scope="col">z (decay ÷ SE)</th>
+                <th scope="col">Half-life (evidence age)</th>
               </tr>
             </thead>
             <tbody>
@@ -632,12 +645,12 @@ export function LabBounded() {
             </caption>
             <thead>
               <tr>
-                <th scope="col">Bits</th>
-                <th scope="col">Top-1</th>
-                <th scope="col">Rung</th>
-                <th scope="col">Δ</th>
+                <th scope="col">Memory budget (bits)</th>
+                <th scope="col">Top-1 accuracy</th>
+                <th scope="col">Rung (from → to)</th>
+                <th scope="col">Δ top-1 (to − from)</th>
                 <th scope="col">SE(Δ)</th>
-                <th scope="col">z</th>
+                <th scope="col">z (Δ ÷ SE)</th>
                 <th scope="col">P7 rule</th>
               </tr>
             </thead>
@@ -730,11 +743,11 @@ export function LabBounded() {
             </caption>
             <thead>
               <tr>
-                <th scope="col">Bits</th>
-                <th scope="col">Pilot top-1</th>
-                <th scope="col">SE</th>
-                <th scope="col">Record top-1</th>
-                <th scope="col">SE</th>
+                <th scope="col">Memory budget (bits)</th>
+                <th scope="col">Pilot top-1 accuracy</th>
+                <th scope="col">Pilot SE</th>
+                <th scope="col">Record top-1 accuracy</th>
+                <th scope="col">Record SE</th>
               </tr>
             </thead>
             <tbody>

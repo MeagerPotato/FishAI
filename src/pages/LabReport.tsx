@@ -74,6 +74,7 @@ import { count, edge, interval, rate, rate3 } from '../lab/format.ts'
 import { labModel } from '../lab/model.ts'
 import { RULES_FILE, shortHash } from '../lab/rules.ts'
 import { Beats } from '../lab/ui/Beats.tsx'
+import { LabContents, type LabSection } from '../lab/ui/LabContents.tsx'
 import { LabShell, withCase } from '../lab/ui/LabShell.tsx'
 import { ArtifactBroken, RulesMismatch } from '../lab/ui/Refusal.tsx'
 import { RuleStamp, SyntheticNotice, Us54Facts } from '../lab/ui/RuleStamp.tsx'
@@ -94,6 +95,27 @@ const REPO = 'https://github.com/MeagerPotato/FishAI'
  * fires and a function is passed as a React child. `Map.get` has no prototype
  * chain.
  */
+/**
+ * The contents of this page, in document order.
+ *
+ * Every `id` here is a real element below, and the two pin acts got wrapper elements to carry
+ * theirs — a `PinAct` owns its own `<section>` and takes no `id`, and the headline div inside it
+ * is far too short for the scroll observer to ever find. The wrapper is a plain `<div>`, which
+ * `position: sticky` inside the act is indifferent to.
+ */
+const CONTENTS: readonly LabSection[] = [
+  { id: 'how-to-read', label: 'How to read this page', note: 'Six ideas, in plain language' },
+  { id: 'rules', label: 'The rule set', note: 'us54, and why the ninth set decides everything' },
+  { id: 'roster', label: 'The roster', note: 'Nine styles, and two caveats on them' },
+  { id: 'method', label: 'Method', note: 'Duplicate deals and multiplicity control' },
+  { id: 'matrix', label: 'The payoff matrix', note: 'Who beats whom, and by how much' },
+  { id: 'counter-graph', label: 'The counter-graph', note: 'Only edges that survived correction' },
+  { id: 'verdict', label: 'The verdict', note: 'Four criteria, recomputed in your browser' },
+  { id: 'exploitability', label: 'Exploitability', note: 'Topping the table is not being strong' },
+  { id: 'crossplay', label: 'Cross-play', note: 'Against a bot nobody here wrote' },
+  { id: 'sources', label: 'Sources and glossary', note: 'Every document, every term' },
+]
+
 const FAMILY_LABEL = new Map<string, string>([
   ['control', 'Control'],
   ['aggressive', 'Aggressive'],
@@ -219,6 +241,8 @@ export function LabReport() {
           <RuleStamp artifact={artifact} check={check} />
           <SyntheticNotice artifact={artifact} />
         </div>
+
+        <LabContents sections={CONTENTS} />
       </Section>
 
       {/* ---- how to read this page -------------------------------------------------------- */}
@@ -459,46 +483,52 @@ export function LabReport() {
       </Section>
 
       {/* ---- pin act 1: the payoff matrix ------------------------------------------------ */}
-      <PinAct steps={matrixBeats.length} badge="Payoff matrix">
-        {(progress) => (
-          <>
-            <div className={pinHead} id="matrix">
-              <MaskedLines lines={['Who beats whom,', 'and by *how much*.']} />
-              <div className={pinHeadAside}>
-                <p>
-                  Each cell below is the share of identical deals the row style&rsquo;s team won
-                  against the column style&rsquo;s. {count(meta.seedSet.count)} duplicate pairs
-                  per cell, SE ≤ {rate3(Math.max(...artifact.matrix.map((c) => c.se)))}. The
-                  figure does not change as you scroll — only the reading does.
-                </p>
+      {/* The id lives on the wrapper, not on the headline inside: `#matrix` should mean the whole
+          act, which is what the contents list links to and what the scroll observer watches. */}
+      <div id="matrix">
+        <PinAct steps={matrixBeats.length} badge="Payoff matrix">
+          {(progress) => (
+            <>
+              <div className={pinHead}>
+                <MaskedLines lines={['Who beats whom,', 'and by *how much*.']} />
+                <div className={pinHeadAside}>
+                  <p>
+                    Each cell below is the share of identical deals the row style&rsquo;s team won
+                    against the column style&rsquo;s. {count(meta.seedSet.count)} duplicate pairs
+                    per cell, SE ≤ {rate3(Math.max(...artifact.matrix.map((c) => c.se)))}. The
+                    figure does not change as you scroll — only the reading does.
+                  </p>
+                </div>
               </div>
-            </div>
-            <PayoffMatrix results={results} figNo="FIG. 07" />
-            <Beats beats={matrixBeats} progress={progress} />
-          </>
-        )}
-      </PinAct>
+              <PayoffMatrix results={results} figNo="FIG. 07" />
+              <Beats beats={matrixBeats} progress={progress} />
+            </>
+          )}
+        </PinAct>
+      </div>
 
       {/* ---- pin act 2: the counter-graph ------------------------------------------------ */}
-      <PinAct steps={graphBeats.length} badge="Counter-graph">
-        {(progress) => (
-          <>
-            <div className={pinHead} id="counter-graph">
-              <MaskedLines lines={['Every edge here', 'survived *correction*.']} />
-              <div className={pinHeadAside}>
-                <p>
-                  Each arrow below points from a style to a style it reliably beats. Built from{' '}
-                  <code>matrix[].significant</code>, the Benjamini-Hochberg flag — never from a
-                  raw p-value. Uncorrected, four more cells in this matrix would have emitted an
-                  edge.
-                </p>
+      <div id="counter-graph">
+        <PinAct steps={graphBeats.length} badge="Counter-graph">
+          {(progress) => (
+            <>
+              <div className={pinHead}>
+                <MaskedLines lines={['Every edge here', 'survived *correction*.']} />
+                <div className={pinHeadAside}>
+                  <p>
+                    Each arrow below points from a style to a style it reliably beats. Built from{' '}
+                    <code>matrix[].significant</code>, the Benjamini-Hochberg flag — never from a
+                    raw p-value. Uncorrected, four more cells in this matrix would have emitted an
+                    edge.
+                  </p>
+                </div>
               </div>
-            </div>
-            <CounterGraph results={results} figNo="FIG. 08" />
-            <Beats beats={graphBeats} progress={progress} />
-          </>
-        )}
-      </PinAct>
+              <CounterGraph results={results} figNo="FIG. 08" />
+              <Beats beats={graphBeats} progress={progress} />
+            </>
+          )}
+        </PinAct>
+      </div>
 
       {/* ---- the verdict ---------------------------------------------------------------- */}
       <Section id="verdict" noMarks>
@@ -541,13 +571,13 @@ export function LabReport() {
                 <thead>
                   <tr>
                     <th scope="col">Style</th>
-                    <th scope="col">E(i)</th>
-                    <th scope="col">BR score</th>
-                    <th scope="col">CI 95%</th>
-                    <th scope="col">Search score</th>
+                    <th scope="col">E(i) — best-response gap</th>
+                    <th scope="col">Best-response score rate</th>
+                    <th scope="col">Best-response CI 95%</th>
+                    <th scope="col">Search score rate (biased high)</th>
                     <th scope="col">Detectable δ</th>
-                    <th scope="col">Maximin</th>
-                    <th scope="col">Worst vs</th>
+                    <th scope="col">Maximin score rate</th>
+                    <th scope="col">Worst matchup</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -618,12 +648,12 @@ export function LabReport() {
                 <caption>Cross-play cells · shared seed list published before the match</caption>
                 <thead>
                   <tr>
-                    <th scope="col">Us</th>
-                    <th scope="col">Them</th>
+                    <th scope="col">Our style</th>
+                    <th scope="col">Foreign bot</th>
                     <th scope="col">Mode</th>
-                    <th scope="col">Pairs</th>
-                    <th scope="col">Our score</th>
-                    <th scope="col">CI 95%</th>
+                    <th scope="col">Duplicate pairs</th>
+                    <th scope="col">Our score rate</th>
+                    <th scope="col">Our CI 95%</th>
                     <th scope="col">Seed set</th>
                     <th scope="col">rulesHash agreed</th>
                   </tr>
