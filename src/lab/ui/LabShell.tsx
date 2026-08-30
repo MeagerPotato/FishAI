@@ -12,7 +12,10 @@
 
 import type { ReactNode } from 'react'
 import { SheetRoot, SiteFooter, SiteNav, useDocumentTitle } from '../../components/index.ts'
-import { loadArtifact, type ArtifactCase } from '../artifact.ts'
+// TYPE-ONLY, and it must stay that way. A value import from `../artifact.ts` here statically
+// pulls the committed results artifact into the chunk every single route loads — see the note in
+// `./replayHref.ts`, which is where the one function that needs the artifact now lives.
+import type { ArtifactCase } from '../artifact.ts'
 
 /**
  * `?case=` is carried across routes so a reader stays in the case they opened. `v2` — the
@@ -21,22 +24,6 @@ import { loadArtifact, type ArtifactCase } from '../artifact.ts'
  */
 export function withCase(href: string, which: ArtifactCase): string {
   return which === 'v2' ? href : `${href}?case=${which}`
-}
-
-/**
- * A replay link, resolved against the case actually loaded: the stored replays are part of each
- * artifact, and the ids differ between the measured runs and the synthetic fixture. A
- * hard-coded id would 404 the link the moment the default case changed — which is exactly how
- * this helper came to exist.
- *
- * The shell itself does not call it, and that is deliberate now that `/design` sits here too:
- * the footer would have to resolve an id on every page of the site, and resolving one means
- * reading the whole results artifact. The pages that offer a replay hold the artifact anyway.
- */
-export function replayHref(which: ArtifactCase): string {
-  const loaded = loadArtifact(which)
-  const id = loaded.ok ? loaded.artifact.replays[0]?.id : undefined
-  return id === undefined ? withCase('/lab', which) : withCase(`/lab/replay/${id}`, which)
 }
 
 export interface LabShellProps {

@@ -20,7 +20,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Eyebrow, Section, SectionHead, TextLink } from '../components/index.ts'
-import { caseFromSearch } from '../lab/artifact.ts'
+import { caseFromSearch } from '../lab/case.ts'
 import { LabShell } from '../lab/ui/LabShell.tsx'
 import lab from '../lab/ui/lab.module.css'
 import { freshSeed, parsePlayParams, retiredMode } from '../play/params.ts'

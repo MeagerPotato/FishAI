@@ -28,8 +28,8 @@
 import { useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Button, Eyebrow, Section, SectionHead, TextLink, buttonRow } from '../components/index.ts'
-import { caseFromSearch } from '../lab/artifact.ts'
-import { LabShell, replayHref } from '../lab/ui/LabShell.tsx'
+import { caseFromSearch } from '../lab/case.ts'
+import { LabShell, withCase } from '../lab/ui/LabShell.tsx'
 import lab from '../lab/ui/lab.module.css'
 import {
   NAME_MAX,
@@ -257,7 +257,7 @@ export function PlayHub() {
             replay out of whichever artifact is actually loaded, which is the same helper the
             nav and the footer already use, and it carries `?case=` across with it.
           */}
-          <TextLink href={replayHref(which)} arrow={false}>
+          <TextLink href={withCase('/lab/replay', which)} arrow={false}>
             the replay page
           </TextLink>
           . The table you just configured is the same engine with you in it — and when your game

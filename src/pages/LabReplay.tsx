@@ -56,7 +56,15 @@ export function LabReplay() {
   const which = caseFromSearch(search)
   const model = labModel(which)
 
-  const record = model.ok ? model.artifact.replays.find((r) => r.id === id) : undefined
+  // `/lab/replay` with no id is a real destination, not a mistake: it means "a stored game", and
+  // the first replay in whichever artifact is loaded is one. It used to redirect to `/lab`, which
+  // made every link to it a dead end, and it is what lets `/play` point at a replay without
+  // importing the artifact merely to name an id.
+  const record = model.ok
+    ? id === ''
+      ? model.artifact.replays[0]
+      : model.artifact.replays.find((r) => r.id === id)
+    : undefined
   // Not hand-memoised: `replayGame` is pure and the React Compiler caches it for us, whereas a
   // `useMemo` here is manual memoization the compiler cannot prove safe and therefore refuses to
   // preserve — it would opt this whole component out of compilation to keep one cheap call.
