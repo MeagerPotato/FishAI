@@ -13,8 +13,9 @@
  * it. That argument was wrong in one direction: a replay is watched and a game
  * is played, and the states a player must catch at a glance — whose turn it is,
  * what is legal, what they hold — need weight the replay's read-only chrome
- * never had to give them. The log and the ScrollRegion still come from the lab;
- * everything a player touches is here.
+ * never had to give them. Everything a player reads or touches on this surface
+ * is now in this file — including the log, which needed a keyboard tab stop the
+ * lab's version does not have.
  *
  * Rules kept, all from SITE_SPEC.md §2:
  *
@@ -84,9 +85,16 @@
   }
 }
 
-/* The table and the hand sit side by side while there is room for both, so the
-   ask panel below them starts within a screen of the top of the page. Below
-   1100px the hand drops under the table and the ask panel follows it. */
+/*
+ * The table and the hand sit side by side, so the ask panel below them starts
+ * within a screen of the top of the page — the hand is a short, wrappable
+ * object and stacking it cost 136px of the ask panel's budget for nothing.
+ *
+ * The breakpoint is 700px, the same one at which the ring itself gives up and
+ * becomes a grid: above it the table always has enough width for the seat
+ * columns (32.9% apart) to clear a seat card (capped at 27%), and below it
+ * there is no ring to sit beside.
+ */
 .tableRow {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(220px, 0.85fr);
@@ -95,7 +103,7 @@
   margin: 0 0 18px;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 700px) {
   .tableRow {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1159,6 +1167,49 @@
 
 .advisorDetailBody {
   padding: 4px 0 12px;
+}
+
+/* ==========================================================================
+   THE PUBLIC LOG
+   --------------------------------------------------------------------------
+   Play-local rather than lab.log, because the box needs a KEYBOARD tab stop
+   (WCAG 2.1.1) and the site's ScrollRegion measures horizontal overflow while
+   this one overflows in height. PublicLog.tsx measures its own.
+   ========================================================================== */
+
+.logBox {
+  max-height: 420px;
+  overflow-y: auto;
+  border: 1px solid var(--fa-line);
+}
+
+/* The tab stop must be visible when it is taken, or it is a stop into
+   nowhere. --fa-amber-2 clears 3:1 on every ground in both themes. */
+.logBox:focus-visible {
+  outline: 2px solid var(--fa-amber-2);
+  outline-offset: -2px;
+}
+
+.log {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.logRow {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 12px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--fa-line-2);
+  font-size: var(--fa-fs-meta);
+  line-height: 1.55;
+  color: var(--fa-ink-2);
+}
+
+.logIx {
+  font-variant-numeric: tabular-nums;
+  color: var(--fa-ink-3);
 }
 
 /* ==========================================================================

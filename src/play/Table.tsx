@@ -33,7 +33,6 @@ import type { BookId, Card, EngineError, Seat, StyleId } from '../../lib/engine/
 import { hashSeed } from '../../lib/engine/index.ts'
 import { Button, Eyebrow, buttonRow, cx } from '../components/index.ts'
 import lab from '../lab/ui/lab.module.css'
-import { ScrollRegion } from '../lab/ui/ScrollRegion.tsx'
 import { advise } from './advisor.ts'
 import { AdvisorPane } from './AdvisorPane.tsx'
 import { AskPanel } from './AskPanel.tsx'
@@ -43,6 +42,7 @@ import { Hand } from './Hand.tsx'
 import type { PlayParams } from './params.ts'
 import { advisorPolicy, policyLabel } from './policies.ts'
 import s from './play.module.css'
+import { PublicLog } from './PublicLog.tsx'
 import { Seats } from './Seats.tsx'
 import { StyleMirror } from './StyleMirror.tsx'
 import type { Pace } from './useGame.ts'
@@ -72,7 +72,6 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
   const windowOpen = Boolean(state.declareWindow) && !finished
   const lead = sets[0] === sets[1] ? null : sets[0] > sets[1] ? 0 : 1
 
-  const logRows = state.log.map((event, i) => ({ key: i, event })).reverse()
   const lastEvent = state.log.length > 0 ? state.log[state.log.length - 1] : null
 
   // The declare dialog is modal (`showModal` + backdrop), so the advisor pane behind it is
@@ -353,19 +352,7 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
             Every ask, every result, every declare — the whole information channel under row 17,
             and everything the bots reason over. Declines advance the window and emit nothing.
           </p>
-          {/* Not a live region: the newest line is already mirrored beside the table as "Last
-              move", and announcing all of this narrated the bots over the player's own turn.
-              ScrollRegion gives the box the tab stop it needs to be readable from a keyboard. */}
-          <ScrollRegion label="Public log, newest first">
-            <ol className={lab.log} aria-label="Public log, newest first">
-              {logRows.map((row) => (
-                <li key={row.key} className={lab.logRow}>
-                  <span className={lab.logIx}>{String(row.key).padStart(3, '0')}</span>
-                  <span>{describePlayEvent(row.event)}</span>
-                </li>
-              ))}
-            </ol>
-          </ScrollRegion>
+          <PublicLog events={state.log} />
         </div>
       </div>
 
