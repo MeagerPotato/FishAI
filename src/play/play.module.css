@@ -532,3 +532,72 @@
   text-transform: uppercase;
   color: var(--fa-ink-3);
 }
+
+/* ==========================================================================
+   THE STYLE MIRROR — the classifier turned on the finished game
+   ========================================================================== */
+
+.mirror {
+  border: 1px solid var(--fa-line);
+  padding: 18px 20px 20px;
+  margin: 0 0 26px;
+}
+
+.mirrorVerdict {
+  margin: 14px 0 0;
+  font-size: var(--fa-fs-body);
+  color: var(--fa-ink);
+}
+
+.mirrorBars {
+  margin: 14px 0 0;
+  display: grid;
+  gap: 6px;
+}
+
+.mirrorRow {
+  display: grid;
+  grid-template-columns: 108px 1fr 56px;
+  align-items: center;
+  gap: 10px;
+}
+
+.mirrorLabel {
+  font-size: var(--fa-fs-micro);
+  letter-spacing: var(--fa-tr-legal);
+  text-transform: uppercase;
+  color: var(--fa-ink-3);
+}
+
+.mirrorTrack {
+  display: block;
+  height: 8px;
+  border: 1px solid var(--fa-line);
+  background-color: var(--fa-sheet);
+}
+
+.mirrorFill {
+  display: block;
+  height: 100%;
+  background-color: var(--fa-ink-3);
+}
+
+.mirrorRowTop .mirrorLabel {
+  color: var(--fa-ink);
+}
+
+.mirrorRowTop .mirrorFill {
+  background-color: var(--fa-ink);
+}
+
+.mirrorPct {
+  font-size: var(--fa-fs-micro);
+  color: var(--fa-ink-3);
+  text-align: right;
+}
+
+@media (max-width: 560px) {
+  .mirrorRow {
+    grid-template-columns: 84px 1fr 56px;
+  }
+}

@@ -225,7 +225,9 @@ export function PlayHub() {
           <TextLink href="/lab/replay/blitz-vs-banker" arrow={false}>
             the replay page
           </TextLink>
-          . The table you just configured is the same engine with you in it.
+          . The table you just configured is the same engine with you in it — and when your game
+          ends, the <strong>style mirror</strong> turns the v1.0 classifier on the finished log,
+          you included, and says which of the nine styles you played most like.
         </p>
       </Section>
     </LabShell>
