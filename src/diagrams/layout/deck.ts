@@ -168,7 +168,7 @@ export function layoutDeck(figNo = 'FIG. 01'): DeckModel {
       { key: 'eights', label: 'EIGHTS + JOKERS x 1', mark: 'swatch', fill: C.accentTint, stroke: C.accent },
       { key: 'count', label: '6 CARDS PER SET', mark: 'line', stroke: C.rule },
     ],
-    fontSizes: [8, 12],
+    fontSizes: [12, 16],
     fig: `${figNo} — DECK ASSEMBLY · 54 CARDS · 9 SETS OF 6`,
     caption:
       'The 48-card default drops the eights and plays eight sets. us54 keeps them and adds two ' +
