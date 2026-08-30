@@ -1,10 +1,19 @@
 /**
- * THE IN-PAGE CONTENTS for a long lab route.
+ * THE IN-PAGE CONTENTS for any long route on this site.
  *
  * `/lab` is 19,000px tall; `/lab/bounded` and `/lab/adaptive` are 14,000px each. Before this
  * component the only way through any of them was the scrollbar: the section names existed as
  * `data-badge` CSS pseudo-elements, which no reader can click and no screen reader announces,
  * and most sections carried no `id` to link to at all.
+ *
+ * ## Mounting it on a page
+ *
+ * Nothing here is specific to the lab routes. Give it a `sections` list whose every `id` is a
+ * real element on the page — a `<Section id="...">` is the usual one — and render it wherever the
+ * index belongs, normally at the end of the hero section so a reader meets it on arrival. The
+ * stylesheet travels with the component, so a host page imports nothing else. The only thing it
+ * assumes about its host is an anchor to send a reader back to the top of, which is `#main` (what
+ * `LabShell` renders) and is overridable with `topHref` for any shell that does not.
  *
  * ## What it is, structurally
  *
@@ -58,6 +67,11 @@ export interface LabContentsProps {
    * reader back to. Defaults to `contents`; only override it if a page already owns that id.
    */
   id?: string
+  /**
+   * Where "Top" goes. `#main` is the landmark `LabShell` renders and is right for every page
+   * inside it; a page in a different shell should pass the anchor its own document starts at.
+   */
+  topHref?: string
 }
 
 /**
@@ -67,7 +81,7 @@ export interface LabContentsProps {
  */
 const BAND = '-25% 0px -65% 0px'
 
-export function LabContents({ sections, id = 'contents' }: LabContentsProps) {
+export function LabContents({ sections, id = 'contents', topHref = '#main' }: LabContentsProps) {
   const wide = useMediaQuery('(min-width: 761px)')
   const [openState, setOpenState] = useState<boolean | null>(null)
   const [active, setActive] = useState<string | null>(null)
@@ -174,7 +188,7 @@ export function LabContents({ sections, id = 'contents' }: LabContentsProps) {
           <span className={s.jumpEyebrow}>Contents</span>
           <span className={s.jumpNow}>{current === undefined ? 'On this page' : current.label}</span>
         </a>
-        <a className={s.jumpTop} href="#main">
+        <a className={s.jumpTop} href={topHref}>
           Top
         </a>
       </nav>
