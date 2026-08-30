@@ -4,13 +4,19 @@ A bot that plays **Canadian Fish** (Literature), and the simulation lab built to
 
 > **Is there a quantitatively superior play style — or do styles just counter each other?**
 
-Two engines now live here. **FishAI v0.5** is the style-conditioned engine that question is asked
-of: nine parameterized styles over one shared inference engine, playable at the site's `/play`
-table with a traced assistant. **FishAI v1.0** is the adaptive engine built on top — it classifies
-what the other seats appear to be playing from the public log and best-responds off the measured
-payoff table. Its measured verdict is a negative result reported with the same care as a positive
-one: over this roster the best response to *everything* is Punter, so adaptation converges to the
-dominant style and then underpays for its warmup ([ADAPTIVE.md](ADAPTIVE.md)).
+Three engines now live here. **FishAI v0.5** is the style-conditioned engine that question is
+asked of: nine parameterized styles over one shared inference engine, playable at the site's
+`/play` table with a traced assistant. **FishAI v1.0** is the adaptive engine built on top — it
+classifies what the other seats appear to be playing from the public log and best-responds off
+the measured payoff table. Its measured verdict is a negative result reported with the same care
+as a positive one: over this roster the best response to *everything* is Punter, so adaptation
+converges to the dominant style and then underpays for its warmup ([ADAPTIVE.md](ADAPTIVE.md)).
+**FishAI v1.5** is the bounded-memory ladder — difficulty as a bit budget with an explicit
+eviction policy, replacing the old noise knob. Measured: strength is monotone in bits at every
+rung, the shipped medium tier prices at ≈ 32 bits, the old noise-based easy tier prices *below
+keeping nothing at all*, and mild memory pressure makes styles *easier* to classify in the
+whole-ecology design — a refuted prediction reported as the headline it is
+([BOUNDED.md](BOUNDED.md)).
 
 Nine bot styles, labelled from aggressive to passive, all sharing one identical inference engine so
 that *style* is measured rather than *skill*. They play tens of thousands of duplicate-dealt games
@@ -115,11 +121,12 @@ Documents:
 | [BOT_LAB.md](BOT_LAB.md) | Experimental design — duplicate deals, metrics, Nash averaging, α-Rank, exploitability |
 | [CONTAINMENT.md](CONTAINMENT.md) | The contained-book result: why an unclaimed team-held book is a resource |
 | [ADAPTIVE.md](ADAPTIVE.md) | FishAI v1.0 — observe → classify → best-respond, the dominance degeneracy, and the measured verdict |
+| [BOUNDED.md](BOUNDED.md) | FishAI v1.5 — memory in bits, the ladder that prices the tiers, and the P7/P8 attribution record |
 | [SITE_SPEC.md](SITE_SPEC.md) | The results site |
 
-The `papers/` directory carries five research papers in LaTeX (v0.5, v1.0, the contained-book
-negative result, the inert axis, and style observability), each compiling standalone under
-pdflatex with every number traced to a committed artifact by digest.
+The `papers/` directory carries six research papers in LaTeX (v0.5, v1.0, v1.5, the
+contained-book negative result, the inert axis, and style observability), each compiling
+standalone under pdflatex with every number traced to a committed artifact by digest.
 
 ## Running it
 
@@ -130,6 +137,7 @@ npm install
 npm test          # engine, bot, and lab suites
 npm run lab       # the style-vs-style simulation (matrix)
 npm run adaptive  # the FishAI v1.0 experiment suite (gauntlet, mixed screen, oracle, classifier)
+npm run bounded   # the FishAI v1.5 experiment suite (ladder, tiers, evidence age, accuracy)
 npm run dev       # the results site — /lab report, /play solo table, /lab/live in-browser sims
 ```
 

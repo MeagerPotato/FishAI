@@ -7,7 +7,9 @@
  * `decide(seatView(state, seat), policyForSeat(...), hashSeed(`${seed}:${moveIndex}`)())` —
  * the EXACT seeding convention the simulation lab uses, so a game at this table is reproducible
  * from its URL and, given the same human actions, move-for-move identical on every visit. The
- * only non-determinism at the table is the human.
+ * only non-determinism at the table is the human. The v0.5 memory budget (`bits`) rides into
+ * `policyForSeat` and nowhere else — a bounded seat is the same pure decide over a restricted
+ * knowledge, so the determinism story is unchanged.
  *
  * ## The drive loop
  *
@@ -111,7 +113,7 @@ function tallySets(state: GameState): { sets: [number, number]; unresolved: numb
   return { sets: [a, b], unresolved: allBooks(state.config).length - resolved }
 }
 
-export function useGame(mode: PlayMode, seed: string, stylesKey: string): Game {
+export function useGame(mode: PlayMode, seed: string, stylesKey: string, bits: number | null): Game {
   const [state, setState] = useState<GameState>(() => newGame(seed, us54Config, 0))
   const [armed, setArmed] = useState(false)
   const [fast, setFast] = useState(false)
@@ -162,10 +164,10 @@ export function useGame(mode: PlayMode, seed: string, stylesKey: string): Game {
     const styles = stylesKey.split(',') as StyleId[]
     const botView = seatView(state, acting)
     const botSeed = hashSeed(`${seed}:${state.moveIndex}`)()
-    const action = decide(botView, policyForSeat(mode, acting, styles), botSeed)
+    const action = decide(botView, policyForSeat(mode, acting, styles, bits), botSeed)
     const delay = fast ? FAST_MS : action.type === 'decline' ? DECLINE_MS : MOVE_MS
     return schedule(action, delay)
-  }, [state, armed, fast, fault, mode, seed, stylesKey])
+  }, [state, armed, fast, fault, mode, seed, stylesKey, bits])
 
   const act = (action: GameAction): ReduceResult => {
     const result = reduce(state, action)

@@ -295,9 +295,13 @@
   transition-delay: 0.5s;
 }
 
-/* --- the collapse -------------------------------------------------------- */
+/* --- the collapse --------------------------------------------------------
+   1080px, moved from 960px when the lab nav grew its eighth link (Bounded):
+   eight labels need ~990px of bar and the gutters leave ~1041px at 1081px.
+   Keep this in step with the matchMedia in SiteNav.tsx and the width note in
+   LabShell.tsx. */
 
-@media (max-width: 960px) {
+@media (max-width: 1080px) {
   .links,
   .cta {
     display: none;

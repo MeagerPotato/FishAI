@@ -5,13 +5,13 @@
  *
  *  1. **Equivalence.** `decideExplained(view, policy, seed).action` deep-equals
  *     `decide(view, policy, seed)` at every decision point of real games, under both rule sets,
- *     for every roster style, every shipped tier AND the adaptive spec. This is the load-bearing
- *     test: the trace is implemented by threading an optional sink through the very branches
- *     `decide` runs, and the only thing that keeps the two functions one function is proof, not
- *     intention. The fuzz drives whole games (52 `us54` + 13 `pagat48` mirror games — the
- *     adaptive engine is deterministic, so it rides the same harness) and compares at every
- *     step, so any trace statement that consumed a random draw, mutated shared state or
- *     diverted a branch would surface as a first-class diff.
+ *     for every roster style, every shipped tier, the adaptive spec AND a bounded spec. This is
+ *     the load-bearing test: the trace is implemented by threading an optional sink through the
+ *     very branches `decide` runs, and the only thing that keeps the two functions one function
+ *     is proof, not intention. The fuzz drives whole games (56 `us54` + 14 `pagat48` mirror
+ *     games — the adaptive and bounded engines are deterministic, so they ride the same
+ *     harness) and compares at every step, so any trace statement that consumed a random draw,
+ *     mutated shared state or diverted a branch would surface as a first-class diff.
  *  2. **The traces say something.** Constructed positions — mostly reused from the suites that
  *     pinned the underlying behaviors — assert the branch `kind`, the presence of the numbers a
  *     player would want (p against its bar, the contained-pass valuation), and a non-empty
@@ -69,9 +69,11 @@ const KINDS = new Set<DecisionTrace['kind']>([
 ])
 
 /**
- * The thirteen policies of the contract: the nine roster styles, the three shipped tiers, and
- * the adaptive spec — the fourth `PolicySpec` shape, whose explained twin must stay pinned to
- * `decide` through the classify-and-delegate path exactly as the static policies are.
+ * The fourteen policies of the contract: the nine roster styles, the three shipped tiers, the
+ * adaptive spec — the fourth `PolicySpec` shape, whose explained twin must stay pinned to
+ * `decide` through the classify-and-delegate path exactly as the static policies are — and a
+ * bounded spec, the fifth shape, pinned through the restricted-knowledge path at a mid-ladder
+ * budget where eviction genuinely bites.
  */
 const POLICIES: { name: string; policy: PolicySpec }[] = [
   ...STYLE_IDS.map((id) => ({ name: id as string, policy: STYLE_ROSTER[id] as PolicySpec })),
@@ -79,6 +81,7 @@ const POLICIES: { name: string; policy: PolicySpec }[] = [
   { name: 'medium', policy: 'medium' as PolicySpec },
   { name: 'hard', policy: 'hard' as PolicySpec },
   { name: 'adaptive', policy: { adaptive: true } },
+  { name: 'bounded-24', policy: { bounded: true, bits: 24 } },
 ]
 
 /** Structural sanity every trace must satisfy, at every decision point. */
@@ -163,9 +166,9 @@ describe('decideExplained.action ≡ decide, at every decision point', () => {
     )
   }
 
-  it('covered at least 52 us54 games and 13 pagat48 games across the thirteen policies', () => {
-    expect(totals.us54Games).toBeGreaterThanOrEqual(52)
-    expect(totals.pagatGames).toBeGreaterThanOrEqual(13)
+  it('covered at least 56 us54 games and 14 pagat48 games across the fourteen policies', () => {
+    expect(totals.us54Games).toBeGreaterThanOrEqual(56)
+    expect(totals.pagatGames).toBeGreaterThanOrEqual(14)
     expect(totals.decisions).toBeGreaterThan(1000)
   })
 })

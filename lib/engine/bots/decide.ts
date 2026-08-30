@@ -79,6 +79,19 @@
  * style with its expected payoff, and each opponent seat's top classification — before the
  * ordinary branch narration, so the assistant pane shows *why this style* above *why this
  * move*. The dependency is strictly one-way: this file imports adaptive.ts, never the reverse.
+ *
+ * ## The bounded-memory layer — FishAI v1.5
+ *
+ * A `BoundedSpec` policy also resolves here, with the view: [bounded.ts](bounded.ts) derives
+ * the fact pool from the full public log, keeps what a bit budget affords, and hands back the
+ * SAME `Knowledge` shape `buildKnowledge` returns — so the chosen style (hard skill, per the
+ * "bare style at full strength" rule) runs the ordinary pipeline below over a restricted
+ * memory rather than a restricted policy. The one plumbing consequence: every knowledge build
+ * below goes through `knowledgeFor`, which consults the resolved policy's override before
+ * falling back to `buildKnowledge`. The restricted knowledge is computed once, eagerly, at
+ * resolution — for BOTH wrappers, so a malformed view that makes the derivation throw lands in
+ * the same fallback on the same path and the explain-parity contract holds by construction.
+ * The dependency is strictly one-way here too: this file imports bounded.ts, never the reverse.
  */
 import type { BookId, Card, GameAction, Seat } from '../types.ts'
 import { allBooks, bookCards, cardBook, isCard, seatTeam, teamSeats } from '../cards.ts'
@@ -100,7 +113,9 @@ import { POLICY_CONSTANTS, SKILL_PRESETS, resolvePolicy } from './style.ts'
 import type { BotPolicy, SkillParams, StyleParams } from './style.ts'
 import { STYLE_ROSTER } from './roster.ts'
 import { ADAPTIVE_DEFAULTS, chooseStyle, isAdaptiveSpec } from './adaptive.ts'
-import type { AdaptiveChoice, AdaptiveSpec, PolicySpec } from './adaptive.ts'
+import type { AdaptiveChoice, AdaptiveSpec } from './adaptive.ts'
+import { BOUNDED_DEFAULTS, boundedRead, isBoundedSpec } from './bounded.ts'
+import type { BoundedRead, BoundedSpec, PolicySpec } from './bounded.ts'
 import type { Knowledge, KnowledgeOptions, RankedAsk, SeatView } from './types.ts'
 
 type Rng = () => number
@@ -224,6 +239,25 @@ function ownTeamCards(view: SeatView): number {
 /** The inference settings of a skill, in the shape `buildKnowledge` wants. */
 function knowledgeOptions(skill: SkillParams): KnowledgeOptions {
   return { logWindow: skill.logWindow, useConstraints: skill.useConstraints }
+}
+
+/**
+ * A resolved policy, plus the bounded arm's knowledge override. `resolveWithView` attaches the
+ * override for a `BoundedSpec` only; everything else carries a plain `{ skill, style }` and the
+ * pipeline is byte-for-byte what it was. Internal to this file — the public resolution shape
+ * stays `BotPolicy`.
+ */
+interface ActivePolicy extends BotPolicy {
+  /** The budget-restricted knowledge for THIS decision's view, computed at resolution time. */
+  boundedK?: () => Knowledge
+}
+
+/**
+ * The one knowledge build the pipeline performs, policy-aware: the bounded arm's restricted
+ * knowledge where an override is present, the ordinary skill-shaped `buildKnowledge` otherwise.
+ */
+function knowledgeFor(view: SeatView, pol: ActivePolicy): Knowledge {
+  return pol.boundedK !== undefined ? pol.boundedK() : buildKnowledge(view, knowledgeOptions(pol.skill))
 }
 
 /** First unresolved book fully contained in the viewer's own hand. */
@@ -856,7 +890,7 @@ function designateAction(view: SeatView, pol: BotPolicy, t?: Sink): GameAction {
  * The style still governs everything it chooses: the ask weights, and (through `errorRate` on
  * the skill side) how often the choice is thrown away for a uniformly random legal ask.
  */
-function decideNoPlanner(view: SeatView, pol: BotPolicy, rng: Rng, t?: Sink): GameAction {
+function decideNoPlanner(view: SeatView, pol: ActivePolicy, rng: Rng, t?: Sink): GameAction {
   const seat = view.seat
   if (view.phase === 'endgame') {
     const g = guessClaim(view, rng)
@@ -889,7 +923,7 @@ function decideNoPlanner(view: SeatView, pol: BotPolicy, rng: Rng, t?: Sink): Ga
     }
     return { type: 'ask', seat, target: a.target, card: a.card }
   }
-  const k = buildKnowledge(view, knowledgeOptions(pol.skill))
+  const k = knowledgeFor(view, pol)
   const ranked = rankAsksWith(view, k, pol.style)
   if (t) t.ranked = ranked.slice(0, 5)
   const top = preferredAsk(ranked, pol.style, t)
@@ -1094,10 +1128,10 @@ function signallingAsk(view: SeatView, style: StyleParams): GameAction | null {
  * The flow for a skill that can plan claims (`planClaims: true`). Every branch below is gated
  * by the style, so this one function is `medium`, `hard`, and every STYLES.md §3 roster entry.
  */
-function decideWithPlanner(view: SeatView, pol: BotPolicy, t?: Sink): GameAction {
+function decideWithPlanner(view: SeatView, pol: ActivePolicy, t?: Sink): GameAction {
   const seat = view.seat
-  const { skill, style } = pol
-  const k = buildKnowledge(view, knowledgeOptions(skill))
+  const { style } = pol
+  const k = knowledgeFor(view, pol)
 
   if (view.phase === 'endgame') {
     // Endgame counting: every remaining card is with the claimer's own team; knowledge + count
@@ -1252,7 +1286,7 @@ function windowCannotClose(view: SeatView): boolean {
  * (row 15, §7 vector 9), and refusing there would throw away the variant's best play. It is a
  * RULE consequence, not a style preference, so no style knob can switch it off.
  */
-function decideWindow(view: SeatView, pol: BotPolicy, rng: Rng, t?: Sink): GameAction {
+function decideWindow(view: SeatView, pol: ActivePolicy, rng: Rng, t?: Sink): GameAction {
   const decline: GameAction = { type: 'decline', seat: view.seat }
   const { skill, style } = pol
 
@@ -1314,7 +1348,7 @@ function decideWindow(view: SeatView, pol: BotPolicy, rng: Rng, t?: Sink): GameA
     return decline
   }
 
-  const k = buildKnowledge(view, knowledgeOptions(skill))
+  const k = knowledgeFor(view, pol)
   if (!style.declareOnlyOwnHand) {
     const refusedBefore = t ? t.refused.length : 0
     const certain = certainClaim(view, k, style, t)
@@ -1368,7 +1402,7 @@ function decideWindow(view: SeatView, pol: BotPolicy, rng: Rng, t?: Sink): GameA
  * there (`NO_DECLARE_WINDOW`), so unlike `pagat48` the turn-holder's only move is an ask, and
  * every claim branch of the ordinary flow has to be skipped rather than merely deprioritised.
  */
-function decideUs54Ask(view: SeatView, pol: BotPolicy, rng: Rng, t?: Sink): GameAction {
+function decideUs54Ask(view: SeatView, pol: ActivePolicy, rng: Rng, t?: Sink): GameAction {
   const seat = view.seat
   const { skill, style } = pol
   const asks = legalAsksFromView(view)
@@ -1389,14 +1423,14 @@ function decideUs54Ask(view: SeatView, pol: BotPolicy, rng: Rng, t?: Sink): Game
       }
       return { type: 'ask', seat, target: a.target, card: a.card }
     }
-    const kLow = buildKnowledge(view, knowledgeOptions(skill))
+    const kLow = knowledgeFor(view, pol)
     const rankedLow = rankAsksWith(view, kLow, style)
     if (t) t.ranked = rankedLow.slice(0, 5)
     const topLow = preferredAsk(rankedLow, style, t)
     if (t) concludeAsk(t, kLow, topLow)
     return { type: 'ask', seat, target: topLow.target, card: topLow.card }
   }
-  const k = buildKnowledge(view, knowledgeOptions(skill))
+  const k = knowledgeFor(view, pol)
   const ranked = rankAsksWith(view, k, style)
   if (ranked.length === 0) {
     if (t) conclude(t, 'error-branch', 'The ranking is empty though legal asks exist — a defensive branch; played the first legal ask.')
@@ -1615,6 +1649,18 @@ function noteAdaptive(t: Sink, spec: AdaptiveSpec, choice: AdaptiveChoice): void
   }
 }
 
+/**
+ * The bounded-memory read, prepended before any branch narration: the budget, what survived
+ * eviction, and where the spotlight sat — the numbers this decision actually ran on, so the
+ * /play advisor can stay honest about what a k-bit seat could still remember.
+ */
+function noteBounded(t: Sink, spec: BoundedSpec, read: BoundedRead, style: StyleParams): void {
+  const bits = Number.isFinite(spec.bits) ? Math.max(0, Math.floor(spec.bits)) : 0
+  t.notes.push(
+    `Bounded: ${bits}-bit memory — kept ${read.kept} of ${n_(read.total, 'derivable fact')} (${read.cost} bits)${read.spotlight !== null ? `, spotlight on ${read.spotlight}` : ''}; playing ${style.label} over the restricted knowledge.`,
+  )
+}
+
 /* ----------------------------------------------------------- validation --- */
 
 /** View-side legality check for the chosen action; anything false => fallback. */
@@ -1742,12 +1788,26 @@ function fallbackAction(view: SeatView, seed: number): GameAction {
  * do. A static spec passes straight through; an `AdaptiveSpec` is answered by `chooseStyle`
  * and played as the chosen roster style at hard skill (STYLES.md §2's "every style shares one
  * identical, full-strength inference engine" — the adaptive engine picks the style, never a
- * weaker inference). Called inside the wrappers' existing try/catch, so a throwing classifier
- * degrades to the same fallback as any other policy failure. `Object.hasOwn` guards the
- * roster lookup because the chosen id ultimately comes from generated table data; the anchor
- * default is the documented degrade, not a new policy.
+ * weaker inference); a `BoundedSpec` is answered by `boundedRead` and played as its named
+ * roster style at hard skill over the restricted knowledge (the budget caps the memory, never
+ * the policy). Called inside the wrappers' existing try/catch, so a throwing classifier or
+ * derivation degrades to the same fallback as any other policy failure. `Object.hasOwn` guards
+ * both roster lookups because the chosen id comes from table data or the wire; the documented
+ * default is the degrade, not a new policy.
+ *
+ * The bounded read is computed eagerly, for both wrappers alike — laziness in one and not the
+ * other would let a malformed view throw on different branches and break the explain parity.
  */
-function resolveWithView(view: SeatView, policy: PolicySpec, t?: Sink): BotPolicy {
+function resolveWithView(view: SeatView, policy: PolicySpec, t?: Sink): ActivePolicy {
+  if (isBoundedSpec(policy)) {
+    const wanted = policy.style ?? BOUNDED_DEFAULTS.style
+    const style = Object.hasOwn(STYLE_ROSTER, wanted)
+      ? STYLE_ROSTER[wanted]
+      : STYLE_ROSTER[BOUNDED_DEFAULTS.style]
+    const read = boundedRead(view, policy)
+    if (t) noteBounded(t, policy, read, style)
+    return { skill: SKILL_PRESETS.hard, style, boundedK: () => read.knowledge }
+  }
   if (!isAdaptiveSpec(policy)) return resolvePolicy(policy)
   const choice = chooseStyle(view, policy)
   if (t) noteAdaptive(t, policy, choice)
@@ -1764,8 +1824,8 @@ function resolveWithView(view: SeatView, policy: PolicySpec, t?: Sink): BotPolic
  *
  * `policy` is a difficulty tier name (the three shipped presets), a bare `StyleParams` (played
  * at full-strength inference, STYLES.md §2), an explicit `{ skill, style }` pair for the
- * BOT_LAB.md §1.3 skill ablation, or the FishAI v1.0 `AdaptiveSpec` (resolved against this
- * view — see `resolveWithView`).
+ * BOT_LAB.md §1.3 skill ablation, the FishAI v1.0 `AdaptiveSpec`, or the FishAI v1.5
+ * `BoundedSpec` (both resolved against this view — see `resolveWithView`).
  */
 export function decide(view: SeatView, policy: PolicySpec, seed: number): GameAction {
   let action: GameAction | null = null
@@ -1840,7 +1900,7 @@ export function decideExplained(view: SeatView, policy: PolicySpec, seed: number
   }
 }
 
-function decideInner(view: SeatView, pol: BotPolicy, seed: number, t?: Sink): GameAction {
+function decideInner(view: SeatView, pol: ActivePolicy, seed: number, t?: Sink): GameAction {
   // One stream per decision, drawn in the order the taken branch consumes it. Only a skill
   // with a non-zero error rate or no claim planner ever draws from it.
   const rng = mulberry32(seed >>> 0)

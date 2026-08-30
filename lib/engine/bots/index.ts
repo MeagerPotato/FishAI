@@ -62,7 +62,18 @@ export { COUNTER_TABLE } from './data/counter-table.ts'
 export type { CounterTable } from './data/counter-table.ts'
 export { ADAPTIVE_DEFAULTS, ADAPTIVE_PHASE_EVENTS, chooseStyle, isAdaptiveSpec } from './adaptive.ts'
 export type { AdaptiveChoice, AdaptiveSpec } from './adaptive.ts'
-// `PolicySpec` is re-exported from adaptive.ts, where the union is widened with `AdaptiveSpec`
-// — the acyclic arrangement documented in that file's header. Everything importing the barrel
-// gets the full four-shape union.
-export type { PolicySpec } from './adaptive.ts'
+// --- FishAI v1.5: the bounded-memory ladder --------------------------------------------------
+export {
+  BOUNDED_DEFAULTS,
+  boundedRead,
+  deriveBoundedFacts,
+  isBoundedSpec,
+  keepWithinBudget,
+  rankBoundedFacts,
+  restrictedKnowledge,
+} from './bounded.ts'
+export type { BoundedFact, BoundedFactKind, BoundedRanking, BoundedRead, BoundedSpec } from './bounded.ts'
+// `PolicySpec` is re-exported from bounded.ts, where adaptive.ts's widened union gains
+// `BoundedSpec` — the acyclic arrangement documented in both file headers. Everything
+// importing the barrel gets the full five-shape union.
+export type { PolicySpec } from './bounded.ts'

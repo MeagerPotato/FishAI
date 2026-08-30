@@ -125,9 +125,9 @@ export function SiteNav({
   }, [open])
 
   // Crossing back above the collapse breakpoint must not leave a hidden sheet
-  // holding the scroll lock.
+  // holding the scroll lock. Keep in step with SiteNav.module.css's 1080px collapse.
   useEffect(() => {
-    const mq = window.matchMedia('(min-width: 961px)')
+    const mq = window.matchMedia('(min-width: 1081px)')
     const onChange = () => {
       if (mq.matches) setOpen(false)
     }

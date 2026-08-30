@@ -36,7 +36,7 @@ export interface TableProps {
 }
 
 export function Table({ play, onRematch, onNewGame }: TableProps) {
-  const game = useGame(play.mode, play.seed, play.stylesKey)
+  const game = useGame(play.mode, play.seed, play.stylesKey, play.bits)
   const [humanError, setHumanError] = useState<EngineError | null>(null)
   // The advisor's style lives here, not in the pane, so the pane and the declare dialog's
   // advice strip reason with the SAME advisor: `advise` is pure over (view, policy, seed),
@@ -105,7 +105,7 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
     </p>
   ) : (
     <p className={s.status}>
-      Seat {acting} ({policyLabel(play.mode, acting, play.styles)}) is thinking…
+      Seat {acting} ({policyLabel(play.mode, acting, play.styles, play.bits)}) is thinking…
     </p>
   )
 
@@ -153,7 +153,7 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
               </Button>
             </div>
           </div>
-          <StyleMirror view={view} mode={play.mode} styles={play.styles} />
+          <StyleMirror view={view} mode={play.mode} styles={play.styles} bits={play.bits} />
         </>
       ) : null}
 
@@ -171,7 +171,7 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
                     {view.counts[seat]}
                   </span>
                   <span className={lab.seatMeta}>
-                    {seat === 0 ? 'You' : policyLabel(play.mode, seat, play.styles)}
+                    {seat === 0 ? 'You' : policyLabel(play.mode, seat, play.styles, play.bits)}
                   </span>
                   <span className={lab.seatMeta}>
                     {windowOpen && acting === seat
@@ -300,6 +300,7 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
               view={view}
               mode={play.mode}
               seed={play.seed}
+              botBits={play.bits}
               style={advisorStyle}
               onStyleChange={setAdvisorStyle}
               active={!finished && acting === 0 && (askTurn || passTurn || game.declareOpen)}
