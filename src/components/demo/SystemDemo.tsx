@@ -1,13 +1,9 @@
 import { PinAct, pinHead, pinHeadAside } from '../acts/PinAct.tsx'
-import { useDocumentTitle } from '../hooks/useDocumentTitle.ts'
 import { Board } from '../data/Board.tsx'
 import type { BoardItem } from '../data/Board.tsx'
 import { StatChart } from '../data/StatChart.tsx'
 import type { Stat } from '../data/StatChart.tsx'
 import { Section, SectionHead } from '../layout/Section.tsx'
-import { SheetRoot } from '../layout/SheetRoot.tsx'
-import { SiteFooter } from '../layout/SiteFooter.tsx'
-import { SiteNav } from '../layout/SiteNav.tsx'
 import { Arrow } from '../primitives/Arrow.tsx'
 import { Button, TextLink, buttonRow } from '../primitives/Button.tsx'
 import { Eyebrow } from '../primitives/Eyebrow.tsx'
@@ -15,19 +11,30 @@ import { Hairline } from '../primitives/Hairline.tsx'
 import { InkPanel, inkPanelBody, inkPanelNote } from '../primitives/InkPanel.tsx'
 import { MaskedLines } from '../primitives/MaskedLines.tsx'
 import { Reveal } from '../primitives/Reveal.tsx'
+import { LabContents, type LabSection } from '../../lab/ui/LabContents.tsx'
+import { LabShell } from '../../lab/ui/LabShell.tsx'
 import s from './SystemDemo.module.css'
 
 /* ---------------------------------------------------------------------------
    Content. Authored for FishAI; the numbers are structural facts about the
-   us54 rule set and the roster, not simulation results — the results artifact
-   does not exist yet and the page says so where it matters.
+   us54 rule set and the roster, never simulation results — a specimen sheet is
+   the wrong place to print a measurement, and this page prints none.
    --------------------------------------------------------------------------- */
 
-const NAV_LINKS = [
-  { href: '#roster', label: 'Roster' },
-  { href: '#numbers', label: 'Numbers' },
-  { href: '#specimen', label: 'Specimen' },
-  { href: '#method', label: 'Method' },
+/**
+ * The in-page index, in place of the four bespoke nav links this page used to define.
+ *
+ * Those links were the whole `/design` defect: they replaced the site's own nav with a
+ * different one, so a reader who clicked Design was dropped into a parallel site with four tabs
+ * that went nowhere else and no way back. The four destinations were always in-page anchors, so
+ * they belong in an in-page contents list — which is what the long lab routes already use.
+ */
+const CONTENTS: readonly LabSection[] = [
+  { id: 'roster', label: 'The roster', note: 'Nine styles, as the Board renders them' },
+  { id: 'numbers', label: 'By the numbers', note: 'The pinned scroll act and the stat chart' },
+  { id: 'specimen', label: 'Specimen', note: 'Palette, scale, tracking, controls' },
+  { id: 'method', label: 'Method', note: 'A centred section head' },
+  { id: 'sign-off', label: 'The sign-off', note: 'The ink panel' },
 ]
 
 const ROSTER: BoardItem[] = [
@@ -126,250 +133,228 @@ const TRACKING = [
   { track: 'head', label: 'Head · 0.18em' },
 ] as const
 
-const FOOTER_COLUMNS = [
-  {
-    title: 'Report',
-    items: [
-      { href: '#roster', label: 'The roster' },
-      { href: '#numbers', label: 'By the numbers' },
-      { href: '#method', label: 'Method' },
-    ],
-  },
-  {
-    title: 'Reference',
-    items: [
-      { href: '#specimen', label: 'Design specimen' },
-      { href: '#method', label: 'Rule set us54' },
-    ],
-  },
-  {
-    title: 'Source',
-    items: [{ href: 'https://github.com/MeagerPotato/FishAI', label: 'Repository' }],
-  },
-]
-
 /* ------------------------------------------------------------------------- */
 
 /**
  * The specimen route. Every primitive in the system appears here once, in the
  * layout it is meant to be used in — a design system you can only read is a
  * design system nobody checks.
+ *
+ * It sits in `LabShell`, the same shell as every other route, and that is the whole point of
+ * this file's last revision. It used to build its own `SheetRoot` + `SiteNav` + `SiteFooter`
+ * with four nav links of its own invention, so `/design` was a second site wearing the first
+ * one's clothes: the tabs changed under the reader, none of them led anywhere outside this
+ * page, and the way back was the browser's back button. A specimen sheet demonstrates the
+ * system; it does not get to opt out of it.
  */
 export function SystemDemo() {
-  useDocumentTitle('Design specimen')
   return (
-    <SheetRoot>
-      <a className="fa-skip" href="#main">
-        Skip to content
-      </a>
-
-      <SiteNav
-        links={NAV_LINKS}
-        current="#roster"
-        cta={{ href: '#verdict', label: 'Verdict' }}
-        standfirst="us54 · deterministic"
-      />
-
-      <main id="main">
-        {/* --- hero ------------------------------------------------------ */}
-        <Section noRule noMarks className={s.hero}>
-          <div className={s.heroGrid}>
-            <MaskedLines
-              level="h1"
-              lines={['Nine play styles.', 'One inference engine.', '*Style, not skill.*']}
-            />
-
-            <div className={s.heroRight}>
-              <Reveal as="p">
-                FishAI plays the us54 dialect of Canadian Fish and runs the roster against
-                itself on duplicate deals. Every style shares the same deduction code, so
-                what the payoff matrix measures is the policy — not one bot being better
-                written than another.
-              </Reveal>
-
-              <div className={buttonRow}>
-                <Button href="#numbers">Read the numbers</Button>
-                <Button href="#method" variant="ghost">
-                  How it is measured
-                </Button>
-              </div>
-            </div>
-          </div>
-        </Section>
-
-        {/* --- roster ---------------------------------------------------- */}
-        <Section id="roster" badge="The roster">
-          <SectionHead
-            lines={['Nine theses about *how to play*,', 'tuned from scratch.']}
-            sub="Under us54 a bad declare gifts the set to the opposition instead of voiding it — a two-point swing in a race to five. Every threshold inherited from the 48-card game is therefore too loose, so no style here is a port."
+    <LabShell
+      current="/design"
+      docTitle="Design specimen"
+      stamp="Rule set us54 · specimen sheet"
+      which="v2"
+    >
+      {/* --- hero ------------------------------------------------------ */}
+      <Section noRule noMarks className={s.hero}>
+        <div className={s.heroGrid}>
+          <MaskedLines
+            level="h1"
+            lines={['Nine play styles.', 'One inference engine.', '*Style, not skill.*']}
           />
 
-          <div className={s.readout}>
-            <Eyebrow tone="accent" track="badge">
-              FIG. 001
-            </Eyebrow>
-            <span className={s.readoutName}>The style spectrum</span>
-            <Eyebrow tone="body" track="tight">
-              Aggressive → passive, plus three information styles
-            </Eyebrow>
-            <Eyebrow tone="muted" track="legal" className={s.readoutAhead}>
-              9 items
-            </Eyebrow>
+          <div className={s.heroRight}>
+            <Reveal as="p">
+              FishAI plays the us54 dialect of Canadian Fish and runs the roster against itself
+              on duplicate deals. Every style shares the same deduction code, so what the payoff
+              matrix measures is the policy — not one bot being better written than another.
+            </Reveal>
+
+            <div className={buttonRow}>
+              <Button href="#numbers" variant="line">
+                Read the numbers
+              </Button>
+              <Button href="/lab" variant="ghost">
+                The measured report
+              </Button>
+            </div>
           </div>
+        </div>
 
-          <Board items={ROSTER} />
-        </Section>
+        <LabContents sections={CONTENTS} />
+      </Section>
 
-        {/* --- pinned act ------------------------------------------------ */}
+      {/* --- roster ---------------------------------------------------- */}
+      <Section id="roster" badge="The roster">
+        <SectionHead
+          lines={['Nine theses about *how to play*,', 'tuned from scratch.']}
+          sub="Under us54 a bad declare gifts the set to the opposition instead of voiding it — a two-point swing in a race to five. Every threshold inherited from the 48-card game is therefore too loose, so no style here is a port."
+        />
+
+        <div className={s.readout}>
+          <Eyebrow tone="accent" track="badge">
+            FIG. 001
+          </Eyebrow>
+          <span className={s.readoutName}>The style spectrum</span>
+          <Eyebrow tone="body" track="tight">
+            Aggressive → passive, plus three information styles
+          </Eyebrow>
+          <Eyebrow tone="muted" track="legal" className={s.readoutAhead}>
+            9 items
+          </Eyebrow>
+        </div>
+
+        <Board items={ROSTER} />
+      </Section>
+
+      {/* --- pinned act ------------------------------------------------ */}
+      {/* The id lives on the wrapper rather than on the pin head, for the reason LabContents
+          documents: the head is a few hundred pixels inside a sticky pin, far too short for the
+          scroll observer to ever settle on. The wrapper is the whole act. */}
+      <div id="numbers">
         <PinAct steps={STATS.length} badge="By the numbers">
           {(progress) => (
             <>
-              <div className={pinHead} id="numbers">
+              <div className={pinHead}>
                 <MaskedLines lines={['The shape of the', '*experiment*.']} />
                 <div className={pinHeadAside}>
                   <p className={s.actNote}>
-                    Structural facts about the rule set and the roster. The payoff matrix
-                    itself is not shown here — the results artifact has not been generated,
-                    and a specimen page is the wrong place to imply it has.
+                    Structural facts about the rule set and the roster. No measurement appears
+                    on this page: a specimen sheet exists to show how a figure is drawn, and a
+                    number printed here would be a number nobody could check.
                   </p>
-                  <TextLink href="#method">Read the method</TextLink>
+                  <TextLink href="/lab">The measured report</TextLink>
                 </div>
               </div>
               <StatChart stats={STATS} progress={progress} />
             </>
           )}
         </PinAct>
+      </div>
 
-        {/* --- specimen -------------------------------------------------- */}
-        <Section id="specimen" badge="Specimen" noRule>
-          <SectionHead
-            lines={['The parts, laid out', 'for *inspection*.']}
-            sub="Palette, scale, tracking ladder and controls. If a value is not on this page it is not in the system."
-          />
+      {/* --- specimen -------------------------------------------------- */}
+      <Section id="specimen" badge="Specimen" noRule>
+        <SectionHead
+          lines={['The parts, laid out', 'for *inspection*.']}
+          sub="Palette, scale, tracking ladder and controls. If a value is not on this page it is not in the system."
+        />
 
-          <div className={s.specimen}>
-            <div className={s.spec}>
-              <Eyebrow track="head" className={s.specHead}>
-                Palette
-              </Eyebrow>
-              <div className={s.swatches}>
-                {PALETTE.map((entry) => (
-                  <div key={entry.token} className={s.swatch}>
-                    <div
-                      className={s.chip}
-                      style={{ backgroundColor: `var(${entry.token})` }}
-                    />
-                    <Eyebrow tone="body" track="name" className={s.chipLabel}>
-                      {entry.label}
-                    </Eyebrow>
-                    <span className={s.chipValue}>{entry.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className={s.spec}>
-              <Eyebrow track="head" className={s.specHead}>
-                Type scale
-              </Eyebrow>
-              {SCALE.map((row) => (
-                <div key={row.token} className={s.scaleRow}>
-                  <Eyebrow tone="muted" track="legal" className={s.scaleKey}>
-                    {row.note}
+        <div className={s.specimen}>
+          <div className={s.spec}>
+            <Eyebrow track="head" className={s.specHead}>
+              Palette
+            </Eyebrow>
+            <div className={s.swatches}>
+              {PALETTE.map((entry) => (
+                <div key={entry.token} className={s.swatch}>
+                  <div
+                    className={s.chip}
+                    style={{ backgroundColor: `var(${entry.token})` }}
+                  />
+                  <Eyebrow tone="body" track="name" className={s.chipLabel}>
+                    {entry.label}
                   </Eyebrow>
-                  <span className={s.scaleSample} style={{ fontSize: row.size }}>
-                    Half-suit
-                  </span>
+                  <span className={s.chipValue}>{entry.value}</span>
                 </div>
               ))}
             </div>
+          </div>
 
-            <div className={s.spec}>
-              <Eyebrow track="head" className={s.specHead}>
-                Micro-label tracking
-              </Eyebrow>
-              <div className={s.rowStack}>
-                {TRACKING.map((row) => (
-                  <Eyebrow key={row.track} tone="muted" track={row.track}>
-                    {row.label}
-                  </Eyebrow>
-                ))}
-                <Eyebrow tone="accent" track="badge">
-                  Accent — this one is active
+          <div className={s.spec}>
+            <Eyebrow track="head" className={s.specHead}>
+              Type scale
+            </Eyebrow>
+            {SCALE.map((row) => (
+              <div key={row.token} className={s.scaleRow}>
+                <Eyebrow tone="muted" track="legal" className={s.scaleKey}>
+                  {row.note}
                 </Eyebrow>
+                <span className={s.scaleSample} style={{ fontSize: row.size }}>
+                  Half-suit
+                </span>
               </div>
-            </div>
+            ))}
+          </div>
 
-            <div className={s.spec}>
-              <Eyebrow track="head" className={s.specHead}>
-                Controls
+          <div className={s.spec}>
+            <Eyebrow track="head" className={s.specHead}>
+              Micro-label tracking
+            </Eyebrow>
+            <div className={s.rowStack}>
+              {TRACKING.map((row) => (
+                <Eyebrow key={row.track} tone="muted" track={row.track}>
+                  {row.label}
+                </Eyebrow>
+              ))}
+              <Eyebrow tone="accent" track="badge">
+                Accent — this one is active
               </Eyebrow>
-              <div className={s.rowStack}>
-                <div className={s.inline}>
-                  <Button>Amber</Button>
-                  <Button variant="ghost">Ghost</Button>
-                  <Button variant="line">Line</Button>
-                  <Button variant="ghost" disabled>
-                    Disabled
-                  </Button>
-                </div>
-                <div className={s.inline}>
-                  <TextLink href="#method">Text link</TextLink>
-                  <TextLink href="#roster">In-page anchor</TextLink>
-                </div>
-                <div className={s.inline}>
-                  <Eyebrow tone="muted" track="legal">
-                    Arrows
-                  </Eyebrow>
-                  <Arrow direction="ne" />
-                  <Arrow direction="e" />
-                  <Arrow direction="sw" />
-                </div>
-                <Hairline variant="line" />
-                <Hairline variant="soft" />
-              </div>
             </div>
           </div>
-        </Section>
 
-        {/* --- method ---------------------------------------------------- */}
-        <Section id="method" badge="Method">
-          <SectionHead
-            centre
-            lines={['Duplicate deals, or', 'the result is *noise*.']}
-            sub="Every pairing plays the same seeded deals from both sides, so a style is never credited for the cards it happened to be dealt. The engine is pure and deterministic: one seed, one byte-identical game."
-          />
-        </Section>
-
-        {/* --- verdict --------------------------------------------------- */}
-        <Section id="verdict" noMarks className={s.outro}>
-          <InkPanel fig="FIG. 005 — The sign-off" live="Awaiting first run">
-            <div className={inkPanelBody}>
-              <MaskedLines
-                lines={['Is there a best style,', 'or do they *counter* each other?']}
-              />
-              <div className={buttonRow}>
-                <Button href="#roster" variant="ghost">
-                  Back to the roster
+          <div className={s.spec}>
+            <Eyebrow track="head" className={s.specHead}>
+              Controls
+            </Eyebrow>
+            <div className={s.rowStack}>
+              <div className={s.inline}>
+                <Button>Amber</Button>
+                <Button variant="ghost">Ghost</Button>
+                <Button variant="line">Line</Button>
+                <Button variant="ghost" disabled>
+                  Disabled
                 </Button>
               </div>
+              <div className={s.inline}>
+                <TextLink href="#method">Text link</TextLink>
+                <TextLink href="#roster">In-page anchor</TextLink>
+              </div>
+              <div className={s.inline}>
+                <Eyebrow tone="muted" track="legal">
+                  Arrows
+                </Eyebrow>
+                <Arrow direction="ne" />
+                <Arrow direction="e" />
+                <Arrow direction="sw" />
+              </div>
+              <Hairline variant="line" />
+              <Hairline variant="soft" />
             </div>
-            <p className={inkPanelNote}>
-              If the payoff matrix is mostly transitive the lab names a best style. If it
-              carries real cyclic energy there is not one, and the counter-structure is the
-              finding. Both render paths exist before the data does.
-            </p>
-          </InkPanel>
-        </Section>
-      </main>
+          </div>
+        </div>
+      </Section>
 
-      <SiteFooter
-        standfirst="A bot that plays Canadian Fish, and the lab that measures whether any play style is actually superior."
-        columns={FOOTER_COLUMNS}
-        legal="© 2026 FishAI — MIT licensed"
-        stamp="Rule set us54 · specimen sheet"
-      />
-    </SheetRoot>
+      {/* --- method ---------------------------------------------------- */}
+      <Section id="method" badge="Method">
+        <SectionHead
+          centre
+          lines={['Duplicate deals, or', 'the result is *noise*.']}
+          sub="Every pairing plays the same seeded deals from both sides, so a style is never credited for the cards it happened to be dealt. The engine is pure and deterministic: one seed, one byte-identical game."
+        />
+      </Section>
+
+      {/* --- sign-off -------------------------------------------------- */}
+      <Section id="sign-off" noMarks className={s.outro}>
+        <InkPanel fig="FIG. 005 — The sign-off" live="Specimen · no data">
+          <div className={inkPanelBody}>
+            <MaskedLines
+              lines={['Is there a best style,', 'or do they *counter* each other?']}
+            />
+            <div className={buttonRow}>
+              <Button href="/lab#verdict" variant="ghost">
+                The verdict, measured
+              </Button>
+            </div>
+          </div>
+          <p className={inkPanelNote}>
+            If the payoff matrix is mostly transitive the lab names a best style. If it
+            carries real cyclic energy there is not one, and the counter-structure is the
+            finding. Both render paths existed before the data did; the answer the artifact
+            actually gives is on the report, recomputed in the browser each time it loads.
+          </p>
+        </InkPanel>
+      </Section>
+    </LabShell>
   )
 }
 

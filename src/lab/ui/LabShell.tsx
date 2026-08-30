@@ -1,16 +1,43 @@
 /**
- * The shell every lab route sits in: one `SheetRoot`, the nav, the footer, and the skip link.
+ * The shell EVERY route on this site sits in: one `SheetRoot`, the nav, the footer, and the skip
+ * link. Not "every lab route" — every route, `/design` included. A page that builds its own nav
+ * builds a second site, which is exactly what `/design` had done and what a reader arriving there
+ * had to escape from.
  *
  * `SiteNav` navigates with plain anchors, which is deliberate rather than an oversight to route
- * around: the three lab routes are separate documents in every sense a reader cares about, and a
- * full navigation guarantees the lazily-loaded chunk boundary is real. In-page drill-downs use
- * router `Link`s, where preserving scroll and state does matter.
+ * around: the routes are separate documents in every sense a reader cares about, and a full
+ * navigation guarantees the lazily-loaded chunk boundary is real. In-page drill-downs use router
+ * `Link`s, where preserving scroll and state does matter.
  */
 
 import type { ReactNode } from 'react'
 import { SheetRoot, SiteFooter, SiteNav, useDocumentTitle } from '../../components/index.ts'
 import { loadArtifact, type ArtifactCase } from '../artifact.ts'
-import { RULES_FILE } from '../rules.ts'
+
+/**
+ * `?case=` is carried across routes so a reader stays in the case they opened. `v2` — the
+ * current measured run — is the default everywhere a case is resolved, so it alone travels
+ * without a parameter.
+ */
+export function withCase(href: string, which: ArtifactCase): string {
+  return which === 'v2' ? href : `${href}?case=${which}`
+}
+
+/**
+ * A replay link, resolved against the case actually loaded: the stored replays are part of each
+ * artifact, and the ids differ between the measured runs and the synthetic fixture. A
+ * hard-coded id would 404 the link the moment the default case changed — which is exactly how
+ * this helper came to exist.
+ *
+ * The shell itself does not call it, and that is deliberate now that `/design` sits here too:
+ * the footer would have to resolve an id on every page of the site, and resolving one means
+ * reading the whole results artifact. The pages that offer a replay hold the artifact anyway.
+ */
+export function replayHref(which: ArtifactCase): string {
+  const loaded = loadArtifact(which)
+  const id = loaded.ok ? loaded.artifact.replays[0]?.id : undefined
+  return id === undefined ? withCase('/lab', which) : withCase(`/lab/replay/${id}`, which)
+}
 
 export interface LabShellProps {
   children: ReactNode
@@ -32,24 +59,18 @@ export interface LabShellProps {
 }
 
 /**
- * `?case=` is carried across routes so a reader stays in the case they opened. `v2` — the
- * current measured run — is the default everywhere a case is resolved, so it alone travels
- * without a parameter.
+ * Which of the three nav entries owns a route.
+ *
+ * The nav marks a SECTION, not a page. `/lab/bounded` and `/lab/matrix` are evidence *inside*
+ * Research, and a reader six thousand pixels into one should still be told which part of the
+ * site they are in. `/design` belongs to no section — it is a footer link — so it marks nothing
+ * rather than borrowing Research's dot and claiming to be something it is not.
  */
-export function withCase(href: string, which: ArtifactCase): string {
-  return which === 'v2' ? href : `${href}?case=${which}`
-}
-
-/**
- * The nav's replay link, resolved against the case actually loaded: the stored replays are part
- * of each artifact, and the ids differ between the measured runs and the synthetic fixture. A
- * hard-coded id would 404 the nav the moment the default case changed — which is exactly how
- * this helper came to exist.
- */
-export function replayHref(which: ArtifactCase): string {
-  const loaded = loadArtifact(which)
-  const id = loaded.ok ? loaded.artifact.replays[0]?.id : undefined
-  return id === undefined ? withCase('/lab', which) : withCase(`/lab/replay/${id}`, which)
+function navSection(current: string, which: ArtifactCase): string | undefined {
+  if (current.startsWith('/play')) return '/play'
+  if (current.startsWith('/papers')) return '/papers'
+  if (current.startsWith('/lab')) return withCase('/lab', which)
+  return undefined
 }
 
 export function LabShell({
@@ -61,23 +82,23 @@ export function LabShell({
   which,
 }: LabShellProps) {
   useDocumentTitle(docTitle)
-  // NINE links, since Papers joined — and the 1080px collapse in SiteNav.module.css (with the
-  // matching matchMedia in SiteNav.tsx) did NOT have to move for it. Measured in the browser at
-  // General Sans 500/16px: the nine labels and their gaps occupy 636px, the whole bar needs
-  // ~823px, and at 1081px the gutters leave 979px. The row hard-wraps only around 860px.
-  //
-  // Papers sits between the evidence pages and the table on purpose: the reading order of this
-  // site is measure it, write it up, then play it.
+  /**
+   * THREE links, down from nine.
+   *
+   * The nine were six lab surfaces plus Papers, Play and Design, and from their labels alone a
+   * visitor could not tell Report from Matrix from Adaptive from Bounded — they read as
+   * synonyms for "some numbers". They are not siblings and never were: five of them are the
+   * evidence behind claims the report makes, so they belong *under* the report, indexed on
+   * `/lab` where each one has room to say what it measures and what it found.
+   *
+   * What is left is the three things a visitor actually chooses between — play the game, read
+   * the evidence, read the write-ups — and the row now fits far below the 1080px collapse in
+   * SiteNav.module.css rather than pressing against it.
+   */
   const links = [
-    { href: withCase('/lab', which), label: 'Report' },
-    { href: withCase('/lab/matrix', which), label: 'Matrix' },
-    { href: replayHref(which), label: 'Replay' },
-    { href: withCase('/lab/adaptive', which), label: 'Adaptive' },
-    { href: withCase('/lab/bounded', which), label: 'Bounded' },
-    { href: withCase('/lab/live', which), label: 'Live' },
-    { href: '/papers', label: 'Papers' },
     { href: '/play', label: 'Play' },
-    { href: '/design', label: 'Design' },
+    { href: withCase('/lab', which), label: 'Research' },
+    { href: '/papers', label: 'Papers' },
   ]
 
   return (
@@ -86,22 +107,36 @@ export function LabShell({
         Skip to content
       </a>
 
-      <SiteNav links={links} current={current} standfirst="us54 · deterministic" brandHref="/lab" />
+      <SiteNav
+        links={links}
+        current={navSection(current, which)}
+        standfirst="us54 · deterministic"
+        brandHref="/lab"
+      />
 
       <main id="main">{children}</main>
 
+      {/*
+        The footer is where the lab surfaces the nav no longer carries stay one click from
+        anywhere — a demoted link is not a deleted one, and every route below is still a live
+        deep link somebody may have bookmarked.
+
+        A replay is the one surface reached through the index rather than named here, because
+        its URL contains an id that only the artifact knows. The evidence index resolves a real
+        one from data `/lab` has already loaded; the footer would have to load it on every page.
+      */}
       <SiteFooter
         standfirst="A bot that plays Canadian Fish, and the lab that measures whether any play style is actually superior."
         columns={[
           {
-            title: 'Report',
+            title: 'Research',
             items: [
-              { href: withCase('/lab', which), label: 'The report' },
+              { href: withCase('/lab', which), label: 'The style report' },
               { href: withCase('/lab/matrix', which), label: 'Full matrix' },
-              { href: replayHref(which), label: 'Replay a game' },
               { href: withCase('/lab/adaptive', which), label: 'Adaptive engine' },
               { href: withCase('/lab/bounded', which), label: 'Bounded memory' },
               { href: withCase('/lab/live', which), label: 'Live simulator' },
+              { href: withCase('/lab', which) + '#evidence', label: 'The evidence index' },
             ],
           },
           {
@@ -115,15 +150,10 @@ export function LabShell({
             title: 'Reference',
             items: [
               { href: '/papers', label: 'Research papers' },
+              { href: withCase('/lab', which) + '#rules', label: 'The us54 rule set' },
+              { href: withCase('/lab', which) + '#method', label: 'Method' },
               { href: '/design', label: 'Design specimen' },
               { href: 'https://github.com/MeagerPotato/FishAI', label: 'Repository' },
-            ],
-          },
-          {
-            title: 'Rule set',
-            items: [
-              { href: withCase('/lab', which) + '#rules', label: RULES_FILE },
-              { href: withCase('/lab', which) + '#method', label: 'Method' },
             ],
           },
         ]}

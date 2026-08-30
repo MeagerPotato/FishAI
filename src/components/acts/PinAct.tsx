@@ -16,13 +16,19 @@ export interface PinActProps {
    */
   steps: number
   /**
-   * Extra scroll per beat after the first, in vh. Default 30.
+   * Extra scroll per beat after the first, in vh. Default 20.
    *
-   * It was 55, which put a four-beat act at 265vh — about 2,400px on a laptop,
-   * and the two acts on /lab together spent roughly 4,800px of scroll on two
-   * figures that do not move. 30 puts the same act at 190vh: still a beat per
-   * comfortable flick, a little under two screens, and the reader reaches the
-   * end of the act in half the distance.
+   * It was 55, then 30, and it is 20 for the same reason both times: this
+   * number buys nothing but distance. The figure does not move during an act
+   * and the beats do not get longer — the only thing a bigger value changes is
+   * how far a reader scrolls to read the same four sentences beside the same
+   * static diagram. At 55 a four-beat act was 265vh, about 2,400px on a laptop;
+   * at 20 it is 160vh, and 20vh is still a deliberate flick per beat rather
+   * than a scroll that skips one.
+   *
+   * The floor is set by the beat rail, not by taste: below roughly 15vh two
+   * beats can advance inside one wheel gesture, which is the thing the act
+   * exists to prevent.
    */
   stepVh?: number
   badge?: string
@@ -40,7 +46,7 @@ export interface PinActProps {
  * visualisation: it owns the track, the pin, the crop marks and the fallback,
  * and hands the scrub position to whatever is being scrubbed.
  */
-export function PinAct({ steps, stepVh = 30, badge, children, className }: PinActProps) {
+export function PinAct({ steps, stepVh = 20, badge, children, className }: PinActProps) {
   const trackRef = useRef<HTMLElement | null>(null)
   const reduced = usePrefersReducedMotion()
 

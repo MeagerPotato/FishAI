@@ -68,5 +68,14 @@ export type { Theme } from './hooks/theme.ts'
 /* Utilities */
 export { cx } from './lib/cx.ts'
 
-/* The specimen route */
-export { SystemDemo } from './demo/SystemDemo.tsx'
+/*
+ * `SystemDemo` is deliberately NOT re-exported here, though it lives under `components/`.
+ *
+ * It is a page, not a part, and it is the only thing in this folder that CONSUMES the barrel —
+ * it renders `LabShell`, which imports this file. Re-exporting it closed the loop
+ * (SystemDemo -> LabShell -> index.ts -> SystemDemo) and rolldown answered a cyclic barrel by
+ * pouring the shared graph into the specimen's own chunk: 26 kB became 1,492 kB, most of it a
+ * results artifact a page of swatches has no use for.
+ *
+ * `App.tsx` lazy-imports it by path, which is the only import it has ever had.
+ */
