@@ -292,12 +292,52 @@ html {
    -------------------------------------------------------------------------- */
 
 @media print {
-  :root {
+  /**
+   * PRINT IS THEME-INDEPENDENT.
+   *
+   * The dark theme is `:root[data-theme='dark']` — specificity (0,2,0) — so a
+   * bare `:root` block here loses to it no matter where it sits in the file.
+   * A reader who had chosen dark and hit Print therefore got the dark INK
+   * tokens (`--fa-ink: #f1eee6`) on the white page this block forces: pale
+   * grey on white, a near-blank sheet.
+   *
+   * Both selectors are listed so the rule matches the dark root at EQUAL
+   * specificity and wins on source order. Every token that carries ink or a
+   * line is reset to its light value; the surfaces go to plain white because
+   * paper is the printer's job, and the painted textures are switched off.
+   */
+  :root,
+  :root[data-theme='dark'] {
     --fa-page: #fff;
     --fa-sheet: #fff;
+    --fa-paper: #fff;
+    --fa-paper-2: #fff;
+    --fa-tile: #fff;
+
+    --fa-ink: #16140e;
+    --fa-ink-2: #57534a;
+    --fa-ink-3: #6c685d;
+
+    --fa-amber-2: #935d07;
+    --fa-on-amber: #16140e;
+
+    --fa-line: rgba(22, 20, 14, 0.16);
+    --fa-line-2: rgba(22, 20, 14, 0.08);
+    --fa-line-control: rgba(22, 20, 14, 0.48);
+    --fa-frame: rgba(22, 20, 14, 0.16);
+
     --fa-ruling: none;
     --fa-dots: none;
     --fa-scanline: none;
+    --fa-hatch: repeating-linear-gradient(
+      45deg,
+      rgba(22, 20, 14, 0.13) 0,
+      rgba(22, 20, 14, 0.13) 1px,
+      transparent 1px,
+      transparent 7px
+    );
+
+    color-scheme: light;
   }
 
   body {

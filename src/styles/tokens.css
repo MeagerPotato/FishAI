@@ -366,3 +366,52 @@
     --fa-fs-display: clamp(35px, 9.5vw, 45px);
   }
 }
+
+/* ==========================================================================
+   ==== BEGIN: CONTROL BOUNDARY (legibility pass) ===========================
+   ==========================================================================
+
+   §4 above splits lines into `frame` (page architecture) and `line`/`line-2`
+   (components). That split has nothing to say about the one case WCAG 1.4.11
+   actually legislates: the visible edge of a CONTROL. `--fa-line` is
+   rgba(22,20,14,0.16), which renders 1.40:1 on every paper ground — it is a
+   seam, and it was doing duty as the only boundary a chip, select, input,
+   pill or ghost button had. At 1.40:1 on a fill that is itself ~1.05:1 from
+   the panel behind it, a control does not read as a control.
+
+   `--fa-line-control` is the third line role: the edge of anything you can
+   click, type into or toggle. Structural hairlines — sheet edges, section
+   rules, grid seams — stay on `--fa-line`/`--fa-line-2`, which is why this is
+   an ADDITIONAL token and not a change to the existing ones.
+
+   MEASURED (sRGB, WCAG 2.x relative luminance, composited over each ground):
+
+     LIGHT  rgba(22,20,14,0.48)      DARK  rgba(241,238,230,0.38)
+       vs --fa-sheet    3.26:1         vs --fa-sheet    3.25:1
+       vs --fa-paper    3.22:1         vs --fa-paper    3.25:1
+       vs --fa-paper-2  3.15:1         vs --fa-paper-2  3.24:1
+       vs --fa-tile     3.12:1         vs --fa-tile     3.23:1
+
+   For comparison, --fa-line on the same grounds: 1.40 / 1.40 / 1.40 / 1.39
+   light, and 2.01 / 2.04 / 2.05 / 2.08 dark.
+
+   The alpha is derived against --fa-tile, the DEEPEST ground, for the same
+   reason §3.1 re-derived --fa-ink-3 there: a boundary that only clears on the
+   lightest paper fails the moment a control is dropped into a tile well.
+
+   NOTE ON THE AUDITED VALUE. The accessibility audit proposed
+   rgba(22,20,14,0.42) ≈ #A29E90 as "≈ 3.05:1 on paper". Recomputed, that
+   alpha renders 2.73:1 on --fa-sheet and 2.63:1 on --fa-tile, and the bare
+   hex #A29E90 is 2.50:1 on --fa-paper — neither reaches 3:1. 0.48 is the
+   lowest alpha on the 0.01 step where all four light grounds clear 3:1.
+   ========================================================================== */
+
+:root {
+  --fa-line-control: rgba(22, 20, 14, 0.48);
+}
+
+:root[data-theme='dark'] {
+  --fa-line-control: rgba(241, 238, 230, 0.38);
+}
+
+/* ==== END: CONTROL BOUNDARY ============================================== */

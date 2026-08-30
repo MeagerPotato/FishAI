@@ -48,26 +48,29 @@ export function AnalysisPipeline({ figNo }: { figNo?: string }) {
           strokeWidth={STROKE.thin}
         />
 
-        {/* Step header chips. */}
+        {/* Step header chips. The number sits in the chip and the step name
+            below it; at 12px the two need 18px of baseline separation, which
+            is what widened HEADER_H from 36 to 48. */}
         {steps.map((step) => (
           <g key={step.number}>
-            <rect x={step.chipX} y={8} width={32} height={16} fill={C.ink12} />
+            <rect x={step.chipX} y={6} width={32} height={20} fill={C.ink12} />
             <Label x={step.cx} y={20} role="tech" fill={C.ink} anchor="middle">
               {step.number}
             </Label>
-            <Label x={step.cx} y={32} role="eyebrow" fill={C.muted} anchor="middle">
+            <Label x={step.cx} y={38} role="eyebrow" fill={C.muted} anchor="middle">
               {step.label}
             </Label>
           </g>
         ))}
 
-        {/* Lane labels — two-line eyebrow. */}
+        {/* Lane labels — two-line eyebrow, on the same 20px baseline pitch as
+            a node's line stack. */}
         {lanes.map((lane) => (
           <g key={`label-${lane.key}`}>
-            <Label x={labelColW / 2} y={lane.mid - 4} role="eyebrow" fill={C.muted} anchor="middle">
+            <Label x={labelColW / 2} y={lane.mid - 6} role="eyebrow" fill={C.muted} anchor="middle">
               {lane.name[0]}
             </Label>
-            <Label x={labelColW / 2} y={lane.mid + 12} role="tech" fill={C.soft} anchor="middle">
+            <Label x={labelColW / 2} y={lane.mid + 14} role="tech" fill={C.soft} anchor="middle">
               {lane.name[1]}
             </Label>
           </g>
@@ -89,11 +92,8 @@ export function AnalysisPipeline({ figNo }: { figNo?: string }) {
             kind={n.focal ? 'focal' : 'backend'}
             name={n.title}
             sub={n.sub}
-          >
-            <Label x={n.x + n.w / 2} y={n.y + n.h - 8} role="tech" fill={C.soft} anchor="middle">
-              {n.tool}
-            </Label>
-          </NodeBox>
+            foot={n.tool}
+          />
         ))}
 
         <LegendStrip scene={scene} />

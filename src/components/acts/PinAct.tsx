@@ -15,6 +15,15 @@ export interface PinActProps {
    * steps each is roughly half a long page.
    */
   steps: number
+  /**
+   * Extra scroll per beat after the first, in vh. Default 30.
+   *
+   * It was 55, which put a four-beat act at 265vh — about 2,400px on a laptop,
+   * and the two acts on /lab together spent roughly 4,800px of scroll on two
+   * figures that do not move. 30 puts the same act at 190vh: still a beat per
+   * comfortable flick, a little under two screens, and the reader reaches the
+   * end of the act in half the distance.
+   */
   stepVh?: number
   badge?: string
   /**
@@ -31,7 +40,7 @@ export interface PinActProps {
  * visualisation: it owns the track, the pin, the crop marks and the fallback,
  * and hands the scrub position to whatever is being scrubbed.
  */
-export function PinAct({ steps, stepVh = 55, badge, children, className }: PinActProps) {
+export function PinAct({ steps, stepVh = 30, badge, children, className }: PinActProps) {
   const trackRef = useRef<HTMLElement | null>(null)
   const reduced = usePrefersReducedMotion()
 

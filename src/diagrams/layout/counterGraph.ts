@@ -26,9 +26,23 @@ import { withLabelMask, type Scene, type SceneArrow, type SceneRect } from '../s
 import { C } from '../tokens'
 import { cellIndex, scoreOf, type StyleResults } from '../types'
 
+/**
+ * NODE_H 56 -> 88 and RANK_STRIDE 120 -> 152.
+ *
+ * A node here carries a type tag AND a fan-in badge in its chip band, then a
+ * 16px name and a 12px `N OUT` under them. At the old 56 the chip band alone
+ * was half the box and the name ran straight through it. 88 is the chip band
+ * (28) plus a two-line stack (35) plus 8px of air top and bottom, rounded to
+ * the 4px grid.
+ *
+ * The stride grew by exactly the same 32, which is what preserves the two
+ * invariants the router depends on: the 64px band between ranks that the
+ * four horizontal tracks (16/28/40/52) run through, and the back-edge's
+ * dedicated exit band 56px below a node, 8px clear of the next rank.
+ */
 const NODE_W = 160
-const NODE_H = 56
-const RANK_STRIDE = 120
+const NODE_H = 88
+const RANK_STRIDE = 152
 const RANK_Y0 = 96
 const VIEW_W = 1000
 const COL_GAP = 40
@@ -434,7 +448,7 @@ export function layoutCounterGraph({
         : ([{ key: 'dominant', label: 'DOMINANT', mark: 'swatch', fill: C.accentTint, stroke: C.accent }] as const)),
       { key: 'fanin', label: 'N IN = COUNTERED BY N', mark: 'swatch', fill: C.ink08, stroke: C.ink12 },
     ],
-    fontSizes: [8, 12],
+    fontSizes: [12, 16],
     fig: `${figNo} — COUNTER-GRAPH · VERDICT ${results.ranking.verdict.toUpperCase()} · CYCLIC ENERGY ${results.ranking.cyclicEnergy.toFixed(3)}`,
     caption:
       `Directed edge i to j where i beats j significantly after Benjamini-Hochberg correction. ` +

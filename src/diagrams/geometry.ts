@@ -141,10 +141,31 @@ export interface LabelPlacement {
   anchor: 'start' | 'middle' | 'end'
 }
 
-const LABEL_H = 12
+/**
+ * Mask height for one line of the arrow role.
+ *
+ * The role is 12px now, not 8px (tokens.ts, `T`), and 12px General Sans
+ * measures 15px ascender-to-descender. 16 is the next value on the 4px grid
+ * that contains it.
+ */
+const LABEL_H = 16
 
-/** Advance width of the 8px arrow-label role, tracked 0.10em. */
-export const labelWidth = (text: string): number => snap(text.length * 6 + 12)
+/**
+ * Advance width of the 12px arrow-label role, tracked 0.14em.
+ *
+ * Measured in the browser rather than assumed. Across every arrow label this
+ * system draws, `length * 9 + 12` clears the rendered width by 7.4px at the
+ * tightest ("NO DECLARE", 92.6px rendered against 104px of mask) and never
+ * over-pads by more than 12. The old constants (6/char, 12px pad) were the
+ * same measurement taken at 8px; scaling them by 12/8 and re-checking against
+ * the real strings is what produced these.
+ *
+ * The mask is what stops the connector bleeding through the glyphs, so it has
+ * to be at least as wide as the text — and the gaps between nodes in every
+ * state machine are sized off THIS function, so widening it is what forced
+ * those layouts apart.
+ */
+export const labelWidth = (text: string): number => snap(text.length * 9 + 12)
 
 /**
  * Place a masked arrow label against a segment.
@@ -161,6 +182,9 @@ export function placeLabel(
 ): LabelPlacement {
   const w = labelWidth(text)
   switch (side) {
+    /* The baseline sits 12px below the mask top in every case — the cap
+       height of the 12px role inside a 16px mask, so the glyphs are optically
+       centred in the box that hides the stroke. */
     case 'above':
       return {
         maskX: mid.x - w / 2,
@@ -168,7 +192,7 @@ export function placeLabel(
         maskW: w,
         maskH: LABEL_H,
         textX: mid.x,
-        textY: mid.y - gap - 3,
+        textY: mid.y - gap - 4,
         anchor: 'middle',
       }
     case 'below':
@@ -178,7 +202,7 @@ export function placeLabel(
         maskW: w,
         maskH: LABEL_H,
         textX: mid.x,
-        textY: mid.y + gap + 9,
+        textY: mid.y + gap + 12,
         anchor: 'middle',
       }
     case 'right':
@@ -188,7 +212,7 @@ export function placeLabel(
         maskW: w,
         maskH: LABEL_H,
         textX: mid.x + gap + 4,
-        textY: mid.y + 3,
+        textY: mid.y + 4,
         anchor: 'start',
       }
     case 'left':
@@ -198,7 +222,7 @@ export function placeLabel(
         maskW: w,
         maskH: LABEL_H,
         textX: mid.x - gap - 4,
-        textY: mid.y + 3,
+        textY: mid.y + 4,
         anchor: 'end',
       }
   }

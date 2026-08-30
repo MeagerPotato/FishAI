@@ -60,7 +60,16 @@ export function LineChart({ model }: { model: LineModel }) {
               strokeWidth={STROKE.default}
               strokeDasharray="5,4"
             />
-            <Label x={PLOT.right + 4} y={referenceY + 4} role="tech" fill={C.soft}>
+            {/* Anchored to the canvas edge rather than hung off the plot's:
+                at 12px "EVEN" is 37px wide and the right margin is 40, so
+                `PLOT.right + 4` pushed the last glyph 0.9px past the viewBox. */}
+            <Label
+              x={PLOT.viewW - 4}
+              y={referenceY + 4}
+              role="tech"
+              fill={C.soft}
+              anchor="end"
+            >
               EVEN
             </Label>
           </g>

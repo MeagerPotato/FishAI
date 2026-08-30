@@ -142,7 +142,7 @@ export function layoutBar({
       { key: 'other', label: unitLabel, mark: 'swatch', fill: C.ink08, stroke: C.muted },
       { key: 'focal', label: 'FOCAL', mark: 'swatch', fill: C.accentTint, stroke: C.accent },
     ],
-    fontSizes: [8, 12],
+    fontSizes: [12, 16],
     fig,
     caption,
   }
@@ -259,7 +259,7 @@ export function layoutLine({
       stroke: s.color,
       dashPattern: s.dash,
     })),
-    fontSizes: [8, 12],
+    fontSizes: [12, 16],
     fig,
     caption,
   }
@@ -380,7 +380,7 @@ export function layoutDumbbell({
       { key: 'ref', label: refLabel.toUpperCase(), mark: 'dot', hollow: true, stroke: C.muted },
       { key: 'focal', label: focalLabel.toUpperCase(), mark: 'dot', fill: C.accent, stroke: C.ink },
     ],
-    fontSizes: [8, 12],
+    fontSizes: [12, 16],
     fig,
     caption,
   }

@@ -22,13 +22,28 @@ import type { Pt } from '../geometry'
 import { withLabelMask, type Scene, type SceneArrow, type SceneRect } from '../scene'
 import { C } from '../tokens'
 
+/**
+ * RE-SPACED FOR THE 12/16px TYPE FLOOR.
+ *
+ * Every constant below is the old one grown by exactly what the taller labels
+ * need, and no more:
+ *
+ *   HEADER_H   36 -> 48   two 12px lines (the step number in its chip and the
+ *                         step name under it) need 18px of baseline pitch
+ *   LANE_H     96 -> 128  a node that is 80 tall instead of 64, with the same
+ *                         32px band under it for the cross-lane elbow
+ *   NODE_H     64 -> 80   three stacked lines at 16/12/12 on a 20px pitch
+ *   NODE_W    104 -> 120  "GameAction[]" is 88px wide at the 12px tech role
+ *   STEP_SLOT 128 -> 144  keeps the 24px gap between two nodes in one lane,
+ *                         which is what the in-lane arrowhead needs
+ */
 const LABEL_COL_W = 140
-const STEP_SLOT_W = 128
+const STEP_SLOT_W = 144
 const RIGHT_PAD = 28
-const HEADER_H = 36
-const LANE_H = 96
-const NODE_W = 104
-const NODE_H = 64
+const HEADER_H = 48
+const LANE_H = 128
+const NODE_W = 120
+const NODE_H = 80
 
 export interface PipelineLane {
   key: string
@@ -169,7 +184,10 @@ export function layoutPipeline(figNo = 'FIG. 09'): PipelineModel {
   }
 
   const analyze = at('analyze')
-  const focalMid: Pt = { x: analyze.x + analyze.w / 2, y: analyze.y + analyze.h + 6 }
+  /* 12, not 6: the label mask is 16 tall now rather than 12, so a 6px drop
+     would put its top edge 2px inside the node it hangs off — which is the
+     "label mask is clipped by node" case `verifyScene` refuses. */
+  const focalMid: Pt = { x: analyze.x + analyze.w / 2, y: analyze.y + analyze.h + 12 }
 
   const arrows: SceneArrow[] = [
     { id: 'seed-play', points: inLane('seed', 'play') },
@@ -219,7 +237,7 @@ export function layoutPipeline(figNo = 'FIG. 09'): PipelineModel {
       { key: 'flow', label: 'HAND-OFF', mark: 'line', stroke: C.muted },
       { key: 'artifact', label: 'ARTIFACT', mark: 'line', stroke: C.accent },
     ],
-    fontSizes: [8, 12],
+    fontSizes: [12, 16],
     fig: `${figNo} — ANALYSIS PIPELINE · 4 LANES · 6 STEPS`,
     caption:
       'Simulations never run in the browser. The site is a pure reader of one committed ' +
