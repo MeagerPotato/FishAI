@@ -41,6 +41,14 @@
  *    styles (the Phase 1 anchor pin), so that cell is a byte-identical re-run of the v1.0
  *    accuracy experiment — its top-1 must reproduce the committed 22.4% exactly, which the
  *    analyze step reports against the committed adaptive artifact.
+ * 5. **E4b — single-seat attribution** (registered 2026-08-30, after the Phase 2 review and
+ *    before any E4b run). E4's grid, seeds and pairings exactly, but ONLY the read seat is
+ *    bounded — the other five seats play their bare full-strength styles — so the ecology
+ *    stays at the full-strength distribution the fingerprints were calibrated on and the P8
+ *    read isolates the bounded seat's own signature. The registered read-seat mapping is
+ *    {@link SINGLE_READ_MAPPING}; the ∞ cell is verified in-run against an all-bare replay.
+ *    The artifact is extended ADDITIVELY by `extendBoundedResults`, which refuses to build if
+ *    any pre-existing aggregate or verdict moved.
  *
  * ## Health discipline
  *
@@ -88,7 +96,9 @@ import { digest } from './run.ts'
 import type { CappedGame, CellHealth, Orientation } from './types.ts'
 import type { AccuracyByStyle } from './adaptive-types.ts'
 import {
+  BOUNDED_BASE_SCHEMA_VERSION,
   BOUNDED_INF_BITS,
+  BOUNDED_P8_PREDICTION,
   BOUNDED_PREDICTIONS,
   BOUNDED_SCHEMA_VERSION,
   BOUNDED_TIERS,
@@ -99,13 +109,17 @@ import type {
   BoundedAccuracy,
   BoundedAccuracyCell,
   BoundedArtifactInputs,
+  BoundedAccuracySingle,
   BoundedGameRecord,
   BoundedHealthSummary,
   BoundedLabConfig,
   BoundedResults,
+  BoundedResultsBase,
   BoundedRunOutput,
   BoundedRunSummary,
   BoundedShareCell,
+  BoundedSingleRunOutput,
+  BoundedSingleRunSummary,
   BoundedTaskResult,
   BoundedVerdict,
   CertainAskObservation,
@@ -114,9 +128,13 @@ import type {
   EvidenceCurve,
   EvidenceRate,
   EvidenceWindow,
+  InfReproduction,
   LadderAdjacentDelta,
   LadderCell,
   MirrorExact,
+  MultiplicityFamily,
+  MultiplicityRung,
+  SingleAccuracyCell,
   TierCell,
 } from './bounded-types.ts'
 
@@ -161,6 +179,11 @@ export function accuracyCellId(bits: number, a: StyleId, b: StyleId): string {
   return `bacc-b${padBits(bits)}-${a}-vs-${b}`
 }
 
+/** The E4b cell id — `baccs`, s for single-seat, so E4 and E4b records can never collide. */
+export function singleCellId(bits: number, a: StyleId, b: StyleId): string {
+  return `baccs-b${padBits(bits)}-${a}-vs-${b}`
+}
+
 /** The E3 policy label for a bounded budget: `bounded-8` … `bounded-inf`. */
 export function boundedPolicyLabel(bits: number): string {
   return bits >= BOUNDED_INF_BITS ? 'bounded-inf' : `bounded-${bits}`
@@ -175,6 +198,30 @@ export function boundedAccuracyPairings(): (readonly [StyleId, StyleId])[] {
   return out
 }
 
+/* -- E4b: the registered read-seat mapping ---------------------------------------------------- */
+
+/**
+ * The E4b read-seat mapping, REGISTERED BEFORE THE RUN (SPEC-v15.md E4b: "one bounded read
+ * seat per game per team-0 style seat; the implementer chooses the cleanest faithful mapping
+ * and documents it in meta.notes before running"). The mapping is written into the run's
+ * `meta.notes` and into `accuracySingle.mapping` verbatim, and the health gate checks every
+ * record against `singleReadSeatFor`.
+ */
+export const SINGLE_READ_MAPPING =
+  'E4b read seat: seat 2·(game mod 3) — the three team-0 seats 0, 2, 4 in rotation across the ' +
+  '50 games of every pairing, always playing the measured team-0 style (pairing[0]) under the ' +
+  'bit budget while the other five seats play their bare full-strength styles exactly as the ' +
+  'v1.0 accuracy harness seats them (team 0 pairing[0], team 1 pairing[1]). startSeat rotates ' +
+  'game mod 6 as in E4, so the read seat occupies every relative table position uniformly ' +
+  'with period 6. Truth for the read is therefore always pairing[0]; the pairing scheme is ' +
+  'triangular, so by-style read counts fall with roster position (identically at every ' +
+  'budget) and the last roster style is never the read truth.'
+
+/** The registered mapping, as arithmetic: game → the bounded read seat (team 0 by parity). */
+export function singleReadSeatFor(game: number): Seat {
+  return (2 * (game % 3)) as Seat
+}
+
 /* -- the task plan --------------------------------------------------------------------------- */
 
 export type BoundedTask =
@@ -182,6 +229,16 @@ export type BoundedTask =
   | { kind: 'tier'; index: number; config: BoundedLabConfig; tier: BotDifficulty; pairFrom: number; pairTo: number }
   | {
       kind: 'accuracy'
+      index: number
+      config: BoundedLabConfig
+      bits: number
+      a: StyleId
+      b: StyleId
+      gameFrom: number
+      gameTo: number
+    }
+  | {
+      kind: 'accuracySingle'
       index: number
       config: BoundedLabConfig
       bits: number
@@ -260,6 +317,40 @@ export function planBoundedTasks(config: BoundedLabConfig): BoundedTask[] {
     }
   }
   return tasks
+}
+
+/**
+ * Slice the E4b follow-up into worker tasks — the accuracy grid's shape exactly (`accBits` ×
+ * 36 pairings × `accGames`, the v1.0 seed list), but with the single-seat task kind. The base
+ * suite's ladder/tier fields are ignored; the grid checks are the same as the planner's.
+ */
+export function planBoundedSingleTasks(config: BoundedLabConfig): BoundedTask[] {
+  checkLadder('accBits', config.accBits)
+  const chunk = Math.max(1, Math.floor(config.chunkPairs))
+  const tasks: BoundedTask[] = []
+  for (let from = 0; from < config.accGames; from += chunk) {
+    for (const bits of config.accBits) {
+      for (const [a, b] of boundedAccuracyPairings()) {
+        tasks.push({
+          kind: 'accuracySingle',
+          index: tasks.length,
+          config,
+          bits,
+          a,
+          b,
+          gameFrom: from,
+          gameTo: Math.min(config.accGames, from + chunk),
+        })
+      }
+    }
+  }
+  return tasks
+}
+
+/** Total games the E4b config will record (the ∞ reproduction replays are checks, not records). */
+export function boundedSingleGamesTotal(config: BoundedLabConfig): number {
+  const pairings = (STYLE_IDS.length * (STYLE_IDS.length - 1)) / 2
+  return config.accBits.length * pairings * config.accGames
 }
 
 /** Total games the config will play, per experiment and summed. */
@@ -434,7 +525,7 @@ function playBoundedGame(
   seed: string,
   startSeat: Seat,
   config: BoundedLabConfig,
-  want: 'log' | 'classify',
+  want: 'log' | 'classify' | 'both',
 ): BoundedPlayed {
   const rules = configFor(config.variant)
   let s = newGame(seed, rules, startSeat)
@@ -490,8 +581,8 @@ function playBoundedGame(
     voids,
     clinch: finished && Math.max(t0, t1) === target,
     tie,
-    log: want === 'log' ? s.log : null,
-    finalTop: want === 'classify' ? classifySeats(publicView(s)).map((c) => c.top) : null,
+    log: want === 'log' || want === 'both' ? s.log : null,
+    finalTop: want === 'classify' || want === 'both' ? classifySeats(publicView(s)).map((c) => c.top) : null,
   }
 }
 
@@ -506,6 +597,23 @@ function rosterStyle(id: StyleId): StyleParams {
 function shareOf(setsA: number, setsB: number): number {
   const total = setsA + setsB
   return total === 0 ? 0.5 : setsA / total
+}
+
+/**
+ * The E4b seat table: exactly ONE bounded seat — `readSeat`, which must be team 0, playing the
+ * measured style `a` under the budget — and five bare full-strength seats seated exactly as
+ * the v1.0 accuracy harness seats them. Exported so the tests can pin the construction.
+ */
+export function singleSeatPolicies(bits: number, a: StyleId, b: StyleId, readSeat: Seat): PolicySpec[] {
+  if (seatTeam(readSeat) !== 0) {
+    throw new Error(`singleSeatPolicies: read seat ${readSeat} is not a team-0 seat — the registered mapping reads team 0`)
+  }
+  const bareA = rosterStyle(a)
+  const bareB = rosterStyle(b)
+  return ALL_SEATS.map((seat): PolicySpec => {
+    if (seat === readSeat) return { bounded: true, bits, style: a }
+    return seatTeam(seat) === 0 ? bareA : bareB
+  })
 }
 
 const ORIENTS: readonly Orientation[] = [0, 1]
@@ -553,6 +661,60 @@ export function runBoundedTask(task: BoundedTask): BoundedTaskResult {
         pairing: [task.a, task.b],
         top: g.finalTop ?? [],
       })
+    }
+    return { taskIndex: task.index, records, wallMs: Date.now() - t0 }
+  }
+
+  if (task.kind === 'accuracySingle') {
+    rosterStyle(task.a)
+    rosterStyle(task.b)
+    const isInf = task.bits >= BOUNDED_INF_BITS
+    for (let game = task.gameFrom; game < task.gameTo; game++) {
+      const seed = seedFor(cfg.accSeedPrefix, game)
+      const startSeat = startSeatFor(game)
+      const readSeat = singleReadSeatFor(game)
+      const policies = singleSeatPolicies(task.bits, task.a, task.b, readSeat)
+      const g = playBoundedGame(policies, seed, startSeat, cfg, isInf ? 'both' : 'classify')
+      const rec: BoundedGameRecord = {
+        exp: 'accuracySingle',
+        cell: singleCellId(task.bits, task.a, task.b),
+        pair: game,
+        orient: 0,
+        seed,
+        startSeat,
+        aTeam: 0,
+        steps: g.steps,
+        finished: g.finished,
+        capped: g.capped,
+        illegal: g.illegal,
+        invariantViolations: g.invariantViolations,
+        setsA: g.sets[0],
+        setsB: g.sets[1],
+        unresolved: g.unresolved,
+        voids: g.voids,
+        aShare: shareOf(g.sets[0], g.sets[1]),
+        clinch: g.clinch,
+        tie: g.tie,
+        bits: task.bits,
+        pairing: [task.a, task.b],
+        top: g.finalTop ?? [],
+        readSeat,
+      }
+      if (isInf) {
+        // The P8 ∞ health gate: replay the game with all six seats bare — the exact v1.0
+        // accuracy harness — and require event identity (elog), an identical six-seat read,
+        // and the same step count. At ∞ the bounded arm is decision-identical by the Phase 1
+        // anchor pin; this VERIFIES it in this run rather than assuming it.
+        const bare = ALL_SEATS.map((seat): PolicySpec =>
+          seatTeam(seat) === 0 ? rosterStyle(task.a) : rosterStyle(task.b),
+        )
+        const ref = playBoundedGame(bare, seed, startSeat, cfg, 'both')
+        rec.infExact =
+          g.steps === ref.steps &&
+          encodeElog(g.log ?? [], rules) === encodeElog(ref.log ?? [], rules) &&
+          JSON.stringify(g.finalTop) === JSON.stringify(ref.finalTop)
+      }
+      records.push(rec)
     }
     return { taskIndex: task.index, records, wallMs: Date.now() - t0 }
   }
@@ -609,6 +771,7 @@ const EXP_ORDER: ReadonlyMap<BoundedGameRecord['exp'], number> = new Map([
   ['ladder', 0],
   ['tier', 1],
   ['accuracy', 2],
+  ['accuracySingle', 3],
 ])
 
 /** Sort key: experiment, cell, pair, orientation — never worker-arrival order. */
@@ -1208,6 +1371,109 @@ export function scoreBoundedAccuracy(
   return { cells, deltas }
 }
 
+/* -- E4b aggregation ------------------------------------------------------------------------- */
+
+/**
+ * Score the single-seat grid: exactly ONE read per game — `top[readSeat]`, truth `pairing[0]`
+ * (the read seat is team 0 by the registered mapping). The other five reads in `top` are
+ * retained data and enter nothing here. Deltas are per-seed paired exactly as P7's; each
+ * cell also carries a seed-clustered SE (per-seed accuracies over the pairings, sd/√seeds)
+ * so the P8 detail can print top-1 ± SE. `infReproduction` tallies the ∞ health gate.
+ */
+export function scoreBoundedSingleAccuracy(
+  records: readonly BoundedGameRecord[],
+  accBits: readonly number[],
+): { cells: SingleAccuracyCell[]; deltas: AccuracyAdjacentDelta[]; infReproduction: InfReproduction } {
+  interface LevelTally {
+    games: number
+    correct: number
+    byStyle: Map<StyleId, { seats: number; correct: number }>
+    bySeed: Map<string, [number, number]>
+  }
+  const levels = new Map<number, LevelTally>()
+  for (const bits of accBits) {
+    levels.set(bits, { games: 0, correct: 0, byStyle: new Map(), bySeed: new Map() })
+  }
+  let infGames = 0
+  let infDeviations = 0
+  for (const r of records) {
+    if (r.exp !== 'accuracySingle' || r.bits === undefined || r.pairing === undefined) continue
+    if (r.top === undefined || r.readSeat === undefined) continue
+    if (r.bits >= BOUNDED_INF_BITS) {
+      infGames++
+      if (r.infExact !== true) infDeviations++
+    }
+    const t = levels.get(r.bits)
+    if (t === undefined) continue
+    t.games++
+    const truth = r.pairing[0]
+    const correct = r.top[r.readSeat] === truth
+    if (correct) t.correct++
+    let seedSlot = t.bySeed.get(r.seed)
+    if (seedSlot === undefined) {
+      seedSlot = [0, 0]
+      t.bySeed.set(r.seed, seedSlot)
+    }
+    seedSlot[0]++
+    if (correct) seedSlot[1]++
+    let by = t.byStyle.get(truth)
+    if (by === undefined) {
+      by = { seats: 0, correct: 0 }
+      t.byStyle.set(truth, by)
+    }
+    by.seats++
+    if (correct) by.correct++
+  }
+
+  const cells: SingleAccuracyCell[] = []
+  for (const bits of accBits) {
+    const t = levels.get(bits)
+    if (t === undefined) continue
+    const byStyle = {} as Record<StyleId, AccuracyByStyle>
+    for (const style of STYLE_IDS) {
+      const by = t.byStyle.get(style)
+      byStyle[style] =
+        by === undefined ? { seats: 0, top1: 0 } : { seats: by.seats, top1: by.seats === 0 ? 0 : by.correct / by.seats }
+    }
+    const perSeed = [...t.bySeed.values()].filter(([n]) => n > 0).map(([n, c]) => c / n)
+    cells.push({
+      bits,
+      games: t.games,
+      reads: t.games,
+      top1: t.games === 0 ? 0 : t.correct / t.games,
+      se: perSeed.length > 0 ? sd(perSeed) / Math.sqrt(perSeed.length) : 0,
+      seeds: perSeed.length,
+      byStyle,
+    })
+  }
+
+  const deltas: AccuracyAdjacentDelta[] = []
+  for (let k = 0; k + 1 < accBits.length; k++) {
+    const lo = levels.get(accBits[k])
+    const hi = levels.get(accBits[k + 1])
+    const diffs: number[] = []
+    if (lo !== undefined && hi !== undefined) {
+      for (const [seed, [nLo, cLo]] of lo.bySeed) {
+        const hiSlot = hi.bySeed.get(seed)
+        if (hiSlot === undefined || nLo === 0 || hiSlot[0] === 0) continue
+        diffs.push(hiSlot[1] / hiSlot[0] - cLo / nLo)
+      }
+    }
+    const delta = mean(diffs)
+    const se = diffs.length > 0 ? sd(diffs) / Math.sqrt(diffs.length) : 0
+    deltas.push({
+      fromBits: accBits[k],
+      toBits: accBits[k + 1],
+      seeds: diffs.length,
+      delta,
+      se,
+      z: finiteZ(delta, se),
+      pass: delta >= -2 * se,
+    })
+  }
+  return { cells, deltas, infReproduction: { games: infGames, deviations: infDeviations } }
+}
+
 /* -- the run --------------------------------------------------------------------------------- */
 
 /**
@@ -1363,7 +1629,7 @@ export function assembleBoundedRun(
   const seconds = opts.wallMs / 1000
   return {
     meta: {
-      schemaVersion: BOUNDED_SCHEMA_VERSION,
+      schemaVersion: BOUNDED_BASE_SCHEMA_VERSION,
       generatedAt: opts.generatedAt,
       config,
       gamesTotal: all.length,
@@ -1399,6 +1665,148 @@ export function assembleBoundedRun(
     tiers,
     evidence,
     accuracy,
+    records: all,
+  }
+}
+
+/**
+ * Fold the E4b task results into the single-seat run output: canonical order, the P8
+ * aggregates, the health gate (the suite's standard clauses plus two of its own — the
+ * registered read-seat mapping checked per record, and the ∞ reproduction), the digest.
+ * Pure, like `assembleBoundedRun`: same results in any order, same output.
+ */
+export function assembleBoundedSingleRun(
+  config: BoundedLabConfig,
+  results: readonly BoundedTaskResult[],
+  opts: { wallMs: number; workers: number; generatedAt: string },
+): BoundedSingleRunOutput {
+  const all: BoundedGameRecord[] = []
+  for (const r of results) for (const rec of r.records) all.push(rec)
+  all.sort(canonical)
+
+  const violations: string[] = []
+
+  // --- cell shape: every budget × pairing cell holds accGames games over distinct seeds ------
+  const groups = new Map<string, BoundedGameRecord[]>()
+  for (const r of all) {
+    const slot = groups.get(r.cell)
+    if (slot === undefined) groups.set(r.cell, [r])
+    else slot.push(r)
+  }
+  for (const bits of config.accBits) {
+    for (const [a, b] of boundedAccuracyPairings()) {
+      const recs = groups.get(singleCellId(bits, a, b)) ?? []
+      const seeds = new Set(recs.map((r) => r.seed))
+      if (recs.length !== config.accGames || seeds.size !== config.accGames) {
+        violations.push(
+          `cell ${singleCellId(bits, a, b)}: ${recs.length} games over ${seeds.size} distinct seeds, ` +
+            `expected ${config.accGames}`,
+        )
+      }
+    }
+  }
+
+  // --- the registered read-seat mapping, checked per record ----------------------------------
+  let mappingViolations = 0
+  let firstMapping = ''
+  for (const r of all) {
+    if (r.exp !== 'accuracySingle') continue
+    if (r.readSeat !== singleReadSeatFor(r.pair) || r.seed !== seedFor(config.accSeedPrefix, r.pair)) {
+      mappingViolations++
+      if (firstMapping === '') firstMapping = `${r.cell} game ${r.pair}`
+    }
+  }
+  if (mappingViolations > 0) {
+    violations.push(
+      `readSeat mapping: ${mappingViolations} record(s) stray from the registered mapping ` +
+        `(seat 2·(game mod 3) on the v1.0 seed list) — first at ${firstMapping}`,
+    )
+  }
+
+  // --- the P8 aggregates, and the ∞ reproduction gate they carry -----------------------------
+  const { cells, deltas, infReproduction } = scoreBoundedSingleAccuracy(all, config.accBits)
+  if (infReproduction.deviations > 0) {
+    violations.push(
+      `P8 ∞ health: ${infReproduction.deviations} of ${infReproduction.games} ∞-budget games did not ` +
+        'reproduce the all-bare full-strength game exactly (elog, six-seat read and step count ' +
+        'compared) — the bounded arm at ∞ is decision-identical by the Phase 1 anchor pin, so a ' +
+        'deviation is a harness bug, full stop',
+    )
+  }
+
+  // --- the standard gates --------------------------------------------------------------------
+  const capped: CappedGame[] = []
+  let illegalActions = 0
+  let invariantViolations = 0
+  let ties = 0
+  let voids = 0
+  let nonClinch = 0
+  for (const r of all) {
+    illegalActions += r.illegal
+    invariantViolations += r.invariantViolations
+    if (r.tie) ties++
+    voids += r.voids
+    if (!r.clinch) nonClinch++
+    if (r.capped) {
+      capped.push({ cell: r.cell, seed: r.seed, orient: r.orient, startSeat: r.startSeat, steps: r.steps })
+    }
+  }
+  if (illegalActions > 0) violations.push(`illegalActions ${illegalActions} (must be 0)`)
+  if (invariantViolations > 0) violations.push(`invariantViolations ${invariantViolations} (must be 0)`)
+  if (capped.length > 0) {
+    const byCell = new Map<string, number>()
+    for (const g of capped) byCell.set(g.cell, (byCell.get(g.cell) ?? 0) + 1)
+    const worst = [...byCell.entries()].sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0]))
+    violations.push(
+      `cappedGames ${capped.length} (must be 0) — cells: ${worst.map(([c, n]) => `${c}=${n}`).join(', ')}`,
+    )
+  }
+  if (config.variant === 'us54') {
+    if (ties > 0) violations.push(`ties ${ties} — RULES_US54.md §5 proves ties are arithmetically impossible`)
+    if (voids > 0) violations.push(`voids ${voids} — RULES_US54.md row 14 abolishes the void outcome`)
+    if (nonClinch > 0) violations.push(`nonClinch ${nonClinch} games did not end on a clinch at exactly 5 sets`)
+  }
+  const health: BoundedHealthSummary = {
+    ok: violations.length === 0,
+    illegalActions,
+    cappedGames: capped.length,
+    invariantViolations,
+    ties,
+    voids,
+    nonClinch,
+    capped,
+    violations,
+  }
+
+  const movesTotal = all.reduce((s, r) => s + r.steps, 0)
+  const seconds = opts.wallMs / 1000
+  return {
+    meta: {
+      schemaVersion: BOUNDED_BASE_SCHEMA_VERSION,
+      generatedAt: opts.generatedAt,
+      config,
+      gamesTotal: all.length,
+      movesTotal,
+      workers: opts.workers,
+      wallMs: opts.wallMs,
+      gamesPerSecond: seconds === 0 ? 0 : all.length / seconds,
+      recordsDigest: digest(boundedToJsonl(all)),
+      notes: [
+        SINGLE_READ_MAPPING,
+        'P8 scores top[readSeat] only. The six-seat end-of-game read is retained per record ' +
+          'for context, clearly separated by readSeat, and enters no verdict. Cell SEs are ' +
+          'seed-clustered (per-seed accuracy over the pairings, sd/√seeds); adjacent deltas ' +
+          "are per-seed paired exactly as P7's.",
+        '∞ health gate: every ∞-budget game is replayed with all six seats bare (the exact ' +
+          'v1.0 accuracy harness table) and required to match event-for-event (elog), ' +
+          'read-for-read and step-for-step. Reproduction replays are checks, not records — ' +
+          'excluded from gamesTotal, movesTotal and the digest.',
+      ],
+    },
+    health,
+    cells,
+    deltas,
+    infReproduction,
     records: all,
   }
 }
@@ -1650,14 +2058,15 @@ export function computeBoundedVerdicts(
 }
 
 /**
- * Fold a run summary and its provenance into the published artifact. Nothing external enters
- * the verdict rules — the committed v1.0 accuracy baseline, when supplied, is echoed into the
- * P7 detail and the meta as context, never as a gate.
+ * Fold a run summary and its provenance into the BASE artifact (the pre-E4b shape, schema
+ * {@link BOUNDED_BASE_SCHEMA_VERSION}) — `extendBoundedResults` upgrades it to the published
+ * schema. Nothing external enters the verdict rules — the committed v1.0 accuracy baseline,
+ * when supplied, is echoed into the P7 detail and the meta as context, never as a gate.
  */
-export function buildBoundedResults(run: BoundedRunSummary, inputs: BoundedArtifactInputs): BoundedResults {
+export function buildBoundedResults(run: BoundedRunSummary, inputs: BoundedArtifactInputs): BoundedResultsBase {
   return {
     meta: {
-      schemaVersion: BOUNDED_SCHEMA_VERSION,
+      schemaVersion: BOUNDED_BASE_SCHEMA_VERSION,
       generatedAt: inputs.generatedAt,
       engineCommit: inputs.engineCommit,
       rulesHash: inputs.rulesHash,
@@ -1681,4 +2090,334 @@ export function buildBoundedResults(run: BoundedRunSummary, inputs: BoundedArtif
     accuracy: run.accuracy,
     verdicts: computeBoundedVerdicts(run, inputs.baseline),
   }
+}
+
+/* -- E4b: the P8 verdict, the multiplicity annotation, and the artifact extension ------------- */
+
+/**
+ * Φ(z), the standard normal CDF, via the Numerical Recipes erfc approximation (§6.2) — ~1e-7
+ * relative accuracy over the whole line, deterministic, dependency-free. Used ONLY by the
+ * multiplicity annotation; no registered verdict rule reads a p-value.
+ */
+export function normalCdf(z: number): number {
+  const x = Math.abs(z) / Math.SQRT2
+  const t = 1 / (1 + 0.5 * x)
+  const erfc =
+    t *
+    Math.exp(
+      -x * x -
+        1.26551223 +
+        t *
+          (1.00002368 +
+            t *
+              (0.37409196 +
+                t *
+                  (0.09678418 +
+                    t *
+                      (-0.18628806 +
+                        t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277)))))))),
+    )
+  const tail = erfc / 2
+  return z < 0 ? tail : 1 - tail
+}
+
+/** The corrected level the multiplicity annotation reads violations at. */
+export const MULTIPLICITY_ALPHA = 0.05
+
+/**
+ * The Bonferroni ×m annotation over one adjacent-rung family (registered with E4b, SPEC-v15.md:
+ * "the artifact ALSO reports Bonferroni-corrected outcomes for their rung families (×3 each)
+ * as an annotation"). Annotation ONLY: the registered per-rung rule (`delta >= −2·SE`, any
+ * violating rung refutes) and the committed verdicts are not altered by anything here.
+ */
+export function multiplicityFamilyOf(id: 'P7' | 'P8', deltas: readonly AccuracyAdjacentDelta[]): MultiplicityFamily {
+  const m = deltas.length
+  const rungs: MultiplicityRung[] = deltas.map((d) => {
+    const pOneSided = normalCdf(d.z)
+    const pBonferroni = Math.min(1, m * pOneSided)
+    return {
+      fromBits: d.fromBits,
+      toBits: d.toBits,
+      delta: d.delta,
+      se: d.se,
+      z: d.z,
+      pOneSided,
+      pBonferroni,
+      violatesRaw: !d.pass,
+      violatesBonferroni: d.delta < 0 && pBonferroni < MULTIPLICITY_ALPHA,
+    }
+  })
+  return {
+    id,
+    comparisons: m,
+    alpha: MULTIPLICITY_ALPHA,
+    rungs,
+    note:
+      `Bonferroni ×${m} over the ${id} adjacent-rung family, as an annotation only — the ` +
+      `registered ${id} rule (delta >= −2·SE per rung, any violating rung refutes) and its ` +
+      `verdict are unchanged. pOneSided is Φ(z) per rung; pBonferroni = min(1, ` +
+      `${m}·pOneSided); a rung violates at the corrected level iff its delta is negative and ` +
+      `pBonferroni < ${MULTIPLICITY_ALPHA}.`,
+  }
+}
+
+/**
+ * The P8 verdict, by the rule registered with the prediction (SPEC-v15.md E4b): every adjacent
+ * rung of the single-seat grid must satisfy `delta >= −2·(per-seed paired SE)`; any violating
+ * rung refutes — exactly P7's rule on the bounded-seat reads. The ∞ reproduction is HEALTH,
+ * not prediction, and is stated in the detail as measured.
+ */
+export function computeBoundedSingleVerdict(
+  single: Pick<BoundedAccuracySingle, 'cells' | 'deltas' | 'infReproduction'>,
+): BoundedVerdict {
+  if (single.cells.length === 0) {
+    return { id: 'P8', prediction: BOUNDED_P8_PREDICTION.text, verdict: 'mixed', detail: 'no single-seat grid was run.' }
+  }
+  const failing = single.deltas.filter((d) => !d.pass)
+  const cells = single.cells
+    .map(
+      (c) =>
+        `${fmtBits(c.bits)}: ${(100 * c.top1).toFixed(2)}% ± ${(100 * c.se).toFixed(2)}% over ${c.reads} reads`,
+    )
+    .join('; ')
+  const steps = single.deltas
+    .map((d) => `${fmtBits(d.fromBits)}→${fmtBits(d.toBits)} ${d.delta >= 0 ? '+' : ''}${fmt(d.delta)} ± ${fmt(d.se)}`)
+    .join('; ')
+  const inf = single.infReproduction
+  const anchor =
+    inf.deviations === 0
+      ? ` The ∞ cell reproduced the corresponding full-strength read exactly in all ${inf.games} games.`
+      : ` THE ∞ CELL FAILED ITS HEALTH GATE: ${inf.deviations} of ${inf.games} games did not reproduce ` +
+        'the full-strength game — a harness bug, and the run is VOID.'
+  return {
+    id: 'P8',
+    prediction: BOUNDED_P8_PREDICTION.text,
+    verdict: failing.length > 0 ? 'refuted' : 'confirmed',
+    detail:
+      `bounded-seat end-of-game top-1 (seed-clustered SE) — ${cells}. ` +
+      `Adjacent deltas (per-seed paired): ${steps}. ` +
+      `${failing.length} of ${single.deltas.length} rungs violate delta >= −2·SE` +
+      (failing.length > 0 ? ` (${failing.map((d) => `${fmtBits(d.fromBits)}→${fmtBits(d.toBits)}`).join(', ')})` : '') +
+      `.${anchor}`,
+  }
+}
+
+/** What `extendBoundedResults` needs beyond the run: the commit whose engine PLAYED the games. */
+export interface BoundedExtendInputs {
+  engineCommit: string
+}
+
+function refuse(why: string): never {
+  throw new Error(`extendBoundedResults: ${why}`)
+}
+
+const BASE_VERDICT_IDS = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'] as const
+
+/** Structural admission of the base artifact — targeted guards on everything relied upon. */
+function admitBase(baseText: string): BoundedResultsBase {
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(baseText)
+  } catch (error) {
+    refuse(`the base artifact is not valid JSON — ${(error as Error).message}`)
+  }
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    refuse('the base artifact is not an object')
+  }
+  const root = parsed as Record<string, unknown>
+  const meta = root.meta
+  if (typeof meta !== 'object' || meta === null) refuse('the base artifact has no meta')
+  const schema = (meta as Record<string, unknown>).schemaVersion
+  if (schema !== BOUNDED_BASE_SCHEMA_VERSION) {
+    refuse(
+      `base meta.schemaVersion is ${String(schema)}; the extension consumes the base suite's ` +
+        `schema ${BOUNDED_BASE_SCHEMA_VERSION} only (an already-extended artifact must not be re-extended)`,
+    )
+  }
+  for (const key of ['ladder', 'ladderDeltas', 'tiers', 'evidence', 'verdicts'] as const) {
+    if (!Array.isArray(root[key])) refuse(`base ${key} is missing or not an array`)
+  }
+  for (const key of ['mirrorExact', 'accuracy'] as const) {
+    if (typeof root[key] !== 'object' || root[key] === null) refuse(`base ${key} is missing`)
+  }
+  const verdicts = root.verdicts as { id?: unknown }[]
+  if (
+    verdicts.length !== BASE_VERDICT_IDS.length ||
+    verdicts.some((v, i) => v === null || typeof v !== 'object' || v.id !== BASE_VERDICT_IDS[i])
+  ) {
+    refuse('base verdicts are not exactly P1–P7 in order')
+  }
+  return parsed as BoundedResultsBase
+}
+
+/**
+ * Extend the committed base artifact with the E4b block — ADDITIVELY, and refusing to build if
+ * anything pre-existing moved. Two byte-identity checks with real teeth:
+ *
+ * 1. **The verdicts are recomputed.** P1–P7 are re-derived from the base artifact's own
+ *    aggregates through `computeBoundedVerdicts` — the same code, the same rules — and must
+ *    reproduce the committed verdict objects byte-for-byte. A doctored aggregate (a share, a
+ *    delta, an evidence rate) changes a recomputed detail string and is refused here.
+ * 2. **The carried sections are compared after assembly.** Every pre-existing section of the
+ *    output must serialise byte-identically to the base's — a guard on this function's own
+ *    future edits, not just on the inputs.
+ *
+ * The additions: `accuracySingle` (the E4b run with its own provenance and health),
+ * `multiplicity` (the ×3 Bonferroni annotation over BOTH rung families), the P8 verdict
+ * appended, the P8 prediction and the E4b notes appended to meta. `meta.schemaVersion` moves
+ * to {@link BOUNDED_SCHEMA_VERSION}; nothing else in meta changes.
+ */
+export function extendBoundedResults(
+  baseText: string,
+  run: BoundedSingleRunSummary,
+  inputs: BoundedExtendInputs,
+): BoundedResults {
+  const base = admitBase(baseText)
+
+  // --- the run must be healthy and must be E4's grid on E4's seeds --------------------------
+  if (!run.health.ok) {
+    refuse(`the E4b run failed its health gate — ${run.health.violations.length} violation(s): ${run.health.violations.join('; ')}`)
+  }
+  const bc = base.meta.config
+  const rc = run.meta.config
+  if (
+    JSON.stringify(rc.accBits) !== JSON.stringify(bc.accBits) ||
+    rc.accGames !== bc.accGames ||
+    rc.accSeedPrefix !== bc.accSeedPrefix ||
+    rc.variant !== bc.variant ||
+    rc.stepCap !== bc.stepCap
+  ) {
+    refuse(
+      'the E4b run does not replay the committed E4 grid — accBits, accGames, accSeedPrefix, ' +
+        'variant and stepCap must all match the base config (identical pairings/seeds is the ' +
+        'registered design)',
+    )
+  }
+  const pairings = (STYLE_IDS.length * (STYLE_IDS.length - 1)) / 2
+  if (run.infReproduction.games !== pairings * rc.accGames || run.infReproduction.deviations !== 0) {
+    refuse(
+      `the ∞ reproduction gate did not hold: ${run.infReproduction.deviations} deviation(s) over ` +
+        `${run.infReproduction.games} ∞ games (expected 0 over ${pairings * rc.accGames})`,
+    )
+  }
+
+  // --- byte-identity check 1a: stored derived fields re-derived from their own inputs --------
+  // The verdict recompute below covers every aggregate a verdict reads; these recomputes cover
+  // stored fields verdicts do NOT read (a ladder cell's interval, a delta's z), so a doctored
+  // number cannot hide in a field no rule consults. All three re-run the exact expressions the
+  // assembler ran, on the parsed doubles — bit-identical or refused.
+  for (const cell of [...base.ladder, ...base.tiers]) {
+    const ci: [number, number] = [cell.share - 1.96 * cell.se, cell.share + 1.96 * cell.se]
+    if (JSON.stringify(ci) !== JSON.stringify(cell.ci95)) {
+      refuse(`a pre-existing aggregate moved — ${cell.id}'s ci95 does not re-derive from its share and se`)
+    }
+  }
+  for (const tier of base.tiers) {
+    const beq = bitsEquivalentOf(tier.share, tier.se, base.ladder)
+    if (JSON.stringify(beq) !== JSON.stringify(tier.bitsEquivalent)) {
+      refuse(
+        `a pre-existing aggregate moved — tier ${tier.tier}'s bits-equivalent does not re-derive ` +
+          'from its share, its se and the ladder cells',
+      )
+    }
+  }
+  for (const d of [...base.ladderDeltas, ...base.accuracy.deltas]) {
+    if (JSON.stringify(finiteZ(d.delta, d.se)) !== JSON.stringify(d.z) || d.pass !== (d.delta >= -2 * d.se)) {
+      refuse(
+        `a pre-existing aggregate moved — the ${d.fromBits}→${d.toBits} delta's z or pass does not ` +
+          're-derive from its delta and se',
+      )
+    }
+  }
+
+  // --- byte-identity check 1b: recompute the committed verdicts from the committed aggregates -
+  const summary: BoundedRunSummary = {
+    meta: {
+      schemaVersion: base.meta.schemaVersion,
+      generatedAt: base.meta.generatedAt,
+      config: base.meta.config,
+      gamesTotal: base.meta.gamesTotal,
+      movesTotal: 0,
+      workers: 0,
+      wallMs: base.meta.wallMs,
+      gamesPerSecond: 0,
+      recordsDigest: base.meta.recordsDigest,
+      notes: [...base.meta.notes],
+    },
+    health: base.meta.health,
+    ladder: base.ladder,
+    ladderDeltas: base.ladderDeltas,
+    mirrorExact: base.mirrorExact,
+    tiers: base.tiers,
+    evidence: base.evidence,
+    accuracy: base.accuracy,
+  }
+  const recomputed = computeBoundedVerdicts(summary, base.meta.baseline ?? undefined)
+  if (JSON.stringify(recomputed) !== JSON.stringify(base.verdicts)) {
+    const first =
+      recomputed.find((v, i) => JSON.stringify(v) !== JSON.stringify(base.verdicts[i]))?.id ?? '(count differs)'
+    refuse(
+      `a pre-existing aggregate or verdict moved — P1–P7 recomputed from the base artifact's own ` +
+        `aggregates do not reproduce its committed verdicts byte-for-byte (first difference at ${first}). ` +
+        'Refusing to write the artifact.',
+    )
+  }
+
+  // --- assemble, additively ------------------------------------------------------------------
+  const out: BoundedResults = {
+    meta: {
+      ...base.meta,
+      schemaVersion: BOUNDED_SCHEMA_VERSION,
+      notes: [...base.meta.notes, ...run.meta.notes.map((n) => `E4b: ${n}`)],
+      predictions: [...base.meta.predictions, { ...BOUNDED_P8_PREDICTION }],
+    },
+    ladder: base.ladder,
+    ladderDeltas: base.ladderDeltas,
+    mirrorExact: base.mirrorExact,
+    tiers: base.tiers,
+    evidence: base.evidence,
+    accuracy: base.accuracy,
+    accuracySingle: {
+      meta: {
+        generatedAt: run.meta.generatedAt,
+        engineCommit: inputs.engineCommit,
+        gamesTotal: run.meta.gamesTotal,
+        movesTotal: run.meta.movesTotal,
+        workers: run.meta.workers,
+        wallMs: run.meta.wallMs,
+        gamesPerSecond: run.meta.gamesPerSecond,
+        recordsDigest: run.meta.recordsDigest,
+        notes: [...run.meta.notes],
+      },
+      mapping: SINGLE_READ_MAPPING,
+      health: run.health,
+      cells: run.cells,
+      deltas: run.deltas,
+      infReproduction: run.infReproduction,
+    },
+    multiplicity: [multiplicityFamilyOf('P7', base.accuracy.deltas), multiplicityFamilyOf('P8', run.deltas)],
+    verdicts: [
+      ...base.verdicts,
+      computeBoundedSingleVerdict({ cells: run.cells, deltas: run.deltas, infReproduction: run.infReproduction }),
+    ],
+  }
+
+  // --- byte-identity check 2: the carried sections, compared after assembly ------------------
+  const carried: readonly (keyof BoundedResultsBase)[] = [
+    'ladder',
+    'ladderDeltas',
+    'mirrorExact',
+    'tiers',
+    'evidence',
+    'accuracy',
+  ]
+  for (const key of carried) {
+    if (JSON.stringify(out[key]) !== JSON.stringify(base[key])) {
+      refuse(`the carried section "${key}" does not serialise byte-identically to the base artifact's`)
+    }
+  }
+  if (JSON.stringify(out.verdicts.slice(0, BASE_VERDICT_IDS.length)) !== JSON.stringify(base.verdicts)) {
+    refuse('the carried P1–P7 verdicts do not serialise byte-identically to the base artifact’s')
+  }
+  return out
 }

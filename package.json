@@ -21,7 +21,9 @@
     "adaptive": "node scripts/adaptive-sim.mjs",
     "adaptive:analyze": "node scripts/adaptive-analyze.mjs",
     "bounded": "node scripts/bounded-sim.mjs",
-    "bounded:analyze": "node scripts/bounded-analyze.mjs"
+    "bounded:analyze": "node scripts/bounded-analyze.mjs",
+    "bounded:single": "node scripts/bounded-single-sim.mjs",
+    "bounded:single:analyze": "node scripts/bounded-single-analyze.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",

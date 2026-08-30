@@ -27,8 +27,19 @@ import type { BotDifficulty, Seat, StyleId, Team, Variant } from '../engine/inde
 import type { CellHealth, InvariantCheck, Orientation } from './types.ts'
 import type { AccuracyByStyle, AdaptiveHealthSummary, VerdictValue } from './adaptive-types.ts'
 
-/** Bump when the emitted JSON shape changes in a way a reader must notice. */
-export const BOUNDED_SCHEMA_VERSION = 1
+/**
+ * The schema of the PUBLISHED artifact (`src/lab/data/bounded-results.json`). Bump when the
+ * emitted JSON shape changes in a way a reader must notice. Version 2 added the E4b single-seat
+ * attribution block (`accuracySingle`), the P8 verdict, and the `multiplicity` annotation.
+ */
+export const BOUNDED_SCHEMA_VERSION = 2
+
+/**
+ * The schema of the BASE suite outputs — `run.json` and the pre-E4b artifact shape
+ * `buildBoundedResults` emits, which `extendBoundedResults` consumes and upgrades. Held at the
+ * committed value so the E1–E4 aggregates it stamps stay byte-identical across the extension.
+ */
+export const BOUNDED_BASE_SCHEMA_VERSION = 1
 
 /**
  * The ∞ rung of the ladder, as a concrete budget provably above the maximum derivable pool.
@@ -45,7 +56,7 @@ export const BOUNDED_TIERS: readonly BotDifficulty[] = Object.freeze(['easy', 'm
 
 /* -- predictions ---------------------------------------------------------------------------- */
 
-export type BoundedPredictionId = 'P1' | 'P2' | 'P3' | 'P4' | 'P5' | 'P6' | 'P7'
+export type BoundedPredictionId = 'P1' | 'P2' | 'P3' | 'P4' | 'P5' | 'P6' | 'P7' | 'P8'
 
 export interface BoundedPrediction {
   id: BoundedPredictionId
@@ -98,6 +109,20 @@ export const BOUNDED_PREDICTIONS: readonly BoundedPrediction[] = [
   },
 ]
 
+/**
+ * The E4b prediction, registered separately (SPEC-v15.md, 2026-08-30 — AFTER the Phase 2
+ * review and BEFORE any E4b run) and therefore not part of {@link BOUNDED_PREDICTIONS}, which
+ * the base suite stamps verbatim. `extendBoundedResults` appends it to the published artifact.
+ */
+export const BOUNDED_P8_PREDICTION: BoundedPrediction = {
+  id: 'P8',
+  text:
+    'E4b (single-seat attribution): top-1 accuracy at the bounded read seat is non-increasing ' +
+    'as its bits shrink, by the same adjacent-rung 2·SE rule as P7 (any violating rung ' +
+    'refutes). The ∞ cell must reproduce the corresponding full-strength read exactly ' +
+    '(health, not prediction).',
+}
+
 export interface BoundedVerdict {
   id: BoundedPredictionId
   prediction: string
@@ -133,7 +158,7 @@ export interface BoundedLabConfig {
 
 /* -- per-game records ----------------------------------------------------------------------- */
 
-export type BoundedExperimentId = 'ladder' | 'tier' | 'accuracy'
+export type BoundedExperimentId = 'ladder' | 'tier' | 'accuracy' | 'accuracySingle'
 
 /**
  * One played game — the JSONL line. `a` is always the measured side (the bounded team in E1,
@@ -175,6 +200,19 @@ export interface BoundedGameRecord {
   top?: readonly StyleId[]
   /** Ladder/tier: the compact full public log (`encodeElog`), the E3 input. */
   elog?: string
+  /**
+   * AccuracySingle: the ONE bounded seat of the game — the seat P8 reads. `top` still carries
+   * all six end-of-game reads (they are free — `classifySeats` reads the whole table at once)
+   * but the P8 scoring uses `top[readSeat]` only; the other five are retained data, clearly
+   * separated by this field, and enter no verdict.
+   */
+  readSeat?: Seat
+  /**
+   * AccuracySingle, ∞ budget only: whether this game — replayed with all six seats bare
+   * full-strength — was event-identical (elog) with an identical six-seat classifier read and
+   * step count. The P8 health gate requires `true` on every ∞ record.
+   */
+  infExact?: boolean
 }
 
 export interface BoundedTaskResult {
@@ -372,6 +410,92 @@ export interface BoundedAccuracy {
   deltas: AccuracyAdjacentDelta[]
 }
 
+/* -- E4b: single-seat attribution ------------------------------------------------------------ */
+
+/**
+ * One E4b budget cell. Exactly ONE read per game — the bounded seat's — so `reads` equals
+ * `games`; `byStyle` keys the truth (the team-0 style, `pairing[0]`), and its `seats` field
+ * counts reads. The pairing scheme is triangular (a style is `pairing[0]` only against styles
+ * later in roster order), so the by-style read counts fall with roster position and the LAST
+ * roster style has none — a property of the registered design, identical at every budget, so
+ * the adjacent-rung deltas always compare identical read populations.
+ */
+export interface SingleAccuracyCell {
+  bits: number
+  games: number
+  /** Bounded-seat reads scored — one per game. */
+  reads: number
+  top1: number
+  /** Seed-clustered SE of `top1`: per-seed accuracies over the pairings, sd/√seeds. */
+  se: number
+  /** Seeds contributing at least one read. */
+  seeds: number
+  byStyle: Record<StyleId, AccuracyByStyle>
+}
+
+/** The P8 ∞ health gate's tally: every ∞ game must reproduce the full-strength game exactly. */
+export interface InfReproduction {
+  games: number
+  /** Games whose all-bare replay differed in log, read, or step count. Must be 0. */
+  deviations: number
+}
+
+/** Provenance of the E4b run — the games behind `accuracySingle`, not the base suite's. */
+export interface BoundedAccuracySingleMeta {
+  /** When the E4b run's games were played. */
+  generatedAt: string
+  /** The engine commit that PLAYED the E4b games. */
+  engineCommit: string
+  gamesTotal: number
+  movesTotal: number
+  workers: number
+  wallMs: number
+  gamesPerSecond: number
+  recordsDigest: string
+  /** The run's notes — the registered read-seat mapping is written here BEFORE the run. */
+  notes: string[]
+}
+
+/** The E4b block of the published artifact — additive; nothing pre-existing moves. */
+export interface BoundedAccuracySingle {
+  meta: BoundedAccuracySingleMeta
+  /** The registered read-seat mapping, verbatim — {@link SingleReadMapping} in bounded.ts. */
+  mapping: string
+  health: BoundedHealthSummary
+  cells: SingleAccuracyCell[]
+  /** The P8 statistic: same per-seed paired rule as P7's deltas. */
+  deltas: AccuracyAdjacentDelta[]
+  infReproduction: InfReproduction
+}
+
+/**
+ * One rung of a Bonferroni-annotated family. `pOneSided` is Φ(z) — the one-sided p of a
+ * violation this deep under H0 (delta = 0); `pBonferroni` is min(1, m·p) for the family's m
+ * comparisons. `violatesRaw` restates the registered rule (`delta < −2·SE`); the annotation
+ * NEVER alters that rule or any committed verdict.
+ */
+export interface MultiplicityRung {
+  fromBits: number
+  toBits: number
+  delta: number
+  se: number
+  z: number
+  pOneSided: number
+  pBonferroni: number
+  violatesRaw: boolean
+  /** delta < 0 and `pBonferroni` < the family alpha. */
+  violatesBonferroni: boolean
+}
+
+/** The ×m Bonferroni annotation over one adjacent-rung family (P7's or P8's; m = 3 each). */
+export interface MultiplicityFamily {
+  id: 'P7' | 'P8'
+  comparisons: number
+  alpha: number
+  rungs: MultiplicityRung[]
+  note: string
+}
+
 /* -- run output and health ------------------------------------------------------------------ */
 
 /** The same gate shape the adaptive suite emits — the discipline is identical by design. */
@@ -406,6 +530,21 @@ export interface BoundedRunSummary {
 /** What `assembleBoundedRun` returns and the launcher writes out. */
 export interface BoundedRunOutput extends BoundedRunSummary {
   /** Canonical order: experiment, cell, pair, orientation. Never worker-arrival order. */
+  records: BoundedGameRecord[]
+}
+
+/** The E4b run's aggregates alone — what its `run.json` holds and `extendBoundedResults` reads. */
+export interface BoundedSingleRunSummary {
+  meta: BoundedRunMeta
+  health: BoundedHealthSummary
+  cells: SingleAccuracyCell[]
+  deltas: AccuracyAdjacentDelta[]
+  infReproduction: InfReproduction
+}
+
+/** What `assembleBoundedSingleRun` returns and the E4b launcher writes out. */
+export interface BoundedSingleRunOutput extends BoundedSingleRunSummary {
+  /** Canonical order, as ever. */
   records: BoundedGameRecord[]
 }
 
@@ -445,8 +584,12 @@ export interface BoundedResultsMeta {
   predictions: BoundedPrediction[]
 }
 
-/** The one artifact `/lab/bounded` will read — `src/lab/data/bounded-results.json`. */
-export interface BoundedResults {
+/**
+ * The base-suite artifact shape (schema {@link BOUNDED_BASE_SCHEMA_VERSION}) — what
+ * `buildBoundedResults` emits and what was committed before E4b. `extendBoundedResults`
+ * consumes this and upgrades it, carrying every section over byte-identically.
+ */
+export interface BoundedResultsBase {
   meta: BoundedResultsMeta
   ladder: LadderCell[]
   ladderDeltas: LadderAdjacentDelta[]
@@ -455,4 +598,14 @@ export interface BoundedResults {
   evidence: EvidenceCurve[]
   accuracy: BoundedAccuracy
   verdicts: BoundedVerdict[]
+}
+
+/**
+ * The one artifact `/lab/bounded` will read — `src/lab/data/bounded-results.json`, schema
+ * {@link BOUNDED_SCHEMA_VERSION}: the base suite plus the E4b single-seat block, the P8
+ * verdict (appended to `verdicts`), and the additive Bonferroni annotation.
+ */
+export interface BoundedResults extends BoundedResultsBase {
+  accuracySingle: BoundedAccuracySingle
+  multiplicity: MultiplicityFamily[]
 }

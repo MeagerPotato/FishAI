@@ -16,37 +16,59 @@
  *  - the aggregation arithmetic (paired shares, adjacent deltas, bits-equivalents, accuracy
  *    scoring) is pinned on hand-built inputs with known answers.
  *
+ * The E4b follow-up (SPEC v1.5, registered after the Phase 2 review and before its run) is
+ * tested the same way: the single-seat task construction is pinned (exactly one bounded seat,
+ * the registered rotating read seat, the budget), the ∞-reproduction and read-seat-mapping
+ * health gates are exercised by doctoring, the P8 rule and the ×3 Bonferroni annotation are
+ * pinned on hand-built inputs, and `extendBoundedResults` is shown to refuse every doctored
+ * base — including an aggregate no verdict reads.
+ *
  * The artifact validator's refusals are tested alongside the committed artifact once it
  * exists — see the companion block at the bottom.
  */
 import { describe, expect, it } from 'vitest'
 import {
   BOUNDED_INF_BITS,
+  BOUNDED_P8_PREDICTION,
   BOUNDED_TIERS,
   DEFAULT_BOUNDED_CONFIG,
+  SINGLE_READ_MAPPING,
   aggregateEvidence,
   assembleBoundedRun,
+  assembleBoundedSingleRun,
   bitsEquivalentOf,
   boundedGamesTotal,
+  boundedSingleGamesTotal,
   boundedToJsonl,
   buildBoundedResults,
+  computeBoundedSingleVerdict,
   computeBoundedVerdicts,
   decodeElog,
   encodeElog,
   evidenceObservationsFromLog,
+  extendBoundedResults,
   ladderAdjacentDeltas,
   ladderCellId,
   mirrorExactness,
+  multiplicityFamilyOf,
+  normalCdf,
+  planBoundedSingleTasks,
   planBoundedTasks,
   runBoundedTask,
   scoreBoundedAccuracy,
+  scoreBoundedSingleAccuracy,
   seedFor,
+  singleCellId,
+  singleReadSeatFor,
+  singleSeatPolicies,
   tierCellId,
 } from '../../lib/lab/index.ts'
 import type {
+  AccuracyAdjacentDelta,
   BoundedGameRecord,
   BoundedLabConfig,
   BoundedRunOutput,
+  BoundedSingleRunOutput,
   BoundedTaskResult,
   DecodedEvent,
   LadderCell,
@@ -83,6 +105,14 @@ function runSuite(config: BoundedLabConfig): BoundedRunOutput {
 
 /** The one tiny run most tests read. Module-level so it is played once, not per test. */
 const RUN = runSuite(TINY)
+
+function runSingleSuite(config: BoundedLabConfig): BoundedSingleRunOutput {
+  const results = planBoundedSingleTasks(config).map((t) => runBoundedTask(t))
+  return assembleBoundedSingleRun(config, results, { wallMs: 1, workers: 1, generatedAt: '2026-01-01T00:00:00.000Z' })
+}
+
+/** The tiny E4b run — the SAME config as RUN, so `extendBoundedResults` accepts the pair. */
+const SINGLE_RUN = runSingleSuite(TINY)
 
 describe('the plan', () => {
   it('the default config is the pre-registered experiment', () => {
@@ -507,6 +537,376 @@ describe('the health gate, enforced', () => {
   })
 })
 
+describe('E4b: the single-seat plan and table', () => {
+  it('plans only accuracySingle tasks over the E4 grid, and refuses a gridless ladder', () => {
+    const tasks = planBoundedSingleTasks(TINY)
+    expect(tasks.length).toBeGreaterThan(0)
+    for (const t of tasks) expect(t.kind).toBe('accuracySingle')
+    expect(boundedSingleGamesTotal(TINY)).toBe(2 * 36 * TINY.accGames)
+    expect(boundedSingleGamesTotal(DEFAULT_BOUNDED_CONFIG)).toBe(4 * 36 * 50)
+    expect(() => planBoundedSingleTasks({ ...TINY, accBits: [16, 64] })).toThrow(/∞ rung/)
+  })
+
+  it('the registered mapping rotates the three team-0 seats', () => {
+    expect([0, 1, 2, 3, 4, 5].map(singleReadSeatFor)).toEqual([0, 2, 4, 0, 2, 4])
+    for (let game = 0; game < 12; game++) expect(seatTeam(singleReadSeatFor(game))).toBe(0)
+  })
+
+  it('singleSeatPolicies: exactly ONE bounded seat, at the read seat, at the budget', () => {
+    const policies = singleSeatPolicies(32, 'balanced', 'blitz', 2)
+    const bounded = policies.filter((p) => typeof p === 'object' && p !== null && Object.hasOwn(p, 'bounded'))
+    expect(bounded.length).toBe(1)
+    expect(policies[2]).toEqual({ bounded: true, bits: 32, style: 'balanced' })
+    // Every other seat is the bare full-strength roster style, seated exactly as the v1.0
+    // accuracy harness seats it — team 0 the first style, team 1 the second.
+    expect(policies[0]).toBe(STYLE_ROSTER.balanced)
+    expect(policies[4]).toBe(STYLE_ROSTER.balanced)
+    for (const seat of [1, 3, 5] as const) expect(policies[seat]).toBe(STYLE_ROSTER.blitz)
+    expect(() => singleSeatPolicies(32, 'balanced', 'blitz', 1)).toThrow(/team-0/)
+  })
+
+  it('a single task carries the mapping through six consecutive games', () => {
+    const result = runBoundedTask({
+      kind: 'accuracySingle',
+      index: 0,
+      config: { ...TINY, accGames: 6 },
+      bits: 16,
+      a: 'balanced',
+      b: 'blitz',
+      gameFrom: 0,
+      gameTo: 6,
+    })
+    expect(result.records.length).toBe(6)
+    for (const [i, r] of result.records.entries()) {
+      expect(r.exp).toBe('accuracySingle')
+      expect(r.cell).toBe(singleCellId(16, 'balanced', 'blitz'))
+      expect(r.pair).toBe(i)
+      expect(r.orient).toBe(0)
+      expect(r.aTeam).toBe(0)
+      expect(r.readSeat).toBe(singleReadSeatFor(i))
+      expect(r.startSeat).toBe(i % 6)
+      expect(r.seed).toBe(seedFor(TINY.accSeedPrefix, i))
+      expect(r.pairing).toEqual(['balanced', 'blitz'])
+      expect(r.top?.length).toBe(6)
+      expect(r.elog).toBeUndefined()
+      expect(r.infExact).toBeUndefined()
+      expect(r.bits).toBe(16)
+    }
+  })
+})
+
+describe('E4b: the tiny run', () => {
+  it('passes the full health gate, mapping and ∞ reproduction included', () => {
+    expect(SINGLE_RUN.health.violations).toEqual([])
+    expect(SINGLE_RUN.health.ok).toBe(true)
+    expect(SINGLE_RUN.meta.gamesTotal).toBe(boundedSingleGamesTotal(TINY))
+    expect(SINGLE_RUN.meta.notes[0]).toBe(SINGLE_READ_MAPPING)
+  })
+
+  it('every record reads the registered seat on the v1.0 seed list', () => {
+    for (const r of SINGLE_RUN.records) {
+      expect(r.exp).toBe('accuracySingle')
+      expect(r.readSeat).toBe(singleReadSeatFor(r.pair))
+      expect(r.seed).toBe(seedFor(TINY.accSeedPrefix, r.pair))
+      expect(r.top?.length).toBe(6)
+      expect(r.elog).toBeUndefined()
+    }
+  })
+
+  it('the ∞ cell reproduced the all-bare full-strength game exactly, every game', () => {
+    const inf = SINGLE_RUN.records.filter((r) => (r.bits ?? 0) >= BOUNDED_INF_BITS)
+    expect(inf.length).toBe(36 * TINY.accGames)
+    for (const r of inf) expect(r.infExact).toBe(true)
+    for (const r of SINGLE_RUN.records) {
+      if ((r.bits ?? 0) < BOUNDED_INF_BITS) expect(r.infExact).toBeUndefined()
+    }
+    expect(SINGLE_RUN.infReproduction).toEqual({ games: 36 * TINY.accGames, deviations: 0 })
+  })
+
+  it('a broken ∞ reproduction VOIDS the run — the P8 health gate', () => {
+    const results = planBoundedSingleTasks(TINY).map((t) => runBoundedTask(t))
+    const clone = JSON.parse(JSON.stringify(results)) as BoundedTaskResult[]
+    let doctored = false
+    for (const tr of clone) {
+      for (const r of tr.records) {
+        if (!doctored && (r.bits ?? 0) >= BOUNDED_INF_BITS) {
+          r.infExact = false
+          doctored = true
+        }
+      }
+    }
+    expect(doctored).toBe(true)
+    const bad = assembleBoundedSingleRun(TINY, clone, { wallMs: 1, workers: 1, generatedAt: 'x' })
+    expect(bad.health.ok).toBe(false)
+    expect(bad.health.violations.join('\n')).toMatch(/P8 ∞ health: 1 of 36/)
+  })
+
+  it('a record straying from the registered read-seat mapping is refused', () => {
+    const results = planBoundedSingleTasks(TINY).map((t) => runBoundedTask(t))
+    const clone = JSON.parse(JSON.stringify(results)) as BoundedTaskResult[]
+    // Game 0's registered seat is 0; move the read to seat 4 on one record.
+    clone[0].records[0].readSeat = 4
+    const bad = assembleBoundedSingleRun(TINY, clone, { wallMs: 1, workers: 1, generatedAt: 'x' })
+    expect(bad.health.ok).toBe(false)
+    expect(bad.health.violations.join('\n')).toMatch(/readSeat mapping: 1 record/)
+  })
+
+  it('a re-run of one task is byte-identical (records; wallMs is provenance)', () => {
+    const task = planBoundedSingleTasks(TINY)[0]
+    expect(JSON.stringify(runBoundedTask(task).records)).toBe(JSON.stringify(runBoundedTask(task).records))
+  })
+})
+
+describe('E4b: scoring arithmetic on hand-built records', () => {
+  function srec(over: Partial<BoundedGameRecord>): BoundedGameRecord {
+    return {
+      exp: 'accuracySingle',
+      cell: singleCellId(16, 'balanced', 'blitz'),
+      pair: 0,
+      orient: 0,
+      seed: 'acc-0',
+      startSeat: 0,
+      aTeam: 0,
+      steps: 100,
+      finished: true,
+      capped: false,
+      illegal: 0,
+      invariantViolations: 0,
+      setsA: 5,
+      setsB: 4,
+      unresolved: 0,
+      voids: 0,
+      aShare: 5 / 9,
+      clinch: true,
+      tie: false,
+      bits: 16,
+      pairing: ['balanced', 'blitz'],
+      top: ['punter', 'punter', 'punter', 'punter', 'punter', 'punter'],
+      readSeat: 0,
+      ...over,
+    }
+  }
+
+  it('scores ONLY the bounded seat, against the team-0 truth', () => {
+    // Seat 0 read correct, every other seat wrong: 1/1. Seat 2 read (game 1) wrong: 0/1.
+    const records = [
+      srec({ pair: 0, seed: 'acc-0', top: ['balanced', 'punter', 'punter', 'punter', 'punter', 'punter'] }),
+      srec({ pair: 1, seed: 'acc-1', readSeat: 2, top: ['balanced', 'blitz', 'punter', 'blitz', 'balanced', 'blitz'] }),
+    ]
+    const scored = scoreBoundedSingleAccuracy(records, [16])
+    expect(scored.cells.length).toBe(1)
+    expect(scored.cells[0].reads).toBe(2)
+    expect(scored.cells[0].top1).toBeCloseTo(1 / 2, 12)
+    expect(scored.cells[0].byStyle.balanced).toEqual({ seats: 2, top1: expect.closeTo(1 / 2, 12) as number })
+    // The truth is pairing[0]; the team-1 style is never a single-seat truth.
+    expect(scored.cells[0].byStyle.blitz).toEqual({ seats: 0, top1: 0 })
+    // Seed-clustered SE over per-seed accuracies 1 and 0: sd 0.7071/√2 = 0.5.
+    expect(scored.cells[0].se).toBeCloseTo(0.5, 12)
+    expect(scored.cells[0].seeds).toBe(2)
+  })
+
+  it('adjacent deltas are per-seed paired with the −2·SE pass rule', () => {
+    const mk = (bits: number, pair: number, correct: boolean): BoundedGameRecord =>
+      srec({
+        cell: singleCellId(bits, 'balanced', 'blitz'),
+        bits,
+        pair,
+        seed: `acc-${pair}`,
+        top: [correct ? 'balanced' : 'punter', 'blitz', 'punter', 'punter', 'punter', 'punter'],
+      })
+    // Seeds 0 and 1: 16 bits scores 1 then 0; 64 bits scores 0 then 0 → deltas −1, 0.
+    const records = [mk(16, 0, true), mk(16, 1, false), mk(64, 0, false), mk(64, 1, false)]
+    const scored = scoreBoundedSingleAccuracy(records, [16, 64])
+    expect(scored.deltas.length).toBe(1)
+    expect(scored.deltas[0].seeds).toBe(2)
+    expect(scored.deltas[0].delta).toBeCloseTo(-0.5, 12)
+    // Per-seed deltas −1 and 0: sd √0.5, se √0.5/√2 = 0.5.
+    expect(scored.deltas[0].se).toBeCloseTo(0.5, 12)
+    expect(scored.deltas[0].pass).toBe(true) // −0.5 >= −2·0.5
+    const worse = [mk(16, 0, true), mk(16, 1, true), mk(64, 0, false), mk(64, 1, false)]
+    const down = scoreBoundedSingleAccuracy(worse, [16, 64])
+    expect(down.deltas[0].delta).toBeCloseTo(-1, 12)
+    expect(down.deltas[0].se).toBeCloseTo(0, 12)
+    expect(down.deltas[0].pass).toBe(false)
+  })
+
+  it('tallies the ∞ reproduction, counting a missing verdict as a deviation', () => {
+    const records = [
+      srec({ cell: singleCellId(BOUNDED_INF_BITS, 'balanced', 'blitz'), bits: BOUNDED_INF_BITS, infExact: true }),
+      srec({
+        cell: singleCellId(BOUNDED_INF_BITS, 'balanced', 'blitz'),
+        bits: BOUNDED_INF_BITS,
+        pair: 1,
+        seed: 'acc-1',
+      }),
+    ]
+    const scored = scoreBoundedSingleAccuracy(records, [BOUNDED_INF_BITS])
+    expect(scored.infReproduction).toEqual({ games: 2, deviations: 1 })
+  })
+})
+
+describe('E4b: the P8 rule and the multiplicity annotation', () => {
+  const delta = (over: Partial<AccuracyAdjacentDelta>): AccuracyAdjacentDelta => ({
+    fromBits: 16,
+    toBits: 32,
+    seeds: 50,
+    delta: 0.01,
+    se: 0.005,
+    z: 2,
+    pass: true,
+    ...over,
+  })
+  const cells = [
+    { bits: 16, games: 1800, reads: 1800, top1: 0.15, se: 0.008, seeds: 50, byStyle: {} },
+    { bits: BOUNDED_INF_BITS, games: 1800, reads: 1800, top1: 0.2, se: 0.009, seeds: 50, byStyle: {} },
+  ] as Parameters<typeof computeBoundedSingleVerdict>[0]['cells']
+
+  it('P8 confirms when every rung passes and refutes on any violation, naming the rung', () => {
+    const good = computeBoundedSingleVerdict({
+      cells,
+      deltas: [delta({})],
+      infReproduction: { games: 1800, deviations: 0 },
+    })
+    expect(good.id).toBe('P8')
+    expect(good.prediction).toBe(BOUNDED_P8_PREDICTION.text)
+    expect(good.verdict).toBe('confirmed')
+    expect(good.detail).toMatch(/reproduced the corresponding full-strength read exactly/)
+    const bad = computeBoundedSingleVerdict({
+      cells,
+      deltas: [delta({}), delta({ fromBits: 32, toBits: 64, delta: -0.02, se: 0.005, z: -4, pass: false })],
+      infReproduction: { games: 1800, deviations: 0 },
+    })
+    expect(bad.verdict).toBe('refuted')
+    expect(bad.detail).toMatch(/1 of 2 rungs violate/)
+    expect(bad.detail).toMatch(/32→64/)
+  })
+
+  it('normalCdf: pinned against known quantiles', () => {
+    expect(normalCdf(0)).toBeCloseTo(0.5, 7)
+    expect(normalCdf(-1.959964)).toBeCloseTo(0.025, 5)
+    expect(normalCdf(1.959964)).toBeCloseTo(0.975, 5)
+    expect(normalCdf(-2.7532960278890557)).toBeCloseTo(0.00294993, 7)
+  })
+
+  it('the Bonferroni family: ×m one-sided p per rung, annotation only', () => {
+    const fam = multiplicityFamilyOf('P7', [
+      delta({ fromBits: 16, toBits: 32, delta: 0.056, se: 0.0073, z: 7.7, pass: true }),
+      delta({ fromBits: 32, toBits: 64, delta: 0.019, se: 0.005, z: 3.87, pass: true }),
+      delta({
+        fromBits: 64,
+        toBits: BOUNDED_INF_BITS,
+        delta: -0.0052777777777777745,
+        se: 0.0019168944146642421,
+        z: -2.7532960278890557,
+        pass: false,
+      }),
+    ])
+    expect(fam.id).toBe('P7')
+    expect(fam.comparisons).toBe(3)
+    expect(fam.alpha).toBe(0.05)
+    expect(fam.note).toMatch(/annotation only/)
+    // The passing rungs: p far above alpha, corrected p clamped at 1, no violation either way.
+    expect(fam.rungs[0].pOneSided).toBeGreaterThan(0.999)
+    expect(fam.rungs[0].pBonferroni).toBe(1)
+    expect(fam.rungs[0].violatesRaw).toBe(false)
+    expect(fam.rungs[0].violatesBonferroni).toBe(false)
+    // The violating rung: p ≈ 0.00295, ×3 ≈ 0.00885 — survives the correction.
+    expect(fam.rungs[2].pOneSided).toBeCloseTo(0.00294993, 7)
+    expect(fam.rungs[2].pBonferroni).toBeCloseTo(3 * 0.00294993, 6)
+    expect(fam.rungs[2].violatesRaw).toBe(true)
+    expect(fam.rungs[2].violatesBonferroni).toBe(true)
+  })
+
+  it('a negative rung inside −2·SE can still violate at the corrected level only if p < alpha/m', () => {
+    // z = −1.9: raw rule passes (−1.9 > −2), one-sided p ≈ 0.0287, ×3 ≈ 0.0861 > 0.05.
+    const fam = multiplicityFamilyOf('P8', [
+      delta({ delta: -0.0095, se: 0.005, z: -1.9, pass: true }),
+      delta({ fromBits: 32, toBits: 64 }),
+      delta({ fromBits: 64, toBits: BOUNDED_INF_BITS }),
+    ])
+    expect(fam.rungs[0].violatesRaw).toBe(false)
+    expect(fam.rungs[0].violatesBonferroni).toBe(false)
+    expect(fam.rungs[0].pBonferroni).toBeCloseTo(3 * normalCdf(-1.9), 12)
+  })
+})
+
+describe('E4b: extendBoundedResults — additive, refusing anything that moved', () => {
+  const inputs = {
+    engineCommit: 'test-commit',
+    rulesHash: 'test-rules-hash',
+    rulesFile: 'RULES_US54.md',
+    generatedAt: '2026-01-01T00:00:00.000Z',
+    baseline: { artifact: 'adaptive-results.json', recordsDigest: 'testdigest', endTop1: 0.224 },
+  }
+  const base = buildBoundedResults(RUN, inputs)
+  const baseText = JSON.stringify(base)
+  const ext = extendBoundedResults(baseText, SINGLE_RUN, { engineCommit: 'e4b-commit' })
+
+  it('appends P8 and the annotation; every carried section is byte-identical', () => {
+    expect(ext.meta.schemaVersion).toBe(2)
+    expect(ext.verdicts.map((v) => v.id)).toEqual(['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'])
+    expect(ext.meta.predictions.map((p) => p.id)).toEqual(['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'])
+    expect(JSON.stringify(ext.verdicts.slice(0, 7))).toBe(JSON.stringify(base.verdicts))
+    expect(JSON.stringify(ext.meta.predictions.slice(0, 7))).toBe(JSON.stringify(base.meta.predictions))
+    for (const key of ['ladder', 'ladderDeltas', 'mirrorExact', 'tiers', 'evidence', 'accuracy'] as const) {
+      expect(JSON.stringify(ext[key])).toBe(JSON.stringify(base[key]))
+    }
+    expect(ext.meta.notes.slice(0, base.meta.notes.length)).toEqual(base.meta.notes)
+    expect(ext.accuracySingle.mapping).toBe(SINGLE_READ_MAPPING)
+    expect(ext.accuracySingle.meta.engineCommit).toBe('e4b-commit')
+    expect(ext.accuracySingle.meta.recordsDigest).toBe(SINGLE_RUN.meta.recordsDigest)
+    expect(ext.accuracySingle.infReproduction.deviations).toBe(0)
+    expect(ext.multiplicity.map((f) => f.id)).toEqual(['P7', 'P8'])
+  })
+
+  it('refuses a doctored aggregate that feeds a verdict (accuracy top-1)', () => {
+    const doctored = JSON.parse(baseText) as { accuracy: { cells: { top1: number }[] } }
+    doctored.accuracy.cells[0].top1 += 0.01
+    expect(() => extendBoundedResults(JSON.stringify(doctored), SINGLE_RUN, { engineCommit: 'x' })).toThrow(
+      /moved/,
+    )
+  })
+
+  it('refuses a doctored aggregate no verdict reads (a ladder cell share)', () => {
+    const doctored = JSON.parse(baseText) as { ladder: { share: number }[] }
+    doctored.ladder[0].share += 0.001
+    expect(() => extendBoundedResults(JSON.stringify(doctored), SINGLE_RUN, { engineCommit: 'x' })).toThrow(
+      /moved/,
+    )
+  })
+
+  it('refuses a doctored committed verdict', () => {
+    const doctored = JSON.parse(baseText) as { verdicts: { verdict: string }[] }
+    doctored.verdicts[0].verdict = 'refuted'
+    expect(() => extendBoundedResults(JSON.stringify(doctored), SINGLE_RUN, { engineCommit: 'x' })).toThrow(
+      /moved/,
+    )
+  })
+
+  it('refuses an unhealthy run, a mismatched grid, and a failed ∞ reproduction', () => {
+    const sick = {
+      ...SINGLE_RUN,
+      health: { ...SINGLE_RUN.health, ok: false, violations: ['doctored'] },
+    }
+    expect(() => extendBoundedResults(baseText, sick, { engineCommit: 'x' })).toThrow(/health gate/)
+
+    const offGrid = {
+      ...SINGLE_RUN,
+      meta: { ...SINGLE_RUN.meta, config: { ...SINGLE_RUN.meta.config, accGames: SINGLE_RUN.meta.config.accGames + 1 } },
+    }
+    expect(() => extendBoundedResults(baseText, offGrid, { engineCommit: 'x' })).toThrow(/E4 grid/)
+
+    const unreproduced = { ...SINGLE_RUN, infReproduction: { ...SINGLE_RUN.infReproduction, deviations: 1 } }
+    expect(() => extendBoundedResults(baseText, unreproduced, { engineCommit: 'x' })).toThrow(/reproduction/)
+  })
+
+  it('refuses to re-extend an already-extended artifact', () => {
+    expect(() => extendBoundedResults(JSON.stringify(ext), SINGLE_RUN, { engineCommit: 'x' })).toThrow(
+      /schema/,
+    )
+  })
+})
+
 describe('verdicts', () => {
   const built = buildBoundedResults(RUN, {
     engineCommit: 'test-commit',
@@ -565,13 +965,19 @@ describe('verdicts', () => {
 })
 
 describe('the artifact validator: round-trip and refusals', () => {
-  const built = buildBoundedResults(RUN, {
-    engineCommit: 'test-commit',
-    rulesHash: 'test-rules-hash',
-    rulesFile: 'RULES_US54.md',
-    generatedAt: '2026-01-01T00:00:00.000Z',
-    baseline: { artifact: 'adaptive-results.json', recordsDigest: 'testdigest', endTop1: 0.224 },
-  })
+  const built = extendBoundedResults(
+    JSON.stringify(
+      buildBoundedResults(RUN, {
+        engineCommit: 'test-commit',
+        rulesHash: 'test-rules-hash',
+        rulesFile: 'RULES_US54.md',
+        generatedAt: '2026-01-01T00:00:00.000Z',
+        baseline: { artifact: 'adaptive-results.json', recordsDigest: 'testdigest', endTop1: 0.224 },
+      }),
+    ),
+    SINGLE_RUN,
+    { engineCommit: 'e4b-commit' },
+  )
 
   it('round-trips through the site parser value-for-value', () => {
     const parsed = parseBoundedArtifact(JSON.stringify(built), 'test')
@@ -581,8 +987,9 @@ describe('the artifact validator: round-trip and refusals', () => {
   it('refuses a wrong schema version, a wrong rule set, and a missing field — each with a path', () => {
     const base = JSON.parse(JSON.stringify(built)) as Record<string, unknown>
 
+    // A version-1 file predates E4b; the reader must notice, not render without the follow-up.
     const wrongSchema = JSON.parse(JSON.stringify(base)) as { meta: { schemaVersion: number } }
-    wrongSchema.meta.schemaVersion = 2
+    wrongSchema.meta.schemaVersion = 1
     expect(() => parseBoundedArtifact(JSON.stringify(wrongSchema), 'test')).toThrow(ArtifactError)
     expect(() => parseBoundedArtifact(JSON.stringify(wrongSchema), 'test')).toThrow(/schemaVersion/)
 
@@ -611,10 +1018,10 @@ describe('the artifact validator: round-trip and refusals', () => {
     expect(() => parseBoundedArtifact(JSON.stringify(badLadder), 'test')).toThrow(/ascend strictly/)
   })
 
-  it('refuses a prediction outside P1–P7 and a verdict outside the three honest values', () => {
+  it('refuses a prediction outside P1–P8 and a verdict outside the three honest values', () => {
     const badId = JSON.parse(JSON.stringify(built)) as { verdicts: { id: string }[] }
-    badId.verdicts[0].id = 'P8'
-    expect(() => parseBoundedArtifact(JSON.stringify(badId), 'test')).toThrow(/P1–P7 and closed/)
+    badId.verdicts[0].id = 'P9'
+    expect(() => parseBoundedArtifact(JSON.stringify(badId), 'test')).toThrow(/P1–P8 and closed/)
 
     const badVerdict = JSON.parse(JSON.stringify(built)) as { verdicts: { verdict: string }[] }
     badVerdict.verdicts[0].verdict = 'inconclusive'
@@ -624,10 +1031,48 @@ describe('the artifact validator: round-trip and refusals', () => {
     badInfinity.ladderDeltas[0].z = null
     expect(() => parseBoundedArtifact(JSON.stringify(badInfinity), 'test')).toThrow(/finite number/)
   })
+
+  it('refuses a missing or malformed E4b block — each with a path', () => {
+    const noSingle = JSON.parse(JSON.stringify(built)) as Record<string, unknown>
+    delete noSingle.accuracySingle
+    expect(() => parseBoundedArtifact(JSON.stringify(noSingle), 'test')).toThrow(/test\.accuracySingle/)
+
+    const noMultiplicity = JSON.parse(JSON.stringify(built)) as Record<string, unknown>
+    delete noMultiplicity.multiplicity
+    expect(() => parseBoundedArtifact(JSON.stringify(noMultiplicity), 'test')).toThrow(/test\.multiplicity/)
+
+    const noSe = JSON.parse(JSON.stringify(built)) as { accuracySingle: { cells: Record<string, unknown>[] } }
+    delete noSe.accuracySingle.cells[0].se
+    expect(() => parseBoundedArtifact(JSON.stringify(noSe), 'test')).toThrow(/test\.accuracySingle\.cells\[0\]\.se/)
+
+    const noMapping = JSON.parse(JSON.stringify(built)) as { accuracySingle: Record<string, unknown> }
+    delete noMapping.accuracySingle.mapping
+    expect(() => parseBoundedArtifact(JSON.stringify(noMapping), 'test')).toThrow(/test\.accuracySingle\.mapping/)
+
+    const badRepro = JSON.parse(JSON.stringify(built)) as {
+      accuracySingle: { infReproduction: { deviations: unknown } }
+    }
+    badRepro.accuracySingle.infReproduction.deviations = 'none'
+    expect(() => parseBoundedArtifact(JSON.stringify(badRepro), 'test')).toThrow(
+      /test\.accuracySingle\.infReproduction\.deviations/,
+    )
+
+    const badFamily = JSON.parse(JSON.stringify(built)) as { multiplicity: { id: string }[] }
+    badFamily.multiplicity[0].id = 'P6'
+    expect(() => parseBoundedArtifact(JSON.stringify(badFamily), 'test')).toThrow(/not an annotated rung family/)
+
+    const badRung = JSON.parse(JSON.stringify(built)) as {
+      multiplicity: { rungs: Record<string, unknown>[] }[]
+    }
+    delete badRung.multiplicity[0].rungs[0].pBonferroni
+    expect(() => parseBoundedArtifact(JSON.stringify(badRung), 'test')).toThrow(
+      /test\.multiplicity\[0\]\.rungs\[0\]\.pBonferroni/,
+    )
+  })
 })
 
 describe('the committed artifact', () => {
-  it('parses clean at the boundary, with a passing health gate and all seven verdicts', () => {
+  it('parses clean at the boundary, with a passing health gate and all eight verdicts', () => {
     const loaded = loadBoundedArtifact()
     expect(loaded.ok).toBe(true)
     if (!loaded.ok) return
@@ -637,7 +1082,7 @@ describe('the committed artifact', () => {
     expect(loaded.artifact.ladderDeltas.length).toBe(9)
     expect(loaded.artifact.mirrorExact.deviations).toBe(0)
     expect(loaded.artifact.tiers.map((t) => t.tier)).toEqual(['easy', 'medium', 'hard'])
-    expect(loaded.artifact.verdicts.map((v) => v.id)).toEqual(['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'])
+    expect(loaded.artifact.verdicts.map((v) => v.id)).toEqual(['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'])
     // The ∞ accuracy cell replays the v1.0 experiment byte-identically (the anchor pin), so
     // when the committed baseline is present the two top-1 numbers must agree exactly.
     const inf = loaded.artifact.accuracy.cells.find((c) => c.bits >= BOUNDED_INF_BITS)
@@ -645,6 +1090,36 @@ describe('the committed artifact', () => {
     if (loaded.artifact.meta.baseline !== null && inf !== undefined) {
       expect(inf.top1).toBeCloseTo(loaded.artifact.meta.baseline.endTop1, 12)
     }
+  })
+
+  it('carries the E4b block: registered mapping, healthy run, exact ∞ reproduction, ×3 annotation', () => {
+    const loaded = loadBoundedArtifact()
+    expect(loaded.ok).toBe(true)
+    if (!loaded.ok) return
+    const single = loaded.artifact.accuracySingle
+    expect(single.mapping).toBe(SINGLE_READ_MAPPING)
+    expect(single.health.ok).toBe(true)
+    expect(single.cells.map((c) => c.bits)).toEqual(loaded.artifact.meta.config.accBits)
+    for (const cell of single.cells) {
+      expect(cell.reads).toBe(cell.games)
+      expect(cell.reads).toBe(36 * loaded.artifact.meta.config.accGames)
+    }
+    expect(single.deltas.length).toBe(single.cells.length - 1)
+    expect(single.infReproduction).toEqual({
+      games: 36 * loaded.artifact.meta.config.accGames,
+      deviations: 0,
+    })
+    expect(loaded.artifact.multiplicity.map((f) => f.id)).toEqual(['P7', 'P8'])
+    for (const fam of loaded.artifact.multiplicity) {
+      expect(fam.comparisons).toBe(3)
+      expect(fam.rungs.length).toBe(3)
+    }
+    // The committed P7 verdicts and aggregates were carried over byte-identically; the P8
+    // verdict is present and honest.
+    const p8 = loaded.artifact.verdicts.find((v) => v.id === 'P8')
+    expect(p8).toBeDefined()
+    expect(['confirmed', 'refuted', 'mixed']).toContain(p8?.verdict)
+    expect(p8?.detail).toMatch(/reproduced the corresponding full-strength read exactly/)
   })
 })
 

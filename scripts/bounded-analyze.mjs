@@ -4,6 +4,13 @@
  *
  * `node scripts/bounded-analyze.mjs --run lab-out/DIR [--emit PATH] [--adaptive PATH]`
  *
+ * Since E4b (SPEC v1.5), what this emits is the BASE artifact — schema 1, the suite's E1–E4
+ * sections and the P1–P7 verdicts. The artifact the SITE reads is schema 2: the base extended
+ * with the E4b single-seat block by `scripts/bounded-single-analyze.mjs` (which consumes the
+ * base through `extendBoundedResults` and refuses to build if anything pre-existing moved).
+ * The default here therefore no longer overwrites `src/lab/data/bounded-results.json`; pass
+ * `--emit PATH` explicitly to write the base artifact somewhere, then extend it.
+ *
  * Thin for the reason every script here is thin: `scripts/` is linted but NOT typechecked, so
  * this file does only what genuinely needs a platform — read files, ask git for the commit,
  * write files. The verdicts and the artifact shape are `buildBoundedResults` in
@@ -52,7 +59,9 @@ if (!opt.run) {
   process.exit(2)
 }
 const runDir = resolve(process.cwd(), opt.run)
-const emitPath = resolve(process.cwd(), opt.emit ?? 'src/lab/data/bounded-results.json')
+// No default src/lab/data emission any more: the site reads the E4b-extended schema-2 artifact,
+// so the base emitted here would be refused at the boundary. Extend it (see the header).
+const emitPath = opt.emit && opt.emit !== 'false' ? resolve(process.cwd(), opt.emit) : null
 const adaptivePath = resolve(process.cwd(), opt.adaptive ?? 'src/lab/data/adaptive-results.json')
 
 // --- read the run back ------------------------------------------------------------------------
@@ -150,7 +159,7 @@ const results = buildBoundedResults(run, {
 // --- emit -------------------------------------------------------------------------------------
 const text = JSON.stringify(results, null, 2)
 await writeFile(join(runDir, 'bounded-results.json'), text, 'utf8')
-if (opt.emit !== 'false') {
+if (emitPath !== null) {
   await mkdir(dirname(emitPath), { recursive: true })
   await writeFile(emitPath, text, 'utf8')
 }
@@ -162,6 +171,7 @@ for (const v of results.verdicts) {
   console.log(`  ${v.detail}`)
 }
 console.log('')
-console.log(`wrote ${join(runDir, 'bounded-results.json')}`)
-if (opt.emit !== 'false') console.log(`wrote ${emitPath}`)
+console.log(`wrote ${join(runDir, 'bounded-results.json')} (BASE artifact, schema 1)`)
+if (emitPath !== null) console.log(`wrote ${emitPath} (BASE artifact, schema 1)`)
+console.log('the site artifact is schema 2 — extend via: node scripts/bounded-single-analyze.mjs --run <E4b DIR> --base <this base>')
 process.exit(run.health.ok ? 0 : 1)

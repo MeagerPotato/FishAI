@@ -12,12 +12,17 @@
  *
  * Refusals, all `ArtifactError` with a readable path:
  *   - `schemaVersion` other than {@link BOUNDED_SCHEMA_VERSION} — a reader must notice.
+ *     (Version 2 added the E4b `accuracySingle` block, the P8 verdict and the `multiplicity`
+ *     annotation; a version-1 file predates E4b and is refused so no page silently renders
+ *     without the attribution follow-up.)
  *   - `ruleSet` other than `us54` — these are us54 results and nothing else's.
  *   - a style id the roster does not carry, anywhere an id keys a value.
  *   - a tier outside the shipped three — the E2 cells are easy/medium/hard and nothing else.
  *   - a ladder that does not ascend strictly — the P1 ordering reads it left to right.
- *   - a verdict outside {confirmed, refuted, mixed} or a prediction outside P1–P7 — the
+ *   - a verdict outside {confirmed, refuted, mixed} or a prediction outside P1–P8 — the
  *     pre-registered set is closed; an unknown entry means the file is from a different suite.
+ *   - a multiplicity family outside {P7, P8} — only the two rung families carry the
+ *     registered Bonferroni annotation.
  *
  * NO page components live here — a later task builds `/lab/bounded` against this parser. The
  * artifact is parsed eagerly at module load, like artifact.ts's `LOADED`: a lazy cache would
@@ -29,6 +34,8 @@ import type {
   BitsEquivalent,
   BoundedAccuracy,
   BoundedAccuracyCell,
+  BoundedAccuracySingle,
+  BoundedHealthSummary,
   BoundedPrediction,
   BoundedPredictionId,
   BoundedResults,
@@ -40,6 +47,9 @@ import type {
   LadderAdjacentDelta,
   LadderCell,
   MirrorExact,
+  MultiplicityFamily,
+  MultiplicityRung,
+  SingleAccuracyCell,
   TierCell,
 } from '../../lib/lab/bounded-types.ts'
 import { BOUNDED_SCHEMA_VERSION, BOUNDED_TIERS } from '../../lib/lab/bounded-types.ts'
@@ -320,13 +330,103 @@ function accuracy(value: unknown, at: string): BoundedAccuracy {
   }
 }
 
-const PREDICTION_IDS = new Set<string>(['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'])
+/* -- the E4b block (schema 2) --------------------------------------------------------------- */
+
+function singleAccuracyCell(value: unknown, at: string): SingleAccuracyCell {
+  const o = obj(value, at)
+  return {
+    bits: num(o.bits, `${at}.bits`),
+    games: num(o.games, `${at}.games`),
+    reads: num(o.reads, `${at}.reads`),
+    top1: num(o.top1, `${at}.top1`),
+    se: num(o.se, `${at}.se`),
+    seeds: num(o.seeds, `${at}.seeds`),
+    byStyle: styleRecord(o.byStyle, `${at}.byStyle`, accuracyByStyle),
+  }
+}
+
+function healthSummary(value: unknown, at: string): BoundedHealthSummary {
+  const h = obj(value, at)
+  return {
+    ok: bool(h.ok, `${at}.ok`),
+    illegalActions: num(h.illegalActions, `${at}.illegalActions`),
+    cappedGames: num(h.cappedGames, `${at}.cappedGames`),
+    invariantViolations: num(h.invariantViolations, `${at}.invariantViolations`),
+    ties: num(h.ties, `${at}.ties`),
+    voids: num(h.voids, `${at}.voids`),
+    nonClinch: num(h.nonClinch, `${at}.nonClinch`),
+    capped: arr(h.capped, `${at}.capped`).map((g, i) => cappedGame(g, `${at}.capped[${i}]`)),
+    violations: arr(h.violations, `${at}.violations`).map((v, i) => str(v, `${at}.violations[${i}]`)),
+  }
+}
+
+function accuracySingleOf(value: unknown, at: string): BoundedAccuracySingle {
+  const o = obj(value, at)
+  const m = obj(o.meta, `${at}.meta`)
+  const inf = obj(o.infReproduction, `${at}.infReproduction`)
+  return {
+    meta: {
+      generatedAt: str(m.generatedAt, `${at}.meta.generatedAt`),
+      engineCommit: str(m.engineCommit, `${at}.meta.engineCommit`),
+      gamesTotal: num(m.gamesTotal, `${at}.meta.gamesTotal`),
+      movesTotal: num(m.movesTotal, `${at}.meta.movesTotal`),
+      workers: num(m.workers, `${at}.meta.workers`),
+      wallMs: num(m.wallMs, `${at}.meta.wallMs`),
+      gamesPerSecond: num(m.gamesPerSecond, `${at}.meta.gamesPerSecond`),
+      recordsDigest: str(m.recordsDigest, `${at}.meta.recordsDigest`),
+      notes: arr(m.notes, `${at}.meta.notes`).map((n, i) => str(n, `${at}.meta.notes[${i}]`)),
+    },
+    mapping: str(o.mapping, `${at}.mapping`),
+    health: healthSummary(o.health, `${at}.health`),
+    cells: arr(o.cells, `${at}.cells`).map((c, i) => singleAccuracyCell(c, `${at}.cells[${i}]`)),
+    deltas: arr(o.deltas, `${at}.deltas`).map((d, i) => accuracyDelta(d, `${at}.deltas[${i}]`)),
+    infReproduction: {
+      games: num(inf.games, `${at}.infReproduction.games`),
+      deviations: num(inf.deviations, `${at}.infReproduction.deviations`),
+    },
+  }
+}
+
+function multiplicityRung(value: unknown, at: string): MultiplicityRung {
+  const o = obj(value, at)
+  return {
+    fromBits: num(o.fromBits, `${at}.fromBits`),
+    toBits: num(o.toBits, `${at}.toBits`),
+    delta: num(o.delta, `${at}.delta`),
+    se: num(o.se, `${at}.se`),
+    z: num(o.z, `${at}.z`),
+    pOneSided: num(o.pOneSided, `${at}.pOneSided`),
+    pBonferroni: num(o.pBonferroni, `${at}.pBonferroni`),
+    violatesRaw: bool(o.violatesRaw, `${at}.violatesRaw`),
+    violatesBonferroni: bool(o.violatesBonferroni, `${at}.violatesBonferroni`),
+  }
+}
+
+function multiplicityFamily(value: unknown, at: string): MultiplicityFamily {
+  const o = obj(value, at)
+  const id = str(o.id, `${at}.id`)
+  if (id !== 'P7' && id !== 'P8') {
+    throw new ArtifactError(
+      `${at}.id: "${id}" is not an annotated rung family; only P7 and P8 carry the registered ` +
+        'Bonferroni annotation.',
+    )
+  }
+  return {
+    id,
+    comparisons: num(o.comparisons, `${at}.comparisons`),
+    alpha: num(o.alpha, `${at}.alpha`),
+    rungs: arr(o.rungs, `${at}.rungs`).map((r, i) => multiplicityRung(r, `${at}.rungs[${i}]`)),
+    note: str(o.note, `${at}.note`),
+  }
+}
+
+const PREDICTION_IDS = new Set<string>(['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'])
 const VERDICT_VALUES = new Set<string>(['confirmed', 'refuted', 'mixed'])
 
 function predictionId(value: unknown, at: string): BoundedPredictionId {
   const s = str(value, at)
   if (!PREDICTION_IDS.has(s)) {
-    throw new ArtifactError(`${at}: "${s}" is not a pre-registered prediction; the set is P1–P7 and closed.`)
+    throw new ArtifactError(`${at}: "${s}" is not a pre-registered prediction; the set is P1–P8 and closed.`)
   }
   return s as BoundedPredictionId
 }
@@ -422,7 +522,6 @@ export function parseBoundedArtifact(text: string, source: string): BoundedResul
 
   const config = obj(meta.config, `${source}.meta.config`)
   const seedSet = obj(meta.seedSet, `${source}.meta.seedSet`)
-  const health = obj(meta.health, `${source}.meta.health`)
   const at = (k: string): string => `${source}.meta.${k}`
 
   const baseline =
@@ -463,19 +562,7 @@ export function parseBoundedArtifact(text: string, source: string): BoundedResul
       wallMs: num(meta.wallMs, at('wallMs')),
       recordsDigest: str(meta.recordsDigest, at('recordsDigest')),
       notes: arr(meta.notes, at('notes')).map((n, i) => str(n, at(`notes[${i}]`))),
-      health: {
-        ok: bool(health.ok, at('health.ok')),
-        illegalActions: num(health.illegalActions, at('health.illegalActions')),
-        cappedGames: num(health.cappedGames, at('health.cappedGames')),
-        invariantViolations: num(health.invariantViolations, at('health.invariantViolations')),
-        ties: num(health.ties, at('health.ties')),
-        voids: num(health.voids, at('health.voids')),
-        nonClinch: num(health.nonClinch, at('health.nonClinch')),
-        capped: arr(health.capped, at('health.capped')).map((g, i) => cappedGame(g, at(`health.capped[${i}]`))),
-        violations: arr(health.violations, at('health.violations')).map((v, i) =>
-          str(v, at(`health.violations[${i}]`)),
-        ),
-      },
+      health: healthSummary(meta.health, at('health')),
       baseline,
       predictions: arr(meta.predictions, at('predictions')).map((p, i) => prediction(p, at(`predictions[${i}]`))),
     },
@@ -487,6 +574,10 @@ export function parseBoundedArtifact(text: string, source: string): BoundedResul
     tiers: arr(root.tiers, `${source}.tiers`).map((t, i) => tierCell(t, `${source}.tiers[${i}]`)),
     evidence: arr(root.evidence, `${source}.evidence`).map((c, i) => evidenceCurve(c, `${source}.evidence[${i}]`)),
     accuracy: accuracy(root.accuracy, `${source}.accuracy`),
+    accuracySingle: accuracySingleOf(root.accuracySingle, `${source}.accuracySingle`),
+    multiplicity: arr(root.multiplicity, `${source}.multiplicity`).map((f, i) =>
+      multiplicityFamily(f, `${source}.multiplicity[${i}]`),
+    ),
     verdicts: arr(root.verdicts, `${source}.verdicts`).map((v, i) => verdict(v, `${source}.verdicts[${i}]`)),
   }
 }
