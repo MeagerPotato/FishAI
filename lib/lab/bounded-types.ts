@@ -31,8 +31,18 @@ import type { AccuracyByStyle, AdaptiveHealthSummary, VerdictValue } from './ada
  * The schema of the PUBLISHED artifact (`src/lab/data/bounded-results.json`). Bump when the
  * emitted JSON shape changes in a way a reader must notice. Version 2 added the E4b single-seat
  * attribution block (`accuracySingle`), the P8 verdict, and the `multiplicity` annotation.
+ * Version 3 (E4b-power, registered 2026-08-30 before any run) makes the 300-seed power run the
+ * P8 verdict of record in `accuracySingle`, retains the 50-seed pilot verbatim in
+ * `accuracySinglePilot`, and adds the labelled `crossDesign` block.
  */
-export const BOUNDED_SCHEMA_VERSION = 2
+export const BOUNDED_SCHEMA_VERSION = 3
+
+/**
+ * The schema of the pilot-extended artifact — what `extendBoundedResults` emits and what
+ * `extendBoundedResultsPower` consumes and upgrades. The committed schema-2 artifact is the
+ * only file of this shape; the site reads schema {@link BOUNDED_SCHEMA_VERSION} alone.
+ */
+export const BOUNDED_PILOT_SCHEMA_VERSION = 2
 
 /**
  * The schema of the BASE suite outputs — `run.json` and the pre-E4b artifact shape
@@ -40,6 +50,16 @@ export const BOUNDED_SCHEMA_VERSION = 2
  * committed value so the E1–E4 aggregates it stamps stay byte-identical across the extension.
  */
 export const BOUNDED_BASE_SCHEMA_VERSION = 1
+
+/**
+ * The E4b-power run's registered shape (SPEC-v15.md E4b-power, registered 2026-08-30 AFTER the
+ * E4b review and BEFORE any run): 300 seeds per pairing — reads 1,800 → 10,800 per cell,
+ * matching P7's read count — on a fresh seed prefix disjoint from the pilot's `clsacc-v1`
+ * (seeds are `${prefix}-${index}`, so a different prefix shares no seed string). The mapping,
+ * bits grid, estimator and P8 rule are UNCHANGED from the pilot.
+ */
+export const BOUNDED_POWER_ACC_GAMES = 300
+export const BOUNDED_POWER_SEED_PREFIX = 'clsacc-power-v1'
 
 /**
  * The ∞ rung of the ladder, as a concrete budget provably above the maximum derivable pool.
@@ -473,6 +493,78 @@ export interface BoundedAccuracySingle {
 }
 
 /**
+ * The E4b-power block — the P8 verdict of record since schema 3. The same shape as the pilot's
+ * block plus the run's own grid parameters, which the pilot never needed (its grid was
+ * guard-enforced equal to the base config's): `accGames` games per pairing on the
+ * `accSeedPrefix` seed list, both registered before the run.
+ */
+export interface BoundedAccuracySinglePower {
+  meta: BoundedAccuracySingleMeta
+  /** Games per pairing — {@link BOUNDED_POWER_ACC_GAMES} per the E4b-power registration. */
+  accGames: number
+  /** The fresh seed prefix, disjoint from the pilot's — {@link BOUNDED_POWER_SEED_PREFIX}. */
+  accSeedPrefix: string
+  /** The registered read-seat mapping, verbatim at the run's game count — rule unchanged. */
+  mapping: string
+  health: BoundedHealthSummary
+  cells: SingleAccuracyCell[]
+  /** The P8 statistic: same per-seed paired rule as P7's deltas, unchanged from the pilot. */
+  deltas: AccuracyAdjacentDelta[]
+  infReproduction: InfReproduction
+}
+
+/**
+ * The 50-seed E4b pilot, retained verbatim (schema 3). Every field of
+ * {@link BoundedAccuracySingle} is carried byte-identically from the committed schema-2
+ * artifact; the three additions record what the pilot said and what it licensed. The pilot's
+ * CONFIRMED was an underpowered null at the P7 effect size (~52% power; its 64→∞ CI contained
+ * the entire P7 effect), so it licensed only the within-design claim that no rung violated at
+ * its N — the power run in `accuracySingle` is the P8 verdict of record.
+ */
+export interface BoundedAccuracySinglePilot extends BoundedAccuracySingle {
+  /** The pilot's P8 verdict exactly as committed at schema 2 — superseded, not rewritten. */
+  verdict: BoundedVerdict
+  /** The pilot's ×3 Bonferroni family exactly as committed at schema 2. */
+  multiplicityFamily: MultiplicityFamily
+  /** The labelling: what this block is, and what its verdict did and did not license. */
+  note: string
+}
+
+/**
+ * The cross-design comparison the E4b-power registration names, labelled as exactly that: the
+ * difference-of-deltas test between P7's violated rung (E4 — BOTH teams bounded, so ecology
+ * and signature move together) and P8's same rung (E4b-power — one bounded read seat in a
+ * full-strength ecology), plus P8's post-hoc power at the P7 effect size. A comparison ACROSS
+ * designs, never a within-design test; no registered verdict rule reads any number here.
+ */
+export interface BoundedCrossDesign {
+  /** The compared rung — P7's violated rung and P8's same rung ({@link BOUNDED_INF_BITS} top). */
+  fromBits: number
+  toBits: number
+  /** P7's rung, quoted from the committed base artifact. */
+  p7: { delta: number; se: number; seeds: number }
+  /** P8's rung from the power run of record. */
+  p8: { delta: number; se: number; seeds: number }
+  /** `p8.delta − p7.delta`. */
+  diffOfDeltas: number
+  /** `√(p7.se² + p8.se²)` — the power run's seed list is disjoint from E4's, so the two rungs
+   * are independent and the covariance term is zero by construction. */
+  se: number
+  z: number
+  /** Two-sided p for a difference this large under H0 (equal deltas). */
+  pTwoSided: number
+  /** `|p7.delta|` — the effect size the power is computed at. */
+  effect: number
+  /** The refutation rule's minimum detectable effect at the record run's rung SE: `2·p8.se`. */
+  mde: number
+  /** `Φ(effect/p8.se − 2)` — P(the registered rule refutes | the true single-seat delta is −effect). */
+  postHocPower: number
+  /** The 50-seed pilot's same three numbers, retained for the correction record. */
+  pilot: { se: number; mde: number; postHocPower: number }
+  note: string
+}
+
+/**
  * One rung of a Bonferroni-annotated family. `pOneSided` is Φ(z) — the one-sided p of a
  * violation this deep under H0 (delta = 0); `pBonferroni` is min(1, m·p) for the family's m
  * comparisons. `violatesRaw` restates the registered rule (`delta < −2·SE`); the annotation
@@ -605,11 +697,26 @@ export interface BoundedResultsBase {
 }
 
 /**
+ * The pilot-extended artifact shape (schema {@link BOUNDED_PILOT_SCHEMA_VERSION}) — what
+ * `extendBoundedResults` emits and what was committed with the E4b pilot.
+ * `extendBoundedResultsPower` consumes this and upgrades it, carrying every base section over
+ * byte-identically and the pilot block verbatim into `accuracySinglePilot`.
+ */
+export interface BoundedResultsPilot extends BoundedResultsBase {
+  accuracySingle: BoundedAccuracySingle
+  multiplicity: MultiplicityFamily[]
+}
+
+/**
  * The one artifact `/lab/bounded` will read — `src/lab/data/bounded-results.json`, schema
- * {@link BOUNDED_SCHEMA_VERSION}: the base suite plus the E4b single-seat block, the P8
- * verdict (appended to `verdicts`), and the additive Bonferroni annotation.
+ * {@link BOUNDED_SCHEMA_VERSION}: the base suite; the E4b-power run as the P8 verdict of
+ * record in `accuracySingle` (the P8 entry of `verdicts` and the P8 `multiplicity` family are
+ * computed from it by the unchanged rules); the 50-seed pilot retained verbatim in
+ * `accuracySinglePilot`; and the labelled `crossDesign` comparison.
  */
 export interface BoundedResults extends BoundedResultsBase {
-  accuracySingle: BoundedAccuracySingle
+  accuracySingle: BoundedAccuracySinglePower
+  accuracySinglePilot: BoundedAccuracySinglePilot
+  crossDesign: BoundedCrossDesign
   multiplicity: MultiplicityFamily[]
 }

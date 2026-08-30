@@ -51,6 +51,15 @@
  *    not total — its docstring states exactly what is authenticated (the base's digest pin,
  *    the registered prediction texts, re-derivable stored fields, the recomputed P1–P7
  *    verdicts, and the carried sections after assembly) and what is copied through unread.
+ * 6. **E4b-power — the P8 run of record** (registered 2026-08-30, after the E4b review and
+ *    before any run). The 50-seed pilot put ~52% power at the P7 effect size — its 64→∞ CI
+ *    contained the entire P7 effect — so its CONFIRMED was an underpowered null licensing
+ *    only the within-design claim. The power run replays the SAME design at 300 seeds per
+ *    pairing (reads matched to P7's 10,800 per cell) on a fresh seed prefix disjoint from the
+ *    pilot's; the mapping, bits grid, estimator and P8 rule are UNCHANGED.
+ *    `extendBoundedResultsPower` makes it the P8 verdict of record, retains the pilot
+ *    verbatim in `accuracySinglePilot`, and adds the labelled `crossDesign` comparison —
+ *    both runs reported whatever they say.
  *
  * ## Health discipline
  *
@@ -101,6 +110,7 @@ import {
   BOUNDED_BASE_SCHEMA_VERSION,
   BOUNDED_INF_BITS,
   BOUNDED_P8_PREDICTION,
+  BOUNDED_PILOT_SCHEMA_VERSION,
   BOUNDED_PREDICTIONS,
   BOUNDED_SCHEMA_VERSION,
   BOUNDED_TIERS,
@@ -112,11 +122,13 @@ import type {
   BoundedAccuracyCell,
   BoundedArtifactInputs,
   BoundedAccuracySingle,
+  BoundedCrossDesign,
   BoundedGameRecord,
   BoundedHealthSummary,
   BoundedLabConfig,
   BoundedResults,
   BoundedResultsBase,
+  BoundedResultsPilot,
   BoundedRunOutput,
   BoundedRunSummary,
   BoundedShareCell,
@@ -206,18 +218,27 @@ export function boundedAccuracyPairings(): (readonly [StyleId, StyleId])[] {
  * The E4b read-seat mapping, REGISTERED BEFORE THE RUN (SPEC-v15.md E4b: "one bounded read
  * seat per game per team-0 style seat; the implementer chooses the cleanest faithful mapping
  * and documents it in meta.notes before running"). The mapping is written into the run's
- * `meta.notes` and into `accuracySingle.mapping` verbatim, and the health gate checks every
- * record against `singleReadSeatFor`.
+ * `meta.notes` and into the artifact's `mapping` fields verbatim, and the health gate checks
+ * every record against `singleReadSeatFor`. Parametric ONLY in the game count the prose
+ * quotes: the pilot registered the text at 50 games; the E4b-power registration moved the
+ * seed count to 300 with the mapping rule itself explicitly UNCHANGED, so the count is the
+ * one substitution the template admits.
  */
-export const SINGLE_READ_MAPPING =
-  'E4b read seat: seat 2·(game mod 3) — the three team-0 seats 0, 2, 4 in rotation across the ' +
-  '50 games of every pairing, always playing the measured team-0 style (pairing[0]) under the ' +
-  'bit budget while the other five seats play their bare full-strength styles exactly as the ' +
-  'v1.0 accuracy harness seats them (team 0 pairing[0], team 1 pairing[1]). startSeat rotates ' +
-  'game mod 6 as in E4, so the read seat occupies every relative table position uniformly ' +
-  'with period 6. Truth for the read is therefore always pairing[0]; the pairing scheme is ' +
-  'triangular, so by-style read counts fall with roster position (identically at every ' +
-  'budget) and the last roster style is never the read truth.'
+export function singleReadMappingText(accGames: number): string {
+  return (
+    'E4b read seat: seat 2·(game mod 3) — the three team-0 seats 0, 2, 4 in rotation across the ' +
+    `${accGames} games of every pairing, always playing the measured team-0 style (pairing[0]) under the ` +
+    'bit budget while the other five seats play their bare full-strength styles exactly as the ' +
+    'v1.0 accuracy harness seats them (team 0 pairing[0], team 1 pairing[1]). startSeat rotates ' +
+    'game mod 6 as in E4, so the read seat occupies every relative table position uniformly ' +
+    'with period 6. Truth for the read is therefore always pairing[0]; the pairing scheme is ' +
+    'triangular, so by-style read counts fall with roster position (identically at every ' +
+    'budget) and the last roster style is never the read truth.'
+  )
+}
+
+/** The pilot's registered mapping text, byte-for-byte as committed with the E4b pilot. */
+export const SINGLE_READ_MAPPING = singleReadMappingText(50)
 
 /** The registered mapping, as arithmetic: game → the bounded read seat (team 0 by parity). */
 export function singleReadSeatFor(game: number): Seat {
@@ -1794,7 +1815,7 @@ export function assembleBoundedSingleRun(
       gamesPerSecond: seconds === 0 ? 0 : all.length / seconds,
       recordsDigest: digest(boundedToJsonl(all)),
       notes: [
-        SINGLE_READ_MAPPING,
+        singleReadMappingText(config.accGames),
         'P8 scores top[readSeat] only. The six-seat end-of-game read is retained per record ' +
           'for context, clearly separated by readSeat, and enters no verdict. Cell SEs are ' +
           'seed-clustered (per-seed accuracy over the pairings, sd/√seeds); adjacent deltas ' +
@@ -2290,13 +2311,15 @@ function admitBase(baseText: string): BoundedResultsBase {
  * The additions: `accuracySingle` (the E4b run with its own provenance and health),
  * `multiplicity` (the ×3 Bonferroni annotation over BOTH rung families), the P8 verdict
  * appended, the P8 prediction and the E4b notes appended to meta. `meta.schemaVersion` moves
- * to {@link BOUNDED_SCHEMA_VERSION}; nothing else in meta changes.
+ * to {@link BOUNDED_PILOT_SCHEMA_VERSION}; nothing else in meta changes. Since E4b-power the
+ * published artifact is schema {@link BOUNDED_SCHEMA_VERSION} — `extendBoundedResultsPower`
+ * consumes this function's output shape and upgrades it.
  */
 export function extendBoundedResults(
   baseText: string,
   run: BoundedSingleRunSummary,
   inputs: BoundedExtendInputs,
-): BoundedResults {
+): BoundedResultsPilot {
   const base = admitBase(baseText)
 
   // --- identity of the base: the caller's digest pin and the registered predictions ----------
@@ -2405,10 +2428,10 @@ export function extendBoundedResults(
   }
 
   // --- assemble, additively ------------------------------------------------------------------
-  const out: BoundedResults = {
+  const out: BoundedResultsPilot = {
     meta: {
       ...base.meta,
-      schemaVersion: BOUNDED_SCHEMA_VERSION,
+      schemaVersion: BOUNDED_PILOT_SCHEMA_VERSION,
       notes: [...base.meta.notes, ...run.meta.notes.map((n) => `E4b: ${n}`)],
       predictions: [...base.meta.predictions, { ...BOUNDED_P8_PREDICTION }],
     },
@@ -2459,6 +2482,434 @@ export function extendBoundedResults(
   }
   if (JSON.stringify(out.verdicts.slice(0, BASE_VERDICT_IDS.length)) !== JSON.stringify(base.verdicts)) {
     refuse('the carried P1–P7 verdicts do not serialise byte-identically to the base artifact’s')
+  }
+  return out
+}
+
+/* -- E4b-power: the P8 run of record, the retained pilot, and the cross-design block ---------- */
+
+/**
+ * Post-hoc power of the registered refutation rule (`delta < −2·SE` refutes) against a true
+ * single-seat delta of `−effect`, at a rung's measured SE: with delta ~ Normal(−effect, se),
+ * P(delta < −2·se) = Φ(effect/se − 2). The degenerate se = 0 resolves by the sign of the
+ * effect — an exact estimator detects any nonzero effect and no null one.
+ */
+function powerAt(effect: number, se: number): number {
+  if (se > 0) return normalCdf(effect / se - 2)
+  return effect > 0 ? 1 : 0
+}
+
+/**
+ * The cross-design comparison the E4b-power registration names — the difference-of-deltas
+ * test between P7's violated rung (the top rung, 64→∞ on the registered grid) and P8's same
+ * rung, plus P8's post-hoc power at the P7 effect size. Labelled cross-design throughout: P7
+ * measures a rung of E4 (BOTH teams bounded — ecology and signature move together), P8 a rung
+ * of the single-seat design (one bounded read seat in a full-strength ecology), so this
+ * compares ACROSS designs and enters no registered verdict rule. The SE adds the two rung
+ * variances — the power run's seed list is disjoint from E4's, so the rungs are independent
+ * by construction (the pilot, which REPLAYED E4's seeds, would not have licensed that).
+ */
+export function crossDesignOf(
+  p7Deltas: readonly AccuracyAdjacentDelta[],
+  pilotDeltas: readonly AccuracyAdjacentDelta[],
+  powerDeltas: readonly AccuracyAdjacentDelta[],
+): BoundedCrossDesign {
+  const top = (deltas: readonly AccuracyAdjacentDelta[], name: string): AccuracyAdjacentDelta => {
+    const rung = deltas.find((d) => d.toBits >= BOUNDED_INF_BITS)
+    if (rung === undefined) throw new Error(`crossDesignOf: ${name} carries no top (→∞) rung`)
+    return rung
+  }
+  const p7 = top(p7Deltas, 'P7')
+  const pilot = top(pilotDeltas, 'the pilot P8')
+  const p8 = top(powerDeltas, 'the power P8')
+  if (p7.fromBits !== p8.fromBits || p7.fromBits !== pilot.fromBits) {
+    throw new Error(
+      `crossDesignOf: the top rungs disagree — P7 ${p7.fromBits}→∞, pilot ${pilot.fromBits}→∞, ` +
+        `power ${p8.fromBits}→∞ must all read the same rung`,
+    )
+  }
+  const diffOfDeltas = p8.delta - p7.delta
+  const se = Math.sqrt(p7.se * p7.se + p8.se * p8.se)
+  const z = se > 0 ? diffOfDeltas / se : diffOfDeltas === 0 ? 0 : Math.sign(diffOfDeltas) * 1e9
+  const effect = Math.abs(p7.delta)
+  return {
+    fromBits: p7.fromBits,
+    toBits: p7.toBits,
+    p7: { delta: p7.delta, se: p7.se, seeds: p7.seeds },
+    p8: { delta: p8.delta, se: p8.se, seeds: p8.seeds },
+    diffOfDeltas,
+    se,
+    z,
+    pTwoSided: 2 * (1 - normalCdf(Math.abs(z))),
+    effect,
+    mde: 2 * p8.se,
+    postHocPower: powerAt(effect, p8.se),
+    pilot: { se: pilot.se, mde: 2 * pilot.se, postHocPower: powerAt(effect, pilot.se) },
+    note:
+      'Cross-design comparison, labelled as exactly that (E4b-power registration): P7’s rung is ' +
+      'measured in E4, where BOTH teams are bounded — ecology and signature move together — and ' +
+      'P8’s in the single-seat design, where only the read seat is. The difference-of-deltas is ' +
+      'therefore a comparison ACROSS designs, never a within-design test, and it enters no ' +
+      'registered verdict rule. Its SE is √(se₇² + se₈²): the power run’s seed list is disjoint ' +
+      'from E4’s, so the two rungs are independent by construction. Post-hoc power is ' +
+      'P(delta < −2·SE | true delta = −effect) = Φ(effect/SE − 2) at each run’s measured top-rung ' +
+      'SE; mde = 2·SE is the effect the registered rule detects with 50% probability. The ' +
+      'pilot’s numbers are retained beside the record run’s — the correction the E4b-power ' +
+      'registration exists to make.',
+  }
+}
+
+/** What `extendBoundedResultsPower` needs beyond the run. Every pin is the caller's, stated. */
+export interface BoundedPowerExtendInputs {
+  /** The commit whose engine PLAYED the power run's games. */
+  engineCommit: string
+  /** The committed schema-2 artifact's base-suite `meta.recordsDigest` — the base pin. */
+  expectedBaseDigest: string
+  /** The committed pilot run's `accuracySingle.meta.recordsDigest` — the retained-pilot pin. */
+  expectedPilotDigest: string
+  /**
+   * The registered power grid the run must carry — {@link BOUNDED_POWER_ACC_GAMES} and
+   * {@link BOUNDED_POWER_SEED_PREFIX} from the caller of record. Parameters rather than
+   * constants so the machinery is testable at tiny N; the analyze script passes the
+   * registered values.
+   */
+  expectedAccGames: number
+  expectedSeedPrefix: string
+}
+
+function refusePower(why: string): never {
+  throw new Error(`extendBoundedResultsPower: ${why}`)
+}
+
+const PILOT_VERDICT_IDS = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'] as const
+
+/** Structural admission of the pilot-extended (schema-2) artifact — everything relied upon. */
+function admitPilot(pilotText: string): BoundedResultsPilot {
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(pilotText)
+  } catch (error) {
+    refusePower(`the pilot-extended artifact is not valid JSON — ${(error as Error).message}`)
+  }
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    refusePower('the pilot-extended artifact is not an object')
+  }
+  const root = parsed as Record<string, unknown>
+  const meta = root.meta
+  if (typeof meta !== 'object' || meta === null) refusePower('the pilot-extended artifact has no meta')
+  const schema = (meta as Record<string, unknown>).schemaVersion
+  if (schema !== BOUNDED_PILOT_SCHEMA_VERSION) {
+    refusePower(
+      `meta.schemaVersion is ${String(schema)}; the power extension consumes the pilot-extended ` +
+        `schema ${BOUNDED_PILOT_SCHEMA_VERSION} only (a base artifact must first pass through ` +
+        'extendBoundedResults; an already-power-extended artifact must not be re-extended)',
+    )
+  }
+  for (const key of ['ladder', 'ladderDeltas', 'tiers', 'evidence', 'verdicts', 'multiplicity'] as const) {
+    if (!Array.isArray(root[key])) refusePower(`pilot-extended ${key} is missing or not an array`)
+  }
+  for (const key of ['mirrorExact', 'accuracy', 'accuracySingle'] as const) {
+    if (typeof root[key] !== 'object' || root[key] === null) refusePower(`pilot-extended ${key} is missing`)
+  }
+  const verdicts = root.verdicts as { id?: unknown }[]
+  if (
+    verdicts.length !== PILOT_VERDICT_IDS.length ||
+    verdicts.some((v, i) => v === null || typeof v !== 'object' || v.id !== PILOT_VERDICT_IDS[i])
+  ) {
+    refusePower('pilot-extended verdicts are not exactly P1–P8 in order')
+  }
+  const families = root.multiplicity as { id?: unknown }[]
+  if (
+    families.length !== 2 ||
+    families.some((f, i) => f === null || typeof f !== 'object' || f.id !== (['P7', 'P8'] as const)[i])
+  ) {
+    refusePower('pilot-extended multiplicity is not exactly the P7 and P8 families in order')
+  }
+  return parsed as BoundedResultsPilot
+}
+
+/**
+ * Extend the committed pilot artifact with the E4b-power run — the registered correction of
+ * record (SPEC-v15.md E4b-power). The 300-seed run becomes the P8 verdict of record in
+ * `accuracySingle`, recomputed by the UNCHANGED rule; the 50-seed pilot moves — verbatim,
+ * byte-identical — to `accuracySinglePilot`, keeping its committed verdict and Bonferroni
+ * family beside a note stating what it licensed; `crossDesign` carries the registered
+ * difference-of-deltas test and post-hoc power, labelled cross-design. Both runs are reported
+ * whatever they say.
+ *
+ * The guards extend `extendBoundedResults`'s discipline to this migration, with the same
+ * stated coverage: the base and pilot digests are pinned to caller-supplied committed values;
+ * `meta.predictions` must reproduce the registered texts; stored derived fields (ci95,
+ * bits-equivalents, every delta family's z and pass) re-derive; P1–P7 AND the pilot's P8 are
+ * recomputed from the artifact's own aggregates and must reproduce byte-for-byte, as must
+ * both committed multiplicity families; and every carried section — the six base sections,
+ * the P1–P7 verdicts, the P7 family, and the pilot block field-for-field — is compared after
+ * assembly. Aggregates no rule reads still ride on the digest pins alone, exactly as before.
+ *
+ * The run itself must be healthy, must carry the registered power grid (the caller states the
+ * expected seed count and fresh prefix; the bits grid, variant and step cap must equal the
+ * base's; the prefix must DIFFER from the base's — the registered disjointness), and must
+ * have passed the ∞ reproduction gate on every ∞ game.
+ */
+export function extendBoundedResultsPower(
+  pilotText: string,
+  run: BoundedSingleRunSummary,
+  inputs: BoundedPowerExtendInputs,
+): BoundedResults {
+  const base = admitPilot(pilotText)
+
+  // --- identity of the base: the caller's digest pins and the registered predictions ---------
+  if (base.meta.recordsDigest !== inputs.expectedBaseDigest) {
+    refusePower(
+      `the artifact's meta.recordsDigest ${base.meta.recordsDigest} does not match the ` +
+        `committed value ${inputs.expectedBaseDigest} the caller pinned — this is not the ` +
+        'committed artifact',
+    )
+  }
+  if (base.accuracySingle.meta.recordsDigest !== inputs.expectedPilotDigest) {
+    refusePower(
+      `the pilot block's recordsDigest ${base.accuracySingle.meta.recordsDigest} does not match ` +
+        `the committed value ${inputs.expectedPilotDigest} the caller pinned — this is not the ` +
+        'committed pilot run',
+    )
+  }
+  if (
+    JSON.stringify(base.meta.predictions) !==
+    JSON.stringify([...BOUNDED_PREDICTIONS, BOUNDED_P8_PREDICTION])
+  ) {
+    refusePower(
+      "the artifact's meta.predictions do not reproduce the code's registered texts " +
+        '(BOUNDED_PREDICTIONS plus BOUNDED_P8_PREDICTION) byte-for-byte',
+    )
+  }
+
+  // --- the run must be healthy and must be the REGISTERED power grid -------------------------
+  if (!run.health.ok) {
+    refusePower(
+      `the power run failed its health gate — ${run.health.violations.length} violation(s): ${run.health.violations.join('; ')}`,
+    )
+  }
+  const bc = base.meta.config
+  const rc = run.meta.config
+  if (
+    JSON.stringify(rc.accBits) !== JSON.stringify(bc.accBits) ||
+    rc.variant !== bc.variant ||
+    rc.stepCap !== bc.stepCap
+  ) {
+    refusePower(
+      'the power run does not hold the pilot design fixed — accBits, variant and stepCap must ' +
+        'all match the committed config (the registration changes the seed count and prefix ' +
+        'ALONE)',
+    )
+  }
+  if (rc.accGames !== inputs.expectedAccGames || rc.accSeedPrefix !== inputs.expectedSeedPrefix) {
+    refusePower(
+      `the power run plays ${rc.accGames} games per pairing on "${rc.accSeedPrefix}"; the ` +
+        `registered power grid the caller stated is ${inputs.expectedAccGames} on ` +
+        `"${inputs.expectedSeedPrefix}"`,
+    )
+  }
+  if (rc.accSeedPrefix === bc.accSeedPrefix) {
+    refusePower(
+      `the power run's seed prefix "${rc.accSeedPrefix}" equals the pilot's — the registration ` +
+        'requires a fresh prefix DISJOINT from the pilot seed list',
+    )
+  }
+  const pairings = (STYLE_IDS.length * (STYLE_IDS.length - 1)) / 2
+  if (run.infReproduction.games !== pairings * rc.accGames || run.infReproduction.deviations !== 0) {
+    refusePower(
+      `the ∞ reproduction gate did not hold: ${run.infReproduction.deviations} deviation(s) over ` +
+        `${run.infReproduction.games} ∞ games (expected 0 over ${pairings * rc.accGames})`,
+    )
+  }
+
+  // --- stored derived fields re-derived, the pilot's delta family included -------------------
+  for (const cell of [...base.ladder, ...base.tiers]) {
+    const ci: [number, number] = [cell.share - 1.96 * cell.se, cell.share + 1.96 * cell.se]
+    if (JSON.stringify(ci) !== JSON.stringify(cell.ci95)) {
+      refusePower(`a carried aggregate moved — ${cell.id}'s ci95 does not re-derive from its share and se`)
+    }
+  }
+  for (const tier of base.tiers) {
+    const beq = bitsEquivalentOf(tier.share, tier.se, base.ladder)
+    if (JSON.stringify(beq) !== JSON.stringify(tier.bitsEquivalent)) {
+      refusePower(
+        `a carried aggregate moved — tier ${tier.tier}'s bits-equivalent does not re-derive ` +
+          'from its share, its se and the ladder cells',
+      )
+    }
+  }
+  for (const d of [...base.ladderDeltas, ...base.accuracy.deltas, ...base.accuracySingle.deltas]) {
+    if (JSON.stringify(finiteZ(d.delta, d.se)) !== JSON.stringify(d.z) || d.pass !== (d.delta >= -2 * d.se)) {
+      refusePower(
+        `a carried aggregate moved — the ${d.fromBits}→${d.toBits} delta's z or pass does not ` +
+          're-derive from its delta and se',
+      )
+    }
+  }
+
+  // --- the committed verdicts and annotation families, recomputed ----------------------------
+  const summary: BoundedRunSummary = {
+    meta: {
+      schemaVersion: base.meta.schemaVersion,
+      generatedAt: base.meta.generatedAt,
+      config: base.meta.config,
+      gamesTotal: base.meta.gamesTotal,
+      movesTotal: 0,
+      workers: 0,
+      wallMs: base.meta.wallMs,
+      gamesPerSecond: 0,
+      recordsDigest: base.meta.recordsDigest,
+      notes: [...base.meta.notes],
+    },
+    health: base.meta.health,
+    ladder: base.ladder,
+    ladderDeltas: base.ladderDeltas,
+    mirrorExact: base.mirrorExact,
+    tiers: base.tiers,
+    evidence: base.evidence,
+    accuracy: base.accuracy,
+  }
+  const recomputed = computeBoundedVerdicts(summary, base.meta.baseline ?? undefined)
+  if (JSON.stringify(recomputed) !== JSON.stringify(base.verdicts.slice(0, BASE_VERDICT_IDS.length))) {
+    const first =
+      recomputed.find((v, i) => JSON.stringify(v) !== JSON.stringify(base.verdicts[i]))?.id ?? '(count differs)'
+    refusePower(
+      `a carried aggregate or verdict moved — P1–P7 recomputed from the artifact's own aggregates ` +
+        `do not reproduce its committed verdicts byte-for-byte (first difference at ${first})`,
+    )
+  }
+  const pilotVerdict = computeBoundedSingleVerdict({
+    cells: base.accuracySingle.cells,
+    deltas: base.accuracySingle.deltas,
+    infReproduction: base.accuracySingle.infReproduction,
+  })
+  if (JSON.stringify(pilotVerdict) !== JSON.stringify(base.verdicts[BASE_VERDICT_IDS.length])) {
+    refusePower(
+      "a carried aggregate or verdict moved — the pilot's P8 verdict recomputed from the " +
+        "artifact's own accuracySingle block does not reproduce the committed verdict byte-for-byte",
+    )
+  }
+  const recomputedFamilies = [
+    multiplicityFamilyOf('P7', base.accuracy.deltas),
+    multiplicityFamilyOf('P8', base.accuracySingle.deltas),
+  ]
+  if (JSON.stringify(recomputedFamilies) !== JSON.stringify(base.multiplicity)) {
+    refusePower(
+      'a carried annotation moved — the P7 and P8 Bonferroni families recomputed from the ' +
+        "artifact's own delta families do not reproduce the committed annotation byte-for-byte",
+    )
+  }
+
+  // --- assemble: the power run of record, the pilot retained, the cross-design block ---------
+  const powerVerdict = computeBoundedSingleVerdict({
+    cells: run.cells,
+    deltas: run.deltas,
+    infReproduction: run.infReproduction,
+  })
+  const pilotReads = base.accuracySingle.cells[0]?.reads ?? 0
+  const pilotSeeds = base.accuracySingle.cells[0]?.seeds ?? 0
+  const powerReads = run.cells[0]?.reads ?? 0
+  const out: BoundedResults = {
+    meta: {
+      ...base.meta,
+      schemaVersion: BOUNDED_SCHEMA_VERSION,
+      notes: [
+        ...base.meta.notes,
+        `E4b-power (SPEC-v15.md, registered 2026-08-30 AFTER the E4b review and BEFORE any run): ` +
+          `the ${pilotSeeds}-seed pilot's P8 verdict licensed only the within-design claim at its ` +
+          `own read count — the registration records ~52% power at the P7 effect size for the ` +
+          `committed 50-seed design. The P8 verdict of record is the ${rc.accGames}-seed power run ` +
+          `(${powerReads} reads per cell) on the fresh disjoint seed prefix "${rc.accSeedPrefix}"; ` +
+          `the mapping, bits grid, estimator and P8 rule are UNCHANGED. The pilot is retained ` +
+          `verbatim in accuracySinglePilot; both runs are reported whatever they say. crossDesign ` +
+          `carries the registered difference-of-deltas test and post-hoc power, labelled ` +
+          `cross-design.`,
+        ...run.meta.notes.map((n) => `E4b-power: ${n}`),
+      ],
+    },
+    ladder: base.ladder,
+    ladderDeltas: base.ladderDeltas,
+    mirrorExact: base.mirrorExact,
+    tiers: base.tiers,
+    evidence: base.evidence,
+    accuracy: base.accuracy,
+    accuracySingle: {
+      meta: {
+        generatedAt: run.meta.generatedAt,
+        engineCommit: inputs.engineCommit,
+        gamesTotal: run.meta.gamesTotal,
+        movesTotal: run.meta.movesTotal,
+        workers: run.meta.workers,
+        wallMs: run.meta.wallMs,
+        gamesPerSecond: run.meta.gamesPerSecond,
+        recordsDigest: run.meta.recordsDigest,
+        notes: [...run.meta.notes],
+      },
+      accGames: rc.accGames,
+      accSeedPrefix: rc.accSeedPrefix,
+      mapping: singleReadMappingText(rc.accGames),
+      health: run.health,
+      cells: run.cells,
+      deltas: run.deltas,
+      infReproduction: run.infReproduction,
+    },
+    accuracySinglePilot: {
+      ...base.accuracySingle,
+      verdict: base.verdicts[BASE_VERDICT_IDS.length],
+      multiplicityFamily: base.multiplicity[1],
+      note:
+        `The ${pilotSeeds}-seed E4b pilot, retained verbatim as committed at schema ` +
+        `${BOUNDED_PILOT_SCHEMA_VERSION} (${pilotReads} reads per cell). Registered correction ` +
+        `(SPEC-v15.md E4b-power): a P8 verdict at this seed count licensed only the ` +
+        `within-design claim that no rung violated at its own N — never the cross-design ` +
+        `attribution; the pilot's post-hoc power at the P7 effect size is reported in ` +
+        `crossDesign.pilot. The power run in accuracySingle (${rc.accGames} seeds per pairing, ` +
+        `${powerReads} reads per cell) is the P8 verdict of record.`,
+    },
+    crossDesign: crossDesignOf(base.accuracy.deltas, base.accuracySingle.deltas, run.deltas),
+    multiplicity: [base.multiplicity[0], multiplicityFamilyOf('P8', run.deltas)],
+    verdicts: [...base.verdicts.slice(0, BASE_VERDICT_IDS.length), powerVerdict],
+  }
+
+  // --- the carried sections, compared after assembly -----------------------------------------
+  const carried: readonly (keyof BoundedResultsBase)[] = [
+    'ladder',
+    'ladderDeltas',
+    'mirrorExact',
+    'tiers',
+    'evidence',
+    'accuracy',
+  ]
+  for (const key of carried) {
+    if (JSON.stringify(out[key]) !== JSON.stringify(base[key])) {
+      refusePower(`the carried section "${key}" does not serialise byte-identically to the committed artifact's`)
+    }
+  }
+  if (JSON.stringify(out.verdicts.slice(0, BASE_VERDICT_IDS.length)) !== JSON.stringify(base.verdicts.slice(0, BASE_VERDICT_IDS.length))) {
+    refusePower('the carried P1–P7 verdicts do not serialise byte-identically to the committed artifact’s')
+  }
+  if (JSON.stringify(out.multiplicity[0]) !== JSON.stringify(base.multiplicity[0])) {
+    refusePower('the carried P7 multiplicity family does not serialise byte-identically to the committed artifact’s')
+  }
+  const pilotKeys: readonly (keyof BoundedAccuracySingle)[] = [
+    'meta',
+    'mapping',
+    'health',
+    'cells',
+    'deltas',
+    'infReproduction',
+  ]
+  for (const key of pilotKeys) {
+    if (JSON.stringify(out.accuracySinglePilot[key]) !== JSON.stringify(base.accuracySingle[key])) {
+      refusePower(
+        `the retained pilot's "${key}" does not serialise byte-identically to the committed ` +
+          "artifact's accuracySingle block",
+      )
+    }
+  }
+  if (JSON.stringify(out.accuracySinglePilot.verdict) !== JSON.stringify(base.verdicts[BASE_VERDICT_IDS.length])) {
+    refusePower('the retained pilot verdict does not serialise byte-identically to the committed P8 verdict')
   }
   return out
 }

@@ -1,9 +1,16 @@
 /**
- * bounded-single-analyze.mjs — extends the committed bounded artifact with the E4b block and
+ * bounded-single-analyze.mjs — extends the committed bounded artifact with an E4b run and
  * writes the ONE artifact the site reads: `src/lab/data/bounded-results.json`.
  *
  * `node scripts/bounded-single-analyze.mjs --run lab-out/DIR [--base PATH] [--emit PATH]
- *    [--baseDigest HEX]`
+ *    [--baseDigest HEX] [--pilotDigest HEX]`
+ *
+ * Two extension paths, chosen by the base artifact's own schemaVersion:
+ *   - schema 1 (the base suite) + a pilot-grid run → `extendBoundedResults` → schema 2;
+ *   - schema 2 (the committed pilot artifact) + the registered E4b-power run (300 seeds on
+ *     the fresh clsacc-power-v1 prefix; `bounded-single-sim.mjs --power`) →
+ *     `extendBoundedResultsPower` → schema 3, the power run becoming the P8 verdict of
+ *     record and the pilot retained verbatim in accuracySinglePilot.
  *
  * Thin for the usual reason — `scripts/` is linted but NOT typechecked. Everything with
  * substance is `extendBoundedResults` in lib/lab/bounded.ts, whose docstring states its exact
@@ -37,14 +44,27 @@ if (major < 23 || (major === 23 && minor < 6)) {
   process.exit(1)
 }
 
-const { digest, extendBoundedResults, scoreBoundedSingleAccuracy } = await import('../lib/lab/index.ts')
+const {
+  BOUNDED_POWER_ACC_GAMES,
+  BOUNDED_POWER_SEED_PREFIX,
+  digest,
+  extendBoundedResults,
+  extendBoundedResultsPower,
+  scoreBoundedSingleAccuracy,
+} = await import('../lib/lab/index.ts')
 
 /**
  * The committed base artifact's meta.recordsDigest — the 85,200-game base suite run
- * (data commit "the v1.5 run"). `extendBoundedResults` refuses a base that does not carry it;
+ * (data commit "the v1.5 run"). Both extension paths refuse a base that does not carry it;
  * pass --baseDigest only to extend a DIFFERENT committed base deliberately.
  */
 const COMMITTED_BASE_DIGEST = 'fe829b581f665c9a'
+
+/**
+ * The committed E4b pilot run's accuracySingle.meta.recordsDigest — the 7,200-game 50-seed
+ * pilot (the E4b commit). The power path refuses a pilot block that does not carry it.
+ */
+const COMMITTED_PILOT_DIGEST = '52bfe90b52ea7029'
 
 function args(argv) {
   const out = {}
@@ -131,11 +151,29 @@ if (!run.health.ok) {
 
 // --- extend, with the refusals inside ---------------------------------------------------------
 const baseText = await readFile(basePath, 'utf8')
-console.log(`base artifact: ${basePath} (pinned digest ${expectedBaseDigest})`)
-const results = extendBoundedResults(baseText, run, {
-  engineCommit: run.engineCommit ?? 'unknown',
-  expectedBaseDigest,
-})
+const baseSchema = JSON.parse(baseText)?.meta?.schemaVersion
+console.log(`base artifact: ${basePath} (schema ${baseSchema}, pinned digest ${expectedBaseDigest})`)
+let results
+if (baseSchema === 1) {
+  results = extendBoundedResults(baseText, run, {
+    engineCommit: run.engineCommit ?? 'unknown',
+    expectedBaseDigest,
+  })
+} else if (baseSchema === 2) {
+  results = extendBoundedResultsPower(baseText, run, {
+    engineCommit: run.engineCommit ?? 'unknown',
+    expectedBaseDigest,
+    expectedPilotDigest: opt.pilotDigest ?? COMMITTED_PILOT_DIGEST,
+    expectedAccGames: BOUNDED_POWER_ACC_GAMES,
+    expectedSeedPrefix: BOUNDED_POWER_SEED_PREFIX,
+  })
+} else {
+  console.error(
+    `the base artifact's schemaVersion is ${baseSchema}; this script extends schema 1 (the base ` +
+      'suite, pilot path) or schema 2 (the committed pilot artifact, power path) and nothing else.',
+  )
+  process.exit(2)
+}
 
 // --- emit -------------------------------------------------------------------------------------
 const text = JSON.stringify(results, null, 2)
@@ -162,6 +200,23 @@ for (const fam of results.multiplicity) {
         `corrected ${r.violatesBonferroni ? 'VIOLATES' : 'ok'}`,
     )
   }
+}
+if (results.crossDesign) {
+  const cd = results.crossDesign
+  const infb = (b) => (b >= 1_000_000 ? 'inf' : String(b))
+  console.log('')
+  console.log(`cross-design (labelled as such; rung ${infb(cd.fromBits)}→${infb(cd.toBits)}):`)
+  console.log(
+    `  P7 delta ${cd.p7.delta.toFixed(6)} ± ${cd.p7.se.toFixed(6)} · P8 delta ${cd.p8.delta.toFixed(6)} ± ${cd.p8.se.toFixed(6)}`,
+  )
+  console.log(
+    `  difference-of-deltas ${cd.diffOfDeltas.toFixed(6)} ± ${cd.se.toFixed(6)} · z ${cd.z.toFixed(3)} · ` +
+      `two-sided p ${cd.pTwoSided.toFixed(4)}`,
+  )
+  console.log(
+    `  post-hoc power at the P7 effect ${cd.effect.toFixed(6)}: record ${(100 * cd.postHocPower).toFixed(1)}% ` +
+      `(mde ${cd.mde.toFixed(4)}) · pilot ${(100 * cd.pilot.postHocPower).toFixed(1)}% (mde ${cd.pilot.mde.toFixed(4)})`,
+  )
 }
 console.log('')
 console.log(`wrote ${join(runDir, 'bounded-results.json')}`)

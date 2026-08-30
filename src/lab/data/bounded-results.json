@@ -1,6 +1,6 @@
 {
   "meta": {
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "generatedAt": "2026-08-30T01:52:24.362Z",
     "engineCommit": "ab779f3-dirty",
     "rulesHash": "b4c7fef74d439fe29cbe4d4775fc4fbecdd95d0c9ce0218eb116a4b2b64b6f8d",
@@ -49,7 +49,11 @@
       "E4 replays the v1.0 accuracy seed list and pairings; the ∞ cell is decision-identical to the v1.0 experiment by the Phase 1 anchor pin, so its top-1 must reproduce the committed baseline exactly.",
       "E4b: E4b read seat: seat 2·(game mod 3) — the three team-0 seats 0, 2, 4 in rotation across the 50 games of every pairing, always playing the measured team-0 style (pairing[0]) under the bit budget while the other five seats play their bare full-strength styles exactly as the v1.0 accuracy harness seats them (team 0 pairing[0], team 1 pairing[1]). startSeat rotates game mod 6 as in E4, so the read seat occupies every relative table position uniformly with period 6. Truth for the read is therefore always pairing[0]; the pairing scheme is triangular, so by-style read counts fall with roster position (identically at every budget) and the last roster style is never the read truth.",
       "E4b: P8 scores top[readSeat] only. The six-seat end-of-game read is retained per record for context, clearly separated by readSeat, and enters no verdict. Cell SEs are seed-clustered (per-seed accuracy over the pairings, sd/√seeds); adjacent deltas are per-seed paired exactly as P7's.",
-      "E4b: ∞ health gate: every ∞-budget game is replayed with all six seats bare (the exact v1.0 accuracy harness table) and required to match event-for-event (elog), read-for-read and step-for-step. Reproduction replays are checks, not records — excluded from gamesTotal, movesTotal and the digest."
+      "E4b: ∞ health gate: every ∞-budget game is replayed with all six seats bare (the exact v1.0 accuracy harness table) and required to match event-for-event (elog), read-for-read and step-for-step. Reproduction replays are checks, not records — excluded from gamesTotal, movesTotal and the digest.",
+      "E4b-power (SPEC-v15.md, registered 2026-08-30 AFTER the E4b review and BEFORE any run): the 50-seed pilot's P8 verdict licensed only the within-design claim at its own read count — the registration records ~52% power at the P7 effect size for the committed 50-seed design. The P8 verdict of record is the 300-seed power run (10800 reads per cell) on the fresh disjoint seed prefix \"clsacc-power-v1\"; the mapping, bits grid, estimator and P8 rule are UNCHANGED. The pilot is retained verbatim in accuracySinglePilot; both runs are reported whatever they say. crossDesign carries the registered difference-of-deltas test and post-hoc power, labelled cross-design.",
+      "E4b-power: E4b read seat: seat 2·(game mod 3) — the three team-0 seats 0, 2, 4 in rotation across the 300 games of every pairing, always playing the measured team-0 style (pairing[0]) under the bit budget while the other five seats play their bare full-strength styles exactly as the v1.0 accuracy harness seats them (team 0 pairing[0], team 1 pairing[1]). startSeat rotates game mod 6 as in E4, so the read seat occupies every relative table position uniformly with period 6. Truth for the read is therefore always pairing[0]; the pairing scheme is triangular, so by-style read counts fall with roster position (identically at every budget) and the last roster style is never the read truth.",
+      "E4b-power: P8 scores top[readSeat] only. The six-seat end-of-game read is retained per record for context, clearly separated by readSeat, and enters no verdict. Cell SEs are seed-clustered (per-seed accuracy over the pairings, sd/√seeds); adjacent deltas are per-seed paired exactly as P7's.",
+      "E4b-power: ∞ health gate: every ∞-budget game is replayed with all six seats bare (the exact v1.0 accuracy harness table) and required to match event-for-event (elog), read-for-read and step-for-step. Reproduction replays are checks, not records — excluded from gamesTotal, movesTotal and the digest."
     ],
     "health": {
       "ok": true,
@@ -3090,6 +3094,256 @@
   },
   "accuracySingle": {
     "meta": {
+      "generatedAt": "2026-08-30T03:38:23.178Z",
+      "engineCommit": "b90735c-dirty",
+      "gamesTotal": 43200,
+      "movesTotal": 32793897,
+      "workers": 22,
+      "wallMs": 174444,
+      "gamesPerSecond": 247.64394304189312,
+      "recordsDigest": "53668ad79186621d",
+      "notes": [
+        "E4b read seat: seat 2·(game mod 3) — the three team-0 seats 0, 2, 4 in rotation across the 300 games of every pairing, always playing the measured team-0 style (pairing[0]) under the bit budget while the other five seats play their bare full-strength styles exactly as the v1.0 accuracy harness seats them (team 0 pairing[0], team 1 pairing[1]). startSeat rotates game mod 6 as in E4, so the read seat occupies every relative table position uniformly with period 6. Truth for the read is therefore always pairing[0]; the pairing scheme is triangular, so by-style read counts fall with roster position (identically at every budget) and the last roster style is never the read truth.",
+        "P8 scores top[readSeat] only. The six-seat end-of-game read is retained per record for context, clearly separated by readSeat, and enters no verdict. Cell SEs are seed-clustered (per-seed accuracy over the pairings, sd/√seeds); adjacent deltas are per-seed paired exactly as P7's.",
+        "∞ health gate: every ∞-budget game is replayed with all six seats bare (the exact v1.0 accuracy harness table) and required to match event-for-event (elog), read-for-read and step-for-step. Reproduction replays are checks, not records — excluded from gamesTotal, movesTotal and the digest."
+      ]
+    },
+    "accGames": 300,
+    "accSeedPrefix": "clsacc-power-v1",
+    "mapping": "E4b read seat: seat 2·(game mod 3) — the three team-0 seats 0, 2, 4 in rotation across the 300 games of every pairing, always playing the measured team-0 style (pairing[0]) under the bit budget while the other five seats play their bare full-strength styles exactly as the v1.0 accuracy harness seats them (team 0 pairing[0], team 1 pairing[1]). startSeat rotates game mod 6 as in E4, so the read seat occupies every relative table position uniformly with period 6. Truth for the read is therefore always pairing[0]; the pairing scheme is triangular, so by-style read counts fall with roster position (identically at every budget) and the last roster style is never the read truth.",
+    "health": {
+      "ok": true,
+      "illegalActions": 0,
+      "cappedGames": 0,
+      "invariantViolations": 0,
+      "ties": 0,
+      "voids": 0,
+      "nonClinch": 0,
+      "capped": [],
+      "violations": []
+    },
+    "cells": [
+      {
+        "bits": 16,
+        "games": 10800,
+        "reads": 10800,
+        "top1": 0.1622222222222222,
+        "se": 0.003985242606891305,
+        "seeds": 300,
+        "byStyle": {
+          "balanced": {
+            "seats": 2400,
+            "top1": 0.034166666666666665
+          },
+          "blitz": {
+            "seats": 2100,
+            "top1": 0.0719047619047619
+          },
+          "punter": {
+            "seats": 1800,
+            "top1": 0.2238888888888889
+          },
+          "banker": {
+            "seats": 1500,
+            "top1": 0.11466666666666667
+          },
+          "turtle": {
+            "seats": 1200,
+            "top1": 0.4141666666666667
+          },
+          "hoarder": {
+            "seats": 900,
+            "top1": 0.22
+          },
+          "scout": {
+            "seats": 600,
+            "top1": 0.29
+          },
+          "ghost": {
+            "seats": 300,
+            "top1": 0.25
+          },
+          "archivist": {
+            "seats": 0,
+            "top1": 0
+          }
+        }
+      },
+      {
+        "bits": 32,
+        "games": 10800,
+        "reads": 10800,
+        "top1": 0.1698148148148148,
+        "se": 0.004368138571500385,
+        "seeds": 300,
+        "byStyle": {
+          "balanced": {
+            "seats": 2400,
+            "top1": 0.03958333333333333
+          },
+          "blitz": {
+            "seats": 2100,
+            "top1": 0.08428571428571428
+          },
+          "punter": {
+            "seats": 1800,
+            "top1": 0.1622222222222222
+          },
+          "banker": {
+            "seats": 1500,
+            "top1": 0.16266666666666665
+          },
+          "turtle": {
+            "seats": 1200,
+            "top1": 0.3975
+          },
+          "hoarder": {
+            "seats": 900,
+            "top1": 0.25555555555555554
+          },
+          "scout": {
+            "seats": 600,
+            "top1": 0.3283333333333333
+          },
+          "ghost": {
+            "seats": 300,
+            "top1": 0.4066666666666667
+          },
+          "archivist": {
+            "seats": 0,
+            "top1": 0
+          }
+        }
+      },
+      {
+        "bits": 64,
+        "games": 10800,
+        "reads": 10800,
+        "top1": 0.16416666666666666,
+        "se": 0.004336935570601799,
+        "seeds": 300,
+        "byStyle": {
+          "balanced": {
+            "seats": 2400,
+            "top1": 0.05458333333333333
+          },
+          "blitz": {
+            "seats": 2100,
+            "top1": 0.09142857142857143
+          },
+          "punter": {
+            "seats": 1800,
+            "top1": 0.1411111111111111
+          },
+          "banker": {
+            "seats": 1500,
+            "top1": 0.15533333333333332
+          },
+          "turtle": {
+            "seats": 1200,
+            "top1": 0.2991666666666667
+          },
+          "hoarder": {
+            "seats": 900,
+            "top1": 0.29333333333333333
+          },
+          "scout": {
+            "seats": 600,
+            "top1": 0.3516666666666667
+          },
+          "ghost": {
+            "seats": 300,
+            "top1": 0.43
+          },
+          "archivist": {
+            "seats": 0,
+            "top1": 0
+          }
+        }
+      },
+      {
+        "bits": 1000000,
+        "games": 10800,
+        "reads": 10800,
+        "top1": 0.16342592592592592,
+        "se": 0.004343225133708216,
+        "seeds": 300,
+        "byStyle": {
+          "balanced": {
+            "seats": 2400,
+            "top1": 0.055
+          },
+          "blitz": {
+            "seats": 2100,
+            "top1": 0.09142857142857143
+          },
+          "punter": {
+            "seats": 1800,
+            "top1": 0.14222222222222222
+          },
+          "banker": {
+            "seats": 1500,
+            "top1": 0.15133333333333332
+          },
+          "turtle": {
+            "seats": 1200,
+            "top1": 0.29333333333333333
+          },
+          "hoarder": {
+            "seats": 900,
+            "top1": 0.2922222222222222
+          },
+          "scout": {
+            "seats": 600,
+            "top1": 0.3566666666666667
+          },
+          "ghost": {
+            "seats": 300,
+            "top1": 0.43
+          },
+          "archivist": {
+            "seats": 0,
+            "top1": 0
+          }
+        }
+      }
+    ],
+    "deltas": [
+      {
+        "fromBits": 16,
+        "toBits": 32,
+        "seeds": 300,
+        "delta": 0.0075925925925925935,
+        "se": 0.0045546259345013804,
+        "z": 1.6670068413475092,
+        "pass": true
+      },
+      {
+        "fromBits": 32,
+        "toBits": 64,
+        "seeds": 300,
+        "delta": -0.005648148148148147,
+        "se": 0.0030936427105899412,
+        "z": -1.8257273630254074,
+        "pass": true
+      },
+      {
+        "fromBits": 64,
+        "toBits": 1000000,
+        "seeds": 300,
+        "delta": -0.0007407407407407402,
+        "se": 0.0009717981709863553,
+        "z": -0.7622372246172303,
+        "pass": true
+      }
+    ],
+    "infReproduction": {
+      "games": 10800,
+      "deviations": 0
+    }
+  },
+  "accuracySinglePilot": {
+    "meta": {
       "generatedAt": "2026-08-30T02:43:45.585Z",
       "engineCommit": "b32f463-dirty",
       "gamesTotal": 7200,
@@ -3334,7 +3588,82 @@
     "infReproduction": {
       "games": 1800,
       "deviations": 0
-    }
+    },
+    "verdict": {
+      "id": "P8",
+      "prediction": "E4b (single-seat attribution): top-1 accuracy at the bounded read seat is non-increasing as its bits shrink, by the same adjacent-rung 2·SE rule as P7 (any violating rung refutes). The ∞ cell must reproduce the corresponding full-strength read exactly (health, not prediction).",
+      "verdict": "confirmed",
+      "detail": "bounded-seat end-of-game top-1 (seed-clustered SE) — 16: 16.78% ± 1.00% over 1800 reads; 32: 16.78% ± 1.04% over 1800 reads; 64: 17.00% ± 1.05% over 1800 reads; ∞: 16.83% ± 1.02% over 1800 reads. Adjacent deltas (per-seed paired): 16→32 +0.0000 ± 0.0118; 32→64 +0.0022 ± 0.0066; 64→∞ -0.0017 ± 0.0026. 0 of 3 rungs violate delta >= −2·SE. The ∞ cell reproduced the corresponding full-strength read exactly in all 1800 games."
+    },
+    "multiplicityFamily": {
+      "id": "P8",
+      "comparisons": 3,
+      "alpha": 0.05,
+      "rungs": [
+        {
+          "fromBits": 16,
+          "toBits": 32,
+          "delta": 4.996003610813204e-18,
+          "se": 0.011798467259776593,
+          "z": 4.234451391703743e-16,
+          "pOneSided": 0.499999985,
+          "pBonferroni": 1,
+          "violatesRaw": false,
+          "violatesBonferroni": false
+        },
+        {
+          "fromBits": 32,
+          "toBits": 64,
+          "delta": 0.0022222222222222214,
+          "se": 0.006632565846278153,
+          "z": 0.3350471406882776,
+          "pOneSided": 0.6312052312065924,
+          "pBonferroni": 1,
+          "violatesRaw": false,
+          "violatesBonferroni": false
+        },
+        {
+          "fromBits": 64,
+          "toBits": 1000000,
+          "delta": -0.0016666666666666668,
+          "se": 0.0025606771118891567,
+          "z": -0.6508695137424305,
+          "pOneSided": 0.2575653413016284,
+          "pBonferroni": 0.7726960239048852,
+          "violatesRaw": false,
+          "violatesBonferroni": false
+        }
+      ],
+      "note": "Bonferroni ×3 over the P8 adjacent-rung family, as an annotation only — the registered P8 rule (delta >= −2·SE per rung, any violating rung refutes) and its verdict are unchanged. pOneSided is Φ(z) per rung; pBonferroni = min(1, 3·pOneSided); a rung violates at the corrected level iff its delta is negative and pBonferroni < 0.05."
+    },
+    "note": "The 50-seed E4b pilot, retained verbatim as committed at schema 2 (1800 reads per cell). Registered correction (SPEC-v15.md E4b-power): a P8 verdict at this seed count licensed only the within-design claim that no rung violated at its own N — never the cross-design attribution; the pilot's post-hoc power at the P7 effect size is reported in crossDesign.pilot. The power run in accuracySingle (300 seeds per pairing, 10800 reads per cell) is the P8 verdict of record."
+  },
+  "crossDesign": {
+    "fromBits": 64,
+    "toBits": 1000000,
+    "p7": {
+      "delta": -0.0052777777777777745,
+      "se": 0.0019168944146642421,
+      "seeds": 50
+    },
+    "p8": {
+      "delta": -0.0007407407407407402,
+      "se": 0.0009717981709863553,
+      "seeds": 300
+    },
+    "diffOfDeltas": 0.004537037037037034,
+    "se": 0.0021491570166238187,
+    "z": 2.1110775071076073,
+    "pTwoSided": 0.03476564716092789,
+    "effect": 0.0052777777777777745,
+    "mde": 0.0019435963419727107,
+    "postHocPower": 0.9996992534134681,
+    "pilot": {
+      "se": 0.0025606771118891567,
+      "mde": 0.005121354223778313,
+      "postHocPower": 0.5243549978551401
+    },
+    "note": "Cross-design comparison, labelled as exactly that (E4b-power registration): P7’s rung is measured in E4, where BOTH teams are bounded — ecology and signature move together — and P8’s in the single-seat design, where only the read seat is. The difference-of-deltas is therefore a comparison ACROSS designs, never a within-design test, and it enters no registered verdict rule. Its SE is √(se₇² + se₈²): the power run’s seed list is disjoint from E4’s, so the two rungs are independent by construction. Post-hoc power is P(delta < −2·SE | true delta = −effect) = Φ(effect/SE − 2) at each run’s measured top-rung SE; mde = 2·SE is the effect the registered rule detects with 50% probability. The pilot’s numbers are retained beside the record run’s — the correction the E4b-power registration exists to make."
   },
   "multiplicity": [
     {
@@ -3386,10 +3715,10 @@
         {
           "fromBits": 16,
           "toBits": 32,
-          "delta": 4.996003610813204e-18,
-          "se": 0.011798467259776593,
-          "z": 4.234451391703743e-16,
-          "pOneSided": 0.499999985,
+          "delta": 0.0075925925925925935,
+          "se": 0.0045546259345013804,
+          "z": 1.6670068413475092,
+          "pOneSided": 0.9522434794101652,
           "pBonferroni": 1,
           "violatesRaw": false,
           "violatesBonferroni": false
@@ -3397,22 +3726,22 @@
         {
           "fromBits": 32,
           "toBits": 64,
-          "delta": 0.0022222222222222214,
-          "se": 0.006632565846278153,
-          "z": 0.3350471406882776,
-          "pOneSided": 0.6312052312065924,
-          "pBonferroni": 1,
+          "delta": -0.005648148148148147,
+          "se": 0.0030936427105899412,
+          "z": -1.8257273630254074,
+          "pOneSided": 0.03394566731553704,
+          "pBonferroni": 0.10183700194661112,
           "violatesRaw": false,
           "violatesBonferroni": false
         },
         {
           "fromBits": 64,
           "toBits": 1000000,
-          "delta": -0.0016666666666666668,
-          "se": 0.0025606771118891567,
-          "z": -0.6508695137424305,
-          "pOneSided": 0.2575653413016284,
-          "pBonferroni": 0.7726960239048852,
+          "delta": -0.0007407407407407402,
+          "se": 0.0009717981709863553,
+          "z": -0.7622372246172303,
+          "pOneSided": 0.2229592070242669,
+          "pBonferroni": 0.6688776210728007,
           "violatesRaw": false,
           "violatesBonferroni": false
         }
@@ -3467,7 +3796,7 @@
       "id": "P8",
       "prediction": "E4b (single-seat attribution): top-1 accuracy at the bounded read seat is non-increasing as its bits shrink, by the same adjacent-rung 2·SE rule as P7 (any violating rung refutes). The ∞ cell must reproduce the corresponding full-strength read exactly (health, not prediction).",
       "verdict": "confirmed",
-      "detail": "bounded-seat end-of-game top-1 (seed-clustered SE) — 16: 16.78% ± 1.00% over 1800 reads; 32: 16.78% ± 1.04% over 1800 reads; 64: 17.00% ± 1.05% over 1800 reads; ∞: 16.83% ± 1.02% over 1800 reads. Adjacent deltas (per-seed paired): 16→32 +0.0000 ± 0.0118; 32→64 +0.0022 ± 0.0066; 64→∞ -0.0017 ± 0.0026. 0 of 3 rungs violate delta >= −2·SE. The ∞ cell reproduced the corresponding full-strength read exactly in all 1800 games."
+      "detail": "bounded-seat end-of-game top-1 (seed-clustered SE) — 16: 16.22% ± 0.40% over 10800 reads; 32: 16.98% ± 0.44% over 10800 reads; 64: 16.42% ± 0.43% over 10800 reads; ∞: 16.34% ± 0.43% over 10800 reads. Adjacent deltas (per-seed paired): 16→32 +0.0076 ± 0.0046; 32→64 -0.0056 ± 0.0031; 64→∞ -0.0007 ± 0.0010. 0 of 3 rungs violate delta >= −2·SE. The ∞ cell reproduced the corresponding full-strength read exactly in all 10800 games."
     }
   ]
 }

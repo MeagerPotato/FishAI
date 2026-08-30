@@ -30,6 +30,10 @@ import { describe, expect, it } from 'vitest'
 import {
   BOUNDED_INF_BITS,
   BOUNDED_P8_PREDICTION,
+  BOUNDED_PILOT_SCHEMA_VERSION,
+  BOUNDED_POWER_ACC_GAMES,
+  BOUNDED_POWER_SEED_PREFIX,
+  BOUNDED_SCHEMA_VERSION,
   BOUNDED_TIERS,
   DEFAULT_BOUNDED_CONFIG,
   SINGLE_READ_MAPPING,
@@ -43,10 +47,12 @@ import {
   buildBoundedResults,
   computeBoundedSingleVerdict,
   computeBoundedVerdicts,
+  crossDesignOf,
   decodeElog,
   encodeElog,
   evidenceObservationsFromLog,
   extendBoundedResults,
+  extendBoundedResultsPower,
   ladderAdjacentDeltas,
   ladderCellId,
   mirrorExactness,
@@ -59,6 +65,7 @@ import {
   scoreBoundedSingleAccuracy,
   seedFor,
   singleCellId,
+  singleReadMappingText,
   singleReadSeatFor,
   singleSeatPolicies,
   tierCellId,
@@ -113,6 +120,14 @@ function runSingleSuite(config: BoundedLabConfig): BoundedSingleRunOutput {
 
 /** The tiny E4b run — the SAME config as RUN, so `extendBoundedResults` accepts the pair. */
 const SINGLE_RUN = runSingleSuite(TINY)
+
+/**
+ * The tiny E4b-power run: the SAME grid on a fresh, disjoint seed prefix at a different game
+ * count — the shape of the registered power design at test scale. `extendBoundedResultsPower`
+ * takes the expected count and prefix from its caller, so tiny values exercise the whole path.
+ */
+const TINY_POWER: BoundedLabConfig = { ...TINY, accGames: 2, accSeedPrefix: 'clsacc-tpow' }
+const POWER_RUN = runSingleSuite(TINY_POWER)
 
 describe('the plan', () => {
   it('the default config is the pre-registered experiment', () => {
@@ -600,7 +615,9 @@ describe('E4b: the tiny run', () => {
     expect(SINGLE_RUN.health.violations).toEqual([])
     expect(SINGLE_RUN.health.ok).toBe(true)
     expect(SINGLE_RUN.meta.gamesTotal).toBe(boundedSingleGamesTotal(TINY))
-    expect(SINGLE_RUN.meta.notes[0]).toBe(SINGLE_READ_MAPPING)
+    // The registered mapping text at the run's own game count; at 50 it IS the pilot constant.
+    expect(SINGLE_RUN.meta.notes[0]).toBe(singleReadMappingText(TINY.accGames))
+    expect(singleReadMappingText(50)).toBe(SINGLE_READ_MAPPING)
   })
 
   it('every record reads the registered seat on the v1.0 seed list', () => {
@@ -920,6 +937,177 @@ describe('E4b: extendBoundedResults — additive, refusing anything that moved',
   })
 })
 
+describe('E4b-power: extendBoundedResultsPower — the run of record, the pilot retained', () => {
+  const base = buildBoundedResults(RUN, {
+    engineCommit: 'test-commit',
+    rulesHash: 'test-rules-hash',
+    rulesFile: 'RULES_US54.md',
+    generatedAt: '2026-01-01T00:00:00.000Z',
+    baseline: { artifact: 'adaptive-results.json', recordsDigest: 'testdigest', endTop1: 0.224 },
+  })
+  const pilot = extendBoundedResults(JSON.stringify(base), SINGLE_RUN, {
+    engineCommit: 'e4b-commit',
+    expectedBaseDigest: base.meta.recordsDigest,
+  })
+  const pilotText = JSON.stringify(pilot)
+  /** The pins the caller of record passes — tiny registered values for the tiny power run. */
+  const pins = {
+    engineCommit: 'power-commit',
+    expectedBaseDigest: pilot.meta.recordsDigest,
+    expectedPilotDigest: pilot.accuracySingle.meta.recordsDigest,
+    expectedAccGames: TINY_POWER.accGames,
+    expectedSeedPrefix: TINY_POWER.accSeedPrefix,
+  }
+  const full = extendBoundedResultsPower(pilotText, POWER_RUN, pins)
+
+  it('the power run becomes the P8 verdict of record, by the unchanged rule', () => {
+    expect(full.meta.schemaVersion).toBe(BOUNDED_SCHEMA_VERSION)
+    expect(full.verdicts.map((v) => v.id)).toEqual(['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'])
+    expect(full.verdicts[7]).toEqual(
+      computeBoundedSingleVerdict({
+        cells: POWER_RUN.cells,
+        deltas: POWER_RUN.deltas,
+        infReproduction: POWER_RUN.infReproduction,
+      }),
+    )
+    expect(full.accuracySingle.accGames).toBe(TINY_POWER.accGames)
+    expect(full.accuracySingle.accSeedPrefix).toBe(TINY_POWER.accSeedPrefix)
+    expect(full.accuracySingle.mapping).toBe(singleReadMappingText(TINY_POWER.accGames))
+    expect(full.accuracySingle.meta.recordsDigest).toBe(POWER_RUN.meta.recordsDigest)
+    expect(full.accuracySingle.meta.engineCommit).toBe('power-commit')
+    expect(full.multiplicity.map((f) => f.id)).toEqual(['P7', 'P8'])
+    expect(full.multiplicity[1]).toEqual(multiplicityFamilyOf('P8', POWER_RUN.deltas))
+  })
+
+  it('every carried section is byte-identical, the pilot block field-for-field included', () => {
+    for (const key of ['ladder', 'ladderDeltas', 'mirrorExact', 'tiers', 'evidence', 'accuracy'] as const) {
+      expect(JSON.stringify(full[key])).toBe(JSON.stringify(pilot[key]))
+    }
+    expect(JSON.stringify(full.verdicts.slice(0, 7))).toBe(JSON.stringify(pilot.verdicts.slice(0, 7)))
+    expect(JSON.stringify(full.multiplicity[0])).toBe(JSON.stringify(pilot.multiplicity[0]))
+    for (const key of ['meta', 'mapping', 'health', 'cells', 'deltas', 'infReproduction'] as const) {
+      expect(JSON.stringify(full.accuracySinglePilot[key])).toBe(JSON.stringify(pilot.accuracySingle[key]))
+    }
+    expect(full.accuracySinglePilot.verdict).toEqual(pilot.verdicts[7])
+    expect(full.accuracySinglePilot.multiplicityFamily).toEqual(pilot.multiplicity[1])
+    expect(full.accuracySinglePilot.note).toMatch(/verdict of record/)
+    expect(full.accuracySinglePilot.note).toMatch(/within-design/)
+  })
+
+  it('the cross-design block reads the top rung of all three delta families, labelled', () => {
+    const cd = full.crossDesign
+    expect(cd.fromBits).toBe(16)
+    expect(cd.toBits).toBe(BOUNDED_INF_BITS)
+    const p7 = pilot.accuracy.deltas[pilot.accuracy.deltas.length - 1]
+    const p8 = POWER_RUN.deltas[POWER_RUN.deltas.length - 1]
+    expect(cd.p7).toEqual({ delta: p7.delta, se: p7.se, seeds: p7.seeds })
+    expect(cd.p8).toEqual({ delta: p8.delta, se: p8.se, seeds: p8.seeds })
+    expect(cd.diffOfDeltas).toBeCloseTo(p8.delta - p7.delta, 12)
+    expect(cd.se).toBeCloseTo(Math.sqrt(p7.se * p7.se + p8.se * p8.se), 12)
+    expect(cd.effect).toBeCloseTo(Math.abs(p7.delta), 12)
+    expect(cd.mde).toBeCloseTo(2 * p8.se, 12)
+    expect(cd.note).toMatch(/ACROSS designs/)
+    expect(cd.note).toMatch(/no registered verdict rule|enters no/)
+  })
+
+  it('crossDesignOf: the arithmetic pinned on the committed pilot review numbers', () => {
+    const rung = (delta: number, se: number): AccuracyAdjacentDelta => ({
+      fromBits: 64,
+      toBits: BOUNDED_INF_BITS,
+      seeds: 50,
+      delta,
+      se,
+      z: se > 0 ? delta / se : 0,
+      pass: delta >= -2 * se,
+    })
+    // The committed P7 rung and the committed pilot P8 rung: the pilot's post-hoc power at the
+    // P7 effect must reproduce the review's ~52% (Φ(0.005278/0.002561 − 2) ≈ 0.524).
+    const cd = crossDesignOf(
+      [rung(-0.0052777777777777745, 0.0019168944146642421)],
+      [rung(-0.0016666666666666668, 0.0025606771118891567)],
+      [rung(-0.001, 0.00105)],
+    )
+    expect(cd.pilot.postHocPower).toBeCloseTo(0.524, 2)
+    expect(cd.pilot.mde).toBeCloseTo(0.005121, 4)
+    expect(cd.postHocPower).toBeCloseTo(1 - 0.00133, 3)
+    expect(cd.mde).toBeCloseTo(0.0021, 4)
+    expect(cd.diffOfDeltas).toBeCloseTo(-0.001 - -0.0052777777777777745, 12)
+    expect(cd.pTwoSided).toBeGreaterThan(0)
+    expect(cd.pTwoSided).toBeLessThan(1)
+    // Mismatched rungs are refused, not silently aligned.
+    expect(() =>
+      crossDesignOf([{ ...rung(-0.005, 0.002), toBits: 64, fromBits: 32 }], [rung(0, 0.01)], [rung(0, 0.01)]),
+    ).toThrow(/top .*rung|→∞/)
+  })
+
+  it('refuses wrong pins: base digest, pilot digest, and strayed prediction texts', () => {
+    expect(() =>
+      extendBoundedResultsPower(pilotText, POWER_RUN, { ...pins, expectedBaseDigest: 'deadbeefdeadbeef' }),
+    ).toThrow(/meta\.recordsDigest .* does not match the committed value/)
+    expect(() =>
+      extendBoundedResultsPower(pilotText, POWER_RUN, { ...pins, expectedPilotDigest: 'deadbeefdeadbeef' }),
+    ).toThrow(/pilot block's recordsDigest .* does not match/)
+    const doctored = JSON.parse(pilotText) as { meta: { predictions: { text: string }[] } }
+    doctored.meta.predictions[7].text += ' (as amended)'
+    expect(() => extendBoundedResultsPower(JSON.stringify(doctored), POWER_RUN, pins)).toThrow(
+      /registered texts/,
+    )
+  })
+
+  it('refuses a run off the registered power grid, and one sharing the pilot seed list', () => {
+    expect(() =>
+      extendBoundedResultsPower(pilotText, POWER_RUN, { ...pins, expectedAccGames: 3 }),
+    ).toThrow(/registered power grid/)
+    // The pilot run itself replays the pilot seed prefix — the registration requires disjoint.
+    expect(() =>
+      extendBoundedResultsPower(pilotText, SINGLE_RUN, {
+        ...pins,
+        expectedAccGames: TINY.accGames,
+        expectedSeedPrefix: TINY.accSeedPrefix,
+      }),
+    ).toThrow(/DISJOINT/)
+    const offDesign = {
+      ...POWER_RUN,
+      meta: { ...POWER_RUN.meta, config: { ...POWER_RUN.meta.config, stepCap: 4999 } },
+    }
+    expect(() => extendBoundedResultsPower(pilotText, offDesign, pins)).toThrow(/design fixed/)
+  })
+
+  it('refuses an unhealthy run and a failed ∞ reproduction', () => {
+    const sick = { ...POWER_RUN, health: { ...POWER_RUN.health, ok: false, violations: ['doctored'] } }
+    expect(() => extendBoundedResultsPower(pilotText, sick, pins)).toThrow(/health gate/)
+    const unreproduced = { ...POWER_RUN, infReproduction: { ...POWER_RUN.infReproduction, deviations: 1 } }
+    expect(() => extendBoundedResultsPower(pilotText, unreproduced, pins)).toThrow(/reproduction/)
+  })
+
+  it('refuses doctored carried aggregates: a base cell, the pilot block, the annotation', () => {
+    const badLadder = JSON.parse(pilotText) as { ladder: { share: number }[] }
+    badLadder.ladder[0].share += 0.001
+    expect(() => extendBoundedResultsPower(JSON.stringify(badLadder), POWER_RUN, pins)).toThrow(/moved/)
+
+    const badPilot = JSON.parse(pilotText) as { accuracySingle: { cells: { top1: number }[] } }
+    badPilot.accuracySingle.cells[0].top1 += 0.01
+    expect(() => extendBoundedResultsPower(JSON.stringify(badPilot), POWER_RUN, pins)).toThrow(
+      /pilot's P8 verdict/,
+    )
+
+    const badFamily = JSON.parse(pilotText) as { multiplicity: { rungs: { pOneSided: number }[] }[] }
+    badFamily.multiplicity[1].rungs[0].pOneSided += 0.01
+    expect(() => extendBoundedResultsPower(JSON.stringify(badFamily), POWER_RUN, pins)).toThrow(
+      /annotation moved/,
+    )
+  })
+
+  it('refuses a base of the wrong schema — un-extended or already power-extended', () => {
+    expect(() =>
+      extendBoundedResultsPower(JSON.stringify(base), POWER_RUN, pins),
+    ).toThrow(/schema/)
+    expect(() =>
+      extendBoundedResultsPower(JSON.stringify(full), POWER_RUN, pins),
+    ).toThrow(/schema/)
+  })
+})
+
 describe('verdicts', () => {
   const built = buildBoundedResults(RUN, {
     engineCommit: 'test-commit',
@@ -978,18 +1166,30 @@ describe('verdicts', () => {
 })
 
 describe('the artifact validator: round-trip and refusals', () => {
-  const built = extendBoundedResults(
+  const built = extendBoundedResultsPower(
     JSON.stringify(
-      buildBoundedResults(RUN, {
-        engineCommit: 'test-commit',
-        rulesHash: 'test-rules-hash',
-        rulesFile: 'RULES_US54.md',
-        generatedAt: '2026-01-01T00:00:00.000Z',
-        baseline: { artifact: 'adaptive-results.json', recordsDigest: 'testdigest', endTop1: 0.224 },
-      }),
+      extendBoundedResults(
+        JSON.stringify(
+          buildBoundedResults(RUN, {
+            engineCommit: 'test-commit',
+            rulesHash: 'test-rules-hash',
+            rulesFile: 'RULES_US54.md',
+            generatedAt: '2026-01-01T00:00:00.000Z',
+            baseline: { artifact: 'adaptive-results.json', recordsDigest: 'testdigest', endTop1: 0.224 },
+          }),
+        ),
+        SINGLE_RUN,
+        { engineCommit: 'e4b-commit', expectedBaseDigest: RUN.meta.recordsDigest },
+      ),
     ),
-    SINGLE_RUN,
-    { engineCommit: 'e4b-commit', expectedBaseDigest: RUN.meta.recordsDigest },
+    POWER_RUN,
+    {
+      engineCommit: 'power-commit',
+      expectedBaseDigest: RUN.meta.recordsDigest,
+      expectedPilotDigest: SINGLE_RUN.meta.recordsDigest,
+      expectedAccGames: TINY_POWER.accGames,
+      expectedSeedPrefix: TINY_POWER.accSeedPrefix,
+    },
   )
 
   it('round-trips through the site parser value-for-value', () => {
@@ -1000,11 +1200,14 @@ describe('the artifact validator: round-trip and refusals', () => {
   it('refuses a wrong schema version, a wrong rule set, and a missing field — each with a path', () => {
     const base = JSON.parse(JSON.stringify(built)) as Record<string, unknown>
 
-    // A version-1 file predates E4b; the reader must notice, not render without the follow-up.
-    const wrongSchema = JSON.parse(JSON.stringify(base)) as { meta: { schemaVersion: number } }
-    wrongSchema.meta.schemaVersion = 1
-    expect(() => parseBoundedArtifact(JSON.stringify(wrongSchema), 'test')).toThrow(ArtifactError)
-    expect(() => parseBoundedArtifact(JSON.stringify(wrongSchema), 'test')).toThrow(/schemaVersion/)
+    // A version-1 file predates E4b, a version-2 file carries only the underpowered pilot;
+    // the reader must notice either, not render it as the verdict of record.
+    for (const version of [1, BOUNDED_PILOT_SCHEMA_VERSION]) {
+      const wrongSchema = JSON.parse(JSON.stringify(base)) as { meta: { schemaVersion: number } }
+      wrongSchema.meta.schemaVersion = version
+      expect(() => parseBoundedArtifact(JSON.stringify(wrongSchema), 'test')).toThrow(ArtifactError)
+      expect(() => parseBoundedArtifact(JSON.stringify(wrongSchema), 'test')).toThrow(/schemaVersion/)
+    }
 
     const wrongRules = JSON.parse(JSON.stringify(base)) as { meta: { ruleSet: string } }
     wrongRules.meta.ruleSet = 'pagat48'
@@ -1082,6 +1285,50 @@ describe('the artifact validator: round-trip and refusals', () => {
       /test\.multiplicity\[0\]\.rungs\[0\]\.pBonferroni/,
     )
   })
+
+  it('refuses a missing or malformed E4b-power block — pilot, cross-design, grid fields', () => {
+    const noPilot = JSON.parse(JSON.stringify(built)) as Record<string, unknown>
+    delete noPilot.accuracySinglePilot
+    expect(() => parseBoundedArtifact(JSON.stringify(noPilot), 'test')).toThrow(/test\.accuracySinglePilot/)
+
+    const noCross = JSON.parse(JSON.stringify(built)) as Record<string, unknown>
+    delete noCross.crossDesign
+    expect(() => parseBoundedArtifact(JSON.stringify(noCross), 'test')).toThrow(/test\.crossDesign/)
+
+    const noGames = JSON.parse(JSON.stringify(built)) as { accuracySingle: Record<string, unknown> }
+    delete noGames.accuracySingle.accGames
+    expect(() => parseBoundedArtifact(JSON.stringify(noGames), 'test')).toThrow(
+      /test\.accuracySingle\.accGames/,
+    )
+
+    const noNote = JSON.parse(JSON.stringify(built)) as { accuracySinglePilot: Record<string, unknown> }
+    delete noNote.accuracySinglePilot.note
+    expect(() => parseBoundedArtifact(JSON.stringify(noNote), 'test')).toThrow(
+      /test\.accuracySinglePilot\.note/,
+    )
+
+    const wrongVerdict = JSON.parse(JSON.stringify(built)) as {
+      accuracySinglePilot: { verdict: { id: string } }
+    }
+    wrongVerdict.accuracySinglePilot.verdict.id = 'P7'
+    expect(() => parseBoundedArtifact(JSON.stringify(wrongVerdict), 'test')).toThrow(
+      /pilot's verdict is its P8 verdict/,
+    )
+
+    const wrongFamily = JSON.parse(JSON.stringify(built)) as {
+      accuracySinglePilot: { multiplicityFamily: { id: string } }
+    }
+    wrongFamily.accuracySinglePilot.multiplicityFamily.id = 'P7'
+    expect(() => parseBoundedArtifact(JSON.stringify(wrongFamily), 'test')).toThrow(
+      /its own P8 family/,
+    )
+
+    const noPower = JSON.parse(JSON.stringify(built)) as { crossDesign: { pilot: Record<string, unknown> } }
+    delete noPower.crossDesign.pilot.postHocPower
+    expect(() => parseBoundedArtifact(JSON.stringify(noPower), 'test')).toThrow(
+      /test\.crossDesign\.pilot\.postHocPower/,
+    )
+  })
 })
 
 describe('the committed artifact', () => {
@@ -1105,34 +1352,84 @@ describe('the committed artifact', () => {
     }
   })
 
-  it('carries the E4b block: registered mapping, healthy run, exact ∞ reproduction, ×3 annotation', () => {
+  it('carries E4b-power as the P8 verdict of record: registered grid, mapping, ∞ reproduction', () => {
     const loaded = loadBoundedArtifact()
     expect(loaded.ok).toBe(true)
     if (!loaded.ok) return
     const single = loaded.artifact.accuracySingle
-    expect(single.mapping).toBe(SINGLE_READ_MAPPING)
+    expect(single.accGames).toBe(BOUNDED_POWER_ACC_GAMES)
+    expect(single.accSeedPrefix).toBe(BOUNDED_POWER_SEED_PREFIX)
+    // The registered disjointness: the power prefix is not the pilot's E4 prefix.
+    expect(single.accSeedPrefix).not.toBe(loaded.artifact.meta.config.accSeedPrefix)
+    expect(single.mapping).toBe(singleReadMappingText(BOUNDED_POWER_ACC_GAMES))
     expect(single.health.ok).toBe(true)
     expect(single.cells.map((c) => c.bits)).toEqual(loaded.artifact.meta.config.accBits)
     for (const cell of single.cells) {
       expect(cell.reads).toBe(cell.games)
-      expect(cell.reads).toBe(36 * loaded.artifact.meta.config.accGames)
+      expect(cell.reads).toBe(36 * single.accGames)
     }
     expect(single.deltas.length).toBe(single.cells.length - 1)
-    expect(single.infReproduction).toEqual({
-      games: 36 * loaded.artifact.meta.config.accGames,
-      deviations: 0,
-    })
+    expect(single.infReproduction).toEqual({ games: 36 * single.accGames, deviations: 0 })
+    // The P8 verdict of record and its annotation family re-derive from the power run alone,
+    // by the UNCHANGED rule; the verdict is whatever the rule says, printed as measured.
+    const p8 = loaded.artifact.verdicts[7]
+    expect(p8).toEqual(
+      computeBoundedSingleVerdict({
+        cells: single.cells,
+        deltas: single.deltas,
+        infReproduction: single.infReproduction,
+      }),
+    )
+    expect(['confirmed', 'refuted', 'mixed']).toContain(p8.verdict)
+    expect(p8.detail).toMatch(/reproduced the corresponding full-strength read exactly/)
     expect(loaded.artifact.multiplicity.map((f) => f.id)).toEqual(['P7', 'P8'])
+    expect(loaded.artifact.multiplicity[1]).toEqual(multiplicityFamilyOf('P8', single.deltas))
     for (const fam of loaded.artifact.multiplicity) {
       expect(fam.comparisons).toBe(3)
       expect(fam.rungs.length).toBe(3)
     }
-    // The committed P7 verdicts and aggregates were carried over byte-identically; the P8
-    // verdict is present and honest.
-    const p8 = loaded.artifact.verdicts.find((v) => v.id === 'P8')
-    expect(p8).toBeDefined()
-    expect(['confirmed', 'refuted', 'mixed']).toContain(p8?.verdict)
-    expect(p8?.detail).toMatch(/reproduced the corresponding full-strength read exactly/)
+  })
+
+  it('retains the 50-seed pilot verbatim, clearly labelled, verdict and family re-derivable', () => {
+    const loaded = loadBoundedArtifact()
+    expect(loaded.ok).toBe(true)
+    if (!loaded.ok) return
+    const pilot = loaded.artifact.accuracySinglePilot
+    expect(pilot.mapping).toBe(SINGLE_READ_MAPPING)
+    expect(pilot.health.ok).toBe(true)
+    for (const cell of pilot.cells) {
+      expect(cell.reads).toBe(36 * loaded.artifact.meta.config.accGames)
+    }
+    expect(pilot.infReproduction).toEqual({
+      games: 36 * loaded.artifact.meta.config.accGames,
+      deviations: 0,
+    })
+    expect(pilot.verdict).toEqual(
+      computeBoundedSingleVerdict({
+        cells: pilot.cells,
+        deltas: pilot.deltas,
+        infReproduction: pilot.infReproduction,
+      }),
+    )
+    expect(pilot.multiplicityFamily).toEqual(multiplicityFamilyOf('P8', pilot.deltas))
+    expect(pilot.note).toMatch(/verdict of record/)
+    expect(pilot.note).toMatch(/within-design/)
+  })
+
+  it('the cross-design block re-derives from the three committed delta families', () => {
+    const loaded = loadBoundedArtifact()
+    expect(loaded.ok).toBe(true)
+    if (!loaded.ok) return
+    const a = loaded.artifact
+    expect(a.crossDesign).toEqual(
+      crossDesignOf(a.accuracy.deltas, a.accuracySinglePilot.deltas, a.accuracySingle.deltas),
+    )
+    expect(a.crossDesign.fromBits).toBe(64)
+    expect(a.crossDesign.toBits).toBe(BOUNDED_INF_BITS)
+    // The effect is the committed P7 64→∞ magnitude; the pilot's post-hoc power at it is the
+    // ~52% the E4b review computed — the number the power run exists to correct.
+    expect(a.crossDesign.effect).toBeCloseTo(0.005278, 5)
+    expect(a.crossDesign.pilot.postHocPower).toBeCloseTo(0.524, 2)
   })
 })
 

@@ -13,8 +13,10 @@
  * Refusals, all `ArtifactError` with a readable path:
  *   - `schemaVersion` other than {@link BOUNDED_SCHEMA_VERSION} — a reader must notice.
  *     (Version 2 added the E4b `accuracySingle` block, the P8 verdict and the `multiplicity`
- *     annotation; a version-1 file predates E4b and is refused so no page silently renders
- *     without the attribution follow-up.)
+ *     annotation. Version 3 — E4b-power — makes the 300-seed power run the P8 verdict of
+ *     record in `accuracySingle`, retains the 50-seed pilot in `accuracySinglePilot`, and
+ *     adds the labelled `crossDesign` block; an earlier file is refused so no page silently
+ *     renders the underpowered pilot as the verdict of record.)
  *   - `ruleSet` other than `us54` — these are us54 results and nothing else's.
  *   - a style id the roster does not carry, anywhere an id keys a value.
  *   - a tier outside the shipped three — the E2 cells are easy/medium/hard and nothing else.
@@ -35,6 +37,9 @@ import type {
   BoundedAccuracy,
   BoundedAccuracyCell,
   BoundedAccuracySingle,
+  BoundedAccuracySinglePilot,
+  BoundedAccuracySinglePower,
+  BoundedCrossDesign,
   BoundedHealthSummary,
   BoundedPrediction,
   BoundedPredictionId,
@@ -387,6 +392,67 @@ function accuracySingleOf(value: unknown, at: string): BoundedAccuracySingle {
   }
 }
 
+/** The E4b-power block (schema 3): the pilot's shape plus the run's own grid parameters. */
+function accuracySinglePowerOf(value: unknown, at: string): BoundedAccuracySinglePower {
+  const o = obj(value, at)
+  return {
+    ...accuracySingleOf(value, at),
+    accGames: num(o.accGames, `${at}.accGames`),
+    accSeedPrefix: str(o.accSeedPrefix, `${at}.accSeedPrefix`),
+  }
+}
+
+/** The retained pilot (schema 3): the committed block plus its verdict, family and label. */
+function accuracySinglePilotOf(value: unknown, at: string): BoundedAccuracySinglePilot {
+  const o = obj(value, at)
+  const family = multiplicityFamily(o.multiplicityFamily, `${at}.multiplicityFamily`)
+  if (family.id !== 'P8') {
+    throw new ArtifactError(
+      `${at}.multiplicityFamily.id: "${family.id}" — the retained pilot carries its own P8 ` +
+        'family and nothing else.',
+    )
+  }
+  const v = verdict(o.verdict, `${at}.verdict`)
+  if (v.id !== 'P8') {
+    throw new ArtifactError(`${at}.verdict.id: "${v.id}" — the retained pilot's verdict is its P8 verdict.`)
+  }
+  return {
+    ...accuracySingleOf(value, at),
+    verdict: v,
+    multiplicityFamily: family,
+    note: str(o.note, `${at}.note`),
+  }
+}
+
+/** The labelled cross-design block (schema 3) — no verdict rule reads anything here. */
+function crossDesignOf(value: unknown, at: string): BoundedCrossDesign {
+  const o = obj(value, at)
+  const rung = (v: unknown, p: string): { delta: number; se: number; seeds: number } => {
+    const r = obj(v, p)
+    return { delta: num(r.delta, `${p}.delta`), se: num(r.se, `${p}.se`), seeds: num(r.seeds, `${p}.seeds`) }
+  }
+  const pilot = obj(o.pilot, `${at}.pilot`)
+  return {
+    fromBits: num(o.fromBits, `${at}.fromBits`),
+    toBits: num(o.toBits, `${at}.toBits`),
+    p7: rung(o.p7, `${at}.p7`),
+    p8: rung(o.p8, `${at}.p8`),
+    diffOfDeltas: num(o.diffOfDeltas, `${at}.diffOfDeltas`),
+    se: num(o.se, `${at}.se`),
+    z: num(o.z, `${at}.z`),
+    pTwoSided: num(o.pTwoSided, `${at}.pTwoSided`),
+    effect: num(o.effect, `${at}.effect`),
+    mde: num(o.mde, `${at}.mde`),
+    postHocPower: num(o.postHocPower, `${at}.postHocPower`),
+    pilot: {
+      se: num(pilot.se, `${at}.pilot.se`),
+      mde: num(pilot.mde, `${at}.pilot.mde`),
+      postHocPower: num(pilot.postHocPower, `${at}.pilot.postHocPower`),
+    },
+    note: str(o.note, `${at}.note`),
+  }
+}
+
 function multiplicityRung(value: unknown, at: string): MultiplicityRung {
   const o = obj(value, at)
   return {
@@ -574,7 +640,9 @@ export function parseBoundedArtifact(text: string, source: string): BoundedResul
     tiers: arr(root.tiers, `${source}.tiers`).map((t, i) => tierCell(t, `${source}.tiers[${i}]`)),
     evidence: arr(root.evidence, `${source}.evidence`).map((c, i) => evidenceCurve(c, `${source}.evidence[${i}]`)),
     accuracy: accuracy(root.accuracy, `${source}.accuracy`),
-    accuracySingle: accuracySingleOf(root.accuracySingle, `${source}.accuracySingle`),
+    accuracySingle: accuracySinglePowerOf(root.accuracySingle, `${source}.accuracySingle`),
+    accuracySinglePilot: accuracySinglePilotOf(root.accuracySinglePilot, `${source}.accuracySinglePilot`),
+    crossDesign: crossDesignOf(root.crossDesign, `${source}.crossDesign`),
     multiplicity: arr(root.multiplicity, `${source}.multiplicity`).map((f, i) =>
       multiplicityFamily(f, `${source}.multiplicity[${i}]`),
     ),

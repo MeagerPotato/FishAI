@@ -5,8 +5,9 @@
  * `node scripts/bounded-analyze.mjs --run lab-out/DIR [--emit PATH] [--adaptive PATH]`
  *
  * Since E4b (SPEC v1.5), what this emits is the BASE artifact — schema 1, the suite's E1–E4
- * sections and the P1–P7 verdicts. The artifact the SITE reads is schema 2: the base extended
- * with the E4b single-seat block by `scripts/bounded-single-analyze.mjs` (which consumes the
+ * sections and the P1–P7 verdicts. The artifact the SITE reads is schema 3: the base extended
+ * with the E4b pilot block and then the E4b-power run of record, both by
+ * `scripts/bounded-single-analyze.mjs` (which consumes the
  * base through `extendBoundedResults` — its docstring states the exact guard coverage: the
  * base's digest is pinned, its predictions authenticated, its derived fields and P1–P7
  * verdicts recomputed, and the carried sections compared after assembly).
@@ -61,7 +62,7 @@ if (!opt.run) {
   process.exit(2)
 }
 const runDir = resolve(process.cwd(), opt.run)
-// No default src/lab/data emission any more: the site reads the E4b-extended schema-2 artifact,
+// No default src/lab/data emission any more: the site reads the E4b-power schema-3 artifact,
 // so the base emitted here would be refused at the boundary. Extend it (see the header).
 const emitPath = opt.emit && opt.emit !== 'false' ? resolve(process.cwd(), opt.emit) : null
 const adaptivePath = resolve(process.cwd(), opt.adaptive ?? 'src/lab/data/adaptive-results.json')
@@ -175,5 +176,5 @@ for (const v of results.verdicts) {
 console.log('')
 console.log(`wrote ${join(runDir, 'bounded-results.json')} (BASE artifact, schema 1)`)
 if (emitPath !== null) console.log(`wrote ${emitPath} (BASE artifact, schema 1)`)
-console.log('the site artifact is schema 2 — extend via: node scripts/bounded-single-analyze.mjs --run <E4b DIR> --base <this base>')
+console.log('the site artifact is schema 3 — extend via: node scripts/bounded-single-analyze.mjs --run <E4b DIR> --base <this base>')
 process.exit(run.health.ok ? 0 : 1)

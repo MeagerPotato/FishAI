@@ -1,10 +1,15 @@
 /**
  * bounded-single-sim.mjs — launcher for E4b, the single-seat attribution follow-up (SPEC v1.5
- * E4b, registered 2026-08-30 before any run; the read-seat mapping is SINGLE_READ_MAPPING in
+ * E4b, registered 2026-08-30 before any run; the read-seat mapping is singleReadMappingText in
  * lib/lab/bounded.ts and is written into the run's meta.notes).
  *
- * `node scripts/bounded-single-sim.mjs [--accGames N] [--workers N] [--chunk N] [--out DIR]
- *    [--jsonl false] [--quiet true]`
+ * `node scripts/bounded-single-sim.mjs [--power true] [--accGames N] [--accSeedPrefix P]
+ *    [--workers N] [--chunk N] [--out DIR] [--jsonl false] [--quiet true]`
+ *
+ * `--power` plays the registered E4b-power grid (SPEC v1.5 E4b-power, registered 2026-08-30
+ * after the E4b review and before any run): BOUNDED_POWER_ACC_GAMES seeds per pairing on the
+ * fresh BOUNDED_POWER_SEED_PREFIX seed list, disjoint from the pilot's — the mapping, bits
+ * grid, estimator and P8 rule unchanged. Without it the pilot grid plays (50 on clsacc-v1).
  *
  * Deliberately thin, exactly like bounded-sim.mjs: `scripts/` is linted but NOT typechecked,
  * so this file only spawns `node:worker_threads` and writes files. The grid is E4's exactly —
@@ -37,6 +42,8 @@ if (major < 23 || (major === 23 && minor < 6)) {
 }
 
 const {
+  BOUNDED_POWER_ACC_GAMES,
+  BOUNDED_POWER_SEED_PREFIX,
   DEFAULT_BOUNDED_CONFIG,
   assembleBoundedSingleRun,
   boundedSingleGamesTotal,
@@ -63,13 +70,18 @@ function args(argv) {
 }
 
 const opt = args(process.argv.slice(2))
+const power = opt.power === 'true'
 const config = {
   ...DEFAULT_BOUNDED_CONFIG,
-  accGames: Number(opt.accGames ?? DEFAULT_BOUNDED_CONFIG.accGames),
+  accGames: Number(opt.accGames ?? (power ? BOUNDED_POWER_ACC_GAMES : DEFAULT_BOUNDED_CONFIG.accGames)),
+  accSeedPrefix: opt.accSeedPrefix ?? (power ? BOUNDED_POWER_SEED_PREFIX : DEFAULT_BOUNDED_CONFIG.accSeedPrefix),
   chunkPairs: Number(opt.chunk ?? DEFAULT_BOUNDED_CONFIG.chunkPairs),
 }
 const workers = Math.max(1, Number(opt.workers ?? defaultWorkers(cpus().length)))
-const outDir = resolve(process.cwd(), opt.out ?? `lab-out/bounded-single-${config.accGames}`)
+const outDir = resolve(
+  process.cwd(),
+  opt.out ?? `lab-out/bounded-single-${config.accSeedPrefix}-${config.accGames}`,
+)
 const quiet = opt.quiet === 'true'
 
 function git(...a) {
@@ -85,8 +97,9 @@ const engineCommit = `${head}${dirty ? '-dirty' : ''}`
 
 const tasks = planBoundedSingleTasks(config)
 console.log(
-  `bounded single (E4b): ${config.variant} · ${boundedSingleGamesTotal(config)} games ` +
-    `(${config.accBits.length} budgets x 36 pairings x ${config.accGames}g, one bounded read seat per game; ` +
+  `bounded single (E4b${power ? '-power' : ''}): ${config.variant} · ${boundedSingleGamesTotal(config)} games ` +
+    `(${config.accBits.length} budgets x 36 pairings x ${config.accGames}g on ${config.accSeedPrefix}, ` +
+    'one bounded read seat per game; ' +
     `∞ games replayed all-bare as the health gate) · ${tasks.length} tasks · ${workers} workers · ` +
     `${cpus().length} cpus · engine ${engineCommit}`,
 )
