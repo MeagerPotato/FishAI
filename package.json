@@ -19,7 +19,9 @@
     "lab": "node scripts/style-sim.mjs",
     "analyze": "node scripts/style-analyze.mjs",
     "adaptive": "node scripts/adaptive-sim.mjs",
-    "adaptive:analyze": "node scripts/adaptive-analyze.mjs"
+    "adaptive:analyze": "node scripts/adaptive-analyze.mjs",
+    "bounded": "node scripts/bounded-sim.mjs",
+    "bounded:analyze": "node scripts/bounded-analyze.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",
