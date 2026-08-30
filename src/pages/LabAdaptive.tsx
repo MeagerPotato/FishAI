@@ -54,6 +54,7 @@ import {
 import { caseFromSearch } from '../lab/artifact.ts'
 import { count, interval, isoDate, pct, rate } from '../lab/format.ts'
 import { checkRules, shortHash } from '../lab/rules.ts'
+import { LabContents, type LabSection } from '../lab/ui/LabContents.tsx'
 import { LabShell, withCase } from '../lab/ui/LabShell.tsx'
 import { ArtifactBroken, RulesMismatch } from '../lab/ui/Refusal.tsx'
 import { ScrollRegion } from '../lab/ui/ScrollRegion.tsx'
@@ -74,6 +75,87 @@ const VERDICT_MARK: Record<VerdictValue, { cls: string; word: string }> = {
   refuted: { cls: s.markFail, word: 'Refuted' },
   mixed: { cls: s.markUnknown, word: 'Mixed' },
 }
+
+const CONTENTS: readonly LabSection[] = [
+  { id: 'how-to-read', label: 'How to read this page', note: 'Six terms, in plain language' },
+  { id: 'mechanism', label: 'The mechanism', note: 'Watch, classify, counter — and the counter is fixed' },
+  { id: 'gauntlet', label: 'The gauntlet', note: 'Nine pure opponents against the punter benchmark' },
+  { id: 'mixed', label: 'The mixed screen', note: 'Twenty-four mixed tables, one paired answer' },
+  { id: 'oracle', label: 'The oracle ablation', note: 'What a perfect read would have bought' },
+  { id: 'classifier', label: 'The classifier', note: 'Accuracy measured on its own terms' },
+  { id: 'usage', label: 'What it played', note: 'Every delegated decision, warmup and warm' },
+  { id: 'verdict', label: 'The verdict', note: 'P1–P4, stated before the run' },
+  { id: 'sources', label: 'Sources', note: 'The run, its health, its calibrations' },
+]
+
+/**
+ * The plain-language on-ramp, in the register `/lab`'s own "How to read" section established.
+ *
+ * Only the terms THIS page's tables and prose actually use, defined and nothing more. The
+ * measurement vocabulary shared with the rest of the lab — duplicate pair, score rate — is
+ * repeated here rather than linked, because a reader who lands on `/lab/adaptive` from a search
+ * result should not have to open a second 19,000px page to find out what a pair is.
+ */
+const HOW_TO_READ = [
+  {
+    ix: '01',
+    title: 'A duplicate pair, and a score rate',
+    role: 'Method',
+    body:
+      'Each seeded deal is played twice with the teams swapped and scored as one observation — a ' +
+      'pair — so the luck of the cards cancels. A score rate is the share of games a team won, 0 ' +
+      'to 1, where .500 is an even match.',
+  },
+  {
+    ix: '02',
+    title: 'The counter table and the best response',
+    role: 'Definition',
+    body:
+      'A measured 9×9 table of what each style scores against each other style. The “best ' +
+      'response” to an opponent is the row of that table with the highest score in the ' +
+      'opponent’s column; the “runner-up” is the second highest, and the margin between them is ' +
+      'how far the choice sits from flipping.',
+  },
+  {
+    ix: '03',
+    title: 'Warmup and warm',
+    role: 'Mechanism',
+    body:
+      'The engine has no read at the start of a game, so it plays a fixed anchor style until the ' +
+      'public log holds roughly 60 observed events. Decisions before that point are “warmup”; ' +
+      'decisions after it, driven by the posterior over opponent styles, are “warm”.',
+  },
+  {
+    ix: '04',
+    title: 'Δ, SE and z',
+    role: 'Uncertainty',
+    body:
+      'Δ is a difference between two arms, and every Δ column on this page names its own ' +
+      'direction in the header. SE is how far that difference would wobble on a fresh run of the ' +
+      'same design; z is Δ divided by its SE — roughly how many SEs from zero the difference ' +
+      'sits. Around ±2 is the conventional line, and a family of simultaneous tests needs a ' +
+      'stricter one, which the gauntlet note states.',
+  },
+  {
+    ix: '05',
+    title: 'Top-1 accuracy',
+    role: 'Classifier',
+    body:
+      'The share of seat reads where the classifier’s single most likely label was the true ' +
+      'style. Nine styles means chance is 1 in 9, about .111 — the floor every accuracy figure ' +
+      'on this page should be read against.',
+  },
+  {
+    ix: '06',
+    title: 'A pre-registered prediction',
+    role: 'Decision rule',
+    body:
+      'P1–P4 were written down before the run, with the rule that would score each one fixed ' +
+      'alongside. A prediction that failed is printed as refuted and a prediction that half held ' +
+      'is printed as mixed, with both halves shown — never rewritten after the fact to match ' +
+      'what the run returned.',
+  },
+]
 
 /** One-line names for the pre-registered predictions; the full text sits in the detail. */
 const PREDICTION_LABEL: Record<string, string> = {
@@ -225,6 +307,17 @@ export function LabAdaptive() {
         <div style={{ marginTop: 'var(--fa-sp-head)' }}>
           <AdaptiveStamp artifact={artifact} shipped={check.shipped} ok={check.ok} />
         </div>
+
+        <LabContents sections={CONTENTS} />
+      </Section>
+
+      {/* ---- how to read this page -------------------------------------------------------- */}
+      <Section id="how-to-read" badge="How to read">
+        <SectionHead
+          lines={['Six terms,', 'and the result *reads itself*.']}
+          sub="Nothing below is dumbed down, and none of it needs prior jargon either. These six are the terms this page's tables and prose actually use; the report's glossary carries the rest of the lab's vocabulary."
+        />
+        <Board items={HOW_TO_READ} />
       </Section>
 
       {/* ---- the mechanism --------------------------------------------------------------- */}
@@ -263,13 +356,13 @@ export function LabAdaptive() {
             </caption>
             <thead>
               <tr>
-                <th scope="col">Against</th>
+                <th scope="col">Opponent column</th>
                 <th scope="col">Best response</th>
-                <th scope="col">Its score</th>
-                <th scope="col">SE</th>
+                <th scope="col">Best-response score rate</th>
+                <th scope="col">Best-response SE</th>
                 <th scope="col">Runner-up</th>
-                <th scope="col">Its score</th>
-                <th scope="col">Margin</th>
+                <th scope="col">Runner-up score rate</th>
+                <th scope="col">Margin (best − runner-up)</th>
               </tr>
             </thead>
             <tbody>
@@ -316,16 +409,16 @@ export function LabAdaptive() {
             </caption>
             <thead>
               <tr>
-                <th scope="col">Opponent</th>
-                <th scope="col">Pairs</th>
-                <th scope="col">Adaptive</th>
-                <th scope="col">SE</th>
-                <th scope="col">CI 95%</th>
-                <th scope="col">Punter row</th>
-                <th scope="col">SE</th>
-                <th scope="col">Δ</th>
+                <th scope="col">Opponent style</th>
+                <th scope="col">Duplicate pairs</th>
+                <th scope="col">Adaptive score rate</th>
+                <th scope="col">Adaptive SE</th>
+                <th scope="col">Adaptive CI 95%</th>
+                <th scope="col">Punter score rate</th>
+                <th scope="col">Punter SE</th>
+                <th scope="col">Δ (adaptive − punter)</th>
                 <th scope="col">Δ SE</th>
-                <th scope="col">z</th>
+                <th scope="col">z (Δ ÷ Δ SE)</th>
               </tr>
             </thead>
             <tbody>
@@ -408,10 +501,10 @@ export function LabAdaptive() {
               <thead>
                 <tr>
                   <th scope="col">Opposing composition</th>
-                  <th scope="col">Pairs</th>
-                  <th scope="col">Adaptive</th>
-                  <th scope="col">Punter</th>
-                  <th scope="col">Δ</th>
+                  <th scope="col">Duplicate pairs</th>
+                  <th scope="col">Adaptive score rate</th>
+                  <th scope="col">Punter score rate</th>
+                  <th scope="col">Δ (adaptive − punter)</th>
                   <th scope="col">Δ SE</th>
                 </tr>
               </thead>
@@ -461,12 +554,12 @@ export function LabAdaptive() {
             </caption>
             <thead>
               <tr>
-                <th scope="col">Opponent</th>
-                <th scope="col">Pairs</th>
-                <th scope="col">Classifier arm</th>
-                <th scope="col">Oracle arm</th>
-                <th scope="col">Δ</th>
-                <th scope="col">SE</th>
+                <th scope="col">Opponent style</th>
+                <th scope="col">Duplicate pairs</th>
+                <th scope="col">Classifier-arm score rate</th>
+                <th scope="col">Oracle-arm score rate</th>
+                <th scope="col">Δ (oracle − classifier)</th>
+                <th scope="col">Δ SE</th>
               </tr>
             </thead>
             <tbody>
@@ -522,8 +615,8 @@ export function LabAdaptive() {
                 <tr>
                   <th scope="col">True style</th>
                   <th scope="col">Seat reads</th>
-                  <th scope="col">Top-1</th>
-                  <th scope="col">vs chance</th>
+                  <th scope="col">Top-1 accuracy</th>
+                  <th scope="col">Top-1 − chance (1/9)</th>
                 </tr>
               </thead>
               <tbody>
@@ -607,10 +700,10 @@ export function LabAdaptive() {
             </caption>
             <thead>
               <tr>
-                <th scope="col">Opponent</th>
+                <th scope="col">Opponent style</th>
                 <th scope="col">Warmup decisions</th>
                 <th scope="col">Warm decisions</th>
-                <th scope="col">Warmup share</th>
+                <th scope="col">Warmup share of decisions</th>
                 <th scope="col">Warmup delegated to</th>
                 <th scope="col">Warm delegated to</th>
               </tr>
