@@ -23,6 +23,7 @@ const LabLive = lazy(() => import('./pages/LabLive.tsx'))
 const Papers = lazy(() => import('./pages/Papers.tsx'))
 const PlayHub = lazy(() => import('./pages/PlayHub.tsx'))
 const PlayTable = lazy(() => import('./pages/PlayTable.tsx'))
+const RoomPage = lazy(() => import('./play/room/RoomPage.tsx'))
 const SystemDemo = lazy(() => import('./components/demo/SystemDemo.tsx'))
 
 /**
@@ -71,6 +72,13 @@ export function App() {
         <Route path="/papers" element={<Papers />} />
         <Route path="/play" element={<PlayHub />} />
         <Route path="/play/table" element={<PlayTable />} />
+        {/*
+          The room's code lives in the path, not the query, because the whole point is that
+          the URL is the invitation — `/play/room/ABC123` is a thing you can read aloud.
+          The bare `/play/room` is the create-or-join surface.
+        */}
+        <Route path="/play/room" element={<RoomPage />} />
+        <Route path="/play/room/:code" element={<RoomPage />} />
         <Route path="/design" element={<SystemDemo />} />
         <Route path="*" element={<Navigate to="/lab" replace />} />
       </Routes>
