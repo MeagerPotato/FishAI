@@ -9,6 +9,20 @@
    It is made by SHRINKING the one typeface and tracking it out, not by adding
    a monospace family. 10.5px, uppercase, 0.10-0.18em. That is the whole trick,
    and adding a second family would dissolve it.
+
+   TWO FORMS, and the distinction is the point (see Eyebrow.tsx):
+
+     .eyebrow          the micro form — 10.5px caps, tracked out. A SERIAL, a
+                       legal line, a column head, a stat caption. Text you
+                       read once to place something, not text you read.
+     .eyebrowHeading   the heading form — 15px, sentence case, weight 500,
+                       0.04em, ink. A real section heading.
+
+   The micro form was carrying both jobs. 10.5px ALL-CAPS at weight 400 and
+   0.14em is a legal-serial voice, and it was announcing whole sections of
+   the site — `<Eyebrow as="h2">` in twenty places. Caps cost roughly 15% of
+   reading speed on their own; at 10.5px with a serial's tracking, a heading
+   in that voice is a label the eye skips rather than a heading it lands on.
    ========================================================================== */
 
 .eyebrow {
@@ -60,6 +74,29 @@
 
 .eyebrowStrong {
   font-weight: 500;
+}
+
+/**
+ * THE HEADING FORM.
+ *
+ * Declared after the tone and track rules so it wins on source order at equal
+ * specificity: a heading is ink, and it is not tracked out like a serial. The
+ * component does not emit a track class in this mode either, so the two
+ * mechanisms agree rather than racing.
+ *
+ * `display: block` rather than the micro form's `inline-block` — this is a
+ * heading, and a heading that shrink-wraps its text mis-measures its own
+ * `text-wrap: balance` and its `max-width` cap.
+ */
+.eyebrowHeading {
+  display: block;
+  font-family: var(--fa-sans);
+  font-size: var(--fa-fs-sm);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  text-transform: none;
+  color: var(--fa-ink);
 }
 
 /* ==========================================================================
@@ -249,10 +286,14 @@
   background-color: var(--fa-amber-lt);
 }
 
+/* The ring is a CONTROL boundary, so it takes --fa-line-control (3.12:1 at
+   worst, on --fa-tile) rather than --fa-line (1.40:1). A ghost button whose
+   only edge is a 1.40:1 hairline on a fill 1.05:1 from its own panel does not
+   read as a button at all — see tokens.css, CONTROL BOUNDARY. */
 .btnGhost {
   background-color: transparent;
   color: var(--fa-ink);
-  box-shadow: inset 0 0 0 1px var(--fa-line);
+  box-shadow: inset 0 0 0 1px var(--fa-line-control);
 }
 
 .btnGhost:hover {
@@ -262,7 +303,7 @@
 .btnLine {
   background: none;
   color: var(--fa-ink);
-  box-shadow: inset 0 0 0 1px var(--fa-frame);
+  box-shadow: inset 0 0 0 1px var(--fa-line-control);
 }
 
 .btnLine:hover {
@@ -270,8 +311,33 @@
   box-shadow: inset 0 0 0 1px var(--fa-ink-3);
 }
 
+/**
+ * DISABLED IS A GROUND, NOT AN OPACITY.
+ *
+ * `opacity: 0.32` faded the whole control, LABEL INCLUDED. On the amber
+ * primary that put the label at 1.73:1 against its own fill in light and
+ * 2.08:1 in dark — and on /play/table that label is the instruction for the
+ * turn ("Pick a card to ask for"), which is exactly the text a reader needs
+ * most at the moment it is unavailable.
+ *
+ * So the state moves off the label entirely and onto three non-colour
+ * devices the system already owns: the --fa-hatch ground (the same hatching
+ * used for "not live" elsewhere), the control ring, and `not-allowed`. The
+ * label itself stays at full ink.
+ *
+ * WHY --fa-ink AND NOT --fa-ink-2. The audit named --fa-ink-2 ("7.1:1"), but
+ * that figure is against a FLAT ground. Measured against the hatch this rule
+ * prescribes, --fa-ink-2 falls to 4.82:1 on a light stripe and 3.51:1 on a
+ * dark one — the dark theme's hatch is 0.196 alpha and LIGHTENS the ground
+ * toward the text. --fa-ink holds 15.13:1 / 14.22:1 flat and 12.9:1 / 7.90:1
+ * where a stripe crosses a glyph, in light and dark respectively. Since the
+ * hatch is what now carries the state, the label does not also have to.
+ */
 .btn:disabled {
-  opacity: 0.32;
+  background-color: var(--fa-tile);
+  background-image: var(--fa-hatch);
+  color: var(--fa-ink);
+  box-shadow: inset 0 0 0 1px var(--fa-line-control);
   cursor: not-allowed;
 }
 
@@ -291,6 +357,20 @@ a:hover > .arrowE {
 .btn:hover .arrowSw,
 a:hover > .arrowSw {
   transform: rotate(180deg) translate(3px, -3px);
+}
+
+/* Nothing travels on a control that cannot be used. Declared after the hover
+   block so it wins on source order at equal specificity. */
+.btn:disabled:hover .arrow {
+  transform: none;
+}
+
+.btn:disabled:hover .arrowE {
+  transform: rotate(45deg);
+}
+
+.btn:disabled:hover .arrowSw {
+  transform: rotate(180deg);
 }
 
 /* A row of buttons. Stacks full-width on a phone, where two half-width
@@ -319,12 +399,15 @@ a:hover > .arrowSw {
    TEXT LINK
    ========================================================================== */
 
+/* The rule under a text link is the affordance, not a seam: it is the only
+   thing distinguishing the link from the ink-coloured prose around it, so it
+   takes the control boundary rather than --fa-line's 1.40:1. */
 .tlink {
   display: inline-flex;
   align-items: center;
   gap: 9px;
   padding-bottom: 4px;
-  border-bottom: 1px solid var(--fa-line);
+  border-bottom: 1px solid var(--fa-line-control);
   font-size: var(--fa-fs-sm);
   font-weight: 500;
   color: var(--fa-ink);
