@@ -374,9 +374,17 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
           <Eyebrow tone="muted" track="head" as="h2">
             Public log — newest first
           </Eyebrow>
+          {/*
+            This used to promise "the whole information channel under row 17", which stopped being
+            true the moment the two-ask view became the default — the reader would have been told
+            they were seeing everything while looking at a deliberately restricted log. What row 17
+            actually describes is what the *bots* read, and that is still worth saying, because the
+            asymmetry is the point: they reason over the full channel whether or not you do.
+          */}
           <p className={lab.figNote} style={{ margin: '10px 0 12px' }}>
-            Every ask, every result, every declare — the whole information channel under row 17,
-            and everything the bots reason over. Declines advance the window and emit nothing.
+            Every ask, every result, every declare. The bots reason over all of it under row 17;
+            what you are shown depends on the view you choose below. Declines advance the window
+            and emit nothing.
           </p>
           <PublicLog events={state.log} names={names} />
         </div>
