@@ -28,7 +28,7 @@ import type { StyleId } from '../../lib/engine/index.ts'
 import { STYLE_IDS, STYLE_ROSTER } from '../../lib/engine/index.ts'
 import { Button, Eyebrow, Section, SectionHead, TextLink, buttonRow } from '../components/index.ts'
 import { caseFromSearch } from '../lab/artifact.ts'
-import { LabShell } from '../lab/ui/LabShell.tsx'
+import { LabShell, replayHref } from '../lab/ui/LabShell.tsx'
 import lab from '../lab/ui/lab.module.css'
 import { deriveStyles, freshSeed, parseBits } from '../play/params.ts'
 import s from '../play/play.module.css'
@@ -281,7 +281,14 @@ export function PlayHub() {
             the report
           </TextLink>
           ; a stored game replayed through the engine, declare windows and all, lives at{' '}
-          <TextLink href="/lab/replay/blitz-vs-banker" arrow={false}>
+          {/*
+            Derived from the loaded artifact, never written down. This link used to name
+            `blitz-vs-banker`, an id that exists only in the legacy fixture — so on the default
+            case it landed on "No replay is stored under that id." `replayHref` reads the first
+            replay out of whichever artifact is actually loaded, which is the same helper the
+            nav and the footer already use, and it carries `?case=` across with it.
+          */}
+          <TextLink href={replayHref(which)} arrow={false}>
             the replay page
           </TextLink>
           . The table you just configured is the same engine with you in it — and when your game

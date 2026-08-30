@@ -81,6 +81,9 @@ import { ScrollRegion } from '../lab/ui/ScrollRegion.tsx'
 import { VerdictBody } from '../lab/ui/Verdict.tsx'
 import s from '../lab/ui/lab.module.css'
 
+/** The public repository, so the Sources list can link the documents it names. */
+const REPO = 'https://github.com/MeagerPotato/FishAI'
+
 /**
  * Family -> display label.
  *
@@ -659,15 +662,37 @@ export function LabReport() {
         <div className={s.split}>
           <div className={s.stack}>
             <h3 className={s.criterionLabel}>Documents</h3>
+            {/*
+              These are links, not names. The deck above promises that nothing here is computed
+              from anything the reader cannot open, and a plain-text list of filenames is that
+              promise unkept — the reader has to go and find them.
+            */}
             <p className={s.figNote}>
-              <strong>{RULES_FILE}</strong> — the pinned rule set, hashed in the browser to{' '}
+              <TextLink href={`${REPO}/blob/main/${RULES_FILE}`}>{RULES_FILE}</TextLink> — the
+              pinned rule set, hashed in the browser to{' '}
               <span className={s.mono}>{shortHash(check.shipped)}</span>.<br />
-              <strong>BOT_LAB.md</strong> — §4 the metrics, §4.4 the decision rule this page
-              applies, §5 the experimental design, §7.1 the data contract.
+              <TextLink href={`${REPO}/blob/main/BOT_LAB.md`}>BOT_LAB.md</TextLink> — §4 the
+              metrics, §4.4 the decision rule this page applies, §5 the experimental design, §7.1
+              the data contract.
               <br />
-              <strong>STYLES.md</strong> — the nine-style roster and its parameter vectors.
+              <TextLink href={`${REPO}/blob/main/STYLES.md`}>STYLES.md</TextLink> — the
+              nine-style roster and its parameter vectors.
               <br />
-              <strong>SITE_SPEC.md</strong> — the routes, the design system, the accent budget.
+              <TextLink href={`${REPO}/blob/main/SITE_SPEC.md`}>SITE_SPEC.md</TextLink> — the
+              routes, the design system, the accent budget.
+            </p>
+          </div>
+          <div className={s.stack}>
+            <h3 className={s.criterionLabel}>The papers</h3>
+            <p className={s.figNote}>
+              This page&rsquo;s tournament, its verdict and both of its measured caveats are
+              written up in full — with the abstracts, the questions each one asks, the PDFs and
+              the LaTeX sources — at{' '}
+              <TextLink href="/papers">the research papers</TextLink>. The three that bear on
+              this page directly are <em>Measuring Play Style Without Skill</em> (the roster and
+              this matrix), <em>The Inert Axis</em> (why the declare-threshold labels do not
+              describe a knob that fires) and <em>The Contained Book</em> (the turn-pass that is
+              live in the v2 re-run and worth nothing).
             </p>
           </div>
           <div className={s.stack}>
