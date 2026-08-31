@@ -53,15 +53,34 @@ import type {
 export const ADAPTIVE_ID = 'fishai-v1'
 export type LivePolicyId = StyleId | typeof ADAPTIVE_ID
 
-/** The ten picks: the measured roster plus the adaptive engine. */
+/**
+ * The ten picks: the measured roster plus the adaptive engine.
+ *
+ * All ten defuse. `defuse: 1` sits on the `BALANCED` base in
+ * [roster.ts](../../../lib/engine/bots/roster.ts) that every style spreads from, so v2.0's
+ * defusal term is live in all nine roster picks, and the adaptive pick inherits it through
+ * whichever style it delegates to. The nine names are names of *styles*, not of an engine
+ * version: a pick labelled "Blitz" is Blitz as v2.0 plays it.
+ *
+ * That is what keeps the reproduction claim above true rather than breaking it. The default
+ * committed matrix (`style-results.v2.json`) and the counter table the adaptive pick reads were
+ * both re-measured against this same knob ladder, defusal included, so a live cell still lines
+ * up with the committed cell of the same name. The older cases reachable by `?case=` predate the
+ * term and do not.
+ */
 export const LIVE_POLICY_IDS: readonly LivePolicyId[] = [...STYLE_IDS, ADAPTIVE_ID]
 
 export function isLivePolicyId(id: string): id is LivePolicyId {
   return id === ADAPTIVE_ID || (STYLE_IDS as readonly string[]).includes(id)
 }
 
+/**
+ * The pick's name in the UI. The roster styles print their roster label; the adaptive pick names
+ * its architecture (v1.0) and the concession term every style now carries (v2.0), the same two
+ * halves `ADAPTIVE_LABEL` prints at the play table.
+ */
 export function livePolicyLabel(id: LivePolicyId): string {
-  return id === ADAPTIVE_ID ? 'FishAI v1.0 (adaptive)' : STYLE_ROSTER[id].label
+  return id === ADAPTIVE_ID ? 'FishAI v1.0 adaptive · v2.0 defusal' : STYLE_ROSTER[id].label
 }
 
 /* -- the run configuration ---------------------------------------------------------------- */

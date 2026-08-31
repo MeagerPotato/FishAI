@@ -17,7 +17,8 @@
  *
  * `?v=` used to select between the v0.5 roster and the v1.0 adaptive engine. v0.5 is retired
  * from play (policies.ts), so `?v=05` names a mode that no longer exists. `retiredMode` reports
- * it and /play/table says so, because the alternative — dealing v1.0 under the same seed — is
+ * it and /play/table says so, because the alternative — dealing the adaptive engine under the
+ * same seed — is
  * the one failure mode this whole file exists to prevent. A link that promises a reproducible
  * game must not quietly reproduce a DIFFERENT one: the seed would still be honoured, the styles
  * would still be named in the URL, and every card would fall somewhere else. Better to stop and

@@ -276,7 +276,9 @@ export function LabBounded() {
             */}
             <p className={s.figNote}>
               The ladder is measured here, not played: the table runs the v1.0 adaptive engine at
-              full memory, and the bit budgets on this page belong to the simulations below.
+              full memory — with v2.0&rsquo;s defusal term live, which this page&rsquo;s ladder
+              was measured without — and the bit budgets on this page belong to the simulations
+              below.
             </p>
           </Reveal>
         </div>
@@ -946,8 +948,9 @@ export function LabBounded() {
           <TextLink href={withCase('/lab', which)}>The style report</TextLink> carries the
           nine-style roster this page&rsquo;s policies come from. And{' '}
           <TextLink href="/play">the table</TextLink> plays the v1.0 adaptive engine at full
-          memory — the budgets on this page are a property of these simulations, not a dial a
-          player turns.
+          memory, over roster styles that now carry v2.0&rsquo;s defusal term — the budgets on
+          this page are a property of these simulations, not a dial a player turns, and the ladder
+          itself was measured before that term existed.
         </p>
         <p className={s.figNote}>
           Method vocabulary — duplicate pair, score rate, standard error, and this page&rsquo;s

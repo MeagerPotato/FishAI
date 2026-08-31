@@ -8,6 +8,10 @@
  * response to everything is Punter, so its adaptivity matters mainly against off-roster
  * opponents: the human.
  *
+ * The style it delegates to carries v2.0's defusal term (`defuse: 1` sits on the roster's shared
+ * base), so the seat is v1.0 architecture running the v2.0 concession layer's active half. The
+ * label states both, and policies.ts explains why neither version alone would be honest.
+ *
  * ## What this page used to be
  *
  * Two mode cards. v0.5 seated five fixed roster styles chosen here, optionally under a v1.5 bit
@@ -22,8 +26,8 @@
  * Everything, as before: `seed`, `names`, `pace`. The URL is the whole configuration, so a
  * shared link reproduces the exact table — the only thing it cannot reproduce is you.
  *
- * Amber budget: with v0.5's card gone, the one primary on this page is the v1.0 launch button.
- * Everything else is `ghost`/`line`.
+ * Amber budget: with v0.5's card gone, the one primary on this page is the adaptive launch
+ * button. Everything else is `ghost`/`line`.
  */
 import { useState } from 'react'
 import { useLocation } from 'react-router-dom'
@@ -120,10 +124,17 @@ export function PlayHub() {
             and 4; seats 1, 3 and 5 play against you.
           </p>
           <p className={lab.figNote}>
+            The two versions in the label are both real. The <em>architecture</em> is v1.0 —
+            observe, classify, best-respond — and none of that machinery has changed. What has
+            changed is the styles it plays: every roster entry now carries v2.0&apos;s defusal
+            term, so a bot that has watched you show a basis in a set it holds cards of will go
+            after that card to take the licence back.
+          </p>
+          <p className={lab.figNote}>
             One measured caveat, stated where the launch button is rather than in a footnote: over
             the nine-style roster the measured best response to every style is Punter, so a warm
-            v1.0 bot converges there. What its adaptivity is actually for is opponents the matrix
-            never measured — you.
+            adaptive bot converges there. What its adaptivity is actually for is opponents the
+            matrix never measured — you.
           </p>
 
           <div className={s.picker}>
