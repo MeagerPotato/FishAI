@@ -122,6 +122,9 @@ Documents:
 | [CONTAINMENT.md](CONTAINMENT.md) | The contained-book result: why an unclaimed team-held book is a resource |
 | [ADAPTIVE.md](ADAPTIVE.md) | FishAI v1.0 — observe → classify → best-respond, the dominance degeneracy, and the measured verdict |
 | [BOUNDED.md](BOUNDED.md) | FishAI v1.5 — memory in bits, the ladder that prices the tiers, and the P7/P8 attribution record |
+| [CONCESSION.md](CONCESSION.md) | FishAI v2.0 — what a conceded turn costs, why the off-limits rule loses, and why inverting it wins |
+| [ASKING.md](ASKING.md) | Who to ask and for what: the inference soundness audit, ask calibration, and the full ask matrix |
+| [CROSSPLAY.md](CROSSPLAY.md) | FishAI played inside a third-party engine against its bots, and the foreign-engine replication |
 | [SITE_SPEC.md](SITE_SPEC.md) | The results site |
 
 The `papers/` directory carries six research papers in LaTeX (v0.5, v1.0, v1.5, the
