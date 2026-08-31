@@ -1,0 +1,1252 @@
+\documentclass[11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{microtype}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
+
+\hypersetup{pdftitle={FishAI v2.0: The Three-Sided Ask},pdfauthor={Allen Hsieh}}
+
+% Float packing: let tables share pages with more text instead of drifting.
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.6}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.8}
+\setcounter{totalnumber}{4}
+\setcounter{topnumber}{3}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\usff}{\code{us54}}
+
+\title{FishAI v2.0: The Three-Sided Ask\\ Refuting an Avoidance Rule and Shipping Its Inverse}
+\author{Allen Hsieh\\[2pt] {\small FishAI project}}
+\date{August 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent Every ask in Literature (Canadian Fish) is three things at once: a bet on a card, a
+\emph{broadcast} --- the holding licence of \usff{} row 6 makes an ask publish that the asker holds
+a card of the named set --- and a \emph{concession}, because row 10 hands the turn to whoever was
+asked on a miss. The engine has only ever scored the first. The project's owner asked for
+``off-limits'' reasoning: identify the opponents who would punish a conceded turn, and refuse to ask
+them. Implemented as a penalty on the miss branch and measured on duplicate deals against a control
+that reproduces the shipped decision function byte-for-byte, it \textbf{loses} $4.5$ to $11.7$
+points of win rate, monotonically worse as the appetite rises ($-0.52$ to $-1.61$ sets per duplicate
+pair), while an information-free perturbation of the same magnitude is free ($-0.12 \pm 0.44$ at
+matched size). The cause is structural and is this paper's central idea: row 6 makes threat and
+opportunity \emph{the same fact}. A seat is dangerous exactly when it holds a card of a set this
+team is invested in, which is what makes it the seat most likely to hold the card this team wants
+--- $\mathrm{corr}(\text{threat}, \text{best available hit probability}) = +0.249$ over $33{,}595$
+observations, mean best $p$ of $0.471$ at high-threat seats against $0.326$ elsewhere. The sound
+response is therefore not avoidance but \textbf{defusal}: ask \emph{into} the set the dangerous seat
+has published a basis in, take the card its reach rests on, and keep the turn under row 9. Same
+threat model, opposite prescription, and it wins: $+1.43$ and $+1.58 \pm 0.32$ sets per duplicate
+pair on two held-out banks, positive at all nine roster styles, $+1.08$ to $+1.96$ against opponents
+that also defuse, and --- the validity result that matters most --- $+1.55$ to $+1.75$ inside a
+third party's engine against their bots, with one knob moved. Most of the paper is negative.
+Signalling is flat and its one positive arm failed to replicate ($-0.013 \pm 0.033$ at $1{,}500$
+pairs); stalling is inert when weak and $-1.14 \pm 0.19$ sets when driven hard; the turn-handoff
+request is built and refuted, the shipped hand-size rule already picking the best teammate $84.8\%$
+of the time with $73.1\%$ of those decisions carrying no signal at all; and a contained-pass aim fix
+measured below the instrument's floor and was \emph{reverted rather than shipped}, because a
+listed-but-inert knob contaminates a measured vector. Concealment is a counter-weapon worth $+0.97
+\pm 0.27$ added to defusal against defusing opponents, and \emph{worse than plain when played
+alone}. This project's own intransitive-triangle claim is refuted at $4{,}000$ pairs per edge on two
+independent bank sets --- the $2\times2$ is a strict total order $DC > D > P > C$ --- and replaced
+by an opponent-dependent argmax worth one bit and up to $+0.29 \pm 0.14$. Two engine defects are
+reported: \code{missTarget: 'fewest'} has the wrong sign (hand size correlates $-0.147$ with the
+cards a conceded seat takes, against the licence estimator's $+0.421$), and \code{style.signalling}
+is unreachable under \usff{}. Two facts are stated rather than buried: the certain-hit gate exists
+because an adversarial pre-commit review found the defusal credit could displace a certain hit ($9$
+occurrences over $150$ games $\times$ $9$ styles against $0$ for the control), and the project's own
+detection-floor characterisation reclassifies two of this paper's nulls as non-measurements rather
+than zeros.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+An ask in Literature is a question, and the engine has always treated it as one: rank the legal asks
+by the probability that the named card is where you think it is, filter the long shots, break the
+ties, play the argmax \cite{v05paper}. That model is correct as far as it goes, and it goes about a
+third of the way. Under the \usff{} dialect \cite{rules} the same ask does two other things, both
+consequential, neither scored. It \textbf{broadcasts}: row 6 permits an ask only into a set the
+asker holds a card of and row 7 forbids naming a card you hold, so every ask publishes that the
+asker holds a card of this set and lacks this one --- the only reliable public fact about a hidden
+hand in this game, and what the engine's whole inference layer is built on \cite{obspaper,repo}. And
+it \textbf{concedes}: row 9 keeps the turn on a hit, row 10 hands it to the seat that was asked on a
+miss, so the miss branch of every ask carries a cost that depends on \emph{which} seat receives the
+turn --- a cost the engine has priced by hand size alone.
+
+The work began with a request from the project's owner, phrased as \emph{off-limits} reasoning:
+build a model of which opponents would punish a conceded turn, and refuse to ask them. The threat
+model that request describes is sound, derivable from the public log, and --- the first surprise ---
+a strict improvement on what the engine already uses for the same job (Section~\ref{sec:cost}). The
+prescription is not sound. Penalising asks by the danger of the seat they would concede to costs up
+to $11.7$ points of win rate, and an information-free perturbation of the same size costs nothing,
+so the loss is caused by the threat \emph{information} rather than by the disturbance
+(Section~\ref{sec:offlimits}).
+
+The reason is the paper's organising idea, and it fits in a sentence: \textbf{row 6 makes threat and
+opportunity the same fact}. A seat is dangerous precisely when it holds a card of a set this team is
+heavily invested in, and that is precisely what makes it the seat most likely to be holding the card
+this team wants (Section~\ref{sec:confound}), so avoiding it means abandoning your own best set.
+
+So keep the model and invert the prescription: ask the dangerous seat --- \textbf{defuse}, taking
+back the very card its reach rests on while row 9 keeps the turn. That mechanism ships, and
+Section~\ref{sec:defuse} measures it at increasingly hostile scales, ending inside a third party's
+engine against a third party's bots (Section~\ref{sec:crossplay}). The rest is negative and
+deliberately so: Sections~\ref{sec:signal} to~\ref{sec:conceal} report three further requested
+mechanisms refuted and a fourth that works only as a counter to the first,
+Section~\ref{sec:triangle} retracts a structural claim this project published about its own tactic
+space, and Section~\ref{sec:floor} reports what the instrument underneath all of it can resolve
+\cite{floorpaper}.
+
+\section{Related work and prior results in this series}
+\label{sec:related}
+
+The measurement discipline is the project's own and is unchanged here: duplicate deals (every seeded
+deal played in both orientations, so the deal is never a confound), the pair as the unit of
+analysis, paired standard errors, and byte-exact controls wherever a mechanism can be switched off
+\cite{v05paper,botlab}. Four prior results are load-bearing: the v0.5 roster's nine styles and tuned
+Balanced control \cite{v05paper,styles}; the v1.0 counter table whose dominant row makes
+style-switching provably degenerate, which Section~\ref{sec:capability4} prices the per-decision
+layer against \cite{v10paper,v15paper,bounded}; the contained-book paper's value of a turn, $E =
+\mathrm{hits}/\max(1,\mathrm{misses})$, and its independent estimate of the cards a conceded turn is
+worth, which Section~\ref{sec:instrument} agrees with to within a few hundredths
+\cite{containedpaper,containment}; and the detection-floor characterisation that supplies
+Section~\ref{sec:floor}'s resolution limits \cite{floorpaper}. The external anchor is the
+\textbf{fishlabs} repository \cite{fishlabs}, an independent Canadian Fish project with its own
+engine, its own bots, and --- usefully --- an independently invented implementation of the very rule
+Section~\ref{sec:offlimits} refutes.
+
+\section{Background: the rules the results rest on}
+\label{sec:background}
+
+Six players in two teams of three (seats $0,2,4$ against $1,3,5$); 54 cards in nine half-suits
+(``sets'') of six; nine cards dealt to each seat; the game ends the moment a team has been awarded
+five sets, so ties are arithmetically impossible \cite{rules,pagat}. The rows this paper cites by
+number \cite{rules}:
+
+\begin{center}
+\small
+\begin{tabular}{@{}c p{0.85\textwidth}@{}}
+\toprule
+row & rule \\
+\midrule
+6  & \textbf{Ask licence.} The asker must hold at least one card of the asked set. \\
+7  & \textbf{Own card.} You may not ask for a card you hold. \\
+8  & \textbf{Target has cards.} The target must hold at least one card. \\
+9  & \textbf{Hit.} The card transfers; the asker \emph{keeps the turn} and asks again. \\
+10 & \textbf{Miss.} The turn passes to the player who was asked. \\
+11 & \textbf{Declare timing.} Any time, including out of turn, inside the declare window. \\
+14 & \textbf{Any declare error at all.} The opposing team scores the set. \\
+17 & \textbf{Information.} Counts are public, with a full log of asks, results and declares. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Rows 6 and 7 make the broadcast; rows 9 and 10 make the concession. Row 11 matters twice
+below: it is why the value of a turn is the value of \emph{asks} rather than declares, and why the
+turn-handoff request loses a premise (Section~\ref{sec:handoff}).
+
+\section{What a conceded turn actually costs}
+\label{sec:cost}
+
+\subsection{The instrument}
+\label{sec:instrument}
+
+\code{scripts/probe-danger.mjs} records a concession whenever an ask is about to miss. The outcome
+variable is how many cards the conceded seat then takes from the conceding team before it misses in
+turn --- the length of row 9's hit chain, in cards --- read from the hands: this is a measurement
+harness, not a bot. The \emph{estimate} it is compared against is built by \code{buildKnowledge}
+over the acting seat's \code{SeatView}, i.e.\ exactly the information a policy has
+\cite{concession,repo}. Over 300 \usff{} games, all-Balanced seats, $12{,}376$ conceded turns: the
+mean cards taken per conceded turn is $\mathbf{1.304}$, with $P(0) = 46.7\%$, $P(\ge 2) = 33.2\%$
+and a maximum of $11$. That mean lands within a few hundredths of the contained-book paper's
+independent derivation of the same quantity from $E$ \cite{containedpaper,containment}, and two
+arguments from different premises agreeing is the reason to trust either.
+
+\subsection{Two estimators, one of which is backwards}
+\label{sec:estimators}
+
+\begin{itemize}
+\item \textbf{\code{handSize}} --- \code{view.counts[X]}. What the engine uses today, in two places:
+  \code{missTarget} in \code{decide.ts}'s \code{pickAsk}, and \code{valueContainedPass}'s $E \cdot
+  n_t / \bar{n}$ term \cite{repo,containedpaper}.
+\item \textbf{\code{licence}} --- over the sets $X$ has publicly shown a basis in (row 6, read off
+  the log), the cards of those sets that this seat can certainly locate on its \emph{own} team.
+  $X$'s reachable prey.
+\end{itemize}
+
+Over the $12{,}376$ observed concessions, \code{handSize} correlates $\mathbf{-0.147}$ with the
+cards the conceded seat then took, and \code{licence} correlates $\mathbf{+0.421}$, with a
+$3.2\times$ lift from its bottom decile ($0.778$ cards) to its top ($2.469$) \cite{concession}. That
+is the first finding of the work, and it is a defect report: the shipped proxy has the wrong sign.
+\code{missTarget: 'fewest'} prefers to concede to the opponent with the smallest hand, on the stated
+grounds that the surrendered turn is worth least there; measured, the smallest hand takes
+\emph{more}. Hand sizes fall as information accumulates, so the sign could have been a phase
+artifact. It is not: over log lengths 0--40, 40--80 and 80--120 ($n = 5{,}216 / 4{,}626 / 2{,}452$,
+mean cards taken $1.19 / 1.37 / 1.40$), $\mathrm{corr}(\code{hand})$ runs $-0.191 / -0.149 / -0.100$
+against $\mathrm{corr}(\code{licence})$ at $+0.474 / +0.416 / +0.353$ --- negative in every bucket,
+and Section~\ref{sec:handoff}'s independent fork study reproduces the sign a third time at $-0.261$.
+Least squares over the licence estimator gives the coefficients the shipped \code{threat.ts}
+carries:
+\begin{equation}
+\label{eq:threat}
+\text{cards} \;\approx\; 0.885 \;+\; 0.391 \cdot \text{prey}.
+\end{equation}
+
+\subsection{Where the licence must be read from}
+\label{sec:licence}
+
+Not from \code{Knowledge.constraints}. The knowledge engine records an ask as a deal-time
+set-constraint and \emph{drops it the moment it is satisfied or exhausted} --- which is exactly when
+the seat has been shown to hold a card of the set, i.e.\ when the threat is most real. Reading the
+basis off the public log instead multiplies what is visible, though not by the same factor twice:
+detection of a harvest threat (opponent basis plus at least two of the set on my team) roughly
+doubles, from $6.0\%$ to $\mathbf{11.7\%}$, while detection of the owner's strict five-and-one
+position rises about fivefold, from $7.1\%$ to $\mathbf{35.0\%}$ \cite{concession}. Those figures are also why every mechanism here is a \textbf{graded term and
+never a veto}: even at its best the predicate is invisible about two thirds of the time, and a rule
+that fires on a third of its cases and is silent on the rest cannot be a hard prohibition without
+being arbitrary.
+
+\section{Off-limits, as requested: refuted}
+\label{sec:offlimits}
+
+The request, implemented literally, is a penalty on the miss branch,
+\begin{equation}
+\label{eq:penalty}
+\text{penalty} \;=\; w_{\mathrm{hit}} \cdot (1-p) \cdot a \cdot \frac{D(t)}{1+E},
+\end{equation}
+subtracted from the shipped ask score, where $p$ is the seat's own hit estimate, $D(t)$ the threat
+estimate of Equation~\eqref{eq:threat} at target $t$, $E$ the value of a turn in cards, and $a$ the
+appetite. Two hundred duplicate pairs per cell, against a prototype control that reproduces
+\code{decide} byte-for-byte when the mechanism is off \cite{concession}.
+
+\begin{table}[t]
+\centering
+\caption{The owner's off-limits rule swept over appetite: a danger penalty on the miss
+branch, 200 duplicate pairs per cell \cite{concession}. The first column is the byte-exact control.}
+\label{tab:offlimits}
+\footnotesize
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+appetite & $0$ (control) & $0.05$ & $0.10$ & $0.25$ & $0.50$ & $1.00$ \\
+\midrule
+win rate & $50.00\%$ & $45.0\%$ & $43.0\%$ & $45.5\%$ & $42.3\%$ & $\mathbf{38.3\%}$ \\
+paired set-difference & $0.0000 \pm 0.0000$ & $-0.52$ & $-0.73$ & $-0.89$ & $-1.19$ & $\mathbf{-1.61}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:offlimits} is monotone in the wrong direction: the harder the rule is driven, the
+worse it does, from $-0.52$ to $-1.61$ sets per duplicate pair and $4.5$ to $11.7$ points of win
+rate below the control. A hard veto restricted to the narrow case --- likely-miss asks only, at
+targets with at least $K$ certainly-located prey cards --- loses too, at $-1.02$ to $-1.38$ for $K =
+2 \ldots 5$, reaching neutral only at $K = 6$, where it has stopped firing.
+
+\subsection{The null control, which is what makes this a finding}
+\label{sec:null}
+
+A policy perturbation that costs win rate has two candidate causes: the information it uses, or the
+mere fact of disturbance. The separating experiment is the same penalty at the same magnitude with
+$D$ replaced by an information-free hash of the target. At appetites $0.10 / 0.25 / 0.50$ the null
+measures $48.50\% / 50.25\% / 50.00\%$ win rate and $-0.12 \pm 0.44$, $+0.01 \pm 0.42$, $-0.23 \pm
+0.44$ sets per pair \cite{concession}. \textbf{An information-free perturbation of the same size is
+free}, and the danger-informed one costs $4.8$ to $7.7$ points more at matched magnitude ($48.5$
+against $43.0$; $50.25$ against $45.5$; $50.0$ against $42.3$). The loss is caused by the threat
+information, not by the noise.
+
+\subsection{Why: threat and opportunity are the same fact}
+\label{sec:confound}
+
+Row 6 cuts both ways, and here is what that means numerically. Over $33{,}595$ ask decisions,
+$\mathrm{corr}(\text{threat}(t), \text{best hit probability available at } t) = \mathbf{+0.249}$:
+the $12{,}691$ high-threat targets (at least two reachable prey cards) carry a mean best available
+$p$ of $\mathbf{0.471}$ against $\mathbf{0.326}$ at the $20{,}904$ low-threat ones
+\cite{concession}. A seat is dangerous \emph{because} it holds a card of a set this team is heavily
+invested in --- and that is the same fact that makes it the seat most likely to be holding the card
+this team wants. Penalising threat is penalising your own best set.
+
+There is also a soundness argument that reaches the same conclusion without any win rate, and it
+generalises past this engine. A threat model built from public information is a strict
+\textbf{under-approximation} of what a seat knows. A positive fact in it --- \emph{this seat has
+published a basis in that set} --- is a certificate and is sound. An absence is not evidence: the
+seat may hold a basis it has never had occasion to publish. So the model may legitimately be used to
+act on \emph{proven} reach, and may \textbf{never} be used to certify a seat as safe. Avoidance
+requires exactly the forbidden direction; defusal requires only the sound one.
+
+\section{Defusal: the same model, the opposite prescription}
+\label{sec:defuse}
+
+If the dangerous seat is the seat holding the card you want, the answer is not to leave it alone ---
+it is to take the card back. A hit removes the very card the licence rests on, and row 9 keeps the
+turn while doing it. The mechanism is therefore a bonus on the \emph{hit} branch where the
+off-limits rule was a penalty on the \emph{miss} branch:
+\begin{equation}
+\label{eq:defuse}
+\text{bonus} \;=\;
+\begin{cases}
+a_{d} \cdot w_{\mathrm{hit}} \cdot p \cdot \dfrac{c \cdot \mathrm{prey}(B)}{1+E}
+  & \text{if the target has a published basis in } B,\\[2ex]
+0 & \text{otherwise,}
+\end{cases}
+\end{equation}
+added to the ranked ask score, where $B$ is the asked card's set, $\mathrm{prey}(B)$ the number of
+cards of $B$ certainly located on this team, $c$ the fitted cards-per-prey-card slope of
+Equation~\eqref{eq:threat}, and $a_d$ the style's appetite \cite{repo}. Dividing by $1+E$ converts
+the credit from cards into the ranker's own units, so the appetite means the same thing at every hit
+rate.
+
+Two design decisions were measured rather than assumed. \textbf{Per set, not per seat}: crediting
+the target's whole published reach was measured too, and per-set is both better ($+1.50$ against
+$+1.21$ on the same bank) and the only version whose causal story is true, since a hit on a card of
+$B$ cannot protect a set it is not in. \textbf{A term, not a branch}: because the credit is added to
+the score, two of \code{pickAsk}'s three guarantees survive for free --- \code{minHitP} still
+filters the same pool, and both near-tie windows still break the same ties. The third did not.
+
+\subsection{The certain-hit gate, and why it exists}
+\label{sec:gate}
+
+\textbf{The gate was not designed in. It was added because an adversarial pre-commit review found
+that the credit could displace a certain hit, and then measured how often.} The arithmetic is thin
+in the wrong direction: a certain hit's score margin over an uncertain ask is about $2$ points,
+while Equation~\eqref{eq:defuse} is bounded only by $a_d \cdot w_{\mathrm{hit}} \cdot c \cdot
+\mathrm{prey} / (1+E)$, which reaches about $137$ at $w_{\mathrm{hit}} = 70$. Ungated, the term
+abandoned a certain hit \textbf{9 times over 150 games $\times$ 9 styles, against 0 for the control}
+\cite{concession,repo}.
+
+\code{pickAsk} therefore zeroes \emph{both} concession terms for any ask with $p < 1$ whenever a
+certain hit is available, leaving the credit live \emph{among} certain hits, where it is free.
+Section~\ref{sec:shipped}'s table was re-measured with the gate in place and did not move. Two
+honest riders travel with it, both in Section~\ref{sec:open}: its firing rate is unpriced beyond the
+sweep that found it, and its concealment half is not pinned by a test.
+
+\subsection{Measured, on held-out banks and across the roster}
+\label{sec:shipped}
+
+The appetite was fixed at $1$ on a tuning bank --- the sweep is an inverted $U$ peaking at $1$--$2$
+and back to noise by $8$ --- then confirmed on two disjoint held-out banks and across the roster.
+Table~\ref{tab:defuse} is the \emph{shipped} implementation, not the prototype:
+\code{STYLE\_ROSTER[s]} against the same style with \code{defuse: 0}, 400 duplicate pairs per cell
+\cite{concession}.
+
+\begin{table}[t]
+\centering
+\caption{Defusal, shipped implementation: each roster style against itself with
+\code{defuse: 0}, 400 duplicate pairs per cell \cite{concession}. Intervals are $\pm 1.96$ paired
+SE.}
+\label{tab:defuse}
+\footnotesize
+\begin{tabular}{@{}lrr@{}}
+\toprule
+cell & win rate & paired set-difference \\
+\midrule
+balanced, holdout A & $60.88\%$ & $\mathbf{+1.43 \pm 0.32}$ \\
+balanced, holdout B & $61.38\%$ & $\mathbf{+1.58 \pm 0.32}$ \\
+blitz     & $61.88\%$ & $+1.35 \pm 0.32$ \\
+punter    & $58.38\%$ & $+1.22 \pm 0.33$ \\
+banker    & $57.63\%$ & $+1.12 \pm 0.31$ \\
+turtle    & $61.25\%$ & $+1.35 \pm 0.36$ \\
+hoarder   & $59.75\%$ & $+1.31 \pm 0.35$ \\
+scout     & $61.63\%$ & $+1.66 \pm 0.32$ \\
+ghost     & $55.38\%$ & $+0.83 \pm 0.32$ \\
+archivist & $\mathbf{65.00\%}$ & $\mathbf{+1.94 \pm 0.33}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Every interval excludes zero; the sign replicates on both banks and at all nine styles.
+
+\textbf{Two sets of numbers appear in this literature and they are not the same measurement.} The
+prototype --- the term alone, hooked into a mirror of \code{pickAsk} --- measured $+1.50\ [1.24,
+1.75]$ and $+1.65\ [1.38, 1.91]$ on 600-pair held-out banks, and those are the figures
+\code{defuse.ts} carries in its header as the result it was built from. Table~\ref{tab:defuse} is
+the shipped implementation re-measured at 400 pairs and lands at $+1.43$ and $+1.58$ on the same two
+banks. The gap is inside the intervals and is what a smaller bank plus a real integration should
+look like; both are quoted rather than the flattering one. Three limits travel with the table, two
+of which the next sections discharge. It is a \emph{mirror match}, the arena in which a mechanism is
+most flattered (Section~\ref{sec:gauntlet}). The slope $c$ is \emph{fitted on this engine}, against
+this roster, under \usff{} --- one fitted constant, and the only one in the mechanism
+(Section~\ref{sec:crossplay}). And the prototype touched \emph{one hook}: nothing in the declare
+policy, the containment policy or the adaptive layer was changed.
+
+\subsection{The gauntlet: against opponents that also defuse}
+\label{sec:gauntlet}
+
+The fishlabs corpus supplies the warning that motivates this experiment: their structurally
+analogous inverted coordinate measured $+2.71$ against a weak opponent, $+0.55$ against a middling
+one and $-0.99$ against their strongest --- a gain that existed only against opponents unable to
+punish it. Those three figures are recorded in this project's own concession document rather than in
+the cross-play one \cite{concession}. So the gate is whether defusal still pays when the opponent
+defuses too. Both arms face the \emph{same fully-armed opponent} and only the measured team's
+appetite changes: arm~A is \code{balanced(defuse 1)} against $S(\code{defuse 1})$, arm~B
+\code{balanced(defuse 0)} against the same opponent, 250 duplicate pairs per cell on a third bank,
+reported as A minus B.
+
+\begin{table}[t]
+\centering
+\caption{The gauntlet: both arms against the same fully-armed opponent, 250 duplicate pairs
+per cell \cite{concession}. Arm~A against \code{balanced} is two identical policies on duplicate
+deals and must sum to zero by construction.}
+\label{tab:gauntlet}
+\footnotesize
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+opponent style & arm A & arm B & \textbf{delta} \\
+\midrule
+balanced  & $0.000$  & $-1.636$ & $\mathbf{+1.64 \pm 0.40}$ \\
+blitz     & $-0.028$ & $-1.744$ & $\mathbf{+1.72 \pm 0.45}$ \\
+punter    & $-0.228$ & $-2.156$ & $\mathbf{+1.93 \pm 0.45}$ \\
+banker    & $+0.436$ & $-1.112$ & $\mathbf{+1.55 \pm 0.55}$ \\
+turtle    & $+3.304$ & $+1.724$ & $\mathbf{+1.58 \pm 0.56}$ \\
+hoarder   & $+1.300$ & $-0.584$ & $\mathbf{+1.88 \pm 0.46}$ \\
+scout     & $+1.876$ & $-0.088$ & $\mathbf{+1.96 \pm 0.51}$ \\
+ghost     & $+0.580$ & $-0.504$ & $\mathbf{+1.08 \pm 0.52}$ \\
+archivist & $+0.696$ & $-0.916$ & $\mathbf{+1.61 \pm 0.53}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The gain survives at every style and is if anything larger than in the mirror match. Three features
+deserve reading separately. \textbf{Arm~A against \code{balanced} is exactly $0.000$}: two identical
+policies on duplicate deals must sum to zero by construction, and they do to the last digit --- a
+free internal-validity check on the harness, and it passes. \textbf{Arm~B is negative almost
+everywhere}: a team that does not defuse \emph{loses} to one that does, by roughly the margin it
+would have gained by switching on, so the mechanism is contested rather than a coordination gain
+both sides collect, and declining to play it is a position rather than a neutrality. And
+\textbf{\code{ghost} is the narrowest cell} ($+1.08$), the style with the most suppressed
+information use and therefore the least to defuse with --- an ordering that is mechanistic, and mild
+evidence that the effect is the stated one. This is not unconditional --- every opponent here is
+still a FishAI policy, and the strongest \emph{known} opponent to this engine need not be the
+strongest one --- but the specific failure the corpus predicted did not occur.
+
+\section{The cross-engine replication}
+\label{sec:crossplay}
+
+Section~\ref{sec:gauntlet} answers ``does it survive a stronger opponent'' without answering ``is
+this a fact about Canadian Fish or a fact about this roster''. The second question needs a different
+engine, and there is one: FishAI's \code{decide} was run as a guest inside the \textbf{fishlabs}
+TypeScript engine, against \emph{its} bots, with \code{defuse} the only knob moved \cite{crossplay}.
+
+\subsection{What could not be played, stated first}
+\label{sec:sestina}
+
+The owner's request was for simulations against \textbf{SESTINA v1.0}, that project's frontier
+agent. \textbf{No game below is a game against SESTINA v1.0.} It is C++ and this machine has no C++
+toolchain --- \code{g++}, \code{clang++}, \code{cl}, \code{gcc}, \code{make} and \code{cmake} are
+all absent --- so their binary cannot be produced here. What was played instead is their
+\emph{TypeScript} lab engine and the eight bots shipped in it, which run under Node with no
+compiler. Their strongest TypeScript bot is FishBot v0.3; their lineage runs to v0.7, which is
+SESTINA v1.0, so the opponent here is roughly four releases behind their frontier \cite{crossplay}.
+One naming correction travels with that: the agent was briefly called ``SISTINA'', a first search
+returned nothing, and it momentarily looked as though it did not exist. It does, under the other
+spelling \cite{fishlabs}.
+
+\subsection{The bridge, and the handicap it imposes}
+\label{sec:bridge}
+
+A bridge that quietly changes the game measures nothing, so the two rule sets were compared before
+any number was trusted. Deck, seats and teams, ask legality, turn flow and the wrong-declare outcome
+are all identical between the fishlabs TypeScript engine and \usff{}, which makes the adapter a pure
+renaming and means FishAI's inference layer reads a log that means exactly what it means at home.
+One row differs: in their engine \textbf{only the turn-holder may declare}, where \usff{} row 11
+offers every seat the option in the declare window \cite{crossplay}.
+
+That difference handicaps FishAI, and it was quantified rather than waved at. Measured in FishAI's
+own engine over 300 \usff{} games, $54.6\%$ of its declares are made on its own turn --- the channel
+the host provides --- and $\mathbf{45.4\%}$ off-turn, through a door their engine does not have.
+Some of those sets would simply be declared later on the seat's own turn, so $45.4\%$ is an upper
+bound on the loss rather than an estimate of it; but the direction is unambiguous, and every FishAI
+win rate in the host engine is a \textbf{floor}. The adapter fell back to a default in 6 decisions
+out of roughly nine thousand ($0.07\%$), always on the declare-window move that does not exist
+there, and results are bit-identical with and without it.
+
+\subsection{Standing, and then the result that matters}
+\label{sec:standing}
+
+\begin{table}[t]
+\centering
+\caption{Defusal inside the fishlabs engine against the fishlabs bots, 300 duplicate pairs
+per opponent, \code{defuse} the only knob moved \cite{crossplay}.}
+\label{tab:xplay}
+\footnotesize
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+opponent & \code{defuse: 1} net sets & \code{defuse: 0} net sets & \textbf{paired delta} \\
+\midrule
+\code{fishbot} (v0.3)  & $-1.333$ & $-2.880$ & $\mathbf{+1.547 \pm 0.517}$ \\
+\code{fishbot\_v02}    & $-0.933$ & $-2.627$ & $\mathbf{+1.693 \pm 0.555}$ \\
+\code{lockout}         & $-0.573$ & $-2.327$ & $\mathbf{+1.753 \pm 0.533}$ \\
+\code{detective}       & $-0.593$ & $-2.300$ & $\mathbf{+1.707 \pm 0.560}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+First, standing. At 150 games per cell in both orientations, FishAI at style \code{balanced} wins
+$42.67\%$ against \code{fishbot} (v0.3), $45.33\%$ against \code{detective}, $47.00\%$ against
+\code{lockout} and $48.67\%$ against \code{fishbot\_v02}, and $80.67$ to $99.67\%$ against the other
+four bots in their lab \cite{crossplay}: competitive with their top four, one to seven points under
+even against them, while playing without the channel that carries $45\%$ of its declares. Those four
+cells publish no intervals and Section~\ref{sec:floor} reclassifies them accordingly.
+
+Table~\ref{tab:xplay} is the strongest evidence in this project that defusal is a property of the
+game rather than of FishAI's roster. Four independent opponents, four intervals excluding zero ---
+and the effect \emph{size} transfers: $+1.55$ to $+1.75$ here against $+1.50$ and $+1.65$ on
+FishAI's own held-out banks and $+1.08$ to $+1.96$ against FishAI opponents that also defuse. The
+mechanism was derived, fitted and tuned entirely against FishAI's roster and had never seen any of
+these bots. Note what the table does \emph{not} say: the \code{defuse: 1} column is still negative
+against all four. Defusal recovers about $1.6$ sets of a deficit it does not close; FishAI loses to
+their top bots either way, by less with the mechanism on.
+
+Since SESTINA could not be run, their reported evidence is cited as theirs
+\cite{fishlabs,crossplay}: SESTINA v1.0 beats their pre-registered target by $+3.33$ pp $[+2.88,
++3.78]$ over $48{,}000$ games and the deployed v0.6 policy by $+4.63$ pp $[+4.19, +5.06]$ over the
+same $48{,}000$. \emph{Frontier margins in this game are small} --- a seventh development cycle with
+a determinized search over a particle belief buys about three percentage points --- which puts
+$+1.6$ sets per duplicate pair in perspective as a large effect by this game's standards.
+
+Their README pairs those margins with three qualifications, and quoting the margins without them
+would overstate the frontier this paper measures itself against. They report that SESTINA costs
+\textbf{at least $4.52\times$} the non-searching blueprint. They publish a negative about their own
+flagship: it does \emph{not} measurably beat a composite configuration assembled earlier in the same
+development cycle. And they decline the strongest claim outright, separating ``strongest
+configuration this project has produced'', which they record as established, from global standing,
+which they record as \emph{``not established, not claimed''} --- so there is no published basis,
+theirs or this paper's, for treating SESTINA as the strongest Canadian Fish agent in existence
+\cite{fishlabs,crossplay}.
+
+\subsection{\code{lockout}: the owner's rule, built independently, and doing well}
+\label{sec:lockout}
+
+The tension in this paper's central negative result is in their repository, and it is recorded here
+rather than buried. Their strategy table describes \code{lockout} as a turn-starvation specialist
+that ranks asks by posterior and then \emph{charges a penalty for missing into a dangerous opponent}
+--- the owner's off-limits rule, arrived at independently by someone else. And in their own
+round-robin (every fishlabs bot against every other, 100 games $\times$ 2 orientations per pairing)
+it ranks second of nine at $77.06\%$ mean win rate against the field, behind \code{fishbot} v0.3's
+$82.69\%$ and ahead of \code{fishbot\_v02} ($75.50\%$) and \code{detective} ($75.31\%$)
+\cite{crossplay,fishlabs}.
+
+\textbf{This looks like a contradiction of Section~\ref{sec:offlimits} and it is not}, for a reason
+that separates a strategy from a term. \code{lockout} is a whole strategy row --- its own
+declaration threshold, its own risk parameter, its own targeting --- that happens to \emph{contain}
+a danger penalty. Its $77\%$ says a strategy built that way is strong; it does not isolate the
+penalty. Section~\ref{sec:offlimits} is an ablation: one policy, one term added, everything else
+byte-identical, duplicate deals, plus an information-free null at matched magnitude. Only the
+ablation answers ``does the danger penalty help''.
+
+\textbf{A supporting argument offered here has been withdrawn.} An earlier draft read the $34.1\%$
+ask accuracy recorded in the \code{lockout} cell as \code{lockout}'s own, and took it as this
+paper's mechanism visible from outside --- a policy that avoids its best asks showing a low hit
+rate. That was a misread of a column that is FishAI's. Measured properly, both sides ask at almost
+exactly the same rate there ($34.1\%$ against $34.8\%$; and $49.8/50.6$, $45.4/46.0$, $43.5/44.4$ in
+the other three cells), so the low rate is a property of the \emph{matchup}, depressing both sides
+alike \cite{crossplay}. The inference is retracted rather than restated; what survives is the
+narrower observation that \code{lockout} produces the largest \code{defuse} delta of the four
+($+1.753$), consistent with an opponent that publishes bases freely but establishing nothing about
+why. So the tension is left unresolved, which is the honest state, and only an ablation of
+\code{lockout}'s own coefficient inside their engine would settle it --- which their lab does not
+expose as a knob.
+
+\subsection{Common failure points, theirs and this paper's}
+\label{sec:failures}
+
+The owner's request named common failure points explicitly, and the host lab answers it most sharply
+through its own weakest serious bot. \code{kv\_search} collapses on \emph{declaration calibration},
+not on play. It takes $30.25\%$ against the field and $0.0\%$ against each of the top three, and
+over 40 games against \code{fishbot} it takes $1.5$ sets to $7.5$ --- but its ask accuracy in those
+games is $49.5\%$ against $62.1\%$, a gap far too small to carry that result. Its declaration
+accuracy does carry it: $\mathbf{73.0\%}$ against \code{fishbot}'s $\mathbf{95.3\%}$, from the
+lowest declaration threshold of any serious bot in their table ($0.75$) \cite{crossplay}. It is not
+being out-asked into oblivion; it is \emph{gifting sets}. Under a rule set where any declare error
+awards the set to the opposing team --- \usff{} row 14, and their engine agrees
+(Section~\ref{sec:bridge}) --- a $27\%$ misdeclare rate is a losing position no amount of asking
+recovers. The lesson generalises beyond their bot: \textbf{under gift rules, declare calibration
+dominates ask quality.}
+
+It also lands on this paper, which is the most self-critical thing the cross-play produced. FishAI's
+own declare accuracy against their bots is $90$--$94\%$, against \code{fishbot}'s $97\%$, and that
+gap is a plausible share of the one-to-seven points FishAI sits below their top four in
+Section~\ref{sec:standing} \cite{crossplay}. Its other visible weakness in this host is the declare
+channel of Section~\ref{sec:bridge}: without the off-turn window it must hold a located set until
+its own turn comes round, and a set held is a set an opponent may take a card out of first.
+
+\section{Signalling: refuted, and its observational support was reverse-causal}
+\label{sec:signal}
+
+An ask publishes two facts to \emph{teammates} as well as to opponents. The hypothesis is natural
+and its observational support is strong: sets that are declared correctly have been asked into far
+more often than sets declared wrongly. \code{scripts/probe-declare.mjs}, 200 games per style, every
+declare classified by whether the ask channel was still open --- i.e.\ whether row 8 still permitted
+an ask at all --- gives, for Balanced and Punter respectively: $1{,}468$ and $1{,}469$ declares with
+the channel open, $\mathbf{100.0\%}$ and $\mathbf{99.7\%}$ of them correct; $90$ and $84$ with it
+closed, $\mathbf{78.9\%}$ and $\mathbf{75.0\%}$ correct; and a mean of $11.70$ / $11.80$ prior asks
+into the set before a \emph{correct} declare against $\mathbf{7.05}$ / $\mathbf{7.28}$ before a
+wrong one \cite{concession}.
+
+\textbf{The intervention did not reproduce the association.} A bonus for asking into sets the team
+cannot yet prove, weighted by proximity to channel-close, measured $+0.013$, $+0.023$, $+0.067$,
+$-0.090$, $-0.203$ at rising appetite over 300 pairs --- and the one positive arm \textbf{failed to
+replicate}: $1{,}500$ duplicate pairs on a disjoint bank gave $49.97\%$, $-0.013 \pm 0.033$. The
+likely reading is that the correlation is reverse-causal: a set asked into a lot is a set several
+seats hold a basis in, and \emph{that} is what makes it provable, so the ask count is a symptom of
+provability rather than a cause of it. A second version is also null --- spending only the
+\emph{free} choice, a tie-break among near-equal asks preferring the one that most reduces the
+team's allocation ambiguity at zero cost in hit probability, measured $+0.008 \pm 0.074$ and $-0.010
+\pm 0.069$ on two banks.
+
+\subsection{The structural objection, which is bigger than signalling}
+\label{sec:structural}
+
+Two things this refutation does not rule out, and the first governs Section~\ref{sec:stall} as well.
+
+\textbf{A structural objection to the whole family.} A linear ask score whose positive mass is
+hit-probability-driven cannot express a \emph{deliberate miss}: the hit term is zero by construction
+and every remaining term is a penalty, so such an ask can never win an argmax at any weight.
+FishAI's score has exactly that shape --- set $p$ to $0$ and $70$ of the mass vanishes. So
+``signalling is inert when weak'' may be a fact about the scoring function rather than about
+signalling; the measured \emph{harm} at high weight is real, but the inert regime is precisely what
+a structurally unselectable tactic looks like. Defusal escapes the trap only because a defusal ask
+\emph{is a hit}, and concealment (Section~\ref{sec:conceal}) only because it moves the argmax
+between two hits.
+
+\textbf{The receiver side is untested.} Everything above changes what the \emph{sender} asks. A
+teammate that reads the log's row-6 and row-7 facts more aggressively when forming a declare plan is
+a different experiment, and has not been measured.
+
+\section{Stalling: refuted}
+\label{sec:stall}
+
+The owner's third request was an endgame stall: decline to take the opponents' last card, to keep
+the ask channel open. Under \usff{} there is no endgame phase --- the rule set specifies
+\code{wholeTeamOut: 'declareWindow'} and the reducer simply moves the turn to the next seat with
+cards. What emptying the opponents does is end the \textbf{ask channel}, since row 8 requires a
+target holding cards, after which every remaining set must be declared on the log as it then stands.
+The strategic content of the request survives; the endgame framing does not \cite{concession,rules}.
+Measured incidence over 200 games: a team empties with sets unresolved in $41\%$ of games, $72\%$ of
+those caused by an ask the other side could have declined to make --- but only $\mathbf{1.32}$ sets
+remain unresolved on average when it happens, the clinch at five sets making deep endgames rare by
+construction.
+
+\begin{table}[t]
+\centering
+\caption{Stalling swept over trigger width and strength \cite{concession}. ``Decisions
+changed'' counts trigger positions at which the mechanism moved the argmax.}
+\label{tab:stall}
+\footnotesize
+\begin{tabular}{@{}rrrrrr@{}}
+\toprule
+trigger width & strength & trigger positions & decisions changed & win rate & paired diff \\
+\midrule
+$2$ & $1$   & $332$     & $16$              & $50.00\%$ & $+0.010 \pm 0.024$ \\
+$6$ & $1$   & $1{,}952$ & $514$             & $49.67\%$ & $0.000 \pm 0.052$ \\
+$3$ & $20$  & $552$     & $440$ ($80\%$)    & $42.00\%$ & $\mathbf{-0.42 \pm 0.12}$ \\
+$6$ & $20$  & $1{,}471$ & $1{,}330$ ($90\%$) & $\mathbf{33.33\%}$ & $\mathbf{-1.14 \pm 0.19}$ \\
+$6$ & $100$ & $1{,}421$ & $1{,}329$ ($94\%$) & $31.83\%$ & $-1.22 \pm 0.19$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:stall} is inert when weak, severely harmful when strong, and monotone --- and not for
+want of alternatives: at trigger positions there are on average $23.15$ legal asks across $2.71$
+distinct targets, and only $5.9\%$ of positions offer a single target. The mechanism has room to
+act, and acting is bad. Refusing a card you can certainly take refuses free material \emph{and} a
+retained turn, and what it buys is time on a channel whose product is worth very little --- declares
+are already about $100\%$ correct while the channel is open, and only about $1.32$ sets remain when
+it closes. It is paying a certain card for insurance against a rare, small loss.
+Section~\ref{sec:structural}'s caveat applies here with more force: a stall is a deliberately worse
+ask, and the score cannot express one.
+
+\section{The turn handoff: built, and the shipped rule already wins}
+\label{sec:handoff}
+
+The owner also asked that a seat which runs out of cards on its own turn choose the teammate to pass
+to by reviewing the history --- which teammate could best use the turn --- rather than by hand size.
+The threat layer of Section~\ref{sec:cost} is exactly that estimator, pointed at a teammate instead
+of an opponent.
+
+A win-rate A/B has no power at this decision, so the instrument is local: at every real pass
+decision, fork the game once per candidate teammate, force the pass there, and count the cards that
+teammate then actually takes before losing the turn --- ground truth per candidate
+\cite{concession}. First, how often the decision exists at all, over 300 \usff{} games: $11.3\%$ of
+games reach \code{awaitPass}; of those events $62.9\%$ present a real choice (more than one teammate
+holding cards), $0.0\%$ have no teammate holding cards, and $11.4\%$ have the ask channel already
+dead --- the owner's blind-declare case, which is 4 occurrences per 300 games. Mean unresolved sets
+at the pass: $1.74$.
+
+\begin{table}[t]
+\centering
+\caption{The fork study: 4{,}000 games, 223 real pass decisions, 446 candidate rows
+\cite{concession}. ``Picks best'' is against the per-candidate ground truth the fork provides.}
+\label{tab:handoff}
+\footnotesize
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+estimator & corr.\ with cards taken & mean cards captured & picks best \\
+\midrule
+oracle & --- & $1.251$ & $100\%$ \\
+\code{handSize} (shipped, \code{passTarget: 'most'}) & $\mathbf{-0.261}$ & $\mathbf{0.897}$ & $\mathbf{84.8\%}$ \\
+\code{reach} (the threat estimator) & $\mathbf{+0.352}$ & $0.906$ & $85.2\%$ \\
+hybrid (reach, hand size breaking ties) & --- & $0.892$ & $84.3\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:handoff}'s correlations keep the signs of Section~\ref{sec:estimators} --- hand size
+negative, reach positive --- and the \emph{decision} is still unaffected, because $\mathbf{73.1\%}$
+of these decisions have no signal in them at all: every candidate takes the same number of cards, so
+no estimator can separate them. Among the roughly 60 that do carry signal, hand size and reach
+mostly agree. The shipped rule is already within $0.35$ cards of the oracle and picks correctly
+$84.8\%$ of the time.
+
+Capability~5 is therefore \textbf{built and refuted as a change}, not skipped. \textbf{The estimator
+is right and the decision is empty}: $+0.352$ against $-0.261$ says the model is the better one, so
+this is a statement about how rarely \usff{} asks the question, not a failure of the threat model.
+\textbf{Where it would matter is frozen}: the states in which this decision fires in $41\%$ of games
+belong to the 48-card rule set, which this project holds byte-identical \cite{styles}. And
+\textbf{one premise of the request does not hold under \usff{}} --- ``which teammate could best
+declare'' is not a reason to pass, because row 11 gives every seat the declare option without the
+turn. The exception the owner identified is real and is the one case where it inverts: when the
+opponents are all out, the declare option sits on the turn-holder alone --- the $11.4\%$ of pass
+events above, or 4 occurrences per 300 games.
+
+\section{Concealment: a counter-weapon, not an improvement}
+\label{sec:conceal}
+
+The owner asked for a fourth mechanism after the first three were measured. When an opponent asks
+you for a card of set $H$, the natural reply is to ask into $H$ --- but that reply publishes your
+own row-6 basis in $H$. The proposal is to hold the card quietly instead, so opponents infer you
+have nothing there and skip you, until you can locate the rest of $H$ and declare it.
+
+\subsection{The behaviour it targets, and why the mechanism is selectable at all}
+\label{sec:arbitrate}
+
+Before building a countermeasure, the behaviour was measured. After a seat is asked for a card of
+$H$, misses, and takes the turn under row 10, $\mathbf{88.1\%}$ of its next asks go into $H$,
+against an availability-matched control of $\mathbf{21.4\%}$ \cite{asking}. The pattern is real and
+large. \textbf{But the engine is not reciprocating; it is collecting certainties.} $99.1\%$ of those
+replies are the argmax on hit probability and $60$--$94\%$ are \emph{certain hits}: the opponent's
+ask, combined with what the seat knew, located a card exactly, and the certainty bonus plus row 9 do
+the rest. Concealment therefore proposes to decline a certain hit, the arithmetic that killed
+stalling.
+
+It nonetheless escapes Section~\ref{sec:structural}'s trap, because it is not a deliberate miss: it
+moves the argmax \emph{between two hits} --- the concealed ask and some other set's ask --- and its
+charge is paid at most once per set rather than at every decision, since a second ask into $H$
+publishes nothing the first did not. So it is selectable at moderate weight, and measures non-zero
+where signalling and stalling measured flat. It is charged as $a_c \cdot w_{\mathrm{hit}} \cdot c
+\cdot \mathrm{mine}(H) / (1+E)$ --- deliberately the same conversion Equation~\eqref{eq:defuse}
+uses, so that the two mechanisms arbitrate exactly rather than by accident. Setting the two against
+each other, defusal wins iff $a_d \cdot p \cdot \mathrm{prey}(H) > a_c \cdot \mathrm{mine}(H)$, and
+at both appetites $1$ that is simply
+\begin{equation}
+\label{eq:arbitrate}
+p \;>\; \frac{\mathrm{mine}(H)}{\mathrm{prey}(H)}:
+\end{equation}
+take the card back when it is likely enough relative to how much of the set you would be
+advertising. Measured over $13{,}622$ ask decisions the two mechanisms collide on $28.6\%$, and
+defusal takes $79.8\%$ of the collisions. They compose; neither cannibalises the other.
+
+\subsection{The measurement, including the part that decides it}
+\label{sec:concealmeasure}
+
+\begin{table}[t]
+\centering
+\caption{Concealment added to defusal, against opponents that defuse \cite{concession}. The
+last row is the cell that decides what the mechanism is; Section~\ref{sec:floor} reclassifies it as
+unresolved rather than zero.}
+\label{tab:conceal}
+\footnotesize
+\begin{tabular}{@{}lrr@{}}
+\toprule
+arm & $N$ & paired set-difference \\
+\midrule
+byte-exact control & --- & $\mathbf{0.0000 \pm 0.0000}$ \\
+held-out bank A & $800$ & $+0.8875 \pm 0.2443$ \\
+held-out bank B & $800$ & $+0.8325 \pm 0.2378$ \\
+headline & $600$ & $\mathbf{+0.9683 \pm 0.2744}$ \\
+information-free null of the same shape and magnitude & --- & $\mathbf{-0.7200 \pm 0.2715}$ \\
+against opponents that do NOT defuse & $600$ & $\mathbf{-0.1483 \pm 0.2571}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:conceal} carries a dose-response in how well the opponent can read the leak
+concealment hides: $+0.97$ against a hard-skill opponent, $+0.31$ against medium, $+0.11$ against
+one without constraints. \textbf{The entire effect is denial of defusal} --- not a general
+improvement but a counter to one specific mechanism.
+
+\textbf{A correction, printed where the claim was.} This section used to end with \emph{``removing
+only the opponent's defusal drops the marginal value to $+0.157$''}. That is withdrawn. It
+contradicts the table's own last row in sign, and it does not reproduce: measured directly,
+conceal-only against plain is $-0.2883 \pm 0.2640$, and as a difference-of-differences on a common
+bank $-0.3067$. Both readings come out negative, and where the $+0.157$ came from could not be
+reconstructed, so it is retracted rather than reinterpreted \cite{concession}.
+
+\textbf{And the row that decides the mechanism is below the instrument's resolution.} $-0.1483 \pm
+0.2571$ at $N = 600$ sits under a minimum detectable effect of about $0.38$ sets at that cell's own
+per-pair SD (Section~\ref{sec:floor}), so concealment against a non-defusing opponent is \textbf{not
+resolved here}: anything from a real loss of about a third of a set to a small gain is consistent
+with it. What \emph{is} resolved, at $4{,}000$ pairs per cell, is that conceal-only is the weakest
+of the four concession arms outright (Section~\ref{sec:triangle}).
+
+\subsection{Verdict, and the correction it forces on defusal}
+\label{sec:concealverdict}
+
+\textbf{Not shipped on.} \code{conceal} is landed as an optional style field defaulting to absent,
+so every roster vector and every shipped difficulty tier is byte-identical, and the tiers carry
+\code{defuse: 0} and so have no customer for a counter to defusal.
+
+This section used to force a correction on Section~\ref{sec:defuse}, printed in the body as a
+warning that \emph{``defusal's $+1.50$ is an over-estimate against a concealing opponent''} which
+would take ``roughly one set per duplicate pair back'' --- on the grounds that neither the gauntlet
+(Table~\ref{tab:gauntlet}) nor the cross-engine replication (Table~\ref{tab:xplay}) ever put
+defusal in front of an opponent that conceals. \textbf{That gap has since been measured, and it
+closes the opposite way} \cite{concession}. Table~\ref{tab:triangle}'s C vs D edge is precisely the
+missing cell, at $4{,}000$ duplicate pairs per edge on two independent bank sets: a conceal-only
+opponent does not take a set off a defusing one, it \emph{loses} to it, by $-0.6797 \pm 0.1030$ and
+$-0.5102 \pm 0.1051$ --- about half a set per pair, in defusal's favour, on both banks.
+
+The worry was the right shape aimed at the wrong target. The figure near $0.9$ belongs to a
+different comparison entirely: concealment \emph{added to} defusal on the same side, the DC vs D
+edge at $+0.9630$ and $+0.8207$ (Table~\ref{tab:triangle}). That prices what a defusing team gains
+by concealing as well --- a fact about its own configuration --- and says nothing about what a
+concealing opponent takes off it. Defusal's headline stands as measured.
+
+\section{The triangle, refuted, and what replaced it}
+\label{sec:triangle}
+
+This project published a claim about its own tactic space: that defusal and concealment made it
+\emph{intransitive}, and that the resulting cycle was the reason an arbitration layer over
+per-decision tactics would pay. Measured properly, there is no cycle, and the retraction and its
+replacement are reported here as a first-class result.
+
+\begin{table}[t]
+\centering
+\caption{All six edges of the $2\times2$ through one code path, $4{,}000$ duplicate pairs
+per edge, with only the arm definitions changing; then reproduced by an independent agent on six
+entirely fresh banks \cite{concession}. Arms: \textbf{P} plain, \textbf{D} defuse-only, \textbf{C}
+conceal-only, \textbf{DC} both.}
+\label{tab:triangle}
+\footnotesize
+\begin{tabular}{@{}lrr@{}}
+\toprule
+edge & first run & independent replication \\
+\midrule
+D vs P   & $+1.6225 \pm 0.1016$ & $+1.6595 \pm 0.1022$ \\
+\textbf{C vs D} & $\mathbf{-0.6797 \pm 0.1030}$ & $\mathbf{-0.5102 \pm 0.1051}$ \\
+P vs C   & $+0.1457 \pm 0.1030$ & $+0.1742 \pm 0.1030$ \\
+DC vs D  & $+0.9630 \pm 0.1069$ & $+0.8207 \pm 0.1070$ \\
+\textbf{P vs DC} & $\mathbf{-1.2985 \pm 0.1036}$ & $\mathbf{-1.3155 \pm 0.1046}$ \\
+DC vs C  & $+0.3690 \pm 0.0987$ & $+0.3202 \pm 0.0987$ \\
+byte-exact control & $0.0000 \pm 0.0000$ & $0.0000 \pm 0.0000$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{There is no cycle under either reading of ``the concealing corner'', and the loop is broken
+by a wrong-signed leg rather than a straddling one --- so no sample size rescues it.} Read the
+corner as conceal-only and the second leg reverses: concealment does not beat defusal, it loses to
+it by about half a set ($9.5$--$12.9$ SE from zero). Read it as defuse-plus-conceal --- which is
+what Table~\ref{tab:conceal}'s $+0.97$ actually measured, concealment \emph{added to} defusal
+against defusing opponents --- and the second leg holds but the third reverses instead: DC beats P
+by $1.3$ sets ($12.5$--$24.6$ SE). The full $4\times4$ is a \textbf{strict transitive total order,
+$DC > D > P > C$}, every edge the same sign on both bank sets. Concealment is an increment on
+defusal, never a substitute for it, and \textbf{conceal-only is the worst of the four arms} ---
+worse than plain.
+
+Two further corrections came out of the replication rather than out of the run. The triangle table
+used to quote defusal at $+1.92 \pm 0.31$ from a 400-pair common-baseline bank; at $4{,}000$ pairs
+it is $+1.62$ / $+1.66$, ordinary sampling variation --- and the first explanation offered for that
+gap, that the mirror harness lacks \code{pickAsk}'s certain-hit gate, was tested by running the
+ungated harness and \emph{refuted} ($+1.6850 \pm 0.3358$, indistinguishable from the gated value).
+And the claim that the published triangle mixed two definitions of the concealing corner is
+\textbf{not} established: \code{conceal.ts}'s own header points the other way, and the two readings
+cannot be told apart at this resolution.
+
+\subsection{What survives, and why it is stronger than the cycle was}
+\label{sec:onebit}
+
+The old argument ran: the v1.0 adaptive layer degenerates because its counter table has a dominant
+row \cite{v10paper}; a defuse/conceal pair has no dominant row; therefore reading the opponent
+starts to pay. The premise was wrong. The conclusion is right anyway, for a plainer reason ---
+\textbf{the column argmax is opponent-dependent.} Measured on common banks, paired on the deal twice
+over, the best response against a \emph{plain} opponent is D by $+0.2870 \pm 0.1392$ over DC;
+against a \emph{conceal-only} opponent it is again D, by $+0.1462 \pm 0.1437$ over DC; and against a
+\emph{defuse-only} opponent it is DC, by $+0.9152 \pm 0.1353$ over D \cite{concession}.
+
+The best response flips on one bit of the opponent's configuration --- \emph{does it defuse?} ---
+and knowing that bit is worth up to $+0.29$ sets per duplicate pair against a non-defusing opponent,
+which is not a hypothetical opponent: every shipped tier carries \code{defuse: 0}. It is
+Section~\ref{sec:concealmeasure}'s own thesis restated as a policy --- conceal only against an
+opponent that defuses --- and it makes the follow-on work concrete and \emph{smaller} than a
+portfolio. The v1.0 degeneracy verdict does need revisiting, since degeneracy there is defined as
+``the read never changes the argmax'' and here the read changes the argmax; but the table it needs
+is one binary coordinate, not a tenth style \cite{v10paper,adaptive}. The arbitration layer is still
+the larger question and still unbuilt.
+
+\section{The detection floor, and the two nulls it reclassifies}
+\label{sec:floor}
+
+Every headline in this paper comes from one instrument: $K$ duplicate pairs of arm $X$ against arm
+$Y$ under \usff{}, reported as the mean paired set-difference $\pm 1.96$ SE. Until it was
+characterised, every published null was ambiguous between ``no effect'' and ``no resolution''. That
+characterisation is a sibling result in this batch \cite{floorpaper}; what matters here is what it
+does to this paper's own numbers. The per-pair SD is $3.15$--$3.44$ sets for arms that differ at
+every decision (replication: $3.18$--$3.44$), giving an $80\%$-power minimum detectable effect of
+$0.76$ at $N = 150$, $0.54$ at $300$, $0.47$ at $400$, $0.38$ at $600$, $0.33$ at $800$, $0.21$ at
+$2{,}000$ and $0.14$ at $4{,}300$ pairs.
+
+The power model is the solid part: across twelve (planted-effect, $N$) cells the observed detection
+rate sat within about one binomial SE of normal-theory prediction in both runs. Two parts did not
+replicate, and both cut against the first run's conclusions --- the empirical floor at $N = 400$
+($84.7\%$ detection of a planted $0.393$, then $75.0\%$; pooled $81.7\%$, so the floor is somewhere
+in $0.36$--$0.50$) and interval coverage at $N = 400$ ($6.1\%$ false positives, then $10.8\%$;
+pooled $8.0\%$ $[5.2\%, 11.7\%]$, excluding the nominal $5\%$). At $N = 800$ both runs are nominal
+\cite{floorpaper}.
+
+\begin{table}[t]
+\centering
+\caption{Which numbers in this paper sit below their own cell's floor
+\cite{concession,floorpaper}. The MDE depends on \emph{that cell's own} SD; this is a record of
+specific verdicts, not a threshold to apply by eye.}
+\label{tab:floortable}
+\footnotesize
+\begin{tabular}{@{}lrrrl@{}}
+\toprule
+result & reported & $N$ & its floor & verdict \\
+\midrule
+Table~\ref{tab:conceal}, conceal vs non-defusers & $-0.1483 \pm 0.2571$ & $600$ & ${\approx}\,0.38$ & \textbf{below floor --- not resolved} \\
+The contained-pass aim, ``inert'' & $-0.045 \pm 0.130$ & --- & --- & \textbf{below floor --- a non-measurement} \\
+\S\ref{sec:standing}, all four headline cells & $42.7$--$48.7\%$, no CIs & $150$ & $1.05$--$1.13$ & \textbf{all four below floor} \\
+Table~\ref{tab:defuse}, defusal shipped & $+1.43$ / $+1.58 \pm 0.32$ & $400$ & ${\approx}\,0.47$ & resolved, $3\times$ the floor \\
+Table~\ref{tab:triangle}, the six edges & $\pm 0.10$ half-widths & $4000$ & ${\approx}\,0.15$ & resolved \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:floortable} is the discipline applied to this project's own work. \textbf{Two of this
+paper's nulls are reclassified as non-measurements}: the contained-pass aim called ``inert'' in
+Section~\ref{sec:defects}, and the non-defuser cell of Table~\ref{tab:conceal}. Neither is a
+statement about the game; both are statements about this instrument's resolution. A third
+reclassification lands on the cross-engine standing figures: at 150 games per cell the per-opponent
+ranking of Section~\ref{sec:standing} is not resolved, which is why Section~\ref{sec:crossplay}
+rests on Table~\ref{tab:xplay}'s 300 properly paired duplicate pairs and not on it.
+
+One trap is worth naming, because the first floor run fell into it: the MDE depends on that cell's
+own SD, and the SD is not constant across the repository --- the turtle cell of
+Table~\ref{tab:defuse} measures $3.645$, and the cross-engine harness's own published half-widths
+imply it runs at $4.57$--$4.95$, some $38$--$49\%$ higher \cite{floorpaper}. So one SD substituted
+across all conditions understates the floor exactly where the cells are smallest. Everything this
+paper ships a mechanism on --- Tables~\ref{tab:defuse}, \ref{tab:gauntlet} and~\ref{tab:triangle}
+--- clears its own floor by $3\times$ or more.
+
+\section{Two defects in the shipped engine, found on the way}
+\label{sec:defects}
+
+\textbf{1. \code{missTarget: 'fewest'} is backwards.} Its trace prose tells the user that the
+smallest hand makes the surrendered turn ``worth least''; the measurement says the opposite in every
+phase bucket (Section~\ref{sec:estimators}), and the fork study of Section~\ref{sec:handoff}
+reproduces the sign a third time at $-0.261$. The same proxy appears in \code{valueContainedPass}'s
+$n_t$ term and in the contained-book policy's aiming rule \cite{containedpaper}.
+
+\textbf{The fix was built where it is soundest, and measured inert.} A contained-book turn-pass is a
+\emph{guaranteed miss} by construction, so Section~\ref{sec:confound}'s danger/opportunity confound
+cannot arise there: it is the one place in the engine where ``concede to the least dangerous seat''
+is exactly right. Replacing both the aim and the cost model with the threat estimate measured
+$-0.045 \pm 0.130$ over 400 duplicate pairs, and the diagnostic says why: over $25{,}654$ ask
+decisions, more than one opponent still holds cards $99.1\%$ of the time, the contained pass fires
+at all on $\mathbf{1.06\%}$, and it fires with the two aims disagreeing on $\mathbf{0.11\%}$.
+Published reach is too sparse there: most opponents have shown no basis at all, so every candidate
+prices the same and the aiming gain collapses.
+
+\textbf{The change was reverted rather than shipped off by default}, on the argument this project
+applies to its own knob inventory --- a knob that is listed, swept and reported while being inert
+contaminates the measured vector, and one of those is already one too many. Section~\ref{sec:floor}
+then reclassifies the $-0.045$ itself: it is below the floor, so ``inert'' overstates what was
+measured, and the revert stands on the sparsity diagnostic and the contamination argument rather
+than on the null.
+
+\textbf{2. \code{style.signalling} is unreachable under \usff{}.} The signalling ask is gated inside
+the planner path, which a \usff{} game enters only for \code{phase === 'endgame'} --- a phase that
+rule set never produces. So the knob is listed, swept and reported, and buys a \usff{} seat nothing
+at all except through the contained-pass information price, where it zeroes one term. \textbf{A dead
+knob in a measured vector is a contaminated comparison}, the same argument that decided the revert
+above. This project has published that failure mode once before, for a different axis
+\cite{inertpaper}; this is the second instance in the same roster.
+
+\section{Capability 4: switching actions instead of playstyles}
+\label{sec:capability4}
+
+The owner asked for an adaptive model that, ``instead of switching between playstyles, just switches
+between actions and strategies, to allow for more flexible playing''. \textbf{That is the right
+architecture, and it is now measured rather than argued.} The two layers price against each other in
+the same unit: the v1.0 adaptive layer, which switches the whole style once per phase, is worth
+$+0.13 \pm 0.06$ sets per duplicate pair over a bare Balanced team \cite{v10paper,adaptive,bounded};
+the style knob itself, chosen well, is worth nothing, because it is a constant (a $\pm 0.27$
+spread); and the per-decision terms (\code{containedPass}, \code{defuse}), which switch the
+\emph{action} at every decision from the position, are worth $+1.43$ and $+1.58 \pm 0.32$
+(Table~\ref{tab:defuse}).
+
+\textbf{The per-decision layer is worth roughly eleven to twelve times the style-switching layer},
+and the style-switching layer is worth less than simply naming a better style would have been ---
+the owner's point, quantified. One arithmetic correction belongs here rather than in a footnote: the
+project's own summary table records this ratio as ``about $15\times$'', and against the numbers this
+paper reports it is not, since $1.43/0.13 = 11.0$ and $1.58/0.13 = 12.2$. No source records what
+the larger figure was computed from. The plausible reconstruction --- offered as one, not as a
+provenance --- is that it is the ratio against the defusal estimate this paper has withdrawn,
+Section~\ref{sec:triangle}'s retired $+1.92$, since $1.92/0.13 = 14.8$. What is not in doubt is the
+ratio of the numbers actually carried, which is eleven to twelve.
+
+There is a structural reason the style layer cannot do better, and it is a theorem rather than a
+measurement: best-response selection over the committed counter table provably degenerates to
+always-Punter, because one row weakly dominates every column and the expected payoff is linear in
+the opponent posterior \cite{v10paper,adaptive}. A layer that reads the \emph{position} --- has this
+opponent published a basis in a set my team can locate cards of? is this set contained? is the ask
+channel about to close? --- is choosing from the legal move list instead, every turn, and every
+mechanism in this paper is one predicate over that list. So what is shipped is a \emph{step} of
+capability 4, and the arbitration layer over it is worth building only now that there is more than
+one tactic to arbitrate: of the four originally proposed three measured harmful or inert, and
+Section~\ref{sec:onebit} prices the arbitration between the two survivors at one bit.
+
+\section{Threats to validity}
+\label{sec:threats}
+
+\begin{enumerate}
+\item \textbf{One fitted constant, fitted here.} The cards-per-prey-card slope of
+  Equation~\eqref{eq:threat} is measured on this engine, against this roster, under \usff{}.
+  Table~\ref{tab:xplay} is evidence that the \emph{mechanism} transfers, not that the constant is
+  optimal elsewhere; no re-fit was attempted inside the host engine, because that would have burned
+  it as a holdout \cite{crossplay}.
+\item \textbf{A stated $K$ is missing.} Several variants of the defusal term were scored before the
+  winner was picked --- per-set against per-seat, five appetites, two gate designs --- and the
+  selection haircut is unpriced. The held-out banks and the cross-engine replication stand in for
+  it; neither substitutes for the arithmetic.
+\item \textbf{The threat model is an under-approximation by construction.} It reads no hand but the
+  viewer's own, so it is silent about every basis a seat has not published and is worst early. That
+  property is what makes avoidance unsound (Section~\ref{sec:confound}); it also caps how much of
+  the true threat any of these mechanisms can act on.
+\item \textbf{The opponents are all policies of two engines}, and both populations are closed. The
+  gauntlet's opponents are FishAI policies; the cross-engine opponents are four bots roughly four
+  releases behind their own project's frontier, played without the declare channel that carries
+  $45.4\%$ of FishAI's declares (Section~\ref{sec:bridge}). Neither population contained a
+  \emph{concealing} opponent --- but that particular gap is closed rather than open:
+  Table~\ref{tab:triangle}'s C vs D edge measures defusal against a conceal-only opponent at
+  $4{,}000$ pairs on two bank sets and puts defusal ahead by about half a set
+  (Section~\ref{sec:concealverdict}).
+\item \textbf{A channel the host engine has and FishAI does not was switched off.} Their engine
+  supports \code{psychologicalTells}. FishAI has no notion of it, so it was left \textbf{off} for
+  every cell in Section~\ref{sec:crossplay}, on the grounds that leaving it on would have measured
+  something other than card play \cite{crossplay}. That is the right call for isolating the
+  mechanism, and it is also a bound on the standing figures: their bots are not being played with
+  everything the host gives them.
+\item \textbf{Resolution, and the harnesses.} Section~\ref{sec:floor} is the honest boundary of
+  every null above, and a null not named in Table~\ref{tab:floortable} has not been individually
+  checked against its own cell's SD. The measurements come from scratch harnesses under
+  \code{scripts/probe-*.mjs}: not typechecked, no committed artifact, not digest-bound, unlike the
+  lab's tournament artifacts \cite{botlab,repo}. They exist so every table above can be regenerated,
+  and that is the strongest claim available for them.
+\end{enumerate}
+
+\section{What is not settled}
+\label{sec:open}
+
+The residue is kept in the body, because a paper that shipped a mechanism and hid its open items
+would be misreporting the work.
+\begin{itemize}
+\item \textbf{The style matrix is invalidated.} The roster now carries \code{defuse: 1}, so the
+  committed style matrix no longer describes the shipped roster and must be re-run and re-pinned
+  \cite{styles}.
+\item \textbf{A pre-existing defect in the committed search numbers}, found while adding the new
+  knobs to the ladder: the candidate budget was the literal $60$ against a $75$-rung ladder, so the
+  search evaluated a \emph{prefix} and abandoned the tail --- a prune selected by the order the
+  fields happen to be typed in. Replaying the old ladder along each style's committed accepted moves
+  reproduces the artifact's candidate counts exactly and shows what the prefix cost: \code{banker}
+  never evaluated \code{minHandSize=3}, and \code{turtle} never evaluated \code{minHandSize=1} or
+  \code{minHandSize=3} --- three rungs across two of nine searches. The budget is now the ladder's
+  own length. The exploit cache does not see any of this, because it keys on an engine hash that
+  walks the engine tree only and neither the ladder nor the budget lives there, so a cached re-run
+  re-emits the pre-fix numbers.
+\item \textbf{The concealment half of the certain-hit gate is unpinned.} \code{pickAsk} documents
+  the gate as zeroing \emph{both} terms; the gate test pins only defusal, because in its fixture the
+  concealing seat has already published a basis in both sets it can ask into and the charge is
+  exactly zero on both asks --- asserted explicitly, so the test cannot be misread as coverage it
+  does not have. A mutation leaving that charge live under a certain hit is invisible to the suite,
+  and the gate's own firing rate is unpriced by any ladder (Section~\ref{sec:gate}).
+\item \textbf{Sign-flip coverage was over-claimed and then corrected.} The claim was that both
+  concession terms pass their suites with the sign reversed. Measured by reversing each of the three
+  sign errors available: negating the defusal bonus fails 2 of 25 existing assertions, negating the
+  concealment charge fails 3 of 25, and reversing the \emph{application} in \code{pickAsk} ---
+  writing $\text{charge} - \text{bonus}$ for $\text{bonus} - \text{charge}$ --- \textbf{passes both
+  suites entirely}. One third of the claim was true and it was the important third: every assertion
+  called the exported functions directly, and nothing pinned what \code{pickAsk} did with the
+  numbers they returned. Two decision-level tests now close it.
+\item \textbf{Four seams are held by hand.} No test pins the concession layer's turn-yield equal to
+  the contained-book policy's $E$, though both file headers describe them as deliberately
+  duplicated; the tabled-licence export has no caller; the dynamic test of the public-view boundary
+  runs the three shipped tiers, which carry \code{defuse: 0}, so no code in the threat, defusal or
+  concealment files executes under it; and the bounded arm's licence scan retires licences against
+  budgeted knowledge while the ask history it scans is not itself budgeted, a fix that would change
+  every committed v1.5 number \cite{v15paper,bounded}.
+\item \textbf{A true match against SESTINA v1.0 is possible and is blocked only by a missing
+  compiler} (Section~\ref{sec:sestina}). Their repository documents a JSON-line cross-play protocol;
+  installing a C++ toolchain would make it a day's work \cite{crossplay,fishlabs}.
+\end{itemize}
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+The request that started this work was for a rule that refuses to ask dangerous opponents. The rule
+was built exactly as asked, measured against a byte-exact control on duplicate deals, and it loses
+--- up to $11.7$ points of win rate, monotonically worse as it is driven harder, while an
+information-free perturbation of the same magnitude is free. The threat model underneath the request
+is nonetheless correct, and better than what the engine already used for the same job: the shipped
+hand-size proxy correlates $-0.147$ with what a conceded seat actually takes, the licence estimator
+$+0.421$.
+
+What makes the prescription wrong is one structural fact. Row 6 permits an ask only into a set the
+asker holds a card of, so the seat that is dangerous to you is the seat holding cards of the sets
+you are invested in --- which is the seat most likely to hold the card you want. Threat and
+opportunity are the same measurement, $\mathrm{corr} = +0.249$, and avoidance trades away your own
+best asks to buy safety that a public-log threat model can never certify anyway, since an absence of
+published reach is not evidence of absent reach. Invert it and the same model prescribes the
+opposite move: ask \emph{into} the set the dangerous seat has published a basis in, take the card
+its reach rests on, and keep the turn under row 9. That is worth $+1.43$ and $+1.58$ sets per
+duplicate pair on held-out banks, is positive at all nine roster styles, survives opponents that
+defuse back at $+1.08$ to $+1.96$, and --- the result the project would keep if it could keep only
+one --- transfers at the same magnitude, $+1.55$ to $+1.75$, into a third party's engine against a
+third party's bots with one knob moved.
+
+The rest of the ledger is negative and is reported at the same weight: signalling flat and
+unreplicated, stalling harmful once strong enough to act, the turn-handoff request beaten by the
+rule already shipped, concealment a counter-weapon rather than an improvement. Three items in it are
+this project correcting itself. The intransitive triangle it published about its own tactic space
+does not exist, and the opponent-dependent argmax worth one bit that replaced it is the better
+result. A fix for the engine's wrong-signed concession proxy was built where it is provably sound,
+measured below the instrument's floor, and \emph{reverted rather than shipped off by default},
+because a listed-but-inert knob contaminates every vector it appears in. And the certain-hit gate
+exists because an adversarial review found the new credit could displace a certain hit, which it
+then did nine times in a sweep against zero for the control.
+
+Two of the nulls above are not zeros. The detection floor \cite{floorpaper} reclassifies
+concealment's non-defuser cell and the contained-pass aim as \emph{non-measurements} --- this
+project's discipline applied to its own published numbers rather than to someone else's. Where a
+result is below the instrument's resolution, the honest report is the resolution.
+
+\medskip
+\noindent\textbf{Reproducibility.} The engine is deterministic and one seed reproduces a
+byte-identical game \cite{repo}; every table above is regenerated by a named probe under
+\code{scripts/probe-*.mjs} \cite{concession}. The cross-engine harness lives outside the repository,
+beside the clone it drives: that clone carries no licence file, nothing from it is copied into this
+project, and their findings are cited as theirs \cite{crossplay,fishlabs}.
+
+\begin{thebibliography}{99}
+\footnotesize
+
+\bibitem{concession}
+FishAI project. CONCESSION.md --- FishAI v2.0: the three-sided ask. Repository document, 2026. Every
+measurement in this paper except the cross-engine ones, with its probe named: \S1--\S3 the conceded
+turn, off-limits and defusal, \S4--\S5a signalling, stalling and concealment, \S6--\S8 the engine
+defects, the turn handoff and the triangle, \S8a the detection floor, \S9 the open residue.
+
+\bibitem{crossplay}
+FishAI project. CROSSPLAY.md --- FishAI against the fishlabs bots, in the fishlabs engine.
+Repository document, 2026. \S0 what ran and what did not, \S1 the bridge and the declare-window
+handicap, \S2 standing, \S3 the cross-engine defusal replication, \S4 their reported SESTINA
+results and their own qualifications on them, \S5 \code{lockout}, \S6 common failure points and
+declare calibration, \S7 what it does not establish.
+
+\bibitem{asking}
+FishAI project. ASKING.md --- the ask channel and what it publishes. Repository document, 2026.
+\S4.3 the reply-into-the-asked-set rate and its availability-matched control.
+
+\bibitem{containment}
+FishAI project. CONTAINMENT.md --- the contained-book result. Repository document, 2026. Claims
+C1--C6 with evidence tiers, and the independent derivation of the value of a turn.
+
+\bibitem{adaptive}
+FishAI project. ADAPTIVE.md --- the v1.0 adaptive layer and its degeneracy verdict. Repository
+document, 2026. The dominant-row argument that collapses best-response style selection to a
+constant.
+
+\bibitem{bounded}
+FishAI project. BOUNDED.md --- the bit-budget memory ladder. Repository document, 2026. \S5a the
+v1.0-over-Balanced measurement cited in Section~\ref{sec:capability4}.
+
+\bibitem{rules}
+FishAI project. RULES\_US54.md --- the ``US student'' 54-card variant. Repository rules
+specification with derived consequences and test vectors, 2026. Decision-table rows cited by number
+throughout.
+
+\bibitem{styles}
+FishAI project. STYLES.md --- the play-style roster under \usff{}. Repository document, 2026. The
+nine-style roster, the rule that a style may not tune its own trigger, and the byte-identical hold
+on the 48-card rule set.
+
+\bibitem{botlab}
+FishAI project. BOT\_LAB.md --- play-style spectrum: research, experimental design, and metrics.
+Repository document, 2026. \S5.1 duplicate-deal pairing, \S10 threats to validity.
+
+\bibitem{repo}
+FishAI project. FishAI repository: engine, bots, simulation laboratory, and results site. Concession
+layer \code{lib/engine/bots/threat.ts}, \code{defuse.ts} and \code{conceal.ts}, the ask ranker
+\code{decide.ts} (\code{pickAsk}, the certain-hit gate), and
+\code{tests/bots/concession-direction.test.ts}, 2026.
+
+\bibitem{v05paper}
+A.~Hsieh. FishAI v0.5: measuring play style without skill in a 54-card Literature variant. FishAI
+project; companion paper, 2026.
+
+\bibitem{v10paper}
+A.~Hsieh. FishAI v1.0: when best-response adaptation is worth less than nothing. FishAI project;
+companion paper, 2026.
+
+\bibitem{v15paper}
+A.~Hsieh. FishAI v1.5: a bit-budget memory ladder as an honest difficulty axis. FishAI project;
+companion paper, 2026.
+
+\bibitem{obspaper}
+A.~Hsieh. What a public log reveals: observing play style in Literature (Canadian Fish). FishAI
+project; companion paper, 2026.
+
+\bibitem{inertpaper}
+A.~Hsieh. The inert axis: when a style parameter is wired, swept, and never reached. FishAI project;
+companion paper, 2026. The first instance in this roster of the failure mode
+Section~\ref{sec:defects} reports a second one of.
+
+\bibitem{containedpaper}
+A.~Hsieh. The contained book: an absorbing resource measured to be worth nothing. FishAI project;
+companion paper, 2026. The value of a turn, the trigger inequality, and the aiming rule
+Section~\ref{sec:defects} attempted to correct.
+
+\bibitem{floorpaper}
+A.~Hsieh. The detection floor: what a duplicate-deal instrument can and cannot resolve. FishAI
+project; companion paper, published alongside this one, 2026. The per-pair SD, the power model, the
+two parts that did not replicate, and the reclassification of two of this paper's nulls.
+
+\bibitem{fishlabs}
+\code{dylann4500}. fishlabs --- a Canadian Fish engine, bot family and evaluation lab. GitHub
+repository, \url{https://github.com/dylann4500/fishlabs}. The C++ SESTINA v1.0 agent and its
+reported margins, the TypeScript lab engine and its eight bots, the \code{lockout} danger-penalty
+strategy, and the JSON-line cross-play protocol. The repository carries no licence file; nothing
+from it is reproduced here.
+
+\bibitem{pagat}
+J.~McLeod (ed.). Literature (Canadian Fish). Pagat card-game rules archive,
+\url{https://www.pagat.com/quartet/literature.html}. Folklore source for the common core of both
+rule sets this project supports.
+
+\end{thebibliography}
+
+\end{document}

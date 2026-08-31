@@ -1,0 +1,1103 @@
+\documentclass[11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{microtype}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
+
+% Float packing: let tables share pages with more text instead of drifting.
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.6}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.8}
+\setcounter{totalnumber}{4}
+\setcounter{topnumber}{3}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\usff}{\code{us54}}
+
+\title{Inference From a Miss:\\ What Silence Licenses, and Two Corrections That Subtract}
+\author{Allen Hsieh\\[2pt] {\small FishAI project}}
+\date{August 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+The owner of this project raised a specific worry about the engine's inference: if you
+ask for a low spade, miss, and the target never asks you for a low spade back, do not
+conclude they hold none. This paper answers that worry and then generalises it into the
+full matrix for choosing an ask. The engine does not make the inference and structurally
+cannot --- an absence is not a log event, so nothing in the ingestion \code{switch} can
+key on one --- demonstrated by a treatment/control pair in which only the named card's
+candidate set moves and the other four are bit-identical. The residual error runs
+\emph{opposite} to the worry: in exactly the owner's position the engine believes
+$14.0\%$ where the truth is $2.0\%$ ($N = 19{,}003$), too generous to the silent seat.
+Calibration over $1{,}395{,}876$ scored asks from $300$ \usff{} games puts the overall
+bias at $-0.0109$ --- optimistic, which is the signature of an engine that is \emph{not}
+over-inferring --- with the certainty tier exact: $16{,}680$ asks called certain hit
+$16{,}680$ times. Stratified, silence alone is worth $-0.0081$ over $1{,}176{,}652$ asks
+and is genuinely near-uninformative, while silence \emph{after a miss} is a different
+object --- such a seat holds a card of the set $6.3\%$ of the time against $66.3\%$ for a
+silent seat never missed on. Two real gaps run the other way, both under-reading
+\emph{positive} evidence: a published row-6 licence is under-priced by $8.4$ points
+($0.2386$ believed against $0.3221$ observed, $N = 23{,}345$), because a deal-time
+constraint is dropped the moment it is satisfied or exhausted --- exactly when the seat
+has been shown to hold a card of the set; and the conceded-turn proxy is hand size, which
+correlates $-0.147$ with the cards the conceded seat then takes against $+0.421$ for its
+published reach. Conditioning on the licence at strength $\lambda = 0.60$ removes the
+calibration bias almost exactly ($-0.0002$). The headline is what that bought. On one
+$400$-pair common baseline, defusal alone is worth $+1.915 \pm 0.315$ sets per duplicate
+pair, the calibration fix alone $+2.068 \pm 0.293$, and \textbf{both together
+$+1.565 \pm 0.317$}: the stack ranks below either part, which is the shape of two
+substitutes reached different ways rather than of complements. That ordering is
+\emph{suggestive, not established}. Every interval quoted is an arm against the baseline;
+none is on a difference between arms, and the smaller gap the reading rests on
+($0.350$ sets) is under these arms' own $0.42$--$0.47$ detection floor. The arms do share
+one bank and one baseline, so the comparison is paired and sharper than a between-bank one
+would be --- but the paired interval was not computed, and at this $N$ the ordering is
+reported as a signal to re-measure rather than as a settled result. Only a common-baseline
+design raises the question at all --- measured each against its own baseline the
+calibration fix reads as a flat $+0.04 \pm 0.41$. The same $400$-pair scale is where this instrument is weakest, and the
+paper reports that in the body: the defusal quantity measures $+1.62$/$+1.66$ at
+$4{,}000$ pairs, and the first explanation offered for the gap was tested and refuted.
+A separate observation --- that two or three sets get ``ask-traded'' --- is confirmed at
+$88.1\%$ against a $21.4\%$ availability-matched control and then shown not to be
+reciprocation at all: $99.1\%$ of those replies are the hit-probability argmax. The
+recommendation is to ship neither change.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+Every ask in Literature (Canadian Fish) is a question put in public, and every answer is
+heard by the whole table. That makes the game a laboratory for a narrow question with a
+wide reach: \emph{what does an event license you to conclude, and what does a
+non-event?}
+
+The question arrived here in a concrete form. The project's owner, watching the engine
+play, wrote down a worry:
+
+\begin{quote}
+``If you have a low spade, you ask for a low spade but don't get it, and they don't ask
+for a low spade back, don't automatically infer that they don't have any low spades.''
+\end{quote}
+
+It is a good worry. It names a real failure mode of enthusiastic deduction engines --- the
+slide from ``no evidence that they hold one'' to ``evidence that they hold none'' --- and
+it names it in the exact position where the slide is most tempting, because the miss
+\emph{did} certify something and the silence sits right next to it.
+
+This paper answers the worry, and then does the thing the worry was a special case of. It
+audits every path by which the engine eliminates a candidate and asks of each whether it
+is sound (Section~\ref{sec:audit}). It measures whether the engine over-infers anywhere,
+by scoring its own stated hit probability against ground truth over $1{,}395{,}876$ asks
+(Section~\ref{sec:calibration}). It measures what silence is actually worth, in the
+owner's exact position and in three neighbouring ones (Section~\ref{sec:silence}). It
+reports the two places where the engine's inference \emph{is} wrong --- both of them the
+opposite of the feared error (Section~\ref{sec:gaps}) --- and one behaviour that looks
+wrong from the outside and is not (Section~\ref{sec:clustering}). It lays out the full
+ask matrix the owner asked for, twelve factors with their grounding, sign, and whether
+they are priced today (Section~\ref{sec:matrix}). And it closes on the result that
+changed what the project would do (Section~\ref{sec:substitution}): fixing the
+calibration error is worth about two sets per duplicate pair, the shipped defusal
+heuristic is worth about two sets per duplicate pair, and \emph{doing both measures lower
+than doing either} --- an ordering the design makes visible and this bank size does not
+resolve.
+
+Three findings are worth stating before the machinery.
+
+\textbf{The engine does not make the owner's mistake, and cannot.} Not because it is
+careful, but because an absence is not representable in the layer that would have to act
+on it (Section~\ref{sec:absence}). The measured residual runs the other way: the engine
+is too generous to the seat that has gone quiet, not too harsh.
+
+\textbf{Silence and silence-after-a-miss are different objects.} The first is worth
+$0.8$ points of bias over $1.18$ million asks --- the owner's principle, validated. The
+second is worth $60$ points of set-level probability. The compound event is informative
+even though neither part is, and the engine under-uses it. It is deliberately not acted
+on, for reasons Section~\ref{sec:notacting} gives in full.
+
+\textbf{Two corrections for the same evidence should not be expected to add.} The defusal
+term the project already ships \cite{concession} and the calibration fix this paper derives
+are, at bottom, one reordering reached two ways --- an argument from mechanism, which the
+measurement then agrees with: stacked, they measure lower than either alone. The ordering
+is suggestive rather than resolved at this bank size, for the reasons
+Section~\ref{sec:subresult} sets out. The design point stands regardless of how the
+ordering settles, and Section~\ref{sec:lesson} states it once, in general.
+
+\section{The rules the inference rests on}
+\label{sec:rules}
+
+Literature is played by six players in two teams of three (seats $0,2,4$ versus $1,3,5$)
+\cite{pagat}. Under \usff{} \cite{rules54} the deck is 54 cards partitioned into nine
+\emph{sets} (half-suits) of six; nine cards are dealt to each player; the game ends when a
+team has been awarded five sets. The engine is pure, deterministic TypeScript, and one
+seed reproduces a byte-identical game \cite{repo,v05paper}.
+
+The inference in this paper uses a handful of rows of the \usff{} decision table
+\cite{rules54}, cited by number throughout.
+
+\begin{center}
+\small
+\begin{tabular}{@{}c p{0.84\textwidth}@{}}
+\toprule
+row & rule \\
+\midrule
+5  & \textbf{Ask target.} The target of an ask is always an opponent; a teammate may
+     never be asked. \\
+6  & \textbf{Ask licence.} An asker must hold at least one card of the asked set. \\
+7  & \textbf{Own card.} You may not ask for a card you hold. \\
+9  & \textbf{Hit.} The card transfers; the asker keeps the turn and asks again. \\
+10 & \textbf{Miss.} The turn passes to the player who was asked. \\
+12 & \textbf{Declare content.} Name the set and the exact holder of all six cards; every
+     assignment must be a seat on the declarer's own team. \\
+17 & \textbf{Information.} Card counts are public, with a full public log of asks,
+     results, and declares. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Two consequences do most of the work below. First, rows 6 and 7 make every ask a
+\emph{broadcast}: it publishes permanently that the asker holds at least one card of the
+set, and that the asker lacks the named card. Second, rows 9 and 10 make every ask a
+\emph{bet with a tempo stake}: a hit takes a card and keeps the turn, a miss ends the turn
+and hands it to a named opponent. The companion document treats the broadcast and the
+concession \cite{concession}; this paper treats the bet, and what the broadcast lets a
+listener conclude. The public channel both of them read from --- what a log of asks,
+results and declares does and does not expose --- is specified in \cite{obspaper}.
+
+\section{The direct answer: an absence is not an event}
+\label{sec:absence}
+
+\subsection{Why the engine cannot make the inference}
+
+FishAI never treats silence as evidence. After $A$ asks $B$ for the $3\spadesuit$ and
+misses, the engine concludes exactly one negative fact --- \emph{$B$ lacks the
+$3\spadesuit$} --- and nothing whatever about $B$'s
+$2\spadesuit/4\spadesuit/5\spadesuit/6\spadesuit/7\spadesuit$. $B$'s later asks into other
+sets move those beliefs by zero \cite{asking}.
+
+The reason is structural rather than careful, and the distinction matters for how much
+confidence the result deserves. The ingestion routine in \code{knowledge.ts} is a
+\code{switch} over events that \emph{are} in the log \cite{repo}. There is no scan for
+``who has not asked into set $S$'', no silence counter, no candidate-mask decay. An
+absence is not representable in that layer, so it cannot be acted on there. A guarantee of
+that shape is stronger than a guarantee that rests on a careful predicate, because there
+is no predicate to get wrong.
+
+\subsection{Demonstrated, not asserted}
+\label{sec:demo}
+
+The claim is executed rather than argued: a treatment in which the $3\spadesuit$ ask
+happens against a control in which it does not, with seat 1 then asking four more times
+and never into low spades \cite{asking}.
+
+\begin{table}[ht]
+\centering
+\caption{Candidate sets and per-seat probabilities after the treatment ask, against the
+control that omits it \cite{asking}. Only the named card moves.}
+\label{tab:demo}
+\small
+\begin{tabular}{@{}l l l r r@{}}
+\toprule
+card & candidates (treatment) & candidates (control) & $p(\text{seat }1)$ treat.
+& $p(\text{seat }1)$ ctrl. \\
+\midrule
+$3\spadesuit$ & $[2,3,4,5]$   & $[1,2,3,4,5]$ & 0.0000 & 0.2000 \\
+$5\spadesuit$ & $[1,2,3,4,5]$ & $[1,2,3,4,5]$ & \textbf{0.2000} & \textbf{0.2000} \\
+$6\spadesuit$ & $[1,2,3,4,5]$ & $[1,2,3,4,5]$ & \textbf{0.2000} & \textbf{0.2000} \\
+$7\spadesuit$ & $[1,2,3,4,5]$ & $[1,2,3,4,5]$ & \textbf{0.2000} & \textbf{0.2000} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:demo} is the whole answer to the literal question. The named card's
+candidate set loses seat 1 --- which is row 7 and the logged miss, both sound --- and the
+other four rows are bit-identical between the two runs. Four further asks by the silent
+seat, into other sets, move nothing.
+
+\subsection{The residual runs the other way}
+\label{sec:residual}
+
+The interesting part is what the engine believes in that position, measured against
+ground truth. In the owner's exact case --- I missed on this seat, and it has never asked
+back into the set --- the engine believes $14.0\%$ and the truth is $2.0\%$
+($N = 19{,}003$) \cite{asking}.
+
+It is \emph{too generous} to the silent seat, by twelve points, not too harsh. It never
+writes that seat off; if anything it should write it off slightly more than it does. So
+the owner's principle is right, the engine already honours it, and it honours it with
+room to spare. Section~\ref{sec:silence} takes that twelve-point gap seriously as a
+quantity, and Section~\ref{sec:notacting} explains why the project declines to spend it.
+
+\section{Every way a candidate can be eliminated, and whether it is sound}
+\label{sec:audit}
+
+An engine that does not infer from absence can still infer unsoundly from presence. The
+audit below walks every path by which a candidate seat is removed from a card's candidate
+set, and asks of each what licenses it \cite{asking,repo}.
+
+\begin{table}[ht]
+\centering
+\caption{The elimination-path audit \cite{asking}. Not one trigger is keyed on an
+absence.}
+\label{tab:audit}
+\small
+\begin{tabular}{@{}p{0.30\textwidth} p{0.47\textwidth} l@{}}
+\toprule
+trigger & justification & verdict \\
+\midrule
+a miss --- the target is cleared for the \textbf{named card} & the logged event
+& \textbf{sound} \\
+a miss --- the asker is cleared for the named card & row 7: you may not ask for a card you
+hold (correctly disabled when \code{askOwnCardAllowed}) & \textbf{sound} \\
+historical count exhaustion & pigeonhole on log-replayed counts; disabled when the log is
+windowed & \textbf{sound} \\
+current count exhaustion & pigeonhole on the public counts of row 17 & \textbf{sound} \\
+own-hand injection & the viewer's own hand is ground truth & \textbf{sound} \\
+singleton collapse, count forcing, constraint forcing, claim reveal & positive fixes,
+downstream of the above or read from a claim's revealed holders (row 12) & \textbf{sound}
+\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three notes on Table~\ref{tab:audit}.
+
+\textbf{The bounded arm inherits soundness rather than risking it.} The v1.5 bit-budget
+fact pool \cite{v15paper} carries \code{lacks-card} and \code{no-basis} facts, which are
+compressions of already-certified eliminations; and forgetting can only \emph{widen} a
+candidate set, never narrow one. A bounded seat is therefore less certain than a
+full-memory seat and never differently certain.
+
+\textbf{The refined probability's only failure mode is over-confidence.}
+\code{refinedHitProbability} short-circuits at zero and is monotone non-decreasing, so it
+cannot manufacture a false negative --- it cannot be the mechanism that writes a seat off.
+Section~\ref{sec:calibration} then measures whether it is over-confident in practice, and
+finds it is not.
+
+\textbf{Two places are sound-but-fragile, and neither is reachable at the shipped hard
+tier.} A first-write-wins rule could persist a wrong certainty on \emph{inconsistent}
+input, but is reachable only under the easy tier's six-event window, which also runs
+without constraints; and \code{clearCand} refuses to empty a candidate set, which is the
+anti-unsoundness guard itself, erring toward a superset. \textbf{No bug was found and no
+code change is warranted} by this audit \cite{asking}.
+
+\subsection{The one defect the audit did surface}
+\label{sec:staleness}
+
+The audit is about elimination, and elimination is sound. The defect it surfaced is about
+\emph{retention}, and it is the cause of the largest gap in this paper.
+
+\code{knowledge.ts} records an ask as a deal-time set constraint --- \emph{this seat holds
+at least one card of this set} --- and \textbf{drops that constraint the moment it is
+satisfied or exhausted} \cite{repo,concession}. Read plainly: the constraint is discarded
+exactly when the seat has been \emph{shown} to hold a card of the set, which is precisely
+when the fact is most informative. \code{refinedHitProbability} iterates those
+constraints, so it goes blind where the evidence is strongest.
+
+This is not a soundness bug. Nothing false is concluded; something true is forgotten. It
+is nonetheless the origin of the $8.4$-point under-pricing of
+Section~\ref{sec:underpricing}, and the threat model already routes around it: the header
+of \code{threat.ts} names the same staleness and reads the licence off the public log
+instead, which roughly doubles the share of harvest threats a seat can see
+($6.0\% \to 11.7\%$) and takes detection of the canonical five-and-one position from
+$7.1\%$ to $35.0\%$ \cite{concession,repo}. The fix had never reached the probability.
+
+\section{Is the engine over-inferring anywhere? Calibration says no}
+\label{sec:calibration}
+
+The audit establishes that each elimination path is licensed. It does not establish that
+the resulting probability is honest, and the two are different claims: an engine can
+reason from sound facts to over-confident numbers. So every legal ask at every ask
+decision was scored with the number \code{pickAsk} actually decides on, against ground
+truth read from the hands --- $300$ \usff{} games, $N = 1{,}395{,}876$ scored asks
+\cite{asking}.
+
+\begin{table}[ht]
+\centering
+\caption{Ask calibration over $1{,}395{,}876$ scored asks, $300$ \usff{} games
+\cite{asking}. ``Believed $p$'' is the number \code{pickAsk} decides on; ``observed'' is
+the realised hit rate of those asks against the hands.}
+\label{tab:calibration}
+\small
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+believed $p$ & $N$ & mean $p$ & observed & observed $-\ p$ \\
+\midrule
+0.0--0.1 & 126{,}303 & 0.007 & 0.0068 & $+0.0002$ \\
+0.1--0.2 & 454{,}977 & 0.171 & 0.1681 & $-0.0028$ \\
+0.2--0.3 & 717{,}054 & 0.221 & 0.2023 & $-0.0184$ \\
+0.3--0.4 & 37{,}765  & 0.337 & 0.2912 & $-0.0461$ \\
+0.4--0.5 & 24{,}124  & 0.440 & 0.4746 & $+0.0349$ \\
+0.5--0.6 & 10{,}083  & 0.533 & 0.5205 & $-0.0130$ \\
+0.6--0.7 & 8{,}181   & 0.625 & 0.6499 & $+0.0249$ \\
+0.7--0.8 & 631       & 0.734 & 0.7242 & $-0.0095$ \\
+0.8--0.9 & 78        & 0.810 & 0.7308 & $-0.0790$ \\
+\textbf{0.9--1.0} & \textbf{16{,}680} & \textbf{1.000} & \textbf{1.0000}
+  & $\mathbf{+0.0000}$ \\
+\midrule
+all & 1{,}395{,}876 & 0.2062 & 0.1953 & $-0.0109$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two readings of Table~\ref{tab:calibration}, in order of load.
+
+\textbf{The certainty tier is exact.} $16{,}680$ asks called certain hit $16{,}680$ times,
+no exceptions. That is the property the whole policy is allowed to rest on --- row 9 keeps
+the turn on a hit, so a certain hit is riskless material \emph{and} free tempo --- and it
+holds at this scale without a single counterexample. It is also the strongest available
+answer to the audit's question, because a false elimination that mattered would have to
+show up here as a certain ask that missed.
+
+\textbf{The overall bias is optimistic by about a point} ($-0.0109$: the engine's mean
+belief exceeds the realised rate). That sign is the signature of an engine that is
+\emph{not} over-inferring in the feared direction. An engine that wrongly concluded ``they
+must have none'' would concentrate its remaining probability on the seats it had not
+written off, and would therefore show hit rates \emph{above} its own claims in the low
+buckets. Table~\ref{tab:calibration} shows the opposite in the three low buckets that
+carry the mass --- $0.1$--$0.2$, $0.2$--$0.3$ and $0.3$--$0.4$, $1.21$ million asks
+between them, all negative. The one low bucket that runs the other way is $0.0$--$0.1$, at
+$+0.0002$: two ten-thousandths, on asks the engine already calls near-impossible, which is
+not the concentration the feared error would produce. Among the buckets with mass, the two
+most negative are $0.3$--$0.4$ ($-0.0461$) and $0.2$--$0.3$ ($-0.0184$), which is exactly
+where the under-priced licence of Section~\ref{sec:underpricing} lives; the single most
+negative row in the table is $0.8$--$0.9$ at $-0.0790$, but it rests on $78$ asks and
+carries no weight.
+
+The estimator here is a reliability decomposition of the familiar kind
+\cite{murphy1973,dawid1982}: the engine's stated probability is the forecast, the realised
+hit is the outcome, and the bucketed table is the reliability curve. Nothing is
+recalibrated on the strength of it in this paper; Section~\ref{sec:substitution} explains
+why the obvious recalibration is declined.
+
+\section{What silence is actually worth}
+\label{sec:silence}
+
+Section~\ref{sec:absence} shows the engine does not use silence. This section asks what it
+would be worth if it did. Two confounds are removed first: contained sets are excluded,
+because the contained-book turn-pass deliberately manufactures repeat misses at seats that
+provably hold nothing, and reuses the same card while doing it
+\cite{containment,containedpaper}. Leaving them in would fabricate the effect the
+measurement is looking for.
+
+\begin{table}[ht]
+\centering
+\caption{Ask-level calibration by silence stratum, contained sets excluded
+\cite{asking}. The third row is the owner's exact position.}
+\label{tab:strata}
+\small
+\begin{tabular}{@{}p{0.44\textwidth}rrrr@{}}
+\toprule
+stratum & $N$ & believed & observed & error \\
+\midrule
+no prior miss, target \textbf{never asked} into the set & 1{,}176{,}652 & 0.2007 & 0.1927
+  & $\mathbf{-0.0081}$ \\
+no prior miss, target \textbf{has} asked into the set & 88{,}419 & 0.3473 & 0.4181
+  & $\mathbf{+0.0708}$ \\
+\textbf{1 miss by me, never asked back} (the owner's case) & 19{,}003 & 0.1399 & 0.0199
+  & $\mathbf{-0.1200}$ \\
+1 miss by me, target has asked into the set since & 21{,}726 & 0.3712 & 0.3792
+  & $+0.0080$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{The set-level question directly: does the seat hold \emph{any} card of the set?
+\cite{asking}}
+\label{tab:setlevel}
+\small
+\begin{tabular}{@{}lrr@{}}
+\toprule
+position & $P(\text{holds} \ge 1 \text{ of the set})$ & $N$ \\
+\midrule
+no miss, silent & \textbf{0.663} & 263{,}016 \\
+miss, then asked back & \textbf{0.761} & 6{,}180 \\
+\textbf{miss, then silent} & \textbf{0.063} & 5{,}968 \\
+two or more misses, then silent & \textbf{0.004} & 464 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three conclusions follow, and they are not the same conclusion.
+
+\textbf{1. Silence on its own is genuinely near-uninformative.} Row 1 of
+Table~\ref{tab:strata} is $0.8$ points of bias over $1.18$ million asks --- the largest
+stratum in the study, and the one that corresponds to ``they simply have not asked into
+this set''. The owner's principle is validated at scale: you cannot read anything into
+``they didn't ask back'', taken alone.
+
+\textbf{2. Silence \emph{after a miss} is a different object.} A seat you missed on that
+then stays quiet holds a card of that set $6.3\%$ of the time (Table~\ref{tab:setlevel},
+row 3), against $66.3\%$ for a silent seat you never missed on. Two or more misses then
+silence takes it to $0.4\%$, on $464$ observations. The compound event is strongly
+informative even though its parts are not, and the ask-level view agrees: the engine
+believes $0.1399$ where the truth is $0.0199$. \emph{The engine under-uses this signal
+rather than over-using it.}
+
+\textbf{3. The engine is not making the mistake the owner was guarding against, in either
+direction that matters.} Its one large error in this table is generosity. Note also row 2
+of Table~\ref{tab:strata}, which is the mirror image and is the subject of
+Section~\ref{sec:underpricing}: where a target \emph{has} published a licence, the engine
+under-believes by $7.1$ points.
+
+\subsection{Why the compound signal is not acted on anyway}
+\label{sec:notacting}
+
+Twelve points of ask-level bias and sixty points of set-level probability look like an
+opportunity. The project declines it, and the reason is a measured one rather than a
+temperamental one.
+
+It is the same trap the companion document records \cite{concession}: a plausible small
+signal read off the public log --- refuse to ask the opponent who would punish the
+conceded turn --- cost up to $11.7$ points of win rate when acted on, because the row-6
+confound made the information point the wrong way. Threat and opportunity are the same
+fact under row 6, so the seat that is most dangerous to concede to is also the seat most
+worth taking a card from. Silence is the \emph{weaker} of the two signals, and it is read
+off the same channel.
+
+If it is ever attempted, the discipline is fixed in advance and is the lab's own
+\cite{botlab,v05paper}: duplicate deals, a byte-for-byte control that reproduces the
+shipped policy exactly when the mechanism is switched off, and an information-free
+perturbation of matched magnitude as the null. The last of those is the part that the
+off-limits work established was necessary: without it, a mechanism that merely
+\emph{changes} decisions can be mistaken for a mechanism that improves them.
+
+\section{Two real gaps, and one pattern that looks like a third}
+\label{sec:gaps}
+
+Neither gap is the one the owner feared. Both are its opposite --- the engine under-reads
+\emph{positive} evidence.
+
+\subsection{A published licence is under-priced by eight points}
+\label{sec:underpricing}
+
+When the target has publicly asked into the set --- a live row-6 licence --- the engine
+believes $0.2386$ and the truth is $0.3221$ ($N = 23{,}345$) \cite{asking}. It under-prices
+its best asks by $8.4$ points.
+
+The cause is the staleness of Section~\ref{sec:staleness}: the deal-time constraint that
+records ``this seat holds a card of this set'' is dropped the moment it is satisfied or
+exhausted, and \code{refinedHitProbability} iterates exactly those constraints.
+
+Conditioning fixes it, and the conditioning is elementary. A live licence says the target
+holds at least one unresolved card of the set, so under the engine's own per-card
+estimates $q_j$ for the cards $j$ of set $B$ at target $t$,
+\begin{equation}
+\label{eq:condition}
+\Pr\bigl(c \text{ at } t \;\big|\; \text{at least one of } B \text{ at } t\bigr)
+\;=\;
+\frac{q_c}{1 - \prod_{j \in B}\,(1 - q_j)} .
+\end{equation}
+Applied at strength $\lambda$ --- $\lambda = 0$ leaving the shipped probability untouched,
+$\lambda = 1$ applying Equation~\eqref{eq:condition} in full --- the residual bias on the
+licensed subset runs:
+
+\begin{table}[ht]
+\centering
+\caption{The $\lambda$ ladder: residual calibration bias on the licensed subset
+\cite{asking}.}
+\label{tab:lambda}
+\small
+\begin{tabular}{@{}lrrrrrrr@{}}
+\toprule
+$\lambda$ & 0 & 0.25 & 0.40 & 0.50 & \textbf{0.60} & 0.75 & 1.00 \\
+\midrule
+bias & $-0.0835$ & $-0.0488$ & $-0.0280$ & $-0.0141$ & $\mathbf{-0.0002}$ & $+0.0206$
+ & $+0.0554$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+$\lambda = 0.60$ removes the bias almost exactly. That the correct strength is not $1$ is
+itself informative: the licence is a fact about the deal, and by the time it is read the
+seat may have been partly harvested, so the full conditioning over-corrects. The ladder is
+monotone in $\lambda$ and crosses zero once, so the operating point is not a fitted
+constant so much as a read-off. Section~\ref{sec:substitution} reports what
+$\lambda = 0.60$ bought in play, which is the part that matters and is not what one would
+guess.
+
+\subsection{The conceded turn is priced with the wrong sign}
+\label{sec:wrongsign}
+
+The second gap belongs to the companion document \cite{concession} and is repeated here
+because it belongs in the ask matrix. \code{missTarget}, \code{aimedTarget},
+\code{valueContainedPass} and \code{signallingAsk} all rank the seat that receives the
+turn by \textbf{hand size}, on the stated grounds that the surrendered turn is worth least
+at the smallest hand. Over $12{,}376$ observed concessions, hand size correlates
+$\mathbf{-0.147}$ with the cards that seat then actually takes --- negative in every
+game-phase bucket --- against $\mathbf{+0.421}$ for its published reach, the sets it has
+shown a row-6 basis in \cite{concession}.
+
+The two gaps have the same root. Both are failures to use the row-6 licence: one on the
+probability side, one on the concession side. The concession side has a fix that ships
+(\code{defuse.ts}); the probability side has the fix derived in
+Section~\ref{sec:underpricing} and not shipped, for the reason
+Section~\ref{sec:substitution} measures.
+
+\subsection{Why the same two or three sets get traded --- and why it is not a bug}
+\label{sec:clustering}
+
+The owner also reported watching games in which ``two or three half-suits get ask-traded
+until it's declared, while the other half-suits never show up''. Both halves of that
+report were tested, and they come apart \cite{asking}.
+
+\textbf{The trading is real, and large.} After seat $B$ is asked for a card of set $H$,
+misses, and takes the turn under row 10, $B$'s next ask goes into $H$ $\mathbf{88.1\%}$ of
+the time when row 6 lets it ($N = 9{,}091$, $600$ games). The availability-matched control
+--- every other legally-askable set at the same decisions --- is $\mathbf{21.4\%}$
+($N = 203{,}723$). The provoking set beats the control $5$--$6\times$ in every bucket, so
+this is not an artefact of what happens to be askable. Unconditionally the figure is
+$36.0\%$, because $59\%$ of provocations land on a set $B$ holds no card of, where row 6
+forbids the reply outright.
+
+\textbf{But it is not a reciprocation rule. It is the certainty rule.}
+
+\begin{table}[ht]
+\centering
+\caption{What the reply into the provoking set actually is \cite{asking}.}
+\label{tab:reply}
+\small
+\begin{tabular}{@{}p{0.62\textwidth}r@{}}
+\toprule
+of $B$'s replies into the provoking set $H$ & share \\
+\midrule
+replies into $H$ that are the argmax on hit probability & \textbf{99.1\%} \\
+replies into $H$ that are \textbf{certain hits}, after a miss & 60.2\% \\
+\quad \dots{} after a hit & 94.3\% \\
+$B$ would have chosen $H$ \emph{anyway}, before being provoked & \textbf{70.1\%} \\
+decisions the provocation actually switched into $H$ & \textbf{18.1\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+An ask into $H$ publishes that the asker holds a card of $H$ (row 6) and lacks the named
+one (row 7). Combined with what $B$ already knows, that very often \emph{locates a card
+exactly} --- and \code{certaintyBonus} makes a certain hit dominate the sort, while row 9
+keeps the turn. \textbf{The bot is not asking back; it is taking a card it can see, and
+the ask it was just asked is what made it visible.} It could not be doing anything else:
+the tradition bans prearranged conventions \cite{develin}, and nothing in this engine
+decodes an incoming ask as a signal --- only as the two facts rows 6 and 7 make it
+publish.
+
+Ablations confirm the ordering, and they are decision-level rather than
+outcome-level --- the unit the project holds to be the honest one for a question of this
+shape \cite{inertpaper}. The $88.1\%$ falls to $84.4\%$ with \mbox{\code{defuse: 0}}, to $72.3\%$
+with refined inference off, and to $72.0\%$ with constraints off --- still $3.4\times$ the
+control. The defusal term contributes about four points of it and is not the cause; the
+\code{-nodefuse} arms reproduce committed HEAD byte-for-byte on the ask path, which is
+what licenses that conclusion \cite{asking}.
+
+\textbf{The ``other sets never show up'' half is false at game scale and true locally.}
+Per game the top three sets take $49.2\%$ of asks against a uniform $33.3\%$, an HHI of
+$0.1358$ against $0.1111$ --- real but modest --- and only $0.55$ of $9$ sets receive no
+ask at all. But in any window of $10$ consecutive asks only $\mathbf{2.96}$ distinct sets
+appear, against $\mathbf{5.98}$ for the same games' asks randomly permuted, and $75.3\%$
+of windows show three or fewer sets against $0.4\%$ permuted. The owner is reporting a
+local view accurately: the clustering is \emph{temporal}, not a coverage failure. Every
+set does get its turn; they just take turns in long runs.
+
+\textbf{Does the clustering cost anything? Not identifiably.} The raw correlation between
+a game's ask concentration and its set outcome is $-0.443$, but ask \emph{count}
+correlates $+0.929$ with sets, and controlling for it collapses the partial correlation to
+$-0.074$ ($-0.008$ on the roster arm). Ask count is plausibly a mediator as well as a
+confound --- games that run long have more asks \emph{and} more sets --- so this
+identifies nothing causal in either direction, and no intervention is warranted on this
+evidence. The honest statement is that the observed behaviour is explained, not that it is
+optimal.
+
+\section{The holistic ask matrix}
+\label{sec:matrix}
+
+The owner asked for the whole reasoning matrix for choosing an ask, not only the silence
+question. Table~\ref{tab:matrix} is it: twelve factors, each with the rule it rests on,
+the sign it should carry, and whether the engine prices it today \cite{asking}.
+
+\begin{table}[p]
+\centering
+\caption{The ask matrix \cite{asking}. ``Priced today?'' is a statement about the shipped
+engine, and the two entries that are not ``yes'' are the two gaps of
+Section~\ref{sec:gaps}.}
+\label{tab:matrix}
+\footnotesize
+\begin{tabular}{@{}c p{0.19\textwidth} p{0.25\textwidth} p{0.13\textwidth} p{0.27\textwidth}@{}}
+\toprule
+\# & factor & grounding & sign & priced today? \\
+\midrule
+1 & \textbf{hit probability} & rows 9/10 --- a hit takes a card and keeps the turn; a miss
+  ends it & \textbf{+}, dominant & \textbf{yes, well.} \code{wHit}$\cdot p$ is 70 of 100 of
+  the score; overall bias $-1.1$ pt; the certainty tier is exact \\
+2 & \textbf{certainty vs.\ probability} & a certain hit is riskless material \emph{and}
+  free tempo & \textbf{+}, must dominate & \textbf{yes.} \code{certaintyBonus} $\ge 20$
+  required of every style; the contained pass refuses to displace one \\
+3 & \textbf{target's published licence in the asked set} & row 6 is the only ask licence,
+  so an ask publishes ``I hold one of these'', permanently & \textbf{+} on both the
+  probability and the value of taking the card & \textbf{partly --- the biggest gap.} The
+  \emph{choice} is priced (\code{defusalBonus}: $+1.50$/$+1.65$ sets for the prototype
+  term, $+1.43$/$+1.58$ for the shipped implementation). The
+  \emph{probability} is not: \S\ref{sec:underpricing}, $-8.4$ points \\
+4 & \textbf{what my ask publishes about me} & rows 6 and 7, both permanent
+  & \textbf{--}, small & \textbf{yes, as a tie-break only} (\code{leakEpsilon}).
+  Deliberately narrow: the best ask into a strong set is usually the ask that completes
+  it \\
+5 & \textbf{who receives the turn on a miss} & row 10 & \textbf{--} on the miss branch ---
+  but see 6 & \textbf{wrong sign.} \S\ref{sec:wrongsign} \\
+6 & \textbf{threat and opportunity are the same fact} & row 6 makes it structural; threat
+  correlates $+0.249$ with the best available $p$, whose mean is $0.471$ at high-threat
+  seats against $0.326$ elsewhere & \textbf{the naive veto is negative}
+  & \textbf{yes, correctly.} Avoidance costs up to $11.7$ points; \code{defuse.ts} inverts
+  it \\
+7 & \textbf{defusal credit} & a hit strips the licence and row 9 keeps the turn
+  & \textbf{+} & \textbf{yes}, \mbox{\code{defuse: 1}} across the roster, replicated in a foreign
+  engine \cite{crossplay} \\
+8 & \textbf{is the set contained?} & no opponent can ask into a one-team set, and declaring
+  it hands it back & \textbf{flips the calculus}: the ask stops being about cards and
+  becomes purely about aiming the turn & \textbf{yes, own branch} --- but its
+  \code{gain} is built on factor 5's backwards proxy \\
+9 & \textbf{progress toward the set} & row 12 needs all six holders named
+  & \textbf{+}, modest & \textbf{yes}, \code{wProgress} \\
+10 & \textbf{narrowing value of a miss} & row 17 makes every ask public; a miss on a
+  two-candidate card pins it & \textbf{+}, small & \textbf{yes}, \code{wNarrow} --- the
+  only term that pays for a miss \\
+11 & \textbf{clinch state} & the game ends at 5 sets; a wrong declare gifts one
+  & \textbf{asymmetric, large late} & \textbf{declares yes, asks no.} Nothing in
+  \code{pickAsk} reads the score. Defensible: an ask cannot lose a set outright \\
+12 & \textbf{silence} & not a rule --- an absence & \textbf{--}, weak alone
+  (\S\ref{sec:silence}) & \textbf{ignored, and that is correct} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Summarised: \textbf{priced well}, factors 1, 2, 4, 7, 9, 10, 11; \textbf{wrong sign},
+factor 5, with factor 8 inheriting it; \textbf{under-priced}, factor 3; \textbf{correctly
+ignored}, factor 12. The matrix's own headline is that the engine's errors are
+concentrated in one place --- what a published row-6 licence is worth --- and that they
+all run in the direction of under-use.
+
+\subsection{The one thing this matrix must not say}
+\label{sec:offlimits}
+
+The owner pairs ``whom to ask'' with ``keeping in mind the off-limits rule'': the idea
+that some opponents should be off limits because the turn you concede on a miss would be
+punished. This project's measured position is that the off-limits \emph{prescription} ---
+refuse to ask the dangerous seat --- \textbf{loses $4.5$ to $11.7$ points of win rate},
+with the paired set-difference falling monotonically with appetite \cite{concession}. Row
+6 is the reason: an opponent is dangerous \emph{because} it has published a basis, and a
+published basis is also the strongest available evidence that an ask into that set will
+hit. Threat and opportunity are the same fact.
+
+The threat \emph{model} is kept and the prescription inverted --- ask them, to strip the
+card their reach rests on --- which is \code{defuse.ts}. Two measurements of it are on
+record and both belong here: the prototype term, hooked into a mirror of \code{pickAsk},
+is worth $+1.50$ and $+1.65$ sets per duplicate pair on two $600$-pair held-out banks,
+while the \emph{shipped} implementation re-measured on those same two banks at $400$ pairs
+lands lower, at $+1.43 \pm 0.32$ and $+1.58 \pm 0.32$; the gap sits inside the intervals
+and is what a smaller bank plus a real integration should look like. The gain is
+replicated in a foreign engine \cite{concession,crossplay}. The only asks for which the
+original avoidance rule is right
+are the ones that \emph{cannot hit}, and those are exactly the asks where the engine still
+ranks the receiving seat by hand size (Section~\ref{sec:wrongsign}).
+
+\section{Two corrections for the same evidence, and what stacking them costs}
+\label{sec:substitution}
+
+Section~\ref{sec:underpricing} removes a real $8.4$-point bias with a principled,
+knob-free conditioning. The obvious expectation is that a better probability plays better.
+It does --- \emph{but only if the engine is not already being paid for the same evidence.}
+
+\subsection{The design, and why the common baseline is the whole point}
+\label{sec:commonbaseline}
+
+All arms mirror \code{pickAsk} as it now stands, defusal term included, with the zero arm
+verified to reproduce the shipped policy byte-for-byte --- the lab's standard control
+discipline \cite{botlab,v05paper}. The measurement is $400$ duplicate pairs, one bank,
+and --- the design decision that carries the result --- \textbf{one common baseline}
+(\mbox{\code{defuse: 0}}, $\lambda = 0$), so that the three treatments are directly comparable to
+each other and not merely each to itself \cite{asking}.
+
+\begin{table}[ht]
+\centering
+\caption{The three-way substitution, $400$ duplicate pairs, one bank, one common baseline
+(\mbox{\code{defuse: 0}}, $\lambda = 0$) \cite{asking}. Intervals are $\pm 1.96$ SE on the paired
+set-difference. See Section~\ref{sec:scale} on the $400$-pair scale.}
+\label{tab:substitution}
+\small
+\begin{tabular}{@{}lrr@{}}
+\toprule
+arm & win rate & paired set-difference \\
+\midrule
+baseline --- neither & 50.00\% & $0.0000 \pm 0.0000$ \\
+\textbf{defusal alone} (\mbox{\code{defuse: 1}}, $\lambda = 0$) & 64.00\%
+  & $\mathbf{+1.915 \pm 0.315}$ \\
+\textbf{calibration alone} (\mbox{\code{defuse: 0}}, $\lambda = 0.6$) & 65.25\%
+  & $\mathbf{+2.068 \pm 0.293}$ \\
+calibration alone, over-corrected ($\lambda = 1.0$) & 61.63\% & $+1.620 \pm 0.327$ \\
+\textbf{both together} (\mbox{\code{defuse: 1}}, $\lambda = 0.6$) & 60.63\%
+  & $\mathbf{+1.565 \pm 0.317}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The result}
+\label{sec:subresult}
+
+Three things follow from Table~\ref{tab:substitution}, in order of how much they change
+what one would do.
+
+\textbf{1. The two mechanisms look like substitutes rather than complements, and the
+ordering is suggestive rather than established.} Either alone is worth about two sets per
+duplicate pair, and the stack measures below either alone. Taken at face value that says
+adding the principled fix on top of the shipped heuristic would have made the engine
+worse.
+
+The claim has to be stated at exactly the strength the design supports, which is less than
+the face value. \textbf{Every interval in Table~\ref{tab:substitution} is on an arm
+against the common baseline; no interval is published on any \emph{difference} between two
+arms}, and the differences are what the substitution claim is about. Nor can the arm
+intervals be differenced by eye: the three treatments run on one bank against one
+baseline, so their errors are positively correlated and a properly paired arm-to-arm
+interval would be \emph{narrower} than any naive combination of the two published
+half-widths. That is the design's strength --- a common bank and a common baseline make
+this a paired comparison, far sharper than measuring each treatment on its own bank and
+subtracting --- but the paired interval was not computed, so the gap is unquantified in
+either direction.
+
+What can be said about magnitude is discouraging at this $N$. The larger gap, calibration
+alone against the stack, is $0.503$ sets; the smaller, defusal alone against the stack, is
+$0.350$. Section~\ref{sec:scale} puts each arm's own $80\%$-power minimum detectable
+effect at $0.42$--$0.47$ sets, so the smaller gap sits below the floor these arms were
+measured at and the larger one barely clears it --- and the empirical floor at $N = 400$
+is itself only pinned to $0.36$--$0.50$. The pairing buys back some of that, and the
+ordering is consistent across both comparisons and reinforced by the $\lambda = 1.0$ row
+below, which is why the result is worth reporting. But \textbf{it is a suggestive ordering
+at this bank size, not an established one}, and the honest next step is to re-run the same
+five arms with the paired arm-to-arm differences and their intervals reported, at a bank
+where $0.35$ sets is comfortably resolvable.
+
+What the design \emph{does} establish is that this question is askable at all. Only a
+common-baseline design can see substitution: measured each against its own baseline --- the
+natural thing to do, and the thing an incremental development process does by default ---
+the calibration fix looks like a flat $+0.04 \pm 0.41$ rather than like something competing
+with a term already shipped.
+
+\textbf{2. The mechanism is one reordering reached two ways.} Equation~\eqref{eq:condition}
+multiplies every card of one set at one seat by the same factor, because the denominator
+depends on the set and the seat and not on the card. It therefore \emph{cannot} reorder
+asks within a (set, seat) pair; all it can do is promote licensed asks against unlicensed
+ones. That is exactly what \code{defuse} does, by a different route --- a bonus on the
+seats whose published reach makes them worth stripping. Two terms that promote the same
+asks are not additive, and the $\lambda = 1.0$ row is the same shape seen from inside a
+single mechanism: over-shoot the promotion alone and the gain falls from $+2.068$ to
+$+1.620$, which is what stacking also produces.
+
+\textbf{3. The calibration error is real and worth fixing eventually --- just not here.}
+\code{refinedHitProbability} is also read by the declare planner, by
+\code{valueContainedPass}, and by any future search or exploitability sweep, and in none of
+those is a defusal bonus quietly compensating for it. It is a bug fix rather than an
+appetite; it needs no style knob; it would help every consumer of the probability rather
+than only the ask ranker.
+
+\textbf{The recommendation is to ship neither change now.} \mbox{\code{defuse: 1}} stays, on the
+strength of its gauntlet against opponents that also defuse and its foreign-engine
+replication \cite{concession,crossplay}, neither of which the calibration fix has. The
+calibration fix is recorded with its $\lambda$ ladder as the better long-term shape.
+Swapping the two is a deliberate experiment for its own day, not a change to make in
+passing.
+
+\subsection{The scale caveat, and a refuted explanation}
+\label{sec:scale}
+
+Table~\ref{tab:substitution}'s numbers come from a $400$-pair bank, and that is this
+instrument's thin end. The project has since characterised the instrument: for arms that
+differ at every decision the per-pair standard deviation is $3.15$--$3.44$ sets, which
+puts the $80\%$-power minimum detectable effect at about $0.47$ sets at $N = 400$ and
+about $0.33$ at $N = 800$ \cite{concession}.
+
+That generic figure must not be applied to this cell by eye, and the companion document
+names the substitution as a trap it fell into itself: the minimum detectable effect
+depends on \emph{that cell's own} standard deviation, which varies across the repository
+by up to a half \cite{concession}. So the floor here is computed from
+Table~\ref{tab:substitution}'s own published half-widths. A half-width of $h$ at
+$N = 400$ implies a per-pair SD of $h\sqrt{N}/1.96$, giving $3.21$ for the defusal arm,
+$2.99$ for the calibration arm, $3.23$ for the stack and $3.34$ for the over-corrected
+arm; the corresponding $80\%$-power minimum detectable effects are $0.45$, $0.42$, $0.45$
+and $0.47$ sets. Each arm clears its own floor by three to five times, so each
+arm's effect against the common baseline is resolved. What is \emph{not} resolved is the
+spacing between the arms: see Section~\ref{sec:subresult}.
+
+Two properties of the instrument at $N = 400$ failed to replicate, and both belong here.
+The coverage is unsettled --- an independent replication found $10.8\%$ false positives
+against a nominal $5\%$, pooling to $8.0\%$ with a confidence interval that excludes
+$5\%$, and whether that is real under-coverage or noise is recorded as unresolved. So is
+the empirical floor: a planted effect of $0.393$ sets was detected in $84.7\%$ of banks on
+the first run and $75.0\%$ on the replication, pooling to $81.7\%$, which leaves the
+$N = 400$ floor somewhere in $0.36$--$0.50$ and not pinned tighter by that design ---
+the $N = 800$ floor does replicate \cite{concession}. Intervals at this scale should be
+read with both in mind.
+
+More directly: \textbf{the $+1.92$-scale figures on this bank are high.} The companion
+document re-ran the defusal quantity at $4{,}000$ duplicate pairs through a single code
+path, and the same edge measures $+1.6225 \pm 0.1016$, replicated independently at
+$+1.6595 \pm 0.1022$, against Table~\ref{tab:substitution}'s $+1.915 \pm 0.315$
+\cite{concession}. The gap is ordinary sampling variation, and the record of how that was
+established is worth keeping, because the first answer offered was wrong: it was proposed
+that this paper's mirror harness lacks \code{pickAsk}'s certain-hit gate and therefore
+measured a different quantity. That explanation was \emph{tested}, by running the ungated
+harness, and \textbf{refuted} --- $+1.6850 \pm 0.3358$, indistinguishable from the gated
+value \cite{concession}. The harness difference is not the explanation; the bank size is.
+
+None of this disturbs the ordering Table~\ref{tab:substitution} exists to establish,
+because all five arms share one bank, one baseline and one code path, and the substitution
+result is an ordering among them rather than an absolute level. It does mean the
+\emph{levels} in that table should be read as this bank's, and the $4{,}000$-pair figures
+preferred wherever the same quantity has been measured there.
+
+\subsection{The general lesson, stated once}
+\label{sec:lesson}
+
+\emph{A term that corrects a probability and a term that rewards the same evidence are not
+additive.} Measuring the second after the first has shipped will show nothing --- the
+$+0.04 \pm 0.41$ of Section~\ref{sec:subresult} is exactly what that looks like --- and
+stacking them can subtract. Any future mechanism that promotes asks at seats with a
+published row-6 licence is competing with \code{defuse} for the same effect, and must be
+measured against a baseline with \code{defuse} \emph{off} before it can be believed.
+
+The lesson generalises past this engine. Wherever a heuristic has been tuned into a
+system and a principled correction for the same underlying error is proposed later, the
+default comparison --- new thing versus current system --- is the one comparison that
+cannot detect substitution. The common baseline costs one extra arm and is the only design
+that answers the question actually being asked.
+
+\section{Threats to validity}
+\label{sec:threats}
+
+\begin{enumerate}
+\item \textbf{The soundness audit is a code audit, not a proof.} Table~\ref{tab:audit}
+  enumerates the elimination paths present in the implementation and licenses each against
+  a rule; it cannot establish that no future path will be added, and it says nothing about
+  paths in other engines. Its strongest empirical backing is the exact certainty tier of
+  Table~\ref{tab:calibration}: a false elimination that mattered would have to surface
+  there.
+
+\item \textbf{Calibration is measured against this roster's own play.} The
+  $1{,}395{,}876$ asks of Table~\ref{tab:calibration} come from $300$ self-play \usff{}
+  games. The distribution of positions is the roster's, so the reliability curve is
+  conditional on the population that generated it. A different opponent population would
+  produce different bucket masses and could produce different biases; nothing here
+  measures that.
+
+\item \textbf{The silence strata are observational.} Table~\ref{tab:strata} conditions on
+  events the engine's own policy produced --- which seats it chose to ask, and when. The
+  strata are therefore not randomised, and the $6.3\%$ figure of
+  Table~\ref{tab:setlevel} describes seats the engine chose to miss on rather than seats
+  in general. Contained sets are excluded for exactly this reason
+  (Section~\ref{sec:silence}); other selection effects of the same shape are possible and
+  unmeasured, which is one more reason Section~\ref{sec:notacting} declines to act on the
+  signal without a duplicate-deal experiment.
+
+\item \textbf{$\lambda = 0.60$ is read off one ladder.} Table~\ref{tab:lambda} is a
+  post-hoc sweep on the licensed subset of the same games the bias was measured on. The
+  ladder is monotone and crosses zero once, so the operating point is not fragile in
+  shape, but it has not been validated out of sample and is not offered as a constant to
+  ship.
+
+\item \textbf{Table~\ref{tab:substitution} is a $400$-pair bank.}
+  Section~\ref{sec:scale} states this in full: each arm clears its own detection floor
+  against the common baseline, the levels are high against a $4{,}000$-pair
+  re-measurement of the one quantity that has one, and both the interval coverage and the
+  empirical floor at this $N$ failed to replicate. The paper does not claim the levels,
+  and it claims the ordering only as suggestive: no interval is published on any
+  difference between arms, and the smaller of the two gaps the substitution reading rests
+  on is below these arms' own floor (Section~\ref{sec:subresult}).
+
+\item \textbf{The substitution result is one operating point.} One $\lambda$, one defusal
+  appetite, one roster, one bank. That the two mechanisms appear to substitute at
+  $(\lambda, \code{defuse}) = (0.6, 1)$ does not establish the shape of the interaction
+  surface elsewhere on it, and no arm here measures a reduced defusal appetite alongside
+  the calibration fix --- which is the obvious next experiment and is not run.
+
+\item \textbf{Ask clustering is explained, not priced.} Section~\ref{sec:clustering}
+  identifies the mechanism behind the $88.1\%$ and shows the concentration is temporal.
+  The partial correlation of $-0.074$ is explicitly not a causal estimate --- ask count is
+  plausibly a mediator as well as a confound --- so nothing here says whether the
+  clustering helps, hurts, or neither.
+
+\item \textbf{Self-play, one engine, one rule set.} The usual transfer caveats apply in
+  full \cite{v05paper,v10paper}. The one external check available is the foreign-engine
+  replication of defusal \cite{crossplay}, which covers the mechanism of factor 7 and none
+  of the inference results in this paper.
+\end{enumerate}
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+The owner's worry was that a strong inference engine would slide from ``no evidence they
+hold one'' to ``evidence they hold none''. The engine does not, and the reason is
+structural: absence is not an event, and the layer that would have to act on one is a
+switch over events that happened. The measured residual runs the other way --- $14.0\%$
+believed against $2.0\%$ true in exactly the position the worry describes --- and the
+calibration table says the same thing over $1{,}395{,}876$ asks: the engine is optimistic
+by about a point, which is the wrong sign for the feared error and the right sign for an
+engine that under-uses what it knows. The certainty tier, the one place where the policy
+is allowed to rest its whole weight on the inference, is exact over $16{,}680$ asks.
+
+What the study found instead is that the engine's real errors are all one error seen from
+different angles: it under-uses the row-6 licence. It under-prices the probability of a
+hit at a seat that has published a basis by $8.4$ points, because the constraint recording
+that basis is dropped the moment it is confirmed. It ranks the seat receiving a conceded
+turn by hand size, a proxy that correlates $-0.147$ with what that seat then takes against
+$+0.421$ for the licence. And the behaviour that looked most like a bug from the
+outside --- two or three sets traded back and forth --- turns out to be the engine using
+the licence \emph{correctly}: $99.1\%$ of those replies are the hit-probability argmax, and
+the bot is not reciprocating but collecting certainties that the incoming ask made
+visible.
+
+The result that changed what the project would do is the last one. A principled
+correction for the under-priced licence is worth $+2.068 \pm 0.293$ sets per duplicate
+pair on a common baseline; the shipped heuristic that rewards the same evidence is worth
+$+1.915 \pm 0.315$; both together are worth $+1.565 \pm 0.317$. Two fixes for one error
+measure lower stacked than singly --- an ordering that is suggestive at this bank and not
+established, because no interval was published on any difference between the arms and the
+smaller gap is below their own detection floor. The design claim is the firm one: the only
+comparison that can \emph{see} substitution is one that measures both mechanisms against a
+baseline carrying neither. The recommendation is to ship neither change now, and to record the
+calibration fix --- with its ladder, its bank size, and the refuted explanation of its
+scale --- as the better long-term shape for whoever swaps them deliberately.
+
+\medskip
+\noindent\textbf{Reproducibility.} The engine is deterministic; every number in this paper
+is a field of a committed probe result in \cite{asking} or \cite{concession}. The
+calibration of Section~\ref{sec:calibration} is \code{scripts/probe-inference.mjs}; the
+strata of Section~\ref{sec:silence} are \code{scripts/probe-inference-strata.mjs}; the
+$\lambda$ ladder of Section~\ref{sec:underpricing} is \code{scripts/probe-licence.mjs};
+the clustering of Section~\ref{sec:clustering} is \code{scripts/probe-concentration.mjs}
+with its window and outcome companions; and Table~\ref{tab:substitution} is
+\code{scripts/probe-licence3.mjs}, whose \code{0 lic3 0 0} invocation is the byte-exact
+control that must print $0.0000 \pm 0.0000$ \cite{asking,repo}.
+
+\begin{thebibliography}{99}
+\footnotesize
+
+\bibitem{murphy1973}
+A.~H.~Murphy.
+\newblock A new vector partition of the probability score.
+\newblock \emph{Journal of Applied Meteorology}, 12(4):595--600, 1973.
+The reliability/resolution decomposition Table~\ref{tab:calibration} is an instance of.
+
+\bibitem{dawid1982}
+A.~P.~Dawid.
+\newblock The well-calibrated Bayesian.
+\newblock \emph{Journal of the American Statistical Association}, 77(379):605--610, 1982.
+
+\bibitem{develin}
+M.~Develin.
+\newblock \emph{The Ten Best Card Games You've Never Heard Of}, ch.~9 (Canadian Fish).
+\newblock \url{http://www.bantha.org/~develin/cardgames.html}.
+Independent attestation of the absorbing property of a contained set, and of the tradition's
+ban on prearranged conventions --- which is why nothing in this engine decodes an ask as a
+signal.
+
+\bibitem{pagat}
+J.~McLeod (ed.).
+\newblock \emph{Literature (Canadian Fish)}.
+\newblock Pagat card-game rules archive,
+\url{https://www.pagat.com/quartet/literature.html}.
+
+\bibitem{v05paper}
+A.~Hsieh.
+\newblock FishAI v0.5: Measuring play style without skill in a 54-card Literature
+variant.
+\newblock FishAI project; companion paper, 2026. The roster, the duplicate-deal protocol,
+and the byte-for-byte control discipline every measurement here inherits.
+
+\bibitem{v10paper}
+A.~Hsieh.
+\newblock FishAI v1.0: When best-response adaptation is worth less than nothing.
+\newblock FishAI project; companion paper, 2026.
+
+\bibitem{v15paper}
+A.~Hsieh.
+\newblock FishAI v1.5: A bit-budget memory ladder as an honest difficulty axis.
+\newblock FishAI project; companion paper, 2026. The bounded fact pool whose
+\code{lacks-card} and \code{no-basis} facts Section~\ref{sec:audit} audits.
+
+\bibitem{containedpaper}
+A.~Hsieh.
+\newblock The contained book: an absorbing resource measured to be worth nothing.
+\newblock FishAI project; companion paper, 2026. The turn-pass whose repeat misses
+Section~\ref{sec:silence} excludes as a confound.
+
+\bibitem{inertpaper}
+A.~Hsieh.
+\newblock The inert axis: when a style parameter is wired, swept, and never reached.
+\newblock FishAI project; companion paper, 2026. The argument that decision-level
+divergence, not outcome, is the honest unit for a question of this shape.
+
+\bibitem{obspaper}
+A.~Hsieh.
+\newblock What a public log reveals: observing play style in Literature (Canadian Fish).
+\newblock FishAI project; companion paper, 2026. The specification of the public channel
+this paper's inferences are drawn from.
+
+\bibitem{asking}
+A.~Hsieh.
+\newblock ASKING.md --- who to ask, for what, and what silence is worth.
+\newblock FishAI project internal report, August 2026. \S1 the elimination-path audit,
+\S2 the calibration over 1{,}395{,}876 asks, \S3 the silence strata, \S4.1 the licence
+under-pricing and its $\lambda$ ladder, \S4.3 ask clustering, \S5 the ask matrix, \S6 the
+three-way substitution.
+
+\bibitem{concession}
+A.~Hsieh.
+\newblock CONCESSION.md --- FishAI v2.0: the three-sided ask.
+\newblock FishAI project internal report, August 2026. \S1.2 the two concession
+estimators, \S2 off-limits refuted, \S3 defusal, \S8.1 the triangle refuted and the
+$400$-pair/$4{,}000$-pair correction, \S8a the detection floor.
+
+\bibitem{containment}
+A.~Hsieh.
+\newblock CONTAINMENT.md --- the contained-book result.
+\newblock FishAI project internal report, August 2026.
+
+\bibitem{crossplay}
+A.~Hsieh.
+\newblock CROSSPLAY.md --- cross-engine play against a foreign Literature implementation.
+\newblock FishAI project internal report, August 2026. \S3, the foreign-engine replication
+of the defusal gain.
+
+\bibitem{rules54}
+FishAI project.
+\newblock RULES\_US54.md --- the ``US student'' 54-card variant.
+\newblock Repository rules specification with derived consequences and test vectors, 2026.
+Decision-table rows cited by number throughout.
+
+\bibitem{botlab}
+FishAI project.
+\newblock BOT\_LAB.md --- play-style spectrum: research, experimental design, and metrics.
+\newblock Repository document; \S5 experimental design, including duplicate-deal pairing
+and the null-control requirement, 2026.
+
+\bibitem{repo}
+FishAI project.
+\newblock FishAI repository: engine, bots, simulation laboratory, and results site.
+\newblock Inference layer \code{lib/engine/bots/knowledge.ts} (the ingestion \code{switch}
+and \code{refinedHitProbability}); the threat model
+\code{lib/engine/bots/threat.ts}, whose header records the constraint-staleness defect of
+\S\ref{sec:staleness}; the defusal term \code{lib/engine/bots/defuse.ts}; the ask ranker
+\code{lib/engine/bots/decide.ts}; probes under \code{scripts/}, 2026.
+
+\end{thebibliography}
+
+\end{document}

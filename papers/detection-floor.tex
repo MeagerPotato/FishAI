@@ -1,0 +1,861 @@
+\documentclass[11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[margin=1.1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{microtype}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+
+\hypersetup{
+  pdftitle={The Detection Floor: What a Null Result Was Measured With},
+  pdfauthor={Allen Hsieh}
+}
+
+\captionsetup{font=small, labelfont=bf}
+
+% Float packing: let tables share pages with more text instead of drifting.
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.6}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.8}
+\setcounter{totalnumber}{4}
+\setcounter{topnumber}{3}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\usff}{\code{us54}}
+
+\title{The Detection Floor:\\ What a Null Result Was Measured With}
+\author{Allen Hsieh\\[2pt] {\small FishAI project}}
+\date{August 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+A research codebase that publishes null results owes its readers a characterisation of the
+instrument those nulls were measured with, because an unresolved effect and an absent effect look
+identical in a table. The FishAI project published several nulls for the \usff{} dialect of
+Literature (Canadian Fish) before anyone measured what its one instrument --- $K$ duplicate deal
+pairs of arm $X$ against arm $Y$, reported as the mean paired set-difference $\pm 1.96\,\mathrm{SE}$
+--- could resolve. This paper reports that characterisation and applies it to the project's own
+back catalogue. The per-pair standard deviation is $3.15$--$3.44$ sets for arms that differ at every
+decision ($3.18$--$3.44$ on an independent replication), giving an 80\%-power minimum detectable
+effect running from $0.76$ sets at $N=150$ through $0.47$ at $N=400$, $0.33$ at $N=800$ and $0.14$ at
+$N=4300$. Validated against a planted edge of continuously variable known size, the normal-theory
+power model held in all twelve (effect, $N$) cells of both runs to within about one binomial standard
+error, and the byte-exact control --- which had to be \emph{changed} before it tested anything, an
+earlier form short-circuiting past the very wrapper whose inertness was the claim --- prints
+$0.0000 \pm 0.0000$. Two parts did not replicate and are reported unsoftened: the empirical floor at
+$N=400$ moved from $84.7\%$ detection to $75.0\%$ on fresh banks (pooled $81.7\%$), so the floor is
+only bounded to $0.36$--$0.50$; and nominal-95\% interval coverage at $N=400$ went $6.1\%$
+($11/180$) to $10.8\%$ ($13/120$), pooling to $8.0\%$ $[5.2, 11.7]$, which excludes the nominal
+$5\%$ --- while $N=800$ is nominal in both runs, a pattern that does not scale as a real coverage
+defect should, so the cause is unknown. We name the trap the first run fell into: the minimum
+detectable effect depends on \emph{that cell's own} standard deviation, which is not constant
+($3.645$ for one cell; $4.57$--$4.95$ implied by a foreign-engine harness), and a cell whose two arms
+mostly agree can resolve $+0.2475 \pm 0.1024$ at $n=800$ while appearing to sit under a generic
+$0.33$ floor. Applying the floor reclassifies two of this project's published nulls as
+non-measurements. The recommendation, grounded only in this codebase's experience, is to publish the
+floor beside the null.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+There are two reasons a measured effect can be reported as zero. The effect can be absent, or the
+instrument can be unable to see it. In a results table these look the same: a small number, an
+interval containing zero, and a row that reads as settled. The distinction is not pedantic. The
+first licenses abandoning a mechanism; the second licenses nothing at all except a bigger
+experiment. Altman and Bland put the point in five words that have not been improved on --- absence
+of evidence is not evidence of absence \cite{altman}.
+
+This paper is about a codebase that made the mistake and then measured its way out of it. The FishAI
+project builds an engine, a bot laboratory and a results site for six-player Literature (Canadian
+Fish) in its 54-card \usff{} dialect \cite{v05}. Its research documents are unusual in one respect
+that makes the failure especially visible: they publish negative results as first-class findings,
+in the body text, with the same typography as the positive ones \cite{concession, containedbook,
+inertaxis}. Four of the project's six papers at the time of writing carry a negative headline.
+
+Every one of those headlines --- positive and negative alike --- comes out of a single instrument:
+$K$ duplicate deal pairs of arm $X$ against arm $Y$ under \usff{}, reported as the mean paired
+set-difference $\pm 1.96\,\mathrm{SE}$. Until the work reported here, nobody had characterised what
+that instrument can and cannot see. Every published null was therefore ambiguous between ``no
+effect'' and ``no resolution'', and the project had no principled way to tell its readers which it
+had found. Worse, the ambiguity is asymmetric in exactly the direction that flatters a project that
+prides itself on negative results: an underpowered design manufactures publishable-looking nulls for
+free.
+
+The remedy is a scratch harness, \code{scripts/probe-floor.mjs} \cite{probefloor}, and an
+independent agent's re-run of the whole thing on fresh seed banks. Together they answer four
+questions --- what is the noise level, what is the smallest planted effect the design actually
+detects, how often does a true null print an interval excluding zero, and which committed numbers
+sit below their own floor. The results are recorded in \cite{concession}~\S8a, which this paper
+reports.
+
+Three of the four parts replicated. Two did not, and both cut against the first run's conclusions.
+This paper reports the failures at the same size as the successes, because a floor paper that
+softened its own non-replications would be a self-refuting document.
+
+The paper is organised as follows. Section~\ref{sec:instrument} states the instrument precisely.
+Section~\ref{sec:noise} gives the noise level and the resulting power curve.
+Section~\ref{sec:planted} describes the planted-edge validation, and
+Section~\ref{sec:control} --- the methodological heart of the paper --- describes why the byte-exact
+control had to be changed before it was worth anything. Section~\ref{sec:nonrep} reports the two
+parts that did not replicate. Section~\ref{sec:trap} names the substitution trap that the first run
+fell into. Section~\ref{sec:catalogue} applies the floor to the project's committed results and
+reclassifies two of its published nulls. Section~\ref{sec:limits} states what none of this
+establishes, and Section~\ref{sec:rec} makes the one recommendation the evidence supports.
+
+\section{The instrument}
+\label{sec:instrument}
+
+\subsection{What a datum is}
+
+Literature is played by six players in two teams of three, seats $0,2,4$ against $1,3,5$
+\cite{v05}. Under \usff{} the 54-card deck is partitioned into nine books of six cards; the game
+ends the moment a team is awarded five books. A game therefore terminates in a clinch, and the
+outcome variable used throughout the project's concession research is not the win indicator but the
+\emph{net sets}: the acting team's score minus the opposing team's.
+
+The instrument is duplicate pairing, borrowed from duplicate bridge and used so that the deal is
+never a confound \cite{botlab}. Every seed is played twice, once with arm $X$ on team $0$ and once
+with $X$ on team $1$, both arms otherwise identical. The pair's datum is
+\begin{equation}
+\label{eq:datum}
+d_i \;=\; \bigl(X - Y \mid X \text{ on team } 0\bigr) \;+\; \bigl(X - Y \mid X \text{ on team } 1\bigr),
+\end{equation}
+on the same seed, and the reported statistic over $K$ pairs is
+$\bar{d} \pm 1.96 \cdot \mathrm{SD}(d)/\sqrt{K}$ \cite{probefloor}. The constant $1.96$ is a house
+constant, fixed so that every interval in the repository is comparable to every other.
+
+Two properties of this design bear on everything below. First, a \emph{mirror match} --- the same
+arm against itself --- returns exactly zero for every pair by construction, since the two
+orientations cancel term by term. That is a useful correctness check and a useless noise estimate:
+it tells you nothing about the variance of a comparison between arms that actually differ. Second,
+the pairing removes the deal but not the play. Two arms that differ at any decision produce
+different game trees on the same deal, and the residual variance of $d_i$ is what the floor is made
+of.
+
+\subsection{The four questions}
+
+\code{probe-floor.mjs} \cite{probefloor} answers four questions, in four stages that can be run
+independently:
+
+\begin{enumerate}
+  \item \textbf{\code{sd}} --- the per-pair standard deviation under the conditions the published
+  tables actually used, and the analytic minimum detectable effect (MDE) curve computed off it. The
+  default is $1{,}200$ pairs per condition.
+  \item \textbf{\code{calib}} and \textbf{\code{detect}} --- the \emph{empirical} floor. An edge of
+  continuously variable true size is planted, measured at large $N$ ($2{,}000$ pairs per grid
+  point), and then the fraction of independent banks whose nominal 95\% interval excludes zero is
+  counted at $N=400$ and $N=800$. The default is 36 banks of 800 pairs per planted size.
+  \item \textbf{\code{fpr}} --- the false-positive rate, on true nulls that nevertheless move the
+  game.
+  \item \textbf{\code{published}} --- the floor applied to the numbers already committed.
+\end{enumerate}
+
+Every seed bank the probe uses is a fresh prefix under \code{floor-}, disjoint from all twelve
+banks in use elsewhere in the repository. The single exception is deliberate and is described in
+Section~\ref{sec:control}.
+
+\subsection{The power arithmetic}
+
+The MDE is the standard two-sided normal-theory quantity for a paired mean at 80\% power:
+\begin{equation}
+\label{eq:mde}
+\mathrm{MDE}(N) \;=\; \frac{\bigl(z_{0.975} + z_{0.80}\bigr)\,\mathrm{SD}}{\sqrt{N}}
+\;=\; \frac{2.8016 \cdot \mathrm{SD}}{\sqrt{N}} ,
+\end{equation}
+with $z_{0.975} = 1.96$ the house constant and $z_{0.80} = 0.8416$ the one-sided power point
+\cite{probefloor, cohen}. Nothing about equation~\eqref{eq:mde} is novel; the contribution here is
+that the $\mathrm{SD}$ in it was, in this repository, never measured before it was needed, and that
+when it was measured it turned out not to be a constant (Section~\ref{sec:trap}).
+
+\section{The noise level, and the curve that follows}
+\label{sec:noise}
+
+\subsection{Per-pair standard deviation}
+
+Table~\ref{tab:sd} gives the per-pair SD for each condition the probe measures, as recorded in the
+harness's own \code{MEASURED\_SD} constant --- the values its \code{sd} stage returned on
+2026-08-31 at $1{,}200$ pairs per condition, checked in so the \code{published} stage can be re-run
+without paying for the sweep again \cite{probefloor}.
+
+\begin{table}[ht]
+\centering
+\caption{Per-pair SD of the duplicate-pair difference, by condition, $1{,}200$ pairs each
+\cite{probefloor}. The first eight rows are arms that differ at every decision; the last two are
+arms that agree almost everywhere, and are included here because Section~\ref{sec:trap} turns on
+the difference.}
+\label{tab:sd}
+\small
+\begin{tabular}{lr}
+\toprule
+condition & per-pair SD (sets) \\
+\midrule
+defuse, balanced (\cite{concession}~\S3.1) & 3.321 \\
+defuse, ghost (\S3.1, narrowest) & 3.237 \\
+defuse, archivist (\S3.1, widest) & 3.428 \\
+conceal vs.\ defusing opponent (\S5a.3) & 3.428 \\
+conceal vs.\ non-defusing opponent (\S5a.3) & 3.363 \\
+lopsided: balanced vs.\ turtle & 3.438 \\
+gauntlet difference-of-differences vs.\ balanced (\S3.3) & 3.364 \\
+information-free null, $\lambda = 0.25$ (\S2.1) & 3.150 \\
+\midrule
+planted edge, $\varepsilon = 0.02$ & 2.549 \\
+symmetric null, $\varepsilon = 0.02$ & 2.959 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The headline is the range over the eight full-divergence conditions: \textbf{$3.15$ to $3.44$ sets
+per pair}. The independent replication on fresh banks returned $3.18$--$3.44$ \cite{concession}.
+This is the most stable result in the whole exercise, and it is worth pausing on why it should be
+stable: it is a property of the game's outcome distribution under duplicate pairing, not of any
+particular mechanism, and it varies remarkably little across conditions as different as a one-knob
+ablation and a lopsided style mismatch.
+
+\subsection{The curve}
+
+Substituting into equation~\eqref{eq:mde} gives Table~\ref{tab:mde}, the operative design tool of
+this paper.
+
+\begin{table}[ht]
+\centering
+\caption{80\%-power minimum detectable effect, in sets per duplicate pair, at the measured per-pair
+SD \cite{concession}.}
+\label{tab:mde}
+\begin{tabular}{lrrrrrrr}
+\toprule
+$N$ (pairs) & 150 & 300 & 400 & 600 & 800 & 2000 & 4300 \\
+\midrule
+MDE (sets/pair) & 0.76 & 0.54 & 0.47 & 0.38 & 0.33 & 0.21 & 0.14 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Read it as a constraint rather than a licence. At $N=400$ --- the size at which several of this
+project's cells were run --- an effect of a third of a set is more likely than not to be missed. At
+$N=150$, the size of the cross-engine cells in \cite{crossplay}~\S2, the design cannot resolve
+anything under three quarters of a set.
+
+\section{Validating the model: an edge of known size}
+\label{sec:planted}
+
+A power curve computed from a measured SD is a prediction, not a measurement. It assumes normality
+of $\bar{d}$, correct SD estimation, and independence across pairs. The probe therefore checks the
+prediction against an edge whose true size is known because it was put there.
+
+\subsection{The planted edge}
+
+The handicapped arm plays the shipped policy except that, on an ordinary ask, it replaces the chosen
+ask with a uniformly chosen legal alternative with probability $\varepsilon$ \cite{probefloor}. Two
+properties make this a usable ruler:
+
+\begin{itemize}
+  \item at $\varepsilon = 0$ no random draw is ever taken --- \code{u01} returns a value in $[0,1)$
+  and every such value fails the $\geq \varepsilon$ test --- so the arm is byte-identical to the
+  control and the paired difference must print exactly $0.0000 \pm 0.0000$;
+  \item the true edge grows monotonically with $\varepsilon$, because replacing an argmax by a
+  uniform draw over the legal ask list can only lose value in expectation.
+\end{itemize}
+
+The draw is a deterministic hash of (stream, seed, step, seat), so a bank replays identically and
+the two orientations of a pair remain the same deal --- which is what keeps
+equation~\eqref{eq:datum} meaningful under the handicap. The calibration grid is
+$\varepsilon \in \{0.005, 0.01, 0.02, 0.03, 0.04, 0.06, 0.08\}$, measured at $2{,}000$ pairs per
+point so that the true edge at each $\varepsilon$ is itself known far more precisely than the
+$N=400$ and $N=800$ banks that are then asked to detect it.
+
+\subsection{Two nulls that move the game}
+\label{sec:nulls}
+
+A mirror match is exactly zero by construction (Section~\ref{sec:instrument}), so it cannot serve as
+the null against which false positives are counted. The probe uses two true nulls that
+\emph{do} disturb play \cite{probefloor}:
+
+\begin{itemize}
+  \item \textbf{\code{symnull}} --- both arms carry the \emph{same} handicap magnitude
+  $\varepsilon$, on two different hash streams. They differ at roughly $2\varepsilon$ of all ask
+  decisions, yet the expected edge is exactly zero by the exchangeability of the two streams. This
+  is the cleanest null available: the game moves, and the truth is nonetheless known.
+  \item \textbf{\code{abnull}} --- the information-free control of the project's earlier probe
+  \code{probe-ab.mjs}, reused as specified: the danger penalty's magnitude with the threat estimate
+  $D$ replaced by a hash of (seat, log length) over the same $0$--$3$ prey range. The prototype
+  ranker is copied faithfully, so that appetite $\lambda = 0$ reproduces \code{decide} at
+  \code{defuse: 0} byte-for-byte. That is a weaker statement than reproducing the shipped decision
+  function, and the difference matters: the shipped roster carries \code{defuse: 1}, so what this
+  control certifies is fidelity to the \emph{unequipped} baseline, not to the policy the project
+  ships \cite{probefloor}.
+\end{itemize}
+
+In the \code{fpr} stage \code{symnull} is run at two magnitudes, $\varepsilon = 0.02$ and
+$\varepsilon = 0.08$, and \code{abnull} at the single appetite $\lambda = 0.25$ that
+\code{probe-ab.mjs} used \cite{probefloor}. All three arms are run at banks of 800 pairs each split
+into its two disjoint halves of 400, so that each bank yields one estimate at $N=800$ and two at
+$N=400$.
+
+\subsection{The power model holds}
+
+This is the solid finding of the exercise. Across twelve (planted-effect, $N$) cells --- six planted
+sizes at two sample sizes --- the observed detection rate sat within about one binomial standard
+error of the normal-theory prediction in \emph{both} runs \cite{concession}. Equation~\eqref{eq:mde}
+can therefore be trusted as a design tool: an experimenter in this repository who wants 80\% power
+against a half-set effect can read off the required $N$ and expect to get what the arithmetic
+promises.
+
+What the model does \emph{not} deliver is a tight empirical estimate of where the floor sits, which
+is Section~\ref{sec:nonrep}'s subject and a different question. The model being calibrated in
+aggregate is compatible with the single grid point nearest the floor being estimated badly, and that
+is what happened.
+
+\section{The control that had to be changed before it meant anything}
+\label{sec:control}
+
+The project's probe discipline requires a byte-exact control: an arm which, with the mechanism
+switched off, reproduces the shipped policy exactly, so that the harness prints
+$0.0000 \pm 0.0000$ and any nonzero reading elsewhere is attributable to the mechanism rather than to
+the scaffolding. Every published concession result in \cite{concession} carries one.
+
+The floor probe's control is the planted-edge arm at $\varepsilon = 0$. An earlier version of that
+arm opened with a short-circuit:
+
+\begin{quote}
+\begin{verbatim}
+if (!(eps > 0)) return plainPolicy(style)
+\end{verbatim}
+\end{quote}
+
+\noindent
+which is the natural thing to write and is worthless as a control. With the short-circuit in place
+the control returns before the wrapper does anything, so the comparison it certifies is
+\code{plainPolicy(style)} against the shipped policy --- a statement true by inspection, since
+\code{plainPolicy} is a one-line delegation to \code{decide}. The wrapper whose inertness at
+$\varepsilon = 0$ is the actual claim is never entered. The draw is never taken, the legality lookup
+never runs, the substitution branch is never reached, and a bug in any of the three would sail
+through a control printing a perfect zero \cite{probefloor}.
+
+The fix is to delete the short-circuit and let the arm fall through. The arm then takes the draw,
+computes the legal ask list, evaluates the substitution branch's guard, declines because
+$u01 \geq 0$ always holds, and \emph{still} prints $0.0000 \pm 0.0000$ over 200 pairs. That is the
+statement the control discipline was asking for. The harness's own comment states the point
+plainly, and the file preserves the superseded version in prose so the reasoning survives the diff.
+
+Three observations generalise beyond this file.
+
+\textbf{A control must exercise the code whose inertness it certifies.} The failure mode is not that
+the short-circuited control was wrong --- its output was correct --- but that it was
+\emph{vacuous}: it verified a proposition nobody doubted while appearing to verify one that mattered.
+A green control is not informative unless one can say which lines it ran.
+
+\textbf{The fast path and the null path are the same path here.} Optimising a null case by returning
+early is normally harmless and often good practice. It is specifically harmful when the null case is
+the control, because the optimisation removes exactly the coverage the control exists to provide.
+Any codebase whose experimental controls are ``the mechanism at appetite zero'' has this hazard
+structurally.
+
+\textbf{The fidelity check is a separate obligation.} A control shows the scaffolding is inert; it
+does not show the scaffolding measures the same thing the published harness measured. The probe
+therefore adds a fourth control job that deliberately breaks its own fresh-bank rule and replays
+\code{holdoutA}, the bank on which \cite{concession}~\S3.1 published
+$+1.4250 \pm 0.3179$ over 400 pairs for the shipped defusal mechanism. Its purpose is to reproduce a
+published number rather than to measure a new one, and that is the only reason a probe should ever
+reuse a bank \cite{probefloor}.
+
+\section{The two parts that did not replicate}
+\label{sec:nonrep}
+
+An independent agent re-ran the entire probe on fresh seed banks. Two of the four parts came back
+different, and both differences remove a claim the first run had made.
+
+\subsection{The empirical floor at \texorpdfstring{$N=400$}{N=400}}
+\label{sec:floor400}
+
+The first run found that a planted true effect of $0.393$ sets per pair was detected --- its nominal
+95\% interval excluding zero --- in $84.7\%$ of independent banks at $N=400$. That is comfortably
+above the $80\%$ target, and the first run drew the conclusion that the empirical floor
+\emph{matched the analytic MDE to 1.5\%}: a satisfying result, and the kind of agreement between
+prediction and measurement that invites trust in both.
+
+The replication detected the same planted effect in $75.0\%$ of banks. Pooled over both runs, the
+detection rate at that grid point is $81.7\%$. Table~\ref{tab:nonrep} sets the two runs side by
+side.
+
+\begin{table}[ht]
+\centering
+\caption{The two non-replications \cite{concession}. Every figure is as printed in the source; the
+interval construction used for the coverage rows is not recorded alongside them.}
+\label{tab:nonrep}
+\small
+\begin{tabular}{lccc}
+\toprule
+quantity & first run & replication & pooled \\
+\midrule
+detection of a $0.393$ effect at $N=400$ & 84.7\% & 75.0\% & 81.7\% \\
+empirical floor at $N=800$ & 0.256 & 0.275 & replicates \\
+coverage: intervals excluding zero, $N=400$ & 6.1\% (11/180) & 10.8\% (13/120) & \textbf{8.0\% (24/300)} \\
+\quad 95\% CI on that rate & --- & $[5.9, 17.8]$ & $[5.2, 11.7]$ \\
+coverage at $N=800$ & nominal & nominal & 4.0\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The consequence is that \textbf{the $N=400$ floor is bounded only to the interval
+$0.36$--$0.50$ sets per pair, and this design cannot pin it tighter}. The first run's 1.5\%
+agreement was an artifact of where the sweep grid happened to land: with a grid of planted sizes and
+a detection rate estimated from a few dozen banks per point, the identity of the smallest point
+clearing 80\% is a coarse and unstable statistic, and reading a two-significant-figure agreement off
+it was over-reading. The analytic MDE at $N=400$, $0.47$, lies inside the bracket, which is
+reassuring and is not the same as being confirmed.
+
+The $N=800$ floor \emph{does} replicate: $0.256$ against $0.275$. The design is better behaved where
+it has more data, which is what one would expect and is a reason to prefer the $N=800$ column of
+Table~\ref{tab:mde} when a choice is available.
+
+\subsection{Interval coverage at \texorpdfstring{$N=400$}{N=400}}
+\label{sec:coverage}
+
+This is the more uncomfortable of the two, because it removes the first run's strongest claim.
+
+On true nulls that still move the game (Section~\ref{sec:nulls}), the first run counted $11$ of
+$180$ nominal-95\% intervals excluding zero at $N=400$: $6.1\%$, which is nominal. On that basis the
+first run concluded that \emph{the nominal 95\% intervals are correctly sized; no interval in this
+repository needs widening}. That is a strong and useful claim, and it would have retired an entire
+class of worry about the project's published error bars.
+
+The replication counted $13$ of $120$: $10.8\%$, with a 95\% interval of $[5.9, 17.8]$ that excludes
+$5\%$. Pooled over both runs the rate is $\mathbf{8.0\%}$ ($24/300$), with interval
+$[\mathbf{5.2}, \mathbf{11.7}]$ --- which also excludes the nominal $5\%$. \textbf{The first run's
+strongest claim fails on independent banks.}
+
+At $N=800$ both runs are nominal, pooling to $4.0\%$.
+
+We report the cause as \textbf{unknown}, and say why rather than leaving it at a shrug. A genuine
+under-coverage defect --- a heavy-tailed pair distribution, a variance estimate biased low, a
+residual dependence between the two orientations of a pair --- ought to scale with $N$ in a
+recognisable way: worse at smaller $N$, tending to nominal as the central limit theorem takes hold.
+What is observed is nominal at $N=800$ and anomalous at $N=400$, from banks that are literally the
+halves of the $N=800$ banks. That is a very specific pattern and no mechanism proposed so far
+predicts it. The two candidate readings are that $N=400$ is genuinely below the size at which the
+normal approximation is safe for this distribution and $N=800$ is above it --- a sharp transition
+over one doubling, which is a lot to ask --- or that the excess is a fluctuation and $24/300$ with an
+interval whose lower end sits at $5.2\%$ is simply a near-miss dressed as a finding.
+
+We decline to choose. What can be said without choosing is the practical instruction: \textbf{a
+nominal 95\% interval computed at $N=400$ in this repository should not be treated as a 95\%
+interval}, and the honest reading of a marginal $N=400$ result is that its error bar may be
+optimistic by an unquantified amount. Whether this should be assumed benign is exactly the question
+\cite{concession}~\S9 refuses to close.
+
+\section{The substitution trap}
+\label{sec:trap}
+
+The first run of this probe fell into a trap worth naming, because it is the most transferable
+mistake in the paper and because it is invisible if one reads Table~\ref{tab:mde} as a threshold
+rather than as a formula.
+
+\subsection{The SD is not a constant}
+
+Equation~\eqref{eq:mde} contains a standard deviation. Table~\ref{tab:mde} was computed with one
+particular value of it, from one particular family of conditions. The MDE of any given cell depends
+on \emph{that cell's own} SD, and the SD is not constant across this repository:
+
+\begin{itemize}
+  \item The eight full-divergence conditions of Table~\ref{tab:sd} span $3.15$--$3.44$, which is
+  narrow enough to invite the substitution.
+  \item The Turtle cell of \cite{concession}~\S3.1 measures $\mathbf{3.645}$ --- outside that band,
+  in the direction that makes its floor higher than the generic figure suggests.
+  \item The cross-engine harness of \cite{crossplay}~\S3, which runs FishAI's policy inside a
+  third-party engine against a foreign bot family, publishes half-widths of $0.517$, $0.555$,
+  $0.533$ and $0.560$ at 300 duplicate pairs per opponent. Those imply a per-pair SD of
+  $\mathbf{4.57}$ to $\mathbf{4.95}$: \textbf{38--49\% higher} than the \usff{} figure
+  \cite{concession}.
+\end{itemize}
+
+Substituting one SD across all conditions understates the floor exactly where the cells are
+smallest, which is exactly where the understatement does the most damage. The cross-engine cells are
+the clearest case: they are both the noisiest and the shortest-run measurements in the project.
+
+\subsection{The counter-example that keeps the reader honest}
+\label{sec:counter}
+
+The trap has a mirror image, and it matters more, because it is the error a reader makes with
+Table~\ref{tab:mde} in hand and good intentions.
+
+A head-to-head between two adaptive generations, \emph{v1.0 against v0.5} --- two members of the
+same generational ladder \cite{v15} --- is recorded as $+0.2475 \pm 0.1024$ at $n=800$. Against the generic $0.33$ floor at $N=800$ that reads as ``below
+the floor, not resolved'' --- and the reading is wrong. Its own interval excludes zero comfortably,
+by a margin of more than two half-widths. The reason is structural: the generic floor was computed
+from arms that differ at \emph{every} decision, and two adaptive arms that mostly agree produce a far
+smaller per-pair SD than a one-knob ablation does, so their cell's own floor is far lower than the
+generic one.
+
+Table~\ref{tab:sd}'s last two rows are the committed evidence for that mechanism inside this
+harness. The planted-edge arm at $\varepsilon = 0.02$ --- which differs from its control on about
+2\% of ask decisions --- has a per-pair SD of $2.549$, and the symmetric null at the same magnitude
+$2.959$, against $3.15$--$3.44$ for arms that differ everywhere. Agreement between arms buys
+precision.
+
+The rule that follows is short and is stated in \cite{concession} in bold for a reason:
+\textbf{never read the floor table as a threshold to apply by eye}. The floor is a function with an
+argument, and the argument is the cell's own noise.
+
+\subsection{The counter-example is itself not traceable}
+\label{sec:untraceable}
+
+Honesty about a floor paper requires one more sentence about that counter-example, and it is not a
+comfortable one. \textbf{The figure $+0.2475 \pm 0.1024$ cannot be found in any committed document.}
+It appears exactly twice in the repository: in \cite{concession}~\S8a, where it does the work
+described above, and in the probe's own list of published claims, where its provenance field reads
+\code{'task brief'} and its description carries the parenthesis \emph{``NOT FOUND in any committed
+doc''} \cite{probefloor}.
+
+We report this rather than quietly substituting a traceable example, for three reasons. It is the
+project's own rule that every number must be traceable to a committed source, and this one is not.
+The probe's author noticed and labelled it, which is the behaviour the rule is meant to produce, and
+suppressing the label would waste that. And the pedagogical point the number carries --- that two
+mostly-agreeing arms resolve effects a generic floor would reject --- does not depend on it: the
+mechanism is demonstrated inside the harness by Table~\ref{tab:sd}'s last two rows, on banks the
+probe generated and can regenerate. The counter-example should be re-derived from a cell that exists
+in a committed artifact, and until it is, it should be read as an illustration rather than as a
+measurement.
+
+\section{Applying the floor to the back catalogue}
+\label{sec:catalogue}
+
+The point of characterising an instrument is to go back and re-read what it produced.
+Table~\ref{tab:catalogue} is \cite{concession}~\S8a.1: every headline result of the project's
+concession research placed against its own floor.
+
+\begin{table}[ht]
+\centering
+\caption{Committed results against their own detection floor \cite{concession}. ``Its floor'' is the
+80\%-power MDE at that cell's $N$ and, where it could be measured, that cell's own SD.}
+\label{tab:catalogue}
+\small
+\begin{tabular}{p{0.30\textwidth} r r r p{0.24\textwidth}}
+\toprule
+result & reported & $N$ & its floor & verdict \\
+\midrule
+\S5a.3 concealment vs.\ non-defusing opponents & $-0.1483 \pm 0.2571$ & 600 & ${\sim}0.38$ &
+  \textbf{below floor --- not resolved} \\
+\S6 the contained-pass aim, ``inert'' & $-0.045 \pm 0.130$ & --- & --- &
+  \textbf{below floor --- a non-measurement, not a zero} \\
+\cite{crossplay}~\S2, all four headline cells & 42.7--48.7\%, no intervals published & 150 &
+  1.05--1.13 & \textbf{all four below floor} \\
+\S3.1 defusal, shipped & $+1.43$ / $+1.58 \pm 0.32$ & 400 & ${\sim}0.47$ & resolved, $3\times$ the
+  floor \\
+\S8.1 the six triangle edges & $\pm 0.10$ half-widths & 4000 & ${\sim}0.15$ & five resolved; \emph{P}
+  vs.\ \emph{C} ($+0.1457$, $+0.1742$) sits at the floor --- \textbf{nominal only} \\
+\cite{bounded}~\S5a, v1.5 vs.\ v1.0 & $-0.1255 \pm 0.0590$ & see \S\ref{sec:discrep} & see note &
+  resolved --- that cell's arms differ far less, so its own SD is much smaller \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Two nulls become non-measurements}
+
+The two reclassifications are the substantive output of this exercise, and both are corrections to
+claims this project published.
+
+\textbf{\cite{concession}~\S6's ``inert'' contained-pass aim.} The project replaced the aim and cost
+model of its contained-book turn-pass --- the one place in the engine where ``concede to the least
+dangerous seat'' is exactly right, because a contained-book pass is a guaranteed miss by
+construction and so cannot suffer the danger/opportunity confound that sinks the same rule on
+ordinary asks --- with the measured threat estimate, and got $-0.045 \pm 0.130$ over 400 duplicate
+pairs. The reading is now \textbf{a statement about this instrument's resolution and not about the
+game}: at the $N=400$ that cell was run at, the floor is $0.47$ sets per pair, so an effect of
+$0.045$ is an order of magnitude under the only floor that applies to it --- and it stays a factor of
+three under $0.14$, the smallest floor anywhere in Table~\ref{tab:mde}.
+
+The reclassification is not a call to un-revert, and it is worth being exact about what it does and
+does not touch, because the reason \S6 gives for the revert was never the interval.
+\cite{concession}~\S6 states that the change was \textbf{reverted rather than shipped off by
+default}, on that document's own \S6.2 argument: a knob that is listed, swept and reported while
+being inert contaminates the measured vector, and one such knob is already one too many
+\cite{inertaxis}. That reason stands untouched here. Two further things should be said in the
+reverted change's defence. First, the diagnostic that accompanied the null gives an independent
+mechanism for it: over $25{,}654$ ask decisions, more than one opponent still held cards $99.1\%$ of
+the time, the contained pass fired at all on only $1.06\%$, and it fired \emph{and} the two aims
+disagreed on $0.11\%$ \cite{concession}. A mechanism that gets to matter on one decision in a
+thousand cannot move a set-difference, and that argument does not depend on the interval. Second,
+the reverted aim was the soundest available form of the fix, built at the one place in the engine
+where the danger/opportunity confound cannot arise. What the reclassification removes is only the
+supporting reading --- the word ``inert'' --- and not the ground the revert was actually made on.
+
+\textbf{\cite{concession}~\S5a.3's non-defuser cell.} Concealment measured $-0.1483 \pm 0.2571$ at
+$N=600$ against opponents that do not defuse, and the document originally read that as concealment
+being worth nothing against them. At that cell's own SD of $3.363$ the floor is about $0.38$ sets:
+the measurement is not capable of distinguishing a real loss of about a third of a set from a small
+gain. The honest statement, now in the source document, is that the cell is \textbf{not resolved}.
+What survives is the comparative result measured at $4{,}000$ pairs per cell, where concealment-only
+is the weakest of the four concession arms outright --- a claim whose floor is about $0.15$ and which
+clears it.
+
+\textbf{And a third that is not this project's own.} \cite{crossplay}~\S2's per-opponent ranking of
+FishAI against a foreign bot family --- four headline cells at $42.7\%$ to $48.7\%$ win rate, at 150
+games per cell, published without intervals --- sits under a floor of $1.05$--$1.13$ sets per pair on
+that harness's own noise level. The ordering of those four opponents is not resolved. The
+\emph{aggregate} claim that harness was built to make, that defusal replicates in a foreign engine at
+$+1.55$ to $+1.75$ sets per pair over 300 pairs per opponent with four intervals excluding zero, is
+untouched by this.
+
+\subsection{Two discrepancies found while reproducing the table}
+\label{sec:discrep}
+
+Reproducing Table~\ref{tab:catalogue} against its underlying sources surfaced two bookkeeping
+discrepancies. Neither changes a verdict; both are reported because a floor paper that quietly
+normalised its own inputs would be exactly the kind of document it is arguing against.
+
+\textbf{The bounded-memory row's $N$.} \cite{concession}~\S8a.1 records the v1.5-against-v1.0 cell at
+$N=2700$. \cite{bounded}~\S5a, the document that published it, states $2{,}000$ duplicate pairs per
+rung on the held-out bank, and the probe's own list of published claims carries $n = 2000$ for the
+same row \cite{probefloor}. Two committed sources say $2{,}000$ and one says $2{,}700$; the balance
+of evidence is that the table's $N$ is a transcription error. The row's verdict does not turn on it,
+because that row is resolved for a reason about its SD rather than its $N$
+(Section~\ref{sec:counter}) --- which is the only reason this is a footnote rather than a
+correction.
+
+\textbf{The untraceable counter-example}, Section~\ref{sec:untraceable}.
+
+\subsection{A verdict rule worth stating separately}
+
+The probe's \code{published} stage does not treat ``the published interval excluded zero'' as
+sufficient for ``resolved''. It requires both that the interval excluded zero \emph{and} that the
+reported effect is at or above the 80\%-power floor, and it prints a distinct verdict ---
+\code{NOMINAL ONLY --- underpowered} --- for a cell that clears its own interval but not its floor
+\cite{probefloor}.
+
+The reasoning is standard and under-applied. An effect that clears its interval but sits below the
+design's floor was found by a design that would have missed it more often than not; conditional on
+being found at all, such an estimate is biased upward in magnitude, and if the true effect is small
+its sign is not reliable either \cite{gelmancarlin}. Reporting it as ``significant'' without
+reporting that its design had, say, 40\% power against it is how a literature accumulates effect
+sizes that shrink on replication \cite{button, ioannidis}; the same argument is why the reform
+literature asks for estimates and intervals to be read as continuous evidence rather than sorted
+into significant and not \cite{amrhein}. Naming the underpowered-but-significant
+case in the harness's own output, rather than in a caveat somewhere else, is the cheapest available
+guard against it.
+
+The rule has a cost, and this paper pays it on its own table rather than exempting itself. Applied
+to \S8.1's six triangle edges, five clear the ${\sim}0.15$ floor at $N=4000$ by a wide margin, but
+the weakest --- \emph{P} against \emph{C}, plain against conceal-only --- is $+0.1457 \pm 0.1030$ on
+the first bank set and $+0.1742 \pm 0.1030$ on the replication \cite{concession}. Both intervals
+exclude zero; neither effect is three times its floor, and the first sits fractionally
+\emph{under} it. By this paper's own rule that edge is \textbf{nominal only, not resolved}. Nothing
+about the triangle's refutation depends on it --- that argument is carried by wrong-signed legs many
+times their floor --- but the ordering claim that conceal-only is the worst of the four arms rests on
+this edge, and it rests on it at the floor.
+
+\section{What this does not establish}
+\label{sec:limits}
+
+\textbf{The floor is a property of this instrument on this game.} $3.15$--$3.44$ sets per pair is
+the residual noise of duplicate-paired net sets under \usff{} at this roster's level of play. It is
+not a property of Literature, of duplicate pairing in general, or of any other outcome variable. The
+cross-engine harness's $4.57$--$4.95$ is the nearest available demonstration that the number does not
+transfer even to a different implementation of the same game.
+
+\textbf{The floor applies to the paired set-difference and to nothing else.} Several of this
+project's nulls are reported in other units. The contained-book paper's headline mirror table, for
+instance, reports mean score on a $0.5$-centred scale with standard errors of $0.0000$--$0.0065$
+\cite{containedbook}; that is a different statistic on a different scale, and Table~\ref{tab:mde}
+says nothing about it. A floor characterisation is per-instrument, and this project has more than one
+instrument.
+
+\textbf{Nothing here rescues a null that is below its floor.} Reclassifying \S6 and \S5a.3 as
+non-measurements does not make either mechanism valuable. It removes a claim; it does not install
+the opposite claim. Both cells would need re-running at an $N$ chosen against the effect size
+actually worth detecting, and neither has been.
+
+\textbf{The empirical floor at $N=400$ is bracketed, not measured.} Section~\ref{sec:floor400}'s
+$0.36$--$0.50$ is the honest width of what two runs of this design can say. Pinning it tighter needs
+either many more banks per grid point or a finer grid, and the exercise would have to be re-costed
+against what a tighter number would actually buy.
+
+\textbf{The coverage anomaly is unresolved and may be nothing.} Section~\ref{sec:coverage} states
+both readings and chooses neither. A reader who wants a single number should take $N=800$'s $4.0\%$,
+use $N \geq 800$ for anything marginal, and treat $N=400$ intervals as provisional.
+
+\textbf{The probes are not the lab.} \code{probe-floor.mjs} and its siblings are scratch harnesses:
+not typechecked, emitting no committed artifact, and their numbers are not digest-bound
+\cite{concession}. They exist so that every table can be regenerated, and that is a weaker guarantee
+than the one the lab's committed results carry. The one mitigation is the fidelity check of
+Section~\ref{sec:control}, which shows this harness reproduces a published number on a published
+bank.
+
+\textbf{Decision-level identity is a stronger tool where it applies.} Where the question is whether
+two policies differ \emph{at all}, an exact comparison of their actions on identical observations and
+seeds returns a certificate rather than an interval, and no floor arithmetic is needed
+\cite{inertaxis}. The floor characterised here is the right instrument for ``how much is this worth''
+and the wrong one for ``does this fire''. The project has both, and part of reading a null correctly
+is noticing which question was asked.
+
+\section{The recommendation}
+\label{sec:rec}
+
+One recommendation follows from this experience, and it is deliberately modest, because it is
+grounded in one codebase, one game, and one instrument.
+
+\textbf{Publish the floor beside the null.} A reported null should carry, in the same table row, the
+smallest effect the design that produced it would have detected 80\% of the time --- computed with
+that cell's own noise level, not a repository-wide constant. Nothing else in this paper is a
+recommendation to anyone. This one is, for four reasons the work made concrete:
+
+\begin{enumerate}
+  \item \textbf{It is the cheapest possible remedy for the ambiguity.} The floor is one number,
+  computed from a standard deviation the harness has already estimated in the course of printing its
+  interval. It requires no additional games. Two of this project's nulls were misread for want of a
+  number that was, in effect, already in memory.
+  \item \textbf{It changes what the null licenses.} ``Measured at $-0.045 \pm 0.130$'' invites the
+  reader to abandon the mechanism. ``Measured at $-0.045 \pm 0.130$, against a floor of $0.47$''
+  invites the reader to note that nothing was learned and to ask what $N$ would be needed. Those are
+  different actions, and only the second is supported.
+  \item \textbf{It has to be per-cell, and stating it per-cell is what stops the substitution
+  trap.} A repository-wide floor printed once in a methods section becomes a threshold applied by
+  eye, which is precisely the error of Section~\ref{sec:trap}. Printed in the row, beside its own
+  interval, the floor carries its argument with it.
+  \item \textbf{It composes with the discipline of putting the correction where the claim is.} This
+  project's practice is to correct claims adjacent to the claims themselves rather than in a
+  footnote or a later document \cite{inertaxis, concession}. A floor in the row is that practice
+  applied pre-emptively: the caveat cannot become detached from the number it qualifies, because it
+  is part of the number's presentation.
+\end{enumerate}
+
+The negative form of the recommendation is worth stating too, because this paper is an instance of
+it. \textbf{Do not publish a floor without replicating it.} The first run of this exercise produced
+a clean, quotable, mutually confirming set of four results, and one independent re-run on fresh banks
+removed two of them --- including the strongest. Had the floor been published after one run, this
+project would have added a false reassurance about its own error bars to the pile of claims it was
+trying to clean up. A characterisation of an instrument is itself a measurement, and it inherits
+every obligation the measurements it is meant to qualify are held to.
+
+\section{Conclusion}
+
+An unresolved effect and an absent effect look identical in a table, and a project that publishes
+nulls as findings is precisely the project that cannot afford the confusion. FishAI published
+several before measuring what its instrument could resolve. Measured, the instrument's noise is
+$3.15$--$3.44$ sets per duplicate pair, giving an 80\%-power floor of $0.47$ sets at $N=400$ and
+$0.33$ at $N=800$; the normal-theory power model behind those figures was validated against a
+planted edge of known size in all twelve cells of both runs, on the strength of a byte-exact control
+that had first to be repaired, because the version that short-circuited at zero handicap proved only
+that the unwrapped policy equalled the shipped policy and never entered the wrapper at issue. Two
+parts did not replicate: the empirical floor at $N=400$ is bounded only to $0.36$--$0.50$, and
+interval coverage at $N=400$ pools to $8.0\%$ $[5.2, 11.7]$ against a nominal $5\%$, for reasons
+unknown and not assumed benign. The floor must always be that cell's own --- one cell measures
+$3.645$, a foreign-engine harness $4.57$--$4.95$, and two mostly-agreeing arms resolve effects a
+generic floor would reject. Applied to the back catalogue, the floor turns two published nulls into
+non-measurements; the mechanisms the project ships clear their floors by a factor of three or more,
+with one exception the same rule catches --- the weakest of \S8.1's six triangle edges, plain against
+conceal-only, whose $+0.1457$ and $+0.1742$ sit at a floor of ${\sim}0.15$ and are nominal only.
+
+The deliverable is not the number. It is the row the number belongs in: publish the floor beside the
+null.
+
+\begin{thebibliography}{99}
+\small
+
+\bibitem{concession}
+FishAI project.
+\emph{CONCESSION.md --- FishAI v2.0: the three-sided ask}.
+Repository document; \S3.1 (defusal, shipped), \S5a.3 (concealment, and the non-defuser cell), \S6
+(the contained-pass aim, reverted), \S8.1 (the triangle at 4{,}000 pairs), \textbf{\S8a} (the
+detection floor, its replication, and the substitution trap), \S8a.1 (the floor applied to committed
+numbers), \S9 (open residues), \S10 (reproducing the measurements).
+
+\bibitem{probefloor}
+FishAI project.
+\emph{\code{scripts/probe-floor.mjs} --- the detection-floor harness}.
+Source file; the four stages (\code{sd}, \code{calib}/\code{detect}, \code{fpr},
+\code{published}), the planted-edge arm and its non-short-circuiting control, the \code{symnull}
+and \code{abnull} true nulls, the \code{MEASURED\_SD} constants recorded 2026-08-31 at 1{,}200
+pairs per condition, the \code{PUBLISHED} claim list, and the \code{NOMINAL ONLY --- underpowered}
+verdict rule.
+
+\bibitem{crossplay}
+FishAI project.
+\emph{CROSSPLAY.md --- FishAI against the fishlabs bots, in the fishlabs engine}.
+Repository document; \S2 (the per-opponent cells at 150 games each, published without intervals),
+\S3 (defusal replicated in a foreign engine, 300 duplicate pairs per opponent, half-widths
+$0.517$--$0.560$).
+
+\bibitem{bounded}
+FishAI project.
+\emph{BOUNDED.md --- the bit-budget memory ladder}.
+Repository document; \S5a (the v1.5-against-v1.0 ladder, 2{,}000 duplicate pairs per rung on bank
+\code{v15v10-holdout-a}, and the residual at an unbounded budget).
+
+\bibitem{botlab}
+FishAI project.
+\emph{BOT\_LAB.md --- play-style spectrum: research, experimental design, and metrics}.
+Repository document; \S5.1--5.2 (duplicate-deal pairing), \S5.4 (fixed-$N$ precision for published
+estimates), \S5.5 (SPRT for tuning decisions only).
+
+\bibitem{inertaxis}
+A.~Hsieh.
+\emph{The inert axis: when a style parameter is wired, swept, and never reached}.
+Companion paper, FishAI project, 2026. The decision-level divergence certificate, and the doctrine
+that a correction belongs adjacent to the claim it corrects.
+
+\bibitem{containedbook}
+A.~Hsieh.
+\emph{The contained book: an absorbing resource measured to be worth nothing}.
+Companion paper, FishAI project, 2026. The project's other principal null, reported in mean-score
+units rather than in paired set-differences.
+
+\bibitem{v05}
+A.~Hsieh.
+\emph{FishAI v0.5: measuring play style without skill in a 54-card Literature variant}.
+Companion paper, FishAI project, 2026. The engine, the \usff{} dialect, the nine-style roster, and
+the tournament design every instrument in this paper is built on.
+
+\bibitem{v15}
+A.~Hsieh.
+\emph{FishAI v1.5: a bit-budget memory ladder as an honest difficulty axis}.
+Companion paper, FishAI project, 2026. The generation the mostly-agreeing-arms discussion of
+Section~\ref{sec:counter} is set against. It does \emph{not} supply that section's
+\emph{v1.0}-against-\emph{v0.5} cell, which appears in no committed document
+(Section~\ref{sec:untraceable}); the traceable mostly-agreeing-arms measurement on this ladder is
+\cite{bounded}~\S5a's v1.5-against-v1.0 rung.
+
+\bibitem{altman}
+D.~G.~Altman and J.~M.~Bland.
+Absence of evidence is not evidence of absence.
+\emph{BMJ}, 311(7003):485, 1995.
+
+\bibitem{cohen}
+J.~Cohen.
+\emph{Statistical Power Analysis for the Behavioral Sciences}, 2nd edition.
+Lawrence Erlbaum Associates, Hillsdale, NJ, 1988.
+
+\bibitem{gelmancarlin}
+A.~Gelman and J.~Carlin.
+Beyond power calculations: assessing Type S (sign) and Type M (magnitude) errors.
+\emph{Perspectives on Psychological Science}, 9(6):641--651, 2014.
+
+\bibitem{button}
+K.~S.~Button, J.~P.~A.~Ioannidis, C.~Mokrysz, B.~A.~Nosek, J.~Flint, E.~S.~J.~Robinson, and
+M.~R.~Munaf\`o.
+Power failure: why small sample size undermines the reliability of neuroscience.
+\emph{Nature Reviews Neuroscience}, 14(5):365--376, 2013.
+
+\bibitem{ioannidis}
+J.~P.~A.~Ioannidis.
+Why most published research findings are false.
+\emph{PLoS Medicine}, 2(8):e124, 2005.
+
+\bibitem{amrhein}
+V.~Amrhein, S.~Greenland, and B.~McShane.
+Scientists rise up against statistical significance.
+\emph{Nature}, 567:305--307, 2019.
+
+\end{thebibliography}
+
+\end{document}

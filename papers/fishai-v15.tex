@@ -63,6 +63,18 @@ effect --- and the pilot's commit overclaimed; the correction is on the record, 
 flat at matched read count. Within the designs measured, the P7 shift is a property of
 the bounded ecology, not of the bounded seat's own end-of-game signature; the
 cross-design difference ($z = 2.11$) is reported as exactly that and enters no verdict.
+An addendum re-measures the arm after the engine gained a defusal term that all nine roster
+styles carry and v1.5 inherits: against the same pre-concession v1.0 whose committed cell reads
+$-0.1255 \pm 0.0590$, the updated arm measures $+1.4065 \pm 0.1399$ and $+1.5290 \pm 0.1418$ on
+two banks --- a different question, not a correction of that cell, which a per-pair audit
+(0/2{,}700 mismatches against a pre-concession export, 1{,}369/2{,}700 against the current tree)
+establishes was measured clean. The ladder's \emph{shape} does not survive either: the
+$0 \to \infty$ span grows from $8.0195$ to $9.7985$ and $9.9260$. And because the term's licence
+scan reads the full public log while retiring only against budgeted knowledge, it partly bypasses
+the bit budget --- held against its own pre-concession self at a zero budget, the updated arm
+still takes $+0.96$ and $+0.80$ sets per pair on the same two banks --- so ``updated v1.5 at $N$
+bits'' is not a clean $N$-bit agent, and the new ladder is not a pure memory ladder. The original
+one, measured before the term existed, is unaffected.
 \end{abstract}
 
 \section{Introduction}
@@ -795,6 +807,155 @@ licensed none of this --- its confidence interval contained the entire effect it
 probing for --- which is why the record distinguishes the pilot from the run of
 record, and why the correction of Section~\ref{sec:timeline} was worth a commit.
 
+\section{Addendum: the ladder under the defusal term}
+\label{sec:defusal}
+
+Everything above was measured before the engine had a concession layer. It has one now
+\cite{v20paper,concession}: \code{defuse}, a term added to the ranked ask score that credits an
+ask for the reach a hit would strip off an opponent able to punish a conceded turn. All nine
+roster styles carry it at appetite~1; no shipped tier does. Its sibling \code{conceal} is $0$ on
+all nine roster styles and on all three tiers, so the only live mechanism in the comparison below
+is \textbf{defusal}, and it is named that here rather than by the layer it arrived in. Because
+the bounded arm plays a \emph{named roster style} at hard skill over restricted knowledge
+(Section~\ref{sec:engine}), v1.5 inherited the term without a line of v1.5 changing. That
+inheritance is what makes a re-measurement necessary, and --- as the second finding below shows
+--- what makes the re-measurement easy to get wrong.
+
+The comparison being re-run is BOUNDED.md \S5a's \cite{bounded}, which had measured the
+then-current v1.5 against v1.0 on a held-out bank and found $-0.1255 \pm 0.0590$ sets per
+duplicate pair at an unbounded budget. That residual is not a memory effect: at $\infty$ bits the
+v1.5 seat is byte-identical to a bare Balanced seat by the equivalence anchor
+(Section~\ref{sec:twopasses}), so what it prices is the \emph{style} gap against a v1.0 seat that
+spends $44.2\%$ of its decisions as Punter \cite{bounded}. Naming Punter reversed it there, and
+the ladder against a v1.0 opponent was monotone at every rung, as it is against v0.5.
+
+\begin{table}[t]
+\centering
+\caption{v1.5 after the defusal term: mean paired set-difference per duplicate pair against a
+\emph{pre-concession} v1.0. Every row but the last is a \emph{new} measurement made for this
+addendum with \code{scripts/probe-v15-clean.mjs} \cite{v15clean} --- bank \code{v15clean-2026a},
+the replication row on the disjoint bank \code{audit-2026q3-repl}, 2{,}000 duplicate pairs per
+cell, both zero-appetite controls exactly $0.0000 \pm 0.0000$ and every health counter zero over
+the 68{,}000 games each bank runs; neither BOUNDED.md nor CONCESSION.md carries them. Positive is
+v1.5 ahead. The last row is BOUNDED.md \S5a's committed cell \cite{bounded}, which measured the
+\emph{pre-concession} v1.5 against the same clean v1.0; it is printed beside them and is not
+superseded --- it answers a different question.}
+\label{tab:defusal}
+\footnotesize
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Arm, at $\infty$ bits & Win rate & Paired set-difference & $n$ \\
+\midrule
+updated v1.5 (balanced) vs.\ clean v1.0      & $60.22\%$ & $+1.4065 \pm 0.1399$ & 2{,}000 \\
+independent replication, disjoint bank       & $61.27\%$ & $+1.5290 \pm 0.1418$ & 2{,}000 \\
+updated v1.5 at style punter vs.\ clean v1.0 & $62.10\%$ & $+1.6595 \pm 0.1413$ & 2{,}000 \\
+updated v1.5 vs.\ \emph{old} v1.5             & ---       & $+1.5725 \pm 0.1405$ & 2{,}000 \\
+\midrule
+zero-appetite controls, both arms            & ---       & $0.0000 \pm 0.0000$  & --- \\
+\midrule
+\S5a, committed: old v1.5 vs.\ clean v1.0    & ---       & $-0.1255 \pm 0.0590$ & 2{,}000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:defusal} is the re-measurement, replicated on a disjoint bank and repeated at a
+second style. The updated arm beats the same clean v1.0 by $+1.4065 \pm 0.1399$ and
+$+1.5290 \pm 0.1418$ sets per pair; at style punter it takes $+1.6595 \pm 0.1413$; measured
+head-to-head against its own pre-concession self it takes $+1.5725 \pm 0.1405$. Both
+zero-appetite controls printed exactly $0.0000 \pm 0.0000$ --- the arm with the term switched off
+is the arm without it --- and no health counter fired across 68{,}000 games. Four things follow,
+and each corrects an overstatement the table invites.
+
+\textbf{First: \S5a's committed cell is neither superseded nor wrong.} It measured the
+\emph{old} v1.5 against a clean v1.0; Table~\ref{tab:defusal}'s top rows measure the
+\emph{updated} v1.5 against the same clean v1.0. Different question, different answer, and the
+sign change between them is the term's arrival rather than a correction of anything. The
+provenance is checkable and was checked: an audit reproduced the artifact behind \S5a per pair
+from a pre-concession export with \textbf{0 mismatches in 2{,}700 pairs}, and from the
+post-concession tree with \textbf{1{,}369 of 2{,}700}. That pair of counts, not any agreement of
+means, is what establishes the committed cell was measured on a clean tree.
+
+\textbf{Second, and this is the part worth carrying out of this repository: a contaminated run
+looks exactly like a faithful replication.} Both generations resolve their style through the same
+\code{STYLE\_ROSTER} --- v1.0's \code{AdaptiveSpec} selects a roster entry per decision, v1.5's
+\code{BoundedSpec} names one --- so an old-version arm driven by the current tree silently
+inherits the new mechanism, on both sides of the comparison at once. Running both arms
+post-concession gives $-0.0740 \pm 0.0533$, statistically indistinguishable from \S5a's committed
+$-0.1255 \pm 0.0590$. A reviewer holding the two side by side would call the second a clean
+replication of the first. \emph{Magnitude cannot detect this class of error; only provenance
+can}, which is why the audit above is a per-pair identity check against a pinned export rather
+than a comparison of intervals.
+
+\begin{table}[t]
+\centering
+\caption{The same comparison across the budget ladder --- v1.5 (balanced) minus a
+pre-concession v1.0, per duplicate pair, with $95\%$ intervals --- before and after the defusal
+term. The left column is BOUNDED.md \S5a's committed ladder \cite{bounded}; the right is new,
+measured for this addendum by \code{scripts/probe-v15-clean.mjs} on bank \code{v15clean-2026a},
+2{,}000 duplicate pairs per rung \cite{v15clean}. \S5a's 8-, 24- and 96-bit rungs have no updated
+counterpart and are omitted; the two columns sit on different banks and are not paired against
+each other, so no row of this table measures the defusal term's own contribution.}
+\label{tab:defusalladder}
+\footnotesize
+\begin{tabular}{@{}rrr@{}}
+\toprule
+Bits & \S5a, pre-concession & Updated \\
+\midrule
+0        & $-8.1450 \pm 0.0689$ & $-8.3920 \pm 0.0645$ \\
+16       & $-2.8520 \pm 0.1497$ & $-1.5635 \pm 0.1656$ \\
+32       & $-0.9940 \pm 0.1200$ & $+0.5365 \pm 0.1518$ \\
+48       & $-0.2875 \pm 0.0789$ & $+1.2200 \pm 0.1423$ \\
+64       & $-0.1625 \pm 0.0641$ & $+1.3855 \pm 0.1400$ \\
+128      & $-0.1255 \pm 0.0590$ & $+1.4065 \pm 0.1399$ \\
+$\infty$ & $-0.1255 \pm 0.0590$ & $+1.4065 \pm 0.1399$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Third: the ladder's shape did not survive unchanged, and an early reading of these runs
+that said ``only the level moves'' is wrong.} Table~\ref{tab:defusalladder} puts the two columns
+side by side. The $0 \to \infty$ span grows from $8.0195$ to $9.7985$ on the first updated bank
+and $9.9260$ on the second. The share of that span bought by the first 16 bits moves too, though
+far less: from \S5a's own rungs, $(8.1450 - 2.8520)/8.0195 = 66.0\%$; on the first updated bank
+$(8.3920 - 1.5635)/9.7985 = 69.7\%$ and on the second $(8.3970 - 1.4730)/9.9260 = 69.8\%$. (\S5a's
+prose puts the first of these at $59\%$ and adds ``$73\%$ by 8''; neither figure follows from the
+table printed beside it --- 8 bits buys $(8.1450 - 6.0215)/8.0195 = 26.5\%$, so the pair is not
+only mis-stated but ordered backwards, a cumulative share falling as the budget grows. The
+recomputation above is used here in preference to either.) What moves the shape is that the
+term's own contribution is budget-dependent, and the contrast that isolates it is the
+concession-only one --- updated v1.5 against \emph{old} v1.5 at a matched budget, which holds the
+opponent fixed and leaves the term as the only difference between the arms. At zero bits it pays
+$+0.9560 \pm 0.1858$ on \code{v15clean-2026a} and $+0.8030 \pm 0.1879$ on the disjoint
+\code{audit-2026q3-repl}, 2{,}000 duplicate pairs each, against $+1.5725 \pm 0.1405$ and
+$+1.6380 \pm 0.1440$ at $\infty$ on the same two banks \cite{v15clean}. A term whose worth depends
+on the budget it sits under cannot leave that budget's curve alone, and it did not.
+Table~\ref{tab:defusalladder} is not evidence for that budget-dependence and must not be quoted
+as if it were: its two columns face a \emph{full-memory} v1.0 while the seat itself is starved,
+they sit on different banks with no pairing between them, and at zero bits both are near the
+floor, so their $-8.3920 - (-8.1450) = -0.2470$ difference is not the term's contribution and
+does not even carry its sign. One of \S5a's caveats travels with the comparison just made,
+because that comparison is
+exactly a cross-budget reading of shape against \S5a's baseline: the v1.0 baseline is not a fixed
+policy across rungs. Its style mixture tracks public-log length, which the opponent's budget
+changes --- warm-Punter share runs $41.0\%$ at $\infty$ to $48.6\%$ at 0 bits --- so cells at
+different budgets face materially different opponents \cite{bounded}.
+
+\textbf{Fourth, and this one qualifies the central axis of this paper.} The defusal term's
+licence scan reads the \emph{full public log} for row-6 asks and retires each licence only
+against the seat's budgeted knowledge. The retirement half is therefore priced; the ask history
+it scans is not. \code{decide.ts} names the asymmetry in its own comment as ``the one thing the
+v1.5 cost model does not yet price'', and CONCESSION.md \S9 carries it as open follow-up ---
+moving the licence into the fact pool as a first-class 1-bit basis read is the correct end state,
+and doing it now would change every committed v1.5 number \cite{repo,concession}. The consequence
+has to be drawn rather than left implicit: \textbf{``updated v1.5 at $N$ bits'' is not a clean
+$N$-bit agent}, and Table~\ref{tab:defusalladder}'s right-hand column must not be read as a pure
+memory ladder. The concession-only contrast at zero bits is the proof of it --- a seat that by
+construction retains nothing still collects $+0.9560 \pm 0.1858$ and $+0.8030 \pm 0.1879$ sets
+over its own pre-concession self, from a mechanism reading a log the budget was supposed to gate
+\cite{v15clean}. None of this touches
+Sections~\ref{sec:ladder}--\ref{sec:attribution}: those were measured before the term existed,
+and every number in them stands as printed.
+
 \section{Discussion}
 \label{sec:discussion}
 
@@ -897,6 +1058,13 @@ natural next instruments if bounded opponents ship at the play table.
   mirror gates certify harness symmetry and the bounded arm's consistency with the
   unbounded engine --- not the engine's own correctness, which rests on its audits
   \cite{v05paper,repo}.
+\item \textbf{The addendum's ladder is not a clean memory ladder.}
+  Section~\ref{sec:defusal}'s updated rungs carry a term whose licence scan reads the full
+  public log, so the budget caps only part of what that seat knows; those numbers describe the
+  v1.5 arm as it now ships, not an $N$-bit agent. Its two columns also sit on different banks and
+  are not paired against each other, and the run was exploratory --- no verdict rule was fixed in
+  advance of it. Everything in Sections~\ref{sec:ladder}--\ref{sec:attribution} predates the
+  term and is unaffected.
 \item \textbf{The E4 grid is coarse.} Four budgets, and the P7 violation is one rung;
   the shape between 64 bits and $\infty$ is uninstrumented. The Bonferroni annotation
   addresses the family actually tested, not the grid that might have been.
@@ -921,6 +1089,11 @@ ecology rather than the seat.
 The correction sequence is reported in full because it is the method working as
 designed: registrations before runs, reviews after them, and conclusions cut back to
 what the data licence --- whichever direction that points.
+A later measurement is reported in the same spirit (Section~\ref{sec:defusal}): after the engine
+gained a defusal term the arm inherits, the cross-generation comparison was re-run, and it
+neither supersedes the committed cell it resembles nor leaves the ladder's shape alone --- and
+the term partly escapes the very budget this paper's axis is built on, which is printed as a
+limit on the new numbers rather than worked around.
 
 \medskip
 \noindent\textbf{Reproducibility.} The engine is deterministic; the committed artifact
@@ -974,6 +1147,11 @@ A.~Hsieh.
 \newblock The inert axis: when a style parameter is wired, swept, and never reached.
 \newblock FishAI project; companion paper, 2026.
 
+\bibitem{v20paper}
+A.~Hsieh.
+\newblock FishAI v2.0: The concession layer, or why avoiding a dangerous opponent loses.
+\newblock FishAI project; companion paper, 2026.
+
 \bibitem{playstyles}
 FishAI project.
 \newblock PLAYSTYLES.md --- Literature / Canadian Fish: play styles, rule dialects, and
@@ -1001,6 +1179,19 @@ FishAI project.
 metrics.
 \newblock Repository document; \S4.3 health gates, \S5 experimental design, 2026.
 
+\bibitem{bounded}
+FishAI project.
+\newblock BOUNDED.md --- FishAI v1.5: the bounded-memory ladder, and what it prices.
+\newblock Repository document; \S4 the experiment suite this paper reports, \S5a the committed
+v1.5-against-v1.0 comparison and its caveats, 2026.
+
+\bibitem{concession}
+FishAI project.
+\newblock CONCESSION.md --- FishAI v2.0: the three-sided ask.
+\newblock Repository document; \S3 the defusal term and its measurement, \S5a concealment,
+\S8a the detection floor, \S9 the open follow-ups --- including the bounded arm's licence, which
+is derived rather than retained, 2026.
+
 \bibitem{fingerprints}
 FishAI project.
 \newblock Committed fingerprint calibration \code{lib/engine/bots/data/fingerprints.ts}.
@@ -1022,6 +1213,16 @@ commit \code{ab779f3} (recorded \code{ab779f3-dirty}); E4b pilot: 7{,}200 games,
 digest \code{52bfe90b52ea7029}; E4b power run: 43{,}200 games, digest
 \code{53668ad79186621d}; rules hash \code{b4c7fef7\ldots} shared with v0.5/v1.0;
 generated 2026-08-30.
+
+\bibitem{v15clean}
+FishAI project.
+\newblock Two-tree defusal re-measurement \code{scripts/probe-v15-clean.mjs}.
+\newblock Post-concession v1.5 driven against a pre-concession v1.0 export from a second module
+graph; \usff{} duplicate deals, 17 cells $\times$ 2{,}000 pairs $=$ 68{,}000 games per bank.
+Bank \code{v15clean-2026a} and the disjoint replication bank \code{audit-2026q3-repl}; both
+zero-appetite controls exactly $0.0000 \pm 0.0000$, every health counter zero; run 2026-08-31.
+These measurements are new to this addendum and are carried by neither BOUNDED.md nor
+CONCESSION.md.
 
 \bibitem{repo}
 FishAI project.
