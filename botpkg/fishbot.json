@@ -1,0 +1,16 @@
+{
+  "format": "fishlab-bot/1",
+  "id": "fishai",
+  "name": "FishAI v1.0",
+  "version": "1.0",
+  "author": "MeagerPotato",
+  "description": "Adaptive engine: reads each opponent seat off the public log, best-responds over a measured 9x9 style payoff matrix, and plays the choice at full inference.",
+  "protocol": "fishlab-json-v1",
+  "run": ["node", "bot.mjs"],
+  "env": {
+    "FISHAI_POLICY": "adaptive",
+    "FISHAI_ANCHOR": "punter"
+  },
+  "timeout_ms": 10000,
+  "poll_off_turn": true
+}

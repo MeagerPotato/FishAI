@@ -49,8 +49,8 @@ export {
   planContainedPass,
   valueContainedPass,
 } from './contained.ts'
-export { decide, decideExplained } from './decide.ts'
-export type { DecisionTrace, ExplainedDecision } from './decide.ts'
+export { decide, decideExplained, planClaimFor } from './decide.ts'
+export type { ClaimPlan, DecisionTrace, ExplainedDecision } from './decide.ts'
 // --- FishAI v1.0: observation, classification, adaptive selection ----------------------------
 export { FEATURE_KEYS, featureVector, observeSeats, replayCounts, replayedCounts } from './observe.ts'
 export type { CountReplay, FeatureKey, SeatObservation } from './observe.ts'
