@@ -5,6 +5,12 @@
  * The behavioural anchor is the project owner's own worked example — one seat holding five cards
  * of a half-suit while an opponent holds the sixth — which is the position the whole mechanism
  * was requested for.
+ *
+ * What this file pins is the arithmetic, the gates and the compatibility guarantees. The term's
+ * *direction* — that the credit is a credit, and that switching it on moves `decide`'s choice onto
+ * the ask into the target's published basis rather than away from it — is pinned separately in
+ * [concession-direction.test.ts](concession-direction.test.ts), which also records which of the
+ * three possible sign errors this file does and does not catch.
  */
 import { describe, expect, it } from 'vitest'
 import { us54Config } from '../../lib/engine/index.ts'

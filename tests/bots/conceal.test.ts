@@ -5,6 +5,12 @@
  * The anchor positions are the owner's own two cases: *"hold the card until you locate who has all
  * of the other cards in the half-suit"* (the release condition, §5 below) and *"unless your team
  * holds the entire half-suit, then you want to signal"* (the containment exception, §4).
+ *
+ * What this file pins is the arithmetic, the five gates and the compatibility guarantees. The
+ * term's *direction* — that the charge is a charge, and that switching it on moves `decide`'s
+ * choice off the first ask into an unpublished set rather than onto it — is pinned separately in
+ * [concession-direction.test.ts](concession-direction.test.ts), which also records which of the
+ * three possible sign errors this file does and does not catch.
  */
 import { describe, expect, it } from 'vitest'
 import { allBooks, bookCards, us54Config } from '../../lib/engine/index.ts'
