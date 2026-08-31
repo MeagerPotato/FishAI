@@ -46,6 +46,7 @@ import type { BookId, Card, Seat } from '../types.ts'
 import { allBooks, bookCards, seatTeam, teamSeats } from '../cards.ts'
 import { rulesFor } from '../variants.ts'
 import { refinedHitProbability } from './knowledge.ts'
+import { turnYield } from './threat.ts'
 import type { SkillParams, StyleParams } from './style.ts'
 import type { Knowledge, RankedAsk, SeatView } from './types.ts'
 
@@ -118,6 +119,10 @@ export interface PassValuation {
    * turn is a geometric run of hits and its expected length is `h / (1 - h)` — which on counts is
    * exactly hits over misses. No table constant: an engine, a roster or a rule set that hits more
    * often prices a conceded turn higher, automatically.
+   *
+   * Computed by {@link turnYield} ([threat.ts](threat.ts)), which is the one definition of this
+   * quantity in the engine. This file used to carry a second, hand-maintained copy of the same
+   * reduction; `tests/bots/threat.test.ts` now pins this field to that function's own result.
    */
   E: number
   /** Mean hand size over the seats still holding cards (public counts, row 17). */
@@ -178,14 +183,7 @@ export function valueContainedPass(
   chosenTarget: Seat,
   infoCost: number,
 ): PassValuation {
-  let hits = 0
-  let misses = 0
-  for (const ev of view.log) {
-    if (ev.type !== 'ask') continue
-    if (ev.hit) hits++
-    else misses++
-  }
-  const E = hits / Math.max(1, misses)
+  const E = turnYield(view)
   let sum = 0
   let seats = 0
   for (const n of view.counts) {

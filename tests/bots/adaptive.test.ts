@@ -19,6 +19,7 @@
  * decideExplained read lines, and `resolvePolicy` refusing the shape it cannot resolve.
  */
 import { describe, expect, it } from 'vitest'
+import v2Raw from '../../src/lab/data/style-results.v2.json?raw'
 import {
   ADAPTIVE_DEFAULTS,
   ADAPTIVE_PHASE_EVENTS,
@@ -153,6 +154,42 @@ describe('counter-table sanity', () => {
   it('carries its provenance', () => {
     expect(COUNTER_TABLE.provenance.recordsDigest.length).toBeGreaterThan(0)
     expect(COUNTER_TABLE.provenance.pairsPerCell).toBe(4300)
+  })
+
+  /**
+   * The pin this file's own generator header promises. Before this existed, the only assertion on
+   * the provenance was that the digest string was non-empty, so a counter table generated from a
+   * DIFFERENT run than the committed artifact — a re-run that was never re-emitted, or an emit
+   * that was never regenerated — passed every test in the suite.
+   *
+   * Deliberately re-derives the table from the artifact instead of calling
+   * `scripts/gen-counter-table.mjs`'s own helpers. That is the tests/room/engine-copy.test.ts
+   * argument: a check that shares the generator's description of a correct output agrees with the
+   * generator by construction, including when the generator is wrong.
+   */
+  it('is generated from the committed matrix-v2 artifact, cell for cell', () => {
+    const artifact = JSON.parse(v2Raw) as {
+      meta: { recordsDigest: string; config: { pairs: number } }
+      matrix: { a: string; b: string; aScore: number; se: number }[]
+    }
+    expect(COUNTER_TABLE.provenance.recordsDigest).toBe(artifact.meta.recordsDigest)
+    expect(COUNTER_TABLE.provenance.pairsPerCell).toBe(artifact.meta.config.pairs)
+
+    const names: readonly string[] = COUNTER_TABLE.styles
+    let checked = 0
+    for (const cell of artifact.matrix) {
+      const i = names.indexOf(cell.a)
+      const j = names.indexOf(cell.b)
+      expect(i, `artifact names style ${cell.a}`).toBeGreaterThanOrEqual(0)
+      expect(j, `artifact names style ${cell.b}`).toBeGreaterThanOrEqual(0)
+      // 6dp because the generator rounds; anything coarser would not catch a re-run.
+      expect(COUNTER_TABLE.p[i][j], `p[${cell.a}][${cell.b}]`).toBeCloseTo(cell.aScore, 6)
+      expect(COUNTER_TABLE.p[j][i], `p[${cell.b}][${cell.a}]`).toBeCloseTo(1 - cell.aScore, 6)
+      expect(COUNTER_TABLE.se[i][j], `se[${cell.a}][${cell.b}]`).toBeCloseTo(cell.se, 6)
+      checked++
+    }
+    // Every unordered pair exactly once: 9 choose 2. Catches a truncated or padded artifact.
+    expect(checked).toBe((names.length * (names.length - 1)) / 2)
   })
 })
 

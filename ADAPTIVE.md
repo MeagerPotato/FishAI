@@ -204,13 +204,34 @@ The payoffs are [data/counter-table.ts](lib/engine/bots/data/counter-table.ts), 
 (`src/lab/data/style-results.v2.json` — [STYLES.md §6.4](STYLES.md)): `p[i][j]` is the
 duplicate-averaged score rate of style *i* against style *j* over 4,300 pairs per cell,
 antisymmetric about 0.5, with the diagonal 0.5 by duplicate-pair symmetry — unmeasured on
-purpose. The provenance travels with the numbers (`recordsDigest 0c3cb524a3534d4a`, engine commit
-`1667a1d-dirty`, generated 2026-08-22), because an adaptive decision is only as honest as the
+purpose. The provenance travels with the numbers (`recordsDigest 1d7d9f30b59c00f6`, engine commit
+`1fdd22e`, generated 2026-08-31), because an adaptive decision is only as honest as the
 matrix it consults, and [tests/bots/adaptive.test.ts](tests/bots/adaptive.test.ts) pins the table
 against the artifact. The experiment pipeline enforces the same discipline at the other end: the
 artifact builder **throws** if the benchmark's digest and the counter table's source digest
 differ — the row the engine is judged against and the table it played from must come from the
 same matrix.
+
+**The table has been regenerated once, and the reader needs to know from which artifact.** The
+committed table above comes from the **re-measured** matrix v2. An earlier table
+(`recordsDigest 0c3cb524a3534d4a`, engine commit `1667a1d-dirty`, generated 2026-08-22) was
+generated from the first v2 artifact and is what every number in §6 was played against; the
+re-measurement replayed the same 36 cells, the same 4,300 duplicate pairs per cell and the same
+`style-v1` seed prefix against a roster that now carries the concession layer's `defuse: 1`
+([STYLES.md §6.4](STYLES.md), [CONCESSION.md](CONCESSION.md)). §5's dominance is restated from
+the new table, §6's measurements are left as they were measured, and §6's supersession caveat
+says which is which.
+
+**And the digest gate does not protect §6 — a point worth stating precisely, because the first
+draft of this paragraph claimed the opposite.** The gate in
+[lib/lab/adaptive.ts](lib/lab/adaptive.ts) throws when the *benchmark* digest differs from the
+*counter table's* source digest. `adaptive-analyze.mjs` builds the benchmark by reading whichever
+`style-results.v2.json` is on disk, and the counter table has been regenerated from that same
+artifact — so both are `1d7d9f30b59c00f6` and the gate **passes**. Re-folding the committed
+adaptive run today would therefore succeed silently, pairing that run's records with the *new*
+punter row and producing gauntlet deltas that mix two engines. The gate compares the table to the
+artifact; it cannot see that the *run* predates both. That is why §6 is fenced with a written
+caveat rather than left to a mechanical check.
 
 ### 4.2 The selection rule, exactly
 
@@ -283,34 +304,88 @@ the nine best-response values, verified against
 
 | BR against | balanced | blitz | punter | banker | turtle | hoarder | scout | ghost | archivist |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| `P[punter][s]` | 0.5190 | 0.5198 | 0.5000 | 0.5469 | 0.6581 | 0.5795 | 0.6603 | 0.5867 | 0.5926 |
+| `P[punter][s]` | 0.5112 | 0.5102 | 0.5000 | 0.5742 | 0.6377 | 0.5667 | 0.6410 | 0.5467 | 0.5593 |
 
 The punter column's 0.5000 is the diagonal — no style beats Punter, so Punter is its own best
-response. In every one of the nine columns Punter's entry strictly exceeds every other row's; the
-smallest margin over the nearest rival row is **0.0112** (the hoarder column, over Blitz), and the
-smallest margin over the anchor's row is **0.0171** (the hoarder column, over Balanced).
+response. In every one of the nine columns Punter's entry strictly exceeds every other row's, and
+the nearest rival is **Blitz in all nine** — though in the blitz
+column that "rival" is Blitz's own 0.5 diagonal, a duplicate-pair convention rather than a measured
+cell, so the binding column below is also the one where both cells are measured. The smallest margin over that nearest rival row is
+**0.0053** (the turtle column), and the smallest margin over the anchor's row is **0.0112**, tied
+across the balanced, blitz and punter columns.
+
+*(That row is the re-measured matrix v2's, per §4.1. The superseded table's row was 0.5190, 0.5198,
+0.5000, 0.5469, 0.6581, 0.5795, 0.6603, 0.5867, 0.5926, with a binding margin of 0.0112 in the
+hoarder column and an anchor margin of 0.0171. The first hedge below is about the difference, and
+§6 was measured against the superseded row.)*
 
 **The derivation.** The expected payoff of §4.2 is linear in the posterior:
 `expected[i] = mean over seats of Σ_s q(s)·P[i][s]`. If `P[punter][s] ≥ P[i][s] + m` for every
 rival row *i* and column *s*, then `expected[punter] ≥ expected[i] + m` for **every** posterior
 `q` — point mass, uniform damping prior, or anything the classifier can emit — because a convex
-combination of dominated columns is dominated by the same margin. With m = 0.0112 the argmax is
+combination of dominated columns is dominated by the same margin. With m = 0.0053 the argmax is
 Punter under every belief. The anchor bias cannot rescue another choice either: the default
-`switchMargin` is 0.01, and Punter clears the Balanced anchor's row by at least 0.0171 in every
-column — the hysteresis is priced *inside* the margin. So once the warmup gate opens, the choice
-is Punter, always, whatever the classifier says.
+`switchMargin` is 0.01, and Punter clears the Balanced anchor's row by at least 0.0112 in every
+column — the hysteresis is priced *inside* the margin, though the pricing is now tight, by 0.0012
+rather than the superseded table's 0.0071. So once the warmup gate opens, the choice is Punter,
+always, whatever the classifier says.
 
 **Two hedges, stated rather than buried.** First, the theorem is exact *given the table*: the
 engine best-responds to the committed point estimates, so "provably selects Punter" is a statement
-about this artifact, not about the platonic matchup graph. The cells behind the smallest margin
-carry paired SEs of ≈ 0.004 each, so 0.0112 is about 1.9 naive combined SEs — conservative,
-since the cells share a seed set — and a re-measured matrix could in principle re-order a
-column. Second, nothing in the code hard-codes the winner:
+about this artifact, not about the platonic matchup graph. **This hedge used to end "and a
+re-measured matrix could in principle re-order a column". The re-measurement has since happened,
+and the honest report is that the ordering survived and the margin did not.** Four things to say
+about it, in the order they matter:
+
+- **The column order held.** Punter's row is still the argmax of every column of the re-measured
+  table, Blitz is still the runner-up in every column, and the degeneracy is still exactly what
+  the artifact says it is. §6.3's exactly-zero oracle result and §6.6's twelve million
+  all-Punter warm decisions are not undermined by anything below.
+- **The margin that carries it halved, to below one standard error.** The binding margin fell
+  from **0.0112 to 0.0053**. The two cells behind it carry paired SEs of 0.004752 and 0.004799,
+  combining to 0.0068, so the new margin is **0.79 combined SE** where the old one was about 1.9.
+  That combination is conservative — the cells share a seed set, so the true paired SE of the
+  difference is smaller — but conservative or not, the gap that the whole proof rests on is now
+  narrower than the noise on the numbers it is computed from. "Provably selects Punter" remains
+  true of the committed artifact and is now a much weaker claim about the game.
+- **The binding column moved, which is itself the finding.** It was `hoarder`; it is now
+  `turtle` (hoarder has relaxed to 0.0092, 1.54 SE). Two re-measurements of the same 36 cells
+  disagree about *which* constraint is tightest, so the identity of the binding column carries
+  no weight and should not be quoted as though it did. Only the magnitude does, and the
+  magnitude is 0.79 SE.
+- **The anchor clearance thinned too.** Punter clears the Balanced anchor by 0.0112 against a
+  `switchMargin` of 0.01 — 0.0012 of headroom, where the superseded table left 0.0071. Punter's
+  *largest* lead over Balanced in any column is now 0.0191, so on these point estimates raising
+  `switchMargin` to 0.02 would keep the warm engine on the Balanced anchor under **every** belief;
+  under the superseded table, whose spread ran to 0.032, it would not have. That is a
+  configuration change rather than a measurement, but it is worth knowing how close to the knob
+  the theorem now sits.
+
+One caution on attributing the shift. The re-measurement is a controlled re-run — same 36 cells,
+same 4,300 duplicate pairs, same `style-v1` seeds — but it is **not** a re-run of the same roster:
+the styles now carry the concession layer's `defuse: 1`, which the `1667a1d` roster did not
+(§4.1). The movement above is that roster change plus sampling, and must not be read as sampling
+alone. The third hedge below is the other half of this picture: over a coordinate the roster does
+not span, the read already *does* change the argmax.
+
+Second, nothing in the code hard-codes the winner:
 [tests/bots/adaptive.test.ts](tests/bots/adaptive.test.ts) **re-derives the argmax from the
 table** and pins the choice per oracle opponent against it, so a future counter table with an
 intransitive cycle flows through the engine unchanged and simply makes the adaptation
 non-trivial. The mechanism was built in full anyway, on purpose: the architecture is the
 contribution, and the degeneracy is the *result*.
+
+**Third hedge, added after the fact and the most important of the three: the degeneracy is a
+property of THIS TABLE'S COORDINATE — the nine-style roster — and not of adaptation in this game.**
+[CONCESSION.md](CONCESSION.md) §8.2 measures a second coordinate the roster does not span: whether
+a seat runs the defusal term, and whether it adds concealment on top. Over the 2x2
+{plain, defuse, conceal, defuse+conceal}, at 4,000 duplicate pairs per edge and replicated on
+disjoint banks, **the column argmax is not constant**: the best response is defuse-only against a
+plain or conceal-only opponent (+0.2870 ± 0.1392 and +0.1462 ± 0.1437 over the runner-up) and
+defuse+conceal against a defusing one (+0.9152 ± 0.1353). The read changes the argmax, which is
+exactly the condition §5 says is absent — so "adaptation is worth less than nothing" is a verdict
+about best-responding over *styles*, and must not be quoted as a verdict about best-responding at
+all. What that buys is one bit, not a tenth style, and it is not yet built.
 
 ---
 
@@ -351,12 +426,43 @@ per-game records are not joined, so the delta SE is the conservative independent
 `sqrt(se² + benchSe²)`, an upper bound on the true paired SE (shared deals correlate the two
 means positively). Every gauntlet z below is therefore, if anything, understated.
 
+**The supersession caveat, equally up front.** Every number in this section was produced by a run
+that played from — and was benchmarked against — the **superseded** matrix-v2 artifact
+(`recordsDigest 0c3cb524a3534d4a`, counter table generated at `1667a1d-dirty`); the committed
+artifact's own `benchmark` and `counterTableProvenance` blocks record exactly that. The matrix has
+since been re-measured (§4.1), so the `punter benchmark` column below is the **superseded** Punter
+row, not the row §5 now proves dominance from:
+
+| | balanced | blitz | punter | banker | turtle | hoarder | scout | ghost | archivist |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| benchmark used by this run (superseded) | 0.5190 | 0.5198 | 0.5000 | 0.5469 | 0.6581 | 0.5795 | 0.6603 | 0.5867 | 0.5926 |
+| committed table today (§5) | 0.5112 | 0.5102 | 0.5000 | 0.5742 | 0.6377 | 0.5667 | 0.6410 | 0.5467 | 0.5593 |
+
+**This section's numbers are left exactly as measured, and the deltas are not restated against the
+new row.** Doing that arithmetic would dress a subtraction up as a measurement: the adaptive arm's
+own games were played by an engine consulting the old table, on a roster without the concession
+layer, and only a re-run — which has not happened — can say what this suite measures now. What
+transfers unchanged is the mechanism, because the structural facts §6 leans on are still true of
+the new table: Punter's row still dominates every column (so §6.3's exactly-zero oracle result
+still follows from §5 rather than from luck), and Balanced's row still sits below Punter's in every
+column — by 0.0112 to 0.0191 on the new table, against the 0.017–0.032 that this run's table
+carried and that §6.1, §6.2 and §6.6 below quote. The narrower gap means the warmup toll priced
+below would, on the new table, be expected *smaller* rather than larger; that is a prediction, not
+a result.
+
+**Nothing mechanical enforces this caveat, so it has to be read.** The analyze step's digest gate
+compares the benchmark digest against the committed counter table's source digest — but the
+benchmark is built by reading the artifact on disk, and the table was regenerated from that same
+artifact, so the two agree and the gate passes. `npm run adaptive:analyze` would re-fold this run
+today **without complaint**, against the new punter row, silently producing the cross-engine
+comparison §4.1 warns about. The gate cannot detect a stale *run*; only this paragraph does.
+
 ### 6.1 The gauntlet: nine cells, nine negative deltas — P1 **refuted**
 
 Adaptive team vs each pure style, 4,300 pairs (8,600 games) per cell, against Punter's matrix-v2
-row on the same deals:
+row on the same deals — the **superseded** row, per the caveat above:
 
-| opponent | adaptive score | SE | punter benchmark | Δ (adaptive − punter) | SE(Δ) | z |
+| opponent | adaptive score | SE | punter benchmark (superseded) | Δ (adaptive − punter) | SE(Δ) | z |
 |---|---:|---:|---:|---:|---:|---:|
 | balanced | 0.5114 | 0.0027 | 0.5190 | −0.0076 | 0.0045 | −1.68 |
 | blitz | 0.5086 | 0.0040 | 0.5198 | −0.0112 | 0.0058 | −1.93 |
@@ -519,12 +625,15 @@ document rather than a knob.
 ### 7.2 What this does **not** settle
 
 - **Intransitive rosters.** Every conclusion above is downstream of one measured fact — a row
-  that dominates every column. A roster with a genuine cycle (matrix v2's cyclic energy is
-  0.0112 against a 0.15 threshold, with zero significant 3-cycles —
-  [STYLES.md §6.4.2](STYLES.md) — so this one has none) would make the argmax belief-dependent,
-  and the machinery here handles that case today: the tests re-derive the best response from the
-  table rather than pinning 'punter', so a new counter table flows through unchanged and simply
-  makes the adaptation non-trivial.
+  that dominates every column. A roster with a genuine cycle (the re-measured matrix v2's cyclic
+  energy is 0.0172 against a 0.15 threshold, with zero significant 3-cycles after Benjamini–
+  Hochberg — [STYLES.md §6.4.2](STYLES.md) — so this one has none) would make the argmax
+  belief-dependent, and the machinery here handles that case today: the tests re-derive the best
+  response from the table rather than pinning 'punter', so a new counter table flows through
+  unchanged and simply makes the adaptation non-trivial. That path is nearer than this document
+  once implied: the re-measurement left the dominance intact but cut its binding margin to 0.79
+  combined SE (§5, first hedge), so the roster is one re-measurement away from being the
+  non-degenerate case rather than safely inside the degenerate one.
 - **Off-roster opponents.** The classifier's posterior is a projection onto nine calibrated
   hypotheses (§3.3). The human at [/play](src/pages/PlayTable.tsx) is none of the nine; so is
   any foreign bot under the [BOT_LAB.md §8](BOT_LAB.md) protocol. Whether a best response chosen

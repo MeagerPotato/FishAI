@@ -64,7 +64,7 @@ import {
 import type { AnalyzeInput, Matrix } from '../../lib/lab/analysis/index.ts'
 import { DEFAULT_LAB_CONFIG, runLab, runTask } from '../../lib/lab/index.ts'
 import type { LabRunConfig, LabTask } from '../../lib/lab/index.ts'
-import { STYLE_ROSTER } from '../../lib/engine/index.ts'
+import { STYLE_ROSTER, validateStyle } from '../../lib/engine/index.ts'
 import type { StyleId } from '../../lib/engine/index.ts'
 
 // --- fixtures with known answers ---------------------------------------------------------------
@@ -634,11 +634,52 @@ describe('exploit — the best-response search (BOT_LAB.md §5.7)', () => {
       'passTarget',
       'hoardBooks',
       'minHandSize',
+      // The three shipped policy knobs no committed exploitability number has ever priced:
+      // CONTAINMENT.md's turn-pass appetite and CONCESSION.md's two concession terms.
+      'containedPass',
+      'defuse',
+      'conceal',
     ]) {
       expect(fields.has(f)).toBe(true)
     }
     // STYLES.md §2: certaintyBonus >= 20 in every style, or an uncertain ask outranks a certain hit.
     for (const k of KNOB_LADDER) expect(k.apply(STYLE_ROSTER.balanced).certaintyBonus).toBeGreaterThanOrEqual(20)
+    // No candidate may propose a style the engine's own construction gate refuses, for ANY target
+    // the search can be pointed at — `searchBestResponse` silently drops those, so an invalid rung
+    // is a rung that is listed and never measured.
+    for (const style of Object.values(STYLE_ROSTER)) {
+      for (const k of KNOB_LADDER) expect(validateStyle(k.apply(style))).toEqual([])
+    }
+  })
+
+  it('the whole ladder fits the default budget — a prefix of it is a prune nobody argued for', () => {
+    // KNOB_LADDER's header refuses to prune the ladder to the knobs already known to be live,
+    // because that would make the search's conclusions circular. A `candidateBudget` below the
+    // ladder's length is the same prune selected by authoring order: the committed v2 artifact
+    // ran at 60 against a 75-entry ladder and three of the nine styles stopped at the ceiling.
+    // Budget is spent only on candidates that CHANGE the incumbent, so the guarantee this pins is
+    // the sufficient one — the budget can never be the reason a rung goes unmeasured.
+    expect(DEFAULT_EXPLOIT_CONFIG.candidateBudget).toBeGreaterThanOrEqual(KNOB_LADDER.length)
+  })
+
+  it('the optional `conceal` reads absent as 0, so an off style is not reported as changed', () => {
+    // `conceal?: number` is the one optional field in StyleParams, and every roster vector omits
+    // it. A getter of `s.conceal` would compare `undefined === 0` and call the style CHANGED —
+    // spending a candidate on a move to the value it already has, playing a byte-identical game
+    // for it, and banking the result as an inert knob.
+    const off = KNOB_LADDER.find((k) => k.id === 'conceal=0')
+    expect(off).toBeDefined()
+    expect(STYLE_ROSTER.balanced.conceal).toBeUndefined()
+    expect(off?.unchanged(STYLE_ROSTER.balanced)).toBe(true)
+    expect(off?.unchanged({ ...STYLE_ROSTER.balanced, conceal: 0 })).toBe(true)
+    expect(off?.unchanged({ ...STYLE_ROSTER.balanced, conceal: 1 })).toBe(false)
+    // No roster vector carries the field, so `conceal=0` is a free skip and every other conceal
+    // rung is a real move, for every target the search can be pointed at.
+    for (const style of Object.values(STYLE_ROSTER)) {
+      for (const k of KNOB_LADDER.filter((c) => c.field === 'conceal')) {
+        expect(k.unchanged(style)).toBe(k.id === 'conceal=0')
+      }
+    }
   })
 
   it('runs a tiny search, keeps the mirror baseline, and measures E on fresh seeds', () => {

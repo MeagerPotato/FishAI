@@ -5,10 +5,16 @@
  */
 /// <reference types="vite/client" />
 import { describe, expect, it } from 'vitest'
-import { decide, hashSeed, seatView } from '../../lib/engine/index.ts'
-import type { GameAction, SeatView } from '../../lib/engine/index.ts'
+import { decide, hashSeed, legalAsksFromView, seatView, us54Config } from '../../lib/engine/index.ts'
+import type { GameAction, Seat, SeatView, StyleParams } from '../../lib/engine/index.ts'
+import { STYLE_ROSTER } from '../../lib/engine/bots/roster.ts'
+import { validateStyle } from '../../lib/engine/bots/style.ts'
+import { buildKnowledge } from '../../lib/engine/bots/knowledge.ts'
+import { preyInBook, seatLicences } from '../../lib/engine/bots/threat.ts'
+import { defusalActive, logLicences } from '../../lib/engine/bots/defuse.ts'
+import { concealmentActive, concealmentPenalty } from '../../lib/engine/bots/conceal.ts'
 import { deepFreeze } from '../engine/util.ts'
-import { collectPositions } from './util.ts'
+import { collectBotViews, collectPositions } from './util.ts'
 
 const DIFFS = ['easy', 'medium', 'hard'] as const
 
@@ -102,6 +108,73 @@ describe('public-view-only proof', () => {
     120_000,
   )
 
+  /**
+   * The concealment half needs a `conceal` appetite, and **nothing shipped carries one**: the
+   * field is optional on `StyleParams`, `style.ts`'s `BASELINE` pins it to 0 for the three tiers,
+   * and not one of the nine roster styles sets the key at all — so `concealAppetite` reads 0 for
+   * every named policy in the engine. A literal `StyleParams` is therefore the only way to open
+   * that gate, and `decide` takes one directly: `PolicySpec` is
+   * `BotDifficulty | StyleParams | BotPolicy`, widened again in adaptive.ts and bounded.ts.
+   */
+  const CONCEALER: StyleParams = Object.freeze({ ...STYLE_ROSTER.balanced, conceal: 2 })
+
+  it(
+    '(d) the concession layer executes under the same proxy: a roster style and a conceal style, under us54',
+    () => {
+      // (a) and (b) above cannot reach threat.ts, defuse.ts or conceal.ts: they run the three
+      // shipped tiers, which carry `defuse: 0` and `conceal: 0`, over `collectPositions`, which
+      // deals `pagat48` — and both gates also close on the rule set. So for that layer the
+      // guarantee used to rest on (c)'s import allow-list alone. These two policies open both
+      // gates on positions where the terms are live.
+      expect(STYLE_ROSTER.balanced.defuse).toBeGreaterThan(0)
+      expect(validateStyle(CONCEALER)).toEqual([])
+      const specs: readonly StyleParams[] = [STYLE_ROSTER.balanced, CONCEALER]
+
+      const us54Views = collectBotViews(4, us54Config)
+      expect(us54Views.length).toBeGreaterThan(100)
+      // Both gates read the rule set, so pin that they are open on this position source rather
+      // than assuming it: a silent `pagat48` regression here would make the whole test vacuous.
+      expect(defusalActive(us54Views[0].view, STYLE_ROSTER.balanced)).toBe(true)
+      expect(concealmentActive(us54Views[0].view, CONCEALER)).toBe(true)
+
+      for (const { state, view, seed } of us54Views) {
+        const base = jsonClone(view)
+        const roots = new Set<string>()
+        const proxied = trackingProxy(base, roots)
+        for (const spec of specs) {
+          const viaProxy = decide(proxied as SeatView, spec, seed)
+          expect(viaProxy).toEqual(decide(seatView(state, view.seat), spec, seed))
+        }
+        for (const key of roots) {
+          expect(PUBLIC_KEYS.has(key), `accessed non-public property "${key}"`).toBe(true)
+        }
+        expect(roots.size).toBeGreaterThan(0)
+      }
+
+      // The runs above prove *nothing was read off-view*. This proves they were not vacuous —
+      // that the deep branches of both halves are actually reached on this position set, rather
+      // than every call returning early from a gate.
+      let preyBearingLicences = 0
+      let concealmentCharges = 0
+      for (const { view } of us54Views) {
+        const k = buildKnowledge(view)
+        const licences = logLicences(view, k)
+        for (let s = 0; s < view.counts.length; s++) {
+          for (const book of seatLicences(view, k, s as Seat)) {
+            if (preyInBook(view, k, book) > 0) preyBearingLicences++
+          }
+        }
+        for (const a of legalAsksFromView(view)) {
+          const ranked = { ...a, score: 0, p: 0.5, reason: 'probe' }
+          if (concealmentPenalty(view, k, CONCEALER, ranked, 1, licences) > 0) concealmentCharges++
+        }
+      }
+      expect(preyBearingLicences).toBeGreaterThan(0)
+      expect(concealmentCharges).toBeGreaterThan(0)
+    },
+    180_000,
+  )
+
   it('(c) lib/engine/bots imports no GameState-consuming engine function', () => {
     // Enumerated at transform time: any future file in the module is covered.
     const sources = import.meta.glob('../../lib/engine/bots/*.ts', {
@@ -130,9 +203,11 @@ describe('public-view-only proof', () => {
       // './style.ts' (which itself imports only './types.ts'). No engine state is reachable.
       './roster.ts',
       // The CONTAINMENT.md turn-pass recogniser and valuation. Pure over the SeatView, the
-      // prebuilt Knowledge object and the style/skill vectors; it imports only '../types.ts',
-      // '../cards.ts', './style.ts' and './types.ts', so no engine state is reachable from it
-      // either — the same standard every other file in this module is held to.
+      // prebuilt Knowledge object and the style/skill vectors; it imports '../types.ts',
+      // '../cards.ts', '../variants.ts', './knowledge.ts', './threat.ts' (for `turnYield`, the one
+      // definition of the cards-per-turn reduction this file's `PassValuation.E` used to duplicate),
+      // './style.ts' (type-only) and './types.ts' — every one already on this list — so no engine
+      // state is reachable from it either, the same standard every other file here is held to.
       './contained.ts',
       // The v1.0 observation layer: a pure single pass over the public log, importing only
       // '../types.ts', '../cards.ts' and './types.ts'. It is precisely the module this test
@@ -160,6 +235,26 @@ describe('public-view-only proof', () => {
       // Generated measured payoff table (scripts/gen-counter-table.mjs): frozen numeric data
       // plus the StyleId type, held to the same standard as the fingerprints above.
       './data/counter-table.ts',
+      // The CONCESSION.md concession layer. './threat.ts' derives what a seat could do with the
+      // turn from the public log, the public counts and './knowledge.ts'; './defuse.ts' turns
+      // that into an ask-score credit. Between them they import only '../types.ts',
+      // '../cards.ts', '../variants.ts', './types.ts', './style.ts' (type-only) and
+      // './knowledge.ts' — every one already on this list — so no engine state is reachable
+      // from either. Neither reads any hand but the viewer's own.
+      //
+      // (a) and (b) do not reach this layer: they run `DIFFS = ['easy','medium','hard']` under
+      // `pagat48` positions, and all three tiers carry `defuse: 0` and `conceal: 0`, so both gates
+      // short-circuit before any of it executes. Test (d) above is the one that runs these three
+      // modules under the read-tracking proxy, on `us54` positions where the terms are live.
+      './threat.ts',
+      './defuse.ts',
+      // The other half of the same layer: './conceal.ts' turns the row-6 publication an ask makes
+      // about the ASKER into an ask-score charge. It imports only '../types.ts', '../cards.ts',
+      // '../variants.ts', './knowledge.ts', './threat.ts', './defuse.ts' (type-only, for the
+      // shared LicenceLookup), './style.ts' (type-only) and './types.ts' — every one already on
+      // this list — so no engine state is reachable from it, and it reads no hand but the
+      // viewer's own (`view.hand`, which is the viewer's by definition).
+      './conceal.ts',
     ])
     const forbiddenIdents = /\b(newGame|publicView|seatView|reduce|dealHands|legalAsks|checkInvariants|shuffle)\b/
     for (const f of files) {

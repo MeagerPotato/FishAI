@@ -638,6 +638,24 @@ read as such: Blitz's and Scout's deltas are nonzero even though their own
 policies are byte-identical between runs, because their \emph{opponents}
 changed \cite{styles}.
 
+\paragraph{Which v2 this is (note added August 2026).} The v2 column above is
+matrix v2 as generated at engine commit \code{1667a1d}, records digest
+\code{0c3cb524a3534d4a} \cite{artifacts}. \textbf{The comparison it makes is
+unaffected by anything that has happened since}, and for the reason that makes
+it a comparison at all: v1 and that v2 were run on the same seed set and
+differ by the turn-pass and nothing else, so the paired deltas isolate the
+mechanism. The artifact \emph{path} has since been rewritten by a controlled
+re-measurement of the same 36 cells --- same seeds, same sample size --- run
+against a roster that additionally carries the concession layer, and with a
+larger exploitability ladder. The verdict survives it (Punter still dominant
+on all four criteria) but every headline figure moved. That artifact differs
+from v1 by two changes rather than one and therefore \emph{cannot} be
+substituted into Table~\ref{tab:v2}: doing so would measure the turn-pass and
+the concession layer together and attribute the sum to the turn-pass. Where a
+current reading of the roster is what is wanted --- ranks, mean scores,
+exploitability --- the superseding numbers are in the v0.5 paper's addendum
+\cite{v05}, and they are not restated here.
+
 \subsection{Exploitability, and the axis the search cannot turn}
 \label{sec:exploit}
 
@@ -673,6 +691,23 @@ real. What \emph{does} resolve is over-use: at appetite 4 the Turtle drops to
 $0.4600 \pm 0.0148$ and the Banker to $0.4850 \pm 0.0083$. The move is worth
 nothing, and spending turns on it anyway is worth less than nothing
 \cite{styles}.
+
+\paragraph{The ladder gap has since been closed (note added August 2026).}
+\code{containedPass} is now a rung of the exploitability search itself, along
+with two knobs of the concession layer, and the re-measurement noted in
+Section~\ref{sec:matrix} re-ran every style against the enlarged ladder. Every
+$E$ in this subsection --- the dominant style's $0.0000 \to 0.0025$, the
+rivals' median of $0.0444$, and the Hoarder's \code{hoardBooks=0
+minHandSize=0} --- is a figure of the old ladder and is superseded. The new
+values, and the reason none of their magnitudes may be attributed to the
+ladder alone, are reported in the v0.5 paper's addendum \cite{v05}; they are
+not restated here. \emph{This paper's conclusion does not turn on them}: the
+mechanism's null is measured by the mirror of Table~\ref{tab:null} and by the
+SPRT probe above, and neither reads the payoff artifact. The direct probe of
+the \code{containedPass} axis reported here also stands as its own record ---
+it is what the search could not reach at the time, measured by other means,
+and its answer and the enlarged ladder's agree that the axis is not where an
+exploit lives.
 
 \section{Why the effect is small}
 \label{sec:small}
@@ -795,7 +830,9 @@ A.~Hsieh,
 variant},
 companion paper, published alongside this one, 2026. The engine, the
 nine-style roster, the tournament design, and the full-matrix results this
-paper's measurements plug into.
+paper's measurements plug into. Its addendum, ``matrix v2, re-measured'',
+reports the August 2026 re-measurement: the verdict survives, every headline
+figure moves, and criterion~4 is materially weaker.
 
 \bibitem{containment}
 A.~Hsieh,
@@ -867,7 +904,12 @@ committed measurement artifacts
 recorded \code{819eebb-dirty}, records digest \code{087b626cedc5845e}) and
 \code{src/lab/data/style-results.v2.json} (matrix v2, engine commit
 recorded \code{1667a1d-dirty}, records digest \code{0c3cb524a3534d4a});
-309{,}600 games each, health gates clean.
+309{,}600 games each, health gates clean. The v1 file is unchanged. The v2
+\emph{path} was later overwritten by a controlled re-measurement (engine
+commit \code{1fdd22e}, records digest \code{1d7d9f30b59c00f6}, generated
+2026-08-31); the digest cited here is the artifact this paper measured
+against, recoverable at that path from the repository history, and it is the
+one Table~\ref{tab:v2} pairs with v1. See \cite{v05}.
 
 \end{thebibliography}
 

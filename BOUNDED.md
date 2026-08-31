@@ -329,6 +329,140 @@ conditional on pinned `us54` — nothing transfers to `pagat48` without re-measu
 
 ---
 
+## 5a. v1.5 against v1.0 — a style gap wearing a memory gap's clothes **[measured, exploratory]**
+
+The owner asked for a direct check of v1.5 against v1.0. The answer needs a distinction before it
+needs a number, because the two generations move **orthogonal axes**:
+
+- **v1.0** (`AdaptiveSpec`) varies the **style** at full memory — it resolves to
+  `{skill: hard, style: STYLE_ROSTER[chooseStyle(...)]}`.
+- **v1.5** (`BoundedSpec`) caps **knowledge** at a fixed, named style.
+
+They do not compose. `isBoundedSpec` is tested first in `resolveWithView`, so
+`{bounded: true, adaptive: true}` resolves purely as bounded and silently drops the adaptive flag.
+"v1.0 under memory pressure" remains inexpressible, exactly as §5 says.
+
+And the anchor of §4 pins v1.5 at an unbounded budget to **v0.5**, not to v1.0: no test anywhere
+relates the adaptive and bounded specs. Re-verified out of sample — **0 mismatches in 28,464 paired
+decisions**, and the game-level control returned exactly `0.0000 ± 0.0000`.
+
+Measured on a held-out bank (`v15v10-holdout-a`), 2,000 duplicate pairs per rung, 108,000 games,
+every health gate zero, against a clean export of committed HEAD rather than a working tree:
+
+| bits | v1.5(balanced) − v1.0 | memory cost alone (vs the same arm at ∞) |
+|---|---:|---:|
+| 0 | −8.1450 ± 0.0689 | −8.0195 ± 0.0900 |
+| 8 | −6.0215 ± 0.1070 | −5.8960 ± 0.1217 |
+| 16 | −2.8520 ± 0.1497 | −2.7265 ± 0.1588 |
+| 24 | −1.7605 ± 0.1415 | −1.6350 ± 0.1517 |
+| 32 | −0.9940 ± 0.1200 | −0.8685 ± 0.1275 |
+| 48 | −0.2875 ± 0.0789 | −0.1620 ± 0.0687 |
+| 64 | −0.1625 ± 0.0641 | −0.0370 ± 0.0318 |
+| 96 | −0.1285 ± 0.0591 | −0.0030 ± 0.0052 |
+| 128 | −0.1255 ± 0.0590 | 0.0000 ± 0.0000 |
+| ∞ | **−0.1255 ± 0.0590** | — |
+
+**The residual at ∞ is not a memory effect and must not be read as one.** At an unbounded budget the
+v1.5 seat is byte-identical to a bare Balanced seat, by the anchor. The −0.1255 is the *style* gap:
+a v1.0 seat is effectively a two-state machine — Balanced while the truncated log is short, Punter
+after — and it spends **44.2%** of its decisions as Punter, whose counter-table row dominates
+Balanced's in every column.
+
+Naming the right style erases and reverses it:
+
+| bits | v1.5(**punter**) − v1.0 |
+|---|---:|
+| 0 | −8.1450 ± 0.0689 |
+| 32 | −0.6365 ± 0.1271 |
+| 64 | **+0.1305 ± 0.0878** |
+| ∞ | **+0.1485 ± 0.0852** |
+
+Consistent with ADAPTIVE.md §6.1's committed finding that the adaptive team loses to the very style
+it converges to. **The v1.5 `style` knob spans ±0.27 sets per pair — larger than the entire v1.0
+adaptation effect**, which differencing puts at **~0.13 sets per duplicate pair over a bare v0.5
+Balanced team, about 0.8% of the sets contested**, and only at high budgets: below 24 bits a v1.0
+opponent is statistically indistinguishable from a bare Balanced one, because a memory-starved
+opponent loses too heavily for the opponent's style to register.
+
+One incidental result worth keeping: **at 0 bits, Punter and Balanced are byte-identical**
+(`+0.0000 ± 0.0000`). Their only live difference on this engine is `gambleBonus`, which fires only
+when an ask would complete a book — and with no remembered facts that condition is unreachable.
+
+**Degradation shape.** The curve is flat from ∞ down to **96 bits** (−0.003 ± 0.005, not
+distinguishable from zero), **first bites at 64** (−0.037 ± 0.032), turns material at 48, then
+collapses: **26% of the whole 0-bit deficit is paid by 8 bits, and 66% by 16.** The money is
+at the low end — the first 16 bits buy more than the next hundred.
+
+> **Correction (2026-08-31).** This sentence read "59% ... by 16 bits, and 73% by 8" until the v1.5
+> paper's addendum tried to cite it and could not make it follow from the table directly above it.
+> Neither figure is right and the pair is ordered backwards — a cumulative share cannot *fall* from
+> 73% at 8 bits to 59% at 16. The arithmetic is `(8.1450 − 6.0215) / 8.0195 = 26.5%` at 8 bits and
+> `(8.1450 − 2.8520) / 8.0195 = 66.0%` at 16; both columns of the table give the same shares,
+> because they differ by the constant −0.1255. The likely origin of "73%" is the share *remaining*
+> at 8 bits, `5.8960 / 8.0195 = 73.5%`, recorded as though it were the share paid. The claim the
+> sentence exists to make — that the money is at the low end — survives the correction and is in
+> fact made more strongly by the true numbers, since 66% at 16 bits is a larger share than the
+> 59% originally printed.
+
+All nine adjacent-rung deltas are non-negative, so the ladder is monotone against a v1.0 opponent
+as well as against v0.5.
+
+This also **replicates the shipped E1 ladder out of sample**: every rung's set-share lands within
+~0.007 of §4.1's committed value on a disjoint bank, with ∞ and 128 both exactly `.5000`.
+
+**Caveats, and they are not small.** This is exploratory, not pre-registered: no verdict rule was
+fixed in advance and no multiplicity correction was applied across 27 cells. The v1.0 baseline is
+not a fixed policy across rungs — its style mixture depends on public-log length, which the
+opponent's budget changes (warm-Punter share runs 41.0% at ∞ to 48.6% at 0 bits), so cells at
+different budgets face materially different opponents; the reference ladder does not have this
+problem and agrees closely, which bounds the distortion without removing it. Only `balanced` and
+`punter` were bounded, only pure teams, only `us54`. And the win rates at 0 and 8 bits are
+near-floor, where the estimator is compressed.
+
+### 5a.1 The post-concession ladder, on three banks — and the win rates
+
+Everything above is **pre-concession**, and must stay that way: it is the committed record of what
+a bounded v1.5 was worth against v1.0 *before* the defusal term existed. What follows is the same
+comparison re-run after the concession layer landed, against a v1.0 driven from a clean
+pre-concession export (`5566e6e`) so that the old arm is not silently handed the new mechanism.
+`scripts/probe-v15-clean.mjs` is the probe; both of its zero-appetite controls print exactly
+`0.0000 +/- 0.0000`, with zero health failures, on every bank below.
+
+This table exists because the tables above publish only set-differences, and the question actually
+asked of this ladder — *what fraction of games does the updated bot win against the old one?* — is
+not answerable from them. **Win rate here is the share of the 4,000 games in a bank's 2,000
+duplicate pairs that the v1.5 seat takes.**
+
+| bits | `v15clean-2026a` | `audit-2026q3-repl` | `v15clean-2026c` |
+|---|---:|---:|---:|
+| 0 | 0.68% | 0.97% | 1.03% |
+| 16 | 38.07% | 38.70% | 38.75% |
+| 32 | 53.83% | 54.80% | 54.93% |
+| 48 | 59.08% | 60.08% | 59.62% |
+| 64 | 60.20% | 60.90% | 60.82% |
+| 128 | 60.22% | 61.27% | 60.90% |
+| ∞ | **60.22%** | **61.27%** | **60.90%** |
+
+So the headline is **~60–61% of games** at full memory, on three disjoint banks, against **48.98%**
+for the same ladder's ∞ rung before the concession layer — the `−0.1255 ± 0.0590` cell in the first
+table of §5a, whose own win rate is recorded in the run artifact but not printed there.
+
+**The sign flip is the concession layer, not memory.** The crossover sits between **16 and 32
+bits**, and below it the bounded seat still loses badly: at zero bits it wins about **1 game in
+100**. That is the near-floor region the caveat above warns about, where the win-rate estimator is
+compressed against zero and the interval on a set-difference is the more honest statistic.
+
+**Provenance of the third bank.** `v15clean-2026c` was run at `9fcd772` — after the `turnYield`
+extraction and after the counter table was regenerated from the re-measured matrix. Neither should
+touch this comparison: the refactor is behaviour-preserving and pinned by
+`tests/bots/threat.test.ts`, and the counter table is consulted only by an adaptive spec, which
+here is loaded from the *old* tree. The agreement of `2026c` with the two earlier banks is the
+evidence that neither touched it in fact. That is the only reason a third bank was run. It is
+confirmatory, and no claim in this document rests on it alone.
+
+
+---
+
 ## 6. Where it lives
 
 **The engine.** [lib/engine/bots/bounded.ts](lib/engine/bots/bounded.ts) — the spec, the guard,

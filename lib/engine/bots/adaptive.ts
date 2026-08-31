@@ -11,16 +11,25 @@
  * proceeds exactly as for any static style. Everything here is a pure function of
  * `(view, spec)`: no Date, no Math.random, no state between calls.
  *
- * ## THE MEASURED FINDING THIS FILE MUST BE READ AGAINST (2026-08-23, committed counter table)
+ * ## THE MEASURED FINDING THIS FILE MUST BE READ AGAINST (re-measured matrix v2, 2026-08-31)
  *
  * Punter is the argmax of `P[·][s]` for **every** column `s` of the table — BR(balanced) =
- * punter 0.5190, BR(blitz) = punter 0.5198, BR(punter) = punter 0.5000 (no style beats
+ * punter 0.5112, BR(blitz) = punter 0.5102, BR(punter) = punter 0.5000 (no style beats
  * punter), and so on down the roster. The expected payoff below is linear in the opponent
  * posterior, so one row weakly dominating every column means best-response adaptation over
  * this roster **provably selects Punter under every belief** — the warm adaptive engine
  * degenerates to always-Punter, whatever the classifier says. The margin also covers the
- * anchor bias: the smallest gap of the punter row over the balanced row is ~0.016, above the
+ * anchor bias: the smallest gap of the punter row over the balanced row is 0.0112, above the
  * default `switchMargin` of 0.01, so not even the anchor tie-break can rescue another choice.
+ *
+ * Read that with ADAPTIVE.md §5's first hedge attached. The matrix was re-measured (the table
+ * this file consults is regenerated from it), and while the column ordering survived intact —
+ * Punter's row still dominates, Blitz still the runner-up in every column — the margin
+ * carrying it fell from 0.0112 to **0.0053**, which is 0.79 combined paired SE rather than the
+ * ~1.9 the superseded table gave; the binding column moved from `hoarder` to `turtle`; and the
+ * anchor clearance thinned from 0.0071 to 0.0012 above `switchMargin`. The dominance is still
+ * what the committed artifact says. It is no longer robust, and this comment should not be
+ * quoted as if it were. (The superseded row read 0.5190 / 0.5198 / 0.5000.)
  *
  * The mechanism is built in full anyway, on purpose. The architecture is the contribution and
  * the degeneracy is the *result*: `tests/bots/adaptive.test.ts` pins it per oracle opponent

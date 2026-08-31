@@ -109,6 +109,10 @@ import {
 } from './knowledge.ts'
 import { planContainedPass } from './contained.ts'
 import type { ContainedPassPlan, PassValuation } from './contained.ts'
+import { defusalActive, defusalBonus, logLicences } from './defuse.ts'
+import type { LicenceLookup } from './defuse.ts'
+import { concealmentActive, concealmentPenalty, ownCardsInBook } from './conceal.ts'
+import { preyInBook, turnYield } from './threat.ts'
 import { POLICY_CONSTANTS, SKILL_PRESETS, resolvePolicy } from './style.ts'
 import type { BotPolicy, SkillParams, StyleParams } from './style.ts'
 import { STYLE_ROSTER } from './roster.ts'
@@ -1017,7 +1021,7 @@ function leaky(k: Knowledge, view: SeatView, book: BookId, style: StyleParams): 
  *
  * Deterministic: refined score desc, then the base ranked order.
  */
-function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: BotPolicy, t?: Sink): RankedAsk {
+function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: ActivePolicy, t?: Sink): RankedAsk {
   const { skill, style } = pol
   interface Scored {
     r: RankedAsk
@@ -1025,11 +1029,64 @@ function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: BotPoli
     s: number
     idx: number
   }
+  // The CONCESSION.md defusal credit, added here rather than in a branch of its own so that
+  // every guarantee below it — the `minHitP` pool, both near-tie windows, the certain-hit
+  // dominance the `certaintyBonus >= 20` sort provides — is untouched. Off at `defuse: 0` (every
+  // shipped tier) and under `pagat48`, and `defusalActive` is checked once so a switched-off
+  // style pays for no scans. The licence cache lives exactly as long as this call.
+  const defusing = defusalActive(view, style)
+  // The other half of the same concession layer, and the other sign. `defusalBonus` credits an ask
+  // for the reach a hit would strip off an opponent; `concealmentPenalty` charges an ask for the
+  // row-6 basis it would publish about THIS seat (conceal.ts). Added into the same score for the
+  // same reason: every guarantee below — the `minHitP` pool, both near-tie windows, the certain-hit
+  // dominance of `certaintyBonus >= 20` — has to survive untouched, and a branch of its own would
+  // have to re-establish all three. Off at `conceal` absent or 0, which is every shipped tier and
+  // every roster style, and under `pagat48`.
+  const concealing = concealmentActive(view, style)
+  // Where this seat's evidence about published bases comes from. `logLicences` scans the public
+  // log for row-6 asks and retires each licence against `k` — so for a BOUNDED seat the
+  // *retirement* half is already budgeted (it reads that seat's restricted knowledge), while the
+  // ask history itself is not. That asymmetry is deliberate and is the one thing the v1.5 cost
+  // model does not yet price: BOUNDED.md's own model is a stateless full-fidelity re-derivation
+  // from the whole log at every decision with budget-capped *retention*, and a licence is derived
+  // rather than retained here. Moving it into the fact pool as a first-class 1-bit `basis` read is
+  // the correct end state and is recorded as follow-up work in CONCESSION.md; doing it now would
+  // change every committed v1.5 number, which is not this change's business.
+  //
+  // The concealment term consumes the SAME lookup, queried at this seat instead of at the target:
+  // "have I already published a basis in this set". One scan serves both halves, and the lookup is
+  // built whenever either is live.
+  const licences: LicenceLookup | undefined =
+    defusing || concealing ? logLicences(view, k) : undefined
+  // One log scan for the whole ranking, not one per ask: `turnYield` is a property of the
+  // position, not of the candidate. Both terms divide by `1 + E`, so both need it.
+  const yield_ = defusing || concealing ? turnYield(view) : 0
+  // Neither concession term may move an ask ACROSS the certainty boundary. Both scale with
+  // `prey(B)` and are unbounded relative to the 20-point `certaintyBonus` margin, so an uncertain
+  // ask into a high-prey set could otherwise outrank a certain hit — trading a card that is
+  // guaranteed, and a turn row 9 keeps, for a chance of conceding it under row 10. Zeroing both
+  // for uncertain asks whenever a certain hit is on the table keeps the credit live AMONG certain
+  // hits (defusal still chooses *which* one) and is identically a no-op when both terms are 0, so
+  // the shipped tiers stay byte-identical.
+  const certainAvailable = ranked.some((r) => r.p === 1)
   const scored: Scored[] = ranked.map((r, idx) => {
-    if (!skill.refinedInference) return { r, refined: r.p, s: r.score, idx }
+    // Charged on both branches of the ask, unlike the defusal credit: row 17 logs the ask whether
+    // it hit or missed, so the publication is unconditional and carries no `p` factor.
+    const charge = concealing ? concealmentPenalty(view, k, style, r, yield_, licences!) : 0
+    const gated = certainAvailable && r.p < 1
+    if (!skill.refinedInference) {
+      const bonus = defusing ? defusalBonus(view, k, style, r, r.p, yield_, licences!) : 0
+      return { r, refined: r.p, s: r.score + (gated ? 0 : bonus - charge), idx }
+    }
     const base = askHitProbability(k, r.card, r.target)
     const refined = refinedHitProbability(k, r.card, r.target)
-    return { r, refined, s: r.score + style.wHit * (refined - base), idx }
+    const bonus = defusing ? defusalBonus(view, k, style, r, refined, yield_, licences!) : 0
+    return {
+      r,
+      refined,
+      s: r.score + style.wHit * (refined - base) + (gated ? 0 : bonus - charge),
+      idx,
+    }
   })
   scored.sort((a, b) => (b.s !== a.s ? b.s - a.s : a.idx - b.idx))
   // `minHitP` is a hard preference, so it is applied to the re-scored order before the tiebreaks.
@@ -1051,33 +1108,82 @@ function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: BotPoli
   // Two independent near-tie windows, deliberately not one. Information protection is worth
   // `leakEpsilon` of score; tempo targeting is worth `missTargetEpsilon` and is off entirely for
   // the shipped `missTarget: 'fewest'`, so every preset takes exactly the width it always took.
+  //
+  // Resolved BEFORE the concession narration below, because the narration has to describe the ask
+  // this function actually returns. Ranking first and narrating second let a note name `top` after
+  // the tiebreak had already moved the choice elsewhere — the note then called the played card the
+  // one that was *beaten*, contradicting the near-tie note beside it in the same trace.
   const missWidth = style.missTarget === 'fewest' ? 0 : POLICY_CONSTANTS.missTargetEpsilon
   const width = Math.max(style.leakEpsilon, missWidth)
-  if (width <= 0) return top.r
-  const near = pool.filter((x) => x.s >= top.s - width)
-  if (near.length === 1) return top.r
-  near.sort((a, b) => {
-    if (style.leakEpsilon > 0) {
-      const la = leaky(k, view, cardBook(a.r.card), style) ? 1 : 0
-      const lb = leaky(k, view, cardBook(b.r.card), style) ? 1 : 0
-      if (la !== lb) return la - lb
-    }
-    if (a.refined === 0 && b.refined === 0 && style.missTarget !== 'random') {
-      const ca = view.counts[a.r.target]
-      const cb = view.counts[b.r.target]
-      if (ca !== cb) return style.missTarget === 'fewest' ? ca - cb : cb - ca
-    }
-    return a.idx - b.idx
-  })
-  if (t && near[0] !== top) {
-    const chosen = near[0]
-    if (style.leakEpsilon > 0 && leaky(k, view, cardBook(top.r.card), style) && !leaky(k, view, cardBook(chosen.r.card), style)) {
-      t.notes.push(`A near-tie (within ${fp(width)} of score) broken for information protection: asking into ${cardBook(top.r.card)} would announce a set this team nearly accounts for, so the quieter ${pc(chosen.r.card)} is preferred.`)
-    } else {
-      t.notes.push(`A near-tie (within ${fp(width)} of score) broken by miss-targeting: the expected miss hands the turn to seat ${chosen.r.target} (${n_(view.counts[chosen.r.target], 'card')}${style.missTarget === 'fewest' ? ' — the smallest hand, so the surrendered turn is worth least' : ' — the largest hand'}).`)
+  let picked = top
+  if (width > 0) {
+    const near = pool.filter((x) => x.s >= top.s - width)
+    if (near.length > 1) {
+      near.sort((a, b) => {
+        if (style.leakEpsilon > 0) {
+          const la = leaky(k, view, cardBook(a.r.card), style) ? 1 : 0
+          const lb = leaky(k, view, cardBook(b.r.card), style) ? 1 : 0
+          if (la !== lb) return la - lb
+        }
+        if (a.refined === 0 && b.refined === 0 && style.missTarget !== 'random') {
+          const ca = view.counts[a.r.target]
+          const cb = view.counts[b.r.target]
+          if (ca !== cb) return style.missTarget === 'fewest' ? ca - cb : cb - ca
+        }
+        return a.idx - b.idx
+      })
+      if (t && near[0] !== top) {
+        const chosen = near[0]
+        if (style.leakEpsilon > 0 && leaky(k, view, cardBook(top.r.card), style) && !leaky(k, view, cardBook(chosen.r.card), style)) {
+          t.notes.push(`A near-tie (within ${fp(width)} of score) broken for information protection: asking into ${cardBook(top.r.card)} would announce a set this team nearly accounts for, so the quieter ${pc(chosen.r.card)} is preferred.`)
+        } else {
+          t.notes.push(`A near-tie (within ${fp(width)} of score) broken by miss-targeting: the expected miss hands the turn to seat ${chosen.r.target} (${n_(view.counts[chosen.r.target], 'card')}${style.missTarget === 'fewest' ? ' — the smallest hand, so the surrendered turn is worth least' : ' — the largest hand'}).`)
+        }
+      }
+      picked = near[0]
     }
   }
-  return near[0].r
+  // Narration only, and read-only: the same ranking re-sorted with the CONCESSION.md credit
+  // removed, purely to say whether the credit is what chose this ask. Nothing below reads it,
+  // and it is only ever computed when a trace is being collected.
+  if (t && defusing) {
+    const withoutBonus = pool
+      .map((x, i) => ({
+        x,
+        plain: x.s - defusalBonus(view, k, style, x.r, x.refined, yield_, licences!),
+        i,
+      }))
+      .sort((a, b) => (b.plain !== a.plain ? b.plain - a.plain : a.x.idx - b.x.idx))
+    const plainTop = withoutBonus[0].x
+    if (plainTop.r !== picked.r) {
+      const book = cardBook(picked.r.card)
+      t.notes.push(
+        `Defusal chose this ask: seat ${picked.r.target} has publicly shown a card of ${book} (RULES_US54.md row 6), and this team can account for ${n_(preyInBook(view, k, book), 'card')} of it. Taking ${pc(picked.r.card)} removes that reach, and a hit keeps the turn — which beat the otherwise better-scoring ${pc(plainTop.r.card)} at seat ${plainTop.r.target}.`,
+      )
+    }
+  }
+  // The same read-only marginal test for the conceal.ts charge: re-sort with the charge added back
+  // and say whether declining to publish a row-6 basis is what moved the choice. Deliberately the
+  // *marginal* statement — the defusal note above and this one each answer "did MY term change the
+  // outcome, holding the rest of the score as it stands", which is the only question either can
+  // answer honestly when both are live and pointing opposite ways.
+  if (t && concealing) {
+    const withoutCharge = pool
+      .map((x, i) => ({
+        x,
+        plain: x.s + concealmentPenalty(view, k, style, x.r, yield_, licences!),
+        i,
+      }))
+      .sort((a, b) => (b.plain !== a.plain ? b.plain - a.plain : a.x.idx - b.x.idx))
+    const plainTop = withoutCharge[0].x
+    if (plainTop.r !== picked.r) {
+      const leaked = cardBook(plainTop.r.card)
+      t.notes.push(
+        `Concealment chose this ask: asking into ${leaked} would have published that this seat holds a card of it (RULES_US54.md row 6), exposing ${n_(ownCardsInBook(view, leaked), 'card')} of ${leaked} in hand that no opponent can currently place — so the quieter ${pc(picked.r.card)} at seat ${picked.r.target} is played instead of ${pc(plainTop.r.card)}.`,
+      )
+    }
+  }
+  return picked.r
 }
 
 /**

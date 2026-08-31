@@ -129,7 +129,7 @@ function exploitBlock(r: StyleResults): string[] {
   const lines: string[] = [header, '-'.repeat(header.length + 30)]
   for (const e of [...r.exploitability].sort((a, b) => b.gap - a.gap)) {
     if (!e.searched) {
-      lines.push(`${pad(e.style, 11, true)}${pad('(holdout — not searched)', 30, true)}`)
+      lines.push(`${pad(e.style, 11, true)}${pad(`(not searched — ${e.skippedReason})`, 30, true)}`)
       continue
     }
     lines.push(
