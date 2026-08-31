@@ -76,7 +76,7 @@ export type { BoundedFact, BoundedFactKind, BoundedRanking, BoundedRead, Bounded
 // --- FishAI v2.0: the concession layer (CONCESSION.md) ---------------------------------------
 export { THREAT_COEFFICIENTS, preyInBook, seatLicences, seatThreat, turnYield } from './threat.ts'
 export type { SeatThreat } from './threat.ts'
-export { defusalActive, defusalBonus, logLicences, tabledLicences } from './defuse.ts'
+export { defusalActive, defusalBonus, logLicences } from './defuse.ts'
 export type { LicenceLookup } from './defuse.ts'
 // `PolicySpec` is re-exported from bounded.ts, where adaptive.ts's widened union gains
 // `BoundedSpec` — the acyclic arrangement documented in both file headers. Everything

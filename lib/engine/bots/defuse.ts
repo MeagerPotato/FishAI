@@ -98,13 +98,13 @@ import type { StyleParams } from './style.ts'
 import type { Knowledge, RankedAsk, SeatView } from './types.ts'
 
 /**
- * Where a seat's published bases come from — injected rather than assumed, because not every
- * policy is entitled to the same evidence.
+ * Where a seat's published bases come from, passed in rather than derived inside the arithmetic.
  *
- * The only source wired today is the whole public log ({@link logLicences}), and `decide` uses it
- * for **every** seat, bounded or not. The indirection exists so that a budgeted source can be
- * substituted without touching this file's arithmetic; {@link tabledLicences} is that seam, and it
- * currently has no caller in `lib/`.
+ * Exactly one source exists, {@link logLicences} — the whole public log — and `decide` uses it for
+ * **every** seat, bounded or not. The parameter is not a promise of a second implementation; it is
+ * what lets `decide` build one memoised scan per decision and hand the same object to both halves
+ * of the concession layer, `defusalBonus` querying it at the ask's target and
+ * `concealmentPenalty` ([conceal.ts](conceal.ts)) at the viewer's own seat.
  *
  * **State the limitation rather than the intention.** BOUNDED.md caps a v1.5 seat's retention in
  * bits, and a licence is a 1-bit `basis` fact in exactly that pool — but only the *retirement* half
@@ -116,9 +116,7 @@ import type { Knowledge, RankedAsk, SeatView } from './types.ts'
  */
 export type LicenceLookup = (seat: Seat) => ReadonlySet<BookId>
 
-const NO_LICENCES: ReadonlySet<BookId> = new Set()
-
-/** The ordinary source: the whole public log, memoised for the length of one decision. */
+/** The one source: the whole public log, memoised for the length of one decision. */
 export function logLicences(view: SeatView, k: Knowledge): LicenceLookup {
   const cache = new Map<Seat, ReadonlySet<BookId>>()
   return (seat) => {
@@ -129,11 +127,6 @@ export function logLicences(view: SeatView, k: Knowledge): LicenceLookup {
     }
     return got
   }
-}
-
-/** A lookup over an explicit table — for tests and for any future budgeted evidence source. */
-export function tabledLicences(table: ReadonlyMap<Seat, ReadonlySet<BookId>>): LicenceLookup {
-  return (seat) => table.get(seat) ?? NO_LICENCES
 }
 
 /** Is the defusal term live for this seat at all? Cheap, and checked before any scan. */

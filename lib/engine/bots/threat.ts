@@ -141,9 +141,12 @@ export interface SeatThreat {
  * to cross-check against `E`.
  *
  * The cross-check belongs to the **unconditional** mean: CONCESSION.md §1.1 measures 1.304 cards
- * per conceded turn, and `contained.ts`'s independent `E = hits / max(1, misses)` derivation of
- * the same quantity lands beside it — two different arguments agreeing on the value of a turn,
- * which is the reason to trust either. `base` and `perPrey` are the conditional decomposition of
+ * per conceded turn, and the `E = hits / max(1, misses)` derivation of the same quantity —
+ * {@link turnYield} below, which is where `contained.ts` reads it too — lands beside it. Two
+ * independent routes to the value of a turn, one an observed mean over 12,376 concessions with
+ * ground truth read from the hands, the other a ratio computed from the public log alone, agreeing
+ * on it — which is the reason to trust either. (Neither is the least-squares fit: that fit produced
+ * `base` and `perPrey`, and the paragraph above is why it cannot serve as its own cross-check.) `base` and `perPrey` are the conditional decomposition of
  * that same mean.
  *
  * **Global, not a style field**, by the STYLES.md §3.1 argument: this is the *geometry* of the
@@ -170,11 +173,24 @@ export function seatThreat(view: SeatView, k: Knowledge, seat: Seat): SeatThreat
  *
  * Row 9 keeps the turn on a hit and row 10 ends it on a miss, so a turn is a geometric run of
  * hits whose expected length is `h / (1 - h)` — which on counts is exactly hits over misses.
- * Identical in form and intent to `contained.ts`'s `PassValuation.E`, and duplicated here rather
- * than imported so the threat layer keeps no dependency on the containment policy. **Nothing pins
- * the two equal — they are kept in step by hand**, and a cross-module test asserting it is recorded
- * as follow-up in CONCESSION.md §9. No table constant: a roster that hits more often prices a turn
- * higher by itself.
+ * No table constant: a roster that hits more often prices a turn higher by itself.
+ *
+ * **This is the single definition of the quantity in the engine.** Two copies of the same
+ * reduction survive outside it — `scripts/probe-ab.mjs` keeps one on purpose, because a probe that
+ * imported the code it audits would agree with it by construction, and
+ * `tests/bots/defuse.test.ts` keeps one as a hand-written expectation. Neither is shipped policy.
+ * `contained.ts`'s `PassValuation.E` is the
+ * same reduction over the same `view.log`, and it used to carry its own copy: the two were kept
+ * in step by hand and nothing pinned them equal. `contained.ts` now calls this function. The
+ * dependency deliberately runs that way round and not the reverse — the containment policy may
+ * lean on the threat estimator, so that the estimator still takes on nothing from the policy.
+ * `tests/bots/threat.test.ts` pins the two *production call sites* to each other over real `us54`
+ * positions, so the two can no longer drift apart silently.
+ *
+ * **What that does not catch, stated because the first draft of this comment claimed it did:** a
+ * re-inlining that reproduces the arithmetic *correctly* passes the pin, because the pin compares
+ * values and the values still agree. Restoring the old inlined copy verbatim was tried and the pin
+ * stayed green. It catches divergence, not duplication.
  */
 export function turnYield(view: SeatView): number {
   let hits = 0
