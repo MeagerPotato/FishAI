@@ -49,6 +49,14 @@ to be worth nothing: the Hoarder finishes 6th of 9 with and without it, and the 
 counter to hoarding is simply not hoarding. To the best of our knowledge, resting on an
 internal literature synthesis that found no peer-reviewed prior work on the game, this is the
 first quantitative game-AI study of Literature.
+
+\smallskip
+\noindent\emph{Addendum (August 2026).} The tournament artifact every figure in this paper is
+read from has since been re-measured in place, against a roster carrying the concession layer
+and against a larger exploitability ladder. The verdict is unchanged --- Punter is still
+dominant on all four criteria --- but every headline figure above moved, and criterion~4 in
+particular is materially weaker. Section~\ref{sec:addendum} reports the new numbers beside
+these, which are left exactly as published.
 \end{abstract}
 
 \section{Introduction}
@@ -477,6 +485,12 @@ re-run on the same seed set after the contained-book turn-pass was implemented
 (Section~\ref{sec:containedpass}); all headline numbers in this paper are v2, with v1 cited
 where the paired comparison is itself the result.
 
+\emph{Addendum.} The path \code{src/lab/data/style-results.v2.json} now holds a \emph{third}
+artifact: matrix v2 re-measured at engine commit \code{1fdd22e}, records digest
+\code{1d7d9f30b59c00f6} \cite{artifactv2b}. The artifact this paper reports --- digest
+\code{0c3cb524a3534d4a} --- is at that path in the repository history, at the commit preceding
+the re-measurement. Section~\ref{sec:addendum} reports what moved; v1 is untouched.
+
 \section{Results}
 \label{sec:results}
 
@@ -486,6 +500,10 @@ All four criteria of Section~\ref{sec:verdict} hold, and the artifact's computed
 \emph{dominant} (Table~\ref{tab:criteria}). This is the criteria mechanism working as
 designed, not a narrative choice: the same pipeline renders ``cyclic'' or ``inconclusive''
 when the numbers say so.
+
+\emph{Addendum.} All four still hold on the re-measured artifact, and the computed verdict is
+still \emph{dominant} --- but all four measured values in Table~\ref{tab:criteria} moved, and
+criterion~4 moved a long way. Section~\ref{sec:addendum} prints the new column beside this one.
 
 \begin{table}[t]
 \centering
@@ -658,6 +676,12 @@ runs are not meaningful. And the search's knob ladder predates the contained-boo
 so that one axis was probed separately by the same SPRT protocol: no candidate was accepted
 for any style at any appetite --- consistent with Section~\ref{sec:containedpass}'s finding
 that the mechanism is worth nothing.
+
+\emph{Addendum.} The second caution has since been acted on rather than merely stated: the
+ladder now carries \code{containedPass} outright, along with two knobs that did not exist when
+this table was measured, and the truncation named below in Section~\ref{sec:addladder} was
+removed. Every number in Table~\ref{tab:exploit} is superseded, and Punter's is superseded
+worst of all --- $0.0025$ becomes $0.0525$. Section~\ref{sec:addcrit4} is the accounting.
 
 \begin{table}[t]
 \centering
@@ -972,6 +996,20 @@ search seeds said the candidate was \emph{worse} by $0.020 \pm 0.018$ while the 
 evaluation said \emph{better} by $0.0275 \pm 0.0098$; two contradictory effects of that size
 mean neither is real, and the honest summary is noise \cite{styles}.
 
+\emph{Addendum.} The paired delta above stands: it is a statement about the two artifacts it
+compares, both of which are unchanged as measurements. The \emph{sharpest} form, though, does
+not survive the re-measurement. On the larger ladder the accepted best response to the Hoarder
+is no longer \code{hoardBooks} 0, \code{minHandSize} 0 but \code{minHitP} 0.45,
+\code{leakEpsilon} 0 --- and that candidate did not replicate: it scored $0.54125$ in search
+and $0.480 \pm 0.0125$ on the held-out block, so $E(\text{Hoarder})$ clamps to $0.0000$
+\cite{artifactv2b}. Read that as a search that found nothing it could reproduce, \emph{not} as
+the Hoarder having become unexploitable, and read ``stop hoarding'' as a best response of the
+old ladder rather than a standing result. The Hoarder also finishes 7th of 9 on the new matrix
+rather than 6th (Table~\ref{tab:addrank}). What the re-measurement does not touch is the
+finding this section is about --- the turn-pass is worth nothing --- which rests on the mirror
+measurement of Table~\ref{tab:contained} and the paired v1/v2 comparison of
+Table~\ref{tab:v1v2}, neither of which reads the re-measured artifact.
+
 So the conclusion is about the strategy, not the implementation. The benefit the containment
 analysis identified is real, reachable, and fires for the derived reasons --- and it is worth
 nothing at this roster's level of play. The verdict stands with no unimplemented benefit
@@ -1052,6 +1090,237 @@ the contained book published alongside this one \cite{inertpaper,containedpaper}
 \cite{artifact} carries the seed set, per-cell records digest, engine commit and rules hash;
 and every number in this paper is either in that artifact or in the repository's measurement
 documents \cite{rules,styles,botlab,containment}.
+
+\section{Addendum: matrix v2, re-measured}
+\label{sec:addendum}
+
+Everything above reports one artifact, and that artifact has since been regenerated in place
+\cite{artifactv2b}. This section records what moved. It amends nothing: the figures in
+Sections~\ref{sec:results}--\ref{sec:hoarder} were correct readings of the artifact that
+existed when they were written, and they are left as they stand. That is the same discipline
+Section~\ref{sec:containedpass} applies to v1 --- a superseded measurement is evidence about
+the engine that produced it, and a silent swap would destroy the very comparison this section
+is making.
+
+\subsection{What was re-run, and the confound}
+\label{sec:addladder}
+
+The re-measurement is controlled rather than an independent sample: the same 36 cells, the same
+4{,}300 duplicate deal pairs per cell, the same \code{style-v1} seed prefix, 309{,}600 games,
+the same rules hash, and health gates clean again (\code{illegalActions}, \code{cappedGames},
+\code{invariantViolations}, \code{ties}, \code{voids}, \code{nonClinch} all zero;
+4{,}300/4{,}300 distinct seeds). Two things changed underneath it, and they changed
+\emph{together}.
+
+\begin{enumerate}
+\item \textbf{The roster.} The concession layer \cite{concession} postdates engine commit
+  \code{1667a1d}, so the vectors measured for this paper did not carry \code{defuse}. Every
+  roster style now carries \code{defuse} $= 1$. That is a change to the games themselves, so it
+  moves every cell of the matrix, not only the best-response search.
+\item \textbf{The exploitability search.} Its knob ladder ran to 75 rungs and its candidate
+  budget was a literal 60. The ladder now runs to 88 rungs --- it gained \code{containedPass}
+  (Section~\ref{sec:containedpass}) and the concession layer's \code{defuse} and \code{conceal}
+  --- and the budget is the ladder's own length \cite{exploitladder}.
+\end{enumerate}
+
+\textbf{Every magnitude reported below is the joint effect of those two changes, and none of it
+may be attributed to the ladder alone.} What \emph{is} cleanly attributable to the ladder is a
+statement about reachability rather than about size, and it is in
+Section~\ref{sec:addcrit4}.
+
+The budget deserves one paragraph of its own, because ``60 of 75'' overstates the damage and
+this paper should not bank an exaggeration in its own favour. A budget below the ladder's
+length does not sample the ladder --- it evaluates a \emph{prefix} and abandons the tail, which
+is a prune selected by the order the fields were typed rather than by evidence. But budget is
+spent only on candidates that actually change the incumbent, and 14--19 of the old ladder's 75
+rungs were the incumbent's own value for any given style, so six of the nine targets finished
+the ladder inside 60. The artifact records \code{candidatesTried} of exactly 60 --- the ceiling,
+not a count --- for Banker, Turtle and Hoarder; replaying the old ladder along each style's
+committed acceptances reproduces all nine counts exactly and needs 61 for Banker and 62 for
+Turtle. Hoarder reached the last rung on its 60th spend and lost nothing. \textbf{Three rungs
+were lost in total: \code{minHandSize} 3 for Banker, and \code{minHandSize} 1 and 3 for
+Turtle} \cite{exploitladder}. A small hole, in a badly chosen place --- but a small one.
+
+\subsection{The verdict survives}
+
+All four criteria of Section~\ref{sec:verdict} hold on the re-measured artifact and the
+computed verdict is again \emph{dominant}: Punter still has the highest mean score, still has
+no losing matchup, the matrix is still almost purely transitive, and criterion~4 still passes.
+Table~\ref{tab:addcriteria} puts the two columns side by side.
+
+\begin{table}[t]
+\centering
+\caption{The four criteria, as published (matrix v2 at engine commit \code{1667a1d}) and as
+re-measured (matrix v2 at \code{1fdd22e}) \cite{artifact,artifactv2b}. The verdict is
+\emph{dominant} in both.}
+\label{tab:addcriteria}
+\small
+\begin{tabular}{@{}clp{4.5cm}p{4.5cm}@{}}
+\toprule
+\# & Criterion & As published & Re-measured \\
+\midrule
+1 & highest mean score & Punter $0.5829$, ahead of Blitz $0.5602$ (margin $0.0227$) &
+    Punter $0.5684$, ahead of Blitz $0.5562$ (margin $0.0122$) \\
+2 & maximin $> 0.5$ & $0.5190$, worst vs.\ Balanced; CI$_{95}$ lower bound $0.5119$ &
+    $0.5102$, worst vs.\ Blitz; CI$_{95}$ lower bound $0.5022$ \\
+3 & cyclic energy $< 0.15$ & $0.0112$; one 3-cycle in point estimates, none significant &
+    $0.0172$; one 3-cycle in point estimates, none significant \\
+4 & exploitability not materially worse & $E(\text{Punter}) = 0.0025$ vs.\ rivals' median
+    $0.0444$ & $E(\text{Punter}) = 0.0525$ vs.\ rivals' median $0.0594$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Criteria 1--3 survive with room to spare and with their structure intact. Punter's margin over
+Blitz halves but stays outside either run's interval; the maximin's worst-opponent label flips
+from Balanced to Blitz, which is the same relabelling between two near-tied cells that
+Section~\ref{sec:results} recorded between v1 and v2 (the two cells are now $0.5112$ and
+$0.5102$, and all eight of Punter's cells remain above $0.5$ and BH-significant); cyclic energy
+rises by half but is still an order of magnitude under its threshold, and 33 of 36 cells are
+significant, as before. Criterion~4 is the exception, and Section~\ref{sec:addcrit4} is about
+it.
+
+\subsection{Every headline figure moved, and the ranking's interior re-ordered}
+
+Table~\ref{tab:addrank} gives the per-style mean scores. The podium and the floor are
+unchanged --- Punter, Blitz, Balanced at the top, Scout and Turtle at the bottom, in that order
+--- but the middle of the table is not: Banker falls from 4th to 6th, Archivist rises from 7th
+to 5th, Ghost from 5th to 4th, Hoarder from 6th to 7th. The differences are stated as point
+estimates between two runs; each run's own $95\%$ interval has a half-width near $0.003$, and
+the paired per-deal test that Table~\ref{tab:v1v2} reports for the v1/v2 pair has not been run
+for this pair, so no $t$ is quoted here. On that reading Banker's $-0.0357$ and Archivist's
+$+0.0221$ are the two large movements and the rest are small.
+
+\begin{table}[t]
+\centering
+\caption{Per-style mean score as published and as re-measured \cite{artifact,artifactv2b}.
+$\Delta$ is a difference of point estimates between two runs on the same seed set; no paired
+per-deal statistic is quoted (see text).}
+\label{tab:addrank}
+\footnotesize
+\begin{tabular}{@{}lccrc@{}}
+\toprule
+Style & Published & Re-measured & $\Delta$ & Rank \\
+\midrule
+Punter    & 0.5829 & 0.5684 & $-0.0145$ & $1 \to 1$ \\
+Blitz     & 0.5602 & 0.5562 & $-0.0040$ & $2 \to 2$ \\
+Balanced  & 0.5581 & 0.5531 & $-0.0050$ & $3 \to 3$ \\
+Banker    & 0.5285 & 0.4928 & $-0.0357$ & $4 \to 6$ \\
+Ghost     & 0.4928 & 0.5082 & $+0.0154$ & $5 \to 4$ \\
+Hoarder   & 0.4885 & 0.4897 & $+0.0012$ & $6 \to 7$ \\
+Archivist & 0.4802 & 0.5023 & $+0.0221$ & $7 \to 5$ \\
+Scout     & 0.4063 & 0.4173 & $+0.0110$ & $8 \to 8$ \\
+Turtle    & 0.4025 & 0.4120 & $+0.0095$ & $9 \to 9$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two readings are available and this paper is not entitled to choose between them: a roster in
+which everybody defuses is a different tournament, and a re-ordering of the middle of a
+transitive ladder is what a real policy change to every seat should be expected to produce.
+Which of the concession layer's terms did it is a question for the document that ships them
+\cite{concession}, not for a re-run of this one.
+
+\subsection{Criterion 4 is materially weaker}
+\label{sec:addcrit4}
+
+This is the finding of the addendum. This paper reports Punter's exploitability as $0.0025$
+against a rivals' median of $0.0444$ --- an eighteen-fold advantage, and the sentence in
+Section~\ref{sec:exploit} that ``it is not a paper champion of this particular roster'' leans
+on the size of that gap. On the re-measured artifact $E(\text{Punter}) = 0.0525$ against a
+rivals' median of $0.0594$. That is essentially a tie. Punter is now the \emph{fourth} least
+exploitable of the nine (Table~\ref{tab:addexploit}), where it was third and within $0.0025$ of
+the floor. Criterion~4 passes on the letter of the rule --- ``not materially worse'', with the
+lab's margin of $0.0200$ --- and on nothing more. That is a far weaker statement than this
+paper's prose around it implies, and readers should take the prose, not the pass, as the thing
+that has been corrected.
+
+\begin{table}[t]
+\centering
+\caption{Exploitability as published and as re-measured, ascending in the new $E$
+\cite{artifact,artifactv2b}. \textbf{Bold} responses use knobs no earlier ladder contained.}
+\label{tab:addexploit}
+\footnotesize
+\begin{tabular}{@{}lclcl@{}}
+\toprule
+Style & $E$ (pub.) & Response (pub.) & $E$ (new) & Response (new) \\
+\midrule
+Hoarder   & 0.0563 & \code{hoardBooks} 0, \code{minHandSize} 0 & 0.0000 &
+  \code{minHitP} 0.45, \code{leakEpsilon} 0 \\
+Banker    & 0.0012 & \code{gambleBonus} 15 & 0.0212 & \code{wHit} 60, \code{minHitP} 0.45 \\
+Archivist & 0.0325 & \code{wHit} 100 & 0.0463 & \code{wNarrow} 25, \code{gambleBonus} 30 \\
+Punter    & 0.0025 & \code{missTarget} \code{random} & \textbf{0.0525} &
+  \textbf{\code{conceal} 1} \\
+Blitz     & 0.0175 & \code{leakEpsilon} 3 & 0.0587 &
+  \textbf{\code{defuse} 2, \code{conceal} 4} \\
+Ghost     & 0.0775 & \code{wProgress} 30, \code{gambleBonus} 30 & 0.0600 &
+  \code{wProgress} 45 \\
+Balanced  & 0.0000 & none (mirror) & 0.0613 & \textbf{\code{conceal} 1} \\
+Turtle    & 0.1500 & \code{declareOnlyOwnHand} off & 0.1325 &
+  \code{declareOnlyOwnHand} off \\
+Scout     & 0.1112 & \code{wHit} 90, \code{wNarrow} 0, \code{minHitP} 0.45 & 0.1475 &
+  \code{wHit} 80, \code{wNarrow} 0, \code{missTarget} \code{most} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{The reachability argument, which is clean.} The search that produced $0.0025$ ran over
+a ladder that contained no rung for \code{containedPass}, none for \code{defuse}, and none for
+\code{conceal}: no committed exploitability number in this paper has ever priced any of those
+three mechanisms \cite{exploitladder}. Three of the nine new best responses are drawn from
+exactly there --- \code{conceal} 1 against Balanced, \code{conceal} 1 against \emph{Punter
+itself}, and \code{defuse} 2 with \code{conceal} 4 against Blitz. Those three deviations were
+not merely missed by the old search; they were unreachable by it \emph{by construction}. The
+control makes the point most sharply: the old search spent 56 candidates against Balanced and
+accepted nothing at all, reporting a flat $0.0000$; the new one accepts a single knob worth
+$0.0613$.
+
+\textbf{The confound, which is equally real.} The roster also changed between the two runs. The
+old $E$s were maxima over a search against opponents that did not defuse, computed on a matrix
+whose every cell has since moved (Table~\ref{tab:addrank}). So the \emph{magnitudes} --- $0.0025
+\to 0.0525$, and the median's $0.0444 \to 0.0594$ --- are joint effects, and this paper does not
+claim the ladder caused them. The honest split is: the ladder is why three particular exploits
+exist at all, and the two changes together are why the numbers are what they are.
+
+\textbf{Why this is a result to own rather than a correction to bury.} Section~\ref{sec:exploit}
+already states, as one of its two honest cautions, that $E$ is a maximum over a stochastic
+search --- and Section~\ref{sec:verdict}'s criterion is a comparison of such maxima. A maximum
+over a search is a \emph{lower} bound on exploitability, so it can only rise as the search
+grows, and the size of the gap between two styles' $E$s is a property of the ladder as much as
+of the styles. This addendum is a concrete instance of that caveat firing: enlarge the search
+by three axes, and the dominant style's eighteen-fold advantage becomes a tie. The claim
+criterion~4 is entitled to make is ``no cheap single-knob counter to Punter was found by this
+search'', and the re-measurement is a reminder of how much work ``this search'' does in that
+sentence.
+
+Two further cautions carry over unchanged and one is new. The final evaluations still carry
+standard errors of $0.012$--$0.017$, so differences between adjacent rows of
+Table~\ref{tab:addexploit} are not meaningful --- Punter's $0.0525$, Blitz's $0.0587$, Ghost's
+$0.0600$ and Balanced's $0.0613$ are four numbers inside one standard error of each other, and
+Punter's fourth place should be read as ``in the middle of the pack'', not as a rank. The search
+still only accepts moves worth about $0.03$ or more. And new: the Hoarder's $0.0000$ is a
+clamp, not a measurement of unexploitability --- its accepted candidate scored $0.54125$ in
+search and $0.480 \pm 0.0125$ on the held-out block, below the mirror baseline, and
+$E = \max(0, \mathrm{SR} - 0.5)$ \cite{artifactv2b}.
+
+\subsection{What the re-measurement does not disturb}
+
+Caveat~I (Section~\ref{sec:inert}) is a decision-level measurement made with the divergence
+instrument on replayed games, not a reading of the payoff artifact, and the re-measurement does
+not bear on it. Caveat~II's central claim --- that the contained-book turn-pass is worth
+nothing --- rests on the mirror measurement of Table~\ref{tab:contained} and the paired v1/v2
+comparison of Table~\ref{tab:v1v2}. Both remain valid, and for a reason worth stating precisely:
+that comparison isolates the turn-pass because v1 and the artifact this paper reports differ by
+the policy change and nothing else. The re-measured artifact differs from v1 by the turn-pass
+\emph{and} the concession layer, so it cannot be substituted into Table~\ref{tab:v1v2}, and any
+re-derivation of that pairing from it would be measuring two changes and attributing them to
+one. The one part of Caveat~II that does not survive is the exploitability sharpening, recorded
+where it appears in Section~\ref{sec:containedpass}.
+
+Finally, the threats of Section~\ref{sec:threats} are unmoved, and this addendum adds nothing to
+the list so much as it supplies the first worked example for two entries already on it ---
+``an untuned roster'' and the standing caution that every result here is conditional on the
+engine that produced it.
 
 \begin{thebibliography}{99}
 \small
@@ -1198,7 +1467,28 @@ FishAI project.
 \newblock Tournament artifact \code{src/lab/data/style-results.v2.json}.
 \newblock 36 cells $\times$ 4{,}300 duplicate pairs (309{,}600 games); records digest
 \code{0c3cb524a3534d4a}; engine commit \code{1667a1d} (recorded \code{1667a1d-dirty});
-generated 2026-08-22.
+generated 2026-08-22. Superseded in place by \cite{artifactv2b}; recoverable at that path from
+the repository history, at the commit preceding the re-measurement.
+
+\bibitem{artifactv2b}
+FishAI project.
+\newblock Tournament artifact \code{src/lab/data/style-results.v2.json}, re-measured.
+\newblock The same 36 cells $\times$ 4{,}300 duplicate pairs (309{,}600 games) and the same
+\code{style-v1} seed prefix, re-run against a roster carrying the concession layer and against
+the complete knob ladder; records digest \code{1d7d9f30b59c00f6}; engine commit
+\code{1fdd22e}; generated 2026-08-31.
+
+\bibitem{concession}
+FishAI project.
+\newblock CONCESSION.md --- FishAI v2.0: the three-sided ask.
+\newblock Repository document; the concession layer, of which \code{defuse} ships on the roster
+and \code{conceal} does not, 2026.
+
+\bibitem{exploitladder}
+FishAI project.
+\newblock \code{lib/lab/analysis/exploit.ts} --- the best-response knob ladder.
+\newblock Repository source; the anti-pruning argument, the replayed accounting of the old
+60-of-75 truncation, and the three knobs the ladder used to omit outright, 2026.
 
 \end{thebibliography}
 
