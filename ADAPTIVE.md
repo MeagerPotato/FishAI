@@ -312,6 +312,18 @@ intransitive cycle flows through the engine unchanged and simply makes the adapt
 non-trivial. The mechanism was built in full anyway, on purpose: the architecture is the
 contribution, and the degeneracy is the *result*.
 
+**Third hedge, added after the fact and the most important of the three: the degeneracy is a
+property of THIS TABLE'S COORDINATE — the nine-style roster — and not of adaptation in this game.**
+[CONCESSION.md](CONCESSION.md) §8.2 measures a second coordinate the roster does not span: whether
+a seat runs the defusal term, and whether it adds concealment on top. Over the 2x2
+{plain, defuse, conceal, defuse+conceal}, at 4,000 duplicate pairs per edge and replicated on
+disjoint banks, **the column argmax is not constant**: the best response is defuse-only against a
+plain or conceal-only opponent (+0.2870 ± 0.1392 and +0.1462 ± 0.1437 over the runner-up) and
+defuse+conceal against a defusing one (+0.9152 ± 0.1353). The read changes the argmax, which is
+exactly the condition §5 says is absent — so "adaptation is worth less than nothing" is a verdict
+about best-responding over *styles*, and must not be quoted as a verdict about best-responding at
+all. What that buys is one bit, not a tenth style, and it is not yet built.
+
 ---
 
 ## 6. The experiment suite **[measured]**

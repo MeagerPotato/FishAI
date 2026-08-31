@@ -31,9 +31,14 @@ reproduces `decide` **byte-for-byte** when the mechanism is switched off.
 | the same threat model, **inverted**: ask them, to strip the card their reach rests on | **+1.50 and +1.65 sets per duplicate pair** on two held-out banks; **+1.08 to +1.96 against opponents that also defuse** | **yes** — `defuse.ts` |
 | **Signalling**: bias asks toward sets the team cannot yet prove | flat; the one positive arm failed to replicate | no |
 | **Stalling**: decline to take the opponents' last card | inert when weak, **−1.14 sets** when strong | no |
-| **Concealment**: hide your own basis by not asking back into the set | **+0.97 sets — but only against opponents that defuse**; nothing otherwise | no — §5a |
+| **Concealment**: hide your own basis by not asking back into the set | **+0.97 sets added to defusal, against opponents that defuse** — and **worse than plain when played alone** (§8.1). Its value against non-defusers is *below this instrument's floor* (§8a), not zero | no — §5a |
 | **Turn handoff**: choose the pass target by what it could do with the turn | built; the shipped rule already picks best 84.8% of the time, and 73% of these choices carry no signal at all | **no** — §7 |
 | **Tactic-level adaptation** instead of style switching | the right architecture: per-decision terms are worth ~15x the v1.0 style-switching layer | **partly** — §8 |
+
+And the instrument itself is now characterised (§8a): the per-pair SD is 3.15–3.44 sets, so the
+80%-power floor is ~0.47 at N=400 and ~0.33 at N=800. Two nulls in this document — §6's "inert"
+contained-pass aim and §5a.3's non-defuser cell — sit **below** that floor and are statements about
+resolution rather than about the game. Every mechanism this document ships clears its floor by 3x.
 
 And one defect, found by measurement rather than by reading:
 
@@ -373,7 +378,7 @@ the score cannot express one.
 
 ---
 
-## 5a. Concealment: the first tactic that beats defusal — and only defusal
+## 5a. Concealment: worth adding to defusal, against defusers only — and worthless alone
 
 The owner asked for a fourth mechanism after the first three were measured: *divert*. When an
 opponent asks you for a card of set H, the natural reply is to ask into H — but that reply publishes
@@ -422,13 +427,24 @@ Measured over 13,622 ask decisions the two mechanisms collide on **28.6%**, and 
 | **against opponents that do NOT defuse** | — | **−0.1483 ± 0.2571** |
 
 Dose-response in how well the opponent can read the leak it hides: **+0.97** against a hard-skill
-opponent, **+0.31** against medium, **+0.11** against one without constraints. And the decomposition
-that settles what the mechanism actually is: removing only the *opponent's* defusal drops the
-marginal value to **+0.157**.
+opponent, **+0.31** against medium, **+0.11** against one without constraints.
+
+> **Correction.** This paragraph used to end: *"removing only the opponent's defusal drops the
+> marginal value to **+0.157**."* That is **withdrawn**. It contradicts the table row three lines
+> above it in sign, and it does not reproduce: measured directly, conceal-only against plain is
+> **-0.2883 +/- 0.2640**, and as a difference-of-differences on a common bank **-0.3067**. Both
+> readings of the manipulation come out negative. Where the +0.157 came from could not be
+> reconstructed, so it is retracted rather than reinterpreted.
 
 **The entire effect is denial of defusal.** Concealment is not a general improvement; it is a
-counter to one specific mechanism. Against an opponent that does not defuse it is worth nothing, and
-slightly negative.
+counter to one specific mechanism.
+
+**But the row that says so is below this instrument's resolution, and must not be read as a
+measurement of zero.** `-0.1483 +/- 0.2571` at N=600 sits under a minimum detectable effect of
+about **0.38 sets** at that cell's own per-pair SD (the detection floor, §9). The honest statement is
+that concealment against a non-defusing opponent is **not resolved here**: anything from a real loss
+of about a third of a set to a small gain is consistent with it. What *is* resolved, at 4,000 pairs
+per cell, is that conceal-only is the weakest of the four concession arms outright - see §8.
 
 ### 5a.4 Verdict, and the correction it forces
 
@@ -565,31 +581,139 @@ complexity when there is more than one tactic to arbitrate. Of the four original
 measured harmful or inert — avoidance loses up to 11.7 points (§2), stalling up to 1.14 sets (§5),
 signalling is flat and failed to replicate (§4) — which left an argmax over a singleton.
 
-**Concealment (§5a) is the second survivor, and it changes the picture in a specific way: it makes
-the tactic space intransitive.**
+**Concealment (§5a) is the second survivor. This section used to claim it made the tactic space
+intransitive. Measured properly, it does not — and what replaced the cycle is a better reason for
+the same conclusion.**
 
-| | measured | where |
-|---|---:|---|
-| defusal beats plain | **+1.92 ± 0.31** | [ASKING.md](ASKING.md) §6, common-baseline bank |
-| concealment beats defusal | **+0.97 ± 0.27** | §5a.3 |
-| plain beats concealment | +0.15 ± 0.26 — *right sign, not significant* | §5a.3 |
+### 8.1 The triangle, refuted
 
-The three legs come from two different banks and two different harnesses, so the triangle is not
-yet a single clean experiment — which is the first reason to treat it as suggestive.
+The earlier claim assembled three legs from two banks and two harnesses.
+[`scripts/probe-triangle.mjs`](scripts/probe-triangle.mjs) runs all six edges of the 2x2 through one
+code path, 4,000 duplicate pairs per edge, with only the arm definitions changing; every number below
+was then reproduced by an independent agent on six entirely fresh banks. The four arms are **P**
+plain, **D** defuse-only, **C** conceal-only, **DC** both.
 
-The first two legs are solid; the third is a sign, not a result, and the triangle should be treated
-as suggestive until it is measured properly. But it is exactly the structure
-[ADAPTIVE.md](ADAPTIVE.md) names as the thing that would make adaptation non-trivial. v1.0's
-adaptive layer degenerates because its counter table has a **dominant row** — one style beats every
-column, so the best response to every belief is the same style. A defuse/conceal pair has no
-dominant row: what to play depends on what the opponent is playing, which is the only condition
-under which reading the opponent pays for itself.
+| edge | first run | independent replication |
+|---|---:|---:|
+| D vs P | +1.6225 ± 0.1016 | +1.6595 ± 0.1022 |
+| **C vs D** | **−0.6797 ± 0.1030** | **−0.5102 ± 0.1051** |
+| P vs C | +0.1457 ± 0.1030 | +0.1742 ± 0.1030 |
+| DC vs D | +0.9630 ± 0.1069 | +0.8207 ± 0.1070 |
+| **P vs DC** | **−1.2985 ± 0.1036** | **−1.3155 ± 0.1046** |
+| DC vs C | +0.3690 ± 0.0987 | +0.3202 ± 0.0987 |
+| byte-exact control | 0.0000 ± 0.0000 | 0.0000 ± 0.0000 |
+
+**There is no cycle, under either reading of "the concealing corner", and the loop is broken by a
+wrong-signed leg rather than a straddling one — so no sample size rescues it.** Read the corner as
+conceal-only and leg 2 reverses: concealment does not beat defusal, it loses to it by about half a
+set (9.5–12.9 SE from zero). Read it as defuse+conceal — which is what §5a.3's **+0.97** actually
+measured, concealment *added to* defusal against defusing opponents — and leg 2 holds, but leg 3
+reverses instead: DC beats P by 1.3 sets (12.5–24.6 SE).
+
+The full 4x4 is a **strict transitive total order, DC > D > P > C**, every edge the same sign on both
+bank sets. Concealment is an *increment on* defusal, never a substitute for it, and **conceal-only is
+the worst of the four arms** — worse than plain. §9's old "the third leg is only a sign" is closed
+too: P vs C clears zero on both banks.
+
+Two corrections that came out of the replication rather than the run. This table used to quote
+defusal at **+1.92 ± 0.31** from a 400-pair common-baseline bank; at 4,000 pairs it is
+**+1.62 / +1.66**, and the gap is ordinary sampling variation — the first explanation offered for it,
+that [ASKING.md](ASKING.md) §6's mirror lacks `pickAsk`'s certain-hit gate, was tested by running
+that ungated harness and refuted (+1.6850 ± 0.3358, indistinguishable from the gated value). And the
+claim that the published triangle mixed two definitions of the concealing corner is **not**
+established; `conceal.ts`'s header points the other way, and the two readings cannot be told apart at
+the resolution available.
+
+### 8.2 What survives, and why it is a stronger result than the cycle was
+
+The old argument ran: v1.0's adaptation degenerates because its counter table has a dominant row; a
+defuse/conceal pair has no dominant row; therefore reading the opponent starts to pay. The premise
+was wrong. The conclusion is right anyway, for a plainer reason — **the column argmax is
+opponent-dependent.** Measured on common banks, paired on the deal twice over:
+
+| against an opponent playing | best response | margin over the runner-up |
+|---|---|---:|
+| plain | **D** (defuse-only) | +0.2870 ± 0.1392 over DC |
+| conceal-only | **D** | +0.1462 ± 0.1437 over DC |
+| defuse-only | **DC** | +0.9152 ± 0.1353 over D |
+
+The best response flips on one bit of the opponent's configuration — *does it defuse?* — and knowing
+that bit is worth up to **+0.29 sets per duplicate pair** against a non-defusing opponent. That is
+not a hypothetical opponent: every shipped tier carries `defuse: 0`. It is also exactly §5a.3's own
+thesis restated as a policy — conceal only against an opponent that defuses.
+
+That makes the follow-on work concrete, and *smaller* than a portfolio.
+**[ADAPTIVE.md](ADAPTIVE.md)'s degeneracy verdict does need revisiting** — degeneracy there is
+defined as "the read never changes the argmax", and here the read changes the argmax — but the table
+it needs is one binary coordinate, not a tenth style. The arbitration layer is still the larger
+question and still unbuilt; nothing here argues it is ready.
 
 So the honest state of capability 4 is: **the per-decision layer is built and measured; the
-arbitration layer over it now has something to arbitrate, and building it is the next piece of real
-work rather than architecture standing in for evidence.** The first step is cheap and is not a
-portfolio — extend the counter table with defuse and conceal coordinates and check whether the
-intransitivity survives a full sweep. Only if it does is the portfolio the right shape.
+arbitration over it is now known to be worth one bit rather than a cycle, and that bit is cheap.**
+
+---
+
+## 8a. The detection floor — what this instrument can and cannot resolve
+
+Every headline in this document comes from one instrument: **K duplicate pairs of arm X against arm
+Y under `us54`, reported as the mean paired set-difference ± 1.96 SE.** Until now nobody had
+characterised what it can see, which left every published null ambiguous between "no effect" and "no
+resolution". [`scripts/probe-floor.mjs`](scripts/probe-floor.mjs) settles it, and an independent
+agent re-ran the whole thing on fresh banks. Three of its four parts replicated; the two that did
+not are reported as unresolved rather than quietly dropped.
+
+**The per-pair SD is 3.15–3.44 sets** for arms that differ at every decision (replication:
+3.18–3.44), which gives an 80%-power minimum detectable effect of
+
+| N | 150 | 300 | 400 | 600 | 800 | 2000 | 4300 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **MDE (sets/pair)** | 0.76 | 0.54 | 0.47 | 0.38 | 0.33 | 0.21 | 0.14 |
+
+**The power model is the solid finding.** Across twelve (planted-effect, N) cells the observed
+detection rate sat within ~1 binomial SE of normal-theory prediction in *both* runs. So the MDE
+arithmetic above can be trusted as a design tool.
+
+**Two things did not replicate, and both cut against the first run's conclusions.**
+
+- **The empirical floor at N=400.** First run: 0.393 sets detected in 84.7% of banks. Replication:
+  the same planted effect detected in 75.0%. Pooled, 81.7%. The N=400 floor is therefore somewhere
+  in **0.36–0.50** and this design cannot pin it tighter; the first run's "matches the analytic MDE
+  to 1.5%" was an artifact of where the sweep grid happened to land. The **N=800 floor does
+  replicate** (0.256 / 0.275).
+- **Interval coverage at N=400.** First run: 6.1% false positives (11/180), i.e. nominal.
+  Replication: 10.8% (13/120), 95% CI [5.9%, 17.8%] — excluding 5%. Pooled: **8.0% (24/300), CI
+  [5.2%, 11.7%]**, also excluding 5%. At N=800 both runs are nominal (pooled 4.0%). So the first
+  run's strongest claim — *"the nominal 95% intervals are correctly sized; no interval in this
+  repository needs widening"* — **fails on independent banks at N=400**. Whether this is real
+  under-coverage or noise is unresolved: a genuine defect ought to worsen with smaller N and grow
+  with larger, and this does not scale that way.
+
+**A trap worth naming, because the first run fell into it.** The MDE depends on *that cell's own*
+SD, and the SD is not constant across the repository. Turtle's §3.1 cell measures 3.645, and
+[CROSSPLAY.md](CROSSPLAY.md) §3's own published half-widths imply its harness runs at **4.57–4.95**,
+38–49% higher than the `us54` figure. Substituting one SD across all conditions understates the
+floor exactly where the cells are smallest.
+
+### 8a.1 Which published numbers sit below the floor
+
+| result | reported | N | its floor | verdict |
+|---|---:|---:|---:|---|
+| §5a.3 concealment vs non-defusing opponents | −0.1483 ± 0.2571 | 600 | ~0.38 | **below floor — not resolved** |
+| §6 the contained-pass aim, "inert" | −0.045 ± 0.130 | — | — | **below floor — a non-measurement, not a zero** |
+| [CROSSPLAY.md](CROSSPLAY.md) §2, all four headline cells | 42.7–48.7%, no intervals published | 150 | 1.05–1.13 | **all four below floor** |
+| §3.1 defusal, shipped | +1.43 / +1.58 ± 0.32 | 400 | ~0.47 | resolved, 3× the floor |
+| §8.1 the six triangle edges | ±0.10 half-widths | 4000 | ~0.15 | resolved |
+| [BOUNDED.md](BOUNDED.md) §5a v1.5 vs v1.0 | −0.1255 ± 0.0590 | 2700 | see note | resolved — that cell's arms differ far less, so its own SD is much smaller |
+
+The last row is the reason the SD must always be the cell's own: `v1.0 vs v0.5 = +0.2475 ± 0.1024`
+at n=800 would look "below the 0.33 floor" against the generic SD, yet its interval excludes zero
+comfortably, because two adaptive arms that mostly agree produce a far smaller per-pair SD than a
+one-knob ablation does. **Never read the table above as a threshold to apply by eye.**
+
+The practical consequence is confined and worth stating plainly: **§6's "inert" and §5a.3's "worth
+nothing against non-defusers" are statements about this instrument's resolution, not about the game**,
+and CROSSPLAY.md §2's per-opponent ranking is not resolved at 150 games per cell. Everything this
+document ships a mechanism on — §3.1, §3.3, §8.1 — clears its floor by 3× or more.
 
 ---
 
@@ -598,20 +722,64 @@ intransitivity survives a full sweep. Only if it does is the portfolio the right
 - ~~The gauntlet.~~ **Done — §3.3.** The gain survives against opponents that also defuse.
 - **Matrix v2 is invalidated.** The roster now carries `defuse: 1`, so the committed style matrix
   no longer describes the shipped roster. `npm run lab` must be re-run and the artifact re-pinned.
-- **`KNOB_LADDER` does not carry the new knob** — and it does not carry `containedPass` either, so
-  the committed exploitability numbers have never priced either mechanism.
+- ~~`KNOB_LADDER` does not carry the new knob.~~ **Done.** `containedPass`, `defuse` and `conceal`
+  now have ladders, taking it from 75 rungs over 23 fields to 88 over 26.
+
+  Fixing it surfaced a **second, pre-existing defect in the committed numbers**: `candidateBudget`
+  was the literal **60** against a **75-rung** ladder, so the search evaluated a *prefix* and
+  abandoned the tail — a prune selected by the order the fields happen to be typed in, which is the
+  exact circularity `KNOB_LADDER`'s own header refuses on principle. Replaying the old ladder along
+  each style's committed `acceptedMoves` reproduces the artifact's `candidatesTried` for all nine
+  targets exactly, and shows what the prefix cost: six of nine finished inside 60, `hoarder`
+  reached the last rung on its 60th spend, **`banker` never evaluated `minHandSize=3`, and
+  `turtle` never evaluated `minHandSize=1` or `minHandSize=3`**. Three rungs across two of nine
+  searches. The budget is now `KNOB_LADDER.length`, so a future field addition cannot silently
+  re-truncate it.
+
+  **The cache does not see any of this.** `scripts/style-analyze.mjs` keys its `--exploitCache`
+  entries on the target's `StyleParams` hash and an `engineHash` that walks `lib/engine` only.
+  Neither the ladder nor the budget lives under `lib/engine`, so a cached re-run reports every
+  entry valid and re-emits the pre-fix numbers. Re-run `npm run analyze` **without**
+  `--exploitCache` whenever the ladder or the budget moves.
 - ~~A foreign-engine check.~~ **Done — [CROSSPLAY.md](CROSSPLAY.md) §3.**
-- **Defusal has not been measured against a concealing opponent at scale.** §5a shows one takes
-  about a set per pair back. Neither the §3.3 gauntlet nor CROSSPLAY.md covers this, so §3's +1.50
-  is an over-estimate against an opponent that hides its bases.
-- **The intransitive triangle of §8 needs a real sweep.** Two of its three legs are measured; the
-  third is only a sign. If it survives, the counter table needs defuse and conceal coordinates and
-  v1.0's degeneracy verdict needs revisiting.
+- ~~Defusal has not been measured against a concealing opponent at scale.~~ **Done — §8.1.** At
+  4,000 duplicate pairs, defusal beats a conceal-only opponent by **+0.51 to +0.68** sets per pair.
+  The worry that concealment "takes about a set per pair back" was the right shape but the wrong
+  target: what takes ~0.9 back is concealment *added to* defusal on the same side (DC vs D), not a
+  concealing opponent facing a defusing one.
+- ~~The intransitive triangle of §8 needs a real sweep.~~ **Done — §8.1, and it is refuted.** All
+  six edges at 4,000 pairs through one code path, replicated on six fresh banks: the 2x2 is a strict
+  transitive order DC > D > P > C, broken by a wrong-signed leg under either reading, so no N
+  rescues it. The follow-on survives in better shape than the cycle would have given it — the column
+  argmax *is* opponent-dependent, worth up to +0.29 sets/pair, so the counter table wants **one
+  binary coordinate** and ADAPTIVE.md's degeneracy verdict does need revisiting (§8.2).
 - **A stated K.** Several variants were scored before the winner was picked; the selection haircut
   is unpriced.
-- **Tests that would catch a sign flip.** Both concession terms currently pass their suites with the
-  sign reversed: the tests pin the arithmetic and the fixtures, not the direction. Directional tests
-  are the cheapest real coverage gain available here.
+- ~~Tests that would catch a sign flip.~~ **Done — and the claim this bullet used to make was
+  wrong, which the work found by checking it.** The claim was that *both* concession terms pass
+  their suites with the sign reversed. Measured by actually reversing each of the three sign errors
+  that can be made and re-running:
+
+  | sign reversed | existing suites |
+  |---|---|
+  | `defusalBonus`'s return | **fails 2 of 25** — caught |
+  | `concealmentPenalty`'s return | **fails 3 of 25** — caught |
+  | the *application* in `pickAsk`, `bonus - charge` written `charge - bonus` | **passes both entirely** |
+
+  So one third of the original claim was true, and it was the important third: every assertion in
+  both files called the two exported functions directly, and nothing pinned what `pickAsk` did with
+  the numbers they returned. `tests/bots/concession-direction.test.ts` closes it with two
+  decision-level tests that construct a position where the term changes which ask is played and
+  assert the *choice*. Re-verified after review: negating `defusalBonus` fails 4 of its 6, and the
+  application flip fails both decision-level tests.
+
+- **The concealment half of the certain-hit gate is still unpinned.** `pickAsk` documents the gate
+  as zeroing *both* terms for an uncertain ask when a certain hit is available, and the new gate
+  test pins only defusal. In its fixture the concealing seat has already published a basis in both
+  sets it can ask into, so conceal's basis-is-public release fires and the charge is exactly zero on
+  both asks — asserted explicitly, so the test cannot be misread as coverage it does not have. A
+  mutation leaving the concealment charge live under a certain hit is invisible to the suite. It
+  needs a fixture with a certain hit *and* an unpublished set the seat holds cards of.
 - **No test pins `turnYield` equal to `contained.ts`'s `E`**, though two file headers describe the
   two as deliberately duplicated. They are kept in step by hand.
 - **`tabledLicences` has no caller.** It is the seam through which a budgeted licence source would
@@ -622,8 +790,11 @@ intransitivity survives a full sweep. Only if it does is the portfolio the right
 - **The certain-hit gate is new and its rate is unmeasured beyond the sweep that found it.** It fired
   on 9 decisions across 150 games x 9 styles; §3.1 was re-measured with it in place and did not move,
   but no ladder prices the gate itself.
-- **A detection floor.** Plant an edge of known size and confirm the instrument resolves it before
-  reading any result off it.
+- ~~A detection floor.~~ **Done — §8a**, and it reclassifies two of this document's own nulls (§6's
+  "inert" aim and §5a.3's non-defuser cell) as non-measurements. Two open residues: the empirical
+  floor at N=400 did not replicate (0.36–0.50, pooled 81.7% at the grid point), and interval coverage
+  at N=400 pooled to 8.0% [5.2, 11.7], excluding the nominal 5%. N=800 is nominal in both runs. Why
+  N=400 under-covers while N=800 does not is unresolved and should not be assumed benign.
 - **The bounded arm's licence is derived, not retained.** `logLicences` retires each licence against
   the seat's own (budgeted) knowledge, but the ask history it scans is not itself budgeted. Moving
   the licence into the fact pool as a first-class 1-bit `basis` read is the correct end state; doing
