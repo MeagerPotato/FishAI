@@ -7,9 +7,13 @@ percentages, common occurrences, key strategies and common failure points.
 This document reports what was actually played. The short version is at the top.
 
 > **The frontier match has since been played, and §9 carries it.** In their own C++ engine, over
-> their own bot-package protocol, **FishAI wins 24.22% of games against SESTINA v1.0** and sits
-> below their entire published lineage — it loses to v0.5 and v0.6 as well. The mirror control
-> passed at exactly 50%.
+> their own bot-package protocol, **FishAI wins 27.08% of games against SESTINA v1.0** and sits
+> below their entire published lineage — it loses to v0.5 and v0.6 as well.
+>
+> **§9 was corrected on 2026-08-31 and the first version of it was wrong three ways.** It reported
+> 24.22%, a figure depressed 3.44 points by a defect in the bridge; it presented a mirror cell as a
+> passing control when a mirror cell has zero statistical power and their engine says so on every
+> run; and it attributed four pooled counters to FishAI. §9.8 lists every withdrawn number.
 >
 > Sections 0 through 8 were written when SESTINA could not be run. Every passage that result
 > contradicts, or that now reads as too favourable, is rewritten in place and marked
@@ -296,24 +300,28 @@ The same lesson appears in FishAI's own numbers. Its declare accuracy against th
 against `fishbot`'s 97%, and that gap is a plausible share of the one-to-seven points FishAI sits
 below the top four of this lab.
 
-**That generalisation was a prediction, and §9 is the test it passed.** It was made against a
-v0.3-era lab, about a mechanism — declare calibration outranking ask quality under gift rules — and
-it was stated before any frontier game was played. Against SESTINA v1.0 the same shape appears in
-the same place, at roughly a quarter of the magnitude and to the same effect:
+**That generalisation was a prediction, §9 was its first real test, and it did not hold.** It was
+made against a v0.3-era lab, about a mechanism — declare calibration outranking ask quality under
+gift rules — and it was stated before any frontier game was played. The first version of §9
+reported it confirmed. That confirmation was an artifact: the declare deficit it rested on was a
+defect in the bridge (§9.5), not a property of FishAI.
 
-| | §6, `kv_search` vs `fishbot` | §9, FishAI vs SESTINA v1.0 |
+| | §6, `kv_search` vs `fishbot` | §9, FishAI vs SESTINA v1.0 (corrected) |
 |---|---|---|
-| ask accuracy, loser / winner | 49.5% / 62.1% | 51.89% / 57.28% |
-| **declare accuracy, loser / winner** | **73.0% / 95.3%** | **93.25% / 98.49%** |
-| what decided it | declaration | declaration |
+| ask accuracy, loser / winner | 49.5% / 62.1% | 52.32% / 57.38% |
+| **declare accuracy, loser / winner** | **73.0% / 95.3%** | **98.42% / 98.46% — parity** |
+| what decided it | declaration | **asking, and time-to-cash** |
 
-Read the second column carefully, because it makes the point more sharply than the first. Against
-SESTINA the two deficits are **the same size**: 5.39 points of ask accuracy, 5.24 points of declare
-accuracy. They do not cost the same. A missed ask transfers a turn; a wrong declare transfers a
-set, permanently, to the team that did not earn it. Equal deficits, unequal prices — which is
-exactly what "declare calibration dominates ask quality" asserts, and it is now visible against an
-agent four releases stronger than the bot the claim was derived from. §9.3 takes the pricing apart.
-**Recorded here as a prediction that held**, not as a restatement.
+Read the second column against the first. The mechanism is not visible there. Against SESTINA v1.0
+FishAI declares **as accurately as the frontier agent does** — 98.42% against 98.46%, a gap of four
+hundredths of a point — so declare calibration cannot be what separates them. What does separate
+them is ask accuracy (−5.06 points) and how long each sits on a resolved set before cashing it
+(9.30 events against 2.92). §9.3 takes that apart.
+
+**Recorded here as a prediction that failed its first real test**, not quietly dropped. The
+mechanism may still be sound where it was derived — on a v0.3-era lab whose loser really did
+declare at 73% — but it does not describe why FishAI loses to SESTINA v1.0, and the evidence that
+appeared to say it did was measuring the adapter.
 
 **FishAI's own visible weakness in this host** is the declare channel of §1: without the off-turn
 window it must hold a set until its turn comes round, and a set held is a set an opponent may take
@@ -333,7 +341,7 @@ This section scopes **§§1–6**. §9 carries its own limits in §9.5.
 - In §§2–6 FishAI played **without its declare window** (§1), the channel carrying 45.4% of its
   declares at home. Those win rates are floors. **[corrected]** Do not carry the word "floor" to
   §9: their C++ engine records out-of-turn declares for both seats, so that handicap is absent
-  there and 24.22% is a plain number, not a lower bound.
+  there and 27.08% is a plain number, not a lower bound.
 - §2 is 150 duplicate pairs per cell and reports win rates without CIs; §3 is 300 properly paired
   duplicate pairs with CIs and is the load-bearing measurement.
 - `psychologicalTells` was left **off** in their engine. It is a channel their bots can use and
@@ -364,90 +372,129 @@ event log; they are confined to the scratchpad clone, which keeps the original b
 
 ## 9. FishAI against SESTINA v1.0, in their C++ engine
 
+> **Correction (2026-08-31).** The first version of this section reported **24.22%**, called a
+> mirror cell "the control that makes 24.22% mean what it says", and attributed four `fish
+> pathology` counters to FishAI. All three were wrong, and they were wrong in the same way: the
+> instrument was not checked as hard as the result. The headline was depressed **3.44 points** by a
+> defect in the bridge; the mirror cell is a symmetry identity with **zero** statistical power, and
+> their engine prints that fact on every mirror run; the pathology counters pool both teams, and
+> their own documentation says so twice. The corrected figures are below. The withdrawn ones are
+> named in §9.8 rather than deleted, because a published number does not stop existing.
+
 The match §0 said could not be run has been run. Their engine builds from source in a Linux
 container; FishAI plays as a **guest bot** over their documented `fishlabs-json-v1` protocol
-(`docs/BOT_PACKAGE.md`), installed with `fish bots add`. 1,200 games per cell — 200 deals × 6
-rotations, duplicate deals — zero faults and zero action-limit games in every cell.
+(`docs/BOT_PACKAGE.md`), installed with `fish bots add`. Cells are 200 deals × 6 rotations = 1,200
+games, duplicate deals — zero faults and zero action-limit games in every cell.
 
 ### 9.1 The result
 
-**FishAI wins 24.22% of games against SESTINA v1.0.**
+**FishAI wins 27.08% of games against SESTINA v1.0** — 1,950 of 7,200 games, six seeds.
 
-| cell | FishAI win rate | 95% CI | mean sets (FishAI − opp) |
-|---|---:|---|---|
-| vs SESTINA v1.0, seed 90210 | 24.33% | [21.99, 26.84] | 3.58 − 5.42 |
-| vs SESTINA v1.0, seed 4242 | 25.08% | [22.71, 27.61] | 3.61 − 5.39 |
-| vs SESTINA v1.0, seed 7011001 | 23.25% | [20.95, 25.72] | 3.60 − 5.40 |
-| vs SESTINA v1.0, native-FP build | 22.58% | [20.31, 25.03] | 3.56 − 5.44 |
-| vs FishBot v0.6 | 28.58% | [26.10, 31.20] | 3.74 − 5.26 |
-| vs FishBot v0.5 | 28.17% | [25.69, 30.78] | 3.79 − 5.21 |
-| SESTINA vs v0.6 (anchor) | 54.17% | [51.34, 56.97] | 4.63 − 4.37 |
-| SESTINA vs v0.5 (anchor) | 55.58% | [52.76, 58.37] | 4.70 − 4.31 |
+| arm | pooled win rate | games | deals |
+|---|---:|---:|---:|
+| **FishAI, corrected bridge** | **27.08%** | 1,950 / 7,200 | 1,200 |
+| FishAI, defective bridge (withdrawn) | 23.64% | 1,702 / 7,200 | 1,200 |
 
-Pooled across the three portable-build seeds: **872 / 3,600 games = 24.22%**. The native-FP build is
-reported separately and is not pooled, for the reason in §9.4.
+Per seed, both arms on identical deals:
 
-**FishAI sits below their entire published lineage.** Not only below the frontier: it loses to
-**v0.6 at 28.58%** and to **v0.5 at 28.17%**, the two policies SESTINA was built to beat. There is
-no rung of their ladder FishAI clears. The three seeds and the fourth build agree inside their
-intervals, so this is not one unlucky bank.
+| seed | defective | corrected | delta |
+|---|---:|---:|---:|
+| 90210 | 24.33% | 28.25% | +3.92 |
+| 4242 | 25.08% | 28.83% | +3.75 |
+| 7011001 | 23.25% | 26.42% | +3.17 |
+| 13579 | 22.83% | 26.17% | +3.33 |
+| 24680 | 23.42% | 27.25% | +3.83 |
+| 31415 | 22.92% | 25.58% | +2.67 |
 
-The two anchor cells are their own bots against each other, run through the same harness as a check
-on the instrument. Their README reports SESTINA at +4.63 pp over v0.6 and +5.18 pp over v0.5; read
-as margins over even, that is 54.63% and 55.18%. The anchors here measure 54.17% and 55.58%, and
-both of their published figures fall inside the measured intervals. The harness reproduces their
-result when it is pointed at their own matchups.
+**Every seed moves the same way.** Mean delta **+3.44 points**, SD 0.48, smallest +2.67. Pooled over
+1,200 deals the paired detection floor is ±2.83 points, so the correction clears it; no single cell
+would have, and that is the point of §9.6's note on which unit these floors are quoted in.
 
-### 9.2 The control passed
+**The ladder, on three matched seeds** (90210 / 4242 / 7011001, 600 deals, both bridges on identical
+deals):
 
-**FishAI vs FishAI, same harness, same protocol: exactly 50.0000%** [47.18, 52.82], sets 4.5 − 4.5.
+| opponent | defective bridge | **corrected bridge** | under even |
+|---|---:|---:|---:|
+| SESTINA v1.0 | 24.22% | **27.83%** | 22.2 |
+| FishBot v0.6 | 29.56% | **32.86%** | 17.1 |
+| FishBot v0.5 | 29.17% | **33.31%** | 16.7 |
 
-This is the number that makes 24.22% mean what it says. A mirror match through a foreign engine, a
-JSON protocol and an adapter written from a spec has many ways to come out lopsided — a seat-order
-bias, a rotation bug, a first-mover advantage in the translation layer, an adapter that hands one
-side more information than the other. Any of those would have shown here. None did. The instrument
-is symmetric, so the 25.8 points are lost at the table and not in the adapter.
+**FishAI still sits below their whole published lineage**, and that conclusion is unchanged. It is
+also furthest under even against the frontier — 5.03 points below its v0.6 cell and 5.47 below its
+v0.5 cell, both clearing the ±4.00 paired floor over 600 deals. What changed is by how much, and —
+in §9.3 — why.
 
-### 9.3 The mechanism: declaration, not asking
+Two anchor cells run their own bots against each other through the same harness: SESTINA beats v0.6
+at 54.17% and v0.5 at 55.58%. Their README reports +4.63 pp and +5.18 pp over even, i.e. 54.63% and
+55.18%; both fall inside the measured cells. The harness reproduces their result when pointed at
+their own matchups.
 
-Per-decision detail from the seed-90210 cell:
+### 9.2 The control could not have worked, and the engine says so
 
-| | FishAI | SESTINA v1.0 |
-|---|---:|---:|
-| **declare accuracy** | **93.25%** | **98.49%** |
-| ask accuracy | 51.89% | 57.28% |
-| lock hold, events before cashing | 9.69 | 2.78 |
-| out-of-turn declares per game | 2.58 | 3.61 |
+The first version of this section reported *"FishAI vs FishAI, same harness: exactly 50.0000%
+[47.18, 52.82]"* and read it as proof the bridge was symmetric. It proves nothing. Their engine
+prints the reason on the mirror cell's own power line:
 
-The declare column is the finding. Both deficits are the same size — 5.39 points of ask accuracy,
-5.24 points of declare accuracy — and they are not worth the same. A missed ask costs a turn. A
-wrong declare hands a set to the other team and cannot be undone. §6 predicted exactly this
-ordering from `kv_search`'s collapse, and §6 now records it as a prediction that held.
+```
+power  MIRROR CELL: win-rate effective sample is 0 (per-deal outcome is deterministic).
+       Rate denominators are halved.
+```
 
-The `pathology` KPIs, over 240 games against SESTINA, say where the declares go wrong:
+A mirror cell plays one policy against itself on duplicate deals. Every deal is replayed with the
+seats rotated, so each game's outcome is the mirror of another game's, and the aggregate is **forced
+to 50% by construction** before a card is dealt. The effective sample is zero, the engine says so in
+so many words, and the `[47.18, 52.82]` interval published beside it was a Wilson interval computed
+on a denominator the engine had already declared meaningless.
 
-| KPI | value |
-|---|---|
-| **forced endgame declarations** | **13, of which 7 wrong = 53.85%** |
-| asks into FishAI's own locked sets | 1,924 = **8.83% of asks**, all guaranteed misses |
-| declarations, all contexts | 2,160, of which 91 wrong = 4.21% |
-| DEAD asks (actor could prove the target lacks the card) | 49 = 0.225% of asks |
-| starved turns | 12 = 0.055% |
-| repeat (actor, suit, target) | 47.68% |
-| action-limit games | 0% |
+**It is not merely uninformative — it is uninformative about exactly the defect that was present.**
+A mirror cell cannot see any bug that affects both sides equally, and the bug in §9.5 affected both
+sides equally: it cost the *defective arm* 3.44 points against SESTINA while leaving the mirror at
+50.0000%, because both mirrored seats lost the same sets in the same positions. The control returned
+a perfect score across a four-point hole.
 
-**53.85% is the single worst number in the run.** When FishAI is forced to declare — out of cards,
-out of legal asks, no choice left — it is wrong more often than a coin. Its ordinary declares are
-wrong 4.21% of the time; forced ones are wrong at nearly thirteen times that rate. The policy
-arrives at the endgame holding sets it has not resolved, and then pays for them. The 9.69-vs-2.78
-lock-hold figure is the same fact seen earlier in the game: FishAI sits on a resolved set for
-roughly three and a half times as many events before cashing it, and a set held is a set that can
-still be taken apart. n = 13 is small and the 53.85% carries a wide interval, but the direction is
-consistent with the lock-hold gap and with the 4.21% base rate it sits above.
+**What did find it was the per-op instrumentation, and it had already fired.** The adapter counts
+every protocol op it services. `opPass` read **0** across 3,600 games — a cardless turn-holder never
+once passed. The first version of this section recorded that number and filed it as *"unreached, not
+verified"*. It was not an unreached branch. It was the symptom, printed in the artifact, of the
+defect below. The lesson this section is willing to draw is narrow and unflattering: **a control
+that cannot fail is not a control, and a counter that reads zero where zero is impossible is not a
+coverage gap.**
 
-The 8.83% of asks fired into FishAI's own locked sets is a second, separate leak: one ask in eleven
-is a guaranteed miss by construction, spent against cards the asking team has already secured. That
-is not a calibration error, it is a target-selection bug, and it is cheap to look for.
+There is no cell in this setup that can detect a symmetric bridge defect. That is a property of
+mirror controls, not of this run, and no rearrangement of seats or seeds repairs it.
+
+### 9.3 The mechanism: asking and cashing, not declaring
+
+Per-decision detail, seed 90210, both bridges against the same SESTINA:
+
+| | FishAI (defective) | **FishAI (corrected)** | SESTINA v1.0 |
+|---|---:|---:|---:|
+| declare accuracy | 92.83% | **98.42%** | **98.46%** |
+| ask accuracy | 51.95% | **52.32%** | **57.38%** |
+| lock hold, events before cashing | 9.55 | **9.30** | **2.92** |
+| declarations per game | 3.74 | 3.64 | 5.31 |
+| out-of-turn declares per game | 2.60 | 2.67 | 3.65 |
+
+**The first version of this section named declaration as the mechanism. That was the bridge, and it
+is withdrawn.** With the bridge corrected, FishAI's declare accuracy is **98.42% against SESTINA's
+98.46% — a gap of four hundredths of a point.** FishAI declares as accurately as the frontier agent
+does. The 5.24-point declare deficit reported earlier was, essentially in full, a defect in the
+translation layer being read as a property of the policy.
+
+Two gaps survive the correction, both untouched by it:
+
+- **Asking: 52.32% against 57.38%, a 5.06-point deficit.** This is now the larger of the two
+  behavioural gaps, not the smaller one.
+- **Cashing: 9.30 events against 2.92, a factor of 3.2.** FishAI sits on a resolved set more than
+  three times as long as SESTINA before declaring it, and a set held is a set that can still be
+  taken apart. SESTINA declares 5.31 times a game to FishAI's 3.64 — it is not declaring more
+  *accurately*, it is declaring more *often and sooner*, at the same accuracy.
+
+The lock-hold figure is the one to build against. It is large, it is stable across bridges (9.55 →
+9.30, i.e. the defect barely touched it), and unlike ask accuracy it names a specific missing
+capability rather than a diffuse one: FishAI reaches a proof late that SESTINA reaches early.
+
+**The `fish pathology` KPI table that stood here is withdrawn in full** — see §9.8.
 
 ### 9.4 What this comparison is not
 
@@ -458,8 +505,8 @@ prices SESTINA at **at least 4.52×** the cost of the non-searching blueprint it
 Expecting a policy that scores moves once to hold parity against a search agent spending four and a
 half times the compute would be naive. This document did not expect it.
 
-A gap was expected. **Its size is the finding**: 25.8 points under even against the frontier, and
-21.4 points under even against v0.6 — a policy from before the search was added. The second number
+A gap was expected. **Its size is the finding**: 22.9 points under even against the frontier, and
+17.1 points under even against v0.6 — a policy from before the search was added. The second number
 is the one that stings, because v0.6 is not a search agent either.
 
 **Which FishAI played.** The arm is `STYLE_ROSTER.punter` at full-strength inference
@@ -481,46 +528,109 @@ is the one that stings, because v0.6 is not a search agent either.
 v07:r12=25,rtie=1,pool=-1,oppfloor=-1,force=1000000,askfloor=-1,stall=12,s1=1,det=12,cand=4,kappa=2.5,rbelief=indep,depth=12,maxq=26
 ```
 
-### 9.5 Instrument caveats that travel with the numbers
+### 9.5 The bridge defect, in full
+
+**What it was.** `us54` has no pass. When a seat holds the turn and has no cards, RULES_US54 §3.2
+`MUST_DECLARE` compels it to declare on best evidence, because the alternative is a table that never
+progresses — `viewerCouldAskIfWindowClosed` returns false on an empty hand, so `mustDeclareNow`
+fires, and `decide` is forbidden from declining ([decide.ts:534](lib/engine/bots/decide.ts#L534)).
+
+Their engine **does** have a pass. It has a `pass` op for exactly that position and sends it the
+moment the declare poll is answered "none". The adapter translated FishAI's compulsion into a host
+that does not impose it: polled at a cardless turn-holder, FishAI answered with a compelled,
+speculative declare instead of declining and being handed the pass it was about to be offered. Every
+such declare spent a set to avoid a move that costs nothing.
+
+**The fix** is one guard in the adapter's `declare_poll` handler, and it is deliberately narrow — it
+fires only when the trace kind is `must-declare` or `forced-claim`, the compelled variants
+([decide.ts:1683](lib/engine/bots/decide.ts#L1683)). A confident `own-book-claim`, `certain-claim`
+or `ev-claim` still goes through untouched, so the guard suppresses compulsion and nothing else.
+
+**What it cost.** 3.44 points of win rate and 5.59 points of declare accuracy. It is a defect in the
+bridge, not in FishAI: the policy was answering a question the host never asked.
+
+**Why it is a finding and not a footnote.** The defect is a *rules-dialect mismatch*, which is the
+failure mode any cross-play measurement is most exposed to and least able to see. It survived a
+mirror control, two adversarial audits, and eight zeroed corruption counters. It was caught by a
+counter reading zero where zero was impossible.
+
+### 9.6 Instrument caveats that travel with the numbers
 
 Every one of these is part of the result. None is filed away somewhere the number can travel
 without it.
 
-- **Two independent adversarial audits returned sound-with-caveats.** Not clean. The caveats are
-  below.
-- **Every corruption counter was zero** over the whole measurement: `planMismatch`,
+- **The floors are quoted per deal, not per game.** A cell is 1,200 games but only **200 deals**,
+  replayed 6 ways. Their engine reports both floors and they differ by 2.4×: `±2.83 pts unpaired
+  over 1200 games; ±6.93 pts over 200 deals (the paired floor)`. **The deal figure governs.** The
+  first version of this section printed Wilson intervals of about ±2.4 points per cell, computed as
+  though 1,200 games were independent draws. They are not. Single-cell differences smaller than
+  ~6.9 points are not resolvable, and several comparisons made in the first version were inside that
+  band.
+- **Two independent adversarial audits returned sound-with-caveats**, and both missed the §9.5
+  defect. Record that as a fact about audits, not a reassurance.
+- **Every corruption counter was zero** over the whole measurement — `planMismatch`,
   `booksDisagree`, `successHolderClash`, `viewInvariant`, `declareShapeBad`, `traceFallback`,
-  `askNotAsk`, `forcedOwnTeamOut`.
-- **The failed-declare asymmetry, and why it runs the safe way.** On a failed declare their protocol
-  reveals nothing about true holders, but FishAI's internal `PublicEvent.claim` carries
-  `actualHolders`. The adapter emits only cards already public from an earlier hit. FishAI therefore
-  sees *less* than its home engine would give it and never sees anything false: strictly weaker
-  inference, never wrong inference. It cannot inflate 24.22%.
-- **`opPass` never fired (`opPass = 0`).** Report that op as **unreached, not verified**. Nothing in
-  this run exercises it.
+  `askNotAsk`, `forcedOwnTeamOut` — and the run was defective anyway. Corruption counters detect
+  corruption, not mistranslation.
+- **`opPass` now fires.** It read 0 before the fix, which was the symptom; it is exercised in every
+  corrected cell.
+- **The failed-declare asymmetry runs the safe way.** On a failed declare their protocol reveals
+  nothing about true holders, but FishAI's internal `PublicEvent.claim` carries `actualHolders`. The
+  adapter emits only cards already public from an earlier hit. FishAI therefore sees *less* than its
+  home engine would give it and never sees anything false: strictly weaker inference, never wrong
+  inference. It cannot inflate the result.
 - **One `major` audit finding stands.** `observe.ts` mis-replays counts from the partial holders
   map. It is unreachable at a fixed roster style, so it does not touch this result — and it means
   **the adapter must not be reused for the adaptive arm without a fix.**
 - **Their engine is sensitive to floating-point contraction.** `-march=native`, their Makefile
   default, enables FMA and changes tie-breaks, so their published identity digests do not reproduce
   across machines. `-march=native -ffp-contract=off` reproduces the generic digest exactly. All
-  three of their own identity controls **PASS** on this build. The native-FP cell (22.58%) is
-  reported to show what the flag is worth and is excluded from the pooled headline.
+  three of their own identity controls **PASS** on this build. Every cell reported here is the
+  portable `-ffp-contract=off` build.
+- **Roster style was never varied in these cells.** The arm is Punter throughout, and **no claim is
+  made here that Punter is the right arm abroad** — only that it is the arm that ran. A style sweep
+  on the *defective* bridge separated the four roster styles by well under a per-cell floor; it has
+  not been repeated on the corrected bridge.
 - **Licensing.** github.com/dylann4500/FishLab carries **no licence file**. No code or prose of
   theirs is copied here. The adapter was written from their published protocol document alone, lives
   in a scratchpad, and is never committed.
 
-### 9.6 What §9 does not establish
+### 9.7 What §9 does not establish
 
 - Nothing about a **tuned** FishAI. No FishAI parameter was fitted against SESTINA, and doing so
   would burn it as a holdout exactly as §7 says of their lab bots.
-- Nothing about the **adaptive arm** — see the `observe.ts` finding in §9.5.
-- The 53.85% forced-endgame figure rests on **13 events**. It is the worst number in the run and
-  the least precisely measured one; both are true.
-- The three seeds share a build and an adapter. They are not independent implementations, only
-  independent deals.
+- Nothing about the **adaptive arm** — see the `observe.ts` finding in §9.6.
+- **The ladder ordering rests on matched seeds, not on single cells.** FishAI is furthest under even
+  against SESTINA — 5.03 points below its v0.6 cell and 5.47 below its v0.5 cell — and those gaps
+  clear the ±4.00 paired floor over 600 deals *only because the three opponents were played on the
+  same three seeds*. Read cell-to-cell across different seeds, nothing here separates them: the
+  defective arm alone spans 28.58% and 30.92% against v0.6 on two seeds, a 2.3-point swing that is
+  pure seed variation inside a ±6.93 floor.
+- The seeds share a build and an adapter. They are not independent implementations, only independent
+  deals — and §9.5 is what a shared adapter is worth as a risk.
 
-### 9.7 Reproducing §9
+### 9.8 Numbers withdrawn from the first version of §9
+
+Named rather than deleted, because a published number does not stop existing.
+
+| withdrawn | was reported as | status |
+|---|---|---|
+| **24.22%** | FishAI vs SESTINA v1.0 | superseded by **27.08%**; the old figure carried the §9.5 defect |
+| **50.0000% [47.18, 52.82]** | "the control passed" | **void.** Zero effective sample; a forced identity, not a test (§9.2) |
+| **93.25% declare accuracy** | FishAI's declare rate | superseded by **98.42%**, at parity with SESTINA (§9.3) |
+| **"the mechanism is declaration, not asking"** | §9.3's finding | **reversed.** Declaration is at parity; asking and cashing are the gaps |
+| **53.85% of forced declarations wrong** | "the single worst number in the run" | **withdrawn.** `fish pathology` pools both teams; not attributable to FishAI |
+| **8.83% of asks into own locked sets** | a FishAI target-selection bug | **withdrawn.** Pooled over both teams |
+| **47.68% repeat (actor, suit, target)** | a FishAI pathology | **withdrawn.** Pooled over both teams |
+| **4.21% of declarations wrong** | FishAI's base rate | **withdrawn.** Pooled over both teams |
+| per-cell **95% CIs of about ±2.4 pts** | precision of a cell | **too narrow.** The governing floor is ±6.93 pts per cell (§9.6) |
+
+The four pooled counters are withdrawn on the authority of FishLab's own documentation, which states
+in two places that `fish pathology` pools both sides, and warns that a pooled figure in a cross match
+is therefore unreliable (`docs/FISHBOT_V05.md`, once as a caveat on their own cross match and once
+in their KPI notes). That caveat was in the repository throughout and was read past.
+
+### 9.9 Reproducing §9
 
 Their engine needs a C++ toolchain, which the Windows host does not have and a Linux container
 does. The image used here was `node:24-bookworm` plus `g++`, `make` and `zip` — Node is needed in
@@ -546,9 +656,15 @@ docker run --rm -it -v "$PWD:/w" -w /w <linux-image-with-clang-and-make> bash
 # 3. Register FishAI as a guest bot over their JSON-line protocol.
 fish bots add <path-to-the-fishai-adapter-package>
 
-# 4. Play each cell: 200 deals x 6 rotations = 1,200 games, duplicate deals, seeds 90210 / 4242 /
-#    7011001. Opponent is the frozen v1.0 spec in 9.4; verify it byte-identical against
-#    `fishbot_v07.json` from the sestina-v1.0 release before trusting the cell.
+# 4. Apply the 9.5 guard to the adapter FIRST. Without it every cell carries the bridge defect,
+#    and no control in this setup will tell you so. Confirm by asserting `opPass > 0` after a cell.
+
+# 5. Play each cell: 200 deals x 6 rotations = 1,200 games, duplicate deals. Headline seeds
+#    90210 / 4242 / 7011001 / 13579 / 24680 / 31415; the ladder uses the first three. Opponent is
+#    the frozen v1.0 spec in 9.4; verify it byte-identical against `fishbot_v07.json` from the
+#    sestina-v1.0 release before trusting the cell.
+
+# 6. Read the power line the engine prints. It states BOTH floors; the per-deal one governs.
 ```
 
 Exact target names, Makefile variables and match-runner flags are in their `docs/BOT_PACKAGE.md`
