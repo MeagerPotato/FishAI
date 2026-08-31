@@ -11,14 +11,31 @@
  * Four cases ship. The **default is `v2` — the current measured run**; the other three exist to
  * keep every render path and the refusal honest, and each states what it is when loaded:
  *
- *   `v2`        **matrix v2, the default** — the 36-cell x 4,300-pair run re-played after the
- *               contained-book turn-pass landed (`containedPass`, STYLES.md §6.3). This is the
- *               committed evidence the site opens on.
+ *   `v2`        **matrix v2, the default** — the 36-cell x 4,300-pair run as **re-measured at
+ *               `1fdd22e`**: the contained-book turn-pass live (`containedPass`, STYLES.md §6.3),
+ *               the concession layer landed (`defuse`, CONCESSION.md), and `KNOB_LADDER` completed
+ *               to 88 rungs. It replaced an earlier v2 measured at `1667a1d`, which had run the
+ *               same 36 cells on the same seeds but against a roster carrying no `defuse` and an
+ *               exploitability search truncated to 60 candidates; STYLES.md §6.5 reports what
+ *               moved between the two and what it costs the claims made from the first. This is
+ *               the committed evidence the site opens on.
  *   `dominant`  **matrix v1** — the same 36 cells on the same 4,300 seeds at `819eebb`, before
  *               the CONTAINMENT.md turn-pass existed. Kept **alongside** v2 rather than replaced
  *               by it so the engine change between them is auditable from the committed bytes:
  *               every deal is played by both engines, so `?case=v2` against `?case=dominant` is
  *               a controlled comparison rather than two independent samples.
+ *
+ *               That argument is why both files are here and it still holds — but state its reach
+ *               honestly, because it has narrowed. There are now **three** engine generations and
+ *               **two** committed artifacts: `819eebb`, `1667a1d`, `1fdd22e`. Only the first and
+ *               the last are on disk. So the comparison these bytes support now spans *both*
+ *               engine changes at once and cannot attribute anything to either alone. The middle
+ *               generation is not recoverable from this repository — it exists only in git
+ *               history, and the only record of what it measured is STYLES.md §6.4, which is
+ *               annotated rather than overwritten for exactly that reason. Committing a third
+ *               case would restore the resolution (same seeds, so it would be the same controlled
+ *               comparison); until one is, do not describe a v1-vs-v2 diff as isolating a single
+ *               change.
  *   `cyclic`    the **synthetic fixture** — generated data, not simulation output, and stamped
  *               as such on every page that loads it. It exists to prove the site can render a
  *               cyclic verdict honestly (criterion 3 fails, so the verdict is NOT a winner),
