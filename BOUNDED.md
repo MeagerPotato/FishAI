@@ -419,6 +419,48 @@ problem and agrees closely, which bounds the distortion without removing it. Onl
 `punter` were bounded, only pure teams, only `us54`. And the win rates at 0 and 8 bits are
 near-floor, where the estimator is compressed.
 
+### 5a.1 The post-concession ladder, on three banks — and the win rates
+
+Everything above is **pre-concession**, and must stay that way: it is the committed record of what
+a bounded v1.5 was worth against v1.0 *before* the defusal term existed. What follows is the same
+comparison re-run after the concession layer landed, against a v1.0 driven from a clean
+pre-concession export (`5566e6e`) so that the old arm is not silently handed the new mechanism.
+`scripts/probe-v15-clean.mjs` is the probe; both of its zero-appetite controls print exactly
+`0.0000 +/- 0.0000`, with zero health failures, on every bank below.
+
+This table exists because the tables above publish only set-differences, and the question actually
+asked of this ladder — *what fraction of games does the updated bot win against the old one?* — is
+not answerable from them. **Win rate here is the share of the 4,000 games in a bank's 2,000
+duplicate pairs that the v1.5 seat takes.**
+
+| bits | `v15clean-2026a` | `audit-2026q3-repl` | `v15clean-2026c` |
+|---|---:|---:|---:|
+| 0 | 0.68% | 0.97% | 1.03% |
+| 16 | 38.07% | 38.70% | 38.75% |
+| 32 | 53.83% | 54.80% | 54.93% |
+| 48 | 59.08% | 60.08% | 59.62% |
+| 64 | 60.20% | 60.90% | 60.82% |
+| 128 | 60.22% | 61.27% | 60.90% |
+| ∞ | **60.22%** | **61.27%** | **60.90%** |
+
+So the headline is **~60–61% of games** at full memory, on three disjoint banks, against **48.98%**
+for the same ladder's ∞ rung before the concession layer — the `−0.1255 ± 0.0590` cell in the first
+table of §5a, whose own win rate is recorded in the run artifact but not printed there.
+
+**The sign flip is the concession layer, not memory.** The crossover sits between **16 and 32
+bits**, and below it the bounded seat still loses badly: at zero bits it wins about **1 game in
+100**. That is the near-floor region the caveat above warns about, where the win-rate estimator is
+compressed against zero and the interval on a set-difference is the more honest statistic.
+
+**Provenance of the third bank.** `v15clean-2026c` was run at `9fcd772` — after the `turnYield`
+extraction and after the counter table was regenerated from the re-measured matrix. Neither should
+touch this comparison: the refactor is behaviour-preserving and pinned by
+`tests/bots/threat.test.ts`, and the counter table is consulted only by an adaptive spec, which
+here is loaded from the *old* tree. The agreement of `2026c` with the two earlier banks is the
+evidence that neither touched it in fact. That is the only reason a third bank was run. It is
+confirmatory, and no claim in this document rests on it alone.
+
+
 ---
 
 ## 6. Where it lives
