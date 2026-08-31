@@ -160,6 +160,28 @@ describe('public-view-only proof', () => {
       // Generated measured payoff table (scripts/gen-counter-table.mjs): frozen numeric data
       // plus the StyleId type, held to the same standard as the fingerprints above.
       './data/counter-table.ts',
+      // The CONCESSION.md concession layer. './threat.ts' derives what a seat could do with the
+      // turn from the public log, the public counts and './knowledge.ts'; './defuse.ts' turns
+      // that into an ask-score credit. Between them they import only '../types.ts',
+      // '../cards.ts', '../variants.ts', './types.ts', './style.ts' (type-only) and
+      // './knowledge.ts' — every one already on this list — so no engine state is reachable
+      // from either. Neither reads any hand but the viewer's own.
+      //
+      // For THIS layer the guarantee rests on the import allow-list alone, not on (a) and (b).
+      // Those run `DIFFS = ['easy','medium','hard']`, and all three tiers carry `defuse: 0` and
+      // `conceal: 0`, so both gates short-circuit and no code in these modules executes under the
+      // proxy. The allow-list does bite — an import outside it fails this test — and the property
+      // is true by construction from what these modules import. Extending (a) and (b) to a roster
+      // style under `us54`, where the terms are live, is recorded as follow-up in CONCESSION.md §9.
+      './threat.ts',
+      './defuse.ts',
+      // The other half of the same layer: './conceal.ts' turns the row-6 publication an ask makes
+      // about the ASKER into an ask-score charge. It imports only '../types.ts', '../cards.ts',
+      // '../variants.ts', './knowledge.ts', './threat.ts', './defuse.ts' (type-only, for the
+      // shared LicenceLookup), './style.ts' (type-only) and './types.ts' — every one already on
+      // this list — so no engine state is reachable from it, and it reads no hand but the
+      // viewer's own (`view.hand`, which is the viewer's by definition).
+      './conceal.ts',
     ])
     const forbiddenIdents = /\b(newGame|publicView|seatView|reduce|dealHands|legalAsks|checkInvariants|shuffle)\b/
     for (const f of files) {

@@ -151,6 +151,18 @@ const BALANCED: StyleParams = {
   // ordinary ask, and never otherwise. 1 = "one use of the licence", which is what a style that
   // banks the book at its next opportunity gets. See the header note below.
   containedPass: 1,
+
+  // The CONCESSION.md defusal term, at its fitted break-even: when an opponent has publicly shown
+  // a basis in a set this team holds cards of, prefer the ask that takes that card back — a hit
+  // removes the licence and row 9 keeps the turn. 1 credits the hit with exactly the cards it
+  // protects, on the measured slope; the appetite curve is an inverted U peaking at 1–2.
+  //
+  // Uniform across the roster, on the same argument `containedPass` is uniform: the interesting
+  // question is which styles *reach* the position and how their other knobs interact with it, and
+  // nine tuned constants would hide that behind tuning. Measured at 1 for every style —
+  // CONCESSION.md §3.1's per-style table has the whole roster positive, from the Ghost's +0.83 to
+  // the Archivist's +1.94 sets per duplicate pair, every interval excluding zero.
+  defuse: 1,
 }
 
 function style(over: Partial<StyleParams> & { id: StyleId; label: string; family: StyleFamily; thesis: string }): StyleParams {

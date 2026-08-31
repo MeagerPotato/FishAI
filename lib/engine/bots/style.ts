@@ -173,6 +173,72 @@ export interface StyleParams extends AskWeights {
    * derived from public data at every call, never per style (STYLES.md §3.1).
    */
   containedPass: number
+
+  // --- the concession term (CONCESSION.md) ----------------------------------
+  /**
+   * Appetite for **defusing** an opponent's reach — the measured half of the off-limits
+   * mechanism ([defuse.ts](defuse.ts), [threat.ts](threat.ts)).
+   *
+   * RULES_US54.md row 10 concedes the turn on a miss, so an ask is also a bet about who gets to
+   * act next. The owner's original proposal was to refuse the asks that would concede to a
+   * dangerous seat; measured, that loses up to 11.7 points of win rate, because row 6 makes threat and
+   * opportunity the same fact — the seat with reach into your set is the seat holding the card
+   * you want (CONCESSION.md §2). Inverting the prescription wins: ask *into* the set the target
+   * has a basis in, take the card back on the hit, and keep the turn under row 9.
+   *
+   * **0 = off**, which is what every shipped preset carries, so the three tiers play exactly the
+   * games they played before this existed under both rule sets. **1 = the fitted break-even** —
+   * the credit equals the cards the hit actually protects, on the {@link threat.THREAT_COEFFICIENTS}
+   * slope. Above 1 the style is paying more than the cards are worth, and the measured curve is
+   * an inverted U that peaks at 1–2 and is back to noise by 8.
+   *
+   * Deliberately a single scalar, and deliberately an appetite rather than a threshold: the
+   * *geometry* — the licence scan, the prey count, the fitted slope, the turn yield — is shared
+   * mechanism derived from public data at every call, never per style (STYLES.md §3.1).
+   */
+  defuse: number
+
+  // --- the broadcast term (CONCESSION.md, conceal.ts) ------------------------
+  /**
+   * Appetite for **concealing** a row-6 basis — the other half of the owner's off-limits request
+   * ([conceal.ts](conceal.ts)).
+   *
+   * RULES_US54.md row 6 lets a seat ask only into a set it holds a card of, so every ask publishes
+   * that holding, and `knowledge.ts` turns the publication into a live set-constraint that an
+   * opponent's `refinedHitProbability` reads straight back out. Concealment declines to make the
+   * *first* ask into a set, paying whatever that ask was worth, to keep the holding hidden — and
+   * releases the moment the basis is public anyway, the set is contained on this team
+   * (CONTAINMENT.md C1 — the owner's "then you want to signal"), or every card of it is located.
+   *
+   * **0 = off, and the field is deliberately OPTIONAL so that off can be the absence of a value.**
+   * The tiers below carry an explicit 0 the way they carry `containedPass: 0` and `defuse: 0`; the
+   * nine STYLES.md §3 roster vectors carry nothing at all and are unchanged as source text, so
+   * "the roster is byte-identical" rests on the type rather than on nine hand-written zeroes. Both
+   * rule sets keep playing exactly the games they played before this existed.
+   * **1 = one conceded turn's worth of exposure** — the
+   * publication charged at {@link threat.THREAT_COEFFICIENTS}'s fitted `perPrey` slope times the
+   * cards of the set in hand, on the same `wHit / (1 + E)` conversion `defuse` uses. That equality
+   * of scale is what makes the two terms arbitrate exactly: when both fire on one ask, defusal
+   * wins iff `defuse * p * prey > conceal * mine`, with every other factor cancelling.
+   *
+   * **Measured, and this is why it ships off rather than at its break-even.** Against opponents
+   * that defuse it is worth **+0.97 [0.69, 1.24]** sets per duplicate pair on 600 pairs, confirmed
+   * at **+0.89 [0.64, 1.13]** and **+0.83 [0.59, 1.07]** on two disjoint held-out banks of 800
+   * pairs each, against a same-magnitude information-free null that measures **−0.72 [−0.99,
+   * −0.45]**. Against opponents that **do not** defuse it is worth **−0.15 [−0.41, +0.11]**, and
+   * −0.28 when driven hard. The whole effect is the denial of `defuse.ts`: that mechanism fires on
+   * the *target's* published basis and aims at the publisher's hand, and this one is the refusal to
+   * become that target. Every shipped tier carries `defuse: 0`, so the tiers have no customer for
+   * it; the roster carries `defuse: 1` but its committed numbers were all measured with this field
+   * absent. The honest home for the result is a counter-table entry (`adaptive.ts`), not a default.
+   *
+   * Deliberately a single scalar, and deliberately an appetite rather than a threshold, for the
+   * same STYLES.md §3.1 reason `defuse` and `containedPass` are: the geometry — the licence scan,
+   * the containment recogniser, the fitted slope, the turn yield — is shared mechanism derived
+   * from public data at every call, never per style.
+   */
+  conceal?: number
+
 }
 
 /**
@@ -327,6 +393,14 @@ const BASELINE: StyleParams = {
   // The shipped policy has never played the CONTAINMENT.md turn-pass, and the three tiers must
   // keep playing exactly the games they played before it existed — under both rule sets.
   containedPass: 0,
+  // Same discipline for the CONCESSION.md defusal term: the tiers are frozen, so the mechanism
+  // is introduced switched off here and carries its measured appetite in the roster instead.
+  defuse: 0,
+  // And for the conceal.ts broadcast term. Unlike the two above it is switched off in the roster
+  // as well, and deliberately: it measured +0.97 sets per duplicate pair against opponents that
+  // defuse and −0.15 against opponents that do not, and every tier here carries `defuse: 0`. See
+  // the field's doc comment for the full derivation.
+  conceal: 0,
 }
 
 /**
@@ -489,5 +563,15 @@ export function validateStyle(style: StyleParams): string[] {
   // An appetite is a count of expected uses of the licence (CONTAINMENT.md C5), so it is
   // non-negative; a negative value would invert the derived comparison rather than express taste.
   if (!(style.containedPass >= 0)) bad.push(`containedPass ${style.containedPass} < 0`)
+  // Likewise for the defusal appetite. A negative value would turn the credit back into the
+  // avoidance penalty CONCESSION.md §2 measured losing, which is a different mechanism wearing
+  // this one's name — refuse it rather than let a sweep wander into it by accident.
+  if (!(style.defuse >= 0)) bad.push(`defuse ${style.defuse} < 0`)
+  // And for the concealment appetite, where a negative value would turn the charge into a *bonus*
+  // for publishing a fresh basis in every set — an information-donation policy wearing this
+  // mechanism's name. An absent field is the off switch and is sound; only a present negative is
+  // refused. (`undefined >= 0` is false, hence the explicit read.)
+  const conceal = style.conceal ?? 0
+  if (!(conceal >= 0)) bad.push(`conceal ${conceal} < 0`)
   return bad
 }
