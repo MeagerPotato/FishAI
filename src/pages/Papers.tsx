@@ -1,5 +1,5 @@
 /**
- * `/papers` — the six papers, and the questions the project has actually put to a measurement.
+ * `/papers` — the nine papers, and the questions the project has actually put to a measurement.
  *
  * Everything on this page is a pointer at something the reader can open: a PDF built from the
  * committed `.tex` by `npm run papers:build`, the LaTeX source on GitHub, and the lab page that
@@ -9,18 +9,26 @@
  *
  * ## The arc, and why the order is not chronological-by-importance
  *
- * v0.5 → v1.0 → v1.5 first, because each answers the question the one before it raised: is any
- * style superior (yes), does reading the table beat committing to the winner (no, and it costs),
- * what should difficulty be if not noise (bits). Then the three focused results, which are the
- * load-bearing caveats of the first three broken out and measured to the end.
+ * v0.5 → v1.0 → v1.5 → v2.0 first, because each answers the question the one before it raised:
+ * is any style superior (yes), does reading the table beat committing to the winner (no, and it
+ * costs), what should difficulty be if not noise (bits), and what is an ask actually for (three
+ * things at once, and the engine only ever scored one). Then the five focused results, which are
+ * the load-bearing caveats of the first four broken out and measured to the end.
  *
  * ## Negative results are findings here
  *
- * Four of the six headline results are negative, and they are printed in the same voice as the
- * positive ones — no hedging verb, no "unfortunately", no framing as an ablation of a success.
- * That is the series' whole method: the contained book is a proved theorem worth nothing, the
- * declare axis is a knob that was never reached, and adaptation over this roster is worth less
- * than nothing. A page that softened those would be misreporting the project.
+ * Seven of the nine headline results are negative or refutations, and they are printed in the
+ * same voice as the positive ones — no hedging verb, no "unfortunately", no framing as an
+ * ablation of a success. That is the series' whole method: the contained book is a proved theorem
+ * worth nothing, the declare axis is a knob that was never reached, adaptation over this roster is
+ * worth less than nothing, the avoidance rule the owner asked for loses to not having it, the
+ * inference he worried about is one the engine structurally cannot make, and two of this
+ * project's own published nulls turn out to be non-measurements rather than zeros. A page that
+ * softened those would be misreporting the project.
+ *
+ * Two of the nine now carry addenda rather than corrections — v0.5 and v1.5 were both re-measured
+ * after the engine gained a defusal term every roster style carries. Where an addendum weakens a
+ * headline, the entry below says so in the same line as the headline, not in a footnote.
  *
  * ## The accent budget (SITE_SPEC.md §2.1)
  *
@@ -53,14 +61,15 @@ import { LabContents, type LabSection } from '../lab/ui/LabContents.tsx'
 import { LabShell, withCase } from '../lab/ui/LabShell.tsx'
 
 /**
- * This page is ~12,600px of index, so it carries the same contents rail the long lab pages do.
+ * This page is a long index — nine entries and then the topics — so it carries the same
+ * contents rail the long lab pages do.
  * Every id below exists on a `<Section>` further down; the component asserts nothing, so a
  * renamed section would silently break the jump — keep the two in step.
  */
 const CONTENTS: readonly LabSection[] = [
   { id: 'how-to-read', label: 'How to read this page', note: 'what each entry carries' },
-  { id: 'series', label: 'The series', note: 'v0.5, v1.0, v1.5' },
-  { id: 'results', label: 'Focused results', note: 'three caveats, measured' },
+  { id: 'series', label: 'The series', note: 'v0.5, v1.0, v1.5, v2.0' },
+  { id: 'results', label: 'Focused results', note: 'five caveats, measured' },
   { id: 'topics', label: 'Research topics', note: 'answered and open' },
   { id: 'sources', label: 'Sources' },
 ]
@@ -131,11 +140,23 @@ interface Paper {
   abstract: string
   method: string
   /**
-   * The lab page that renders this paper's evidence from the committed artifact. `href` and
-   * `hash` are kept apart because `?case=` has to land BEFORE the fragment, and a single
-   * pre-joined string would put it after.
+   * Where this paper's evidence lives. `href` and `hash` are kept apart because `?case=` has to
+   * land BEFORE the fragment, and a single pre-joined string would put it after.
+   *
+   * Six of the nine point at a lab page that renders the evidence from the committed artifact.
+   * The other three cannot: the concession layer, the ask matrix and the detection floor have no
+   * lab page, and their evidence is the committed markdown itself. Those set `external`, which
+   * does two things — it skips `withCase`, because `?case=` means nothing off-site, and it prints
+   * `pathLabel` instead of the raw URL, so the link caption stays the same shape as the others
+   * rather than becoming a 60-character GitHub path.
    */
-  evidence: { href: string; hash?: string; label: string }
+  evidence: {
+    href: string
+    hash?: string
+    label: string
+    external?: true
+    pathLabel?: string
+  }
 }
 
 const PAPERS: Paper[] = [
@@ -147,7 +168,7 @@ const PAPERS: Paper[] = [
     question:
       'Is one way of playing Fish actually better than the others, or do the styles just beat each other in a circle?',
     finding:
-      'One style wins outright. Punter clears all four criteria written down before the tournament ran — highest mean score .5829, maximin .5190 above the half, cyclic energy .0112 against a .15 threshold, and exploitability .0025 against a rivals’ median of .0444 — over 309,600 games in 36 cells. The rock-paper-scissors structure the styles were expected to form is simply not there.',
+      'One style wins outright, and still does after the whole roster changed under it. Punter clears all four criteria written down before the tournament ran, over 309,600 games in 36 cells, and clears them again on a re-measurement taken after every style gained a defusal term: mean score .5829 → .5684, maximin .5190 → .5102 above the half, cyclic energy .0112 → .0172 against a .15 threshold. The rock-paper-scissors structure the styles were expected to form is simply not there in either run. What the re-measurement did cost is the fourth criterion, and the addendum says so plainly: exploitability .0025 → .0525 against a rivals’ median that moved .0444 → .0594, which is essentially a tie where the paper’s prose leaned on an eighteen-fold gap.',
     abstract:
       'Nine parameterized play styles share one identical full-strength inference engine, so that differences in outcome measure style rather than skill. The roster is evaluated in a full-precision duplicate-deal round-robin — 36 cells, 4,300 mirrored deal pairs per cell, per-cell standard error at most .005 — and the payoff matrix is analysed with mean score, maximin, Bradley–Terry, Nash averaging, α-Rank and a Hodge decomposition into transitive and cyclic parts. Two measured caveats qualify the headline and are reported as first-class results: the declare-threshold axis the roster’s labels advertise is inert across the range the roster spans, and the card-hoarding style’s signature benefit was derived, implemented, and measured to be worth nothing.',
     method:
@@ -177,16 +198,36 @@ const PAPERS: Paper[] = [
     question:
       'How do you make a bot easier to beat without making it stupid — what should a difficulty setting actually be?',
     finding:
-      'Cap what it can remember, measured in bits, and the dial tells the truth. Set-share is non-decreasing in bits at every one of the nine adjacent rungs, from .1313 at zero bits to .5000 at the top, and the shipped tiers now carry prices: medium is worth 32.2 bits [30.8, 35.1], and the old noise-based easy tier measures below the zero-bit floor — .0446 against .1313, so a memoryless bot that reasons beats a remembering bot that dices. The headline refutation runs the other way from the prediction: memory pressure makes styles easier to classify, not harder, with top-1 rising from .1542 at 16 bits to .2295 at 64 against .2243 at full memory.',
+      'Cap what it can remember, measured in bits, and the dial tells the truth. Set-share is non-decreasing in bits at every one of the nine adjacent rungs, from .1313 at zero bits to .5000 at the top, and the shipped tiers now carry prices: medium is worth 32.2 bits [30.8, 35.1], and the old noise-based easy tier measures below the zero-bit floor — .0446 against .1313, so a memoryless bot that reasons beats a remembering bot that dices. The headline refutation runs the other way from the prediction: memory pressure makes styles easier to classify, not harder, with top-1 rising from .1542 at 16 bits to .2295 at 64 against .2243 at full memory. An addendum then re-measures the arm after the engine gained a defusal term it inherits: against the same pre-concession v1.0, the committed −0.1255 ± 0.0590 becomes +1.4065 ± 0.1399 and +1.5290 ± 0.1418 on two banks — a different question, not a correction of that cell, which a per-pair audit shows was measured clean. And because the term’s licence scan reads the full public log while retiring only against budgeted knowledge, it partly escapes the budget: holding the opponent fixed, it is worth +0.9560 ± 0.1858 and +0.8030 ± 0.1879 at zero bits. The updated ladder is therefore not a pure memory ladder. The original one, measured before the term existed, is unaffected.',
     abstract:
       'Until now the engine’s easy tier was a six-event memory window plus a 25% uniform blunder rate — a difficulty knob that is neither monotone, interpretable, nor human-shaped. v1.5 replaces it with memory capacity capped in bits under a fixed fact tariff (2 bits per card fact, 1 per basis fact), with facts ranked by contestability rather than recency, implemented as a stateless re-derivation from the full public log at every decision. Evidence-age analysis finds the predicted forgetting signature where the budget bites — half-lives of 5, 13, 17, 33 and 49 events, rising with bits — while the noise tier is cliff-edged at its window and not flat inside it. A single-seat follow-up registered after review, and re-run at 300 seeds after its 50-seed pilot was priced at 52% power, confirms the read seat’s own signature flat at matched read count.',
     method:
-      'Eight predictions with verdict rules fixed before their runs; four verdicts came back MIXED and are printed as MIXED. Ten budgets replay one identical 3,000-seed list in both orientations, so adjacent-rung deltas are paired per seed. The correction of record — an underpowered pilot’s overclaim, caught by its own review — is retained in the artifact beside the run that settled it.',
+      'Eight predictions with verdict rules fixed before their runs; four verdicts came back MIXED and are printed as MIXED. Ten budgets replay one identical 3,000-seed list in both orientations, so adjacent-rung deltas are paired per seed. The correction of record — an underpowered pilot’s overclaim, caught by its own review — is retained in the artifact beside the run that settled it. The addendum is exploratory and marked as such: 2,000 duplicate pairs per cell, on banks held out from the original ladder, with a per-pair provenance audit against a pre-concession export.',
     evidence: { href: '/lab/bounded', label: 'The bounded-memory ladder — all eight verdicts' },
   },
   {
-    slug: 'contained-book',
+    slug: 'fishai-v20',
     serial: '04',
+    kind: 'System paper · v2.0',
+    title: 'FishAI v2.0: The Three-Sided Ask — Refuting an Avoidance Rule and Shipping Its Inverse',
+    question:
+      'If some opponents would punish you badly for handing them the turn, should you avoid asking them?',
+    finding:
+      'No — avoidance loses, and the opposite move wins. A rule that penalises asks aimed at dangerous opponents costs 4.5 to 11.7 points of win rate and gets monotonically worse the harder it is driven (−0.52 to −1.61 sets per duplicate pair), while an information-free perturbation of the same size is free. The reason is structural: the holding-licence rule makes threat and opportunity the same fact, corr(threat, best available hit probability) = +0.249 over 33,595 observations, with mean best p of 0.471 at high-threat seats against 0.326 elsewhere. Inverting the prescription — ask into the set the dangerous seat has published a basis in, taking back the card its reach rests on — is worth +1.43 and +1.58 ± 0.32 sets per duplicate pair on two held-out banks, and +1.55 to +1.75 inside a third party’s engine against their bots with one knob moved.',
+    abstract:
+      'Every ask in this game is three things at once: a bet on a card, a broadcast — the holding licence of the us54 dialect makes an ask publish that the asker holds a card of the named set — and a concession, because a miss hands the turn to whoever was asked. The engine had only ever scored the first. The project’s owner asked for “off-limits” reasoning: identify the opponents who would punish a conceded turn, and refuse to ask them. Implemented as a penalty on the miss branch, it loses. The cause is the paper’s central idea, and it is what makes the inverse work: because the licence makes threat and opportunity the same fact, the seat you most want to avoid is the seat you most want to ask.',
+    method:
+      'Every mechanism is a single-term ablation on duplicate deals — each seeded deal played in both orientations — against a control that reproduces the shipped decision function byte-for-byte when the mechanism is off, paired with an information-free null of matched magnitude to separate the effect of the information from the effect of the disturbance. Banks are held out from the tuning bank; results are re-measured on the shipped implementation rather than the prototype; and the same policy is run as a guest inside an independent third-party engine against that project’s own bots, with defusal as the only knob moved. Every null is checked against the instrument’s own detection floor, which reclassifies two of this paper’s nulls as non-measurements.',
+    evidence: {
+      href: 'https://github.com/MeagerPotato/FishAI/blob/main/CONCESSION.md',
+      label: 'The concession record — every arm, and the four refutations',
+      external: true,
+      pathLabel: 'github.com/…/CONCESSION.md',
+    },
+  },
+  {
+    slug: 'contained-book',
+    serial: '05',
     kind: 'Focused result',
     title: 'The Contained Book: An Absorbing Resource Measured to Be Worth Nothing',
     question:
@@ -201,7 +242,7 @@ const PAPERS: Paper[] = [
   },
   {
     slug: 'inert-axis',
-    serial: '05',
+    serial: '06',
     kind: 'Focused result',
     title: 'The Inert Axis: When a Style Parameter Is Wired, Swept, and Never Reached',
     question:
@@ -220,7 +261,7 @@ const PAPERS: Paper[] = [
   },
   {
     slug: 'style-observability',
-    serial: '06',
+    serial: '07',
     kind: 'Focused result',
     title: 'What a Public Log Reveals: Observing Play Style in Literature (Canadian Fish)',
     question:
@@ -235,6 +276,46 @@ const PAPERS: Paper[] = [
       href: '/lab/adaptive',
       hash: '#classifier',
       label: 'The classifier — the accuracy curve',
+    },
+  },
+  {
+    slug: 'asking',
+    serial: '08',
+    kind: 'Focused result',
+    title: 'Inference From a Miss: What Silence Licenses, and Two Corrections That Overlap',
+    question:
+      'You ask another player for a card, they do not have it, and they never ask you for one of those cards back. What are you actually allowed to conclude about what they are holding?',
+    finding:
+      'Nothing — and the engine already concludes nothing, because an absence is not an event it can see. If anything it is too kind to the quiet seat: in exactly that position it believes 14.0% where the truth is 2.0% (N = 19,003), and across 1,395,876 scored asks it runs about a point optimistic overall, while its certain calls are exactly right 16,680 times out of 16,680. The real errors run the other way, under-reading positive evidence: a seat that has publicly shown it holds a card of a set is under-priced by 8.4 points (.2386 believed against .3221 observed), and correcting that is worth +2.068 ± 0.293 sets per duplicate pair. But the shipped defusal heuristic rewards the same evidence and is worth +1.915 ± 0.315 alone, while both together measure +1.565 ± 0.317 — less than either. The three arms share one baseline and one bank, so that comparison is paired rather than cross-bank; but no interval is put on the difference between arms, and the gap is smaller than this instrument’s own floor at 400 pairs. Two corrections for one error overlapping rather than adding is the reading the numbers suggest, not one they establish.',
+    abstract:
+      'The owner raised a specific worry about the engine’s inference, and it is answered here and then generalised into the full matrix for choosing an ask. The engine cannot make the inference he feared: an absence is not a log event, so nothing in the ingestion switch can key on one — demonstrated by a treatment/control pair in which only the named card’s candidate set moves and the other four are bit-identical. Silence alone is worth −.0081 over 1,176,652 asks and is genuinely near-uninformative; silence after a miss is a different object, such a seat holding a card of the set 6.3% of the time against 66.3% for a silent seat never missed on. A separate observation — that sets get “ask-traded” — is confirmed at 88.1% against a 21.4% availability-matched control, and then shown not to be reciprocation at all: 99.1% of those replies are the hit-probability argmax.',
+    method:
+      'Every legal ask at every ask decision of 300 games was scored with the number the ask ranker actually decides on, against ground truth read from the hands — 1,395,876 asks, bucketed into a reliability table and then stratified by whether the target had been missed on and whether it had asked back. A treatment/control probe pair, identical but for one ask, isolates what a single miss moves in the candidate sets. The substitution result is 400 duplicate-deal pairs on one bank against one common baseline carrying neither mechanism, so the two corrections are comparable to each other rather than each only to itself; measured the other way — each against its own baseline — the calibration fix reads as a flat +0.04 ± 0.41, which is why the design matters.',
+    evidence: {
+      href: 'https://github.com/MeagerPotato/FishAI/blob/main/ASKING.md',
+      label: 'The ask matrix — the calibration table and every stratum',
+      external: true,
+      pathLabel: 'github.com/…/ASKING.md',
+    },
+  },
+  {
+    slug: 'detection-floor',
+    serial: '09',
+    kind: 'Focused result',
+    title: 'The Detection Floor: What a Null Result Was Measured With',
+    question:
+      'When this project reported that something made no difference, could its measurements have seen a difference if there had been one?',
+    finding:
+      'Often not. The instrument’s noise is 3.15–3.44 sets per duplicate pair, so the smallest effect it detects 80% of the time is about .47 sets at 400 pairs and .33 at 800 — and two of the project’s own published nulls sit far under that: the contained-pass aim at −.045 ± .130, and concealment against non-defusing opponents at −.1483 ± .2571 where the floor is ~.38. Both are reclassified as non-measurements rather than zeros. The power model itself is solid, holding in all twelve planted-effect cells of both runs. Two of the four parts did not replicate and are reported unsoftened: the empirical floor at 400 pairs is bounded only to .36–.50 (84.7% then 75.0% detection, pooled 81.7%), and nominal-95% interval coverage at 400 pairs pooled to 8.0% [5.2, 11.7] against a nominal 5%, while 800 was nominal in both runs — a pattern that does not scale as a real coverage defect should, for reasons that remain unknown.',
+    abstract:
+      'A codebase that publishes null results owes its readers a characterisation of the instrument those nulls were measured with, because an unresolved effect and an absent effect look identical in a table. This project published several nulls before anyone measured what its one instrument could resolve. The paper reports that characterisation and applies it to the back catalogue, and it names the trap the first run fell into: the minimum detectable effect depends on that cell’s own standard deviation, which is not constant — 3.645 for one cell, 4.57–4.95 implied by a foreign-engine harness — so a cell whose two arms mostly agree can resolve +0.2475 ± 0.1024 at 800 pairs while appearing to sit under a generic .33 floor. The recommendation, grounded only in this codebase’s experience, is to publish the floor beside the null.',
+    method:
+      'One instrument — K duplicate deal pairs of arm X against arm Y, reported as the mean paired set-difference ± 1.96 SE — characterised by planting an edge of continuously variable known size, monotone in its parameter and byte-identical to the shipped policy at zero, then counting how often independent banks of 400 and 800 pairs detected it, and how often two true nulls that still move the game produced intervals excluding zero. Everything rests on a byte-exact control that had to be rewritten to stop short-circuiting past the very wrapper whose inertness it certified. An independent agent re-ran the whole probe on fresh banks; three of four parts replicated, and the two that did not are printed as unresolved.',
+    evidence: {
+      href: 'https://github.com/MeagerPotato/FishAI/blob/main/CONCESSION.md',
+      label: 'The floor, and the two nulls it reclassifies — §8a',
+      external: true,
+      pathLabel: 'github.com/…/CONCESSION.md',
     },
   },
 ]
@@ -386,7 +467,9 @@ const OPEN: Topic[] = [
 
 function PaperEntry({ paper, which }: { paper: Paper; which: ArtifactCase }) {
   const titleId = `paper-${paper.slug}`
-  const evidenceHref = withCase(paper.evidence.href, which) + (paper.evidence.hash ?? '')
+  const evidenceHref = paper.evidence.external
+    ? paper.evidence.href + (paper.evidence.hash ?? '')
+    : withCase(paper.evidence.href, which) + (paper.evidence.hash ?? '')
   const note = pdfNote(paper.slug)
   return (
     <article className={p.paper} aria-labelledby={titleId}>
@@ -453,8 +536,8 @@ function PaperEntry({ paper, which }: { paper: Paper; which: ArtifactCase }) {
             >
               {paper.evidence.label}
               <span className={p.linkPath}>
-                {paper.evidence.href}
-                {paper.evidence.hash ?? ''}
+                {paper.evidence.pathLabel ?? paper.evidence.href}
+                {paper.evidence.pathLabel ? '' : (paper.evidence.hash ?? '')}
               </span>
             </a>
           </li>
