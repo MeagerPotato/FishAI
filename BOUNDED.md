@@ -390,9 +390,22 @@ when an ask would complete a book — and with no remembered facts that conditio
 
 **Degradation shape.** The curve is flat from ∞ down to **96 bits** (−0.003 ± 0.005, not
 distinguishable from zero), **first bites at 64** (−0.037 ± 0.032), turns material at 48, then
-collapses: **59% of the whole 0-bit deficit is already paid by 16 bits, and 73% by 8.** The money is
-at the low end — the first 16 bits buy more than the next hundred. All nine adjacent-rung deltas are
-non-negative, so the ladder is monotone against a v1.0 opponent as well as against v0.5.
+collapses: **26% of the whole 0-bit deficit is paid by 8 bits, and 66% by 16.** The money is
+at the low end — the first 16 bits buy more than the next hundred.
+
+> **Correction (2026-08-31).** This sentence read "59% ... by 16 bits, and 73% by 8" until the v1.5
+> paper's addendum tried to cite it and could not make it follow from the table directly above it.
+> Neither figure is right and the pair is ordered backwards — a cumulative share cannot *fall* from
+> 73% at 8 bits to 59% at 16. The arithmetic is `(8.1450 − 6.0215) / 8.0195 = 26.5%` at 8 bits and
+> `(8.1450 − 2.8520) / 8.0195 = 66.0%` at 16; both columns of the table give the same shares,
+> because they differ by the constant −0.1255. The likely origin of "73%" is the share *remaining*
+> at 8 bits, `5.8960 / 8.0195 = 73.5%`, recorded as though it were the share paid. The claim the
+> sentence exists to make — that the money is at the low end — survives the correction and is in
+> fact made more strongly by the true numbers, since 66% at 16 bits is a larger share than the
+> 59% originally printed.
+
+All nine adjacent-rung deltas are non-negative, so the ladder is monotone against a v1.0 opponent
+as well as against v0.5.
 
 This also **replicates the shipped E1 ladder out of sample**: every rung's set-share lands within
 ~0.007 of §4.1's committed value on a disjoint bank, with ∞ and 128 both exactly `.5000`.
