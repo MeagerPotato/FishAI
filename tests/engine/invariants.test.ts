@@ -68,7 +68,10 @@ function us54State(hands: Card[][], patch: Partial<GameState> = {}): GameState {
 function us54Action(s: GameState, rng: () => number): GameAction {
   if (s.declareWindow) {
     const seat = s.declareWindow.option
-    if (rng() >= 0.12) return { type: 'decline', seat }
+    // §3/§4 MUST_DECLARE: while no ask can follow the window there is nothing to close it
+    // into, so `decline` is refused and the option seat's only move is a declare. Re-derived
+    // locally, like `legalAsksOf`, rather than leaning on the engine's own predicate.
+    if (legalAsksOf(s).length > 0 && rng() >= 0.12) return { type: 'decline', seat }
     const unresolved = allBooks(s.config).filter((b) => !s.books[b])
     const book = unresolved[randInt(rng, unresolved.length)]
     const team = teamSeats(seatTeam(seat))

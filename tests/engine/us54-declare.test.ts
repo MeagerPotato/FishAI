@@ -444,7 +444,7 @@ describe('turn after a declare (RULES_US54.md §1 row 16, §7 vector 5)', () => 
 /* ----------------------------------- §4 + §7 vectors 8-9: running out of cards --- */
 
 describe('running out of cards (RULES_US54.md §4, §7 vectors 8-9)', () => {
-  it('vector 8: a declare that empties the turn-holder moves the turn to the next seat with cards', () => {
+  it("vector 8: a declare that empties the turn-holder passes the turn to a teammate", () => {
     // Seat 3 (the turn-holder) holds exactly the two LOW-C cards seat 0's declare removes.
     const s = game54(hands54({ 0: ['2C', '3C'], 2: ['4C', '5C'], 3: ['6C', '7C'] }, [0, 1, 2, 4, 5]), 3)
     expect(s.hands[3]).toEqual(['6C', '7C'])
@@ -453,19 +453,29 @@ describe('running out of cards (RULES_US54.md §4, §7 vectors 8-9)', () => {
     expect(r.state.books['LOW-C']?.outcome).toBe('team1')
     expect(r.events).toContainEqual({ type: 'player_out', seat: 3 })
     expect(r.state.hands[3]).toEqual([])
-    // §4 [DERIVED]: next seat in ascending cyclic order that still holds cards.
-    expect(r.state.turn).toBe(4)
-    expect(r.state.declareWindow).toEqual({ option: 4, declined: 0 })
-    expect(r.state.phase).toBe('playing')
-    expect(conserved(r.state)).toBe(true)
+    // §4: the turn is the emptied holder's to pass, and it goes to a teammate — the same rule
+    // and the same phase as being emptied by your own declare. It does NOT advance to seat 4,
+    // which is an opponent; that was the derived rule this vector used to pin, and it was wrong.
+    expect(r.state.phase).toBe('awaitPass')
+    expect(r.state.turn).toBe(3)
+    expect(r.state.declareWindow).toBeUndefined()
+    expect(refuse(r.state, { type: 'pass', seat: 3, to: 4 }).code).toBe('PASS_TARGET_NOT_TEAMMATE')
+    const passed = ok(r.state, { type: 'pass', seat: 3, to: 5 })
+    expect(passed.state.phase).toBe('playing')
+    expect(passed.state.turn).toBe(5)
+    expect(passed.state.declareWindow).toEqual({ option: 5, declined: 0 })
+    expect(conserved(passed.state)).toBe(true)
   })
 
-  it('wraps around when the seats after the emptied turn-holder are also out', () => {
-    // Only seats 1 and 5 hold anything besides the declared set; the turn-holder is seat 3.
-    const s = game54(hands54({ 0: ['2C', '3C'], 2: ['4C', '5C'], 3: ['6C', '7C'] }, [1, 5]), 3)
+  it('advances instead, wrapping, when the emptied turn-holder has no teammate left', () => {
+    // Only seats 0 and 2 hold anything besides the declared set, so team B is wholly out the
+    // moment seat 3 is emptied and there is no teammate to receive a pass.
+    const s = game54(hands54({ 0: ['2C', '3C'], 2: ['4C', '5C'], 3: ['6C', '7C'] }, [0, 2]), 3)
     const r = ok(optionTo(s, 0), { type: 'claim', seat: 0, book: 'LOW-C', assignments: LOW_C_CORRECT() })
-    expect(r.state.hands.map((h) => h.length > 0)).toEqual([false, true, false, false, false, true])
-    expect(r.state.turn).toBe(5)
+    expect(r.state.hands.map((h) => h.length > 0)).toEqual([true, false, true, false, false, false])
+    // Seats 4 and 5 are out too, so the scan wraps past them to seat 0.
+    expect(r.state.phase).toBe('playing')
+    expect(r.state.turn).toBe(0)
   })
 
   it('an out-of-turn declarer who empties themselves drops out and does NOT pass', () => {

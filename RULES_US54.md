@@ -198,10 +198,22 @@ Row 18 changes in effect, because a cardless player may still declare (row 15).
 - **A cardless player's declare is nearly always self-harming** and the bots must know it: every
   card must be assigned to an own-team seat, so if your whole team is cardless, any declare you make
   is necessarily wrong and gifts the set to the opponents (row 14).
-- **[DERIVED] If a declare empties the current turn-holder**, the turn moves to the **next seat in
-  ascending cyclic seat order that still holds cards**. This case cannot arise under the 48-card
-  default (claims are turn-only there, so only the claimant can be emptied by their own claim), and
-  it is new here.
+- **[OWNER] If a declare empties the current turn-holder**, they **pass the turn to a teammate**,
+  exactly as row 20 has them do when their own declare empties them. Whose declare emptied them
+  makes no difference: the turn is theirs, and a turn-holder who runs out of cards passes it to a
+  teammate of their choosing (`awaitPass`). This case cannot arise under the 48-card default
+  (claims are turn-only there, so only the claimant can be emptied by their own claim), and it is
+  new here. If the whole team is out there is no teammate to receive it, and only then does the
+  turn advance to the next seat in ascending cyclic order that still holds cards.
+
+  > **Corrected 2026-09-01.** This bullet was previously marked `[DERIVED]` and inferred the
+  > ascending-cyclic advance for *every* such case — which hands the turn to seat `turn + 1`, an
+  > **opponent**, whenever that opponent holds a card. Measured over 400 games and 3,079 declares,
+  > 56 out-of-turn declares emptied the turn-holder, 37 of those had a teammate still holding
+  > cards, and **19 gave the turn to the wrong team** — about one game in twenty-one. The
+  > inference was wrong against the owner's rulebook and the rule above replaces it. Every result
+  > measured under the previous rule is stamped with the previous hash of this document and is
+  > superseded; see the papers' rule-set sections.
 - **[DERIVED] If an out-of-turn declarer empties themselves**, they simply drop out. They do **not**
   pass the turn — passing is a turn action and they do not hold the turn. The 48-card `awaitPass`
   flow (RULES.md row 20) applies **only** when the declarer *was* the turn-holder.
@@ -304,7 +316,9 @@ Derived per variant (never hardcoded anywhere):
 7. **Clinch** — Team A reaches its 5th set on move *k* → `phase === 'finished'` immediately, with
    sets still unresolved and cards still in hands; `winner === 0`; no `tie` is ever emitted.
 8. **Turn-holder emptied by another seat's declare** — turn is seat 3 holding exactly the two cards
-   seat 0's declare removes → turn advances to the next seat with cards; seat 3 emits `player_out`.
+   seat 0's declare removes → phase is `awaitPass`, the turn is still seat 3's to give, and it may
+   go only to a teammate; seat 3 emits `player_out`. With seat 3's whole team out instead, and
+   only then, the turn advances to the next seat with cards.
 9. **Cardless declarer** — a seat with an empty hand legally declares and it resolves normally.
 10. **Fuzz gate** — 10,000 `us54` games: all terminate, every winner is a clinch at exactly 5 sets,
     the `resolved === 9` fallback **never** fires, no `tie` is ever emitted, and
