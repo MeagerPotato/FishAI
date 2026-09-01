@@ -422,7 +422,7 @@ export function LabReport() {
       <Section id="rules" badge="The rule set">
         <SectionHead
           lines={['54 cards, nine sets of six,', 'and *no way to draw*.']}
-          sub={`Results are only meaningful against the rules that produced them. This page reports ${RULES_FILE}, stamped above from meta.rulesHash and verified in the browser against the shipped document's own bytes — not the pagat48 rule set the live table plays.`}
+          sub={`Results are only meaningful against the rules that produced them. This page reports ${RULES_FILE}, stamped above from meta.rulesHash and verified in the browser against the shipped document's own bytes — the same rule set the live table at /play deals.`}
         />
         {/* The figure deals the 54 cards into their nine sets, and the panel underneath says
             why the ninth one decides everything. The sentence that used to sit here said both
