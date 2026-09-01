@@ -28,11 +28,60 @@
  *   signatures of `foreignDeclare` and `declareOnlyOwnHand` styles.
  * - **Hand counts replay.** Counts are re-derived from the log rather than read from
  *   `view.counts`: every seat starts at `handSize(config)`, a hit moves one card
- *   asker <- target, and a claim removes each of the six cards from whoever `actualHolders`
- *   says held it. This is deliberate: the classifier evaluates *truncated* logs (checkpoint
- *   fingerprints slice the log mid-game), and a truncated view's top-level `counts` describe
- *   the end of the game, not the truncation point. The replayed counts are correct at every
- *   prefix, and `tests/bots/observe.test.ts` pins them against `view.counts` at full length.
+ *   asker <- target, and a claim takes all six cards of the resolved book out of play,
+ *   debiting each from the seat that held it. This is deliberate: the classifier evaluates
+ *   *truncated* logs (checkpoint fingerprints slice the log mid-game), and a truncated view's
+ *   top-level `counts` describe the end of the game, not the truncation point. The replayed
+ *   counts are correct at every prefix, and `tests/bots/observe.test.ts` pins them against
+ *   `view.counts` at full length.
+ *
+ * ## The one place the replay can be weaker than exact — and how it says so
+ *
+ * A claim's `actualHolders` is the only witness of *whose* hand each of the six cards left.
+ * At home it always names all six: `reduce.ts` builds it by scanning the true hands and
+ * refuses the action outright if any card of the book is in no hand. But the log is not
+ * always ours. A bridged failed declare emits only the cards an earlier hit had already made
+ * public (CROSSPLAY.md §9.6), so the map is *partial by construction* there.
+ *
+ * So the scan iterates `bookCards(book, config)` — the book, not the map. A card the map
+ * omits has still left play, and must still leave `publicHolder`, or every later ask for it
+ * reads as certain or provably dead against a hand it is no longer in. The holder comes from
+ * the reveal, falling back to `publicHolder` when the reveal is silent (a hit locates a card
+ * exactly, and only another hit or this resolution can move it, so that fallback is exact
+ * too). What the scan will *not* do is invent a holder: when no witness names one, no hand is
+ * debited. That leaves a count too high rather than debiting the wrong seat, which is the
+ * error a caller can reason about.
+ *
+ * The residual weakness is **reported, not silent**, and it is reported where a consumer will
+ * meet it: `replayCounts` returns `countsExact` beside the counts, and `observeSeats` carries
+ * the same flag onto every `SeatObservation`. It is deliberately *not* in `FEATURE_KEYS` —
+ * `featureVector` projects that list and nothing else, so the classifier's input vector and
+ * every calibrated fingerprint in `data/fingerprints.ts` are untouched by its existence.
+ *
+ * It goes false in three places, all of them witness failures rather than count arithmetic:
+ * a resolved book supplies fewer holders than it has cards; a reveal names a seat the replay
+ * had already emptied; or a reveal names one seat for a card `publicHolder` located at
+ * another. In the last two the reveal wins the debit — it is the stronger witness, being the
+ * true hand rather than a location inferred from an earlier hit — but the hit that made the
+ * losing witness has *already* been replayed into the counts and cannot be taken back, so a
+ * second seat is wrong too and the flag is the only thing that says so.
+ * `missFewestShare` / `missMostShare` compare counts *across* seats, so a consumer weighing
+ * those on a foreign log can ask first whether the counts are worth comparing. A silent
+ * weakness in a counter is exactly what published a wrong number once in this project
+ * already: a counter read zero where zero was impossible, and it was filed as a coverage gap
+ * instead of the defect it was.
+ *
+ * The two declare *signatures* honour that same fact rather than reporting it, because for
+ * them there is nothing to report — the observation is simply not available.
+ * `foreignDeclares` ("the claimer held no card of the book") and `ownHandOnlyDeclares` ("every
+ * card was the claimer's own") are claims about *all* the holders, and a partial map cannot
+ * support either: an empty map makes "the claimer is not among the holders" vacuously true,
+ * which would score every bridged failed declare as foreign, and a one-card map naming the
+ * claimer would score it own-hand-only. Both increments are therefore gated on a reveal that
+ * names every card of the book, so both counters — and `foreignDeclareShare` /
+ * `ownHandOnlyShare`, which unlike `countsExact` *are* in `FEATURE_KEYS` — read 0 on a log
+ * that cannot certify them. At home every reveal is complete, so the gate never fires and no
+ * home observation changes.
  *
  * ## What the log can NOT show
  *
@@ -95,14 +144,25 @@ export interface SeatObservation {
   missMostShare: number
   declares: number
   declaresCorrect: number
-  /** Declares of a book the claimer held no card of (exact, from the actualHolders reveal). */
+  /**
+   * Declares of a book the claimer held no card of (exact, from the actualHolders reveal).
+   * Counted only where the reveal named every card of the book — see the header.
+   */
   foreignDeclares: number
-  /** Declares where every actualHolders value == the claimer. */
+  /** Declares where every actualHolders value == the claimer, on a complete reveal only. */
   ownHandOnlyDeclares: number
   /** Mean of (declare event index / final observed event index); 0 when no declares. */
   declareBackload: number
   /** Total public events observed (the x-axis for accuracy curves). */
   events: number
+  /**
+   * Whether the replayed hand counts behind `missFewestShare` / `missMostShare` were derived
+   * exactly — the same flag `replayCounts` returns, repeated per seat because it is a property
+   * of the log every seat was scored against (see the header). A property of the *instrument*,
+   * not of the seat's behaviour, so it is not in `FEATURE_KEYS` and never reaches a classifier
+   * vector or a fingerprint. True on every home log.
+   */
+  countsExact: boolean
 
   // --- normalised shares of the counts above, for length-invariant classification ------------
   // The raw counts are the primary observations; these divide them by their own denominators
@@ -189,6 +249,8 @@ interface SeatTrack {
 interface ScanResult {
   tracks: SeatTrack[]
   counts: number[]
+  /** False once any resolved book's witnesses were incomplete or disagreed (see the header). */
+  countsExact: boolean
 }
 
 /**
@@ -199,6 +261,8 @@ function scan(view: PublicState | SeatView): ScanResult {
   const config = view.config
   const dealt = handSize(config)
   const counts: number[] = ALL_SEATS.map(() => dealt)
+  // Cleared by a resolved book whose witnesses were incomplete or disagreed (see the header).
+  let countsExact = true
   const publicHolder = new Map<Card, Seat>()
   const certified: Set<BookId>[] = ALL_SEATS.map(() => new Set<BookId>())
   const tracks: SeatTrack[] = ALL_SEATS.map(() => ({
@@ -292,14 +356,50 @@ function scan(view: PublicState | SeatView): ScanResult {
       const mine = seatTeam(claimer) === 0 ? 'team0' : 'team1'
       if (outcome === mine) t.declaresCorrect++
 
-      const holders = Object.values(actualHolders)
-      if (!holders.includes(claimer)) t.foreignDeclares++
-      if (holders.length > 0 && holders.every((s) => s === claimer)) t.ownHandOnlyDeclares++
+      // Read the reveal through the BOOK, not through `Object.keys(actualHolders)`: the map is
+      // total at home but partial on a bridged failed declare (header), and `Record<Card, Seat>`
+      // claims a totality a foreign log does not honour. One `undefined` here is one card no
+      // reveal witnesses.
+      const cards = bookCards(book, config)
+      const revealed: (Seat | undefined)[] = cards.map((c) => actualHolders[c])
+      const completeReveal = revealed.every((s) => s !== undefined)
 
-      // The reveal removes all six cards from whoever actually held them, whatever the
-      // outcome — the reducer strips them unconditionally, and so does the replay.
-      for (const [card, holder] of Object.entries(actualHolders) as [Card, Seat][]) {
-        counts[holder]--
+      // The declare signatures are claims about ALL the holders, so a partial reveal cannot
+      // support either of them (header). Gated, not guessed: an empty map would otherwise make
+      // `!includes(claimer)` vacuously true and score every bridged failed declare as foreign.
+      // At home `completeReveal` is always true (`reduce.ts:366-379` builds the map from the
+      // true hands and refuses the action if a card is in none), so nothing changes there.
+      if (completeReveal) {
+        const holders = revealed as Seat[]
+        if (!holders.includes(claimer)) t.foreignDeclares++
+        if (holders.every((s) => s === claimer)) t.ownHandOnlyDeclares++
+      } else {
+        countsExact = false
+      }
+
+      // The reveal takes all six cards of the book out of play, whatever the outcome — the
+      // reducer strips them unconditionally, and so does the replay. This is `knowledge.ts`'s
+      // shape (`:286-293`), which is why that module was never exposed to this.
+      for (let j = 0; j < cards.length; j++) {
+        const card = cards[j]
+        // The reveal is preferred, a public location is the fallback, and neither is invented.
+        const seen = revealed[j]
+        const located = publicHolder.get(card)
+        // Two witnesses, two seats: the reveal is the true hand and the location was inferred
+        // from an earlier hit, so the reveal takes the debit — but that hit is already in
+        // `counts` and cannot be un-replayed, so the located seat is over by one and stays
+        // over. Same class of contradiction as the emptied-seat clamp below, and it gets the
+        // same treatment. Cannot fire at home, where both witnesses are true.
+        if (seen !== undefined && located !== undefined && located !== seen) countsExact = false
+        const holder = seen !== undefined ? seen : located
+        if (holder !== undefined) {
+          // Clamped: a seat replayed to 0 cannot have held it, so log and replay disagree and
+          // the counts have stopped being exact — say so rather than going negative.
+          if (counts[holder] > 0) counts[holder]--
+          else countsExact = false
+        }
+        // Unconditional, holder known or not: a resolved card is out of play and must not stay
+        // "located" at a seat, or every later ask for it scores against a hand it has left.
         publicHolder.delete(card)
       }
       for (const s of ALL_SEATS) {
@@ -312,21 +412,58 @@ function scan(view: PublicState | SeatView): ScanResult {
     // replayed count is 0 by the time the event lands), never a source of new information.
   }
 
-  return { tracks, counts }
+  return { tracks, counts, countsExact }
+}
+
+/** The replayed hand counts, and whether the log let the replay derive them exactly. */
+export interface CountReplay {
+  /** One count per seat 0..5 at the end of the observed log. */
+  counts: number[]
+  /**
+   * True when every resolved book in the log named all six of its holders *and* no reveal
+   * contradicted what the replay already believed, so every card that left play was debited
+   * from the hand it actually left. False means at least one seat's count is wrong: either an
+   * *upper* bound (a card left play that no witness could attribute, and the replay declined
+   * to guess) or an over-count left behind by a hit the reveal overruled.
+   *
+   * Deliberately conservative — it goes false even in the case where `publicHolder` happened
+   * to recover every missing holder, because "the reveal named all six" is a property a
+   * consumer can check for itself, while "the recovery happened to be complete" is one it
+   * would simply have to take on trust.
+   */
+  countsExact: boolean
 }
 
 /**
- * The replayed hand counts at the end of the observed log. Exposed so the replay can be pinned
- * against `view.counts` on a full log, and because a truncated view's own `counts` are wrong
- * for its truncation point by construction (see the header).
+ * The replayed hand counts at the end of the observed log, with the flag that says whether
+ * they are exact. Exposed so the replay can be pinned against `view.counts` on a full log, and
+ * because a truncated view's own `counts` are wrong for its truncation point by construction
+ * (see the header). Reach for this rather than `replayedCounts` whenever the answer depends on
+ * comparing one seat's count against another's — that comparison is the thing an inexact
+ * replay quietly breaks.
+ */
+export function replayCounts(view: PublicState | SeatView): CountReplay {
+  const { counts, countsExact } = scan(view)
+  return { counts, countsExact }
+}
+
+/**
+ * The counts alone — exactly `replayCounts(view).counts`. Kept as its own export because every
+ * existing caller wants the array and nothing else, and because the pin against `view.counts`
+ * reads better without the wrapper.
  */
 export function replayedCounts(view: PublicState | SeatView): number[] {
   return scan(view).counts
 }
 
-/** One SeatObservation per seat 0..5, from a single pass over the public log. */
+/**
+ * One SeatObservation per seat 0..5, from a single pass over the public log. `countsExact` is
+ * the scan's own flag repeated on every seat: `classifySeats` hands a consumer these and
+ * nothing else, so a flag left behind in `ScanResult` would be unreachable from the one place
+ * that reads `missFewestShare` / `missMostShare` ([classify.ts](classify.ts)).
+ */
 export function observeSeats(view: PublicState | SeatView): SeatObservation[] {
-  const { tracks } = scan(view)
+  const { tracks, countsExact } = scan(view)
   const events = view.log.length
   const finalIndex = events - 1
   return ALL_SEATS.map((seat) => {
@@ -359,6 +496,7 @@ export function observeSeats(view: PublicState | SeatView): SeatObservation[] {
       ownHandOnlyDeclares: t.ownHandOnlyDeclares,
       declareBackload: backload,
       events,
+      countsExact,
       deadAskShare: t.provablyDeadAsks / Math.max(1, t.asks),
       certainAskShare: t.certainAsks / Math.max(1, t.asks),
       leakyAskShare: t.leakyAsks / Math.max(1, t.asks),

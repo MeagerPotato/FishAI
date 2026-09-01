@@ -5,7 +5,10 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist', 'node_modules']),
+  // `.claude/worktrees` holds throwaway checkouts of this same repository. Without this ignore
+  // eslint parses every copy, which is both meaningless and slow: it reported 2,474 parser errors
+  // across ~43 worktrees, none of them about this checkout's code.
+  globalIgnores(['dist', 'node_modules', '.claude']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [js.configs.recommended, tseslint.configs.recommended],

@@ -52,8 +52,8 @@ export {
 export { decide, decideExplained } from './decide.ts'
 export type { DecisionTrace, ExplainedDecision } from './decide.ts'
 // --- FishAI v1.0: observation, classification, adaptive selection ----------------------------
-export { FEATURE_KEYS, featureVector, observeSeats, replayedCounts } from './observe.ts'
-export type { FeatureKey, SeatObservation } from './observe.ts'
+export { FEATURE_KEYS, featureVector, observeSeats, replayCounts, replayedCounts } from './observe.ts'
+export type { CountReplay, FeatureKey, SeatObservation } from './observe.ts'
 export { checkpointBucket, classifySeat, classifySeats } from './classify.ts'
 export type { SeatClassification, StyleFingerprint } from './classify.ts'
 export { FINGERPRINTS, FINGERPRINT_BUCKET_IDS } from './data/fingerprints.ts'
@@ -82,3 +82,6 @@ export type { LicenceLookup } from './defuse.ts'
 // `BoundedSpec` — the acyclic arrangement documented in both file headers. Everything
 // importing the barrel gets the full five-shape union.
 export type { PolicySpec } from './bounded.ts'
+// --- Monet v0.1: the agent line's version registry (MONET.md §3.1) ---------------------------
+export { MONET_VERSIONS, MONET_VERSION_IDS, isMonetVersion, monetPolicy } from './monet.ts'
+export type { MonetVersion } from './monet.ts'

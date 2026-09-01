@@ -177,7 +177,7 @@ FishLab's engine has a dedicated `pass` op for the position *"you hold the turn 
 cards"*, and sends it the moment a declare poll is answered "none". The adapter answered the
 **declare poll first**. `opPoll` built a view with `phase: 'playing'` and an open `declareWindow` at
 the seat whatever the hand size, and FishAI's `mustDeclareNow`
-([decide.ts:534](lib/engine/bots/decide.ts#L534)) is
+([decide.ts:550](lib/engine/bots/decide.ts#L550)) is
 
 ```ts
 function mustDeclareNow(view: SeatView): boolean {
@@ -186,7 +186,7 @@ function mustDeclareNow(view: SeatView): boolean {
 }
 ```
 
-`viewerCouldAskIfWindowClosed` ([decide.ts:540](lib/engine/bots/decide.ts#L540)) returns false on an
+`viewerCouldAskIfWindowClosed` ([decide.ts:556](lib/engine/bots/decide.ts#L556)) returns false on an
 empty hand, so a cardless turn-holder is compelled to declare and **declining is illegal**. At home
 that state is `awaitPass`, not a declare window, and the branch is unreachable; the bridge made it
 reachable. RULES_US54 §3.2 `MUST_DECLARE` exists because `us54` has no pass — the alternative is a
@@ -196,7 +196,7 @@ compulsion anyway. **Every such declare spent a set to avoid a move that costs n
 The guard is one condition in the `declare_poll` handler and is deliberately narrow: it fires only
 when `action.type === 'claim' && view.hand.length === 0 && state.turn === state.seat` and the trace
 kind is `must-declare` or `forced-claim` — the compelled variants
-([decide.ts:1683](lib/engine/bots/decide.ts#L1683)). Confident `own-book-claim`, `certain-claim` and
+([decide.ts:1699](lib/engine/bots/decide.ts#L1699)). Confident `own-book-claim`, `certain-claim` and
 `ev-claim` go through untouched.
 
 **What it was worth**, six seeds on identical deals, both arms:
@@ -465,8 +465,8 @@ The load-bearing evidence for POLICY ≈ 0 is bridge-independent and does not de
 decomposition. Across **265,884 declined declare polls** in two independent probes, **not one was
 declined while a provable set sat in hand**, and `certainClaim` is gated only by
 `withinHoardLimits`, which returns true before touching the hand at Punter's `hoardBooks = 0,
-minHandSize = 0` ([decide.ts:496](lib/engine/bots/decide.ts#L496) and
-[decide.ts:680](lib/engine/bots/decide.ts#L680), both verified). The bridge
+minHandSize = 0` ([decide.ts:512](lib/engine/bots/decide.ts#L512) and
+[decide.ts:696](lib/engine/bots/decide.ts#L696), both verified). The bridge
 defect produced *extra* declares, never extra declines, so it cannot have hidden a withheld provable
 set. [measured; internal counter over declines, bridge-independent in kind]
 
@@ -860,7 +860,7 @@ verified against the shipped tree.
 `declareEagerness` 1.0, `declareThresholdStalled` 0.34, `declareMaxUncertain` 3 and
 `foreignDeclareThreshold` 0.50 each reproduce base to four decimals on every KPI; `declareThreshold`
 buys speed by guessing at a net loss (§3.1). **The reason is structural, not tuned.** `evClaim`'s
-gate at [decide.ts:751-759](lib/engine/bots/decide.ts#L751) requires **every** uncertain card's
+gate at [decide.ts:767-775](lib/engine/bots/decide.ts#L767) requires **every** uncertain card's
 candidate list to be entirely teammates —
 
 ```ts

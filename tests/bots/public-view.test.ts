@@ -255,6 +255,14 @@ describe('public-view-only proof', () => {
       // this list — so no engine state is reachable from it, and it reads no hand but the
       // viewer's own (`view.hand`, which is the viewer's by definition).
       './conceal.ts',
+      // The MONET.md version registry: a frozen table mapping a Monet version id to the
+      // `PolicySpec` that version plays, plus two total pure functions over it. It imports
+      // only './roster.ts', './style.ts' and './bounded.ts' (type-only) — every one already
+      // on this list — and it holds parameter data, not positions: nothing in it takes a
+      // view, let alone a GameState. It is on this list because `index.ts` re-exports it,
+      // and it is admitted on the same standard as './roster.ts' rather than as an
+      // exception to it.
+      './monet.ts',
     ])
     const forbiddenIdents = /\b(newGame|publicView|seatView|reduce|dealHands|legalAsks|checkInvariants|shuffle)\b/
     for (const f of files) {

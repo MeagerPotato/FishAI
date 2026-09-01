@@ -63,6 +63,7 @@ measures nothing.
 | turn flow | a hit keeps the turn, a miss concedes it to the seat asked | rows 9, 10 | **yes** |
 | **a wrong declare** | awards the set to the **opposing** team | `wrongDeclare: 'opponents'` | **yes** |
 | **who may declare** | **the turn-holder only** | **any seat, in the declare window (row 11)** | **NO** |
+| **game end** | **all nine half-suits resolved** | **the fifth set awarded ends it (row 19, `winCondition: 'clinch'`)** | **NO** |
 
 The first five make the bridge a pure renaming: no rules translation is needed, and FishAI's
 inference layer — built entirely on the row-6 and row-7 facts an ask publishes — reads a log that
@@ -80,6 +81,23 @@ Nearly half of FishAI's declaring happens through a door their engine does not h
 sets would simply be declared later on its own turn, so 45.4% is an upper bound on the loss rather
 than an estimate of it. But the direction is unambiguous, and every FishAI win rate in §2 should be
 read as a **floor**.
+
+**The seventh does not change who wins; it changes what a set margin means.** Nine sets, and `us54`
+makes a tie arithmetically impossible (row 21), so a team awarded a fifth set holds a majority the
+remaining four cannot overturn: stop there or play them out, the winner is the same team. Every win
+rate in this document is therefore comparable across the two rule sets. Set *margins* are not.
+Their engine resolves all nine — which is why §2's "mean sets, for / against" column sums to 9.00
+on every row — so any set margin reported here is a nine-set margin, and does not compare with an
+`us54` one that stops at the clinch.
+
+The second consequence is subtler. FishAI's speculative-declare threshold is clinch-aware: it moves
+once either team stands one set from `clinchTarget`, and the half of that which is a rule
+consequence rather than a style preference reasons that a failed declare would hand the opponents
+the set that *ends the game* ([decide.ts:597](lib/engine/bots/decide.ts#L597)). The reasoning
+survives the crossing — five of nine decides their game too — but the sets played on after the
+decision are a phase `us54` cannot reach, and FishAI goes on declaring in them under a threshold
+built for a game that would already be over. That tail cannot move a win rate, since the winner is
+fixed before it starts. Nothing here measures what else it does.
 
 Two smaller notes. The adapter fell back to a default in **6 decisions out of roughly nine
 thousand** (0.07%), always on FishAI emitting `decline` — the declare-window move that does not
@@ -112,8 +130,15 @@ of its declares. It is decisively ahead of the rest of this lab's field.
 An earlier draft of this paragraph said "their top four" and "their field" without qualification.
 That reads as a claim about fishlabs' standing generally, and §9 shows it is not one. The four bots
 above are the top of a **v0.2–v0.3 era TypeScript lab**, not the top of the shipped lineage.
-Against the shipped lineage FishAI wins 28.6% (v0.6), 28.2% (v0.5) and 24.2% (SESTINA v1.0) — 21 to
-26 points under even, not one to seven. §2 measures standing against the lab and nothing more.
+Against the shipped lineage, on the corrected bridge and the three matched seeds the ladder uses
+(§9.1), FishAI wins **33.31% (v0.5)**, **32.86% (v0.6)** and **27.83% (SESTINA v1.0)** — 17 to 22
+points under even, not one to seven. (That SESTINA cell is the three-seed ladder figure; the
+six-seed headline is **27.08%**.) §2 measures standing against the lab and nothing more.
+
+The three lineage figures this paragraph carried until 2026-08-31 — 28.6%, 28.2% and 24.2% — were
+defective-bridge numbers (§9.5), superseded by the three above and not to be quoted again. What
+they were used to say is what survives the correction: the gap to the shipped lineage is several
+times the gap to this lab.
 
 Two further reasons to hold this table loosely, both already on the record elsewhere:
 [CONCESSION.md](CONCESSION.md) §8a.1 puts **all four headline cells below its power floor** at 150
@@ -533,7 +558,7 @@ v07:r12=25,rtie=1,pool=-1,oppfloor=-1,force=1000000,askfloor=-1,stall=12,s1=1,de
 **What it was.** `us54` has no pass. When a seat holds the turn and has no cards, RULES_US54 §3.2
 `MUST_DECLARE` compels it to declare on best evidence, because the alternative is a table that never
 progresses — `viewerCouldAskIfWindowClosed` returns false on an empty hand, so `mustDeclareNow`
-fires, and `decide` is forbidden from declining ([decide.ts:534](lib/engine/bots/decide.ts#L534)).
+fires, and `decide` is forbidden from declining ([decide.ts:550](lib/engine/bots/decide.ts#L550)).
 
 Their engine **does** have a pass. It has a `pass` op for exactly that position and sends it the
 moment the declare poll is answered "none". The adapter translated FishAI's compulsion into a host
@@ -543,7 +568,7 @@ such declare spent a set to avoid a move that costs nothing.
 
 **The fix** is one guard in the adapter's `declare_poll` handler, and it is deliberately narrow — it
 fires only when the trace kind is `must-declare` or `forced-claim`, the compelled variants
-([decide.ts:1683](lib/engine/bots/decide.ts#L1683)). A confident `own-book-claim`, `certain-claim`
+([decide.ts:1699](lib/engine/bots/decide.ts#L1699)). A confident `own-book-claim`, `certain-claim`
 or `ev-claim` still goes through untouched, so the guard suppresses compulsion and nothing else.
 
 **What it cost.** 3.44 points of win rate and 5.59 points of declare accuracy. It is a defect in the
@@ -579,9 +604,21 @@ without it.
   adapter emits only cards already public from an earlier hit. FishAI therefore sees *less* than its
   home engine would give it and never sees anything false: strictly weaker inference, never wrong
   inference. It cannot inflate the result.
-- **One `major` audit finding stands.** `observe.ts` mis-replays counts from the partial holders
-  map. It is unreachable at a fixed roster style, so it does not touch this result — and it means
-  **the adapter must not be reused for the adaptive arm without a fix.**
+- **The one `major` audit finding is closed** — in Monet v0.1, and this bullet used to say it was
+  still open. `observe.ts` replayed hand counts by iterating the partial `actualHolders` map
+  rather than the book, so every card the map omits stayed in a hand *and* stayed publicly
+  located: a later ask for one of them scored `certainAsks` or `provablyDeadAsks` against a hand
+  it had already left. The fix iterates the book, clears `publicHolder` for every card of a
+  resolved set whether the reveal named it or not, clamps a debit at zero, and refuses to
+  attribute a card to a seat no witness names. It also gates the two declare *signatures* —
+  `foreignDeclares`, `ownHandOnlyDeclares` — on a reveal that names the whole book, because on an
+  empty map "the claimer is not among the holders" is vacuously true and scored every bridged
+  failed declare as foreign. **What the fix does not recover:** a card the reveal omits and no
+  earlier hit located left a hand the log cannot identify, so that hand's count stays one too
+  high, and a reveal that contradicts an earlier hit leaves the losing seat over by one. Neither
+  is guessed at. Both are now *reported* — `replayCounts(view).countsExact`, carried onto every
+  `SeatObservation` — where before they were silent. None of this is reachable at a fixed roster
+  style, so no number in §9 moves.
 - **Their engine is sensitive to floating-point contraction.** `-march=native`, their Makefile
   default, enables FMA and changes tie-breaks, so their published identity digests do not reproduce
   across machines. `-march=native -ffp-contract=off` reproduces the generic digest exactly. All
@@ -599,7 +636,11 @@ without it.
 
 - Nothing about a **tuned** FishAI. No FishAI parameter was fitted against SESTINA, and doing so
   would burn it as a holdout exactly as §7 says of their lab bots.
-- Nothing about the **adaptive arm** — see the `observe.ts` finding in §9.6.
+- Nothing about the **adaptive arm.** The `observe.ts` defect that disqualified the adapter for it
+  is closed (§9.6), so the blocker is gone — but no adaptive cell has been run over this bridge,
+  and the *residual* limit travels with the adapter: on a foreign log the replayed counts can be
+  an upper bound, `missFewestShare` and `missMostShare` are exactly the two features that compare
+  counts across seats, and anything weighing them must read `countsExact` first.
 - **The ladder ordering rests on matched seeds, not on single cells.** FishAI is furthest under even
   against SESTINA — 5.03 points below its v0.6 cell and 5.47 below its v0.5 cell — and those gaps
   clear the ±4.00 paired floor over 600 deals *only because the three opponents were played on the

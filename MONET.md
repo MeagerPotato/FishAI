@@ -196,22 +196,27 @@ Every belief milestone below is gated on **both** cells.
 
 ### 1.4 The record debt Monet inherits
 
-CROSSPLAY.md §9 has been re-issued and is correct. Three items remain, and they must land in v0.1
-because Monet's baseline is quoted from documents that still contradict themselves:
+CROSSPLAY.md §9 has been re-issued and is correct. Three items remained when this section was
+written, because Monet's baseline was quoted from documents that still contradicted themselves.
+**All three are closed in v0.1.** The table is kept rather than deleted: a debt that disappears
+silently is indistinguishable from one that was never paid, which is the whole complaint §1.4
+exists to make. Locations are section references, not line anchors — the version of this table
+that pinned "`CROSSPLAY.md` §2, line 115" was wrong within the day, because closing the item moved
+the paragraph.
 
-| item | location | what is wrong |
-|---|---|---|
-| lineage summary | `CROSSPLAY.md` §2, line 115 | still reads "28.6% (v0.6), 28.2% (v0.5) and 24.2% (SESTINA v1.0) — 21 to 26 points under even". Corrected: **32.86 / 33.31 / 27.83**, i.e. **17 to 22 points under even** |
-| rules table | `CROSSPLAY.md` §1 | no win-condition row. `us54` clinches at five sets; their engine plays all nine half-suits |
-| stale comment | `decide.ts:463-465` | asserts no speculative declare ever cleared `declareThreshold 0.775` across 51,420 decisions. Abroad, `ev-claim` fires **30 times in 3,858 traced declares** (0.78%) [measured, corrected] |
+| item | location | what was wrong | status |
+|---|---|---|---|
+| lineage summary | `CROSSPLAY.md` §2, the "earlier draft" paragraph | read "28.6% (v0.6), 28.2% (v0.5) and 24.2% (SESTINA v1.0) — 21 to 26 points under even". Corrected: **32.86 / 33.31 / 27.83**, i.e. **17 to 22 points under even** | **closed in v0.1.** Rewritten to the three corrected figures, with the three withdrawn ones named as superseded rather than quietly dropped |
+| rules table | `CROSSPLAY.md` §1 | no win-condition row. `us54` clinches at five sets; their engine plays all nine half-suits | **closed in v0.1.** A seventh row, plus two paragraphs on what the difference does and does not change: win rates stay comparable across the two rule sets, set margins do not |
+| stale comment | `decide.ts`, the hoard-gate comment above `withinHoardLimits` | asserted no speculative declare ever cleared `declareThreshold 0.775` across 51,420 decisions. Abroad, `ev-claim` fires **30 times in 3,858 traced declares** (0.78%) [measured, corrected] | **closed in v0.1.** The measurement is now stated as what it was — a `declareThreshold` sweep of *Balanced* on one home bank — with the away result beside it. The gate move survives: it never needed `evClaim` to be dead everywhere, only too thin to carry a style |
 
 ### 1.5 What Monet is allowed to break, and what it is not
 
 | may break | must not break |
 |---|---|
 | `Knowledge`'s internal representation (`knowledge.ts:134-157`, `:540-568`) | `SeatView` (`bots/types.ts:13`) — every input a posterior needs is already in it |
-| `planClaim` (`decide.ts:391-439`) and `certainClaim` (`decide.ts:680-701`) | `reduce.ts` — verified needing no change: `actualHolders` is always complete (`:367-379`), `windowAfter` resets on every accept path (`:169-172`), `publicView` never leaks hidden identity (`views.ts:8-23`) |
-| the ask scorer's probability term (`knowledge.ts:722-733`) | determinism and purity: a policy must remain a pure function of `SeatView`, and must not draw from the rng, or `tests/bots/explain.test.ts`'s bit-identity pin (`decide.ts:1959-1963`) fails |
+| `planClaim` (`decide.ts:391-439`) and `certainClaim` (`decide.ts:696-717`) | `reduce.ts` — verified needing no change: `actualHolders` is always complete (`:367-379`), `windowAfter` resets on every accept path (`:169-172`), `publicView` never leaks hidden identity (`views.ts:8-23`) |
+| the ask scorer's probability term (`knowledge.ts:722-733`) | determinism and purity: a policy must remain a pure function of `SeatView`, and must not draw from the rng, or `tests/bots/explain.test.ts`'s bit-identity pin (`decide.ts:1975-1979`) fails |
 | `BOUNDED.md`'s cost model — see below | `us54`'s rules. §4 is an owner decision, not an implementation detail (§4.2) |
 
 **`bounded.ts` is the scoped casualty, and it must be scoped before code is written, not after.**
@@ -250,11 +255,11 @@ carried by the 11 declares outside that population — so the 8.6% share rests o
 
 | trace kind | count | share | code path |
 |---|---:|---:|---|
-| `certain-claim` | 163 | 57.0% | `decide.ts:680` |
+| `certain-claim` | 163 | 57.0% | `decide.ts:696` |
 | `own-book-claim` | 112 | 39.2% | `decide.ts:268` |
-| `must-declare` | 5 | 1.7% | `decide.ts:1486` |
-| `ev-claim` | 5 | 1.7% | `decide.ts:724` |
-| `forced-claim` | 1 | 0.3% | `decide.ts:827` |
+| `must-declare` | 5 | 1.7% | `decide.ts:1502` |
+| `ev-claim` | 5 | 1.7% | `decide.ts:740` |
+| `forced-claim` | 1 | 0.3% | `decide.ts:843` |
 
 **275 of 286 declares (96.2%) were made with zero uncertain cards. Once a set is provable, Monet
 cashes it essentially instantly.** [measured, home]
@@ -277,7 +282,7 @@ and §2.2's structural gate is the reason.
 
 ### 2.2 The knobs this rules out, with their code paths
 
-`decideWindow`'s gate order (`decide.ts:1395-1504`):
+`decideWindow`'s gate order (`decide.ts:1411-1520`):
 
 ```
 ownTeamCards == 0            :1402   §4 hard rule, no style may override
@@ -305,12 +310,12 @@ ablations agree: four of five declare knobs reproduce base to four decimals, and
 by guessing at −0.97 points [−2.44, +0.50]. [measured, defective, paired — the arms share the defect
 and the contrast is paired, so the null is safe]
 
-The structural reason is one line: `evClaim`'s `allOnTeam` gate (`decide.ts:750-759`) rejects
+The structural reason is one line: `evClaim`'s `allOnTeam` gate (`decide.ts:766-775`) rejects
 **415,822 of 417,010** candidate plans (99.72%) before any threshold is read.
 
 ### 2.3 Why proving a set costs ~9 events and not ~3
 
-`certainClaim`'s test at **`decide.ts:689`** is the operative definition of "provably ours":
+`certainClaim`'s test at **`decide.ts:705`** is the operative definition of "provably ours":
 
 ```
 plan.uncertain.length === 0 && plan.p === 1
@@ -342,11 +347,11 @@ own certifying chain**, and the information yield per public event is roughly on
 2. **The constraint pool never reaches the declare decision.** `planClaim` (`decide.ts:391-439`)
    reads `k.cands` and `k.unknownSlots` and **never touches `k.constraints`**. Verified: the only
    reader in the decision path is `refinedHitProbability` (`knowledge.ts:703-719`, called from
-   `decide.ts:1082`, `decide.ts:1718`, `contained.ts:316`), which is ask-ranking only and gated on
+   `decide.ts:1098`, `decide.ts:1734`, `contained.ts:316`), which is ask-ranking only and gated on
    `skill.refinedInference`. The one piece of joint structure the engine holds is invisible to the
    code that decides whether a set is ours.
 3. **The speculative escape hatch is arithmetically dead.** `evClaim` already tests the correct
-   weaker condition at `decide.ts:750-759` — every uncertain card's candidates are all teammates,
+   weaker condition at `decide.ts:766-775` — every uncertain card's candidates are all teammates,
    i.e. the set is certainly the team's and only the *assignment* is open. But `plan.p` is a
    **product of independent per-card marginals** (`decide.ts:427`), so two uncertain cards at ~0.55
    give p ≈ 0.30 against Punter's 0.775 bar (`roster.ts:214`). The branch cannot fire.
@@ -354,7 +359,7 @@ own certifying chain**, and the information yield per public event is roughly on
 ### 2.4 The one seam, and the one thing that is already free
 
 `knowledgeFor(view, pol)` — **`decide.ts:263-265`**. Every policy path takes its belief from there
-(`decide.ts:1240`, `:1457`, `:1532`, `:1539`). A posterior is introduced behind that seam.
+(`decide.ts:1256`, `:1473`, `:1548`, `:1555`). A posterior is introduced behind that seam.
 
 **The seam is necessary and not sufficient**: if the posterior materialises a `Knowledge` through
 `finishKnowledge` (`knowledge.ts:502-569`), the collapse to masks at `:540-568` throws the joint away
@@ -411,12 +416,14 @@ explains why the band is 31–37% rather than a point.
 
 **Ships.** The FishAI v2.0 policy, unchanged in every reachable path, under the Monet name. Plus:
 
-- **`observe.ts:301-304`, the confirmed `major` audit finding, fixed.** The claim branch decrements
-  `counts` **per entry present in `actualHolders`**, not per card of the resolved book. At home the
-  map always has six entries (`reduce.ts:367-379`) so nothing shows; on the bridge a failed declare
-  emits only cards already public from an earlier hit, and every unlisted card leaves its hand
-  without the replay noticing. Verified directly (`scratchpad/probe-observe.mjs`, `us54`, `LOW-C`
-  resolved with one card per seat, `handSize` 9): [measured, home]
+- **The confirmed `major` audit finding, fixed.** The defect was `observe.ts:301-304` *as of
+  `d918d76`* — line anchors are given against the revision the defect lived in, because the fix
+  moves them. The claim branch decremented `counts` **per entry present in `actualHolders`**, not
+  per card of the resolved book. At home the map always has six entries (`reduce.ts:367-379`) so
+  nothing showed; on the bridge a failed declare emits only cards already public from an earlier
+  hit, and every unlisted card left its hand without the replay noticing. Verified directly
+  (`scratchpad/probe-observe.mjs`, `us54`, `LOW-C` resolved with one card per seat, `handSize` 9):
+  [measured, home]
 
   | `actualHolders` | `replayedCounts` |
   |---|---|
@@ -424,29 +431,33 @@ explains why the band is 31–37% rather than a point.
   | partial (2 entries) | `8,9,8,9,9,9` — four seats permanently +1 |
   | empty (0 entries) | `9,9,9,9,9,9` — six cards vanish with no hand debited |
 
-  The error is permanent and cumulative: nothing re-syncs `counts` against `view.counts`, and
+  The error was permanent and cumulative: nothing re-syncs `counts` against `view.counts`, and
   `observe.ts` never reads `view.books`, so it has no `markResolvedGone` equivalent
-  (`knowledge.ts:425-433`). It corrupts `missFewest`/`missMost` (`:270-286`) and both
-  `certified[...].clear()` guards (`:268`, `:307`), which puts three of the fourteen `FEATURE_KEYS`
-  (`:145-160`) downstream — `missFewestShare`, `missMostShare`, `leakyAskShare`. On a constructed
-  position, one revealed card instead of six moved seat 1's `missFewestShare` from **0 → 1**, the
-  maximum possible swing on that feature. `replayedCounts` is also exported publicly
-  (`bots/index.ts:55`, `engine/index.ts:91`).
+  (`knowledge.ts:425-433`). It corrupted `missFewest`/`missMost` and both `certified[...].clear()`
+  guards, which puts three of the fourteen `FEATURE_KEYS` downstream — `missFewestShare`,
+  `missMostShare`, `leakyAskShare`. On a constructed position, one revealed card instead of six
+  moved seat 1's `missFewestShare` from **0 → 1**, the maximum possible swing on that feature.
+  `replayedCounts` is also exported publicly, from both barrels.
 
-  **The fix is four lines and needs no interface change:** iterate `bookCards(book, config)` rather
-  than `Object.entries(actualHolders)`, decrement only where the map supplies a holder, and clamp at
-  0 — i.e. adopt `knowledge.ts:286-293`'s shape, which is why `knowledge.ts` is immune. That leaves
-  a partial map *weaker* rather than *wrong*, matching the failed-declare asymmetry CROSSPLAY §9.6
-  already relies on. A regression test belongs beside `tests/bots/observe.test.ts:242`, which today
-  pins `replayedCounts` against `view.counts` on **complete** logs only and therefore cannot catch
-  this.
+  **What shipped** iterates `bookCards(book, config)` rather than `Object.entries(actualHolders)`,
+  clears `publicHolder` for every card of the resolved book whether the reveal named it or not,
+  debits only where a witness supplies a holder, and clamps at 0 — i.e. adopts
+  `knowledge.ts:286-293`'s shape, which is why `knowledge.ts` was always immune. That leaves a
+  partial map *weaker* rather than *wrong*, matching the failed-declare asymmetry CROSSPLAY §9.6
+  already relies on. Two things the first draft of this bullet missed and the review caught: the
+  two declare *signatures* read off the same partial map and had to be gated on a complete reveal
+  (an empty map scored `foreignDeclareShare` 1.0 on every bridged failed declare), and a reveal
+  that contradicts an earlier hit leaves the losing seat over by one, so it clears `countsExact`
+  too. The regression tests sit beside the existing `replayedCounts`-vs-`view.counts` pin in
+  `tests/bots/observe.test.ts`, which sees **complete** logs only and therefore could never catch
+  any of this.
 
-  It is unreachable at a fixed roster style — the only caller chain is `observeSeats`
-  (`observe.ts:328`) ← `classifySeats` (`classify.ts:172`) ← `chooseAtCut` (`adaptive.ts:218`) ←
-  `chooseStyle` (`adaptive.ts:261`) ← `resolveWithView` (`decide.ts:1917-1918`), and that last edge
-  fires only when `isAdaptiveSpec(policy)`. **So it does not touch the 27.08% and it does block every
-  adaptive arm Monet may later want.** Fix it first because it is free and it is a correctness bug,
-  not a research question.
+  It is unreachable at a fixed roster style — the only caller chain is `observeSeats` ←
+  `classifySeats` (`classify.ts:172`) ← `chooseAtCut` (`adaptive.ts:218`) ← `chooseStyle`
+  (`adaptive.ts:261`) ← `resolveWithView` (`decide.ts:1933-1934`), and that last edge fires only
+  when `isAdaptiveSpec(policy)`. **So it does not touch the 27.08% and it did block every adaptive
+  arm Monet may later want.** Fixed first because it is free and it is a correctness bug, not a
+  research question.
 - **The op-coverage harness** (§6.2), armed on every cell.
 - **The three record items of §1.4.**
 - **The win-condition assertion in the adapter's `new_game`.** The adapter checks deck sets,
@@ -475,6 +486,19 @@ explains why the band is 31–37% rather than a point.
 
 1. **Byte identity to FishAI v2.0** — 0 action mismatches over ≥ 20,000 `us54` decisions across the
    roster against committed HEAD. This is a pass/fail with no floor: one mismatch fails it.
+
+   **PASS, and re-runnable.** `scripts/byte-identity.mjs` materialises the reference revision file
+   by file with `git show <rev>:<path>` and sweeps both module graphs: **64,198 decisions, 128,396
+   comparisons, 0 mismatches** against `d918d76`, in both spellings the v2.0 arm was ever addressed
+   in. `MUTATE=<styleId>` re-points the reference at another roster style and must fail — it does,
+   at 940 mismatches on a two-seed run — so the harness is known to be wired up rather than assumed
+   to be. The sweep needs a second revision on disk, which a vitest file cannot have, so it also
+   emits `tests/bots/data/monet-v01-bank.ts`: a per-game digest of what the v2.0 arm actually did,
+   generated from the *reference* module graph and committed. `tests/bots/monet.test.ts` replays
+   the same 27 games against it (20,217 decisions). That fixture is the half of this item that
+   still fails a month from now, when no reference tree is at hand — the in-graph comparison alone
+   cannot, because both its arms are the same imported `decide` and a regression moves them
+   together.
 2. **Baseline reproduction** — `bot:monet-v0.1` vs SESTINA, 6 seeds × 200 deals, must return
    **27.08% ± 2.83**, and the per-seed vector must match 28.25 / 28.83 / 26.42 / 26.17 / 27.25 /
    25.58 to the digit. This is a cross-instrument identity pin, not a measurement: a new arm
@@ -483,7 +507,109 @@ explains why the band is 31–37% rather than a point.
    90210, byte-identical to `bot:pf2`.
 3. **Op coverage** — `opPass > 0`, `opAsk` and `opPoll` in their expected bands, every fault counter
    zero, and **every op with a written expectation** (§6.2).
-4. **`observe.ts` regression** — the partial-map and empty-map cases pin to `8,8,8,8,8,8`.
+
+   > **NOT ACCEPTED. This item failed on the run of 2026-09-01 and is open.** The run's own verdict
+   > file ends `OP COVERAGE: FAIL (5 failures)`. Recorded here rather than in a scratchpad, because
+   > a failed pre-registered expectation that lives only next to the arm that failed it is how a
+   > wrong number gets published.
+   >
+   > | counter | written expectation (§6.2, pre-registered) | observed, seed 90210 | ratio |
+   > |---|---:|---:|---:|
+   > | `opAsk` | 50,649 | 51,998 | 1.027 |
+   > | `opPoll` | 354,303 | 363,984 | 1.027 |
+   > | `opPass` | 176 | 178 | 1.011 |
+   > | `passfixDeclines` | 182 | 184 | 1.011 |
+   > | `opForced` | 445 | 467 | 1.049 |
+   >
+   > Two further written expectations fail and were absent from the run's own table: §E's ±30%
+   > per-game band fails on `opForced` for **3 of the 5** non-reference seeds (0.389 / 0.424 / 0.555
+   > / 0.578 / 0.472 / 0.493 against a 0.371 base), and §D1's ±10% cross-check fails at **1.95×**
+   > (`declaresEmitted` 8,522 against the engine's ≈4,367).
+   >
+   > **What is on offer is not a pass.** The argument for the arm is that §6.2's row was itself
+   > produced by splicing a shared `bot.log` and lost about one seat process of 36. That argument is
+   > *inference, not measurement*: its only evidence is that this run's spliced logs sum *below* the
+   > published figure, the one-lost-process prediction (51,998 × 35/36 = 50,554) misses 50,649 by
+   > 0.19%, and the five per-counter ratios are **not uniform** (1.027 / 1.027 / 1.011 / 1.011 /
+   > 1.049) where a whole lost process predicts a flat 1.029. And the remedy on offer is to rewrite
+   > a pre-registered expectation after seeing the result, which `OP-EXPECTATIONS.md` line 9
+   > forbids in terms: *every value below is fixed at the moment this file is written and is not
+   > revised afterwards*.
+   >
+   > **A third measurement has since settled it, and it is independent of BOTH collectors.**
+   > [measured, corrected, lead session] The engine reports its own `events/game` for this cell:
+   > **101.116** over 1,200 games = 121,339 events. A declare poll goes to every seat before every
+   > move, and the arm holds 3 side-A seats, so the expected `opPoll` total is **364,018** — a
+   > figure neither collector produced and neither could bias.
+   >
+   > | `opPoll` source | value | ratio to the engine's 364,018 |
+   > |---|---:|---:|
+   > | per-process JSON collector | 363,984 | **0.99991** |
+   > | `bot.log` splice (the §6.2 row) | 354,303 | 0.97331 |
+   >
+   > The JSON collector matches the engine's own arithmetic to **0.009%**; the pre-registered row
+   > is **2.67% short**, and losing one seat process of 36 predicts 353,873 — within 0.12% of it.
+   > That is three independent facts agreeing on the same mechanism: the pre-registered row was
+   > measured through a lossy channel, because every seat of a match inherits one `bot.log`
+   > descriptor and keeps its own offset, so seats overwrite one another.
+   >
+   > **This is evidence, not an amendment.** The row below is left exactly as pre-registered.
+   > Amending a pre-registered expectation is Allen's call and is recorded as an open decision in
+   > §8.3 — the discipline that makes pre-registration worth anything is that a result may not
+   > rewrite the expectation it was tested against, however good the result's argument is.
+   >
+   > **The originally-proposed control, now redundant but still cheap:** rebuild the `bot:pf2` arm with the *same*
+   > per-process JSON collector (`$MONET_COVER_DIR`, not `bot.log` splicing) and re-measure seed
+   > 90210. `bot:monet-v01` and `bot:pf2` produce a byte-identical engine statistics block on that
+   > cell, so their true op totals are equal by construction and exactly one of the two counts can
+   > be right. If pf2 returns 51,998 / 363,984 / 178 / 184 / 467, the defect is in the old row: fix
+   > §6.2 with a provenance note naming log splicing, **get Allen's sign-off on amending a
+   > pre-registered expectation**, and only then mark this item passed. If it does not, the
+   > divergence is in the `monet-v01` instrumentation and the arm is what needs fixing, not the
+   > reference. Until that control has run, item 3 is a **FAIL** and v0.1 is not accepted on it.
+4. **`observe.ts` regression** — `tests/bots/observe.test.ts` pins the claim replay against
+   reveals that name fewer than six holders. **Not to `8,8,8,8,8,8`** — this item asked for that
+   in an earlier draft and no correct implementation can deliver it: a card the reveal omits left
+   a hand the log does not identify, and the honest replay leaves that hand undebited rather than
+   inventing a seat. The partial map therefore still returns `8,9,8,9,9,9` and the empty one
+   `9,9,9,9,9,9`; those two vectors are the *same* before and after the fix, because
+   `probe-observe.mjs` builds its claim with no earlier hits, so nothing was publicly located for
+   the old loop to strand. What the fix does make true, and what the tests pin:
+   - every card of the resolved book leaves `publicHolder`, named by the reveal or not — before
+     the fix an unnamed card stayed publicly located after its book was gone, so a later ask for
+     it scored `certainAsks` or `provablyDeadAsks` against a hand it had already left;
+   - a holder the reveal omits but an earlier hit had made public is still debited;
+   - no count goes negative (a reveal naming an emptied seat clamps at 0), and none is attributed
+     to a seat the reveal never named;
+   - `replayCounts(view).countsExact` — the new sibling export of `replayedCounts`, exported from
+     both barrels — is true on a complete reveal and false on a partial or empty one, false when a
+     reveal names an already-emptied seat, and false when a reveal names one seat for a card an
+     earlier hit located at another (the reveal wins the debit; the hit is already in the counts
+     and cannot be un-replayed, so a second seat is over by one and only the flag can say so);
+   - the flag is also carried on every `SeatObservation`, because `classifySeats` hands a consumer
+     those and nothing else — a flag left in the scan's own return type would be unreachable from
+     the one place that weighs `missFewestShare` / `missMostShare`. It is deliberately **not** in
+     `FEATURE_KEYS`: `featureVector` projects that list and nothing else, so the classifier's input
+     vector and every calibrated fingerprint are provably untouched;
+   - the two declare *signatures* are gated on a reveal that names the whole book. `foreignDeclares`
+     and `ownHandOnlyDeclares` are claims about *all* the holders, and on an empty map "the claimer
+     is not among the holders" is vacuously true — which scored every bridged failed declare as
+     foreign, at `foreignDeclareShare` 1.0, straight into `FEATURE_KEYS`. Both now read 0 on a log
+     that cannot certify them. At home every reveal is complete, so the gate never fires.
+
+   On a construction with four LOW-C cards publicly located and one of them named, the fix moves
+   the counts from `7,10,7,11,9,9` to `7,9,7,9,9,9` and the later asker's score from 1 certain /
+   2 provably dead to 0 / 0 (`scratchpad/probe-observe-2.mjs`). [measured, home] **The residual
+   weakness is now reported instead of silent**, which is the part that generalises: every
+   consumer that compares one seat's count against another's — `missFewest`, `missMost` — can ask
+   first whether the counts are worth comparing.
+
+   **Home-invariance control.** The claim that none of this is reachable at home is not an argument
+   from `reduce.ts`; it was measured against the committed revision. Over **25,721 real `us54`
+   positions** — nine roster tables, four seeds each, every prefix of every game — the working
+   tree's `featureVector`s, `replayedCounts` and `classifySeats` are byte-identical to HEAD's, and
+   `countsExact` is true at all 25,721. Zero differences, so no home decision, fingerprint or
+   classification moves. [measured, home]
 
 **Cost.** S. **Risk.** None to the number; this is the milestone that makes the rest measurable.
 
@@ -493,7 +619,7 @@ explains why the band is 31–37% rather than a point.
 
 - **`minHitP: 1e-9` on the roster styles.** It removes every ask the seat's own knowledge proves
   dead, it has a legality-preserving waiver for genuinely starved turns, and **it cannot change any
-  other ask**, because no ask has p in (0, 1e-9). Consumed at `decide.ts:1093-1096`; Punter ships 0.
+  other ask**, because no ask has p in (0, 1e-9). Consumed at `decide.ts:1109-1112`; Punter ships 0.
 - **`knowledge.ts:809`** — `const narrowing = cand.length > 1 ? 1 / (cand.length - 1) : 1`. Do not
   grant the full 12-point narrowing credit when `cand.length <= 1` and the certain holder is not the
   target. **A known miss narrows nothing.**
@@ -665,7 +791,7 @@ requiring no new state.
 
 **What must not change.** `Knowledge` keeps its shape. `holders`, `cands`, `gone`, `unknownSlots` and
 `constraints` remain, **derived as marginals**, so the twelve existing readers keep working:
-`decide.ts:400, 412, 670, 672, 753, 993, 1287, 1330, 1661`, plus `knowledge.ts:643-660` and `:741-749`,
+`decide.ts:400, 412, 686, 688, 769, 1009, 1303, 1346, 1677`, plus `knowledge.ts:643-660` and `:741-749`,
 plus `conceal.ts`, `defuse.ts`, `contained.ts`, `threat.ts`. This is what makes v0.5 an L and not an XL.
 
 **Why it is the right next step.** It attacks the ask-accuracy deficit directly (52.32 vs 57.38), it
@@ -704,7 +830,7 @@ about exactly that.
    by remaining capacity (`:420-429`) with an **independent product** for `p` (`:427`). It becomes an
    argmax over the joint, with the joint's own probability.
 2. **`certainClaim:689` stops being the definition of "ours".** `plan.p >= threshold` subsumes
-   `plan.p === 1`; `certainClaim` (`decide.ts:680-701`) becomes the p = 1 special case of `evClaim`.
+   `plan.p === 1`; `certainClaim` (`decide.ts:696-717`) becomes the p = 1 special case of `evClaim`.
    **The nine dead knobs of §2.2 become live for the first time** — which is a risk, not a prize, and
    the acceptance test treats it as one.
 3. **The two structural losses of §2.3 close together**: a miss reweights the deal distribution
@@ -739,7 +865,7 @@ ownership onsets are never proved before the deal ends [defective, 22,480 positi
    investigated as one.
 6. **Cost budget** unchanged from v0.5: ≤ 10×.
 7. **Home regression** at ≥ 800 duplicate pairs, plus the `decideExplained` bit-identity pin
-   (`decide.ts:1959-1963`): the sink stays write-only and the posterior draws no rng.
+   (`decide.ts:1975-1979`): the sink stays write-only and the posterior draws no rng.
 
 > **Do not use the +20-point figure from the structural decomposition.** Equalising declaration
 > counts at 4.5 moves the set differential −1.86 → −0.50 and prices out at "+20 points". It is an
@@ -909,22 +1035,22 @@ declaration channel as a target, and it is why §2 is about proof latency rather
 
 ### 4.2 A2 — REJECTED. The defect was in the adapter, and `us54` genuinely has no pass
 
-The drafts propose changing `decide.ts:540` so that an empty hand no longer implies compulsion,
+The drafts propose changing `decide.ts:556` so that an empty hand no longer implies compulsion,
 calling it an XS robustness fix. **It is not a robustness fix. It is a rules change to `us54`, and
 Monet does not make it.**
 
 **The source facts, all verified directly in `C:/Projects/FishAI/lib/engine`:**
 
-- `mustDeclareNow` (`decide.ts:534`) returns
+- `mustDeclareNow` (`decide.ts:550`) returns
   `windowCannotClose(view) || (view.turn === view.seat && !viewerCouldAskIfWindowClosed(view))`.
-- `viewerCouldAskIfWindowClosed` (`decide.ts:548`) returns false on `view.hand.length === 0`
-  (`decide.ts:550`). Its own doc comment says it is *"exactly the engine's own `turnHolderCanAsk`,
+- `viewerCouldAskIfWindowClosed` (`decide.ts:564`) returns false on `view.hand.length === 0`
+  (`decide.ts:566`). Its own doc comment says it is *"exactly the engine's own `turnHolderCanAsk`,
   restated over the public view"*.
 - `turnHolderCanAsk` (`helpers.ts:29`) contains `if (s.hands[seat].length === 0) return false`.
 - `reduceDecline` (`reduce.ts:588`) calls it at **`reduce.ts:595`** and returns
   `err('MUST_DECLARE', ...)` when it is false.
 
-**So `decide.ts:540` is not a trap the bot fell into. It is the bot's copy of the engine's legality
+**So `decide.ts:556` is not a trap the bot fell into. It is the bot's copy of the engine's legality
 rule.** Changing one without the other makes `decide` emit a `decline` that its own reducer refuses,
 in exactly the position the change targets — and the server's bot chain breaks on the first
 `if (!r.ok)`, leaving the room stuck.
@@ -1023,7 +1149,7 @@ the case, that is stated rather than buried.
 
 | control | requirement |
 |---|---|
-| **Op coverage** | Every protocol op exercised, **with a written expectation for each, recorded before the run**. `opPass > 0` is the tripwire that would have caught the bridge defect in an hour. Corrected reference values on one cell pair, seed 90210: `opAsk` 50,649 · `opPoll` 354,303 · `opPass` **0 → 176** · `passfixDeclines` 182 · `opForced` 445 |
+| **Op coverage** | Every protocol op exercised, **with a written expectation for each, recorded before the run**. `opPass > 0` is the tripwire that would have caught the bridge defect in an hour. Corrected reference values on one cell pair, seed 90210: `opAsk` 50,649 · `opPoll` 354,303 · `opPass` **0 → 176** · `passfixDeclines` 182 · `opForced` 445. **⚠ These five are DISPUTED and are not to be quoted as settled** — Monet v0.1's run returned 51,998 / 363,984 / 178 / 184 / 467 on the same cell and failed against them (§3.1 item 3). The row is left as written because it is a pre-registered expectation and this project does not revise those after seeing a result; it moves only on the pf2-with-JSON-collector control named in §3.1, and on Allen's sign-off |
 | **Byte-exact null arm** | The arm with the mechanism off reproduces the shipped policy to four decimals. Worked precedent: `bot:fishai-base` reproduced the published defective ladder exactly (three-seed mean 24.2222% against the published 24.22%), and `arm_passfix` reproduced `bot:pf2` at 28.25 / 52.3193 / 98.42 / 9.30118 |
 | **Cross-instrument identity pin** | A newly built arm reproduces a *known* arm's numbers on a *known* cell before any of its own numbers are read |
 | **Paired deals** | Both arms of every contrast play identical deals and rotations, and every contrast is reported against the **paired per-deal** floor |
@@ -1037,6 +1163,15 @@ the case, that is stated rather than buried.
 > **0.371/game**; the 0.01–0.05 band belongs to the engine's `forced decls` line, which counts
 > declares *emitted* and runs at 0.02/game. **The assertion must name which of the two it means.**
 > [measured, corrected]
+>
+> Two later facts, both from Monet v0.1's run and both **pending the §3.1 item 3 control**. First,
+> the `0.371/game` here is 445/1200 and therefore moves with the disputed count — the same cell
+> measured with the per-process collector gives `0.389/game`. Second, and independent of the
+> dispute: **`opForced` is far more seed-variable than one cell suggests.** Across six seeds it
+> reads 467 / 509 / 666 / 693 / 566 / 592, a mean of **0.485/game** over a range of 0.389–0.578.
+> A single-cell `opForced` figure should not be quoted as *the* rate, and the ±30% per-game
+> coverage band written for the five non-reference seeds fails on three of them for that reason —
+> a fault in the band, not in the arm.
 
 ### 6.3 Power — the floors are per deal
 
@@ -1250,6 +1385,16 @@ of positions on `bot:pf2` and re-running one replay settles it, and it has not b
   sized on an unverified premise. It is a count over an event stream that already exists.
 - **Whether search over a *correct* posterior is worth anything** is the single largest unknown in
   this roadmap, and it cannot be measured until v0.6 exists (§3.9).
+
+---
+
+### 8.3 Decisions waiting on the owner
+
+| # | decision | state |
+|---|---|---|
+| 1 | **Amend §6.2's pre-registered op-coverage row?** Three independent facts say the row was measured through a lossy channel and the true values are `opAsk` 51,998 · `opPoll` 363,984 · `opPass` 178 · `passfixDeclines` 184 · `opForced` 467 (§3.1 item 3). The row is left as written regardless, because a result may not rewrite the expectation it was tested against. Amending it is Allen's call. | **open** |
+| 2 | **Should Monet play the post-clinch phase at all?** `us54` clinches at five sets; the host plays all nine. Measured on the corrected bridge: **73.9–76.5% of seat-games reach a state `us54` says cannot exist**, and the arm answers **47,868 of 416,627 ops (11.5%)** there. No decision changed and no points are attributed to it yet, but it is the largest un-modelled region of the foreign game and v0.1 is the first milestone to have measured it. | **open, newly quantified** |
+| 3 | **`bounded.ts`'s cost model** (§1.5). A joint posterior has no atomic-fact decomposition, so the bit budget becomes undefined. v0.5 must choose in writing between confining the posterior to the unbounded arm and giving BOUNDED.md a new cost model. | open, due at v0.5 |
 
 ---
 

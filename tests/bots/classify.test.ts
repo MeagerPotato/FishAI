@@ -65,6 +65,9 @@ function flatObs(v: number, asks: number): SeatObservation {
     ownHandOnlyDeclares: 0,
     declareBackload: v,
     events: 100,
+    // Not a feature: `featureVector` projects FEATURE_KEYS and nothing else, so this field
+    // cannot reach the classifier. Present only because `SeatObservation` requires it.
+    countsExact: true,
     deadAskShare: v,
     certainAskShare: v,
     leakyAskShare: v,
