@@ -1,9 +1,9 @@
 {
   "meta": {
     "schemaVersion": 3,
-    "generatedAt": "2026-08-30T01:52:24.362Z",
-    "engineCommit": "ab779f3-dirty",
-    "rulesHash": "b4c7fef74d439fe29cbe4d4775fc4fbecdd95d0c9ce0218eb116a4b2b64b6f8d",
+    "generatedAt": "2026-09-01T19:50:19.296Z",
+    "engineCommit": "ed188da-dirty",
+    "rulesHash": "e9311958e811b7bc4cd93735fda0cbaaf6ab2485310ea5b992f2ec3569163b7c",
     "rulesFile": "RULES_US54.md",
     "ruleSet": "us54",
     "config": {
@@ -40,8 +40,8 @@
       "prefix": "bounded-v1",
       "count": 3000
     },
-    "wallMs": 308191,
-    "recordsDigest": "fe829b581f665c9a",
+    "wallMs": 265526,
+    "recordsDigest": "4c88997b3aed3a7d",
     "notes": [
       "E1/E2 records retain the FULL public log as `elog`: one self-delimiting token per event, order and count preserved exactly (ages are log-index differences). A claim's assignments/actualHolders and a game_over's score snapshot are elided — derivable or unused by the E3 estimator, and the elision keeps the retained logs in memory. Nothing else is dropped or capped.",
       "E3 estimator: at ask event i, every card whose public location a hit established at event j (unmoved and unretired since) that the acting seat could legally ask of the correct holder is one availability observation at age i−j; exploited iff the actual ask was exactly that card at that holder; the hit column is the actual ask’s outcome. Hands are reconstructed from the seed’s deal plus the log’s hits and claims. Clustered comparisons (decay, window) cluster by seed; the half-life read requires 200 observations in a band.",
@@ -68,8 +68,8 @@
     },
     "baseline": {
       "artifact": "adaptive-results.json",
-      "recordsDigest": "ce3316641a8f38fe",
-      "endTop1": 0.22425925925925927
+      "recordsDigest": "ee1e535a2066ac18",
+      "endTop1": 0.2199074074074074
     },
     "predictions": [
       {
@@ -112,15 +112,15 @@
       "pairs": 3000,
       "games": 6000,
       "distinctSeeds": 3000,
-      "share": 0.13134126984127045,
-      "se": 0.0017234359942560938,
+      "share": 0.09527612433862476,
+      "se": 0.0015238408401775227,
       "ci95": [
-        0.1279633352925285,
-        0.1347192043900124
+        0.09228939629187681,
+        0.0982628523853727
       ],
-      "seUnpaired": 0.0017210262311161113,
-      "avgMoves": 798.2155,
-      "maxMoves": 1691,
+      "seUnpaired": 0.0015364064270142928,
+      "avgMoves": 723.164,
+      "maxMoves": 1456,
       "health": {
         "illegalActions": 0,
         "cappedGames": 0,
@@ -138,15 +138,15 @@
       "pairs": 3000,
       "games": 6000,
       "distinctSeeds": 3000,
-      "share": 0.24485681216931263,
-      "se": 0.002163011238673025,
+      "share": 0.21837632275132382,
+      "se": 0.002093554399857799,
       "ci95": [
-        0.2406173101415135,
-        0.24909631419711176
+        0.21427295612760253,
+        0.22247968937504511
       ],
-      "seUnpaired": 0.0022145593350105684,
-      "avgMoves": 768.8788333333333,
-      "maxMoves": 1469,
+      "seUnpaired": 0.0021709274552428252,
+      "avgMoves": 728.5861666666667,
+      "maxMoves": 1431,
       "health": {
         "illegalActions": 0,
         "cappedGames": 0,
@@ -164,15 +164,15 @@
       "pairs": 3000,
       "games": 6000,
       "distinctSeeds": 3000,
-      "share": 0.3920714285714279,
-      "se": 0.0026476043951927934,
+      "share": 0.38734027777777585,
+      "se": 0.002613606721642149,
       "ci95": [
-        0.38688212395685,
-        0.3972607331860058
+        0.38221760860335724,
+        0.39246294695219447
       ],
-      "seUnpaired": 0.002809568683696865,
-      "avgMoves": 741.1165,
-      "maxMoves": 1480,
+      "seUnpaired": 0.0028041171390308464,
+      "avgMoves": 698.299,
+      "maxMoves": 1355,
       "health": {
         "illegalActions": 0,
         "cappedGames": 0,
@@ -190,15 +190,15 @@
       "pairs": 3000,
       "games": 6000,
       "distinctSeeds": 3000,
-      "share": 0.4360995370370355,
-      "se": 0.0023465417099108217,
+      "share": 0.4388234126984108,
+      "se": 0.002409011549655292,
       "ci95": [
-        0.43150031528561034,
-        0.4406987587884607
+        0.4341017500610864,
+        0.4435450753357352
       ],
-      "seUnpaired": 0.0028160595367213337,
-      "avgMoves": 720.48,
-      "maxMoves": 1468,
+      "seUnpaired": 0.0028905273790382486,
+      "avgMoves": 664.7415,
+      "maxMoves": 1306,
       "health": {
         "illegalActions": 0,
         "cappedGames": 0,
@@ -216,15 +216,15 @@
       "pairs": 3000,
       "games": 6000,
       "distinctSeeds": 3000,
-      "share": 0.46526124338624214,
-      "se": 0.001960875041842614,
+      "share": 0.4669927248677231,
+      "se": 0.0018601478932736548,
       "ci95": [
-        0.4614179283042306,
-        0.46910455846825366
+        0.4633468349969067,
+        0.47063861473853946
       ],
-      "seUnpaired": 0.002790111119977204,
-      "avgMoves": 704.5366666666666,
-      "maxMoves": 1264,
+      "seUnpaired": 0.002827854422867688,
+      "avgMoves": 649.5968333333333,
+      "maxMoves": 1273,
       "health": {
         "illegalActions": 0,
         "cappedGames": 0,
@@ -242,15 +242,15 @@
       "pairs": 3000,
       "games": 6000,
       "distinctSeeds": 3000,
-      "share": 0.4909361772486765,
-      "se": 0.0010564148211328751,
+      "share": 0.493083002645502,
+      "se": 0.0009829123575973598,
       "ci95": [
-        0.48886560419925607,
-        0.49300675029809693
+        0.4911564944246112,
+        0.4950095108663928
       ],
-      "seUnpaired": 0.002779580256295978,
-      "avgMoves": 688.469,
-      "maxMoves": 1243,
+      "seUnpaired": 0.0027891257544115865,
+      "avgMoves": 630.9765,
+      "maxMoves": 1241,
       "health": {
         "illegalActions": 0,
         "cappedGames": 0,
@@ -268,15 +268,15 @@
       "pairs": 3000,
       "games": 6000,
       "distinctSeeds": 3000,
-      "share": 0.4976931216931214,
-      "se": 0.0005701395129302556,
+      "share": 0.49779927248677214,
+      "se": 0.0004923715224802867,
       "ci95": [
-        0.4965756482477781,
-        0.4988105951384647
+        0.4968342243027108,
+        0.4987643206708335
       ],
-      "seUnpaired": 0.002751152332009589,
-      "avgMoves": 685.1443333333333,
-      "maxMoves": 1137,
+      "seUnpaired": 0.0027966036094413905,
+      "avgMoves": 625.7145,
+      "maxMoves": 1045,
       "health": {
         "illegalActions": 0,
         "cappedGames": 0,
@@ -294,15 +294,15 @@
       "pairs": 3000,
       "games": 6000,
       "distinctSeeds": 3000,
-      "share": 0.49986937830687833,
-      "se": 0.00014433623935497633,
+      "share": 0.4998892195767195,
+      "se": 0.0001269861701915252,
       "ci95": [
-        0.4995864792777426,
-        0.5001522773360141
+        0.4996403266831441,
+        0.5001381124702949
       ],
-      "seUnpaired": 0.002762799804440442,
-      "avgMoves": 683.2793333333333,
-      "maxMoves": 1075,
+      "seUnpaired": 0.002803381857642186,
+      "avgMoves": 624.043,
+      "maxMoves": 992,
       "health": {
         "illegalActions": 0,
         "cappedGames": 0,
@@ -326,9 +326,9 @@
         0.5,
         0.5
       ],
-      "seUnpaired": 0.0027644554763199746,
-      "avgMoves": 683.1735,
-      "maxMoves": 1042,
+      "seUnpaired": 0.0028018380894030822,
+      "avgMoves": 624.0303333333334,
+      "maxMoves": 992,
       "health": {
         "illegalActions": 0,
         "cappedGames": 0,
@@ -352,9 +352,9 @@
         0.5,
         0.5
       ],
-      "seUnpaired": 0.0027644554763199746,
-      "avgMoves": 683.1713333333333,
-      "maxMoves": 1042,
+      "seUnpaired": 0.0028018380894030822,
+      "avgMoves": 624.0303333333334,
+      "maxMoves": 992,
       "health": {
         "illegalActions": 0,
         "cappedGames": 0,
@@ -373,72 +373,72 @@
       "fromBits": 0,
       "toBits": 8,
       "seeds": 3000,
-      "delta": 0.11351554232804208,
-      "se": 0.0027611768960752363,
-      "z": 41.11128935252,
+      "delta": 0.12310019841269886,
+      "se": 0.002531072754204198,
+      "z": 48.63558276158804,
       "pass": true
     },
     {
       "fromBits": 8,
       "toBits": 16,
       "seeds": 3000,
-      "delta": 0.14721461640211653,
-      "se": 0.0031481521677073025,
-      "z": 46.76223020989744,
+      "delta": 0.16896395502645545,
+      "se": 0.003121906636800803,
+      "z": 54.122039728773736,
       "pass": true
     },
     {
       "fromBits": 16,
       "toBits": 24,
       "seeds": 3000,
-      "delta": 0.04402810846560847,
-      "se": 0.0030370693517222233,
-      "z": 14.496905854534262,
+      "delta": 0.05148313492063508,
+      "se": 0.0029690308904651384,
+      "z": 17.340046910919664,
       "pass": true
     },
     {
       "fromBits": 24,
       "toBits": 32,
       "seeds": 3000,
-      "delta": 0.02916170634920639,
-      "se": 0.002538132306000242,
-      "z": 11.48943507801662,
+      "delta": 0.028169312169312212,
+      "se": 0.00245945234043608,
+      "z": 11.453489748989231,
       "pass": true
     },
     {
       "fromBits": 32,
       "toBits": 48,
       "seeds": 3000,
-      "delta": 0.02567493386243381,
-      "se": 0.002049901103608503,
-      "z": 12.524962212683063,
+      "delta": 0.026090277777777785,
+      "se": 0.0019245380823552658,
+      "z": 13.556644067987621,
       "pass": true
     },
     {
       "fromBits": 48,
       "toBits": 64,
       "seeds": 3000,
-      "delta": 0.00675694444444445,
-      "se": 0.0011185770805054928,
-      "z": 6.040660551878052,
+      "delta": 0.004716269841269838,
+      "se": 0.0010404130776765419,
+      "z": 4.533074355238062,
       "pass": true
     },
     {
       "fromBits": 64,
       "toBits": 96,
       "seeds": 3000,
-      "delta": 0.0021762566137566147,
-      "se": 0.0005733997955838031,
-      "z": 3.795356452021183,
+      "delta": 0.002089947089947089,
+      "se": 0.000496131622299746,
+      "z": 4.212485147105606,
       "pass": true
     },
     {
       "fromBits": 96,
       "toBits": 128,
       "seeds": 3000,
-      "delta": 0.00013062169312169313,
-      "se": 0.00014433623935497628,
-      "z": 0.9049819622946251,
+      "delta": 0.00011078042328042329,
+      "se": 0.0001269861701915252,
+      "z": 0.8723817964849259,
       "pass": true
     },
     {
@@ -462,15 +462,15 @@
       "pairs": 3000,
       "games": 6000,
       "distinctSeeds": 3000,
-      "share": 0.044631613756613356,
-      "se": 0.0010779049339668264,
+      "share": 0.033725529100528805,
+      "se": 0.000937282243617149,
       "ci95": [
-        0.04251892008603837,
-        0.04674430742718834
+        0.031888455903039195,
+        0.035562602298018414
       ],
-      "seUnpaired": 0.0010678197130402295,
-      "avgMoves": 669.1921666666667,
-      "maxMoves": 1233,
+      "seUnpaired": 0.0009466418281481847,
+      "avgMoves": 615.9095,
+      "maxMoves": 1192,
       "health": {
         "illegalActions": 0,
         "cappedGames": 0,
@@ -487,7 +487,7 @@
         "bits": 0,
         "lo": 0,
         "hi": 0,
-        "note": "share 0.0446 sits at or below the 0-bit floor — clamped"
+        "note": "share 0.0337 sits at or below the 0-bit floor — clamped"
       }
     },
     {
@@ -495,15 +495,15 @@
       "pairs": 3000,
       "games": 6000,
       "distinctSeeds": 3000,
-      "share": 0.4655505952380939,
-      "se": 0.0023935990687924216,
+      "share": 0.40004629629629374,
+      "se": 0.002468939620902594,
       "ci95": [
-        0.46085914106326076,
-        0.470242049412927
+        0.39520717463932464,
+        0.4048854179532628
       ],
-      "seUnpaired": 0.0027872774136400366,
-      "avgMoves": 711.8585,
-      "maxMoves": 1177,
+      "seUnpaired": 0.0027001004661070752,
+      "avgMoves": 673.769,
+      "maxMoves": 1091,
       "health": {
         "illegalActions": 0,
         "cappedGames": 0,
@@ -517,9 +517,9 @@
       "tier": "medium",
       "bitsEquivalent": {
         "finite": true,
-        "bits": 32.18031710050096,
-        "lo": 30.792360839172595,
-        "hi": 35.10391827507524,
+        "bits": 17.974397019622856,
+        "lo": 17.222442553069264,
+        "hi": 18.72635148617645,
         "note": "first ascending crossing of the finite ladder segment"
       }
     },
@@ -528,15 +528,15 @@
       "pairs": 3000,
       "games": 6000,
       "distinctSeeds": 3000,
-      "share": 0.5006203703703703,
-      "se": 0.000746474833069223,
+      "share": 0.4342916666666649,
+      "se": 0.00239674340103534,
       "ci95": [
-        0.49915727969755463,
-        0.502083461043186
+        0.42959404960063563,
+        0.4389892837326942
       ],
-      "seUnpaired": 0.0027605464378148833,
-      "avgMoves": 681.3545,
-      "maxMoves": 1042,
+      "seUnpaired": 0.0027463093944098084,
+      "avgMoves": 649.7586666666666,
+      "maxMoves": 1034,
       "health": {
         "illegalActions": 0,
         "cappedGames": 0,
@@ -549,465 +549,631 @@
       },
       "tier": "hard",
       "bitsEquivalent": {
-        "finite": false,
-        "bits": null,
-        "lo": 85.52919644020274,
-        "hi": null,
-        "note": "share 0.5006 sits above every finite rung — between 128 bits and ∞"
+        "finite": true,
+        "bits": 23.29580884478276,
+        "lo": 22.565842874641895,
+        "hi": 24.047106875251032,
+        "note": "first ascending crossing of the finite ladder segment"
       }
     }
   ],
   "evidence": [
     {
       "policy": "bounded-0",
-      "askDecisions": 290286,
-      "decisionsWithCertain": 113365,
-      "observations": 201396,
+      "askDecisions": 260060,
+      "decisionsWithCertain": 70326,
+      "observations": 112813,
       "rows": [
         {
           "lo": 1,
           "hi": 2,
-          "available": 21057,
-          "exploited": 3075,
-          "exploitRate": 0.14603219831884884,
-          "hits": 5729,
-          "hitRate": 0.27207104525810893
+          "available": 22658,
+          "exploited": 6850,
+          "exploitRate": 0.30232147585841646,
+          "hits": 12149,
+          "hitRate": 0.5361903080589637
         },
         {
           "lo": 3,
           "hi": 4,
-          "available": 22975,
-          "exploited": 2762,
-          "exploitRate": 0.12021762785636561,
-          "hits": 6900,
-          "hitRate": 0.3003264417845484
+          "available": 25862,
+          "exploited": 8204,
+          "exploitRate": 0.3172221792591447,
+          "hits": 14711,
+          "hitRate": 0.5688268502049338
         },
         {
           "lo": 5,
           "hi": 6,
-          "available": 17982,
-          "exploited": 1239,
-          "exploitRate": 0.06890223556890224,
-          "hits": 4330,
-          "hitRate": 0.240796351907463
+          "available": 15198,
+          "exploited": 3421,
+          "exploitRate": 0.22509540729043295,
+          "hits": 7373,
+          "hitRate": 0.48512962231872614
         },
         {
           "lo": 7,
           "hi": 8,
-          "available": 15111,
-          "exploited": 871,
-          "exploitRate": 0.05764012970683608,
-          "hits": 3414,
-          "hitRate": 0.2259281318244987
+          "available": 10744,
+          "exploited": 1980,
+          "exploitRate": 0.18428890543559195,
+          "hits": 4697,
+          "hitRate": 0.4371742367833209
         },
         {
           "lo": 9,
           "hi": 12,
-          "available": 24213,
-          "exploited": 1175,
-          "exploitRate": 0.04852765043571635,
-          "hits": 5077,
-          "hitRate": 0.20968075001032505
+          "available": 13447,
+          "exploited": 2253,
+          "exploitRate": 0.16754666468357254,
+          "hits": 5730,
+          "hitRate": 0.42611734959470515
         },
         {
           "lo": 13,
           "hi": 16,
-          "available": 17776,
-          "exploited": 750,
-          "exploitRate": 0.04219171917191719,
-          "hits": 3302,
-          "hitRate": 0.18575607560756074
+          "available": 7503,
+          "exploited": 1002,
+          "exploitRate": 0.133546581367453,
+          "hits": 2863,
+          "hitRate": 0.38158070105291214
         },
         {
           "lo": 17,
           "hi": 24,
-          "available": 25351,
-          "exploited": 981,
-          "exploitRate": 0.038696698355094476,
-          "hits": 4098,
-          "hitRate": 0.16165042799100626
+          "available": 7925,
+          "exploited": 840,
+          "exploitRate": 0.10599369085173502,
+          "hits": 2638,
+          "hitRate": 0.33287066246056785
         },
         {
           "lo": 25,
           "hi": 32,
-          "available": 16595,
-          "exploited": 503,
-          "exploitRate": 0.03031033443808376,
-          "hits": 2268,
-          "hitRate": 0.13666767098523652
+          "available": 3804,
+          "exploited": 290,
+          "exploitRate": 0.07623554153522608,
+          "hits": 1039,
+          "hitRate": 0.2731335436382755
         },
         {
           "lo": 33,
           "hi": 48,
-          "available": 19857,
-          "exploited": 382,
-          "exploitRate": 0.019237548471571737,
-          "hits": 2243,
-          "hitRate": 0.11295764717731782
+          "available": 3329,
+          "exploited": 187,
+          "exploitRate": 0.056173024932412136,
+          "hits": 707,
+          "hitRate": 0.21237608891559026
         },
         {
           "lo": 49,
           "hi": 64,
-          "available": 10295,
-          "exploited": 197,
-          "exploitRate": 0.019135502671199612,
-          "hits": 1159,
-          "hitRate": 0.11257892180670229
+          "available": 1338,
+          "exploited": 56,
+          "exploitRate": 0.04185351270553064,
+          "hits": 214,
+          "hitRate": 0.15994020926756353
         },
         {
           "lo": 65,
           "hi": 96,
-          "available": 7922,
-          "exploited": 132,
-          "exploitRate": 0.01666245897500631,
-          "hits": 908,
-          "hitRate": 0.11461752082807372
+          "available": 904,
+          "exploited": 44,
+          "exploitRate": 0.048672566371681415,
+          "hits": 153,
+          "hitRate": 0.16924778761061948
         },
         {
           "lo": 97,
           "hi": 128,
-          "available": 1927,
-          "exploited": 29,
-          "exploitRate": 0.015049299429164505,
-          "hits": 184,
-          "hitRate": 0.09548521017125065
-        },
-        {
-          "lo": 129,
-          "hi": null,
-          "available": 335,
-          "exploited": 10,
-          "exploitRate": 0.029850746268656716,
-          "hits": 28,
-          "hitRate": 0.08358208955223881
-        }
-      ],
-      "young": {
-        "available": 77125,
-        "exploited": 7947,
-        "rate": 0.10304051863857375
-      },
-      "old": {
-        "available": 40336,
-        "exploited": 750,
-        "rate": 0.018593811979373265
-      },
-      "decay": {
-        "diff": 0.06606300122289938,
-        "se": 0.0026191503615651435,
-        "z": 25.223065537719513,
-        "seeds": 2462
-      },
-      "window": {
-        "inside": {
-          "available": 62014,
-          "exploited": 7076,
-          "rate": 0.11410326700422485
-        },
-        "justOutside": {
-          "available": 39324,
-          "exploited": 2046,
-          "rate": 0.05202929508696979
-        },
-        "insideSplit": {
-          "diff": 0.07585881040312528,
-          "se": 0.0029386086504882693,
-          "z": 25.814533143268616,
-          "seeds": 2998
-        },
-        "cliff": {
-          "diff": 0.05570994485828856,
-          "se": 0.0021748289005478587,
-          "z": 25.615782852736018,
-          "seeds": 2997
-        }
-      },
-      "halfLifeAge": 5
-    },
-    {
-      "policy": "bounded-8",
-      "askDecisions": 295042,
-      "decisionsWithCertain": 109073,
-      "observations": 188025,
-      "rows": [
-        {
-          "lo": 1,
-          "hi": 2,
-          "available": 22512,
-          "exploited": 6753,
-          "exploitRate": 0.2999733475479744,
-          "hits": 12735,
-          "hitRate": 0.5656982942430704
-        },
-        {
-          "lo": 3,
-          "hi": 4,
-          "available": 28678,
-          "exploited": 9870,
-          "exploitRate": 0.34416625985075666,
-          "hits": 18639,
-          "hitRate": 0.6499407211102587
-        },
-        {
-          "lo": 5,
-          "hi": 6,
-          "available": 19254,
-          "exploited": 4463,
-          "exploitRate": 0.2317959904435442,
-          "hits": 10498,
-          "hitRate": 0.5452373532772411
-        },
-        {
-          "lo": 7,
-          "hi": 8,
-          "available": 15952,
-          "exploited": 3091,
-          "exploitRate": 0.19376880641925778,
-          "hits": 8356,
-          "hitRate": 0.5238214643931796
-        },
-        {
-          "lo": 9,
-          "hi": 12,
-          "available": 24710,
-          "exploited": 3914,
-          "exploitRate": 0.1583974099554836,
-          "hits": 11711,
-          "hitRate": 0.47393767705382434
-        },
-        {
-          "lo": 13,
-          "hi": 16,
-          "available": 17160,
-          "exploited": 2251,
-          "exploitRate": 0.13117715617715617,
-          "hits": 7550,
-          "hitRate": 0.43997668997669
-        },
-        {
-          "lo": 17,
-          "hi": 24,
-          "available": 22003,
-          "exploited": 2130,
-          "exploitRate": 0.0968049811389356,
-          "hits": 8599,
-          "hitRate": 0.390810344043994
-        },
-        {
-          "lo": 25,
-          "hi": 32,
-          "available": 13217,
-          "exploited": 1024,
-          "exploitRate": 0.07747597790724067,
-          "hits": 4736,
-          "hitRate": 0.35832639782098813
-        },
-        {
-          "lo": 33,
-          "hi": 48,
-          "available": 13601,
-          "exploited": 851,
-          "exploitRate": 0.06256892875523859,
-          "hits": 4188,
-          "hitRate": 0.3079185354018087
-        },
-        {
-          "lo": 49,
-          "hi": 64,
-          "available": 6097,
-          "exploited": 323,
-          "exploitRate": 0.05297687387239626,
-          "hits": 1630,
-          "hitRate": 0.26734459570280467
-        },
-        {
-          "lo": 65,
-          "hi": 96,
-          "available": 4004,
-          "exploited": 180,
-          "exploitRate": 0.04495504495504495,
-          "hits": 961,
-          "hitRate": 0.24000999000999002
-        },
-        {
-          "lo": 97,
-          "hi": 128,
-          "available": 728,
-          "exploited": 51,
-          "exploitRate": 0.07005494505494506,
-          "hits": 154,
-          "hitRate": 0.21153846153846154
-        },
-        {
-          "lo": 129,
-          "hi": null,
-          "available": 109,
-          "exploited": 4,
-          "exploitRate": 0.03669724770642202,
+          "available": 96,
+          "exploited": 6,
+          "exploitRate": 0.0625,
           "hits": 15,
-          "hitRate": 0.13761467889908258
+          "hitRate": 0.15625
+        },
+        {
+          "lo": 129,
+          "hi": null,
+          "available": 5,
+          "exploited": 0,
+          "exploitRate": 0,
+          "hits": 2,
+          "hitRate": 0.4
         }
       ],
       "young": {
-        "available": 86396,
-        "exploited": 24177,
-        "rate": 0.27983934441409325
+        "available": 74462,
+        "exploited": 20455,
+        "rate": 0.2747038758024227
       },
       "old": {
-        "available": 24539,
-        "exploited": 1409,
-        "rate": 0.05741880272219732
+        "available": 5672,
+        "exploited": 293,
+        "rate": 0.05165726375176305
       },
       "decay": {
-        "diff": 0.16110074966356902,
-        "se": 0.0052435165945318865,
-        "z": 30.723798954230496,
-        "seeds": 2013
+        "diff": 0.15021383035018424,
+        "se": 0.009354140101560483,
+        "z": 16.05853971816449,
+        "seeds": 909
       },
       "window": {
         "inside": {
-          "available": 70444,
-          "exploited": 21086,
-          "rate": 0.29932996422690367
+          "available": 63718,
+          "exploited": 18475,
+          "rate": 0.2899494648294046
         },
         "justOutside": {
-          "available": 40662,
-          "exploited": 7005,
-          "rate": 0.172273867492991
+          "available": 24191,
+          "exploited": 4233,
+          "rate": 0.17498243148278286
         },
         "insideSplit": {
-          "diff": 0.07219416117948599,
-          "se": 0.004152010278278352,
-          "z": 17.387760708873195,
-          "seeds": 2992
+          "diff": 0.08235071422364272,
+          "se": 0.004307361391877362,
+          "z": 19.118598773470964,
+          "seeds": 2987
         },
         "cliff": {
-          "diff": 0.12154113359916098,
-          "se": 0.0033452082897063727,
-          "z": 36.332904582700685,
-          "seeds": 2989
+          "diff": 0.1042271034776803,
+          "se": 0.003995189378308857,
+          "z": 26.0881509256012,
+          "seeds": 2944
         }
       },
       "halfLifeAge": 13
     },
     {
-      "policy": "bounded-16",
-      "askDecisions": 298098,
-      "decisionsWithCertain": 102754,
-      "observations": 181868,
+      "policy": "bounded-8",
+      "askDecisions": 276780,
+      "decisionsWithCertain": 80258,
+      "observations": 128029,
       "rows": [
         {
           "lo": 1,
           "hi": 2,
-          "available": 23921,
-          "exploited": 9364,
-          "exploitRate": 0.391455206722127,
-          "hits": 17018,
-          "hitRate": 0.7114251076460014
+          "available": 22469,
+          "exploited": 8120,
+          "exploitRate": 0.361386799590547,
+          "hits": 14730,
+          "hitRate": 0.655569896301571
         },
         {
           "lo": 3,
           "hi": 4,
-          "available": 33923,
-          "exploited": 13980,
-          "exploitRate": 0.41210977802670756,
-          "hits": 26474,
-          "hitRate": 0.7804144680600182
+          "available": 27820,
+          "exploited": 12017,
+          "exploitRate": 0.43195542774982026,
+          "hits": 20659,
+          "hitRate": 0.7425952552120776
         },
         {
           "lo": 5,
           "hi": 6,
-          "available": 21360,
-          "exploited": 6757,
-          "exploitRate": 0.3163389513108614,
-          "hits": 15334,
-          "hitRate": 0.7178838951310862
+          "available": 15719,
+          "exploited": 4906,
+          "exploitRate": 0.31210636808957315,
+          "hits": 10376,
+          "hitRate": 0.6600928812265411
         },
         {
           "lo": 7,
           "hi": 8,
-          "available": 16749,
-          "exploited": 4696,
-          "exploitRate": 0.2803749477580751,
-          "hits": 11478,
-          "hitRate": 0.6852946444563854
+          "available": 11936,
+          "exploited": 3168,
+          "exploitRate": 0.26541554959785524,
+          "hits": 7593,
+          "hitRate": 0.6361427613941019
         },
         {
           "lo": 9,
           "hi": 12,
-          "available": 25501,
-          "exploited": 6699,
-          "exploitRate": 0.26269558056546805,
-          "hits": 16795,
-          "hitRate": 0.6586016234657465
+          "available": 16557,
+          "exploited": 3896,
+          "exploitRate": 0.2353083288035272,
+          "hits": 10025,
+          "hitRate": 0.6054840852811499
         },
         {
           "lo": 13,
           "hi": 16,
-          "available": 16954,
-          "exploited": 4041,
-          "exploitRate": 0.23835083166214463,
-          "hits": 10506,
-          "hitRate": 0.6196767724430813
+          "available": 10312,
+          "exploited": 1985,
+          "exploitRate": 0.19249418153607448,
+          "hits": 5918,
+          "hitRate": 0.5738944918541505
         },
         {
           "lo": 17,
           "hi": 24,
-          "available": 19298,
-          "exploited": 3748,
-          "exploitRate": 0.194217017307493,
-          "hits": 10718,
-          "hitRate": 0.5553943413825266
+          "available": 11234,
+          "exploited": 1923,
+          "exploitRate": 0.17117678476054835,
+          "hits": 6182,
+          "hitRate": 0.5502937511126936
         },
         {
           "lo": 25,
           "hi": 32,
-          "available": 9814,
-          "exploited": 1651,
-          "exploitRate": 0.1682290605257795,
-          "hits": 4944,
-          "hitRate": 0.503770124312207
+          "available": 5242,
+          "exploited": 660,
+          "exploitRate": 0.12590614269362838,
+          "hits": 2536,
+          "hitRate": 0.48378481495612363
         },
         {
           "lo": 33,
           "hi": 48,
-          "available": 8771,
-          "exploited": 1178,
-          "exploitRate": 0.13430623646106488,
-          "hits": 3637,
-          "hitRate": 0.41466195416714174
+          "available": 4091,
+          "exploited": 430,
+          "exploitRate": 0.10510877536054754,
+          "hits": 1586,
+          "hitRate": 0.38768027377169395
         },
         {
           "lo": 49,
           "hi": 64,
-          "available": 3265,
-          "exploited": 306,
-          "exploitRate": 0.09372128637059725,
-          "hits": 1093,
-          "hitRate": 0.33476263399693723
+          "available": 1499,
+          "exploited": 102,
+          "exploitRate": 0.06804536357571714,
+          "hits": 419,
+          "hitRate": 0.27951967978652437
         },
         {
           "lo": 65,
           "hi": 96,
-          "available": 2049,
-          "exploited": 153,
-          "exploitRate": 0.0746705710102489,
-          "hits": 555,
-          "hitRate": 0.2708638360175695
+          "available": 910,
+          "exploited": 37,
+          "exploitRate": 0.04065934065934066,
+          "hits": 201,
+          "hitRate": 0.22087912087912087
         },
         {
           "lo": 97,
           "hi": 128,
-          "available": 254,
-          "exploited": 19,
-          "exploitRate": 0.07480314960629922,
-          "hits": 46,
-          "hitRate": 0.18110236220472442
+          "available": 195,
+          "exploited": 4,
+          "exploitRate": 0.020512820512820513,
+          "hits": 29,
+          "hitRate": 0.14871794871794872
         },
         {
           "lo": 129,
           "hi": null,
-          "available": 9,
+          "available": 45,
+          "exploited": 1,
+          "exploitRate": 0.022222222222222223,
+          "hits": 9,
+          "hitRate": 0.2
+        }
+      ],
+      "young": {
+        "available": 77944,
+        "exploited": 28211,
+        "rate": 0.3619393410653803
+      },
+      "old": {
+        "available": 6740,
+        "exploited": 574,
+        "rate": 0.08516320474777449
+      },
+      "decay": {
+        "diff": 0.19032078150557838,
+        "se": 0.009192525411618978,
+        "z": 20.703862429906437,
+        "seeds": 1054
+      },
+      "window": {
+        "inside": {
+          "available": 66008,
+          "exploited": 25043,
+          "rate": 0.3793934068597746
+        },
+        "justOutside": {
+          "available": 28493,
+          "exploited": 7064,
+          "rate": 0.24792054188748114
+        },
+        "insideSplit": {
+          "diff": 0.06389722430645682,
+          "se": 0.004648680213665877,
+          "z": 13.745239803464232,
+          "seeds": 2990
+        },
+        "cliff": {
+          "diff": 0.12540472769796998,
+          "se": 0.004322627329648594,
+          "z": 29.011228156965522,
+          "seeds": 2941
+        }
+      },
+      "halfLifeAge": 17
+    },
+    {
+      "policy": "bounded-16",
+      "askDecisions": 279984,
+      "decisionsWithCertain": 78072,
+      "observations": 128242,
+      "rows": [
+        {
+          "lo": 1,
+          "hi": 2,
+          "available": 23460,
+          "exploited": 11030,
+          "exploitRate": 0.4701619778346121,
+          "hits": 18506,
+          "hitRate": 0.7888320545609548
+        },
+        {
+          "lo": 3,
+          "hi": 4,
+          "available": 30871,
+          "exploited": 14617,
+          "exploitRate": 0.47348644358783326,
+          "hits": 25995,
+          "hitRate": 0.8420524116484727
+        },
+        {
+          "lo": 5,
+          "hi": 6,
+          "available": 16737,
+          "exploited": 6620,
+          "exploitRate": 0.39553085977176317,
+          "hits": 13336,
+          "hitRate": 0.796797514488857
+        },
+        {
+          "lo": 7,
+          "hi": 8,
+          "available": 12163,
+          "exploited": 4185,
+          "exploitRate": 0.344076296966209,
+          "hits": 9481,
+          "hitRate": 0.7794951903313327
+        },
+        {
+          "lo": 9,
+          "hi": 12,
+          "available": 16937,
+          "exploited": 5732,
+          "exploitRate": 0.33843065477947687,
+          "hits": 13064,
+          "hitRate": 0.7713290429237764
+        },
+        {
+          "lo": 13,
+          "hi": 16,
+          "available": 9907,
+          "exploited": 2971,
+          "exploitRate": 0.29988896739679016,
+          "hits": 7366,
+          "hitRate": 0.7435146865852428
+        },
+        {
+          "lo": 17,
+          "hi": 24,
+          "available": 10132,
+          "exploited": 2812,
+          "exploitRate": 0.27753651796288986,
+          "hits": 7319,
+          "hitRate": 0.7223647848401106
+        },
+        {
+          "lo": 25,
+          "hi": 32,
+          "available": 4050,
+          "exploited": 981,
+          "exploitRate": 0.24222222222222223,
+          "hits": 2691,
+          "hitRate": 0.6644444444444444
+        },
+        {
+          "lo": 33,
+          "hi": 48,
+          "available": 2730,
+          "exploited": 519,
+          "exploitRate": 0.1901098901098901,
+          "hits": 1525,
+          "hitRate": 0.5586080586080586
+        },
+        {
+          "lo": 49,
+          "hi": 64,
+          "available": 842,
+          "exploited": 86,
+          "exploitRate": 0.1021377672209026,
+          "hits": 340,
+          "hitRate": 0.40380047505938244
+        },
+        {
+          "lo": 65,
+          "hi": 96,
+          "available": 360,
+          "exploited": 40,
+          "exploitRate": 0.1111111111111111,
+          "hits": 130,
+          "hitRate": 0.3611111111111111
+        },
+        {
+          "lo": 97,
+          "hi": 128,
+          "available": 42,
+          "exploited": 3,
+          "exploitRate": 0.07142857142857142,
+          "hits": 6,
+          "hitRate": 0.14285714285714285
+        },
+        {
+          "lo": 129,
+          "hi": null,
+          "available": 11,
+          "exploited": 1,
+          "exploitRate": 0.09090909090909091,
+          "hits": 3,
+          "hitRate": 0.2727272727272727
+        }
+      ],
+      "young": {
+        "available": 83231,
+        "exploited": 36452,
+        "rate": 0.4379618171114128
+      },
+      "old": {
+        "available": 3985,
+        "exploited": 649,
+        "rate": 0.1628607277289837
+      },
+      "decay": {
+        "diff": 0.11758049244525343,
+        "se": 0.014008773035463747,
+        "z": 8.393346951056591,
+        "seeds": 675
+      },
+      "window": {
+        "inside": {
+          "available": 71068,
+          "exploited": 32267,
+          "rate": 0.4540299431530365
+        },
+        "justOutside": {
+          "available": 29100,
+          "exploited": 9917,
+          "rate": 0.34079037800687284
+        },
+        "insideSplit": {
+          "diff": 0.05463901285697911,
+          "se": 0.004688398889367754,
+          "z": 11.654087919201638,
+          "seeds": 2977
+        },
+        "cliff": {
+          "diff": 0.0828666897138378,
+          "se": 0.004670793950279952,
+          "z": 17.74145693343442,
+          "seeds": 2912
+        }
+      },
+      "halfLifeAge": 33
+    },
+    {
+      "policy": "bounded-24",
+      "askDecisions": 271078,
+      "decisionsWithCertain": 72224,
+      "observations": 119938,
+      "rows": [
+        {
+          "lo": 1,
+          "hi": 2,
+          "available": 22983,
+          "exploited": 12608,
+          "exploitRate": 0.5485793847626507,
+          "hits": 20296,
+          "hitRate": 0.8830874994561198
+        },
+        {
+          "lo": 3,
+          "hi": 4,
+          "available": 30990,
+          "exploited": 16599,
+          "exploitRate": 0.5356243949661181,
+          "hits": 28358,
+          "hitRate": 0.9150693772184576
+        },
+        {
+          "lo": 5,
+          "hi": 6,
+          "available": 15839,
+          "exploited": 7223,
+          "exploitRate": 0.4560262642843614,
+          "hits": 14006,
+          "hitRate": 0.884272997032641
+        },
+        {
+          "lo": 7,
+          "hi": 8,
+          "available": 11023,
+          "exploited": 4540,
+          "exploitRate": 0.4118660981583961,
+          "hits": 9560,
+          "hitRate": 0.8672775106595301
+        },
+        {
+          "lo": 9,
+          "hi": 12,
+          "available": 14720,
+          "exploited": 5883,
+          "exploitRate": 0.3996603260869565,
+          "hits": 12684,
+          "hitRate": 0.8616847826086956
+        },
+        {
+          "lo": 13,
+          "hi": 16,
+          "available": 9180,
+          "exploited": 3370,
+          "exploitRate": 0.3671023965141612,
+          "hits": 7856,
+          "hitRate": 0.8557734204793028
+        },
+        {
+          "lo": 17,
+          "hi": 24,
+          "available": 9022,
+          "exploited": 3116,
+          "exploitRate": 0.34537796497450673,
+          "hits": 7559,
+          "hitRate": 0.8378408335180669
+        },
+        {
+          "lo": 25,
+          "hi": 32,
+          "available": 3446,
+          "exploited": 1086,
+          "exploitRate": 0.3151479976784678,
+          "hits": 2748,
+          "hitRate": 0.7974463145676146
+        },
+        {
+          "lo": 33,
+          "hi": 48,
+          "available": 2028,
+          "exploited": 516,
+          "exploitRate": 0.25443786982248523,
+          "hits": 1443,
+          "hitRate": 0.7115384615384616
+        },
+        {
+          "lo": 49,
+          "hi": 64,
+          "available": 520,
+          "exploited": 91,
+          "exploitRate": 0.175,
+          "hits": 288,
+          "hitRate": 0.5538461538461539
+        },
+        {
+          "lo": 65,
+          "hi": 96,
+          "available": 166,
+          "exploited": 26,
+          "exploitRate": 0.1566265060240964,
+          "hits": 63,
+          "hitRate": 0.3795180722891566
+        },
+        {
+          "lo": 97,
+          "hi": 128,
+          "available": 21,
+          "exploited": 0,
+          "exploitRate": 0,
+          "hits": 2,
+          "hitRate": 0.09523809523809523
+        },
+        {
+          "lo": 129,
+          "hi": null,
+          "available": 0,
           "exploited": 0,
           "exploitRate": 0,
           "hits": 0,
@@ -1015,326 +1181,326 @@
         }
       ],
       "young": {
-        "available": 95953,
-        "exploited": 34797,
-        "rate": 0.3626462955822121
+        "available": 80835,
+        "exploited": 40970,
+        "rate": 0.5068349106203995
       },
       "old": {
-        "available": 14348,
-        "exploited": 1656,
-        "rate": 0.11541678282687483
+        "available": 2735,
+        "exploited": 633,
+        "rate": 0.23144424131627056
       },
       "decay": {
-        "diff": 0.10545545731430692,
-        "se": 0.00757595803065877,
-        "z": 13.91975204819568,
-        "seeds": 1523
+        "diff": 0.07717237177035632,
+        "se": 0.017080992804200848,
+        "z": 4.518026127344119,
+        "seeds": 486
       },
       "window": {
         "inside": {
-          "available": 79204,
-          "exploited": 30101,
-          "rate": 0.38004393717489016
+          "available": 69812,
+          "exploited": 36430,
+          "rate": 0.5218300578697073
         },
         "justOutside": {
-          "available": 42250,
-          "exploited": 11395,
-          "rate": 0.26970414201183435
+          "available": 25743,
+          "exploited": 10423,
+          "rate": 0.40488676533426565
         },
         "insideSplit": {
-          "diff": 0.0654311931894195,
-          "se": 0.004365765314636752,
-          "z": 14.987336348578697,
-          "seeds": 2991
+          "diff": 0.048774046874887414,
+          "se": 0.005067134487702676,
+          "z": 9.625567861531234,
+          "seeds": 2958
         },
         "cliff": {
-          "diff": 0.0955377902122194,
-          "se": 0.0037173840556544435,
-          "z": 25.70027438163099,
-          "seeds": 2978
-        }
-      },
-      "halfLifeAge": 17
-    },
-    {
-      "policy": "bounded-24",
-      "askDecisions": 294616,
-      "decisionsWithCertain": 91789,
-      "observations": 161373,
-      "rows": [
-        {
-          "lo": 1,
-          "hi": 2,
-          "available": 23921,
-          "exploited": 11566,
-          "exploitRate": 0.4835082145395259,
-          "hits": 20213,
-          "hitRate": 0.8449897579532628
-        },
-        {
-          "lo": 3,
-          "hi": 4,
-          "available": 35671,
-          "exploited": 17927,
-          "exploitRate": 0.5025651089120013,
-          "hits": 31629,
-          "hitRate": 0.8866866642370553
-        },
-        {
-          "lo": 5,
-          "hi": 6,
-          "available": 19593,
-          "exploited": 8020,
-          "exploitRate": 0.40932986270606847,
-          "hits": 16395,
-          "hitRate": 0.836778441280049
-        },
-        {
-          "lo": 7,
-          "hi": 8,
-          "available": 14741,
-          "exploited": 5248,
-          "exploitRate": 0.35601383895258126,
-          "hits": 11946,
-          "hitRate": 0.8103927820364969
-        },
-        {
-          "lo": 9,
-          "hi": 12,
-          "available": 22402,
-          "exploited": 7861,
-          "exploitRate": 0.35090616909204536,
-          "hits": 17765,
-          "hitRate": 0.7930095527185073
-        },
-        {
-          "lo": 13,
-          "hi": 16,
-          "available": 14761,
-          "exploited": 4694,
-          "exploitRate": 0.3180001354921753,
-          "hits": 11319,
-          "hitRate": 0.7668179662624484
-        },
-        {
-          "lo": 17,
-          "hi": 24,
-          "available": 15344,
-          "exploited": 4385,
-          "exploitRate": 0.2857794577685089,
-          "hits": 10900,
-          "hitRate": 0.7103753910323254
-        },
-        {
-          "lo": 25,
-          "hi": 32,
-          "available": 6844,
-          "exploited": 1671,
-          "exploitRate": 0.24415546464056107,
-          "hits": 4369,
-          "hitRate": 0.6383693746347165
-        },
-        {
-          "lo": 33,
-          "hi": 48,
-          "available": 5241,
-          "exploited": 988,
-          "exploitRate": 0.18851364243464988,
-          "hits": 2814,
-          "hitRate": 0.5369204350314826
-        },
-        {
-          "lo": 49,
-          "hi": 64,
-          "available": 1740,
-          "exploited": 229,
-          "exploitRate": 0.13160919540229885,
-          "hits": 760,
-          "hitRate": 0.4367816091954023
-        },
-        {
-          "lo": 65,
-          "hi": 96,
-          "available": 953,
-          "exploited": 110,
-          "exploitRate": 0.11542497376705142,
-          "hits": 393,
-          "hitRate": 0.4123819517313746
-        },
-        {
-          "lo": 97,
-          "hi": 128,
-          "available": 154,
-          "exploited": 4,
-          "exploitRate": 0.025974025974025976,
-          "hits": 28,
-          "hitRate": 0.18181818181818182
-        },
-        {
-          "lo": 129,
-          "hi": null,
-          "available": 8,
-          "exploited": 2,
-          "exploitRate": 0.25,
-          "hits": 3,
-          "hitRate": 0.375
-        }
-      ],
-      "young": {
-        "available": 93926,
-        "exploited": 42761,
-        "rate": 0.4552626535783489
-      },
-      "old": {
-        "available": 8096,
-        "exploited": 1333,
-        "rate": 0.16464920948616601
-      },
-      "decay": {
-        "diff": 0.08912927066485901,
-        "se": 0.010418788532794428,
-        "z": 8.554667405362302,
-        "seeds": 1042
-      },
-      "window": {
-        "inside": {
-          "available": 79185,
-          "exploited": 37513,
-          "rate": 0.4737387131401149
-        },
-        "justOutside": {
-          "available": 37143,
-          "exploited": 13109,
-          "rate": 0.3529332579490079
-        },
-        "insideSplit": {
-          "diff": 0.04849254601201911,
-          "se": 0.004773900762175449,
-          "z": 10.157845424068103,
-          "seeds": 2984
-        },
-        "cliff": {
-          "diff": 0.08799778640748776,
-          "se": 0.004286577001683142,
-          "z": 20.528684396182562,
-          "seeds": 2944
+          "diff": 0.06882947230050274,
+          "se": 0.0050684758341532025,
+          "z": 13.579915255135507,
+          "seeds": 2823
         }
       },
       "halfLifeAge": 33
     },
     {
       "policy": "bounded-32",
-      "askDecisions": 291282,
-      "decisionsWithCertain": 86245,
-      "observations": 152519,
+      "askDecisions": 267665,
+      "decisionsWithCertain": 69003,
+      "observations": 116756,
       "rows": [
         {
           "lo": 1,
           "hi": 2,
-          "available": 23927,
-          "exploited": 12857,
-          "exploitRate": 0.5373427508672212,
-          "hits": 21955,
-          "hitRate": 0.9175826472186233
+          "available": 22529,
+          "exploited": 13211,
+          "exploitRate": 0.5863997514314883,
+          "hits": 21165,
+          "hitRate": 0.9394558125083226
         },
         {
           "lo": 3,
           "hi": 4,
-          "available": 36664,
-          "exploited": 19931,
-          "exploitRate": 0.5436122627100153,
-          "hits": 34530,
-          "hitRate": 0.9417957669648702
+          "available": 31454,
+          "exploited": 18012,
+          "exploitRate": 0.5726457684237299,
+          "hits": 30099,
+          "hitRate": 0.9569212182870224
         },
         {
           "lo": 5,
           "hi": 6,
-          "available": 18846,
-          "exploited": 8631,
-          "exploitRate": 0.4579751671442216,
-          "hits": 17151,
-          "hitRate": 0.9100604902897167
+          "available": 15307,
+          "exploited": 7507,
+          "exploitRate": 0.49042921539165085,
+          "hits": 14394,
+          "hitRate": 0.940354086365715
         },
         {
           "lo": 7,
           "hi": 8,
-          "available": 13775,
-          "exploited": 5750,
-          "exploitRate": 0.41742286751361163,
-          "hits": 12343,
-          "hitRate": 0.896043557168784
+          "available": 10354,
+          "exploited": 4641,
+          "exploitRate": 0.44823256712381687,
+          "hits": 9603,
+          "hitRate": 0.9274676453544524
         },
         {
           "lo": 9,
           "hi": 12,
-          "available": 20905,
-          "exploited": 8487,
-          "exploitRate": 0.4059794307581918,
-          "hits": 18487,
-          "hitRate": 0.8843338914135375
+          "available": 14456,
+          "exploited": 6181,
+          "exploitRate": 0.42757332595462094,
+          "hits": 13309,
+          "hitRate": 0.920655783065855
         },
         {
           "lo": 13,
           "hi": 16,
-          "available": 13543,
-          "exploited": 5235,
-          "exploitRate": 0.3865465554160821,
-          "hits": 11798,
-          "hitRate": 0.8711511481946393
+          "available": 8926,
+          "exploited": 3645,
+          "exploitRate": 0.40835760699081336,
+          "hits": 8129,
+          "hitRate": 0.9107102845619538
         },
         {
           "lo": 17,
           "hi": 24,
-          "available": 14255,
-          "exploited": 5208,
-          "exploitRate": 0.36534549280954054,
-          "hits": 12041,
-          "hitRate": 0.8446860750613819
+          "available": 8414,
+          "exploited": 3308,
+          "exploitRate": 0.3931542666983599,
+          "hits": 7608,
+          "hitRate": 0.904207273591633
         },
         {
           "lo": 25,
           "hi": 32,
-          "available": 5752,
-          "exploited": 1778,
-          "exploitRate": 0.30910987482614743,
-          "hits": 4456,
-          "hitRate": 0.7746870653685675
+          "available": 3159,
+          "exploited": 1199,
+          "exploitRate": 0.3795504906616018,
+          "hits": 2784,
+          "hitRate": 0.8812915479582146
         },
         {
           "lo": 33,
           "hi": 48,
-          "available": 3701,
-          "exploited": 1044,
-          "exploitRate": 0.28208592272358823,
-          "hits": 2571,
-          "hitRate": 0.6946771142934343
+          "available": 1755,
+          "exploited": 534,
+          "exploitRate": 0.30427350427350425,
+          "hits": 1467,
+          "hitRate": 0.8358974358974359
         },
         {
           "lo": 49,
           "hi": 64,
-          "available": 862,
-          "exploited": 180,
-          "exploitRate": 0.2088167053364269,
-          "hits": 527,
-          "hitRate": 0.611368909512761
+          "available": 310,
+          "exploited": 100,
+          "exploitRate": 0.3225806451612903,
+          "hits": 249,
+          "hitRate": 0.8032258064516129
         },
         {
           "lo": 65,
           "hi": 96,
-          "available": 282,
-          "exploited": 52,
-          "exploitRate": 0.18439716312056736,
-          "hits": 152,
-          "hitRate": 0.5390070921985816
+          "available": 65,
+          "exploited": 14,
+          "exploitRate": 0.2153846153846154,
+          "hits": 38,
+          "hitRate": 0.5846153846153846
         },
         {
           "lo": 97,
           "hi": 128,
-          "available": 7,
+          "available": 23,
           "exploited": 1,
-          "exploitRate": 0.14285714285714285,
+          "exploitRate": 0.043478260869565216,
+          "hits": 1,
+          "hitRate": 0.043478260869565216
+        },
+        {
+          "lo": 129,
+          "hi": null,
+          "available": 4,
+          "exploited": 1,
+          "exploitRate": 0.25,
           "hits": 2,
-          "hitRate": 0.2857142857142857
+          "hitRate": 0.5
+        }
+      ],
+      "young": {
+        "available": 79644,
+        "exploited": 43371,
+        "rate": 0.5445607955401537
+      },
+      "old": {
+        "available": 2157,
+        "exploited": 650,
+        "rate": 0.3013444598980065
+      },
+      "decay": {
+        "diff": 0.049056820204388375,
+        "se": 0.018305036612193275,
+        "z": 2.6799629655867965,
+        "seeds": 390
+      },
+      "window": {
+        "inside": {
+          "available": 69290,
+          "exploited": 38730,
+          "rate": 0.5589551161783807
+        },
+        "justOutside": {
+          "available": 24810,
+          "exploited": 10822,
+          "rate": 0.4361950826279726
+        },
+        "insideSplit": {
+          "diff": 0.026409798656746985,
+          "se": 0.005220142193717814,
+          "z": 5.0592105878897105,
+          "seeds": 2935
+        },
+        "cliff": {
+          "diff": 0.05671073330590904,
+          "se": 0.0053199398429008326,
+          "z": 10.660032816270732,
+          "seeds": 2762
+        }
+      },
+      "halfLifeAge": null
+    },
+    {
+      "policy": "bounded-48",
+      "askDecisions": 262140,
+      "decisionsWithCertain": 66005,
+      "observations": 112538,
+      "rows": [
+        {
+          "lo": 1,
+          "hi": 2,
+          "available": 22184,
+          "exploited": 13750,
+          "exploitRate": 0.619816083663902,
+          "hits": 21890,
+          "hitRate": 0.9867472051929318
+        },
+        {
+          "lo": 3,
+          "hi": 4,
+          "available": 31692,
+          "exploited": 18969,
+          "exploitRate": 0.5985422188564937,
+          "hits": 31414,
+          "hitRate": 0.9912280701754386
+        },
+        {
+          "lo": 5,
+          "hi": 6,
+          "available": 14826,
+          "exploited": 7893,
+          "exploitRate": 0.5323755564548766,
+          "hits": 14630,
+          "hitRate": 0.9867799811142587
+        },
+        {
+          "lo": 7,
+          "hi": 8,
+          "available": 9811,
+          "exploited": 4785,
+          "exploitRate": 0.48771786769952097,
+          "hits": 9607,
+          "hitRate": 0.9792070125369483
+        },
+        {
+          "lo": 9,
+          "hi": 12,
+          "available": 13343,
+          "exploited": 6293,
+          "exploitRate": 0.47163306602713034,
+          "hits": 13054,
+          "hitRate": 0.978340702990332
+        },
+        {
+          "lo": 13,
+          "hi": 16,
+          "available": 8167,
+          "exploited": 3698,
+          "exploitRate": 0.45279784498591896,
+          "hits": 7975,
+          "hitRate": 0.9764907554793681
+        },
+        {
+          "lo": 17,
+          "hi": 24,
+          "available": 7997,
+          "exploited": 3468,
+          "exploitRate": 0.4336626234838064,
+          "hits": 7753,
+          "hitRate": 0.9694885582093284
+        },
+        {
+          "lo": 25,
+          "hi": 32,
+          "available": 2836,
+          "exploited": 1169,
+          "exploitRate": 0.41220028208744713,
+          "hits": 2717,
+          "hitRate": 0.9580394922425952
+        },
+        {
+          "lo": 33,
+          "hi": 48,
+          "available": 1374,
+          "exploited": 524,
+          "exploitRate": 0.3813682678311499,
+          "hits": 1309,
+          "hitRate": 0.9526928675400291
+        },
+        {
+          "lo": 49,
+          "hi": 64,
+          "available": 239,
+          "exploited": 86,
+          "exploitRate": 0.3598326359832636,
+          "hits": 220,
+          "hitRate": 0.9205020920502092
+        },
+        {
+          "lo": 65,
+          "hi": 96,
+          "available": 69,
+          "exploited": 22,
+          "exploitRate": 0.3188405797101449,
+          "hits": 67,
+          "hitRate": 0.9710144927536232
+        },
+        {
+          "lo": 97,
+          "hi": 128,
+          "available": 0,
+          "exploited": 0,
+          "exploitRate": 0,
+          "hits": 0,
+          "hitRate": 0
         },
         {
           "lo": 129,
@@ -1347,317 +1513,151 @@
         }
       ],
       "young": {
-        "available": 93212,
-        "exploited": 47169,
-        "rate": 0.5060399948504485
+        "available": 78513,
+        "exploited": 45397,
+        "rate": 0.5782099779654325
       },
       "old": {
-        "available": 4852,
-        "exploited": 1277,
-        "rate": 0.2631904369332234
+        "available": 1682,
+        "exploited": 632,
+        "rate": 0.375743162901308
       },
       "decay": {
-        "diff": 0.05724368995784245,
-        "se": 0.011901173739883236,
-        "z": 4.8099196943917635,
-        "seeds": 770
+        "diff": -0.004265949253193847,
+        "se": 0.01932498654065077,
+        "z": -0.2207478511935973,
+        "seeds": 300
       },
       "window": {
         "inside": {
-          "available": 79437,
-          "exploited": 41419,
-          "rate": 0.5214069010662538
+          "available": 68702,
+          "exploited": 40612,
+          "rate": 0.5911327181159209
         },
         "justOutside": {
-          "available": 34680,
-          "exploited": 14237,
-          "rate": 0.41052479815455595
+          "available": 23154,
+          "exploited": 11078,
+          "rate": 0.47844864818173966
         },
         "insideSplit": {
-          "diff": 0.028109682884970684,
-          "se": 0.004966258921199834,
-          "z": 5.660132371467146,
-          "seeds": 2973
+          "diff": 0.006811136937979078,
+          "se": 0.005325405171740814,
+          "z": 1.2789894324139461,
+          "seeds": 2924
         },
         "cliff": {
-          "diff": 0.07156278356313076,
-          "se": 0.004475162622905127,
-          "z": 15.991102356113837,
-          "seeds": 2914
-        }
-      },
-      "halfLifeAge": 49
-    },
-    {
-      "policy": "bounded-48",
-      "askDecisions": 286963,
-      "decisionsWithCertain": 81864,
-      "observations": 145272,
-      "rows": [
-        {
-          "lo": 1,
-          "hi": 2,
-          "available": 23754,
-          "exploited": 13701,
-          "exploitRate": 0.5767870674412731,
-          "hits": 23342,
-          "hitRate": 0.9826555527490107
-        },
-        {
-          "lo": 3,
-          "hi": 4,
-          "available": 37647,
-          "exploited": 21787,
-          "exploitRate": 0.5787180917470184,
-          "hits": 37147,
-          "hitRate": 0.9867187292480144
-        },
-        {
-          "lo": 5,
-          "hi": 6,
-          "available": 18168,
-          "exploited": 9215,
-          "exploitRate": 0.5072104799647732,
-          "hits": 17742,
-          "hitRate": 0.976552179656539
-        },
-        {
-          "lo": 7,
-          "hi": 8,
-          "available": 12786,
-          "exploited": 6013,
-          "exploitRate": 0.4702799937431566,
-          "hits": 12414,
-          "hitRate": 0.970905678085406
-        },
-        {
-          "lo": 9,
-          "hi": 12,
-          "available": 19107,
-          "exploited": 8711,
-          "exploitRate": 0.4559062123828963,
-          "hits": 18474,
-          "hitRate": 0.9668707803422829
-        },
-        {
-          "lo": 13,
-          "hi": 16,
-          "available": 12409,
-          "exploited": 5421,
-          "exploitRate": 0.4368603432992183,
-          "hits": 11955,
-          "hitRate": 0.9634136513820614
-        },
-        {
-          "lo": 17,
-          "hi": 24,
-          "available": 13077,
-          "exploited": 5494,
-          "exploitRate": 0.4201269404297622,
-          "hits": 12529,
-          "hitRate": 0.9580943641507991
-        },
-        {
-          "lo": 25,
-          "hi": 32,
-          "available": 5020,
-          "exploited": 1997,
-          "exploitRate": 0.39780876494023903,
-          "hits": 4684,
-          "hitRate": 0.9330677290836653
-        },
-        {
-          "lo": 33,
-          "hi": 48,
-          "available": 2661,
-          "exploited": 982,
-          "exploitRate": 0.36903419767004886,
-          "hits": 2406,
-          "hitRate": 0.9041713641488163
-        },
-        {
-          "lo": 49,
-          "hi": 64,
-          "available": 475,
-          "exploited": 169,
-          "exploitRate": 0.35578947368421054,
-          "hits": 424,
-          "hitRate": 0.8926315789473684
-        },
-        {
-          "lo": 65,
-          "hi": 96,
-          "available": 145,
-          "exploited": 43,
-          "exploitRate": 0.296551724137931,
-          "hits": 113,
-          "hitRate": 0.7793103448275862
-        },
-        {
-          "lo": 97,
-          "hi": 128,
-          "available": 22,
-          "exploited": 3,
-          "exploitRate": 0.13636363636363635,
-          "hits": 4,
-          "hitRate": 0.18181818181818182
-        },
-        {
-          "lo": 129,
-          "hi": null,
-          "available": 1,
-          "exploited": 1,
-          "exploitRate": 1,
-          "hits": 1,
-          "hitRate": 1
-        }
-      ],
-      "young": {
-        "available": 92355,
-        "exploited": 50716,
-        "rate": 0.5491418981105517
-      },
-      "old": {
-        "available": 3304,
-        "exploited": 1198,
-        "rate": 0.362590799031477
-      },
-      "decay": {
-        "diff": 0.04224989099439651,
-        "se": 0.013112065296689356,
-        "z": 3.222214810436012,
-        "seeds": 542
-      },
-      "window": {
-        "inside": {
-          "available": 79569,
-          "exploited": 44703,
-          "rate": 0.5618142744033481
-        },
-        "justOutside": {
-          "available": 31893,
-          "exploited": 14724,
-          "rate": 0.4616687047314458
-        },
-        "insideSplit": {
-          "diff": 0.0015307808801367459,
-          "se": 0.005025814105767858,
-          "z": 0.30458366503845624,
-          "seeds": 2962
-        },
-        "cliff": {
-          "diff": 0.05308956457697199,
-          "se": 0.004705773787507746,
-          "z": 11.28179274530939,
-          "seeds": 2859
+          "diff": 0.03524439740784785,
+          "se": 0.005264559344554499,
+          "z": 6.694652885678568,
+          "seeds": 2681
         }
       },
       "halfLifeAge": null
     },
     {
       "policy": "bounded-64",
-      "askDecisions": 286115,
-      "decisionsWithCertain": 80905,
-      "observations": 143518,
+      "askDecisions": 260338,
+      "decisionsWithCertain": 65272,
+      "observations": 111499,
       "rows": [
         {
           "lo": 1,
           "hi": 2,
-          "available": 23648,
-          "exploited": 13814,
-          "exploitRate": 0.5841508795669824,
-          "hits": 23572,
-          "hitRate": 0.996786197564276
+          "available": 22049,
+          "exploited": 13823,
+          "exploitRate": 0.6269218558664792,
+          "hits": 21986,
+          "hitRate": 0.9971427275613407
         },
         {
           "lo": 3,
           "hi": 4,
-          "available": 37816,
-          "exploited": 22132,
-          "exploitRate": 0.5852549185529935,
-          "hits": 37705,
-          "hitRate": 0.9970647345039136
+          "available": 31671,
+          "exploited": 19137,
+          "exploitRate": 0.6042436298190774,
+          "hits": 31603,
+          "hitRate": 0.9978529253891573
         },
         {
           "lo": 5,
           "hi": 6,
-          "available": 18174,
-          "exploited": 9391,
-          "exploitRate": 0.5167271926928579,
-          "hits": 18081,
-          "hitRate": 0.9948827996038296
+          "available": 14775,
+          "exploited": 7988,
+          "exploitRate": 0.5406429780033841,
+          "hits": 14719,
+          "hitRate": 0.9962098138747885
         },
         {
           "lo": 7,
           "hi": 8,
-          "available": 12700,
-          "exploited": 6149,
-          "exploitRate": 0.4841732283464567,
-          "hits": 12623,
-          "hitRate": 0.9939370078740157
+          "available": 9613,
+          "exploited": 4839,
+          "exploitRate": 0.5033808384479351,
+          "hits": 9566,
+          "hitRate": 0.9951107874752939
         },
         {
           "lo": 9,
           "hi": 12,
-          "available": 19080,
-          "exploited": 8933,
-          "exploitRate": 0.4681865828092243,
-          "hits": 18944,
-          "hitRate": 0.9928721174004193
+          "available": 13094,
+          "exploited": 6277,
+          "exploitRate": 0.4793798686421262,
+          "hits": 13024,
+          "hitRate": 0.994654040018329
         },
         {
           "lo": 13,
           "hi": 16,
-          "available": 12287,
-          "exploited": 5607,
-          "exploitRate": 0.45633596484088873,
-          "hits": 12186,
-          "hitRate": 0.9917799300073248
+          "available": 8168,
+          "exploited": 3753,
+          "exploitRate": 0.4594760039177277,
+          "hits": 8126,
+          "hitRate": 0.9948579823702253
         },
         {
           "lo": 17,
           "hi": 24,
-          "available": 12319,
-          "exploited": 5513,
-          "exploitRate": 0.4475200909164705,
-          "hits": 12213,
-          "hitRate": 0.9913954054712233
+          "available": 7733,
+          "exploited": 3474,
+          "exploitRate": 0.44924350187508083,
+          "hits": 7674,
+          "hitRate": 0.9923703607914134
         },
         {
           "lo": 25,
           "hi": 32,
-          "available": 4551,
-          "exploited": 1963,
-          "exploitRate": 0.43133377279718743,
-          "hits": 4498,
-          "hitRate": 0.9883542078664029
+          "available": 2906,
+          "exploited": 1231,
+          "exploitRate": 0.42360633172746043,
+          "hits": 2882,
+          "hitRate": 0.9917412250516173
         },
         {
           "lo": 33,
           "hi": 48,
-          "available": 2454,
-          "exploited": 1009,
-          "exploitRate": 0.4111654441727791,
-          "hits": 2399,
-          "hitRate": 0.9775876120619397
+          "available": 1215,
+          "exploited": 502,
+          "exploitRate": 0.41316872427983536,
+          "hits": 1191,
+          "hitRate": 0.980246913580247
         },
         {
           "lo": 49,
           "hi": 64,
-          "available": 401,
-          "exploited": 160,
-          "exploitRate": 0.39900249376558605,
-          "hits": 389,
-          "hitRate": 0.970074812967581
+          "available": 211,
+          "exploited": 84,
+          "exploitRate": 0.3981042654028436,
+          "hits": 207,
+          "hitRate": 0.981042654028436
         },
         {
           "lo": 65,
           "hi": 96,
-          "available": 88,
-          "exploited": 35,
-          "exploitRate": 0.3977272727272727,
-          "hits": 70,
-          "hitRate": 0.7954545454545454
+          "available": 64,
+          "exploited": 14,
+          "exploitRate": 0.21875,
+          "hits": 64,
+          "hitRate": 1
         },
         {
           "lo": 97,
@@ -1679,150 +1679,150 @@
         }
       ],
       "young": {
-        "available": 92338,
-        "exploited": 51486,
-        "rate": 0.5575819272672139
+        "available": 78108,
+        "exploited": 45787,
+        "rate": 0.5862011573718441
       },
       "old": {
-        "available": 2943,
-        "exploited": 1204,
-        "rate": 0.4091063540604825
+        "available": 1490,
+        "exploited": 600,
+        "rate": 0.40268456375838924
       },
       "decay": {
-        "diff": -0.0044230266636656485,
-        "se": 0.01303778228928934,
-        "z": -0.3392468569826638,
-        "seeds": 485
+        "diff": -0.03106044493554323,
+        "se": 0.019449271611883957,
+        "z": -1.596997849346943,
+        "seeds": 269
       },
       "window": {
         "inside": {
-          "available": 79638,
-          "exploited": 45337,
-          "rate": 0.5692885306009694
+          "available": 68495,
+          "exploited": 40948,
+          "rate": 0.5978246587342142
         },
         "justOutside": {
-          "available": 31780,
-          "exploited": 15082,
-          "rate": 0.47457520453115165
+          "available": 22707,
+          "exploited": 11116,
+          "rate": 0.4895406702778879
         },
         "insideSplit": {
-          "diff": -0.00508827207669923,
-          "se": 0.0050518412486397326,
-          "z": -1.0072113960566964,
-          "seeds": 2957
+          "diff": 0.002024674149490268,
+          "se": 0.005304310613894796,
+          "z": 0.3817035420562618,
+          "seeds": 2910
         },
         "cliff": {
-          "diff": 0.04800893393418722,
-          "se": 0.004678988266151909,
-          "z": 10.26053736477324,
-          "seeds": 2848
+          "diff": 0.029951495312147938,
+          "se": 0.0053265946943498585,
+          "z": 5.623010014994898,
+          "seeds": 2673
         }
       },
       "halfLifeAge": null
     },
     {
       "policy": "bounded-96",
-      "askDecisions": 285550,
-      "decisionsWithCertain": 80642,
-      "observations": 142988,
+      "askDecisions": 259814,
+      "decisionsWithCertain": 65055,
+      "observations": 111169,
       "rows": [
         {
           "lo": 1,
           "hi": 2,
-          "available": 23595,
-          "exploited": 13827,
-          "exploitRate": 0.586013986013986,
-          "hits": 23594,
-          "hitRate": 0.9999576181394363
+          "available": 22014,
+          "exploited": 13831,
+          "exploitRate": 0.6282820023621332,
+          "hits": 22014,
+          "hitRate": 1
         },
         {
           "lo": 3,
           "hi": 4,
-          "available": 37844,
-          "exploited": 22182,
-          "exploitRate": 0.5861431138357468,
-          "hits": 37843,
-          "hitRate": 0.9999735757319522
+          "available": 31717,
+          "exploited": 19207,
+          "exploitRate": 0.6055742976952423,
+          "hits": 31716,
+          "hitRate": 0.9999684711668821
         },
         {
           "lo": 5,
           "hi": 6,
-          "available": 18221,
-          "exploited": 9449,
-          "exploitRate": 0.5185774655617145,
-          "hits": 18219,
-          "hitRate": 0.9998902365402558
+          "available": 14713,
+          "exploited": 7983,
+          "exploitRate": 0.5425813906069462,
+          "hits": 14709,
+          "hitRate": 0.9997281315843132
         },
         {
           "lo": 7,
           "hi": 8,
-          "available": 12650,
-          "exploited": 6187,
-          "exploitRate": 0.4890909090909091,
-          "hits": 12648,
-          "hitRate": 0.9998418972332016
+          "available": 9615,
+          "exploited": 4840,
+          "exploitRate": 0.5033801352054083,
+          "hits": 9615,
+          "hitRate": 1
         },
         {
           "lo": 9,
           "hi": 12,
-          "available": 18897,
-          "exploited": 8924,
-          "exploitRate": 0.4722442715774991,
-          "hits": 18891,
-          "hitRate": 0.9996824892840134
+          "available": 13038,
+          "exploited": 6335,
+          "exploitRate": 0.48588740604387176,
+          "hits": 13038,
+          "hitRate": 1
         },
         {
           "lo": 13,
           "hi": 16,
-          "available": 12274,
-          "exploited": 5670,
-          "exploitRate": 0.46195209385693337,
-          "hits": 12271,
-          "hitRate": 0.9997555809027212
+          "available": 8069,
+          "exploited": 3734,
+          "exploitRate": 0.46275870615937537,
+          "hits": 8069,
+          "hitRate": 1
         },
         {
           "lo": 17,
           "hi": 24,
-          "available": 12170,
-          "exploited": 5515,
-          "exploitRate": 0.4531635168447001,
-          "hits": 12169,
-          "hitRate": 0.9999178307313065
+          "available": 7774,
+          "exploited": 3526,
+          "exploitRate": 0.453563159248778,
+          "hits": 7770,
+          "hitRate": 0.9994854643684075
         },
         {
           "lo": 25,
           "hi": 32,
-          "available": 4526,
-          "exploited": 1992,
-          "exploitRate": 0.4401237295625276,
-          "hits": 4526,
-          "hitRate": 1
+          "available": 2788,
+          "exploited": 1212,
+          "exploitRate": 0.4347202295552367,
+          "hits": 2786,
+          "hitRate": 0.9992826398852224
         },
         {
           "lo": 33,
           "hi": 48,
-          "available": 2352,
-          "exploited": 996,
-          "exploitRate": 0.42346938775510207,
-          "hits": 2352,
+          "available": 1173,
+          "exploited": 491,
+          "exploitRate": 0.4185848252344416,
+          "hits": 1173,
           "hitRate": 1
         },
         {
           "lo": 49,
           "hi": 64,
-          "available": 391,
-          "exploited": 162,
-          "exploitRate": 0.4143222506393862,
-          "hits": 391,
+          "available": 229,
+          "exploited": 88,
+          "exploitRate": 0.38427947598253276,
+          "hits": 229,
           "hitRate": 1
         },
         {
           "lo": 65,
           "hi": 96,
-          "available": 68,
-          "exploited": 35,
-          "exploitRate": 0.5147058823529411,
-          "hits": 68,
+          "available": 39,
+          "exploited": 9,
+          "exploitRate": 0.23076923076923078,
+          "hits": 39,
           "hitRate": 1
         },
         {
@@ -1845,150 +1845,150 @@
         }
       ],
       "young": {
-        "available": 92310,
-        "exploited": 51645,
-        "rate": 0.559473513162171
+        "available": 78059,
+        "exploited": 45861,
+        "rate": 0.5875171344752047
       },
       "old": {
-        "available": 2811,
-        "exploited": 1193,
-        "rate": 0.42440412664532196
+        "available": 1441,
+        "exploited": 588,
+        "rate": 0.4080499653018737
       },
       "decay": {
-        "diff": -0.014508623341896235,
-        "se": 0.012893107049681399,
-        "z": -1.125300773970907,
-        "seeds": 470
+        "diff": -0.03485756512827796,
+        "se": 0.01968041881344303,
+        "z": -1.7711800474727668,
+        "seeds": 261
       },
       "window": {
         "inside": {
-          "available": 79660,
-          "exploited": 45458,
-          "rate": 0.5706502636203866
+          "available": 68444,
+          "exploited": 41021,
+          "rate": 0.5993366840044416
         },
         "justOutside": {
-          "available": 31547,
-          "exploited": 15111,
-          "rate": 0.47899958791644215
+          "available": 22653,
+          "exploited": 11175,
+          "rate": 0.4933121440868759
         },
         "insideSplit": {
-          "diff": -0.007605320253061163,
-          "se": 0.005107767582032222,
-          "z": -1.4889714794022093,
-          "seeds": 2954
+          "diff": -0.0014231424600015718,
+          "se": 0.005318351512830736,
+          "z": -0.2675908985271439,
+          "seeds": 2910
         },
         "cliff": {
-          "diff": 0.04664586382517412,
-          "se": 0.004699573199042503,
-          "z": 9.925553204422437,
-          "seeds": 2844
+          "diff": 0.025840057223808534,
+          "se": 0.005271899161095281,
+          "z": 4.901470311590718,
+          "seeds": 2669
         }
       },
       "halfLifeAge": null
     },
     {
       "policy": "bounded-128",
-      "askDecisions": 285503,
-      "decisionsWithCertain": 80630,
-      "observations": 142961,
+      "askDecisions": 259812,
+      "decisionsWithCertain": 65054,
+      "observations": 111165,
       "rows": [
         {
           "lo": 1,
           "hi": 2,
-          "available": 23597,
-          "exploited": 13828,
-          "exploitRate": 0.586006695766411,
-          "hits": 23597,
+          "available": 22012,
+          "exploited": 13829,
+          "exploitRate": 0.6282482282391423,
+          "hits": 22012,
           "hitRate": 1
         },
         {
           "lo": 3,
           "hi": 4,
-          "available": 37850,
-          "exploited": 22182,
-          "exploitRate": 0.5860501981505944,
-          "hits": 37850,
+          "available": 31715,
+          "exploited": 19207,
+          "exploitRate": 0.6056124862052656,
+          "hits": 31715,
           "hitRate": 1
         },
         {
           "lo": 5,
           "hi": 6,
-          "available": 18226,
-          "exploited": 9454,
-          "exploitRate": 0.5187095358279381,
-          "hits": 18226,
+          "available": 14712,
+          "exploited": 7982,
+          "exploitRate": 0.5425502990755846,
+          "hits": 14712,
           "hitRate": 1
         },
         {
           "lo": 7,
           "hi": 8,
-          "available": 12644,
-          "exploited": 6187,
-          "exploitRate": 0.48932299905093324,
-          "hits": 12644,
+          "available": 9618,
+          "exploited": 4843,
+          "exploitRate": 0.5035350384695363,
+          "hits": 9618,
           "hitRate": 1
         },
         {
           "lo": 9,
           "hi": 12,
-          "available": 18892,
-          "exploited": 8927,
-          "exploitRate": 0.47252805420283717,
-          "hits": 18892,
+          "available": 13043,
+          "exploited": 6337,
+          "exploitRate": 0.48585448133098214,
+          "hits": 13043,
           "hitRate": 1
         },
         {
           "lo": 13,
           "hi": 16,
-          "available": 12261,
-          "exploited": 5669,
-          "exploitRate": 0.4623603295000408,
-          "hits": 12261,
+          "available": 8063,
+          "exploited": 3731,
+          "exploitRate": 0.4627309934267642,
+          "hits": 8063,
           "hitRate": 1
         },
         {
           "lo": 17,
           "hi": 24,
-          "available": 12158,
-          "exploited": 5511,
-          "exploitRate": 0.45328178976805394,
-          "hits": 12158,
+          "available": 7775,
+          "exploited": 3529,
+          "exploitRate": 0.45389067524115756,
+          "hits": 7775,
           "hitRate": 1
         },
         {
           "lo": 25,
           "hi": 32,
-          "available": 4522,
-          "exploited": 1989,
-          "exploitRate": 0.4398496240601504,
-          "hits": 4522,
+          "available": 2787,
+          "exploited": 1214,
+          "exploitRate": 0.43559382848941514,
+          "hits": 2787,
           "hitRate": 1
         },
         {
           "lo": 33,
           "hi": 48,
-          "available": 2352,
-          "exploited": 996,
-          "exploitRate": 0.42346938775510207,
-          "hits": 2352,
+          "available": 1170,
+          "exploited": 491,
+          "exploitRate": 0.41965811965811967,
+          "hits": 1170,
           "hitRate": 1
         },
         {
           "lo": 49,
           "hi": 64,
-          "available": 391,
-          "exploited": 162,
-          "exploitRate": 0.4143222506393862,
-          "hits": 391,
+          "available": 231,
+          "exploited": 87,
+          "exploitRate": 0.37662337662337664,
+          "hits": 231,
           "hitRate": 1
         },
         {
           "lo": 65,
           "hi": 96,
-          "available": 68,
-          "exploited": 35,
-          "exploitRate": 0.5147058823529411,
-          "hits": 68,
+          "available": 39,
+          "exploited": 9,
+          "exploitRate": 0.23076923076923078,
+          "hits": 39,
           "hitRate": 1
         },
         {
@@ -2011,150 +2011,150 @@
         }
       ],
       "young": {
-        "available": 92317,
-        "exploited": 51651,
-        "rate": 0.5594960841448487
+        "available": 78057,
+        "exploited": 45861,
+        "rate": 0.5875321880164495
       },
       "old": {
-        "available": 2811,
-        "exploited": 1193,
-        "rate": 0.42440412664532196
+        "available": 1440,
+        "exploited": 587,
+        "rate": 0.4076388888888889
       },
       "decay": {
-        "diff": -0.014508623341896235,
-        "se": 0.012893107049681399,
-        "z": -1.125300773970907,
-        "seeds": 470
+        "diff": -0.03472072878454507,
+        "se": 0.01969290154728557,
+        "z": -1.7631088390492107,
+        "seeds": 261
       },
       "window": {
         "inside": {
-          "available": 79673,
-          "exploited": 45464,
-          "rate": 0.5706324601809898
+          "available": 68439,
+          "exploited": 41018,
+          "rate": 0.5993366355440611
         },
         "justOutside": {
-          "available": 31536,
-          "exploited": 15114,
-          "rate": 0.479261796042618
+          "available": 22661,
+          "exploited": 11180,
+          "rate": 0.49335863377609107
         },
         "insideSplit": {
-          "diff": -0.007452091812664274,
-          "se": 0.005105612210953244,
-          "z": -1.4595882931878466,
-          "seeds": 2954
+          "diff": -0.0015975892763525716,
+          "se": 0.005315383827217804,
+          "z": -0.30055953215871284,
+          "seeds": 2910
         },
         "cliff": {
-          "diff": 0.04617192321173369,
-          "se": 0.004694263489060587,
-          "z": 9.83581840246756,
-          "seeds": 2843
+          "diff": 0.025903501755195287,
+          "se": 0.005268479742861525,
+          "z": 4.916693812915003,
+          "seeds": 2670
         }
       },
       "halfLifeAge": null
     },
     {
       "policy": "bounded-inf",
-      "askDecisions": 285502,
-      "decisionsWithCertain": 80630,
-      "observations": 142961,
+      "askDecisions": 259812,
+      "decisionsWithCertain": 65054,
+      "observations": 111165,
       "rows": [
         {
           "lo": 1,
           "hi": 2,
-          "available": 23597,
-          "exploited": 13828,
-          "exploitRate": 0.586006695766411,
-          "hits": 23597,
+          "available": 22012,
+          "exploited": 13829,
+          "exploitRate": 0.6282482282391423,
+          "hits": 22012,
           "hitRate": 1
         },
         {
           "lo": 3,
           "hi": 4,
-          "available": 37850,
-          "exploited": 22182,
-          "exploitRate": 0.5860501981505944,
-          "hits": 37850,
+          "available": 31715,
+          "exploited": 19207,
+          "exploitRate": 0.6056124862052656,
+          "hits": 31715,
           "hitRate": 1
         },
         {
           "lo": 5,
           "hi": 6,
-          "available": 18226,
-          "exploited": 9454,
-          "exploitRate": 0.5187095358279381,
-          "hits": 18226,
+          "available": 14712,
+          "exploited": 7982,
+          "exploitRate": 0.5425502990755846,
+          "hits": 14712,
           "hitRate": 1
         },
         {
           "lo": 7,
           "hi": 8,
-          "available": 12644,
-          "exploited": 6187,
-          "exploitRate": 0.48932299905093324,
-          "hits": 12644,
+          "available": 9618,
+          "exploited": 4843,
+          "exploitRate": 0.5035350384695363,
+          "hits": 9618,
           "hitRate": 1
         },
         {
           "lo": 9,
           "hi": 12,
-          "available": 18892,
-          "exploited": 8927,
-          "exploitRate": 0.47252805420283717,
-          "hits": 18892,
+          "available": 13043,
+          "exploited": 6337,
+          "exploitRate": 0.48585448133098214,
+          "hits": 13043,
           "hitRate": 1
         },
         {
           "lo": 13,
           "hi": 16,
-          "available": 12261,
-          "exploited": 5669,
-          "exploitRate": 0.4623603295000408,
-          "hits": 12261,
+          "available": 8063,
+          "exploited": 3731,
+          "exploitRate": 0.4627309934267642,
+          "hits": 8063,
           "hitRate": 1
         },
         {
           "lo": 17,
           "hi": 24,
-          "available": 12158,
-          "exploited": 5511,
-          "exploitRate": 0.45328178976805394,
-          "hits": 12158,
+          "available": 7775,
+          "exploited": 3529,
+          "exploitRate": 0.45389067524115756,
+          "hits": 7775,
           "hitRate": 1
         },
         {
           "lo": 25,
           "hi": 32,
-          "available": 4522,
-          "exploited": 1989,
-          "exploitRate": 0.4398496240601504,
-          "hits": 4522,
+          "available": 2787,
+          "exploited": 1214,
+          "exploitRate": 0.43559382848941514,
+          "hits": 2787,
           "hitRate": 1
         },
         {
           "lo": 33,
           "hi": 48,
-          "available": 2352,
-          "exploited": 996,
-          "exploitRate": 0.42346938775510207,
-          "hits": 2352,
+          "available": 1170,
+          "exploited": 491,
+          "exploitRate": 0.41965811965811967,
+          "hits": 1170,
           "hitRate": 1
         },
         {
           "lo": 49,
           "hi": 64,
-          "available": 391,
-          "exploited": 162,
-          "exploitRate": 0.4143222506393862,
-          "hits": 391,
+          "available": 231,
+          "exploited": 87,
+          "exploitRate": 0.37662337662337664,
+          "hits": 231,
           "hitRate": 1
         },
         {
           "lo": 65,
           "hi": 96,
-          "available": 68,
-          "exploited": 35,
-          "exploitRate": 0.5147058823529411,
-          "hits": 68,
+          "available": 39,
+          "exploited": 9,
+          "exploitRate": 0.23076923076923078,
+          "hits": 39,
           "hitRate": 1
         },
         {
@@ -2177,208 +2177,208 @@
         }
       ],
       "young": {
-        "available": 92317,
-        "exploited": 51651,
-        "rate": 0.5594960841448487
+        "available": 78057,
+        "exploited": 45861,
+        "rate": 0.5875321880164495
       },
       "old": {
-        "available": 2811,
-        "exploited": 1193,
-        "rate": 0.42440412664532196
+        "available": 1440,
+        "exploited": 587,
+        "rate": 0.4076388888888889
       },
       "decay": {
-        "diff": -0.014508623341896235,
-        "se": 0.012893107049681399,
-        "z": -1.125300773970907,
-        "seeds": 470
+        "diff": -0.03472072878454507,
+        "se": 0.01969290154728557,
+        "z": -1.7631088390492107,
+        "seeds": 261
       },
       "window": {
         "inside": {
-          "available": 79673,
-          "exploited": 45464,
-          "rate": 0.5706324601809898
+          "available": 68439,
+          "exploited": 41018,
+          "rate": 0.5993366355440611
         },
         "justOutside": {
-          "available": 31536,
-          "exploited": 15114,
-          "rate": 0.479261796042618
+          "available": 22661,
+          "exploited": 11180,
+          "rate": 0.49335863377609107
         },
         "insideSplit": {
-          "diff": -0.007452091812664274,
-          "se": 0.005105612210953244,
-          "z": -1.4595882931878466,
-          "seeds": 2954
+          "diff": -0.0015975892763525716,
+          "se": 0.005315383827217804,
+          "z": -0.30055953215871284,
+          "seeds": 2910
         },
         "cliff": {
-          "diff": 0.04617192321173369,
-          "se": 0.004694263489060587,
-          "z": 9.83581840246756,
-          "seeds": 2843
+          "diff": 0.025903501755195287,
+          "se": 0.005268479742861525,
+          "z": 4.916693812915003,
+          "seeds": 2670
         }
       },
       "halfLifeAge": null
     },
     {
       "policy": "reference",
-      "askDecisions": 4014697,
-      "decisionsWithCertain": 899979,
-      "observations": 1528644,
+      "askDecisions": 3728067,
+      "decisionsWithCertain": 793293,
+      "observations": 1311282,
       "rows": [
         {
           "lo": 1,
           "hi": 2,
-          "available": 275880,
-          "exploited": 169471,
-          "exploitRate": 0.6142924459910106,
-          "hits": 275880,
+          "available": 278215,
+          "exploited": 180527,
+          "exploitRate": 0.6488758693815934,
+          "hits": 278215,
           "hitRate": 1
         },
         {
           "lo": 3,
           "hi": 4,
-          "available": 402291,
-          "exploited": 243680,
-          "exploitRate": 0.6057306775443646,
-          "hits": 402291,
+          "available": 365042,
+          "exploited": 228895,
+          "exploitRate": 0.6270374367880956,
+          "hits": 365042,
           "hitRate": 1
         },
         {
           "lo": 5,
           "hi": 6,
-          "available": 191402,
-          "exploited": 103710,
-          "exploitRate": 0.5418438678801685,
-          "hits": 191402,
+          "available": 164087,
+          "exploited": 91174,
+          "exploitRate": 0.5556442618854632,
+          "hits": 164087,
           "hitRate": 1
         },
         {
           "lo": 7,
           "hi": 8,
-          "available": 136136,
-          "exploited": 70465,
-          "exploitRate": 0.5176073926073926,
-          "hits": 136136,
+          "available": 111876,
+          "exploited": 59370,
+          "exploitRate": 0.5306768207658479,
+          "hits": 111876,
           "hitRate": 1
         },
         {
           "lo": 9,
           "hi": 12,
-          "available": 196314,
-          "exploited": 97792,
-          "exploitRate": 0.4981407337225058,
-          "hits": 196314,
+          "available": 148717,
+          "exploited": 75935,
+          "exploitRate": 0.5106006710732465,
+          "hits": 148717,
           "hitRate": 1
         },
         {
           "lo": 13,
           "hi": 16,
-          "available": 120509,
-          "exploited": 58287,
-          "exploitRate": 0.48367341858284446,
-          "hits": 120509,
+          "available": 88660,
+          "exploited": 43288,
+          "exploitRate": 0.4882472366343334,
+          "hits": 88660,
           "hitRate": 1
         },
         {
           "lo": 17,
           "hi": 24,
-          "available": 119129,
-          "exploited": 56160,
-          "exploitRate": 0.4714217361012012,
-          "hits": 119129,
+          "available": 85895,
+          "exploited": 40543,
+          "exploitRate": 0.47200651958786893,
+          "hits": 85895,
           "hitRate": 1
         },
         {
           "lo": 25,
           "hi": 32,
-          "available": 46462,
-          "exploited": 21537,
-          "exploitRate": 0.4635400972838018,
-          "hits": 46462,
+          "available": 34847,
+          "exploited": 15831,
+          "exploitRate": 0.4543002267053118,
+          "hits": 34847,
           "hitRate": 1
         },
         {
           "lo": 33,
           "hi": 48,
-          "available": 28667,
-          "exploited": 12799,
-          "exploitRate": 0.44647155265636446,
-          "hits": 28667,
+          "available": 21728,
+          "exploited": 9441,
+          "exploitRate": 0.43450846833578793,
+          "hits": 21728,
           "hitRate": 1
         },
         {
           "lo": 49,
           "hi": 64,
-          "available": 7289,
-          "exploited": 3397,
-          "exploitRate": 0.46604472492797366,
-          "hits": 7289,
+          "available": 6804,
+          "exploited": 2863,
+          "exploitRate": 0.4207818930041152,
+          "hits": 6804,
           "hitRate": 1
         },
         {
           "lo": 65,
           "hi": 96,
-          "available": 3640,
-          "exploited": 1790,
-          "exploitRate": 0.49175824175824173,
-          "hits": 3640,
+          "available": 4174,
+          "exploited": 1795,
+          "exploitRate": 0.43004312410158124,
+          "hits": 4174,
           "hitRate": 1
         },
         {
           "lo": 97,
           "hi": 128,
-          "available": 731,
-          "exploited": 375,
-          "exploitRate": 0.5129958960328317,
-          "hits": 731,
+          "available": 933,
+          "exploited": 373,
+          "exploitRate": 0.39978563772775993,
+          "hits": 933,
           "hitRate": 1
         },
         {
           "lo": 129,
           "hi": null,
-          "available": 194,
-          "exploited": 119,
-          "exploitRate": 0.6134020618556701,
-          "hits": 194,
+          "available": 304,
+          "exploited": 127,
+          "exploitRate": 0.41776315789473684,
+          "hits": 304,
           "hitRate": 1
         }
       ],
       "young": {
-        "available": 1005709,
-        "exploited": 587326,
-        "rate": 0.5839919897306278
+        "available": 919220,
+        "exploited": 559966,
+        "rate": 0.6091751702530406
       },
       "old": {
-        "available": 40521,
-        "exploited": 18480,
-        "rate": 0.4560598208336418
+        "available": 33943,
+        "exploited": 14599,
+        "rate": 0.43010340865568747
       },
       "decay": {
-        "diff": -0.021181741605334165,
-        "se": 0.004949134600699372,
-        "z": -4.27988796310792,
-        "seeds": 2571
+        "diff": 0.048866828745455684,
+        "se": 0.004923760806208903,
+        "z": 9.924695912082937,
+        "seeds": 2469
       },
       "window": {
         "inside": {
-          "available": 869573,
-          "exploited": 516861,
-          "rate": 0.5943848302557692
+          "available": 807344,
+          "exploited": 500596,
+          "rate": 0.6200529142472107
         },
         "justOutside": {
-          "available": 332450,
-          "exploited": 168257,
-          "rate": 0.5061121973229057
+          "available": 260593,
+          "exploited": 135305,
+          "rate": 0.5192196260068382
         },
         "insideSplit": {
-          "diff": 0.02054952752626618,
-          "se": 0.0031106582430484933,
-          "z": 6.606166901230309,
+          "diff": 0.038862369873560204,
+          "se": 0.002868113091123618,
+          "z": 13.549803874133639,
           "seeds": 3000
         },
         "cliff": {
-          "diff": 0.07181807953529687,
-          "se": 0.002675423749074331,
-          "z": 26.84362787769421,
+          "diff": 0.08032415170305382,
+          "se": 0.002527944072259817,
+          "z": 31.774497143542135,
           "seeds": 3000
         }
       },
@@ -2386,273 +2386,273 @@
     },
     {
       "policy": "tier-easy",
-      "askDecisions": 238775,
-      "decisionsWithCertain": 131389,
-      "observations": 295763,
+      "askDecisions": 214722,
+      "decisionsWithCertain": 107577,
+      "observations": 223587,
       "rows": [
         {
           "lo": 1,
           "hi": 2,
-          "available": 34816,
-          "exploited": 17744,
-          "exploitRate": 0.5096507352941176,
-          "hits": 27905,
-          "hitRate": 0.8014993106617647
+          "available": 31741,
+          "exploited": 16577,
+          "exploitRate": 0.522258277937053,
+          "hits": 25437,
+          "hitRate": 0.8013925207145333
         },
         {
           "lo": 3,
           "hi": 4,
-          "available": 46943,
-          "exploited": 23172,
-          "exploitRate": 0.49361992203310395,
-          "hits": 37869,
-          "hitRate": 0.8067017446690667
+          "available": 40199,
+          "exploited": 20162,
+          "exploitRate": 0.5015547650439066,
+          "hits": 32408,
+          "hitRate": 0.8061892086867832
         },
         {
           "lo": 5,
           "hi": 6,
-          "available": 25064,
-          "exploited": 13197,
-          "exploitRate": 0.5265320778806256,
-          "hits": 20261,
-          "hitRate": 0.8083705713373763
+          "available": 20575,
+          "exploited": 10722,
+          "exploitRate": 0.5211178614823815,
+          "hits": 16554,
+          "hitRate": 0.8045686512758202
         },
         {
           "lo": 7,
           "hi": 8,
-          "available": 17138,
-          "exploited": 352,
-          "exploitRate": 0.02053915275994865,
-          "hits": 9523,
-          "hitRate": 0.5556657719687245
+          "available": 14011,
+          "exploited": 246,
+          "exploitRate": 0.017557633288130755,
+          "hits": 7632,
+          "hitRate": 0.5447148668903005
         },
         {
           "lo": 9,
           "hi": 12,
-          "available": 30822,
-          "exploited": 1108,
-          "exploitRate": 0.03594834858218156,
-          "hits": 14540,
-          "hitRate": 0.47174096424631756
+          "available": 23890,
+          "exploited": 753,
+          "exploitRate": 0.03151946421096693,
+          "hits": 10947,
+          "hitRate": 0.4582251988279615
         },
         {
           "lo": 13,
           "hi": 16,
-          "available": 24370,
-          "exploited": 730,
-          "exploitRate": 0.029954862535904802,
-          "hits": 11522,
-          "hitRate": 0.4727944193680755
+          "available": 18341,
+          "exploited": 545,
+          "exploitRate": 0.029714846518728532,
+          "hits": 8536,
+          "hitRate": 0.46540537593370046
         },
         {
           "lo": 17,
           "hi": 24,
-          "available": 37003,
-          "exploited": 1034,
-          "exploitRate": 0.02794368024214253,
-          "hits": 17400,
-          "hitRate": 0.47023214333972924
+          "available": 26431,
+          "exploited": 669,
+          "exploitRate": 0.025311187620597028,
+          "hits": 12427,
+          "hitRate": 0.470167606219969
         },
         {
           "lo": 25,
           "hi": 32,
-          "available": 25595,
-          "exploited": 643,
-          "exploitRate": 0.025122094159015434,
-          "hits": 12037,
-          "hitRate": 0.4702871654620043
+          "available": 17626,
+          "exploited": 394,
+          "exploitRate": 0.02235334165437422,
+          "hits": 8181,
+          "hitRate": 0.4641438783615114
         },
         {
           "lo": 33,
           "hi": 48,
-          "available": 30450,
-          "exploited": 767,
-          "exploitRate": 0.025188834154351396,
-          "hits": 14042,
-          "hitRate": 0.4611494252873563
+          "available": 18913,
+          "exploited": 427,
+          "exploitRate": 0.022577063395548037,
+          "hits": 8538,
+          "hitRate": 0.45143552054142655
         },
         {
           "lo": 49,
           "hi": 64,
-          "available": 14319,
-          "exploited": 372,
-          "exploitRate": 0.025979467839932956,
-          "hits": 6512,
-          "hitRate": 0.45478036175710596
+          "available": 7908,
+          "exploited": 198,
+          "exploitRate": 0.02503793626707132,
+          "hits": 3538,
+          "hitRate": 0.447395042994436
         },
         {
           "lo": 65,
           "hi": 96,
-          "available": 8536,
-          "exploited": 269,
-          "exploitRate": 0.031513589503280225,
-          "hits": 3801,
-          "hitRate": 0.44529053420806
+          "available": 3761,
+          "exploited": 114,
+          "exploitRate": 0.030311087476734912,
+          "hits": 1713,
+          "hitRate": 0.45546397234777986
         },
         {
           "lo": 97,
           "hi": 128,
-          "available": 690,
-          "exploited": 30,
-          "exploitRate": 0.043478260869565216,
-          "hits": 281,
-          "hitRate": 0.4072463768115942
+          "available": 190,
+          "exploited": 8,
+          "exploitRate": 0.042105263157894736,
+          "hits": 86,
+          "hitRate": 0.45263157894736844
         },
         {
           "lo": 129,
           "hi": null,
-          "available": 17,
-          "exploited": 1,
-          "exploitRate": 0.058823529411764705,
-          "hits": 8,
-          "hitRate": 0.47058823529411764
+          "available": 1,
+          "exploited": 0,
+          "exploitRate": 0,
+          "hits": 0,
+          "hitRate": 0
         }
       ],
       "young": {
-        "available": 123961,
-        "exploited": 54465,
-        "rate": 0.43937206056743655
+        "available": 106526,
+        "exploited": 47707,
+        "rate": 0.4478437189043051
       },
       "old": {
-        "available": 54012,
-        "exploited": 1439,
-        "rate": 0.026642227653114123
+        "available": 30773,
+        "exploited": 747,
+        "rate": 0.024274526370519613
       },
       "decay": {
-        "diff": 0.4115070908615284,
-        "se": 0.0024177702736489825,
-        "z": 170.20107135342835,
-        "seeds": 2665
+        "diff": 0.42079821976439613,
+        "se": 0.0029396353847227644,
+        "z": 143.14639902325214,
+        "seeds": 2296
       },
       "window": {
         "inside": {
-          "available": 106823,
-          "exploited": 54113,
-          "rate": 0.5065669378317403
+          "available": 92515,
+          "exploited": 47461,
+          "rate": 0.5130087012916824
         },
         "justOutside": {
-          "available": 47960,
-          "exploited": 1460,
-          "rate": 0.030442035029190993
+          "available": 37901,
+          "exploited": 999,
+          "rate": 0.02635814358460199
         },
         "insideSplit": {
-          "diff": -0.03599518294939978,
-          "se": 0.0034901282803590093,
-          "z": -10.313426916702662,
-          "seeds": 2997
+          "diff": -0.03304239655541281,
+          "se": 0.003962635499059222,
+          "z": -8.338490018387379,
+          "seeds": 2994
         },
         "cliff": {
-          "diff": 0.4861281830384317,
-          "se": 0.0018778986017981144,
-          "z": 258.8681745505093,
-          "seeds": 2986
+          "diff": 0.49860310390941504,
+          "se": 0.002177231120808379,
+          "z": 229.00788949052404,
+          "seeds": 2963
         }
       },
       "halfLifeAge": 7
     },
     {
       "policy": "tier-medium",
-      "askDecisions": 293359,
-      "decisionsWithCertain": 86947,
-      "observations": 145635,
+      "askDecisions": 270209,
+      "decisionsWithCertain": 74471,
+      "observations": 119867,
       "rows": [
         {
           "lo": 1,
           "hi": 2,
-          "available": 29181,
-          "exploited": 17666,
-          "exploitRate": 0.6053939207018265,
-          "hits": 29181,
+          "available": 28800,
+          "exploited": 18394,
+          "exploitRate": 0.6386805555555556,
+          "hits": 28800,
           "hitRate": 1
         },
         {
           "lo": 3,
           "hi": 4,
-          "available": 42232,
-          "exploited": 26444,
-          "exploitRate": 0.6261602576245501,
-          "hits": 42232,
+          "available": 37760,
+          "exploited": 24111,
+          "exploitRate": 0.6385328389830508,
+          "hits": 37760,
           "hitRate": 1
         },
         {
           "lo": 5,
           "hi": 6,
-          "available": 18036,
-          "exploited": 10159,
-          "exploitRate": 0.5632623641605677,
-          "hits": 18036,
+          "available": 15225,
+          "exploited": 8645,
+          "exploitRate": 0.5678160919540229,
+          "hits": 15225,
           "hitRate": 1
         },
         {
           "lo": 7,
           "hi": 8,
-          "available": 11564,
-          "exploited": 5876,
-          "exploitRate": 0.5081286751988932,
-          "hits": 11564,
+          "available": 9149,
+          "exploited": 4847,
+          "exploitRate": 0.5297846759208656,
+          "hits": 9149,
           "hitRate": 1
         },
         {
           "lo": 9,
           "hi": 12,
-          "available": 17355,
-          "exploited": 8553,
-          "exploitRate": 0.49282627484874675,
-          "hits": 17355,
+          "available": 11463,
+          "exploited": 5849,
+          "exploitRate": 0.5102503707580912,
+          "hits": 11463,
           "hitRate": 1
         },
         {
           "lo": 13,
           "hi": 16,
-          "available": 10895,
-          "exploited": 5482,
-          "exploitRate": 0.5031665901789811,
-          "hits": 10895,
+          "available": 6800,
+          "exploited": 3419,
+          "exploitRate": 0.5027941176470588,
+          "hits": 6800,
           "hitRate": 1
         },
         {
           "lo": 17,
           "hi": 24,
-          "available": 10224,
-          "exploited": 4993,
-          "exploitRate": 0.4883607198748044,
-          "hits": 10224,
+          "available": 6587,
+          "exploited": 3163,
+          "exploitRate": 0.480188249582511,
+          "hits": 6587,
           "hitRate": 1
         },
         {
           "lo": 25,
           "hi": 32,
-          "available": 3806,
-          "exploited": 1815,
-          "exploitRate": 0.476878612716763,
-          "hits": 3806,
+          "available": 2631,
+          "exploited": 1200,
+          "exploitRate": 0.45610034207525657,
+          "hits": 2631,
           "hitRate": 1
         },
         {
           "lo": 33,
           "hi": 48,
-          "available": 1961,
-          "exploited": 939,
-          "exploitRate": 0.4788373278939317,
-          "hits": 1961,
+          "available": 1246,
+          "exploited": 578,
+          "exploitRate": 0.463884430176565,
+          "hits": 1246,
           "hitRate": 1
         },
         {
           "lo": 49,
           "hi": 64,
-          "available": 325,
-          "exploited": 151,
-          "exploitRate": 0.4646153846153846,
-          "hits": 325,
+          "available": 164,
+          "exploited": 71,
+          "exploitRate": 0.4329268292682927,
+          "hits": 164,
           "hitRate": 1
         },
         {
           "lo": 65,
           "hi": 96,
-          "available": 56,
-          "exploited": 29,
-          "exploitRate": 0.5178571428571429,
-          "hits": 56,
+          "available": 42,
+          "exploited": 22,
+          "exploitRate": 0.5238095238095238,
+          "hits": 42,
           "hitRate": 1
         },
         {
@@ -2675,150 +2675,150 @@
         }
       ],
       "young": {
-        "available": 101013,
-        "exploited": 60145,
-        "rate": 0.5954184114915901
+        "available": 90934,
+        "exploited": 55997,
+        "rate": 0.615798271273671
       },
       "old": {
-        "available": 2342,
-        "exploited": 1119,
-        "rate": 0.477796754910333
+        "available": 1452,
+        "exploited": 671,
+        "rate": 0.4621212121212121
       },
       "decay": {
-        "diff": -0.03111488072319776,
-        "se": 0.011888729657782383,
-        "z": -2.6171745526091517,
-        "seeds": 497
+        "diff": -0.02516143635593004,
+        "se": 0.016471703820765654,
+        "z": -1.5275551715669728,
+        "seeds": 306
       },
       "window": {
         "inside": {
-          "available": 89449,
-          "exploited": 54269,
-          "rate": 0.6067032610761439
+          "available": 81785,
+          "exploited": 51150,
+          "rate": 0.6254203093476799
         },
         "justOutside": {
-          "available": 28919,
-          "exploited": 14429,
-          "rate": 0.4989453300598223
+          "available": 20612,
+          "exploited": 10696,
+          "rate": 0.5189210168833689
         },
         "insideSplit": {
-          "diff": 0.004616590919737769,
-          "se": 0.004542283410472525,
-          "z": 1.0163590649350331,
-          "seeds": 2975
+          "diff": 0.011508680026942783,
+          "se": 0.004610900824891332,
+          "z": 2.4959721460098887,
+          "seeds": 2956
         },
         "cliff": {
-          "diff": 0.05838746863396369,
-          "se": 0.004569033911170816,
-          "z": 12.778952787199142,
-          "seeds": 2861
+          "diff": 0.025851062412269987,
+          "se": 0.005188834582955651,
+          "z": 4.982055604005162,
+          "seeds": 2700
         }
       },
       "halfLifeAge": null
     },
     {
       "policy": "tier-hard",
-      "askDecisions": 284771,
-      "decisionsWithCertain": 80256,
-      "observations": 142277,
+      "askDecisions": 264173,
+      "decisionsWithCertain": 69444,
+      "observations": 119183,
       "rows": [
         {
           "lo": 1,
           "hi": 2,
-          "available": 23516,
-          "exploited": 13771,
-          "exploitRate": 0.58560129273686,
-          "hits": 23516,
+          "available": 23316,
+          "exploited": 14246,
+          "exploitRate": 0.6109967404357523,
+          "hits": 23316,
           "hitRate": 1
         },
         {
           "lo": 3,
           "hi": 4,
-          "available": 37817,
-          "exploited": 22151,
-          "exploitRate": 0.5857418621254992,
-          "hits": 37817,
+          "available": 34537,
+          "exploited": 20771,
+          "exploitRate": 0.601412977386571,
+          "hits": 34537,
           "hitRate": 1
         },
         {
           "lo": 5,
           "hi": 6,
-          "available": 18203,
-          "exploited": 9469,
-          "exploitRate": 0.5201889798384881,
-          "hits": 18203,
+          "available": 16162,
+          "exploited": 8407,
+          "exploitRate": 0.5201707709441901,
+          "hits": 16162,
           "hitRate": 1
         },
         {
           "lo": 7,
           "hi": 8,
-          "available": 12615,
-          "exploited": 6166,
-          "exploitRate": 0.48878319460959174,
-          "hits": 12615,
+          "available": 10568,
+          "exploited": 5172,
+          "exploitRate": 0.4894019682059046,
+          "hits": 10568,
           "hitRate": 1
         },
         {
           "lo": 9,
           "hi": 12,
-          "available": 18909,
-          "exploited": 8928,
-          "exploitRate": 0.4721561161351737,
-          "hits": 18909,
+          "available": 13824,
+          "exploited": 6643,
+          "exploitRate": 0.48054108796296297,
+          "hits": 13824,
           "hitRate": 1
         },
         {
           "lo": 13,
           "hi": 16,
-          "available": 12033,
-          "exploited": 5577,
-          "exploitRate": 0.46347544253303413,
-          "hits": 12033,
+          "available": 8229,
+          "exploited": 3846,
+          "exploitRate": 0.46737149106817355,
+          "hits": 8229,
           "hitRate": 1
         },
         {
           "lo": 17,
           "hi": 24,
-          "available": 12024,
-          "exploited": 5439,
-          "exploitRate": 0.4523453093812375,
-          "hits": 12024,
+          "available": 7907,
+          "exploited": 3427,
+          "exploitRate": 0.43341343113696723,
+          "hits": 7907,
           "hitRate": 1
         },
         {
           "lo": 25,
           "hi": 32,
-          "available": 4464,
-          "exploited": 1962,
-          "exploitRate": 0.43951612903225806,
-          "hits": 4464,
+          "available": 3023,
+          "exploited": 1296,
+          "exploitRate": 0.42871319880913,
+          "hits": 3023,
           "hitRate": 1
         },
         {
           "lo": 33,
           "hi": 48,
-          "available": 2306,
-          "exploited": 964,
-          "exploitRate": 0.41803989592367735,
-          "hits": 2306,
+          "available": 1395,
+          "exploited": 587,
+          "exploitRate": 0.42078853046594983,
+          "hits": 1395,
           "hitRate": 1
         },
         {
           "lo": 49,
           "hi": 64,
-          "available": 327,
-          "exploited": 149,
-          "exploitRate": 0.45565749235474007,
-          "hits": 327,
+          "available": 194,
+          "exploited": 66,
+          "exploitRate": 0.3402061855670103,
+          "hits": 194,
           "hitRate": 1
         },
         {
           "lo": 65,
           "hi": 96,
-          "available": 63,
-          "exploited": 30,
-          "exploitRate": 0.47619047619047616,
-          "hits": 63,
+          "available": 28,
+          "exploited": 8,
+          "exploitRate": 0.2857142857142857,
+          "hits": 28,
           "hitRate": 1
         },
         {
@@ -2841,43 +2841,43 @@
         }
       ],
       "young": {
-        "available": 92151,
-        "exploited": 51557,
-        "rate": 0.5594838905709107
+        "available": 84583,
+        "exploited": 48596,
+        "rate": 0.5745362543300663
       },
       "old": {
-        "available": 2696,
-        "exploited": 1143,
-        "rate": 0.42396142433234424
+        "available": 1617,
+        "exploited": 661,
+        "rate": 0.40878169449598023
       },
       "decay": {
-        "diff": -0.012507613768636941,
-        "se": 0.013044161783081806,
-        "z": -0.9588668077437705,
-        "seeds": 458
+        "diff": -0.030308181099106775,
+        "se": 0.018212380751810465,
+        "z": -1.6641526175041055,
+        "seeds": 282
       },
       "window": {
         "inside": {
-          "available": 79536,
-          "exploited": 45391,
-          "rate": 0.5706975457654395
+          "available": 74015,
+          "exploited": 43424,
+          "rate": 0.5866918867797069
         },
         "justOutside": {
-          "available": 31524,
-          "exploited": 15094,
-          "rate": 0.4788097957112042
+          "available": 24392,
+          "exploited": 11815,
+          "rate": 0.4843801246310266
         },
         "insideSplit": {
-          "diff": -0.010147770201378298,
-          "se": 0.005039416067364364,
-          "z": -2.013679772760979,
-          "seeds": 2951
+          "diff": 0.007120275312481264,
+          "se": 0.00505852185719791,
+          "z": 1.4075802207614518,
+          "seeds": 2938
         },
         "cliff": {
-          "diff": 0.043279212993466584,
-          "se": 0.004705083544179807,
-          "z": 9.198394159653768,
-          "seeds": 2846
+          "diff": 0.023068384946540312,
+          "se": 0.005256547115403084,
+          "z": 4.3885053134868315,
+          "seeds": 2754
         }
       },
       "halfLifeAge": null
@@ -2889,43 +2889,43 @@
         "bits": 16,
         "games": 1800,
         "seats": 10800,
-        "top1": 0.15416666666666667,
+        "top1": 0.16287037037037036,
         "byStyle": {
           "balanced": {
             "seats": 1200,
-            "top1": 0.015833333333333335
+            "top1": 0.26166666666666666
           },
           "blitz": {
             "seats": 1200,
-            "top1": 0.059166666666666666
+            "top1": 0.0925
           },
           "punter": {
             "seats": 1200,
-            "top1": 0.27416666666666667
+            "top1": 0.020833333333333332
           },
           "banker": {
             "seats": 1200,
-            "top1": 0.1075
+            "top1": 0.14333333333333334
           },
           "turtle": {
             "seats": 1200,
-            "top1": 0.2733333333333333
+            "top1": 0.3333333333333333
           },
           "hoarder": {
             "seats": 1200,
-            "top1": 0.1825
+            "top1": 0.19833333333333333
           },
           "scout": {
             "seats": 1200,
-            "top1": 0.26666666666666666
+            "top1": 0.24583333333333332
           },
           "ghost": {
             "seats": 1200,
-            "top1": 0.16083333333333333
+            "top1": 0.11416666666666667
           },
           "archivist": {
             "seats": 1200,
-            "top1": 0.0475
+            "top1": 0.05583333333333333
           }
         }
       },
@@ -2933,107 +2933,19 @@
         "bits": 32,
         "games": 1800,
         "seats": 10800,
-        "top1": 0.21009259259259258,
+        "top1": 0.205,
         "byStyle": {
           "balanced": {
             "seats": 1200,
-            "top1": 0.043333333333333335
+            "top1": 0.235
           },
           "blitz": {
             "seats": 1200,
-            "top1": 0.07583333333333334
+            "top1": 0.12333333333333334
           },
           "punter": {
             "seats": 1200,
-            "top1": 0.17166666666666666
-          },
-          "banker": {
-            "seats": 1200,
-            "top1": 0.1375
-          },
-          "turtle": {
-            "seats": 1200,
-            "top1": 0.3525
-          },
-          "hoarder": {
-            "seats": 1200,
-            "top1": 0.2575
-          },
-          "scout": {
-            "seats": 1200,
-            "top1": 0.3675
-          },
-          "ghost": {
-            "seats": 1200,
-            "top1": 0.3775
-          },
-          "archivist": {
-            "seats": 1200,
-            "top1": 0.1075
-          }
-        }
-      },
-      {
-        "bits": 64,
-        "games": 1800,
-        "seats": 10800,
-        "top1": 0.22953703703703704,
-        "byStyle": {
-          "balanced": {
-            "seats": 1200,
-            "top1": 0.06
-          },
-          "blitz": {
-            "seats": 1200,
-            "top1": 0.0925
-          },
-          "punter": {
-            "seats": 1200,
-            "top1": 0.13333333333333333
-          },
-          "banker": {
-            "seats": 1200,
-            "top1": 0.125
-          },
-          "turtle": {
-            "seats": 1200,
-            "top1": 0.31416666666666665
-          },
-          "hoarder": {
-            "seats": 1200,
-            "top1": 0.3125
-          },
-          "scout": {
-            "seats": 1200,
-            "top1": 0.41333333333333333
-          },
-          "ghost": {
-            "seats": 1200,
-            "top1": 0.49833333333333335
-          },
-          "archivist": {
-            "seats": 1200,
-            "top1": 0.11666666666666667
-          }
-        }
-      },
-      {
-        "bits": 1000000,
-        "games": 1800,
-        "seats": 10800,
-        "top1": 0.22425925925925927,
-        "byStyle": {
-          "balanced": {
-            "seats": 1200,
-            "top1": 0.05583333333333333
-          },
-          "blitz": {
-            "seats": 1200,
-            "top1": 0.0925
-          },
-          "punter": {
-            "seats": 1200,
-            "top1": 0.12916666666666668
+            "top1": 0.02666666666666667
           },
           "banker": {
             "seats": 1200,
@@ -3041,23 +2953,111 @@
           },
           "turtle": {
             "seats": 1200,
-            "top1": 0.27166666666666667
+            "top1": 0.38916666666666666
           },
           "hoarder": {
             "seats": 1200,
-            "top1": 0.30916666666666665
+            "top1": 0.2475
           },
           "scout": {
             "seats": 1200,
-            "top1": 0.4125
+            "top1": 0.2891666666666667
           },
           "ghost": {
             "seats": 1200,
-            "top1": 0.5041666666666667
+            "top1": 0.3025
           },
           "archivist": {
             "seats": 1200,
-            "top1": 0.1175
+            "top1": 0.10583333333333333
+          }
+        }
+      },
+      {
+        "bits": 64,
+        "games": 1800,
+        "seats": 10800,
+        "top1": 0.22148148148148147,
+        "byStyle": {
+          "balanced": {
+            "seats": 1200,
+            "top1": 0.2325
+          },
+          "blitz": {
+            "seats": 1200,
+            "top1": 0.13833333333333334
+          },
+          "punter": {
+            "seats": 1200,
+            "top1": 0.03666666666666667
+          },
+          "banker": {
+            "seats": 1200,
+            "top1": 0.11083333333333334
+          },
+          "turtle": {
+            "seats": 1200,
+            "top1": 0.3516666666666667
+          },
+          "hoarder": {
+            "seats": 1200,
+            "top1": 0.29333333333333333
+          },
+          "scout": {
+            "seats": 1200,
+            "top1": 0.3225
+          },
+          "ghost": {
+            "seats": 1200,
+            "top1": 0.4066666666666667
+          },
+          "archivist": {
+            "seats": 1200,
+            "top1": 0.10083333333333333
+          }
+        }
+      },
+      {
+        "bits": 1000000,
+        "games": 1800,
+        "seats": 10800,
+        "top1": 0.2199074074074074,
+        "byStyle": {
+          "balanced": {
+            "seats": 1200,
+            "top1": 0.2325
+          },
+          "blitz": {
+            "seats": 1200,
+            "top1": 0.13833333333333334
+          },
+          "punter": {
+            "seats": 1200,
+            "top1": 0.035833333333333335
+          },
+          "banker": {
+            "seats": 1200,
+            "top1": 0.1125
+          },
+          "turtle": {
+            "seats": 1200,
+            "top1": 0.32083333333333336
+          },
+          "hoarder": {
+            "seats": 1200,
+            "top1": 0.2925
+          },
+          "scout": {
+            "seats": 1200,
+            "top1": 0.32666666666666666
+          },
+          "ghost": {
+            "seats": 1200,
+            "top1": 0.4141666666666667
+          },
+          "archivist": {
+            "seats": 1200,
+            "top1": 0.10583333333333333
           }
         }
       }
@@ -3067,41 +3067,41 @@
         "fromBits": 16,
         "toBits": 32,
         "seeds": 50,
-        "delta": 0.05592592592592593,
-        "se": 0.007259290110536506,
-        "z": 7.704048891055087,
+        "delta": 0.042129629629629635,
+        "se": 0.0061975522575490076,
+        "z": 6.797785299561307,
         "pass": true
       },
       {
         "fromBits": 32,
         "toBits": 64,
         "seeds": 50,
-        "delta": 0.01944444444444444,
-        "se": 0.00502123092489479,
-        "z": 3.8724457678376667,
+        "delta": 0.01648148148148149,
+        "se": 0.0051078757821367326,
+        "z": 3.2266801669532645,
         "pass": true
       },
       {
         "fromBits": 64,
         "toBits": 1000000,
         "seeds": 50,
-        "delta": -0.0052777777777777745,
-        "se": 0.0019168944146642421,
-        "z": -2.7532960278890557,
-        "pass": false
+        "delta": -0.0015740740740740756,
+        "se": 0.0017328042328042328,
+        "z": -0.9083969465648863,
+        "pass": true
       }
     ]
   },
   "accuracySingle": {
     "meta": {
-      "generatedAt": "2026-08-30T03:38:23.178Z",
-      "engineCommit": "b90735c-dirty",
+      "generatedAt": "2026-09-01T20:09:28.520Z",
+      "engineCommit": "ed188da-dirty",
       "gamesTotal": 43200,
-      "movesTotal": 32793897,
+      "movesTotal": 30156102,
       "workers": 22,
-      "wallMs": 174444,
-      "gamesPerSecond": 247.64394304189312,
-      "recordsDigest": "53668ad79186621d",
+      "wallMs": 167501,
+      "gamesPerSecond": 257.90890800651937,
+      "recordsDigest": "01c5166919ed3a93",
       "notes": [
         "E4b read seat: seat 2·(game mod 3) — the three team-0 seats 0, 2, 4 in rotation across the 300 games of every pairing, always playing the measured team-0 style (pairing[0]) under the bit budget while the other five seats play their bare full-strength styles exactly as the v1.0 accuracy harness seats them (team 0 pairing[0], team 1 pairing[1]). startSeat rotates game mod 6 as in E4, so the read seat occupies every relative table position uniformly with period 6. Truth for the read is therefore always pairing[0]; the pairing scheme is triangular, so by-style read counts fall with roster position (identically at every budget) and the last roster style is never the read truth.",
         "P8 scores top[readSeat] only. The six-seat end-of-game read is retained per record for context, clearly separated by readSeat, and enters no verdict. Cell SEs are seed-clustered (per-seed accuracy over the pairings, sd/√seeds); adjacent deltas are per-seed paired exactly as P7's.",
@@ -3127,41 +3127,41 @@
         "bits": 16,
         "games": 10800,
         "reads": 10800,
-        "top1": 0.1622222222222222,
-        "se": 0.003985242606891305,
+        "top1": 0.18648148148148147,
+        "se": 0.004433812482379303,
         "seeds": 300,
         "byStyle": {
           "balanced": {
             "seats": 2400,
-            "top1": 0.034166666666666665
+            "top1": 0.25333333333333335
           },
           "blitz": {
             "seats": 2100,
-            "top1": 0.0719047619047619
+            "top1": 0.10571428571428572
           },
           "punter": {
             "seats": 1800,
-            "top1": 0.2238888888888889
+            "top1": 0.028333333333333332
           },
           "banker": {
             "seats": 1500,
-            "top1": 0.11466666666666667
+            "top1": 0.102
           },
           "turtle": {
             "seats": 1200,
-            "top1": 0.4141666666666667
+            "top1": 0.4525
           },
           "hoarder": {
             "seats": 900,
-            "top1": 0.22
+            "top1": 0.23666666666666666
           },
           "scout": {
             "seats": 600,
-            "top1": 0.29
+            "top1": 0.26166666666666666
           },
           "ghost": {
             "seats": 300,
-            "top1": 0.25
+            "top1": 0.22333333333333333
           },
           "archivist": {
             "seats": 0,
@@ -3173,41 +3173,41 @@
         "bits": 32,
         "games": 10800,
         "reads": 10800,
-        "top1": 0.1698148148148148,
-        "se": 0.004368138571500385,
+        "top1": 0.1865740740740741,
+        "se": 0.004485477184919109,
         "seeds": 300,
         "byStyle": {
           "balanced": {
             "seats": 2400,
-            "top1": 0.03958333333333333
+            "top1": 0.20958333333333334
           },
           "blitz": {
             "seats": 2100,
-            "top1": 0.08428571428571428
+            "top1": 0.11666666666666667
           },
           "punter": {
             "seats": 1800,
-            "top1": 0.1622222222222222
+            "top1": 0.028888888888888888
           },
           "banker": {
             "seats": 1500,
-            "top1": 0.16266666666666665
+            "top1": 0.12266666666666666
           },
           "turtle": {
             "seats": 1200,
-            "top1": 0.3975
+            "top1": 0.4066666666666667
           },
           "hoarder": {
             "seats": 900,
-            "top1": 0.25555555555555554
+            "top1": 0.2966666666666667
           },
           "scout": {
             "seats": 600,
-            "top1": 0.3283333333333333
+            "top1": 0.3016666666666667
           },
           "ghost": {
             "seats": 300,
-            "top1": 0.4066666666666667
+            "top1": 0.31666666666666665
           },
           "archivist": {
             "seats": 0,
@@ -3219,41 +3219,41 @@
         "bits": 64,
         "games": 10800,
         "reads": 10800,
-        "top1": 0.16416666666666666,
-        "se": 0.004336935570601799,
+        "top1": 0.1837962962962963,
+        "se": 0.0045615425588064525,
         "seeds": 300,
         "byStyle": {
           "balanced": {
             "seats": 2400,
-            "top1": 0.05458333333333333
+            "top1": 0.19875
           },
           "blitz": {
             "seats": 2100,
-            "top1": 0.09142857142857143
+            "top1": 0.12523809523809523
           },
           "punter": {
             "seats": 1800,
-            "top1": 0.1411111111111111
+            "top1": 0.03166666666666667
           },
           "banker": {
             "seats": 1500,
-            "top1": 0.15533333333333332
+            "top1": 0.118
           },
           "turtle": {
             "seats": 1200,
-            "top1": 0.2991666666666667
+            "top1": 0.3408333333333333
           },
           "hoarder": {
             "seats": 900,
-            "top1": 0.29333333333333333
+            "top1": 0.3188888888888889
           },
           "scout": {
             "seats": 600,
-            "top1": 0.3516666666666667
+            "top1": 0.3233333333333333
           },
           "ghost": {
             "seats": 300,
-            "top1": 0.43
+            "top1": 0.4033333333333333
           },
           "archivist": {
             "seats": 0,
@@ -3265,41 +3265,41 @@
         "bits": 1000000,
         "games": 10800,
         "reads": 10800,
-        "top1": 0.16342592592592592,
-        "se": 0.004343225133708216,
+        "top1": 0.18342592592592594,
+        "se": 0.004583065097558961,
         "seeds": 300,
         "byStyle": {
           "balanced": {
             "seats": 2400,
-            "top1": 0.055
+            "top1": 0.20416666666666666
           },
           "blitz": {
             "seats": 2100,
-            "top1": 0.09142857142857143
+            "top1": 0.12571428571428572
           },
           "punter": {
             "seats": 1800,
-            "top1": 0.14222222222222222
+            "top1": 0.029444444444444443
           },
           "banker": {
             "seats": 1500,
-            "top1": 0.15133333333333332
+            "top1": 0.118
           },
           "turtle": {
             "seats": 1200,
-            "top1": 0.29333333333333333
+            "top1": 0.3283333333333333
           },
           "hoarder": {
             "seats": 900,
-            "top1": 0.2922222222222222
+            "top1": 0.32222222222222224
           },
           "scout": {
             "seats": 600,
-            "top1": 0.3566666666666667
+            "top1": 0.32
           },
           "ghost": {
             "seats": 300,
-            "top1": 0.43
+            "top1": 0.4033333333333333
           },
           "archivist": {
             "seats": 0,
@@ -3313,27 +3313,27 @@
         "fromBits": 16,
         "toBits": 32,
         "seeds": 300,
-        "delta": 0.0075925925925925935,
-        "se": 0.0045546259345013804,
-        "z": 1.6670068413475092,
+        "delta": 0.00009259259259259152,
+        "se": 0.004769950171067799,
+        "z": 0.01941164776819121,
         "pass": true
       },
       {
         "fromBits": 32,
         "toBits": 64,
         "seeds": 300,
-        "delta": -0.005648148148148147,
-        "se": 0.0030936427105899412,
-        "z": -1.8257273630254074,
+        "delta": -0.0027777777777777783,
+        "se": 0.0032141991463399103,
+        "z": -0.8642208062748395,
         "pass": true
       },
       {
         "fromBits": 64,
         "toBits": 1000000,
         "seeds": 300,
-        "delta": -0.0007407407407407402,
-        "se": 0.0009717981709863553,
-        "z": -0.7622372246172303,
+        "delta": -0.00037037037037037046,
+        "se": 0.0010157699702357608,
+        "z": -0.3646203187956101,
         "pass": true
       }
     ],
@@ -3344,14 +3344,14 @@
   },
   "accuracySinglePilot": {
     "meta": {
-      "generatedAt": "2026-08-30T02:43:45.585Z",
-      "engineCommit": "b32f463-dirty",
+      "generatedAt": "2026-09-01T20:06:33.536Z",
+      "engineCommit": "ed188da-dirty",
       "gamesTotal": 7200,
-      "movesTotal": 5597835,
+      "movesTotal": 5047623,
       "workers": 22,
-      "wallMs": 31517,
-      "gamesPerSecond": 228.4481390995336,
-      "recordsDigest": "52bfe90b52ea7029",
+      "wallMs": 29771,
+      "gamesPerSecond": 241.84609183433543,
+      "recordsDigest": "23b00a4f4873eb75",
       "notes": [
         "E4b read seat: seat 2·(game mod 3) — the three team-0 seats 0, 2, 4 in rotation across the 50 games of every pairing, always playing the measured team-0 style (pairing[0]) under the bit budget while the other five seats play their bare full-strength styles exactly as the v1.0 accuracy harness seats them (team 0 pairing[0], team 1 pairing[1]). startSeat rotates game mod 6 as in E4, so the read seat occupies every relative table position uniformly with period 6. Truth for the read is therefore always pairing[0]; the pairing scheme is triangular, so by-style read counts fall with roster position (identically at every budget) and the last roster style is never the read truth.",
         "P8 scores top[readSeat] only. The six-seat end-of-game read is retained per record for context, clearly separated by readSeat, and enters no verdict. Cell SEs are seed-clustered (per-seed accuracy over the pairings, sd/√seeds); adjacent deltas are per-seed paired exactly as P7's.",
@@ -3375,25 +3375,25 @@
         "bits": 16,
         "games": 1800,
         "reads": 1800,
-        "top1": 0.16777777777777778,
-        "se": 0.009974772916422205,
+        "top1": 0.1988888888888889,
+        "se": 0.010834423458146999,
         "seeds": 50,
         "byStyle": {
           "balanced": {
             "seats": 400,
-            "top1": 0.005
+            "top1": 0.2325
           },
           "blitz": {
             "seats": 350,
-            "top1": 0.10571428571428572
+            "top1": 0.14
           },
           "punter": {
             "seats": 300,
-            "top1": 0.21333333333333335
+            "top1": 0.03666666666666667
           },
           "banker": {
             "seats": 250,
-            "top1": 0.132
+            "top1": 0.092
           },
           "turtle": {
             "seats": 200,
@@ -3401,15 +3401,15 @@
           },
           "hoarder": {
             "seats": 150,
-            "top1": 0.16
+            "top1": 0.3
           },
           "scout": {
             "seats": 100,
-            "top1": 0.3
+            "top1": 0.29
           },
           "ghost": {
             "seats": 50,
-            "top1": 0.36
+            "top1": 0.28
           },
           "archivist": {
             "seats": 0,
@@ -3421,41 +3421,41 @@
         "bits": 32,
         "games": 1800,
         "reads": 1800,
-        "top1": 0.16777777777777778,
-        "se": 0.010407422201768575,
+        "top1": 0.19611111111111112,
+        "se": 0.010864902545896196,
         "seeds": 50,
         "byStyle": {
           "balanced": {
             "seats": 400,
-            "top1": 0.045
+            "top1": 0.21
           },
           "blitz": {
             "seats": 350,
-            "top1": 0.07714285714285714
+            "top1": 0.11428571428571428
           },
           "punter": {
             "seats": 300,
-            "top1": 0.17
+            "top1": 0.03333333333333333
           },
           "banker": {
             "seats": 250,
-            "top1": 0.128
+            "top1": 0.124
           },
           "turtle": {
             "seats": 200,
-            "top1": 0.41
+            "top1": 0.46
           },
           "hoarder": {
             "seats": 150,
-            "top1": 0.22666666666666666
+            "top1": 0.29333333333333333
           },
           "scout": {
             "seats": 100,
-            "top1": 0.36
+            "top1": 0.33
           },
           "ghost": {
             "seats": 50,
-            "top1": 0.44
+            "top1": 0.38
           },
           "archivist": {
             "seats": 0,
@@ -3467,41 +3467,41 @@
         "bits": 64,
         "games": 1800,
         "reads": 1800,
-        "top1": 0.17,
-        "se": 0.010458137403193101,
+        "top1": 0.195,
+        "se": 0.011039736742874706,
         "seeds": 50,
         "byStyle": {
           "balanced": {
             "seats": 400,
-            "top1": 0.0575
+            "top1": 0.2275
           },
           "blitz": {
             "seats": 350,
-            "top1": 0.1
+            "top1": 0.11428571428571428
           },
           "punter": {
             "seats": 300,
-            "top1": 0.12666666666666668
+            "top1": 0.04666666666666667
           },
           "banker": {
             "seats": 250,
-            "top1": 0.144
+            "top1": 0.12
           },
           "turtle": {
             "seats": 200,
-            "top1": 0.37
+            "top1": 0.385
           },
           "hoarder": {
             "seats": 150,
-            "top1": 0.22666666666666666
+            "top1": 0.3
           },
           "scout": {
             "seats": 100,
-            "top1": 0.41
+            "top1": 0.33
           },
           "ghost": {
             "seats": 50,
-            "top1": 0.5
+            "top1": 0.42
           },
           "archivist": {
             "seats": 0,
@@ -3513,41 +3513,41 @@
         "bits": 1000000,
         "games": 1800,
         "reads": 1800,
-        "top1": 0.16833333333333333,
-        "se": 0.010238095238095237,
+        "top1": 0.19277777777777777,
+        "se": 0.010238095238095234,
         "seeds": 50,
         "byStyle": {
           "balanced": {
             "seats": 400,
-            "top1": 0.0575
+            "top1": 0.2275
           },
           "blitz": {
             "seats": 350,
-            "top1": 0.09714285714285714
+            "top1": 0.11428571428571428
           },
           "punter": {
             "seats": 300,
-            "top1": 0.12
+            "top1": 0.05
           },
           "banker": {
             "seats": 250,
-            "top1": 0.148
+            "top1": 0.128
           },
           "turtle": {
             "seats": 200,
-            "top1": 0.365
+            "top1": 0.355
           },
           "hoarder": {
             "seats": 150,
-            "top1": 0.23333333333333334
+            "top1": 0.29333333333333333
           },
           "scout": {
             "seats": 100,
-            "top1": 0.4
+            "top1": 0.33
           },
           "ghost": {
             "seats": 50,
-            "top1": 0.5
+            "top1": 0.42
           },
           "archivist": {
             "seats": 0,
@@ -3561,27 +3561,27 @@
         "fromBits": 16,
         "toBits": 32,
         "seeds": 50,
-        "delta": 4.996003610813204e-18,
-        "se": 0.011798467259776593,
-        "z": 4.234451391703743e-16,
+        "delta": -0.002777777777777776,
+        "se": 0.010714285714285714,
+        "z": -0.2592592592592591,
         "pass": true
       },
       {
         "fromBits": 32,
         "toBits": 64,
         "seeds": 50,
-        "delta": 0.0022222222222222214,
-        "se": 0.006632565846278153,
-        "z": 0.3350471406882776,
+        "delta": -0.0011111111111111087,
+        "se": 0.0059370172092904905,
+        "z": -0.1871497204644103,
         "pass": true
       },
       {
         "fromBits": 64,
         "toBits": 1000000,
         "seeds": 50,
-        "delta": -0.0016666666666666668,
-        "se": 0.0025606771118891567,
-        "z": -0.6508695137424305,
+        "delta": -0.0022222222222222235,
+        "se": 0.002075666163590797,
+        "z": -1.0706067580626222,
         "pass": true
       }
     ],
@@ -3593,7 +3593,7 @@
       "id": "P8",
       "prediction": "E4b (single-seat attribution): top-1 accuracy at the bounded read seat is non-increasing as its bits shrink, by the same adjacent-rung 2·SE rule as P7 (any violating rung refutes). The ∞ cell must reproduce the corresponding full-strength read exactly (health, not prediction).",
       "verdict": "confirmed",
-      "detail": "bounded-seat end-of-game top-1 (seed-clustered SE) — 16: 16.78% ± 1.00% over 1800 reads; 32: 16.78% ± 1.04% over 1800 reads; 64: 17.00% ± 1.05% over 1800 reads; ∞: 16.83% ± 1.02% over 1800 reads. Adjacent deltas (per-seed paired): 16→32 +0.0000 ± 0.0118; 32→64 +0.0022 ± 0.0066; 64→∞ -0.0017 ± 0.0026. 0 of 3 rungs violate delta >= −2·SE. The ∞ cell reproduced the corresponding full-strength read exactly in all 1800 games."
+      "detail": "bounded-seat end-of-game top-1 (seed-clustered SE) — 16: 19.89% ± 1.08% over 1800 reads; 32: 19.61% ± 1.09% over 1800 reads; 64: 19.50% ± 1.10% over 1800 reads; ∞: 19.28% ± 1.02% over 1800 reads. Adjacent deltas (per-seed paired): 16→32 -0.0028 ± 0.0107; 32→64 -0.0011 ± 0.0059; 64→∞ -0.0022 ± 0.0021. 0 of 3 rungs violate delta >= −2·SE. The ∞ cell reproduced the corresponding full-strength read exactly in all 1800 games."
     },
     "multiplicityFamily": {
       "id": "P8",
@@ -3603,10 +3603,10 @@
         {
           "fromBits": 16,
           "toBits": 32,
-          "delta": 4.996003610813204e-18,
-          "se": 0.011798467259776593,
-          "z": 4.234451391703743e-16,
-          "pOneSided": 0.499999985,
+          "delta": -0.002777777777777776,
+          "se": 0.010714285714285714,
+          "z": -0.2592592592592591,
+          "pOneSided": 0.3977176229067298,
           "pBonferroni": 1,
           "violatesRaw": false,
           "violatesBonferroni": false
@@ -3614,10 +3614,10 @@
         {
           "fromBits": 32,
           "toBits": 64,
-          "delta": 0.0022222222222222214,
-          "se": 0.006632565846278153,
-          "z": 0.3350471406882776,
-          "pOneSided": 0.6312052312065924,
+          "delta": -0.0011111111111111087,
+          "se": 0.0059370172092904905,
+          "z": -0.1871497204644103,
+          "pOneSided": 0.4257716335682576,
           "pBonferroni": 1,
           "violatesRaw": false,
           "violatesBonferroni": false
@@ -3625,11 +3625,11 @@
         {
           "fromBits": 64,
           "toBits": 1000000,
-          "delta": -0.0016666666666666668,
-          "se": 0.0025606771118891567,
-          "z": -0.6508695137424305,
-          "pOneSided": 0.2575653413016284,
-          "pBonferroni": 0.7726960239048852,
+          "delta": -0.0022222222222222235,
+          "se": 0.002075666163590797,
+          "z": -1.0706067580626222,
+          "pOneSided": 0.14217315050541182,
+          "pBonferroni": 0.4265194515162355,
           "violatesRaw": false,
           "violatesBonferroni": false
         }
@@ -3642,26 +3642,26 @@
     "fromBits": 64,
     "toBits": 1000000,
     "p7": {
-      "delta": -0.0052777777777777745,
-      "se": 0.0019168944146642421,
+      "delta": -0.0015740740740740756,
+      "se": 0.0017328042328042328,
       "seeds": 50
     },
     "p8": {
-      "delta": -0.0007407407407407402,
-      "se": 0.0009717981709863553,
+      "delta": -0.00037037037037037046,
+      "se": 0.0010157699702357608,
       "seeds": 300
     },
-    "diffOfDeltas": 0.004537037037037034,
-    "se": 0.0021491570166238187,
-    "z": 2.1110775071076073,
-    "pTwoSided": 0.03476564716092789,
-    "effect": 0.0052777777777777745,
-    "mde": 0.0019435963419727107,
-    "postHocPower": 0.9996992534134681,
+    "diffOfDeltas": 0.001203703703703705,
+    "se": 0.00200858137541326,
+    "z": 0.5992805262649846,
+    "pTwoSided": 0.5489857854645996,
+    "effect": 0.0015740740740740756,
+    "mde": 0.0020315399404715216,
+    "postHocPower": 0.32622411071709595,
     "pilot": {
-      "se": 0.0025606771118891567,
-      "mde": 0.005121354223778313,
-      "postHocPower": 0.5243549978551401
+      "se": 0.002075666163590797,
+      "mde": 0.004151332327181594,
+      "postHocPower": 0.10718221509325287
     },
     "note": "Cross-design comparison, labelled as exactly that (E4b-power registration): P7’s rung is measured in E4, where BOTH teams are bounded — ecology and signature move together — and P8’s in the single-seat design, where only the read seat is. The difference-of-deltas is therefore a comparison ACROSS designs, never a within-design test, and it enters no registered verdict rule. Its SE is √(se₇² + se₈²): the power run’s seed list is disjoint from E4’s, so the two rungs are independent by construction. Post-hoc power is P(delta < −2·SE | true delta = −effect) = Φ(effect/SE − 2) at each run’s measured top-rung SE; mde = 2·SE is the effect the registered rule detects with 50% probability. The pilot’s numbers are retained beside the record run’s — the correction the E4b-power registration exists to make."
   },
@@ -3674,10 +3674,10 @@
         {
           "fromBits": 16,
           "toBits": 32,
-          "delta": 0.05592592592592593,
-          "se": 0.007259290110536506,
-          "z": 7.704048891055087,
-          "pOneSided": 0.9999999999999934,
+          "delta": 0.042129629629629635,
+          "se": 0.0061975522575490076,
+          "z": 6.797785299561307,
+          "pOneSided": 0.999999999994688,
           "pBonferroni": 1,
           "violatesRaw": false,
           "violatesBonferroni": false
@@ -3685,10 +3685,10 @@
         {
           "fromBits": 32,
           "toBits": 64,
-          "delta": 0.01944444444444444,
-          "se": 0.00502123092489479,
-          "z": 3.8724457678376667,
-          "pOneSided": 0.9999461256674488,
+          "delta": 0.01648148148148149,
+          "se": 0.0051078757821367326,
+          "z": 3.2266801669532645,
+          "pOneSided": 0.9993738231594279,
           "pBonferroni": 1,
           "violatesRaw": false,
           "violatesBonferroni": false
@@ -3696,13 +3696,13 @@
         {
           "fromBits": 64,
           "toBits": 1000000,
-          "delta": -0.0052777777777777745,
-          "se": 0.0019168944146642421,
-          "z": -2.7532960278890557,
-          "pOneSided": 0.002949926046098821,
-          "pBonferroni": 0.008849778138296462,
-          "violatesRaw": true,
-          "violatesBonferroni": true
+          "delta": -0.0015740740740740756,
+          "se": 0.0017328042328042328,
+          "z": -0.9083969465648863,
+          "pOneSided": 0.1818342724034304,
+          "pBonferroni": 0.5455028172102911,
+          "violatesRaw": false,
+          "violatesBonferroni": false
         }
       ],
       "note": "Bonferroni ×3 over the P7 adjacent-rung family, as an annotation only — the registered P7 rule (delta >= −2·SE per rung, any violating rung refutes) and its verdict are unchanged. pOneSided is Φ(z) per rung; pBonferroni = min(1, 3·pOneSided); a rung violates at the corrected level iff its delta is negative and pBonferroni < 0.05."
@@ -3715,10 +3715,10 @@
         {
           "fromBits": 16,
           "toBits": 32,
-          "delta": 0.0075925925925925935,
-          "se": 0.0045546259345013804,
-          "z": 1.6670068413475092,
-          "pOneSided": 0.9522434794101652,
+          "delta": 0.00009259259259259152,
+          "se": 0.004769950171067799,
+          "z": 0.01941164776819121,
+          "pOneSided": 0.5077436619752829,
           "pBonferroni": 1,
           "violatesRaw": false,
           "violatesBonferroni": false
@@ -3726,22 +3726,22 @@
         {
           "fromBits": 32,
           "toBits": 64,
-          "delta": -0.005648148148148147,
-          "se": 0.0030936427105899412,
-          "z": -1.8257273630254074,
-          "pOneSided": 0.03394566731553704,
-          "pBonferroni": 0.10183700194661112,
+          "delta": -0.0027777777777777783,
+          "se": 0.0032141991463399103,
+          "z": -0.8642208062748395,
+          "pOneSided": 0.19373330234866076,
+          "pBonferroni": 0.5811999070459823,
           "violatesRaw": false,
           "violatesBonferroni": false
         },
         {
           "fromBits": 64,
           "toBits": 1000000,
-          "delta": -0.0007407407407407402,
-          "se": 0.0009717981709863553,
-          "z": -0.7622372246172303,
-          "pOneSided": 0.2229592070242669,
-          "pBonferroni": 0.6688776210728007,
+          "delta": -0.00037037037037037046,
+          "se": 0.0010157699702357608,
+          "z": -0.3646203187956101,
+          "pOneSided": 0.35769742215656436,
+          "pBonferroni": 1,
           "violatesRaw": false,
           "violatesBonferroni": false
         }
@@ -3754,7 +3754,7 @@
       "id": "P1",
       "prediction": "E1 (ladder monotonicity): set-share is non-decreasing in bits, within 2·(paired SE) at every adjacent pair.",
       "verdict": "confirmed",
-      "detail": "adjacent rungs (share delta, per-seed paired SE over 3000 seeds): 0→8 +0.1135 ± 0.0028; 8→16 +0.1472 ± 0.0031; 16→24 +0.0440 ± 0.0030; 24→32 +0.0292 ± 0.0025; 32→48 +0.0257 ± 0.0020; 48→64 +0.0068 ± 0.0011; 64→96 +0.0022 ± 0.0006; 96→128 +0.0001 ± 0.0001; 128→∞ +0.0000 ± 0.0000. 0 of 9 rungs violate delta >= −2·SE; most negative rung 128→∞ at z 0.00."
+      "detail": "adjacent rungs (share delta, per-seed paired SE over 3000 seeds): 0→8 +0.1231 ± 0.0025; 8→16 +0.1690 ± 0.0031; 16→24 +0.0515 ± 0.0030; 24→32 +0.0282 ± 0.0025; 32→48 +0.0261 ± 0.0019; 48→64 +0.0047 ± 0.0010; 64→96 +0.0021 ± 0.0005; 96→128 +0.0001 ± 0.0001; 128→∞ +0.0000 ± 0.0000. 0 of 9 rungs violate delta >= −2·SE; most negative rung 128→∞ at z 0.00."
     },
     {
       "id": "P2",
@@ -3765,38 +3765,38 @@
     {
       "id": "P3",
       "prediction": "E2 (question, direction only): each shipped tier lands at a finite, orderable bits-equivalent (easy < medium < hard). No numeric prediction — this is the measurement the ladder exists to provide.",
-      "verdict": "mixed",
-      "detail": "easy: share 0.0446 ± 0.0011 → 0.0 bits [0.0, 0.0]; medium: share 0.4656 ± 0.0024 → 32.2 bits [30.8, 35.1]; hard: share 0.5006 ± 0.0007 → no finite equivalent (share 0.5006 sits above every finite rung — between 128 bits and ∞). Ordering easy < medium < hard holds on point estimates; not every tier is finitely placeable."
+      "verdict": "confirmed",
+      "detail": "easy: share 0.0337 ± 0.0009 → 0.0 bits [0.0, 0.0]; medium: share 0.4000 ± 0.0025 → 18.0 bits [17.2, 18.7]; hard: share 0.4343 ± 0.0024 → 23.3 bits [22.6, 24.0]. Ordering easy < medium < hard holds on point estimates."
     },
     {
       "id": "P4",
       "prediction": "E3: full-memory policies are age-flat (the S48 log-reader regime, by construction).",
       "verdict": "mixed",
-      "detail": "reference: young (1–8) 0.5840 over 1005709, old (33+) 0.4561 over 40521, decay -0.0212 ± 0.0049 (z -4.28, 2571 seeds) — NOT flat; bounded-inf: young (1–8) 0.5595 over 92317, old (33+) 0.4244 over 2811, decay -0.0145 ± 0.0129 (z -1.13, 470 seeds) — flat"
+      "detail": "reference: young (1–8) 0.6092 over 919220, old (33+) 0.4301 over 33943, decay 0.0489 ± 0.0049 (z 9.92, 2469 seeds) — NOT flat; bounded-inf: young (1–8) 0.5875 over 78057, old (33+) 0.4076 over 1440, decay -0.0347 ± 0.0197 (z -1.76, 261 seeds) — flat"
     },
     {
       "id": "P5",
       "prediction": "E3: bounded policies decay with age, and the decay half-life increases with bits (the S45 signature, by construction of spotlight + recency eviction).",
       "verdict": "mixed",
-      "detail": "0 bits: decay 0.0661 ± 0.0026 (significant), half-life age 5; 8 bits: decay 0.1611 ± 0.0052 (significant), half-life age 13; 16 bits: decay 0.1055 ± 0.0076 (significant), half-life age 17; 24 bits: decay 0.0891 ± 0.0104 (significant), half-life age 33; 32 bits: decay 0.0572 ± 0.0119 (significant), half-life age 49; 48 bits: decay 0.0422 ± 0.0131 (significant), half-life none; 64 bits: decay -0.0044 ± 0.0130 (NOT significant), half-life none; 96 bits: decay -0.0145 ± 0.0129 (NOT significant), half-life none; 128 bits: decay -0.0145 ± 0.0129 (NOT significant), half-life none. Every budget decays: NO; half-life defined everywhere and non-decreasing with a strict increase: NO."
+      "detail": "0 bits: decay 0.1502 ± 0.0094 (significant), half-life age 13; 8 bits: decay 0.1903 ± 0.0092 (significant), half-life age 17; 16 bits: decay 0.1176 ± 0.0140 (significant), half-life age 33; 24 bits: decay 0.0772 ± 0.0171 (significant), half-life age 33; 32 bits: decay 0.0491 ± 0.0183 (significant), half-life none; 48 bits: decay -0.0043 ± 0.0193 (NOT significant), half-life none; 64 bits: decay -0.0311 ± 0.0194 (NOT significant), half-life none; 96 bits: decay -0.0349 ± 0.0197 (NOT significant), half-life none; 128 bits: decay -0.0347 ± 0.0197 (NOT significant), half-life none. Every budget decays: NO; half-life defined everywhere and non-decreasing with a strict increase: NO."
     },
     {
       "id": "P6",
       "prediction": "E3: the OLD easy tier (logWindow 6 + 25% uniform noise) is age-flat inside its window and cliff-edged at it — i.e. noise is not human-shaped; the paper’s motivating contrast.",
       "verdict": "mixed",
-      "detail": "easy tier: inside the 6-event window 0.5066 over 106823 (ages 1–3 vs 4–6 split -0.0360 ± 0.0035, NOT flat); just outside (7–12) 0.0304 over 47960; cliff (1–6 minus 7–12) 0.4861 ± 0.0019 (z 258.87, cliff-edged)."
+      "detail": "easy tier: inside the 6-event window 0.5130 over 92515 (ages 1–3 vs 4–6 split -0.0330 ± 0.0040, NOT flat); just outside (7–12) 0.0264 over 37901; cliff (1–6 minus 7–12) 0.4986 ± 0.0022 (z 229.01, cliff-edged)."
     },
     {
       "id": "P7",
       "prediction": "E4 (direction): top-1 accuracy is non-increasing as bits shrink — memory pressure erodes the behavioural signature. Where it lands relative to the 22.4% full-strength baseline is the measurement, not a prediction.",
-      "verdict": "refuted",
-      "detail": "end-of-game top-1 — 16: 15.4% over 10800 seats; 32: 21.0% over 10800 seats; 64: 23.0% over 10800 seats; ∞: 22.4% over 10800 seats. Adjacent deltas (per-seed paired): 16→32 +0.0559 ± 0.0073; 32→64 +0.0194 ± 0.0050; 64→∞ -0.0053 ± 0.0019. 1 of 3 rungs violate delta >= −2·SE (64→∞). The ∞ cell reads 22.4% against the committed v1.0 baseline 22.4% (adaptive-results.json); the two are the same games by the anchor pin, and they agree exactly."
+      "verdict": "confirmed",
+      "detail": "end-of-game top-1 — 16: 16.3% over 10800 seats; 32: 20.5% over 10800 seats; 64: 22.1% over 10800 seats; ∞: 22.0% over 10800 seats. Adjacent deltas (per-seed paired): 16→32 +0.0421 ± 0.0062; 32→64 +0.0165 ± 0.0051; 64→∞ -0.0016 ± 0.0017. 0 of 3 rungs violate delta >= −2·SE. The ∞ cell reads 22.0% against the committed v1.0 baseline 22.0% (adaptive-results.json); the two are the same games by the anchor pin, and they agree exactly."
     },
     {
       "id": "P8",
       "prediction": "E4b (single-seat attribution): top-1 accuracy at the bounded read seat is non-increasing as its bits shrink, by the same adjacent-rung 2·SE rule as P7 (any violating rung refutes). The ∞ cell must reproduce the corresponding full-strength read exactly (health, not prediction).",
       "verdict": "confirmed",
-      "detail": "bounded-seat end-of-game top-1 (seed-clustered SE) — 16: 16.22% ± 0.40% over 10800 reads; 32: 16.98% ± 0.44% over 10800 reads; 64: 16.42% ± 0.43% over 10800 reads; ∞: 16.34% ± 0.43% over 10800 reads. Adjacent deltas (per-seed paired): 16→32 +0.0076 ± 0.0046; 32→64 -0.0056 ± 0.0031; 64→∞ -0.0007 ± 0.0010. 0 of 3 rungs violate delta >= −2·SE. The ∞ cell reproduced the corresponding full-strength read exactly in all 10800 games."
+      "detail": "bounded-seat end-of-game top-1 (seed-clustered SE) — 16: 18.65% ± 0.44% over 10800 reads; 32: 18.66% ± 0.45% over 10800 reads; 64: 18.38% ± 0.46% over 10800 reads; ∞: 18.34% ± 0.46% over 10800 reads. Adjacent deltas (per-seed paired): 16→32 +0.0001 ± 0.0048; 32→64 -0.0028 ± 0.0032; 64→∞ -0.0004 ± 0.0010. 0 of 3 rungs violate delta >= −2·SE. The ∞ cell reproduced the corresponding full-strength read exactly in all 10800 games."
     }
   ]
 }

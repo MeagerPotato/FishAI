@@ -633,7 +633,7 @@ export function LabBounded() {
       <Section id="pressure" badge="Style under pressure">
         <SectionHead
           lines={['Mild memory pressure makes styles', '*easier to read* — in one design.']}
-          sub="P7 predicted the v1.0 classifier's top-1 accuracy non-increasing as the bits shrink. It was refuted at one rung — and the two obligations the review attached ride here with the headline, not in a footnote."
+          sub="P7 predicted the v1.0 classifier's top-1 accuracy non-increasing as the bits shrink. Accuracy rises with bits instead, at every rung — and the two obligations the review attached ride here with the headline, not in a footnote."
         />
         <div className={s.stackWide}>
           <p className={s.prose}>
@@ -694,22 +694,33 @@ export function LabBounded() {
 
         <div className={s.refuseBox} style={{ marginTop: 'var(--fa-sp-head)' }}>
           <Eyebrow tone="muted" track="badge">
-            The refutation, with its two riders · multiplicity and attribution
+            The rungs, with their two riders · multiplicity and attribution
           </Eyebrow>
           <p className={s.stepAction} style={{ marginTop: 10 }}>
             {violated
               ? `${bitsLabel(violated.fromBits)} → ${bitsLabel(violated.toBits)}: ${sgn4(violated.delta)} ± ${rate(violated.se)} — accuracy FALLS from 64 bits to full memory`
-              : 'no violated rung in the artifact'}
+              : 'no rung violates: accuracy is non-decreasing in bits across all three'}
           </p>
           <p className={s.figNote}>
             <strong>Multiplicity.</strong> P7&rsquo;s rule tests three adjacent rungs, so a
-            single violation carries a family-wise caveat, annotated at registration: under
-            Bonferroni ×{p7Family?.comparisons ?? 3} the violated rung&rsquo;s one-sided p{' '}
-            {p7Rung ? pv5(p7Rung.pOneSided) : '—'} corrects to{' '}
-            {p7Rung ? pv5(p7Rung.pBonferroni) : '—'} — still under α ={' '}
-            {p7Family?.alpha ?? 0.05}. <strong>The refutation survives the correction.</strong>{' '}
-            The annotation changes no committed verdict; the registered rule already refuted on
-            the raw rung.
+            single violation would carry a family-wise caveat, annotated at registration under
+            Bonferroni ×{p7Family?.comparisons ?? 3}.{' '}
+            {p7Rung ? (
+              <>
+                The violated rung&rsquo;s one-sided p {pv5(p7Rung.pOneSided)} corrects to{' '}
+                {pv5(p7Rung.pBonferroni)} — still under α = {p7Family?.alpha ?? 0.05}.{' '}
+                <strong>The refutation survives the correction.</strong> The annotation changes
+                no committed verdict; the registered rule already refuted on the raw rung.
+              </>
+            ) : (
+              <>
+                <strong>On this artifact no rung violates at all</strong>, so the correction has
+                nothing to apply to and P7 is confirmed on its own registered rule. The
+                annotation is kept in place rather than deleted: it is what the rule would have
+                been read against, and a re-measurement that happens to avoid a caveat does not
+                retire it.
+              </>
+            )}
           </p>
           <p className={s.figNote}>
             <strong>Attribution.</strong> E4 bounds BOTH teams, so a budget changes everything

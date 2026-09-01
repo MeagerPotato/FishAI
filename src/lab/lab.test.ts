@@ -33,7 +33,7 @@ import { replayGame } from './replay.ts'
 import { checkRules, SHIPPED_RULES_HASH } from './rules.ts'
 import { derive, findCycles, reconcile, significantEdges } from './verdict.ts'
 
-function artifactOf(which: 'cyclic' | 'dominant' | 'v2' | 'stale'): LabArtifact {
+function artifactOf(which: 'cyclic' | 'v2' | 'stale'): LabArtifact {
   const loaded = loadArtifact(which)
   if (!loaded.ok) throw new Error(`${which} failed to parse: ${loaded.detail}`)
   return loaded.artifact
@@ -184,8 +184,8 @@ describe('the roster size is checked at the boundary, not during render', () => 
 })
 
 describe('the rule-set guard (SITE_SPEC.md §1.1)', () => {
-  it('accepts the three live cases against the shipped RULES_US54.md', () => {
-    for (const which of ['cyclic', 'dominant', 'v2'] as const) {
+  it('accepts the two live cases against the shipped RULES_US54.md', () => {
+    for (const which of ['cyclic', 'v2'] as const) {
       const a = artifactOf(which)
       expect(a.meta.rulesHash).toBe(SHIPPED_RULES_HASH)
       expect(checkRules(a.meta.rulesHash, 'x').ok).toBe(true)
@@ -214,8 +214,8 @@ describe('the verdict (BOT_LAB.md §4.4)', () => {
     expect(d.cycles.length).toBeGreaterThan(0)
   })
 
-  it('renders the dominant case as dominant, with all four criteria holding', () => {
-    const d = derive(artifactOf('dominant'))
+  it('renders the v2 case as dominant, with all four criteria holding', () => {
+    const d = derive(artifactOf('v2'))
     expect(d.verdict).toBe('dominant')
     expect(d.criteria.every((c) => c.pass === true)).toBe(true)
     expect(d.cycles).toHaveLength(0)
@@ -228,7 +228,7 @@ describe('the verdict (BOT_LAB.md §4.4)', () => {
   })
 
   it('will not crown a style when the exploitability search did not run', () => {
-    const a = artifactOf('dominant')
+    const a = artifactOf('v2')
     const unmeasured: LabArtifact = {
       ...a,
       exploitability: [],
@@ -240,7 +240,7 @@ describe('the verdict (BOT_LAB.md §4.4)', () => {
   })
 
   it('tests criterion 2 on the interval, not the point estimate', () => {
-    const a = artifactOf('dominant')
+    const a = artifactOf('v2')
     const index = cellIndex(a.matrix)
     const d = derive(a)
     const mm = d.maximin.find((m) => m.style === d.candidate)!
@@ -277,7 +277,7 @@ describe('significance drives the counter-graph, not p-values', () => {
   })
 
   it('no edge is derived from a cell that failed correction', () => {
-    for (const which of ['cyclic', 'dominant', 'v2'] as const) {
+    for (const which of ['cyclic', 'v2'] as const) {
       const a = artifactOf(which)
       const index = cellIndex(a.matrix)
       for (const e of significantEdges(
@@ -320,7 +320,7 @@ describe('significance drives the counter-graph, not p-values', () => {
   })
 
   it('the counter-graph layout only routes significant edges', () => {
-    for (const which of ['cyclic', 'dominant', 'v2'] as const) {
+    for (const which of ['cyclic', 'v2'] as const) {
       const a = artifactOf(which)
       const model = layoutCounterGraph({ results: reconcile(a, derive(a)) })
       const index = cellIndex(a.matrix)
@@ -335,7 +335,7 @@ describe('significance drives the counter-graph, not p-values', () => {
 
   it('highlights a cycle only when the verdict is cyclic', () => {
     const cyclic = artifactOf('cyclic')
-    const dominant = artifactOf('dominant')
+    const dominant = artifactOf('v2')
     expect(
       layoutCounterGraph({ results: reconcile(cyclic, derive(cyclic)) }).cycle.length,
     ).toBeGreaterThan(0)
@@ -406,7 +406,9 @@ describe('case selection', () => {
     expect(caseFromSearch('')).toBe('v2')
     expect(caseFromSearch('?case=nonsense')).toBe('v2')
     expect(caseFromSearch('?case=cyclic')).toBe('cyclic')
-    expect(caseFromSearch('?case=dominant')).toBe('dominant')
+    // `dominant` was retired by the September 2026 turn-pass correction, so an old link to it
+    // lands on the default rather than on a refusal page.
+    expect(caseFromSearch('?case=dominant')).toBe('v2')
     expect(caseFromSearch('?case=v2')).toBe('v2')
     expect(caseFromSearch('?case=stale')).toBe('stale')
   })
