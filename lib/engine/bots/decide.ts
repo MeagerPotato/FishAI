@@ -461,9 +461,25 @@ function foreignBookSet(view: SeatView): Set<BookId> {
  *
  * It used to gate `evClaim` alone, on the argument that refusing *free points* to protect an
  * ask-licence is a giveaway rather than optionality. Measured, that argument left the style with
- * no behaviour at all: across 51,420 decisions of real `us54` play no speculative declare ever
- * cleared even `declareThreshold 0.775`, so `evClaim` never returned and every knob behind it —
- * including both hoard knobs — was unreachable. See STYLES.md §3.1.
+ * no behaviour at all: sweeping `declareThreshold` on Balanced over 51,420 decisions of `us54`
+ * self-play at home, every bar from 0.775 up to 1 changed **0** decisions against Balanced's own
+ * 0.90 — no speculative declare in that population ever reached `p = 0.775` — so `evClaim` never
+ * returned there and every knob behind it, including both hoard knobs, was unreachable. See
+ * STYLES.md §3.1.
+ *
+ * **That is a home result on one vector, and it does not survive as a general claim.** Away from
+ * home — FishLab's engine over the corrected `bot:pf2` bridge — `ev-claim` accounts for **30 of
+ * 3,858** traced declares (0.78%); and even at home a *Punter* mirror, whose `declareMaxUncertain`
+ * is 2 rather than Balanced's 1, traces it on **5 of 286** (MONET.md §7.5 and §2). So "`evClaim`
+ * never returns" is false of the code and true only of the swept vector on the swept bank. The
+ * narrower claim — that nothing clears **0.775** — is not resolved abroad rather than refuted: the
+ * 30 carry a mean believed `p` of 0.7455, *below* 0.775, so some of them cleared an effective bar
+ * lower than this one (`declareThresholdStalled` 0.5, or a bar `clinchAdjustedThreshold` scaled
+ * down), and the trace does not record which firing met which bar.
+ *
+ * None of that disturbs the gate move, which never needed `evClaim` to be dead everywhere — only
+ * too thin to carry a whole style. At 0.78% of declares it still is, and the Hoarder's own bar
+ * (0.975) sits well above the 0.775 both `ev-claim` populations were measured at.
  *
  * The move is also the more faithful reading of the style. The owner's description is *"holds
  * onto a single card until the rest are revealed"*, and the card a declare actually spends is

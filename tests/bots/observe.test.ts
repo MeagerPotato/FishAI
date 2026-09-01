@@ -18,7 +18,13 @@ import {
   STYLE_ROSTER,
 } from '../../lib/engine/index.ts'
 import type { BookId, Card, PublicEvent, PublicState, Seat, StyleParams } from '../../lib/engine/index.ts'
-import { FEATURE_KEYS, featureVector, observeSeats, replayedCounts } from '../../lib/engine/bots/observe.ts'
+import {
+  FEATURE_KEYS,
+  featureVector,
+  observeSeats,
+  replayCounts,
+  replayedCounts,
+} from '../../lib/engine/bots/observe.ts'
 import { deepFreeze } from '../engine/util.ts'
 import { ask, gs, mkView } from './util.ts'
 
@@ -36,6 +42,21 @@ function claim(
 function holders(book: BookId, seat: Seat, over: Partial<Record<Card, Seat>> = {}): Record<Card, Seat> {
   const out = {} as Record<Card, Seat>
   for (const c of bookCards(book, us54Config)) out[c] = over[c] ?? seat
+  return out
+}
+
+/**
+ * A holders reveal naming exactly `cards`, in order, at `seats`. `actualHolders` is typed
+ * `Record<Card, Seat>` — total — but a foreign log need not honour that: over the bridge a
+ * failed declare reveals only the cards an earlier hit had already made public (CROSSPLAY.md
+ * §9.6), so the map that arrives is partial by construction. This builds any of those shapes:
+ * all six cards, some of them, or `revealNaming([], [])` for none at all.
+ */
+function revealNaming(cards: readonly Card[], seats: readonly Seat[]): Record<Card, Seat> {
+  const out = {} as Record<Card, Seat>
+  cards.forEach((c, i) => {
+    out[c] = seats[i]
+  })
   return out
 }
 
@@ -240,9 +261,13 @@ describe('observeSeats — real games', () => {
     for (let g = 0; g < 3; g++) {
       const { final, snapshots } = playUs54(`observe-counts-${g}`, balanced)
       expect(replayedCounts(final)).toEqual(final.counts)
+      // A home log's reveals always name all six holders (`reduce.ts` refuses the action
+      // otherwise), so the replay is exact at every prefix and must say so.
+      expect(replayCounts(final)).toEqual({ counts: final.counts, countsExact: true })
       expect(snapshots.length).toBeGreaterThan(0)
       for (const snap of snapshots) {
         expect(replayedCounts(snap)).toEqual(snap.counts)
+        expect(replayCounts(snap).countsExact).toBe(true)
       }
     }
   })
@@ -267,5 +292,178 @@ describe('observeSeats — real games', () => {
     }).not.toThrow()
     expect(fromFrozen).toEqual(observeSeats(final))
     expect(JSON.stringify(observeSeats(final))).toBe(JSON.stringify(observeSeats(final)))
+  })
+})
+
+/**
+ * The claim replay against reveals that do NOT name all six holders — the shape a bridged
+ * failed declare emits, and the shape the pin above cannot reach: it only ever sees home logs,
+ * whose reveals are always complete. The scan used to iterate `actualHolders` rather than the
+ * book, so every unnamed card silently stayed in a hand and stayed publicly located.
+ *
+ * Note what is deliberately NOT pinned here: `8,8,8,8,8,8`. When the reveal omits a card, the
+ * log genuinely does not say whose hand it left, and no correct implementation can recover it.
+ * Under-counting is the honest answer; inventing a seat would be worse. What *is* pinned is
+ * that the card leaves play, that no seat the reveal never named is touched, that nothing goes
+ * negative, and that the replay reports its own inexactness instead of hiding it.
+ */
+describe('replayCounts — reveals that do not name all six holders', () => {
+  const LOW_C = bookCards('LOW-C', us54Config)
+  /** LOW-C resolved with exactly one card in each seat's hand: every seat drops 9 -> 8. */
+  const oneEach = (): Record<Card, Seat> => revealNaming(LOW_C, [0, 1, 2, 3, 4, 5])
+
+  it('a complete reveal debits all six holders and reports the counts exact', () => {
+    const r = replayCounts(viewOf([gs, claim(0, 'LOW-C', oneEach(), 'team0')]))
+    expect(r.counts).toEqual([8, 8, 8, 8, 8, 8])
+    expect(r.countsExact).toBe(true)
+  })
+
+  it('a partial reveal debits the holders it names, touches no other seat, and is not exact', () => {
+    const named = revealNaming([LOW_C[0], LOW_C[1]], [0, 2])
+    const r = replayCounts(viewOf([gs, claim(0, 'LOW-C', named, 'team0')]))
+    // Seats 0 and 2 are named; the four cards no witness places leave 1, 3, 4 and 5 at the
+    // deal size. Under-counted, not misattributed — and reported as such.
+    expect(r.counts).toEqual([8, 9, 8, 9, 9, 9])
+    expect(r.countsExact).toBe(false)
+    for (const c of r.counts) expect(c).toBeGreaterThanOrEqual(0)
+  })
+
+  it('an empty reveal debits nothing at all and is not exact', () => {
+    const r = replayCounts(viewOf([gs, claim(0, 'LOW-C', revealNaming([], []), 'team0')]))
+    expect(r.counts).toEqual([9, 9, 9, 9, 9, 9])
+    expect(r.countsExact).toBe(false)
+    for (const c of r.counts) expect(c).toBeGreaterThanOrEqual(0)
+  })
+
+  it('every card of the resolved book leaves publicHolder, named by the reveal or not', () => {
+    const log: PublicEvent[] = [
+      gs,
+      // Four LOW-C cards publicly located: two at seat 1, two at seat 3.
+      ask(1, 0, LOW_C[0], true),
+      ask(1, 0, LOW_C[1], true),
+      ask(3, 2, LOW_C[2], true),
+      ask(3, 2, LOW_C[3], true),
+      // The reveal names one of those four and nothing else.
+      claim(0, 'LOW-C', revealNaming([LOW_C[0]], [1]), 'team0'),
+      // Every card of the book, asked for after the book left play. A stale `publicHolder`
+      // entry scores these as certain (holder == target) or provably dead (holder != target);
+      // cleared, they score neither. Before the fix this seat read 1 certain and 2 dead.
+      ...LOW_C.map((c) => ask(4, 1, c, false)),
+    ]
+    const obs = observeSeats(viewOf(log))
+    expect(obs[4].asks).toBe(6)
+    expect(obs[4].certainAsks).toBe(0)
+    expect(obs[4].provablyDeadAsks).toBe(0)
+  })
+
+  it('a holder the reveal omits but an earlier hit made public is still debited', () => {
+    const log: PublicEvent[] = [
+      gs,
+      ask(1, 0, LOW_C[0], true), // seat 0 -> 8, seat 1 -> 10
+      ask(1, 0, LOW_C[1], true), // seat 0 -> 7, seat 1 -> 11
+      claim(0, 'LOW-C', revealNaming([LOW_C[0]], [1]), 'team0'),
+    ]
+    const r = replayCounts(viewOf(log))
+    // Seat 1 is debited twice: once from the reveal, once from the public location the reveal
+    // omitted — a hit locates a card exactly, and only another hit or this resolution moves it.
+    expect(r.counts).toEqual([7, 9, 9, 9, 9, 9])
+    // Exactness is a property of the *reveal*, not of how well the fallback happened to do:
+    // four cards were still unwitnessed, so the counts are not exact.
+    expect(r.countsExact).toBe(false)
+  })
+
+  it('a complete reveal naming an already-empty seat clamps at 0 rather than going negative', () => {
+    // Nine fabricated hits empty seat 5 (observe replays events; it does not re-referee), then
+    // a *complete* LOW-C reveal puts six cards in the hand that has none. That is the other way
+    // the replay can stop being exact, and the counts must stay in range while it says so.
+    const strip: Card[] = ['2D', '3D', '4D', '5D', '6D', '7D', '2H', '3H', '4H']
+    const log: PublicEvent[] = [
+      gs,
+      ...strip.map((c) => ask(4, 5, c, true)),
+      claim(0, 'LOW-C', holders('LOW-C', 5), 'team0'),
+    ]
+    const r = replayCounts(viewOf(log))
+    expect(r.counts[5]).toBe(0)
+    for (const c of r.counts) expect(c).toBeGreaterThanOrEqual(0)
+    expect(r.countsExact).toBe(false)
+  })
+
+  it('a reveal that contradicts a public location debits the reveal and reports inexact', () => {
+    // Seat 1 publicly took LOW_C[0] off seat 0, so the replay has that card at seat 1. The
+    // reveal then names seat 2 for it. The reveal is the stronger witness and wins the debit,
+    // but the hit is already in the counts and cannot be un-replayed: seat 1 stays one too
+    // high and seat 2 one too low. Two seats wrong, and only the flag can say so.
+    const named = revealNaming(LOW_C, [2, 3, 3, 3, 3, 3])
+    const log: PublicEvent[] = [gs, ask(1, 0, LOW_C[0], true), claim(0, 'LOW-C', named, 'team0')]
+    const r = replayCounts(viewOf(log))
+    expect(r.counts).toEqual([8, 10, 8, 4, 9, 9])
+    // The reveal is complete — six cards, six holders — so the *only* thing that can flag this
+    // is the contradiction itself. Before the fix this vector shipped with countsExact true.
+    expect(r.countsExact).toBe(false)
+  })
+
+  it('carries countsExact onto every SeatObservation, and keeps it out of the feature vector', () => {
+    const partial = viewOf([gs, claim(0, 'LOW-C', revealNaming([LOW_C[0]], [1]), 'team0')])
+    const complete = viewOf([gs, claim(0, 'LOW-C', oneEach(), 'team0')])
+    // `classifySeats` hands a consumer SeatObservations and nothing else, so the flag has to
+    // reach them or `missFewestShare` / `missMostShare` are weighed with no way to ask.
+    for (const o of observeSeats(partial)) expect(o.countsExact).toBe(false)
+    for (const o of observeSeats(complete)) expect(o.countsExact).toBe(true)
+    // ...and it must never reach the classifier's vector, or every calibrated fingerprint in
+    // data/fingerprints.ts describes a different instrument than the one reading them.
+    expect(FEATURE_KEYS).not.toContain('countsExact')
+    expect(featureVector(observeSeats(partial)[0]).every((x) => typeof x === 'number')).toBe(true)
+  })
+})
+
+/**
+ * `foreignDeclares` and `ownHandOnlyDeclares` are statements about *all* the holders of a
+ * resolved book, so a reveal that names only some of them cannot support either. Both feed
+ * FEATURE_KEYS through their shares, and both used to read straight off `Object.values` — on
+ * an empty map `!holders.includes(claimer)` is vacuously true, so the shape a bridged failed
+ * declare emits (CROSSPLAY.md §9.6) scored as a foreign declare every time.
+ */
+describe('the declare signatures require a reveal that names the whole book', () => {
+  const LOW_C = bookCards('LOW-C', us54Config)
+
+  it('scores a foreign declare on a complete reveal that places no card at the claimer', () => {
+    const obs = observeSeats(viewOf([gs, claim(0, 'LOW-C', holders('LOW-C', 2), 'team1')]))
+    expect(obs[0].declares).toBe(1)
+    expect(obs[0].foreignDeclares).toBe(1)
+    expect(obs[0].foreignDeclareShare).toBe(1)
+    expect(obs[0].ownHandOnlyDeclares).toBe(0)
+  })
+
+  it('scores an own-hand-only declare on a complete reveal that places every card at the claimer', () => {
+    const obs = observeSeats(viewOf([gs, claim(0, 'LOW-C', holders('LOW-C', 0), 'team0')]))
+    expect(obs[0].ownHandOnlyDeclares).toBe(1)
+    expect(obs[0].ownHandOnlyShare).toBe(1)
+    expect(obs[0].foreignDeclares).toBe(0)
+  })
+
+  it('scores neither on an empty reveal — vacuous truth is not an observation', () => {
+    const obs = observeSeats(viewOf([gs, claim(0, 'LOW-C', revealNaming([], []), 'team0')]))
+    expect(obs[0].declares).toBe(1)
+    expect(obs[0].foreignDeclares).toBe(0)
+    expect(obs[0].foreignDeclareShare).toBe(0)
+    expect(obs[0].ownHandOnlyDeclares).toBe(0)
+    expect(obs[0].ownHandOnlyShare).toBe(0)
+  })
+
+  it('scores neither on a partial reveal naming one card at the claimer', () => {
+    const named = revealNaming([LOW_C[0]], [0])
+    const obs = observeSeats(viewOf([gs, claim(0, 'LOW-C', named, 'team0')]))
+    expect(obs[0].declares).toBe(1)
+    expect(obs[0].ownHandOnlyDeclares).toBe(0)
+    expect(obs[0].ownHandOnlyShare).toBe(0)
+    expect(obs[0].foreignDeclares).toBe(0)
+  })
+
+  it('scores neither on a partial reveal naming one card away from the claimer', () => {
+    const named = revealNaming([LOW_C[0]], [3])
+    const obs = observeSeats(viewOf([gs, claim(0, 'LOW-C', named, 'team1')]))
+    expect(obs[0].declares).toBe(1)
+    expect(obs[0].foreignDeclares).toBe(0)
+    expect(obs[0].foreignDeclareShare).toBe(0)
   })
 })
