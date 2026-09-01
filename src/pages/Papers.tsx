@@ -1,5 +1,5 @@
 /**
- * `/papers` — the nine papers, and the questions the project has actually put to a measurement.
+ * `/papers` — the ten papers, and the questions the project has actually put to a measurement.
  *
  * Everything on this page is a pointer at something the reader can open: a PDF built from the
  * committed `.tex` by `npm run papers:build`, the LaTeX source on GitHub, and the lab page that
@@ -588,29 +588,33 @@ export function Papers() {
       current="/papers"
       docTitle="Research papers"
       which={which}
-      stamp="six papers · built from papers/*.tex"
+      stamp="ten papers · built from papers/*.tex"
     >
       {/* ---- hero ------------------------------------------------------------------------- */}
       <Section noRule noMarks>
         <MaskedLines
           level="h1"
-          lines={['Six papers,', 'one question each,', 'and *four of the answers are no*.']}
+          lines={['Ten papers,', 'one question each,', 'and *eight of the answers are no*.']}
         />
         <div className={s.split} style={{ marginTop: 'var(--fa-sp-head)' }}>
           <Reveal as="p" className={s.prose}>
             FishAI is a bot that plays Canadian Fish and a laboratory that measures it. The
-            papers below are what the laboratory has written down: three system papers tracing
-            the engine from v0.5 to v1.5, and three focused results that take one load-bearing
-            caveat each and measure it to the end. Every one is built from a committed LaTeX
-            source, and every number in them is a field of an artifact this site renders.
+            papers below are what the laboratory has written down: four system papers tracing
+            the engine from v0.5 to v2.0, five focused results that take one load-bearing caveat
+            each and measure it to the end, and one cross-engine match played inside another
+            project&rsquo;s engine against their frontier agent. Every one is built from a
+            committed LaTeX source, and every number in them is a field of an artifact this site
+            renders.
           </Reveal>
           <Reveal as="div" className={s.stack}>
             <p className={s.prose}>
-              Four of the six headlines are <strong>negative results</strong>, and they are the
-              point rather than an embarrassment. A proved theorem measured at zero, a knob that
-              was wired and swept and never reached, an adaptive agent that provably becomes the
-              static one and then bills you for the trip — those are findings, and the series
-              reports them in the same voice as the win.
+              Eight of the ten headlines are <strong>negative results</strong>, and they are the
+              point rather than an embarrassment. A proved theorem measured at zero; a knob that
+              was wired and swept and never reached; an adaptive agent that provably becomes the
+              static one and then bills you for the trip; a rule the owner asked for that lost,
+              and won only inverted; a match against another project&rsquo;s frontier agent lost
+              at 27.08% — those are findings, and the series reports them in the same voice as
+              the two wins.
             </p>
             <div className={buttonRow}>
               <Button href="#topics" variant="line">
@@ -681,8 +685,8 @@ export function Papers() {
       {/* ---- the system papers ------------------------------------------------------------ */}
       <Section id="series" badge="The series">
         <SectionHead
-          lines={['Three system papers,', 'each answering', 'the *last one’s question*.']}
-          sub="v0.5 asks whether any style is superior and finds one. v1.0 asks whether reading the table beats committing to that winner, and finds it costs. v1.5 asks what difficulty should be if not random blundering, and finds bits. Read in order, they are one argument."
+          lines={['Four system papers,', 'each answering', 'the *last one’s question*.']}
+          sub="v0.5 asks whether any style is superior and finds one. v1.0 asks whether reading the table beats committing to that winner, and finds it costs. v1.5 asks what difficulty should be if not random blundering, and finds bits. v2.0 asks whether to avoid the opponents who would punish a conceded turn, and finds that the seat you most want to avoid is the seat you most want to ask. Read in order, they are one argument."
         />
         <div className={p.papers}>
           {PAPERS.filter((paper) => paper.kind.startsWith('System')).map((paper) => (
@@ -694,8 +698,8 @@ export function Papers() {
       {/* ---- the focused results ---------------------------------------------------------- */}
       <Section id="results" badge="Focused results">
         <SectionHead
-          lines={['Three caveats,', 'taken seriously enough', 'to get *their own papers*.']}
-          sub="Each of these began as a footnote in a larger paper and turned out to carry more weight than the thing it qualified: an absorbing resource worth nothing, a parameter that was never consulted, and the exact ceiling on reading a player from a public log."
+          lines={['Six caveats,', 'taken seriously enough', 'to get *their own papers*.']}
+          sub="Five of these began as a footnote in a larger paper and turned out to carry more weight than the thing they qualified: an absorbing resource worth nothing, a parameter that was never consulted, the exact ceiling on reading a player from a public log, what a miss actually licenses you to conclude, and what the instrument behind every null in this project could resolve. The sixth is the caveat underneath all of them — everything here was measured against ourselves — and it answers that by going and playing somebody else’s frontier agent."
         />
         <div className={p.papers}>
           {PAPERS.filter((paper) => !paper.kind.startsWith('System')).map((paper) => (
@@ -815,7 +819,7 @@ export function Papers() {
               role: 'github.com/MeagerPotato/FishAI',
               body:
                 'The engine, the simulators, the committed artifacts, and the LaTeX source of ' +
-                'all six papers under papers/. MIT licensed.',
+                'all ten papers under papers/. MIT licensed.',
             },
           ]}
         />

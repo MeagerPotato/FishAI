@@ -1035,9 +1035,15 @@ Stated as designed-for or open, per the laboratory's own checklist \cite{botlab}
   re-running every style over medium-strength inference to detect style-times-skill
   interactions --- has not been run for this roster.
 \item \textbf{Self-play convention lock-in.} A style that wins this tournament may be a style
-  its own roster has learned to read \cite{hu2020}. \emph{Open:} the holdout roster and the
-  cross-play protocol against an independently written bot are specified but not yet run; the
-  artifact's cross-play block is empty.
+  its own roster has learned to read \cite{hu2020}. \emph{Partly closed, September 2026:} the
+  cross-play half has since been run. FishAI's decision function was played as a guest inside an
+  independent project's engine, against their frontier agent, and lost at $27.08\%$ over
+  $7{,}200$ games \cite{frontierpaper}. That is consistent with this threat rather than a
+  dismissal of it, but it does not confirm it either: the loss anatomy attributes the gap to how
+  long FishAI sits on a resolved set ($9.30$ events against $2.92$), leaves roughly $16.4$ of
+  the $22.17$ points to even unattributed, and isolates no convention this roster taught itself.
+  \emph{Still open:} the holdout roster is specified and not run, and this artifact's cross-play
+  block is still empty --- the match was measured in a separate harness and is not a field here.
 \item \textbf{Intransitivity misread as noise.} Designed against: explicit cyclic-energy
   metric, BH-corrected cycle enumeration, and a verdict rule with a first-class cyclic
   outcome.
@@ -1519,6 +1525,13 @@ A.~Hsieh.
 A.~Hsieh.
 \newblock FishAI v1.0: when best-response adaptation is worth less than nothing.
 \newblock FishAI project; companion paper, published alongside this one, 2026.
+
+\bibitem{frontierpaper}
+A.~Hsieh.
+\newblock Against the frontier: a cross-engine measurement and the bridge defect that nearly
+  buried it.
+\newblock FishAI project; companion paper, 2026. The $7{,}200$-game match inside the other
+  project's engine, the loss anatomy, and the withdrawn first measurement.
 
 \bibitem{repo}
 FishAI project.
