@@ -129,14 +129,14 @@ owner decision rather than a discovery made late.
 
 ### 0.3 The call this document makes
 
-**Monet v0.1 through v0.7 is the belief programme. It is fully specified below, every milestone has a
+**Monet v0.1 through v0.4 is the belief programme. It is fully specified below, every milestone has a
 falsifiable acceptance test, and the evidence supports it landing somewhere in the 31–37% band —
 short of the target by roughly 13 points.** [inferred, from §0.1's measured components]
 
-**Monet v0.8 is a gate, not a milestone.** At v0.8 the belief programme is done and the number is
-whatever it is. If Monet is under 40% there, the remaining gap is POSITION and the owner chooses
-between building a lab-only search arm (v0.9 → v1.0, which does not ship on `/play`) and publishing
-the negative result. **Both are honourable outcomes and one of them is much cheaper.**
+**Monet v0.5's gate (§3.5b) is a gate, not a milestone.** There the belief programme is done and
+the number is whatever it is. If Monet is under 40%, the remaining gap is POSITION and the owner
+chooses between building a lab-only search arm (§3.5c → v1.0, which does not ship on `/play`) and
+publishing the negative result. **Both are honourable outcomes and one is much cheaper.**
 
 **What is not honourable** is shipping search, measuring two points, and calling it a frontier
 engine. This lab has already published three negative results that hold up — the degeneracy theorem,
@@ -385,32 +385,52 @@ Every milestone states what ships, what it must measure, and a **falsifiable acc
 detection floor and the sample size that floor implies**. **No milestone is accepted on a single
 cell.** Minimum three seeds; headline milestones six; anything claiming under 3 points needs twelve.
 
-**Win-rate figures in the "target" column are design targets, not forecasts.** v0.3 and v0.4's
-targets are measured; v0.5 through v0.7's are extrapolations bounded above by the oracle, and §0.1
-explains why the band is 31–37% rather than a point.
+**Win-rate figures in the "target" column are design targets, not forecasts.** v0.3's
+target is measured; v0.4's is an extrapolation bounded above by the oracle, and §0.1
+explains why the band is 31–37% rather than a point. v0.5 carries no target by design.
+
+> **Compacted 2026-09-01 on the owner's instruction.** The ladder ran to ten rungs; it now runs to
+> six. **v0.5 carries what v1.0 was going to carry, and is measured before v1.0 is defined** — the
+> point of the exercise is to find out where the capability actually lies rather than to march
+> toward a number the evidence does not support. Old v0.3+v0.4 merge into **v0.3**; old v0.5+v0.6
+> merge into **v0.4**; old v0.7+v0.8+v0.9 merge into **v0.5**. Every merged rung's engineering
+> detail is preserved below as a sub-part; nothing was deleted.
+>
+> **What compaction does not do is change the physics.** §0.1's measured ceiling is unchanged:
+> everything this project has measured, stacked with a full additivity the evidence contradicts,
+> reaches ≈37.3%. Fewer rungs make the same points arrive in fewer releases, not more points
+> arrive.
+>
+> **What it does cost is attribution, and that has to be paid for explicitly.** A rung that ships
+> three mechanisms and does not move cannot tell you which of the three failed — and per-mechanism
+> attribution is the whole reason this project's numbers are worth anything. **So each bundled
+> mechanism keeps its own marker and its own ablation cell even though it ships in one version.**
+> A compacted rung is a release boundary, never a measurement boundary.
 
 | version | ships | target vs SESTINA | primary acceptance metric | effort |
 |---|---|---:|---|---|
-| **v0.1** | fork, instrument, record — no behaviour change | 27.08% (must not move) | byte identity + op coverage | S |
-| **v0.2** | ask-scorer correctness (`minHitP`, two `rankAsksWith` defects) | 27.08% (must not move) | DEAD counter | XS–S |
-| **v0.3** | licence conditioning, λ = 0.60 | **≥ 30.5%** | calibration bias, then win rate | S |
-| **v0.4** | the defusal-appetite decision under λ | ≥ 31.0% **or a written freeze** | a decision with an interval | S–M |
-| **v0.5** | `pCardAt` — a calibrated marginal replaces `pHit` | **≥ 33.0%** | ask accuracy + calibration | L |
-| **v0.6** | `pAssignment` — `planClaim` on the joint | **≥ 36.0%** | **lock hold** | L–XL |
-| **v0.7** | negative certificates, count exhaustion, cross-seat handoff | ≥ 37.0% | lock hold, endgame accuracy | M |
-| **v0.8** | **the gate** — measure, decide, be willing to stop | whatever it is | the owner's decision, in writing | XS |
-| **v0.9** | lab arm: information-set search over the posterior | unknown, priced at 578× | cost budget first, then win rate | XL |
-| **v1.0** | defined by its acceptance test only | **≥ 50.0%** | 12 seeds, ±2.00 | — |
+| **v0.1** ✅ | fork, instrument, record — no behaviour change | 27.08% (did not move) | byte identity + op coverage | S — **shipped** |
+| **v0.2** | ask-scorer correctness (`minHitP`, two `rankAsksWith` defects) · the pre/post-clinch metric split | 27.08% (must not move) | DEAD counter; the split reported | XS–S |
+| **v0.3** | λ = 0.60 licence conditioning · the defusal-appetite decision · **score-conditioned declare urgency** | **≥ 30.5%** | calibration bias · a written `defuse` decision with an interval · lock hold for the score term | S–M |
+| **v0.4** | the belief rewrite: `pCardAt` (calibrated marginal), then `pAssignment` (the joint) | **≥ 36.0%** | ask accuracy + calibration, then **lock hold** | L–XL |
+| **v0.5** | **the capability readout** — negative certificates, count exhaustion, cross-seat handoff, and the search arm priced and measured | **no target. This rung is the measurement.** | 12 seeds, ±2.00, and a written decision on what v1.0 is | M + XL |
+| **v1.0** | **defined only after v0.5's number is read** | ≥ 50.0% | — | — |
 
-> **These targets are additive and the evidence says the terms are not.** v0.6's 36.0% is λ's
+> **v0.5 is a readout, not an attempt.** It deliberately carries no win-rate target, because the
+> honest expectation from §0.1 is **31–37%**, not 50%. If v0.5 lands there, that is the answer to
+> "where do the capabilities lie", and v1.0 is then a decision about architecture — or about
+> publishing a negative result — taken with the number in hand rather than in advance. Writing a
+> 50% target onto v0.5 would be writing down the answer we want.
+
+> **These targets are additive and the evidence says the terms are not.** v0.4's 36.0% is λ's
 > shipped-config +3.71 plus the oracle's entire +5.75, stacked — the same pair §0.1 and §2.4 argue
 > are substitutes, and the same subsumption §3.5 lists as its own risk. **They are stated as design
 > targets so that a miss is legible, not because a stack of substitutes is expected to hold.** Each
 > milestone's real acceptance is its mechanism marker (calibration bias, lock hold, DEAD counts,
 > declaration counts); the win-rate column is reported last and a miss against it is *not* a failure
-> if the mechanism marker moved. **[speculative]** — and if v0.4 freezes at `defuse: 1`, the 31.50%
+> if the mechanism marker moved. **[speculative]** — and if v0.3 freezes at `defuse: 1`, the 31.50%
 > arm §0.1's bound is built on is never built, so §0.1's ≈37.3% ceiling must be re-derived on the arm
-> actually shipped before v0.7's 37.0% is quoted again.
+> actually shipped before v0.5's readout is interpreted against it.
 
 ### 3.1 Monet v0.1 — the fork, the instrument, and the record
 
@@ -654,7 +674,17 @@ the census is essentially untouched]
 
 **Cost.** XS for the knob, S for the two scoring fixes plus their home regression.
 
-### 3.3 Monet v0.3 — licence conditioning (λ = 0.60), the first real points
+### 3.3 Monet v0.3 — the cheap measured wins, bundled
+
+**Ships three mechanisms.** Each keeps its own marker and its own ablation cell (§3 preamble):
+λ licence conditioning, the `defuse` appetite decision, and score-conditioned declare urgency.
+The third is new and is the owner's. The policy today never reads `view.score` — it plays a
+position at 4–4 exactly as it plays 0–0, though at 4–4 the next set ends the game and at 0–0 it
+does not. **It is deliberately sequenced before §3.4's L–XL belief rewrite, because it is the
+cheap test of the same channel**: if cashing urgency alone moves lock hold, the posterior is
+buying less than §3.4 assumes.
+
+#### 3.3a Licence conditioning (λ = 0.60), the first real points
 
 **Ships.** ASKING.md §4.1's correction, in `refinedHitProbability` (`knowledge.ts:703-719`):
 condition the hit probability on a live row-6 licence,
@@ -723,7 +753,7 @@ posterior than the oracle is, because it is a real policy change and not a cheat
 the same evidence are not additive.* That is now measured rather than argued, and it is what v0.4 is
 for.
 
-### 3.4 Monet v0.4 — the defusal-appetite decision, taken deliberately
+#### 3.3b The defusal-appetite decision, taken deliberately
 
 **The problem.** With λ shipped, the shipped `defuse: 1` is worth **−0.71 [unresolved]**. The
 appetite may now be worth nothing, or worth removing. Deciding that by eye is exactly the error this
@@ -777,7 +807,12 @@ others:
 
 **Cost.** S–M. **Target.** ≥ 31.0%, or a written freeze at v0.3's level. Both are acceptances.
 
-### 3.5 Monet v0.5 — `pCardAt`, the calibrated marginal
+### 3.4 Monet v0.4 — the belief rewrite
+
+**Ships two mechanisms in sequence**, each with its own marker and ablation cell: the calibrated
+marginal first, then the joint. `pCardAt` must be read before `pAssignment` is built.
+
+#### 3.4a `pCardAt`, the calibrated marginal
 
 **Ships.** A calibrated per-card probability, replacing `pHit` (`knowledge.ts:722-733`) — today a
 slot-uniform prior over a support set, and **the whole probability model behind Monet's ask
@@ -795,7 +830,7 @@ requiring no new state.
 plus `conceal.ts`, `defuse.ts`, `contained.ts`, `threat.ts`. This is what makes v0.5 an L and not an XL.
 
 **Why it is the right next step.** It attacks the ask-accuracy deficit directly (52.32 vs 57.38), it
-leaves the declare path alone, and **it is the input `pAssignment` needs** — so v0.6 is a
+leaves the declare path alone, and **it is the input `pAssignment` needs** — so §3.4b is a
 continuation rather than a second rewrite. It also subsumes λ, which is the substitution risk.
 
 **Acceptance test.**
@@ -822,7 +857,7 @@ continuation rather than a second rewrite. It also subsumes λ, which is the sub
 certainty with a probability, and a probability can be miscalibrated where a certainty cannot. §7 is
 about exactly that.
 
-### 3.6 Monet v0.6 — `pAssignment`, and the proof-lag milestone
+#### 3.4b `pAssignment`, and the proof-lag milestone
 
 **Ships.** The change that moves the 3.2×.
 
@@ -857,10 +892,10 @@ ownership onsets are never proved before the deal ends [defective, 22,480 positi
    clearing 36.0% first.** If it does not, 36.0% is above the channel's own ceiling and the target is
    restated at the re-measured ceiling minus the floor, in writing, before the cell runs. And the
    v0.4 cell ≥ 45%, 3 seeds (±4.00).
-5. **Measured against the oracle in the same harness, and the oracle is re-built on the v0.5 belief
-   before v0.6 is read.** The existing arm's 33.58% [3 seeds] is a ceiling for the *shipped* belief
-   at λ = 0; it is not the ceiling for a v0.5 build and must not be quoted as one. Re-run the oracle
-   on the v0.5 lib root, 3 seeds, and record its level **before** v0.6's own number is read. An
+5. **Measured against the oracle in the same harness, and the oracle is re-built on the §3.4a belief
+   before §3.4b is read.** The existing arm's 33.58% [3 seeds] is a ceiling for the *shipped* belief
+   at λ = 0; it is not the ceiling for a §3.4a build and must not be quoted as one. Re-run the oracle
+   on the §3.4a lib root, 3 seeds, and record its level **before** §3.4b's own number is read. An
    implementation that beats the *re-measured* oracle is a defect in the oracle arm and must be
    investigated as one.
 6. **Cost budget** unchanged from v0.5: ≤ 10×.
@@ -875,9 +910,15 @@ ownership onsets are never proved before the deal ends [defective, 22,480 positi
 
 **Cost.** L–XL. **This is the largest single item in the roadmap and it is unavoidable.**
 
-### 3.7 Monet v0.7 — the cheaper extractions on top of the posterior
+### 3.5 Monet v0.5 — the capability readout
 
-Three items that are cheap **only once v0.6 exists**, because each is a way of getting more out of a
+**This is the rung the whole roadmap exists to reach, and it carries no win-rate target.** It
+ships the cheap extractions, then stops and measures, then prices the only architecture anyone
+has argued could cross 50%. Its output is a number and a written decision, not a release.
+
+#### 3.5a The cheaper extractions on top of the posterior
+
+Three items that are cheap **only once §3.4b exists**, because each is a way of getting more out of a
 representation that can hold it.
 
 **(a) Negative certificates and count exhaustion.** **79% of the *lagging* locks — 21.6% of all locks
@@ -886,7 +927,7 @@ that missed 21.6%, opponent miss 0.9%, over 1,937 lagging-lock episodes [measure
 event-adjacency census over the same games as the lag decomposition, which the correction barely
 moved]. This is also the exact channel SESTINA's `r12` coordinate attacks.
 
-> **It is a last-event attribution, and that is why this is v0.7 and not v0.3.** In a sequential
+> **It is a last-event attribution, and that is why this is §3.5a and not §3.3.** In a sequential
 > process, whatever event completes a chain is credited by construction, so 21.6% is a lever only if
 > it exceeds the base rate of teammate misses among all events in the lagging window. **That base
 > rate was not measured** (WHY §3.2, §6.4), and until it is, the channel is [inferred] rather than
@@ -931,10 +972,10 @@ home regression at 800 pairs with endgame accuracy as the primary metric because
 is near the floor.
 
 **Cost.** M. **Target.** ≥ 37.0% — **the top of the band §0.1 licenses**, and reached only if these
-extractions are not already inside v0.6's posterior. If v0.7 moves nothing, that is a result about
-v0.6 having done the job, not a failure, and it must be reported that way.
+extractions are not already inside §3.4b's posterior. If §3.5a moves nothing, that is a result about
+§3.4b having done the job, not a failure, and it must be reported that way.
 
-### 3.8 Monet v0.8 — the gate
+#### 3.5b The gate — measure, decide, be willing to stop
 
 **This milestone ships no code.** It runs the full panel at power and writes down the answer.
 
@@ -944,10 +985,10 @@ the oracle arm as the ceiling control, plus the home regression suite. Roughly t
 
 **The decision rule, written before the run so it cannot be negotiated after it.**
 
-| Monet at v0.8 | what it means | what happens |
+| Monet at the §3.5b gate | what it means | what happens |
 |---|---|---|
 | **≥ 50%** | the belief programme was enough; nothing in §0.1 predicted it | v1.0 immediately; re-audit everything, because this contradicts a measured ceiling |
-| **40–50%** | the residual is small enough that search might close it | price v0.9 properly and take it to the owner |
+| **40–50%** | the residual is small enough that search might close it | price §3.5c properly and take it to the owner |
 | **< 40%** | the belief mechanisms this project has measured are exhausted; POSITION is the leading hypothesis for the residual, not a finding (§0.2) | **the forced choice below** |
 
 **§0.1 says the third row is the likely one.** The choice it forces:
@@ -963,9 +1004,9 @@ the oracle arm as the ceiling control, plus the home regression suite. Roughly t
    price of closing it"* is a result of the same kind as this lab's other three, and it is cheaper
    and more defensible than a frontier claim the project cannot afford to back.
 
-### 3.9 Monet v0.9 — the lab arm, and why it cannot be priced before v0.6
+#### 3.5c The lab arm, and why it cannot be priced before §3.4b
 
-**Ships (only if v0.8 says so).** Information-set determinization search over the v0.6 posterior, with
+**Ships (only if §3.5b says so).** Information-set determinization search over §3.4b's posterior, with
 a paired lower-confidence-bound guard.
 
 **The honest update on search, and it goes against the drafts.**
@@ -976,11 +1017,11 @@ a paired lower-confidence-bound guard.
 > floor. Search is no longer a measured negative. It is **unresolved and expensive**, which is a
 > materially weaker case against it than the drafts make.
 
-**But the cell that matters has never been run, and cannot be until v0.6 exists.** Every search arm
+**But the cell that matters has never been run, and cannot be until §3.4b exists.** Every search arm
 measured so far searched on top of the *shipped* belief — a slot-uniform prior over a support set
 (`knowledge.ts:722-733`). Search over a wrong belief is expected to be worth little, and both labs'
 numbers are consistent with that. **Search over a correct posterior is the untested cell.** That is
-why v0.9 is genuinely gated on v0.6 and not merely sequenced after it.
+why §3.5c is genuinely gated on §3.4b and not merely sequenced after it.
 
 **What is known about the price, and it is the binding constraint:**
 
@@ -1000,7 +1041,7 @@ why v0.9 is genuinely gated on v0.6 and not merely sequenced after it.
 its win rate is read. Then paired arms on shared determinizations, 6 seeds × 200 deals, with the
 unguarded determinized argmax as a named negative control.
 
-### 3.10 Monet v1.0 — defined by its acceptance test and nothing else
+### 3.6 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
 
@@ -1149,7 +1190,7 @@ the case, that is stated rather than buried.
 
 | control | requirement |
 |---|---|
-| **Op coverage** | Every protocol op exercised, **with a written expectation for each, recorded before the run**. `opPass > 0` is the tripwire that would have caught the bridge defect in an hour. Corrected reference values on one cell pair, seed 90210: `opAsk` 50,649 · `opPoll` 354,303 · `opPass` **0 → 176** · `passfixDeclines` 182 · `opForced` 445. **⚠ These five are DISPUTED and are not to be quoted as settled** — Monet v0.1's run returned 51,998 / 363,984 / 178 / 184 / 467 on the same cell and failed against them (§3.1 item 3). The row is left as written because it is a pre-registered expectation and this project does not revise those after seeing a result; it moves only on the pf2-with-JSON-collector control named in §3.1, and on Allen's sign-off |
+| **Op coverage** | Every protocol op exercised, **with a written expectation for each, recorded before the run**. `opPass > 0` is the tripwire that would have caught the bridge defect in an hour. Reference values on one cell pair, seed 90210: `opAsk` **51,998** · `opPoll` **363,984** · `opPass` **0 → 178** · `passfixDeclines` **184** · `opForced` **467**. **Amended 2026-09-01 on the owner's sign-off** — the previous row (50,649 / 354,303 / 176 / 182 / 445) was summed from `bot.log`, where every seat process inherits one descriptor and keeps its own offset, so seats overwrite one another and the total loses about one process in 36. Superseded values are in §8.1; the evidence that settled it is in §3.1 item 3. **Collect from a per-process JSON file, never from `bot.log`,** and cross-check the total against the engine's own `events/game` |
 | **Byte-exact null arm** | The arm with the mechanism off reproduces the shipped policy to four decimals. Worked precedent: `bot:fishai-base` reproduced the published defective ladder exactly (three-seed mean 24.2222% against the published 24.22%), and `arm_passfix` reproduced `bot:pf2` at 28.25 / 52.3193 / 98.42 / 9.30118 |
 | **Cross-instrument identity pin** | A newly built arm reproduces a *known* arm's numbers on a *known* cell before any of its own numbers are read |
 | **Paired deals** | Both arms of every contrast play identical deals and rotations, and every contrast is reported against the **paired per-deal** floor |
@@ -1314,9 +1355,9 @@ n = 30 and n = 34.
 cards, and the posterior's entire purpose is to move them into a tier that currently has thirty
 samples and an unstable sign.** So:
 
-- **The calibration harness ships before the posterior does**, not alongside it (§3.5 acceptance item
+- **The calibration harness ships before the posterior does**, not alongside it (§3.4a acceptance item
   1). Believed vs realised, per decile, ≥ 20,000 decisions, on every cell.
-- **The declare-accuracy parity guard (≥ 98.0%) is a hard gate at every milestone from v0.6.** Monet
+- **The declare-accuracy parity guard (≥ 98.0%) is a hard gate at every milestone from §3.4b.** Monet
   inherits parity with the frontier on the one channel it has already won. Trading it for speed is
   the single most likely way for this roadmap to produce a worse bot with a better story.
 
@@ -1342,6 +1383,26 @@ of positions on `bot:pf2` and re-running one replay settles it, and it has not b
 ## 8. Numbers this document refuses to quote, and what is still open
 
 ### 8.1 Withdrawn from the drafts
+
+**Amended 2026-09-01 — the §6.2 op-coverage reference row.** Superseded, and superseded by an
+amendment to a *pre-registered* expectation, which this project otherwise forbids. It was allowed
+here because the correction came from outside the disputed measurement: the engine's own
+`events/game` (101.116 × 1,200 games × 3 side-A seats = **364,018** expected polls) is produced by
+FishLab's code, not by either counter, and the replacement lands within **0.009%** of it while the
+pre-registered row is **2.67%** short. The defect is `bot.log` descriptor sharing, and losing one
+seat process of 36 predicts the old figure to within 0.12%.
+
+| counter | withdrawn | replacement |
+|---|---:|---:|
+| `opAsk` | 50,649 | **51,998** |
+| `opPoll` | 354,303 | **363,984** |
+| `opPass` | 176 | **178** |
+| `passfixDeclines` | 182 | **184** |
+| `opForced` | 445 | **467** |
+
+**The rule this does not repeal.** A result may not rewrite the expectation it was tested against.
+An amendment needs a third source that neither side of the dispute produced, and it is recorded
+where the old value stays visible. Anything less is choosing the answer you wanted.
 
 | withdrawn | was | status |
 |---|---|---|
@@ -1381,10 +1442,10 @@ of positions on `bot:pf2` and re-running one replay settles it, and it has not b
   declared in about 94.6% of games, so its wrong-declare share is a residual of the 24–69 range and
   is not measured. Reading it out needs an engine-side declare log, not a guest-side trace.
 - **The base rate of teammate-missed asks among all events in the lagging window** is not counted.
-  Without it, §3.7(a)'s 21.6% is a last-event attribution, not a lever, and v0.7's first item is
+  Without it, §3.5a(a)'s 21.6% is a last-event attribution, not a lever, and §3.5a's first item is
   sized on an unverified premise. It is a count over an event stream that already exists.
 - **Whether search over a *correct* posterior is worth anything** is the single largest unknown in
-  this roadmap, and it cannot be measured until v0.6 exists (§3.9).
+  this roadmap, and it cannot be measured until §3.4b exists (§3.5c).
 
 ---
 
@@ -1392,8 +1453,8 @@ of positions on `bot:pf2` and re-running one replay settles it, and it has not b
 
 | # | decision | state |
 |---|---|---|
-| 1 | **Amend §6.2's pre-registered op-coverage row?** Three independent facts say the row was measured through a lossy channel and the true values are `opAsk` 51,998 · `opPoll` 363,984 · `opPass` 178 · `passfixDeclines` 184 · `opForced` 467 (§3.1 item 3). The row is left as written regardless, because a result may not rewrite the expectation it was tested against. Amending it is Allen's call. | **open** |
-| 2 | **Should Monet play the post-clinch phase at all?** `us54` clinches at five sets; the host plays all nine. Measured on the corrected bridge: **73.9–76.5% of seat-games reach a state `us54` says cannot exist**, and the arm answers **47,868 of 416,627 ops (11.5%)** there. No decision changed and no points are attributed to it yet, but it is the largest un-modelled region of the foreign game and v0.1 is the first milestone to have measured it. | **open, newly quantified** |
+| 1 | ~~**Amend §6.2's pre-registered op-coverage row?**~~ **RESOLVED 2026-09-01 — amended on the owner's sign-off.** See §8.1 for the withdrawal record and §3.1 item 3 for the evidence. Original text: Three independent facts say the row was measured through a lossy channel and the true values are `opAsk` 51,998 · `opPoll` 363,984 · `opPass` 178 · `passfixDeclines` 184 · `opForced` 467 (§3.1 item 3). The row is left as written regardless, because a result may not rewrite the expectation it was tested against. Amending it is Allen's call. | **open** |
+| 2 | ~~**Should Monet play the post-clinch phase at all?**~~ **DOWNGRADED 2026-09-01 — it cannot change a result.** `clinchTarget` is 5 of 9 and `2 x 5 > 9`, so both teams cannot clinch; sets are never taken back, so reaching 5 is a permanent lock. **The winner under `us54` and under the host's play-all-nine is therefore identical by construction**, and the 73.9-76.5% of seat-games that run past the clinch cannot change who won. An earlier note here called it the largest un-modelled region of the foreign game and implied it might be worth points; that was wrong and is withdrawn. **What survives is a measurement hazard, not a strategy one:** the per-decision metrics the whole diagnosis rests on — ask accuracy 52.32 vs 57.38, lock hold 9.30 vs 2.92 — are summed over all ops, including the **47,868 of 416,627 (11.5%)** played after the game was already decided. If Monet behaves differently there, those headline figures are contaminated. **v0.2 splits them pre/post clinch**; nothing may be tuned against the unsplit figures after that. | **downgraded; the split is a v0.2 deliverable** |
 | 3 | **`bounded.ts`'s cost model** (§1.5). A joint posterior has no atomic-fact decomposition, so the bit budget becomes undefined. v0.5 must choose in writing between confining the posterior to the unbounded arm and giving BOUNDED.md a new cost model. | open, due at v0.5 |
 
 ---
