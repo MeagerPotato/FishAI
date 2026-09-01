@@ -1103,6 +1103,117 @@ retained beside the run of record; every number here is a field of it or of the
 committed v1.0 artifact \cite{adaptiveartifact}, and the suite re-runs from
 \code{npm run bounded} \cite{repo}.
 
+\section{Addendum: the turn-pass correction, and what it did not move}
+\label{sec:addturnpass}
+
+\emph{September 2026.} \code{RULES\_US54.md} \S4 carried a rule marked \code{[DERIVED]}, and the
+inference was wrong. When a declare emptied the current turn-holder, the engine advanced the turn
+to the next seat in ascending cyclic order that still held cards --- which, because teams alternate
+by seat parity, is seat $\mathit{turn}+1$, an \textbf{opponent}, whenever that opponent holds a
+card. The owner's rulebook gives the turn to a \textbf{teammate}, exactly as row 20 already did
+when a seat's \emph{own} declare emptied it. Measured over 400 games and 3{,}079 declares, 56
+out-of-turn declares emptied the turn-holder, 37 of those had a teammate still holding cards, and
+\textbf{19 gave the turn to the wrong team} --- about one game in twenty-one.
+
+The engine now routes both cases into the same \code{awaitPass}, the rules document is corrected,
+and its hash moved, so every artifact in this project was regenerated. This section reports what
+that did to the ladder, and the answer is: essentially nothing.
+
+\subsection{The isolation}
+
+The ladder was re-run twice on one tree, with the turn-pass rule as the only difference --- same
+seeds, same budgets, same roster, same 3{,}000 duplicate pairs per rung.
+
+\begin{table}[t]
+\centering
+\caption{The bit ladder under the corrected rule and under the rule it replaces, on identical
+seeds. The right-hand column is the correction's whole effect on this axis.}
+\label{tab:addturnpass}
+\footnotesize
+\begin{tabular}{@{}rrrrr@{}}
+\toprule
+bits & corrected & previous rule & delta & rung SE \\
+\midrule
+$0$   & $0.0953$ & $0.0953$ & $0.0000$  & $0.0015$ \\
+$8$   & $0.2184$ & $0.2187$ & $-0.0003$ & $0.0021$ \\
+$16$  & $0.3873$ & $0.3876$ & $-0.0003$ & $0.0026$ \\
+$24$  & $0.4388$ & $0.4389$ & $-0.0001$ & $0.0024$ \\
+$32$  & $0.4670$ & $0.4671$ & $-0.0001$ & $0.0019$ \\
+$48$  & $0.4931$ & $0.4933$ & $-0.0002$ & $0.0010$ \\
+$64$  & $0.4978$ & $0.4978$ & $0.0000$  & $0.0005$ \\
+$96$  & $0.4999$ & $0.4999$ & $0.0000$  & $0.0001$ \\
+$128$ & $0.5000$ & $0.5000$ & $0.0000$  & $0.0000$ \\
+$\infty$ & $0.5000$ & $0.5000$ & $0.0000$ & $0.0000$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{The largest move at any rung is $0.0003$, and every move is inside that rung's own standard
+error.} A real rules defect, firing in about one game in twenty-one, is invisible to this
+instrument. That is worth stating as a finding rather than a relief: the ladder measures a
+difference between two seats that share the defect, and a symmetric perturbation cancels in a
+paired duplicate-deal design almost exactly as the design promises.
+
+\subsection{What did move, and it is not memory}
+\label{sec:addconcession}
+
+The regenerated artifact nonetheless differs substantially from the one Sections~\ref{sec:ladder}
+onward report, and \textbf{the difference is the concession layer, not the rule and not the
+budget.} The committed artifact those sections read was generated on 2026-08-30, and the
+concession layer \cite{concession} landed later the same day; every roster style now carries
+\code{defuse} $=1$, and the bounded arm delegates to the roster.
+
+\begin{table}[t]
+\centering
+\caption{The ladder's ends and the shipped tiers, as published and as regenerated. Every move
+below is attributable to the concession layer by Table~\ref{tab:addturnpass}'s isolation, which
+prices the rule correction at $\le 0.0003$.}
+\label{tab:addtiers}
+\footnotesize
+\begin{tabular}{@{}lll@{}}
+\toprule
+ & as published & regenerated \\
+\midrule
+zero-bit floor & $0.1313$ & $0.0953$ \\
+top of the ladder & $0.5000$ & $0.5000$ \\
+easy tier & $0.0446$ --- below the zero-bit floor & $0.0337$ --- below it still, clamped to $0.0$ bits \\
+medium tier & $32.2$ bits $[30.8, 35.1]$ & $\mathbf{18.0}$ bits $[17.2, 18.7]$ \\
+hard tier & --- & $23.3$ bits $[22.6, 24.0]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two readings follow and only the first is safe.
+
+\textbf{Safe: the paper's claims about the \emph{axis} are unchanged.} P1 is CONFIRMED again ---
+set-share is non-decreasing at all nine adjacent rungs, and the most negative rung sits at $z$
+$0.00$. P2 is CONFIRMED, with 0 integer-exact mirror deviations over 3{,}000 $\infty$-budget
+pairs. P3 is CONFIRMED, with the tier ordering easy $<$ medium $<$ hard intact. P7 is CONFIRMED.
+P4, P5 and P6 come back MIXED exactly as before. \textbf{Every verdict in this paper survives the
+regeneration}, and so does the headline refutation: memory pressure still makes styles easier to
+classify, with end-of-game top-1 rising $16.3\% \to 20.5\% \to 22.1\%$ across 16, 32 and 64 bits
+against $22.0\%$ at full memory.
+
+\textbf{Not safe: the shipped medium tier is no longer worth 32 bits.} It prices at $18.0$ bits
+now, and the honest reading is that \emph{the tier did not get cheaper --- the ladder got
+steeper}, because every rung of it gained a mechanism the tier does not carry. The three shipped
+tiers still carry \code{defuse} $=0$ while every ladder rung now delegates to a roster style that
+carries \code{defuse} $=1$, so the tier is being priced against a stronger ruler than the one
+Section~\ref{sec:tiers} used. \textbf{A tier price is a statement about two things at once, and
+this addendum is the demonstration.} Re-running the ladder with \code{defuse} $=0$ throughout
+would restore the comparison the shipped tiers deserve; it has not been run, and until it is, the
+$32.2$-bit figure and the $18.0$-bit figure answer different questions rather than disagreeing
+about one.
+
+\subsection{One cross-design number weakened}
+
+Section~\ref{sec:p8}'s difference-of-deltas between the whole-ecology and read-seat-only
+designs is $+0.0012 \pm 0.0020$ on the regenerated artifact ($z$ $0.60$, two-sided $p$ $0.55$),
+where the committed run read $+0.0045 \pm 0.0021$ at $z$ $2.11$. It was reported there as a
+cross-design comparison entering no verdict rule, and it enters none here either; what changes is
+that it no longer excludes zero. Nothing in this paper rested on it, which is why it was labelled
+that way in the first place.
+
 \begin{thebibliography}{99}
 \footnotesize
 

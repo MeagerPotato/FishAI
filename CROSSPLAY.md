@@ -1,7 +1,7 @@
 # CROSSPLAY.md — FishAI against the fishlabs bots, in the fishlabs engine
 
 The owner asked for simulations against **SESTINA v1.0**, the frontier agent in
-[github.com/dylann4500/fishlabs](https://github.com/dylann4500/fishlabs), reporting win
+[github.com/dylann4500/FishLab](https://github.com/dylann4500/FishLab), reporting win
 percentages, common occurrences, key strategies and common failure points.
 
 This document reports what was actually played. The short version is at the top.
