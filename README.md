@@ -135,6 +135,8 @@ Documents:
 | [CONCESSION.md](CONCESSION.md) | FishAI v2.0 — what a conceded turn costs, why the off-limits rule loses, and why inverting it wins |
 | [ASKING.md](ASKING.md) | Who to ask and for what: the inference soundness audit, ask calibration, and the full ask matrix |
 | [CROSSPLAY.md](CROSSPLAY.md) | FishAI played inside a third-party engine: the foreign-engine replication of defusal, and **27.08% against SESTINA v1.0** — below their whole published lineage. Its §9 was corrected after a bridge defect, a powerless control and four pooled counters were found in the first version |
+| [WHY-FISHAI-LOSES.md](WHY-FISHAI-LOSES.md) | The account of the cross-play deficit: FishAI declares as accurately as the frontier (98.42% vs 98.46%) and takes **9.30 events to prove a set SESTINA proves in 2.92**. 139 cells, 166,800 games |
+| [MONET.md](MONET.md) | The roadmap from **Monet v0.1 to v1.0**, whose goal is to beat SESTINA. States plainly what the measured ceilings imply about the 22.92 points to find |
 | [SITE_SPEC.md](SITE_SPEC.md) | The results site |
 
 The `papers/` directory carries nine research papers in LaTeX (v0.5, v1.0, v1.5, v2.0, the
