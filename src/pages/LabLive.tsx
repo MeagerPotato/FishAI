@@ -290,12 +290,21 @@ export function LabLive() {
         ) : null}
         {adaptiveInPlay ? (
           <p className={lab.figNote}>
-            FishAI v1.0 classifies its opponents from the public log and best-responds off the
-            measured counter table. One measured caveat travels with it: over this roster the
-            best response to everything is Punter, so a warm adaptive seat converges there — its
-            adaptivity is aimed at opponents the matrix never measured.
+            The adaptive pick is v1.0 architecture: it classifies its opponents from the public
+            log and best-responds off the measured counter table. One measured caveat travels
+            with it: over this roster the best response to everything is Punter, so a warm
+            adaptive seat converges there — its adaptivity is aimed at opponents the matrix never
+            measured.
           </p>
         ) : null}
+        <p className={lab.figNote}>
+          All ten picks run today&rsquo;s engine, and since v2.0 that means all ten defuse: the
+          concession term sits on the base every roster style spreads from, so a pick named{' '}
+          <em>Blitz</em> is Blitz as v2.0 plays it. The default committed matrix and the counter
+          table were re-measured against that same knob ladder, which is why a live cell still
+          lines up with the committed cell of the same name; the older <code>?case=</code>
+          documents predate the term.
+        </p>
       </Section>
 
       <Section badge="Demo, not evidence">

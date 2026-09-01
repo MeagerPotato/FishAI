@@ -4,19 +4,29 @@ A bot that plays **Canadian Fish** (Literature), and the simulation lab built to
 
 > **Is there a quantitatively superior play style — or do styles just counter each other?**
 
-Three engines now live here. **FishAI v0.5** is the style-conditioned engine that question is
-asked of: nine parameterized styles over one shared inference engine, playable at the site's
-`/play` table with a traced assistant. **FishAI v1.0** is the adaptive engine built on top — it
-classifies what the other seats appear to be playing from the public log and best-responds off
-the measured payoff table. Its measured verdict is a negative result reported with the same care
-as a positive one: over this roster the best response to *everything* is Punter, so adaptation
-converges to the dominant style and then underpays for its warmup ([ADAPTIVE.md](ADAPTIVE.md)).
-**FishAI v1.5** is the bounded-memory ladder — difficulty as a bit budget with an explicit
-eviction policy, replacing the old noise knob. Measured: strength is monotone in bits at every
-rung, the shipped medium tier prices at ≈ 32 bits, the old noise-based easy tier prices *below
-keeping nothing at all*, and mild memory pressure makes styles *easier* to classify in the
-whole-ecology design — a refuted prediction reported as the headline it is
-([BOUNDED.md](BOUNDED.md)).
+Four engines now live here. **FishAI v0.5** is the style-conditioned engine that question is
+asked of: nine parameterized styles over one shared inference engine, with a traced assistant.
+**FishAI v1.0** is the adaptive engine built on top — it classifies what the other seats appear
+to be playing from the public log and best-responds off the measured payoff table. Its measured
+verdict is a negative result reported with the same care as a positive one: over this roster the
+best response to *everything* is Punter, so adaptation converges to the dominant style and then
+underpays for its warmup ([ADAPTIVE.md](ADAPTIVE.md)). **FishAI v1.5** is the bounded-memory
+ladder — difficulty as a bit budget with an explicit eviction policy, replacing the old noise
+knob. Measured: strength is monotone in bits at every rung, the shipped medium tier prices at ≈
+32 bits, the old noise-based easy tier prices *below keeping nothing at all*, and mild memory
+pressure makes styles *easier* to classify in the whole-ecology design — a refuted prediction
+reported as the headline it is ([BOUNDED.md](BOUNDED.md)). **FishAI v2.0** is the concession
+layer — what a conceded turn costs, why the off-limits avoidance rule loses, and why inverting
+it into a defusal term wins ([CONCESSION.md](CONCESSION.md)).
+
+**What the `/play` table actually seats.** Every bot seat is the v1.0 adaptive engine, and only
+v1.0: no bounded-memory budget is built anywhere on the play surface, and there is no
+bot-or-difficulty selector at all. But the roster styles it delegates to all carry v2.0's
+`defuse: 1` (it sits on the shared `BALANCED` base in `lib/engine/bots/roster.ts`), so the
+concession layer's defusal half is live at the table while `conceal` is not. The seat cards say
+so: **v1.0 architecture, v2.0 defusal**. v0.5 is retired *from play* — a `/play/table?v=05` link
+is refused with an explanation rather than silently redealt — and is untouched everywhere else
+in the project.
 
 Nine bot styles, labelled from aggressive to passive, all sharing one identical inference engine so
 that *style* is measured rather than *skill*. They play tens of thousands of duplicate-dealt games
@@ -124,14 +134,17 @@ Documents:
 | [BOUNDED.md](BOUNDED.md) | FishAI v1.5 — memory in bits, the ladder that prices the tiers, and the P7/P8 attribution record |
 | [CONCESSION.md](CONCESSION.md) | FishAI v2.0 — what a conceded turn costs, why the off-limits rule loses, and why inverting it wins |
 | [ASKING.md](ASKING.md) | Who to ask and for what: the inference soundness audit, ask calibration, and the full ask matrix |
-| [CROSSPLAY.md](CROSSPLAY.md) | FishAI played inside a third-party engine against its bots, and the foreign-engine replication |
+| [CROSSPLAY.md](CROSSPLAY.md) | FishAI played inside a third-party engine: the foreign-engine replication of defusal, and **27.08% against SESTINA v1.0** — below their whole published lineage. Its §9 was corrected after a bridge defect, a powerless control and four pooled counters were found in the first version |
+| [WHY-FISHAI-LOSES.md](WHY-FISHAI-LOSES.md) | The account of the cross-play deficit: FishAI declares as accurately as the frontier (98.42% vs 98.46%) and takes **9.30 events to prove a set SESTINA proves in 2.92**. 139 cells, 166,800 games |
+| [MONET.md](MONET.md) | The roadmap from **Monet v0.1 to v1.0**, whose goal is to beat SESTINA. States plainly what the measured ceilings imply about the 22.92 points to find |
 | [SITE_SPEC.md](SITE_SPEC.md) | The results site |
 
-The `papers/` directory carries six research papers in LaTeX (v0.5, v1.0, v1.5, the
-contained-book negative result, the inert axis, and style observability), each compiling
-standalone under pdflatex with every number traced to a committed artifact by digest. The site
-presents all six at `/papers` — each with the question it asks, its headline finding, its
-abstract, and links to the PDF, the source, and the lab page carrying its evidence.
+The `papers/` directory carries nine research papers in LaTeX (v0.5, v1.0, v1.5, v2.0, the
+contained-book negative result, the inert axis, style observability, inference from a miss, and
+the detection floor), each compiling standalone under pdflatex with every number traced to a
+committed artifact by digest. The site presents all nine at `/papers` — each with the question
+it asks, its headline finding, its abstract, and links to the PDF, the source, and the lab page
+carrying its evidence.
 
 **The built PDFs are committed, under `public/papers/`, and must be rebuilt when a `.tex`
 changes.** `npm run papers:build` compiles every paper twice, fails the build if any log

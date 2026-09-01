@@ -8,9 +8,11 @@
  * (src/play/advisor.ts), which also renders inside the declare dialog where the modal would
  * otherwise hide it.
  *
- * Every bot seat is the FishAI v1.0 adaptive engine. There is no mode picker because there is
- * no second mode: v0.5 is retired from play (see policies.ts for what that did and did not
- * touch), and a link that still names it is REFUSED here rather than quietly dealt as v1.0.
+ * Every bot seat is the FishAI v1.0 adaptive engine, playing roster styles that carry v2.0's
+ * defusal term (`defuse: 1` on the roster's shared base — policies.ts has the full account of
+ * why the label names both versions). There is no mode picker because there is no second mode:
+ * v0.5 is retired from play (see policies.ts for what that did and did not touch), and a link
+ * that still names it is REFUSED here rather than quietly dealt as the adaptive engine.
  * The whole promise of this page is that the URL reproduces the game; honouring the seed while
  * silently swapping the engine would break that promise in the one way a player could not see.
  *
@@ -65,7 +67,8 @@ export function PlayTable() {
             sub={
               <>
                 The URL asks for <code>v={retired}</code>. This table now seats the FishAI v1.0
-                adaptive engine at all five bot seats and nothing else, so there is no honest way
+                adaptive engine — carrying v2.0&apos;s defusal term — at all five bot seats and
+                nothing else, so there is no honest way
                 to open your link: the seed would still deal, the game would still run, and every
                 decision in it would be a different bot&apos;s. You would be looking at someone
                 else&apos;s game under your own seed.
@@ -125,16 +128,18 @@ export function PlayTable() {
 
         <div className={lab.synthetic}>
           <Eyebrow tone="muted" track="badge">
-            FishAI v1.0 · every bot seat is adaptive
+            FishAI v1.0 adaptive · v2.0 defusal · every bot seat
           </Eyebrow>
           <p className={lab.syntheticBody}>
             No styles can be assigned at this table. Each bot reads the public log, classifies
             what the other seats appear to be playing, and best-responds with a roster style
             chosen off the measured payoff table — re-derived from scratch at every decision, so
-            two seats with the same information reach the same read. One measured caveat, stated
-            up front: over this roster the best response to <em>everything</em> is Punter, so a
-            warm v1.0 seat converges there; its adaptivity matters against opponents the matrix
-            never measured — such as you.
+            two seats with the same information reach the same read. The <em>architecture</em> is
+            v1.0; the styles it delegates to all carry v2.0&apos;s defusal term, so when you have
+            publicly shown a basis in a set these bots hold cards of, they will try to take that
+            card back. One measured caveat, stated up front: over this roster the best response to{' '}
+            <em>everything</em> is Punter, so a warm adaptive seat converges there; its adaptivity
+            matters against opponents the matrix never measured — such as you.
           </p>
         </div>
 

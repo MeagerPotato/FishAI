@@ -300,10 +300,12 @@ export function LabAdaptive() {
             <p className={s.figNote}>
               The engine is playable, not only measured:{' '}
               <TextLink href="/play" arrow={false}>
-                take a seat against v1.0 yourself
+                take a seat against it yourself
               </TextLink>{' '}
               — it will be classifying your log too, and you are the off-roster opponent none of
-              this page covers.
+              this page covers. The table runs this page&rsquo;s v1.0 architecture unchanged, but
+              over roster styles that have since gained v2.0&rsquo;s defusal term, so it is not a
+              re-run of the suite below.
             </p>
           </Reveal>
         </div>

@@ -1,0 +1,1261 @@
+# MONET.md — the roadmap from Monet v0.1 to Monet v1.0
+
+**FishAI v2.0 is frozen as LEGACY.** Monet is a new line, starting at v0.1, whose stated goal is
+**Monet v1.0 beats SESTINA v1.0**. FishAI v2.0 is the baseline Monet must beat and the thing Monet
+inherits from: the engine, the rules, the harness, the documents, and one measured policy.
+
+> **Correction carried into this document.** Every number in the two draft write-ups this roadmap
+> supersedes (`NEXT-GENERATION.md`, `WHY-FISHAI-LOSES.md`) was measured on a defective bridge
+> (`bot:fishai`), which cost FishAI **3.44 points of win rate** and **5.59 points of declare
+> accuracy**. Those drafts are not cited here as sources of levels. Where a mechanism finding from
+> them survives, it is restated against the corrected arm (`bot:pf2`) and labelled. Three of the
+> drafts' load-bearing claims are withdrawn outright in §5 and §8. In particular: **the declare
+> accuracy deficit does not exist** (98.42 vs 98.46 is parity), **the +4.00 bridge repair is not
+> available to spend** (it is already inside the 27.08% baseline), and **the measured refutation of
+> search did not reproduce** on the corrected bridge.
+
+**Confidence labels.** `[measured]` — a cell was run and is reported with its N and its floor.
+`[inferred]` — the mechanism is measured, the consequence is arithmetic over measured quantities.
+`[speculative]` — neither. Every measurement carries the bridge it came from: `[corrected]` is
+`bot:pf2`, `[defective]` is `bot:fishai`, `[home]` is FishAI's own engine with no adapter in the
+path. **A number from one bridge is never subtracted from a number on another.**
+
+**Effort.** XS ≤ 1 day · S = 1–3 days · M = 1–2 weeks · L = 1–2 months · XL = rewrite.
+
+---
+
+## 0. The target, stated honestly
+
+**Monet v1.0 beats SESTINA v1.0. That means crossing 50%.**
+
+| | win rate vs SESTINA v1.0 | deals | floor |
+|---|---:|---:|---:|
+| FishAI v2.0, corrected bridge — **the baseline** | **27.08%** | 1,200 | ±2.83 |
+| the target | **50.00%** | — | — |
+| **to find** | **22.92 points** | — | — |
+
+[measured, corrected] Six seeds, 1,950 of 7,200 games, `bot:pf2` vs the frozen v1.0 spec. Every
+seed of the six moved the same way under the bridge repair; mean delta +3.44, SD 0.48, min +2.67.
+
+### 0.1 What the evidence says about whether 22.92 points is reachable
+
+**No combination of the mechanisms this project has measured reaches parity.** That is a weaker
+claim than "belief cannot get there", and it is the only one the evidence supports. [inferred]
+
+**First, the cashing channel has a measured ceiling, and it is small.** An oracle arm that shares
+its team's true hands and cashes every lock the instant it exists scores **33.58%** against the same
+opponent on the same three seeds where the honest arm scores **27.83%** — a delta of **+5.75 points**,
+positive on 3 of 3 seeds, clearing the ±4.00 floor over 600 deals. Its `lockHoldA` collapses from
+**9.24 to 0.41** events, so it really is doing the thing. [measured, corrected]
+
+That is the entire cashing channel, solved perfectly and for free by cheating, and **it leaves Monet
+16.42 points under even.** No implementation of a real belief beats a cheat that already knows the
+answer.
+
+**Second, the asking channel is measured too, and it is also small.** The best arm anywhere in the
+corrected factorial is licence-conditioned hit probability with the defusal appetite off, at
+**31.50%** — **+4.42** over the 27.08% baseline on 1,200 deals, clearing ±2.83. [measured, corrected]
+
+**Third, the two channels are the same object read twice, so they do not add.** The factorial says so
+directly: the defusal appetite is worth **+3.42** when licence conditioning is off and **−0.71** when
+it is on. The interaction term is **−4.12**. Both terms promote asks at seats carrying a live row-6
+licence; they compete for the same effect. [measured, corrected] The same argument applies to the
+licence fold and the joint posterior, for a structural reason given in §2.4: **the licence fold is a
+first-order approximation of exactly what the posterior computes.**
+
+Stacking the two channels with **full additivity that the evidence says will not hold**:
+
+| stack, most favourable reading the evidence permits | win rate |
+|---|---:|
+| baseline (FishAI v2.0, corrected bridge) | 27.08% |
+| + best measured asking arm (licence conditioning, defuse off) | 31.50% |
+| + the cashing channel **at its cheating ceiling** (+5.75) | **≈ 37.3%** |
+| **still under even by** | **≈ 12.7 points** |
+
+> **What this bound does not cover.** The oracle shares the three FishAI seats' true hands; it grants
+> nothing about opponent holdings, and so it bounds own-team lock detection, not belief. The
+> opponent-certainty deficit — 1.594 located cards per decision against 2.218, flat by phase where
+> SESTINA's climbs (WHY §3.3) — has no ceiling arm at all, and `conceal`, the one built term that
+> prices what an ask publishes, has fired on 0.000% of asks under every shipped style and has never
+> been measured on either bridge (WHY §6.4). **≈37.3% is an upper bound over the measured set, not
+> over the achievable one**, and no milestone below may be justified by treating it as the latter.
+> [inferred]
+
+**That is the optimistic sum of everything this project has measured, and it does not reach parity.**
+It is not a forecast; it is an upper bound built by ignoring a substitution the same measurement
+already found.
+
+### 0.2 What the residual is made of, and what architecture would be required
+
+The **ask-accuracy** gap sits in position, not in move choice, and that much is measured. Replaying
+both agents through `decideExplained` at matched positions decomposes it:
+
+| component | value |
+|---|---:|
+| FishAI at its own positions | 52.33% |
+| FishAI at SESTINA's positions | 62.71% |
+| SESTINA at its own positions | 57.22% |
+| **POSITION** (the positions Monet arrives at are worse) | **−10.38** |
+| **SELECTION** (Monet picks better moves once there) | **+5.49** |
+
+[measured, defective — and the defect is not ruled out of this term. The starting quantity 52.334%
+sits 0.02 points from the corrected 52.32%, which pins the *level*; POSITION is a statement about
+arrived-at trajectories, and the guard removed ~253 wrong declares per cell, which are trajectory
+changes. **Re-recording positions on `bot:pf2` and re-running the replay is one cell and it has not
+been done.**]
+
+**Monet picks better moves than the frontier at matched positions. The positions it arrives at are
+worse.** What the decomposition does *not* say is why. It is a one-step counterfactual with history
+held fixed, so it cannot distinguish a trajectory gap caused by shallow planning from one caused by
+a weaker belief driving worse asks — and the oracle, a belief-only intervention, moves ask accuracy
+3.75 points and the set differential 0.398, which is trajectory movement from belief alone. **That
+POSITION is reachable only by lookahead is [speculative], not a consequence of the decomposition.**
+
+**The architecture this roadmap therefore plans for is a calibrated joint posterior over deals with a
+search over information sets on top of it — both, not either.** That is a working hypothesis about
+where the residual lives, not a conclusion the decomposition licenses. What *is* known is the price:
+
+| | cost per ask decision | per six-seat game |
+|---|---:|---:|
+| Monet today (the FishAI policy) | ~0.14 ms | ~82 ms |
+| a posterior at the affordable budget | ≤ 1.4 ms (10×) | ~0.8 s |
+| determinized search at det=12 / cand=4 / depth=12 | ~81 ms (578×) | ~6.6 s desktop, 20–26 s phone |
+
+[measured, home — `bench.mjs`; 12 × 4 × 12 = 576 `decide` calls × 0.14 ms ≈ 81 ms]
+
+**A 578× per-decision engine does not seat behind a human-facing move in a browser, and does not run
+on a phone at all.** That is not a tuning problem; it is a product fork. §3.9 makes it an explicit
+owner decision rather than a discovery made late.
+
+### 0.3 The call this document makes
+
+**Monet v0.1 through v0.7 is the belief programme. It is fully specified below, every milestone has a
+falsifiable acceptance test, and the evidence supports it landing somewhere in the 31–37% band —
+short of the target by roughly 13 points.** [inferred, from §0.1's measured components]
+
+**Monet v0.8 is a gate, not a milestone.** At v0.8 the belief programme is done and the number is
+whatever it is. If Monet is under 40% there, the remaining gap is POSITION and the owner chooses
+between building a lab-only search arm (v0.9 → v1.0, which does not ship on `/play`) and publishing
+the negative result. **Both are honourable outcomes and one of them is much cheaper.**
+
+**What is not honourable** is shipping search, measuring two points, and calling it a frontier
+engine. This lab has already published three negative results that hold up — the degeneracy theorem,
+the bounded-memory refutation, and the off-limits refutation. *"Monet plays at v0.4 strength and here
+is exactly which capability it lacks, priced"* is a result of the same kind.
+
+---
+
+## 1. What Monet inherits
+
+### 1.1 The policy
+
+Monet v0.1 is FishAI v2.0's `STYLE_ROSTER.punter` at `SKILL_PRESETS.hard`, unchanged. That arm is
+the one every corrected number in this document was measured on, and it carries `defuse: 1` from the
+`BALANCED` base (`lib/engine/bots/roster.ts:165`), which every roster entry inherits through
+`style()`.
+
+### 1.2 The corrected bridge
+
+`bot:pf2` — the shipped adapter plus one guard in `opPoll` — is the instrument, and it is a
+**bridge** artifact, not a Monet artifact. It lives in the session scratchpad and is never committed.
+Monet inherits the corrected *measurement*, not a stronger policy. **There is no +3.44 left to
+spend: it is already inside 27.08%.**
+
+### 1.3 The lineage placement, complete for the first time
+
+Corrected-bridge cells, 3 seeds (90210 / 4242 / 7011001) × 200 deals × 6 rotations = 600 deals each,
+paired floor ±4.00:
+
+| opponent | Monet's inherited win rate | ask acc (A / B) | declare acc (A / B) | lock hold (A / B) |
+|---|---:|---:|---:|---:|
+| FishBot v0.2 | **67.42%** | 55.82 / 55.50 | 98.90 / 87.29 | 6.67 / 19.84 |
+| FishBot v0.3 | **62.06%** | 56.81 / 57.38 | 98.22 / 85.62 | 7.94 / 12.05 |
+| FishBot v0.4 | **34.25%** | 53.99 / 57.24 | 97.69 / 98.30 | 8.02 / 4.87 |
+| FishBot v0.5 | **33.31%** | 55.01 / 58.72 | 98.24 / 97.55 | 8.34 / 4.00 |
+| FishBot v0.6 | **32.86%** | 54.57 / 58.17 | 97.53 / 97.86 | 8.34 / 3.70 |
+| SESTINA v1.0 | **27.83%** | 52.35 / 57.35 | 98.37 / 98.33 | 9.24 / 2.97 |
+
+[measured, corrected] `v01` is not in the panel: the engine rejects the spec (`fish: unknown policy
+'v01'`). The panel is six opponents, not seven.
+
+**The finding that sets Monet's first architectural target.** Their own lineage is not a ladder of
+even rungs. Playing their bots against each other on the same harness: v0.3 beats v0.2 at 51.17%,
+v0.5 beats v0.4 at 50.86% — but **v0.4 beats v0.3 at 74.72%.** [measured, corrected, 3 seeds]
+Essentially all of the lineage's strength arrives in one step, and **that step is exactly the step
+Monet fails**: it clears v0.3 by 12 points and loses to v0.4 by 16.
+
+> **Correction to the drafts.** `NEXT-GENERATION.md` §6.4 places FishAI as *"clearing one rung and no
+> other"* at v0.3 55.17% / v0.4 30.00%. Both levels are defective-bridge and both are withdrawn. The
+> corrected placement clears **two** rungs (v0.2 at 67.42%, v0.3 at 62.06%) and the v0.4 cell is
+> **34.25%**, not 30.00%. The qualitative placement — between v0.3 and v0.4, nearer v0.3 — survives.
+
+**Consequence for the roadmap: the v0.4 cell is a better acceptance instrument than the SESTINA
+cell.** The effect Monet is trying to produce is 24.72 points wide there and 22.9 wide against
+SESTINA, but the v0.4 opponent is not a search agent, so a belief change should move it much further.
+Every belief milestone below is gated on **both** cells.
+
+### 1.4 The record debt Monet inherits
+
+CROSSPLAY.md §9 has been re-issued and is correct. Three items remain, and they must land in v0.1
+because Monet's baseline is quoted from documents that still contradict themselves:
+
+| item | location | what is wrong |
+|---|---|---|
+| lineage summary | `CROSSPLAY.md` §2, line 115 | still reads "28.6% (v0.6), 28.2% (v0.5) and 24.2% (SESTINA v1.0) — 21 to 26 points under even". Corrected: **32.86 / 33.31 / 27.83**, i.e. **17 to 22 points under even** |
+| rules table | `CROSSPLAY.md` §1 | no win-condition row. `us54` clinches at five sets; their engine plays all nine half-suits |
+| stale comment | `decide.ts:463-465` | asserts no speculative declare ever cleared `declareThreshold 0.775` across 51,420 decisions. Abroad, `ev-claim` fires **30 times in 3,858 traced declares** (0.78%) [measured, corrected] |
+
+### 1.5 What Monet is allowed to break, and what it is not
+
+| may break | must not break |
+|---|---|
+| `Knowledge`'s internal representation (`knowledge.ts:134-157`, `:540-568`) | `SeatView` (`bots/types.ts:13`) — every input a posterior needs is already in it |
+| `planClaim` (`decide.ts:391-439`) and `certainClaim` (`decide.ts:680-701`) | `reduce.ts` — verified needing no change: `actualHolders` is always complete (`:367-379`), `windowAfter` resets on every accept path (`:169-172`), `publicView` never leaks hidden identity (`views.ts:8-23`) |
+| the ask scorer's probability term (`knowledge.ts:722-733`) | determinism and purity: a policy must remain a pure function of `SeatView`, and must not draw from the rng, or `tests/bots/explain.test.ts`'s bit-identity pin (`decide.ts:1959-1963`) fails |
+| `BOUNDED.md`'s cost model — see below | `us54`'s rules. §4 is an owner decision, not an implementation detail (§4.2) |
+
+**`bounded.ts` is the scoped casualty, and it must be scoped before code is written, not after.**
+`BoundedFact` (`bounded.ts:127-142`) prices belief in 1–2 bit atoms, and `replayFacts` (`:358`)
+reconstructs a `Work` from the kept facts and finishes through the identical `finishKnowledge`
+(`knowledge.ts:502`) — which is what makes BOUNDED.md's large-budget equivalence pin hold *by
+construction* rather than by two implementations staying in step (`knowledge.ts:495-501` says so).
+**A joint posterior has no atomic-fact decomposition, so the bit budget becomes undefined.** Monet
+v0.5 must choose, in writing, between confining the posterior to the unbounded arm and giving
+BOUNDED.md a new cost model. This is a roadmap decision and it is listed as an acceptance item.
+
+---
+
+## 2. The defect Monet exists to fix, in the real code
+
+**Lock hold: 9.30 events against SESTINA's 2.92, a factor of 3.2.** [measured, corrected, seed 90210,
+1,200 games] It is the largest behavioural gap that survives the bridge correction, it barely moved
+across the correction (9.55 → 9.30), and unlike ask accuracy it names a specific missing capability.
+
+### 2.1 The split that decides where the work goes
+
+The metric is a single number and the code makes it two. Instrumented at home — Punter at all six
+seats, `us54`, 40 games, 286 declares (`scratchpad/probe-lockhold.mjs`, `probe-infer.mjs`):
+
+| half | definition | mean events | share |
+|---|---|---:|---:|
+| **inference** | the set is on one team in ground truth → some seat on that team can *prove* it | **6.16** | **91.4%** |
+| **decision** | a seat can prove it → that seat declares it | **0.58** | **8.6%** |
+| total | ground truth → declared | 6.74 | 100% |
+
+Decision-half distribution **over the 275 declares made with zero uncertain cards**: mean 0.01,
+p50 0, p90 0, max 3 events. The table's 0.58 is the mean over **all 286**, and the difference is
+carried by the 11 declares outside that population — so the 8.6% share rests on 11 samples and is
+[inferred], not resolved. Declare-path attribution over the same 286 declares, read off
+`decideExplained().trace.kind`:
+
+| trace kind | count | share | code path |
+|---|---:|---:|---|
+| `certain-claim` | 163 | 57.0% | `decide.ts:680` |
+| `own-book-claim` | 112 | 39.2% | `decide.ts:268` |
+| `must-declare` | 5 | 1.7% | `decide.ts:1486` |
+| `ev-claim` | 5 | 1.7% | `decide.ts:724` |
+| `forced-claim` | 1 | 0.3% | `decide.ts:827` |
+
+**275 of 286 declares (96.2%) were made with zero uncertain cards. Once a set is provable, Monet
+cashes it essentially instantly.** [measured, home]
+
+> **Caveat, stated rather than buried.** 6.74 is a home cell against Punter; 9.30 is the bridge
+> instrument against SESTINA, and the two do not share a definition of "events before cashing". The
+> home numbers are used here **only for the ratio between the two halves**, which is a property of
+> the code rather than of the opponent. The 9.30 and 2.92 stay as the brief states them. The split is
+> [measured, home]; that it explains the bridge gap is [inferred].
+
+Corroborated on the bridge from the other side: the lag decomposition over 1,970 declared locks gives
+HOLD 8.97, LAG 8.27, **POLICY 0.01**, with 99.1% of locks declared at the first provable poll and
+265,884 declined polls in which no provable set was in hand. [measured, defective — but the brief
+shows the defect moved the marker by 0.25 events, so the causal arrow survives]
+
+**Consequence, and it is the single most useful sentence in this document: every declare knob in the
+codebase addresses 8.6% of the wait** — a share carried by 11 declares, so [inferred] rather than
+resolved. The direction does not depend on the share: 96.2% of declares carry zero uncertain cards,
+and §2.2's structural gate is the reason.
+
+### 2.2 The knobs this rules out, with their code paths
+
+`decideWindow`'s gate order (`decide.ts:1395-1504`):
+
+```
+ownTeamCards == 0            :1402   §4 hard rule, no style may override
+forced = stalled || must     :1419-1421
+declarableOwnBook            :1435   -> withinHoardLimits, bypassed when forced
+certainClaim                 :1460   -> withinHoardLimits
+evClaim                      :1476   -> threshold, clinch, hoard, eagerness
+forcedClaim                  :1487
+decline                      :1503
+```
+
+| knob | consumed at | reachable? |
+|---|---|---|
+| `declareEagerness` | `eagerEnoughToDeclare:624` → `windowTicksWanted:641` | `evClaim` only |
+| `declareThreshold` / `declareThresholdStalled` | `evClaim:736` | `evClaim` only |
+| `declareMaxUncertain` | `evClaim:749` | `evClaim` only |
+| `foreignDeclareThreshold` | `evClaim:762` | `evClaim` only |
+| `clinchAggression` / `denialWeight` | `clinchAdjustedThreshold:581-592` | `evClaim` only |
+| `foreignDeclare` | `certainClaim:681`, `evClaim:747` | both |
+| `hoardBooks` / `minHandSize` | `withinHoardLimits:496-515` | all refusable declares |
+
+**Nine of ten declare knobs sit behind a branch that fires on 1.7% of declares at home and 0.78%
+abroad.** They cannot buy a 3.2× factor and Monet does not spend effort on them. The corrected
+ablations agree: four of five declare knobs reproduce base to four decimals, and the fifth buys speed
+by guessing at −0.97 points [−2.44, +0.50]. [measured, defective, paired — the arms share the defect
+and the contrast is paired, so the null is safe]
+
+The structural reason is one line: `evClaim`'s `allOnTeam` gate (`decide.ts:750-759`) rejects
+**415,822 of 417,010** candidate plans (99.72%) before any threshold is read.
+
+### 2.3 Why proving a set costs ~9 events and not ~3
+
+`certainClaim`'s test at **`decide.ts:689`** is the operative definition of "provably ours":
+
+```
+plan.uncertain.length === 0 && plan.p === 1
+```
+
+`plan.uncertain` is empty iff `holderOf(k, c) !== null` for all six cards (`decide.ts:400-411`), and
+`plan.p === 1` iff every one of those certain holders is on the viewer's team. **So "provably ours"
+is six independent per-card certainties**, and a certainty arrives from exactly one of:
+
+| rule | line | yield |
+|---|---:|---|
+| hit on an `ORIGINAL` card — `fixX(ci, target)` | `knowledge.ts:263` | 1 event → 1 card |
+| miss — `clearCand` asker and target, **on that card only** | `knowledge.ts:272-277` | 1 event → 2 bits on 1 card |
+| ask licence (row 6) — pushes an at-least-one-of disjunction | `knowledge.ts:220-246` | 1 event → 1 constraint |
+| claim reveal — `fixX` all six, then `GONE` | `knowledge.ts:281-295` | 1 event → 6 cards, of another set |
+| own-hand injection — YES on held, NO on every unheld card | `knowledge.ts:511-534` | free, no events |
+| count exhaustion / forcing | `knowledge.ts:196-208`, `:323-343` | global, late only |
+
+For a six-card set the viewer typically holds 1–3 members free. **Each remaining card then needs its
+own certifying chain**, and the information yield per public event is roughly one card. That is the
+~9-event shape.
+
+**The three structural losses, each with its line:**
+
+1. **A miss constrains one card.** `knowledge.ts:272-277` clears two bits on the card that was named.
+   Under a joint posterior the same miss reweights the whole deal distribution — *"seat t lacks 5H"*
+   combined with *"t has 6 unknown slots of 30"* shifts mass across every unresolved card. The rest
+   is discarded.
+2. **The constraint pool never reaches the declare decision.** `planClaim` (`decide.ts:391-439`)
+   reads `k.cands` and `k.unknownSlots` and **never touches `k.constraints`**. Verified: the only
+   reader in the decision path is `refinedHitProbability` (`knowledge.ts:703-719`, called from
+   `decide.ts:1082`, `decide.ts:1718`, `contained.ts:316`), which is ask-ranking only and gated on
+   `skill.refinedInference`. The one piece of joint structure the engine holds is invisible to the
+   code that decides whether a set is ours.
+3. **The speculative escape hatch is arithmetically dead.** `evClaim` already tests the correct
+   weaker condition at `decide.ts:750-759` — every uncertain card's candidates are all teammates,
+   i.e. the set is certainly the team's and only the *assignment* is open. But `plan.p` is a
+   **product of independent per-card marginals** (`decide.ts:427`), so two uncertain cards at ~0.55
+   give p ≈ 0.30 against Punter's 0.775 bar (`roster.ts:214`). The branch cannot fire.
+
+### 2.4 The one seam, and the one thing that is already free
+
+`knowledgeFor(view, pol)` — **`decide.ts:263-265`**. Every policy path takes its belief from there
+(`decide.ts:1240`, `:1457`, `:1532`, `:1539`). A posterior is introduced behind that seam.
+
+**The seam is necessary and not sufficient**: if the posterior materialises a `Knowledge` through
+`finishKnowledge` (`knowledge.ts:502-569`), the collapse to masks at `:540-568` throws the joint away
+again.
+
+**The cheapest fact in this roadmap:** `SeatView = PublicState & { seat, hand }` (`bots/types.ts:13`,
+built by `views.ts:26-32`) already carries the log, per-seat counts, own hand, config and resolved
+books. **Every input a joint posterior needs is already there. The missing thing is not information;
+it is the representation over it.**
+
+**And the load-bearing insight for the version ordering.** `refinedHitProbability`
+(`knowledge.ts:703-719`) folds surviving constraints into `pHit` by taking a `max` over **one**
+constraint, and its own comment says it ignores overlap between constraints. **The licence
+conditioning of v0.3 is the first-order version of the same computation the posterior of v0.5 does
+exactly.** That is why v0.3 comes before v0.5, why they are expected to be substitutes, and why v0.3
+is the cheapest real evidence available that the constraint channel carries win-rate points at all.
+
+---
+
+## 3. The version ladder
+
+Every milestone states what ships, what it must measure, and a **falsifiable acceptance test with a
+detection floor and the sample size that floor implies**. **No milestone is accepted on a single
+cell.** Minimum three seeds; headline milestones six; anything claiming under 3 points needs twelve.
+
+**Win-rate figures in the "target" column are design targets, not forecasts.** v0.3 and v0.4's
+targets are measured; v0.5 through v0.7's are extrapolations bounded above by the oracle, and §0.1
+explains why the band is 31–37% rather than a point.
+
+| version | ships | target vs SESTINA | primary acceptance metric | effort |
+|---|---|---:|---|---|
+| **v0.1** | fork, instrument, record — no behaviour change | 27.08% (must not move) | byte identity + op coverage | S |
+| **v0.2** | ask-scorer correctness (`minHitP`, two `rankAsksWith` defects) | 27.08% (must not move) | DEAD counter | XS–S |
+| **v0.3** | licence conditioning, λ = 0.60 | **≥ 30.5%** | calibration bias, then win rate | S |
+| **v0.4** | the defusal-appetite decision under λ | ≥ 31.0% **or a written freeze** | a decision with an interval | S–M |
+| **v0.5** | `pCardAt` — a calibrated marginal replaces `pHit` | **≥ 33.0%** | ask accuracy + calibration | L |
+| **v0.6** | `pAssignment` — `planClaim` on the joint | **≥ 36.0%** | **lock hold** | L–XL |
+| **v0.7** | negative certificates, count exhaustion, cross-seat handoff | ≥ 37.0% | lock hold, endgame accuracy | M |
+| **v0.8** | **the gate** — measure, decide, be willing to stop | whatever it is | the owner's decision, in writing | XS |
+| **v0.9** | lab arm: information-set search over the posterior | unknown, priced at 578× | cost budget first, then win rate | XL |
+| **v1.0** | defined by its acceptance test only | **≥ 50.0%** | 12 seeds, ±2.00 | — |
+
+> **These targets are additive and the evidence says the terms are not.** v0.6's 36.0% is λ's
+> shipped-config +3.71 plus the oracle's entire +5.75, stacked — the same pair §0.1 and §2.4 argue
+> are substitutes, and the same subsumption §3.5 lists as its own risk. **They are stated as design
+> targets so that a miss is legible, not because a stack of substitutes is expected to hold.** Each
+> milestone's real acceptance is its mechanism marker (calibration bias, lock hold, DEAD counts,
+> declaration counts); the win-rate column is reported last and a miss against it is *not* a failure
+> if the mechanism marker moved. **[speculative]** — and if v0.4 freezes at `defuse: 1`, the 31.50%
+> arm §0.1's bound is built on is never built, so §0.1's ≈37.3% ceiling must be re-derived on the arm
+> actually shipped before v0.7's 37.0% is quoted again.
+
+### 3.1 Monet v0.1 — the fork, the instrument, and the record
+
+**Ships.** The FishAI v2.0 policy, unchanged in every reachable path, under the Monet name. Plus:
+
+- **`observe.ts:301-304`, the confirmed `major` audit finding, fixed.** The claim branch decrements
+  `counts` **per entry present in `actualHolders`**, not per card of the resolved book. At home the
+  map always has six entries (`reduce.ts:367-379`) so nothing shows; on the bridge a failed declare
+  emits only cards already public from an earlier hit, and every unlisted card leaves its hand
+  without the replay noticing. Verified directly (`scratchpad/probe-observe.mjs`, `us54`, `LOW-C`
+  resolved with one card per seat, `handSize` 9): [measured, home]
+
+  | `actualHolders` | `replayedCounts` |
+  |---|---|
+  | complete (6 entries) | `8,8,8,8,8,8` — correct |
+  | partial (2 entries) | `8,9,8,9,9,9` — four seats permanently +1 |
+  | empty (0 entries) | `9,9,9,9,9,9` — six cards vanish with no hand debited |
+
+  The error is permanent and cumulative: nothing re-syncs `counts` against `view.counts`, and
+  `observe.ts` never reads `view.books`, so it has no `markResolvedGone` equivalent
+  (`knowledge.ts:425-433`). It corrupts `missFewest`/`missMost` (`:270-286`) and both
+  `certified[...].clear()` guards (`:268`, `:307`), which puts three of the fourteen `FEATURE_KEYS`
+  (`:145-160`) downstream — `missFewestShare`, `missMostShare`, `leakyAskShare`. On a constructed
+  position, one revealed card instead of six moved seat 1's `missFewestShare` from **0 → 1**, the
+  maximum possible swing on that feature. `replayedCounts` is also exported publicly
+  (`bots/index.ts:55`, `engine/index.ts:91`).
+
+  **The fix is four lines and needs no interface change:** iterate `bookCards(book, config)` rather
+  than `Object.entries(actualHolders)`, decrement only where the map supplies a holder, and clamp at
+  0 — i.e. adopt `knowledge.ts:286-293`'s shape, which is why `knowledge.ts` is immune. That leaves
+  a partial map *weaker* rather than *wrong*, matching the failed-declare asymmetry CROSSPLAY §9.6
+  already relies on. A regression test belongs beside `tests/bots/observe.test.ts:242`, which today
+  pins `replayedCounts` against `view.counts` on **complete** logs only and therefore cannot catch
+  this.
+
+  It is unreachable at a fixed roster style — the only caller chain is `observeSeats`
+  (`observe.ts:328`) ← `classifySeats` (`classify.ts:172`) ← `chooseAtCut` (`adaptive.ts:218`) ←
+  `chooseStyle` (`adaptive.ts:261`) ← `resolveWithView` (`decide.ts:1917-1918`), and that last edge
+  fires only when `isAdaptiveSpec(policy)`. **So it does not touch the 27.08% and it does block every
+  adaptive arm Monet may later want.** Fix it first because it is free and it is a correctness bug,
+  not a research question.
+- **The op-coverage harness** (§6.2), armed on every cell.
+- **The three record items of §1.4.**
+- **The win-condition assertion in the adapter's `new_game`.** The adapter checks deck sets,
+  out-of-turn declares and cardless-may-declare, and not the win condition. `us54` clinches at five
+  sets (`RULES_US54.md` row 19); their engine plays all nine. Assert the difference loudly.
+
+  > **Correction to the drafts.** `NEXT-GENERATION.md` A4 sizes this at *"196 of 299 wrong declares
+  > in a phase FishAI's rule set does not model"*. The sizing does not survive the corrected bridge.
+  > The per-declare trace finds **24 wrong declares of 3,858** (0.62%), and **the `us+them == 8`
+  > bucket is unobservable from the guest seat** — the seat's history carries at most 8 declare
+  > events per game (3,577 of 3,600 seat-game histories carry exactly 8; the other 23 carry 7), so
+  > the ninth declare is never delivered to the bot. That is a limit of the instrument, not proof the
+  > terminal declare does not happen: the engine's own arithmetic (8.9458 declarations against 9.000
+  > mean sets, WHY-FISHAI-LOSES §1) says the ninth half-suit **is** declared in about 94.6% of games.
+  > Wrong declares among the traced population concentrate at the *last declared* half-suit instead:
+  > **13 of 24 at `us+them == 7`**. [measured, corrected] The instrument check is still right and
+  > still free; the urgency is withdrawn, and the question *"should Monet play the post-clinch phase
+  > at all"* is unanswered by the trace rather than closed by it.
+  >
+  > The trace sees 3.215 of the engine's 3.639 side-A declarations per game (88.3%, 3,858 of 4,367),
+  > and the engine's own 98.42% implies ≈69 wrong side-A declarations per cell against the 24 the
+  > trace can see. The total is **24–69, not 299**, and the terminal share is a residual of that
+  > range, not a measurement.
+
+**Acceptance test.**
+
+1. **Byte identity to FishAI v2.0** — 0 action mismatches over ≥ 20,000 `us54` decisions across the
+   roster against committed HEAD. This is a pass/fail with no floor: one mismatch fails it.
+2. **Baseline reproduction** — `bot:monet-v0.1` vs SESTINA, 6 seeds × 200 deals, must return
+   **27.08% ± 2.83**, and the per-seed vector must match 28.25 / 28.83 / 26.42 / 26.17 / 27.25 /
+   25.58 to the digit. This is a cross-instrument identity pin, not a measurement: a new arm
+   reproduces a known arm's numbers on a known cell **before** its own numbers are read. The
+   precedent worked — `arm_passfix` returned 28.25% / ask 52.3193 / dAcc 98.42 / lock 9.30118 at seed
+   90210, byte-identical to `bot:pf2`.
+3. **Op coverage** — `opPass > 0`, `opAsk` and `opPoll` in their expected bands, every fault counter
+   zero, and **every op with a written expectation** (§6.2).
+4. **`observe.ts` regression** — the partial-map and empty-map cases pin to `8,8,8,8,8,8`.
+
+**Cost.** S. **Risk.** None to the number; this is the milestone that makes the rest measurable.
+
+### 3.2 Monet v0.2 — ask-scorer correctness, with no points claimed
+
+**Ships.** Three fixes in `knowledge.ts`, all verified in the shipped source:
+
+- **`minHitP: 1e-9` on the roster styles.** It removes every ask the seat's own knowledge proves
+  dead, it has a legality-preserving waiver for genuinely starved turns, and **it cannot change any
+  other ask**, because no ask has p in (0, 1e-9). Consumed at `decide.ts:1093-1096`; Punter ships 0.
+- **`knowledge.ts:809`** — `const narrowing = cand.length > 1 ? 1 / (cand.length - 1) : 1`. Do not
+  grant the full 12-point narrowing credit when `cand.length <= 1` and the certain holder is not the
+  target. **A known miss narrows nothing.**
+- **`knowledge.ts:807, 814-816`** — award `gambleBonus` only when the **asked** card is the set's
+  missing one, not merely when the team accounts for five of six. The comment sitting directly above
+  it — that the asked card is by construction not one of them, by row 7 — **is wrong**:
+  `teamKnownOfBook` (`knowledge.ts:741-749`) counts every card whose certain holder is on the
+  asker's team, **teammates included**, and row 7 only forbids asking for a card *you* hold. Fix the
+  comment with the code.
+
+**Evidence.** Every avoidable dead ask scored exactly `52.00 = 18·(5/6) + 12 + 25`, which reproduces
+from the shipped weights (`knowledge.ts:758-765`, mirrored at `style.ts:352-359`). 71 dead asks in
+240 games (0.685%) against SESTINA's 10; 61 of the 71 are repeats of an identical earlier guaranteed
+miss. [measured, defective — ask-side, and the declare-side defect moved ask accuracy 0.37 points, so
+the census is essentially untouched]
+
+**Expected gain: approximately zero win rate.** 0.23 avoidable dead asks/game, ~0.1 cards/game.
+
+**Acceptance test — and the point of this milestone is that it is not a win-rate test.**
+
+1. **Home identity on the unaffected population** — every ask with p > 0 unchanged, 0 mismatches over
+   ≥ 20,000 decisions with `minHitP: 1e-9`.
+2. **Mechanism counter** — the host's DEAD counter on 3 seeds × 200 deals. Measured on the defective
+   bridge it moved 76 → 39 with `minHitP` and 76 → 60 with `gambleBonus: 0`; require the same
+   direction and at least a halving.
+3. **Win rate must NOT move** — 6 seeds × 200 deals, |Δ| < 2.83 against v0.1. A move that clears the
+   floor here is evidence of a mistake, not of a gain.
+
+> **Do not run a win-rate A/B to justify this.** At 0.1 cards/game the effect is far under the
+> **9,604-deals-per-point** line. The drafts quote that figure in games; the engine prints it per
+> deal and the per-deal floor governs (§6.3).
+
+**Cost.** XS for the knob, S for the two scoring fixes plus their home regression.
+
+### 3.3 Monet v0.3 — licence conditioning (λ = 0.60), the first real points
+
+**Ships.** ASKING.md §4.1's correction, in `refinedHitProbability` (`knowledge.ts:703-719`):
+condition the hit probability on a live row-6 licence,
+
+```
+P(c at t | at least one of B at t) = q_c / (1 − Π_j (1 − q_j))
+```
+
+applied at λ = 0.60. It removes the measured calibration bias almost exactly: **−0.0835 → −0.0002**
+at home. [measured, home] Scope it where the blindness is — apply the conditioning where the
+satisfied constraint has been **dropped**, which is where the bias lives, not to licensed asks
+generally.
+
+**Why it is worth more than the drafts thought, and why the drafts' number was wrong.** The factorial
+resolves the dossier's largest open question:
+
+| arm | win rate vs SESTINA |
+|---|---:|
+| defuse 0, λ 0 | 23.67% |
+| defuse 1, λ 0 — **the shipped baseline** | 27.08% |
+| **defuse 0, λ 0.6** | **31.50%** |
+| defuse 1, λ 0.6 | 30.79% |
+
+[measured, corrected — 6 seeds × 200 deals per arm, 1,200 deals, paired floor ±2.83, all four arms
+built on the same patched lib root]
+
+- λ at defuse 0: **+7.83**, positive on 6 of 6 seeds, clears.
+- λ at defuse 1: **+3.71**, positive on 6 of 6 seeds, clears.
+- defuse at λ 0: **+3.42**, positive on 6 of 6, clears.
+- defuse at λ 0.6: **−0.71**, unresolved.
+- **interaction −4.12** — the two mechanisms are substitutes, not additive (the term itself does not
+  clear at this N).
+
+> **This is where the drafts' +7.0 came from, and it is not the value of λ for the shipped bot.** λ
+> is worth **+7.83 only when the defusal appetite is switched off**. On the shipped configuration,
+> which carries `defuse: 1` from `roster.ts:165`, λ is worth **+3.71**. Quoting +7.0 as the value of
+> λ for a bot that already defuses adds a gain the defusal term has already banked. `NEXT-GENERATION`
+> B3 called +7.0 *"the least-supported large number in the dossier"* and was right to; it is now
+> supported, and it is a number about a different bot.
+
+**Why this is also the first step of the posterior programme, not a detour.** §2.4: the fold is the
+first-order version of what v0.5 computes exactly. **The +7.83 is the first measured evidence that
+`k.constraints` carries win-rate points when it reaches a probability** — better evidence for the
+posterior than the oracle is, because it is a real policy change and not a cheat.
+
+**Acceptance test.**
+
+1. **Calibration first** — the dropped-constraint bias must move from **−0.0881 pooled / −0.0340 for
+   Monet's own asks** toward zero, measured on the corrected bridge over ≥ 6,000 asks. Mechanism
+   before win rate, always.
+2. **Win rate** — ≥ **30.5%** pooled over 6 seeds × 200 deals (1,200 deals, ±2.83) against v0.2's
+   27.08%. A gain of +3.42 or more clears; a gain of +2.0 does not and must be reported as
+   unresolved, not as a win.
+3. **Panel** — the v0.4 and v0.6 cells must move in the same direction, 3 seeds each (600 deals,
+   ±4.00). **A change that closes the SESTINA gap without moving v0.4 and v0.6 is a fit, not a fix.**
+4. **Home regression** — ≥ 800 duplicate pairs, `us54`. ASKING §6 measured this costing ~0.35
+   sets/pair in self-play with defusal on, so a loss here is expected and must be *quantified*, not
+   discovered later. Use the cell's own SD, never the generic one (§6.3).
+5. **Confirmation on a selection-free bank** — §6.5.
+
+**Cost.** S — the patch exists (`scripts/probe-licence.mjs`, `probe-licence3.mjs`) and the byte-exact
+λ = 0 control is already built. There is no λ or licence conditioning anywhere in `lib/` today
+[verified by grep].
+
+**Risk.** ASKING.md §6's binding lesson: *a term that corrects a probability and a term that rewards
+the same evidence are not additive.* That is now measured rather than argued, and it is what v0.4 is
+for.
+
+### 3.4 Monet v0.4 — the defusal-appetite decision, taken deliberately
+
+**The problem.** With λ shipped, the shipped `defuse: 1` is worth **−0.71 [unresolved]**. The
+appetite may now be worth nothing, or worth removing. Deciding that by eye is exactly the error this
+project has already made once.
+
+**What is measured, and what is not.** The equal-N ladder, 5 seeds × 200 deals per rung = 1,000 deals
+per rung, paired floor ±3.10, against SESTINA on the pre-λ policy:
+
+| defuse | win rate | vs rung 1 | resolved at ±3.10? |
+|---:|---:|---:|---|
+| 0 | 23.50% | −3.88 | **yes** |
+| 0.5 | 27.00% | −0.38 | no |
+| **1 (shipped)** | **27.38%** | — | — |
+| 2 | 29.30% | +1.92 | no |
+| **4 (apparent peak)** | **29.95%** | +2.57 | no |
+| 8 | 28.78% | +1.40 | no |
+
+[measured, corrected] Holdout bank 31415, which took no part in fitting: d0 24.50%, d1 25.58%,
+d4 29.58% — the 4-vs-1 gap replicates at +4.00 there.
+
+> **Correction to the drafts, and it goes the wrong way for them.** `NEXT-GENERATION` B2 reports
+> `defuse: 4` as **+3.333 points [+1.258, +5.409], positive on all five seeds individually**. On the
+> corrected bridge at six seeds it is **+2.81, positive on 5 of 6 — seed 24680 is −1.83** — and it
+> does **not** clear its floor. The inverted U is visible and the apparent peak sits at 4, but
+> **every rung-to-rung contrast above 0 is inside the floor.** The only resolved statement the ladder
+> supports is *"some defusal beats none"*. Anyone quoting "defuse 4 is the optimum" is quoting an
+> unresolved maximum of six noisy points. Resolving the peak needs roughly 4× the deals per rung.
+
+**Ships.** A decision, in writing, and whichever constant it names. Three admissible outcomes and no
+others:
+
+1. **Freeze at `defuse: 1`** and record the interval. Cheapest, and defensible.
+2. **Move to `defuse: 0`**, if the ladder under λ says so at a resolved margin.
+3. **Make the appetite opponent-conditional.** The adaptive layer already exists (ADAPTIVE.md), and
+   CONCESSION §8's body prices per-decision tactic-level adaptation at **+1.43 and +1.58 ± 0.32**
+   against style-switching's **+0.13 ± 0.06** — *"roughly eleven to twelve times"*. (CONCESSION §0's
+   headline table says ~15×; the body is the measurement and the table is the outlier. Quote 11–12×,
+   and fix the table.) **Blocked on the `observe.ts` fix, which is why that fix is in v0.1.**
+
+**Acceptance test.**
+
+1. **The ladder re-run on top of λ**, equal N on every rung, `defuse ∈ {0, 0.5, 1, 2, 4}`, **5 seeds
+   × 200 deals per rung minimum** (1,000 deals, ±3.10). A rung is only "better" if it clears.
+2. **Home re-fit first if the constant moves.** CROSSPLAY §7's holdout rule is binding: **never move
+   a shipped roster constant on a cross-play fit.** CONCESSION §3.1 fitted the appetite at 1 at home;
+   moving it requires the home ladder to agree, at ≥ 800 duplicate pairs per rung.
+3. **Confirmation on a selection-free bank.** Every seed this project has ever named is now spent
+   (§6.5). Draw new ones and write them down before the fitting cell runs.
+4. **Report the interval, and report when the effect is under the floor.** This milestone is allowed
+   to conclude "unresolved, frozen at 1" and that is a pass.
+
+**Cost.** S–M. **Target.** ≥ 31.0%, or a written freeze at v0.3's level. Both are acceptances.
+
+### 3.5 Monet v0.5 — `pCardAt`, the calibrated marginal
+
+**Ships.** A calibrated per-card probability, replacing `pHit` (`knowledge.ts:722-733`) — today a
+slot-uniform prior over a support set, and **the whole probability model behind Monet's ask
+accuracy**.
+
+**The construction.** Matrix scaling (Sinkhorn / permanent approximation) over the card × seat
+capacity bipartite graph, seeded from `w.cand` (`knowledge.ts:148`) and `unknownSlots`
+(`knowledge.ts:563`), with `w.constraints` (`knowledge.ts:152`) as side constraints. It gives a
+calibrated `pCardAt(card, seat)` for every card at once, and it is a pure function of `SeatView`
+requiring no new state.
+
+**What must not change.** `Knowledge` keeps its shape. `holders`, `cands`, `gone`, `unknownSlots` and
+`constraints` remain, **derived as marginals**, so the twelve existing readers keep working:
+`decide.ts:400, 412, 670, 672, 753, 993, 1287, 1330, 1661`, plus `knowledge.ts:643-660` and `:741-749`,
+plus `conceal.ts`, `defuse.ts`, `contained.ts`, `threat.ts`. This is what makes v0.5 an L and not an XL.
+
+**Why it is the right next step.** It attacks the ask-accuracy deficit directly (52.32 vs 57.38), it
+leaves the declare path alone, and **it is the input `pAssignment` needs** — so v0.6 is a
+continuation rather than a second rewrite. It also subsumes λ, which is the substitution risk.
+
+**Acceptance test.**
+
+1. **Calibration harness first, and it is a new permanent instrument.** Believed vs realised, per
+   decile, over ≥ 20,000 ask decisions. Every decile's |believed − realised| < 0.05, and the
+   aggregate within 0.01. **This harness runs on every cell from v0.5 onward** — see §7.
+2. **Ask accuracy** — 52.32% → **≥ 55.0%** on 6 seeds × 200 deals. The corrected instrument reads
+   52.35% on the 3-seed panel and 52.3193% at seed 90210, so the starting point is pinned to four
+   decimals and a 2.7-point move is far outside cell noise on the *rate*, not the win rate.
+3. **The DEAD and own-locked-ask counters must move**, not just the rate.
+4. **Win rate ≥ 33.0%** on 6 seeds × 200 deals (±2.83) — reported **last**, because it is the noisiest
+   of the four.
+5. **Panel: the v0.4 cell must move from 34.25% toward parity**, 3 seeds (±4.00). This is the rung
+   Monet fails and it is the cleanest signal available (§1.3).
+6. **Cost budget** — ≤ 1.4 ms per decision (10× of 0.14 ms), ≤ 0.9 s per six-seat game. **A
+   posterior that costs 10× is affordable; one that costs 500× is a different product** (§0.2).
+7. **The BOUNDED.md scope decision, in writing, before code** (§1.5). Unbounded-arm-only, or a new
+   cost model. Not both, not neither.
+8. **Substitution measured, not assumed** — a λ-off arm on the same build. If `pCardAt` subsumes λ,
+   the λ term comes out and the roadmap says so.
+
+**Cost.** L. **Risk.** This is the first milestone that can be wrong in a new way: it replaces a
+certainty with a probability, and a probability can be miscalibrated where a certainty cannot. §7 is
+about exactly that.
+
+### 3.6 Monet v0.6 — `pAssignment`, and the proof-lag milestone
+
+**Ships.** The change that moves the 3.2×.
+
+1. **`planClaim` (`decide.ts:391-439`) is rewritten.** Today it is a deterministic greedy assignment
+   by remaining capacity (`:420-429`) with an **independent product** for `p` (`:427`). It becomes an
+   argmax over the joint, with the joint's own probability.
+2. **`certainClaim:689` stops being the definition of "ours".** `plan.p >= threshold` subsumes
+   `plan.p === 1`; `certainClaim` (`decide.ts:680-701`) becomes the p = 1 special case of `evClaim`.
+   **The nine dead knobs of §2.2 become live for the first time** — which is a risk, not a prize, and
+   the acceptance test treats it as one.
+3. **The two structural losses of §2.3 close together**: a miss reweights the deal distribution
+   rather than clearing two bits on one card, and the constraint pool finally reaches the declare
+   decision.
+
+**The direction is measured; the magnitude is not.** At team-ownership positions, replayed over the
+same positions so a bridge defect cannot reorder them: greedy allocation **46.52%**, an exact joint
+maximiser over the same marginals **47.97%**, a 128-world Monte Carlo joint posterior **50.76%**
+[measured, defective, 5,453 positions — a replay over positions, not a play measurement]. The acting
+seat can prove its own team's allocation at **2.90%** of ownership positions, and **12.73%** of
+ownership onsets are never proved before the deal ends [defective, 22,480 positions].
+
+**Acceptance test — lock hold is the primary metric, and the oracle is the ceiling control.**
+
+1. **Lock hold** — **9.30 → ≤ 5.0**, against the oracle's floor of **0.41** and SESTINA's 2.92.
+   6 seeds × 200 deals. This is the mechanism's own marker and it moves before the win rate does.
+2. **Declarations per game** — 3.64 → **≥ 4.5**, toward SESTINA's 5.31.
+3. **Declare accuracy must not fall below 98.0%.** This is a **parity guard**, not a target. Monet
+   inherits 98.42% against SESTINA's 98.46%; a posterior that cashes sooner by cashing wrongly has
+   traded the one channel that is already at the frontier. **Any milestone that breaks this gate
+   fails, whatever the win rate does.**
+4. **Win rate ≥ 36.0%**, 6 seeds × 200 deals (±2.83) — **conditional on the re-measured oracle
+   clearing 36.0% first.** If it does not, 36.0% is above the channel's own ceiling and the target is
+   restated at the re-measured ceiling minus the floor, in writing, before the cell runs. And the
+   v0.4 cell ≥ 45%, 3 seeds (±4.00).
+5. **Measured against the oracle in the same harness, and the oracle is re-built on the v0.5 belief
+   before v0.6 is read.** The existing arm's 33.58% [3 seeds] is a ceiling for the *shipped* belief
+   at λ = 0; it is not the ceiling for a v0.5 build and must not be quoted as one. Re-run the oracle
+   on the v0.5 lib root, 3 seeds, and record its level **before** v0.6's own number is read. An
+   implementation that beats the *re-measured* oracle is a defect in the oracle arm and must be
+   investigated as one.
+6. **Cost budget** unchanged from v0.5: ≤ 10×.
+7. **Home regression** at ≥ 800 duplicate pairs, plus the `decideExplained` bit-identity pin
+   (`decide.ts:1959-1963`): the sink stays write-only and the posterior draws no rng.
+
+> **Do not use the +20-point figure from the structural decomposition.** Equalising declaration
+> counts at 4.5 moves the set differential −1.86 → −0.50 and prices out at "+20 points". It is an
+> accounting identity that assumes cards Monet never wins. The oracle says the reachable part of that
+> channel is **+5.75**. With the oracle's own levels now re-derived, the temptation to reach for +20
+> is larger, and it is still wrong.
+
+**Cost.** L–XL. **This is the largest single item in the roadmap and it is unavoidable.**
+
+### 3.7 Monet v0.7 — the cheaper extractions on top of the posterior
+
+Three items that are cheap **only once v0.6 exists**, because each is a way of getting more out of a
+representation that can hold it.
+
+**(a) Negative certificates and count exhaustion.** **79% of the *lagging* locks — 21.6% of all locks
+— are unblocked by a teammate's ask that missed**: proved at the instant of lock 72.5%, teammate ask
+that missed 21.6%, opponent miss 0.9%, over 1,937 lagging-lock episodes [measured, defective — an
+event-adjacency census over the same games as the lag decomposition, which the correction barely
+moved]. This is also the exact channel SESTINA's `r12` coordinate attacks.
+
+> **It is a last-event attribution, and that is why this is v0.7 and not v0.3.** In a sequential
+> process, whatever event completes a chain is credited by construction, so 21.6% is a lever only if
+> it exceeds the base rate of teammate misses among all events in the lagging window. **That base
+> rate was not measured** (WHY §3.2, §6.4), and until it is, the channel is [inferred] rather than
+> the mechanistic statement the drafts read it as. The `r12` control that would price it does not
+> clear its floor either — see the withdrawal immediately below.
+
+> **The price on it is withdrawn.** `NEXT-GENERATION` C2 quotes *"+1.91 points is the measured size of
+> the denial component"* at ±2.83 — the unpaired per-game figure. Re-run on the corrected bridge, the
+> `r12`-off contrast is **27.83% → 30.42%, +2.58**, against a paired floor of **±4.00** at 600 deals.
+> **It does not clear, and it did not clear before either.** `lockHoldA` moves 9.24 → 8.16, so the
+> mechanism is real and its win-rate price is unresolved. Do not quote +1.91 or +2.58 as a gain.
+> Resolving it needs ≥ 1,200 deals per arm.
+
+**(b) Cross-seat handoff of a compelled declaration.** Allow a `MUST_DECLARE` seat to hand the
+obligation to a teammate whose `planClaim` p is higher. Emulated inside FishAI's own engine over
+1,036 endgame declarations across 9,000 games: as shipped **39.86% [36.9, 42.9]**, most-confident
+teammate **72.10% [69.3, 74.7]**, fewest-guesses selector 70.41%, best-of-three oracle **86.58%**; it
+relocates the declaration 77.90% of the time. [measured, home — no adapter in the path, so nothing
+about the bridge touches it]
+
+**The caution travels with it.** `planClaim`'s p is a poor **within-position** predictor in the
+endgame — AUC 0.551, Brier 0.2648 against a constant's 0.2481 and 0.2434 for a function of the
+guessed-card count — but a good **across-seat** one, which is exactly the use here. **Use p to choose
+the declarer; never to gate declaring.** Its level in the `forced-claim` branch is badly
+under-confident (states 20.15% where reality is 63.69%, n = 157) and must be corrected before the
+number goes on the wire. [measured, home]
+
+**Expect less abroad than at home**, because the host's own ladder already supplies much of the
+benefit. The forced channel is one of the few quantities the bridge correction left completely alone:
+**forced declares 0.02/game at 62.5% on both bridges** [brief §4]. Quote 62.5% from the brief, not
+64.08% from the defective H1 cell.
+
+**(c) The forced endgame is not in this milestone, and here is the measurement that keeps it out.**
+Corrected: Monet 60.76% (48 of 79) against SESTINA's 46.21% (67 of 145); Wilson [49.7, 70.8] vs
+[38.3, 54.3], **overlapping**. [measured, corrected] The sign is unresolved and resolving it needs
+~40,000 **deals** — the drafts say games, and the per-deal floor governs. **Monet may well already be
+the better team there.**
+
+**Acceptance test.** Lock hold and endgame declaration accuracy as primaries, `r12`-on vs `r12`-off
+as the sensitivity control (if (a) works the gap between those cells narrows), 6 seeds × 200 deals,
+home regression at 800 pairs with endgame accuracy as the primary metric because the win-rate effect
+is near the floor.
+
+**Cost.** M. **Target.** ≥ 37.0% — **the top of the band §0.1 licenses**, and reached only if these
+extractions are not already inside v0.6's posterior. If v0.7 moves nothing, that is a result about
+v0.6 having done the job, not a failure, and it must be reported that way.
+
+### 3.8 Monet v0.8 — the gate
+
+**This milestone ships no code.** It runs the full panel at power and writes down the answer.
+
+**What runs.** Six seeds × 200 deals against SESTINA, v0.6, v0.5, v0.4, v0.3, v0.2 — 36 cells, plus
+the oracle arm as the ceiling control, plus the home regression suite. Roughly the size of the
+139-cell re-measurement that produced this roadmap's numbers, and therefore known to be affordable.
+
+**The decision rule, written before the run so it cannot be negotiated after it.**
+
+| Monet at v0.8 | what it means | what happens |
+|---|---|---|
+| **≥ 50%** | the belief programme was enough; nothing in §0.1 predicted it | v1.0 immediately; re-audit everything, because this contradicts a measured ceiling |
+| **40–50%** | the residual is small enough that search might close it | price v0.9 properly and take it to the owner |
+| **< 40%** | the belief mechanisms this project has measured are exhausted; POSITION is the leading hypothesis for the residual, not a finding (§0.2) | **the forced choice below** |
+
+**§0.1 says the third row is the likely one.** The choice it forces:
+
+1. **Accept v0.4/v0.5-era strength in-browser and stop.** One rewrite, no latency cost, and the
+   honest maximum for the shipped product. Monet ships at ~33–37% against the frontier and the
+   README says so.
+2. **Split the engine.** Keep the fast policy on the `/play` surface, build the searching engine as a
+   lab/server arm. Then the frontier claim is about a bot the site does not seat, and that needs
+   saying the way ADAPTIVE.md's degeneracy result and BOUNDED.md's refuted prediction are said.
+3. **Publish the negative result and do not chase it.** *"Monet reaches v0.4-era strength, the
+   remaining 13 points are trajectory rather than belief, here is the decomposition and here is the
+   price of closing it"* is a result of the same kind as this lab's other three, and it is cheaper
+   and more defensible than a frontier claim the project cannot afford to back.
+
+### 3.9 Monet v0.9 — the lab arm, and why it cannot be priced before v0.6
+
+**Ships (only if v0.8 says so).** Information-set determinization search over the v0.6 posterior, with
+a paired lower-confidence-bound guard.
+
+**The honest update on search, and it goes against the drafts.**
+
+> **`NEXT-GENERATION` §4.1's refutation of search did not reproduce on the corrected bridge.** The
+> draft reports −3.7 to −4.2 points across three search arms. Re-run on `bot:pf2`, the same three
+> arms give **26.75% / 28.00% / 27.19% against a base of 27.83%** — **all three unresolved** at their
+> floor. Search is no longer a measured negative. It is **unresolved and expensive**, which is a
+> materially weaker case against it than the drafts make.
+
+**But the cell that matters has never been run, and cannot be until v0.6 exists.** Every search arm
+measured so far searched on top of the *shipped* belief — a slot-uniform prior over a support set
+(`knowledge.ts:722-733`). Search over a wrong belief is expected to be worth little, and both labs'
+numbers are consistent with that. **Search over a correct posterior is the untested cell.** That is
+why v0.9 is genuinely gated on v0.6 and not merely sequenced after it.
+
+**What is known about the price, and it is the binding constraint:**
+
+- det=12 / cand=4 / depth=12 = **576 `decide` calls ≈ 81 ms per ask decision** — ~578× the current
+  0.14 ms — **~6.6 s per six-seat game on desktop and 20–26 s on a phone**, against ~82 ms today.
+  [measured, home — `bench.mjs`]
+- The tie group that search would resolve is large and irreducible: **57.9% of 2,209 ask decisions
+  end in an exact top-score tie**, mean 3.21 candidates, and the tie-break is already fully
+  deterministic — eight rng seeds gave identical actions in 100% of positions. [measured, defective —
+  a structural property of the scoring function; FishLab independently measures the same object at
+  54.74%, and reports every tie-break rule realising the same hit rate.]
+- FishLab's own published price for the correct form of search is **+2.08 points over v0.6 at
+  300–420× cost**, attributed to them. That is less than the *bridge repair* delivered, and the
+  bridge repair made Monet no stronger at all.
+
+**Acceptance test.** Cost budget **first** — an arm that misses its latency target is rejected before
+its win rate is read. Then paired arms on shared determinizations, 6 seeds × 200 deals, with the
+unguarded determinized argmax as a named negative control.
+
+### 3.10 Monet v1.0 — defined by its acceptance test and nothing else
+
+**Monet v1.0 exists when, and only when:**
+
+1. **Win rate ≥ 50.0% against SESTINA v1.0**, pooled over **12 seeds × 200 deals = 2,400 deals**,
+   paired floor **±2.00** — so a 50.0% reading is separated from 48% at the instrument's own
+   resolution. Never on three seeds, never on one cell.
+2. **Every seed of the twelve is reported**, and the SD across them is published. The bridge
+   correction was believable because all six seeds moved the same way; a v1.0 claim carrying one
+   negative seed is a claim about a seed.
+3. **The panel is monotone** — Monet beats v0.2 through v0.6 as well. A bot that beats SESTINA and
+   loses to v0.5 has been fitted, not built.
+4. **Declare accuracy ≥ 98.0%** (the §3.6 parity guard) and **zero fault counters** across the whole
+   run.
+5. **Every control of §6.2 passes**, including op coverage, and **the mirror cell is not among them.**
+6. **The result is reproduced by a second, independently built arm** on the same spec. The seeds share
+   a build and an adapter; §9.5's shared-adapter defect is what that is worth as a risk.
+
+---
+
+## 4. Tier A: the call on the four inherited items
+
+### 4.1 A1 — done, banked, and not available to spend
+
+The adapter guard is shipped in `bot:pf2` and every corrected number in this document already
+contains it. **It is worth +3.44 points of measurement and zero points of strength.** [measured,
+corrected, 6 seeds] The drafts' +4.00 came from 300-game cells on the native-FP build and is
+superseded. **Delete the row; do not add it to any stack.**
+
+The associated restatement matters more than the number: post-fix declare accuracy is **98.42%
+against SESTINA's 98.46%**, which is **parity**, not "above 97%". That is what retires the whole
+declaration channel as a target, and it is why §2 is about proof latency rather than about declaring.
+
+### 4.2 A2 — REJECTED. The defect was in the adapter, and `us54` genuinely has no pass
+
+The drafts propose changing `decide.ts:540` so that an empty hand no longer implies compulsion,
+calling it an XS robustness fix. **It is not a robustness fix. It is a rules change to `us54`, and
+Monet does not make it.**
+
+**The source facts, all verified directly in `C:/Projects/FishAI/lib/engine`:**
+
+- `mustDeclareNow` (`decide.ts:534`) returns
+  `windowCannotClose(view) || (view.turn === view.seat && !viewerCouldAskIfWindowClosed(view))`.
+- `viewerCouldAskIfWindowClosed` (`decide.ts:548`) returns false on `view.hand.length === 0`
+  (`decide.ts:550`). Its own doc comment says it is *"exactly the engine's own `turnHolderCanAsk`,
+  restated over the public view"*.
+- `turnHolderCanAsk` (`helpers.ts:29`) contains `if (s.hands[seat].length === 0) return false`.
+- `reduceDecline` (`reduce.ts:588`) calls it at **`reduce.ts:595`** and returns
+  `err('MUST_DECLARE', ...)` when it is false.
+
+**So `decide.ts:540` is not a trap the bot fell into. It is the bot's copy of the engine's legality
+rule.** Changing one without the other makes `decide` emit a `decline` that its own reducer refuses,
+in exactly the position the change targets — and the server's bot chain breaks on the first
+`if (!r.ok)`, leaving the room stuck.
+
+**And the behaviour is intended, by the owner, in writing.** `RULES_US54.md` §4 carries an `[OWNER]`
+ruling: **"A cardless seat forced to declare gifts the set away, and that is intended."** A set still
+resolves, which is all termination requires; a team that has run out of cards does not get to stall
+the game by declining forever.
+
+**The defect was a rules-dialect mismatch at the boundary, and the boundary is where it was fixed.**
+FishLab's engine has a `pass` op for that position; `us54` does not. Translating between two dialects
+is the adapter's job, A1 did it, and it is the correct place for it.
+
+**What Monet does instead, and it is the actionable version of A2's intent.** Make the dialect
+boundary explicit and *asserted*, not implicit and *inferred*. The adapter's `new_game` handler gains
+a **dialect capability descriptor** — does the host have a pass? what is its win condition? does it
+resolve all nine half-suits? — and every position where FishAI's rules and the host's rules differ
+becomes a named, asserted translation with a counter, rather than a silent identity. **The next
+dialect difference should be caught by an assertion in an hour, not by a three-point hole in a
+published win rate.** [design, not measured]
+
+**If the owner does want `us54` to give a cardless turn-holder a pass**, that is a legitimate rules
+question and it is his call — but it is a change to `reduce.ts`, the invariants, and the 10,000-game
+fuzz gate (`RULES_US54.md` §10 item 10), it needs `[OWNER]` sign-off in `RULES_US54.md` §3.2 and §4,
+and **it invalidates every home measurement in this repository**. It is not an XS item and it is not
+Monet's to take.
+
+### 4.3 A3 and A4 — the record and the instrument
+
+A3's remaining items are in §1.4 and land in v0.1. A4's instrument check lands in v0.1; its sizing is
+withdrawn in §3.1's blockquote.
+
+---
+
+## 5. What will not close the gap
+
+Each row carries the corrected measurement that kills it. Where the corrected measurement *weakened*
+the case, that is stated rather than buried.
+
+| do not do | because | bridge |
+|---|---|---|
+| Tune any declare threshold or eagerness knob against lock hold | Nine of ten sit behind `evClaim`, which fires on 1.7% of home declares and 0.78% abroad; `allOnTeam` rejects 99.72% of plans before a threshold is read; four of five knobs reproduce base to four decimals and the fifth buys speed at −0.97 [−2.44, +0.50] | home + defective, paired |
+| Treat declare accuracy as a target | **98.42% vs 98.46% is parity.** Believed − realised is **−0.000776** over 3,858 declares, and the certainty tier is **3,795 / 3,795 exact** on one bank and **3,924 / 3,924** on another. Monet is not lying to itself about what it knows | corrected |
+| Replace the greedy allocator with an exact joint maximiser **over the same marginals** | Measured null: it disagrees with greedy on 4 of ~2,400 emitted declarations, and 46.52% → 47.97% in replay against the 128-world posterior's 50.76%. **The marginals are the defect, not the allocator** | defective, paired |
+| Rewrite `planClaim`'s probability without rewriting its belief | p equals the exact urn probability of its own allocation to four decimals; the shipped allocation **is** the model argmax; a joint MLE over the same marginals is worse (44.45% vs 46.85%) | home |
+| Work on the forced endgame | Corrected: Monet 60.76% vs SESTINA 46.21%, Wilson intervals **overlapping**; resolving the sign needs ~40,000 **deals**. Monet may already be the better team there | corrected |
+| Work on the ask *ranker* | SELECTION is **+5.49** in Monet's favour at matched positions. POSITION is **−10.38**. Effort on the ask score is effort on a symptom | defective; the starting quantity is within 0.02 pts of corrected, which pins the level but **not** the position distribution the term is about (§0.2, §7.6) |
+| Ship `conceal: 1` on top of `defuse: 1` | CONCESSION §5a.3 measures conceal alone at **−0.1483 ± 0.2571** against an MDE of ~0.38, and §8a.1 lists that exact row as *below floor — not resolved*. Its paired **+0.97** with defusal does clear at 2.5×. **The asymmetry must be stated, and both must be measured against a common `defuse: 0` baseline** | home |
+| Spend more on `containedPass` or ASKING §4.2's conceded-turn fix | `contained-pass` fires 6 times in 240 games; the `missTarget` tiebreak moves the ask on 0.79% of decisions; `containedPass` measured **+0.100 [−0.053, +0.253]** over 6,000 games/arm | defective, paired |
+| Re-fit `declareEagerness` against a foreign opponent | **The premise is gone.** The 6.5-point cross-play accuracy gap it was fitting against was the bridge. At 98.42% vs 98.46% there is nothing to re-fit, and the ≤ +2-point estimate has no derivation left | corrected |
+| Poll the window more aggressively | 3 extra polls −1.81 (unresolved), 20 polls **−4.19** (clears). The drafts' "corner of the knob" asymmetry is refuted; more polling is measurably worse at the far end and unresolved at the near one | corrected |
+| Add determinization search **as the next step** | Not because it is measured negative — **that refutation did not reproduce** (§3.9) — but because it costs 578× and cannot be priced until v0.6 exists | corrected |
+
+---
+
+## 6. Measurement discipline
+
+### 6.1 The standard cell
+
+- **200 deals × 6 rotations = 1,200 games**, duplicate deals, so the deal is never a confound.
+- **Build:** `g++ -O2 -std=c++20 -ffp-contract=off`, **without** `-march=native`. Native enables FMA,
+  changes tie-breaks and makes FishLab's published identity digests irreproducible; the portable
+  build reproduces the generic digest and **all three of their identity controls PASS on it**. Require
+  all three before a game is played.
+- **Opponent:** the frozen v1.0 spec, verified byte-identical in its `spec` and `allparamsSpec` fields
+  to the release asset before the cell is trusted:
+
+  ```
+  v07:r12=25,rtie=1,pool=-1,oppfloor=-1,force=1000000,askfloor=-1,stall=12,s1=1,det=12,cand=4,kappa=2.5,rbelief=indep,depth=12,maxq=26
+  ```
+- **`--games=N` is deals**, not games. Total games = N × rotations.
+- **Handshake `timeout_ms` = 90,000.** The 20 s default expires while Node type-strips the TypeScript
+  engine under host contention.
+- **Quiet host.** Cell wall times ranged 42 s to 1,025 s under twelve concurrent sibling containers.
+- **Clean the shared bot tree.** ~75 bot packages are currently registered in it. An arm built in a
+  contaminated tree measures its neighbour — the same failure mode as the roster-defuse contamination
+  already on record. **Name the arms that must survive a cleanup** (`bot:pf2` and Monet's own) and
+  delete the rest.
+- **Bot ids are lowercased on install.** Two cells in the re-measurement failed with
+  `no bot package called 'p2trS' is installed`. Register lowercase.
+
+### 6.2 Controls — and the mirror cell is not one of them
+
+> **This is the lesson that cost this project a published wrong number, and it belongs in the process
+> rather than in a footnote.** The first version of CROSSPLAY §9 called a FishAI-vs-FishAI mirror
+> *"the control that makes any number mean what it says"*. It is not a control. A mirror plays one
+> policy against itself on duplicate deals, every deal is replayed with the seats rotated, and the
+> aggregate is **forced to 50% by construction before a card is dealt**. Their engine prints the
+> reason on every mirror cell: `MIRROR CELL: win-rate effective sample is 0 (per-deal outcome is
+> deterministic). Rate denominators are halved.` **It returned a perfect 50.0000% across a
+> 3.44-point hole**, because the defect affected both mirrored seats identically. **A control that
+> cannot fail is not a control.** Keep the mirror as a smoke test if you like. It must never appear
+> in a control table, and no milestone's acceptance may depend on it.
+
+**What to use instead. All mandatory, all cheap.**
+
+| control | requirement |
+|---|---|
+| **Op coverage** | Every protocol op exercised, **with a written expectation for each, recorded before the run**. `opPass > 0` is the tripwire that would have caught the bridge defect in an hour. Corrected reference values on one cell pair, seed 90210: `opAsk` 50,649 · `opPoll` 354,303 · `opPass` **0 → 176** · `passfixDeclines` 182 · `opForced` 445 |
+| **Byte-exact null arm** | The arm with the mechanism off reproduces the shipped policy to four decimals. Worked precedent: `bot:fishai-base` reproduced the published defective ladder exactly (three-seed mean 24.2222% against the published 24.22%), and `arm_passfix` reproduced `bot:pf2` at 28.25 / 52.3193 / 98.42 / 9.30118 |
+| **Cross-instrument identity pin** | A newly built arm reproduces a *known* arm's numbers on a *known* cell before any of its own numbers are read |
+| **Paired deals** | Both arms of every contrast play identical deals and rotations, and every contrast is reported against the **paired per-deal** floor |
+| **Fault counters** | `planMismatch`, `booksDisagree`, `successHolderClash`, `viewInvariant`, `declareShapeBad`, `traceFallback`, `askNotAsk`, `forcedOwnTeamOut`, `forcedNone`, `pollNotWindowMove`, `passNotPass` all zero; `auditViolations` zero; action-limit games 0%. **Necessary, not sufficient** — all eight read zero across the defective run |
+| **Calibration harness** | From v0.5: believed vs realised per decile on ≥ 20,000 decisions, on every cell |
+| **Completion** | Every cell must have produced a win-rate line. Cells have died silently on handshake timeouts. **Check, do not assume** |
+| **Home regression** | Every shipped change gets ≥ 800 `us54` duplicate pairs before it is called a ship |
+
+> **Correction to the op-coverage assertion the audit proposed.** *"`opForced` within 0.01–0.05 per
+> game"* **would fail on every corrected cell.** `opForced` counts forced *polls received* and runs at
+> **0.371/game**; the 0.01–0.05 band belongs to the engine's `forced decls` line, which counts
+> declares *emitted* and runs at 0.02/game. **The assertion must name which of the two it means.**
+> [measured, corrected]
+
+### 6.3 Power — the floors are per deal
+
+The engine prints both floors on every cell, verbatim:
+
+```
+power  98/sqrt(N): +/-2.83 pts unpaired over 1200 games; +/-6.93 pts over 200 deals (the paired
+       floor).  1 pt needs 9604 games, 0.5 pt 38416, 0.25 pt 153664
+```
+
+**The per-deal floor governs.** A cell is 1,200 games but only 200 deals, replayed six ways.
+
+| sample | seeds | **deals** | **paired floor** |
+|---|---:|---:|---:|
+| one cell | 1 | 200 | **±6.93** |
+| three seeds | 3 | 600 | **±4.00** |
+| five seeds | 5 | 1,000 | **±3.10** |
+| six seeds | 6 | 1,200 | **±2.83** |
+| twelve seeds | 12 | 2,400 | **±2.00** |
+| — | 48 | 9,604 | **±1.00** |
+
+> **Correction to the drafts.** `NEXT-GENERATION` §6.3 labels this row **"N (games)"**, which
+> understates every floor in the programme by **2.45×**. Under that label a standard cell reads
+> ±2.83 when it actually resolves ±6.93; B3's four-arm design was specified at 2.45× the power it
+> had; the "9,604 games per point" line and the forced endgame's "~40,000 games" are both quoted in
+> the wrong unit. **Wilson intervals of ~±2.4 points per cell treat 1,200 games as independent draws.
+> They are not.**
+
+**Rules that follow, and they are binding:**
+
+- **No milestone is accepted on a single cell.** Any single-cell difference under ~6.9 points is not
+  resolvable, full stop.
+- **Do not run a win-rate A/B whose predicted effect is under the cell's floor.** v0.2 (0.1
+  cards/game) and the forced endgame (≤ 0.48 points, ~40,000 deals) both fail this test and are
+  verified on mechanism counters instead.
+- **Report the interval, and report when the effect is under the floor.** CONCESSION §8a.1 already
+  lists which published numbers sit below their instrument's resolution. Do not add to it silently.
+- For home `us54` duplicate-pair cells, use **that cell's own SD**, never the generic one: the generic
+  per-pair SD is 3.15–3.44 sets, CROSSPLAY §3's harness runs at 4.57–4.95, and two-adaptive-arm cells
+  run far lower. Interval coverage at N = 400 is **8.0% false positives [5.2%, 11.7%]**, excluding 5%.
+  **Prefer N = 800.**
+
+### 6.4 The opponent panel
+
+| opponent | why it is in the panel | Monet's inherited level |
+|---|---|---:|
+| **SESTINA v1.0** | the headline and the target | 27.83% (3 seeds) / 27.08% (6) |
+| **v0.6, v0.5** | non-searching, and Monet loses to both. A change that closes the SESTINA gap without moving these is a fit, not a fix | 32.86% / 33.31% |
+| **v0.4** | **the rung Monet fails, and the rung that carries the lineage's whole strength.** Every belief milestone is gated here | 34.25% |
+| **v0.3, v0.2** | the rungs Monet clears. Regression guards | 62.06% / 67.42% |
+| **the oracle arm** | the **ceiling control** for the cashing channel. Built once, on the shipped belief at λ = 0 — **it must be re-built on each new belief before it is quoted as that build's ceiling** (§3.6 item 5) | 33.58% (3 seeds), shipped belief only |
+| **home `us54` self-play** | every shipped change needs a home regression | — |
+| ~~FishAI mirror~~ | **struck.** Zero effective sample; see §6.2 | — |
+
+`v01` is not in the panel — the engine rejects the spec.
+
+### 6.5 Holdout discipline, and the seeds are all spent
+
+**Every seed this project has named in an artifact is now spent.** The headline uses 90210 / 4242 /
+7011001 / 13579 / 24680 / 31415; the ladder uses the first three; 31415 was additionally burned as
+the defusal holdout; and 31 / 515253 — the "reserve" the drafts name — were used as fitting banks in
+the original ablations.
+
+**Rules:**
+
+- **Draw three new banks and write them into the milestone's artifact before the fitting cell runs.**
+  Reserved from this document forward and not to be used for any fit: **8675309 / 271828 / 1618033.**
+- **Fit on 90210 / 4242. Confirm on 7011001 plus at least one reserved bank.**
+- **Never move a shipped roster constant on a cross-play fit.** CROSSPLAY §7 and §9.6. A constant that
+  moves because SESTINA liked it has burned SESTINA as a holdout.
+- **Common baseline.** Anything that promotes licensed asks — the defusal appetite, licence
+  conditioning, `conceal` — is measured in a factorial against a common `defuse: 0`, λ = 0 baseline.
+  **Measured against its own baseline the calibration fix looked like a flat +0.04 ± 0.41; against
+  the common one it is a substitute.** This has already cost the project one wrong conclusion.
+- **Name which banks are spent and which are held in every document that quotes a number**, or the
+  holdout rule cannot be enforced by a reader.
+
+---
+
+## 7. How we will know Monet is not fooling itself
+
+The bridge defect is the best-documented failure this project has, and it happened despite a control
+table, two independent adversarial audits, and eight fault counters reading zero. The lesson is
+specific enough to be operationalised.
+
+**7.1 A counter reading zero where zero is impossible is a defect, not a coverage gap.**
+
+`opPass` read **0 across 3,600 games** and was recorded in the first version of CROSSPLAY §9 as
+*"unreached, not verified"*. It was not an unreached branch. It was the symptom, printed in the
+artifact, of a three-point hole. It now reads 176 on a single cell.
+
+**The rule Monet adopts:** every counter gets a **written expected range before the run, not after**.
+A counter outside its range halts the cell. **Zero is a value that must be explained, never filed.**
+If a zero has no written explanation, it is a defect until proven otherwise.
+
+Two zeros in the current codebase *are* explained, and they are the template for what an acceptable
+explanation looks like: `conceal` fired on **0.000% of 10,370 asks** because it is switched off at
+every shipped roster tier (`style.ts:208`), and `contained-pass` fires 6 times in 240 games because
+the position it needs is rare. Both are written down. Neither is a defect.
+
+**7.2 A control that cannot fail is not a control.**
+
+Any control whose result is forced by construction is deleted from the table, not demoted. The mirror
+cell is the worked example (§6.2). When a control returns a perfect score, the first question is
+whether it *could* have returned anything else.
+
+**7.3 An audit returning "sound with caveats" is a fact about the audit.**
+
+Two independent adversarial audits passed the defective bridge. Record that as evidence about audits,
+not as reassurance about the code. **Audits do not substitute for an assertion that fires.**
+
+**7.4 Mechanism markers move before win rates, so measure them first.**
+
+Every milestone in §3 states a mechanism marker as its **primary** metric and win rate as its last.
+Win rate is the noisiest measurement in the harness — a standard cell resolves ±6.93 — and it is the
+slowest to respond. Lock hold, DEAD counts, calibration bias and declaration counts all resolve at
+far smaller N, and each of them names *which* mechanism moved.
+
+**7.5 The new self-deception risk that arrives with the posterior, and the instrument for it.**
+
+**From v0.5 onward Monet emits a probability where FishAI emitted a certainty, and a probability can
+be wrong in a way a certainty cannot.** The current evidence is unusually clear about which tiers are
+trustworthy and which are not: [measured, corrected, seed 90210]
+
+| tier | n | believed | realised | believed − realised |
+|---|---:|---:|---:|---:|
+| certain-claim | 3,110 | 1.000000 | 1.000000 | **0.000000** |
+| own-book-claim | 685 | 1.000000 | 1.000000 | **0.000000** |
+| ev-claim | 30 | 0.745540 | 0.666667 | +0.078873 |
+| must-declare | 24 | 0.484425 | 0.583333 | −0.098909 |
+| forced-claim | 8 | 0.233917 | 0.625000 | −0.391083 |
+| **all** | **3,858** | 0.993003 | 0.993779 | **−0.000776** |
+
+**The certainty tier is exact — 3,795 / 3,795 on this bank and 3,924 / 3,924 on a second.** And
+**`ev-claim` is not calibrated and is not miscalibrated: it has no population.** Its believed −
+realised is **+0.0789 against SESTINA and −0.1291 against v0.5** — the sign flips between banks on
+n = 30 and n = 34.
+
+**The consequence for Monet is exact and uncomfortable: today 96.2% of declares carry zero uncertain
+cards, and the posterior's entire purpose is to move them into a tier that currently has thirty
+samples and an unstable sign.** So:
+
+- **The calibration harness ships before the posterior does**, not alongside it (§3.5 acceptance item
+  1). Believed vs realised, per decile, ≥ 20,000 decisions, on every cell.
+- **The declare-accuracy parity guard (≥ 98.0%) is a hard gate at every milestone from v0.6.** Monet
+  inherits parity with the frontier on the one channel it has already won. Trading it for speed is
+  the single most likely way for this roadmap to produce a worse bot with a better story.
+
+**7.6 Never quote a number across bridges.**
+
+The whole re-measurement exists because a defective-bridge level was about to be subtracted from a
+corrected-bridge level, which would have priced the project's largest rewrite at about +2 points.
+**Every figure in this document carries its bridge. Every future figure must too.** A difference
+between two bridges is not a measurement of anything.
+
+**And "replay over recorded positions" is bridge-independent only for claims about the decision
+function *given* a position.** It is not bridge-independent for any claim whose answer depends on
+which positions arise — the allocator comparison (46.52 / 47.97 / 50.76, §3.6 and §5), the
+ownership-onset shares (2.90%, 12.73%, §3.6) and the POSITION/SELECTION decomposition (§0.2) are all
+of that second kind, and all were replayed over positions generated by an arm that spent ~253 extra
+sets per cell. **The distinction was asserted as a category and never tested. Re-recording one cell
+of positions on `bot:pf2` and re-running one replay settles it, and it has not been run.**
+[inferred] Until it is, every `[defective]` label on a distribution-dependent replay means
+*unverified*, not *safe*.
+
+---
+
+## 8. Numbers this document refuses to quote, and what is still open
+
+### 8.1 Withdrawn from the drafts
+
+| withdrawn | was | status |
+|---|---|---|
+| **+4.00** for the bridge repair | A1's gain | superseded by **+3.44** [measured, corrected, 6 seeds], and **already banked** — not available to any stack |
+| the **5.24-point declare-accuracy deficit** | the mechanism of the loss | **reversed.** 98.42 vs 98.46 is parity |
+| **24.22% / 30.17% / 24.42% / 69.83%** | levels vs SESTINA | all defective-bridge. Corrected: **27.83% / 33.58% / 27.83% / 66.42%** |
+| **"the remaining ~40 points are unattributed"** | §5.2's conclusion | **double-counts.** It uses the A-vs-B spread instead of the gap to even. Corrected: **16.42 points** |
+| **"C1 alone, ~30% against SESTINA"** | §5.3's step one | **invalid as written** — it invites a cross-bridge subtraction. The oracle is **33.58%**, and the delta **+5.75 survives exactly** |
+| **+3.333, positive on all five seeds** | the defusal appetite | **+2.81 on six seeds, positive on 5 of 6 — seed 24680 is −1.83 — and it does not clear its floor** |
+| **"the ladder peaks at 4"** | the appetite's shape | **unresolved.** Every rung-to-rung contrast above 0 is inside ±3.10 |
+| **+7.0 for λ** | the least-supported large number | **supported, but it is a number about a different bot**: +7.83 at `defuse: 0`, **+3.71** on the shipped configuration |
+| **+1.91 for the denial component** | C2's price | **does not clear.** Corrected +2.58 against a ±4.00 paired floor |
+| **−3.7 to −4.2 for search** | §4.1's refutation | **did not reproduce.** 26.75 / 28.00 / 27.19 against 27.83, all unresolved |
+| **"196 of 299 wrong declares in the terminal half-suit"** | A4's sizing | **the sizing does not survive.** 24 of 3,858 traced; the terminal bucket is unobservable from the guest side, not empty — the implied total is **24–69**, not 299 |
+| **"the mirror makes any number mean what it says"** | the control table | **void** (§6.2) |
+| **"N (games)"** on the power table | §6.3 | **wrong unit.** The per-deal floor governs; every floor in the drafts is 2.45× too tight |
+| **v0.4 at 30.00%, v0.3 at 55.17%** | the lineage anchors | defective-bridge. Corrected: **34.25%** and **62.06%** |
+| **64.08%** forced-endgame accuracy | C3's abroad figure | quote **62.5%** from the brief instead; corrected the channel reads 60.76% against SESTINA's 46.21%, **overlapping** |
+| **"~15×"** for per-decision adaptation | CONCESSION §0's table | quote **11–12×** from CONCESSION §8's body, which is the measurement. Fix the table there too |
+
+### 8.2 Open questions this roadmap does not answer
+
+- **The defusal ladder's peak is not located.** Five seeds per rung buys ±3.10 and every contrast
+  among rungs 0.5–8 is smaller than that. Resolving it needs ~4× the deals per rung. v0.4 is allowed
+  to conclude "unresolved" and freeze.
+- **The `r12` denial component's win-rate price is unresolved** at +2.58 against ±4.00. Needs ≥ 1,200
+  deals per arm.
+- **The forced-endgame sign is unresolved** and needs ~40,000 deals. Not worth it.
+- **The defuse × λ interaction (−4.12) does not itself clear** at 1,200 deals per arm, though both
+  main effects do. The substitution is established; its size is not.
+- **The home calibration figure was not re-measured.** The drafts' "+0.0010 over 3,055 home declares"
+  is outside the cross-play instrument; a second cross-play bank (v0.5, 4,025 declares,
+  all-tier −0.000092) was substituted and is labelled as such.
+- **~45 of Monet's wrong declares per cell are invisible to the guest-side trace** (it sees 88.3% of
+  side-A declarations, 3,858 of 4,367). The total is 24–69 rather than 24, and **the terminal
+  half-suit is exactly the bucket the guest seat cannot see** — the engine's arithmetic says it is
+  declared in about 94.6% of games, so its wrong-declare share is a residual of the 24–69 range and
+  is not measured. Reading it out needs an engine-side declare log, not a guest-side trace.
+- **The base rate of teammate-missed asks among all events in the lagging window** is not counted.
+  Without it, §3.7(a)'s 21.6% is a last-event attribution, not a lever, and v0.7's first item is
+  sized on an unverified premise. It is a count over an event stream that already exists.
+- **Whether search over a *correct* posterior is worth anything** is the single largest unknown in
+  this roadmap, and it cannot be measured until v0.6 exists (§3.9).
+
+---
+
+## 9. Licensing
+
+github.com/dylann4500/FishLab carries **no licence file**, so default copyright applies. Their
+repository is read for **ideas, mechanism designs and measured findings only**. No code or prose of
+theirs appears in FishAI or in Monet. Their published numbers are cited as theirs, with attribution.
+The engine clone and the adapter live only in a session scratchpad and are never committed.
