@@ -1,7 +1,9 @@
-# FishAI v1.0 — a FishLab bot package
+# Bass v2.0 — a FishLab bot package
 
-A bot that plays Canadian Fish (Literature) in the US 54-card student dialect. It is the
-adaptive engine from the [FishAI](https://github.com/MeagerPotato/FishAI) repository, exported
+A bot that plays Canadian Fish (Literature) in the US 54-card student dialect. **Bass** is the
+agent line the [FishAI](https://github.com/MeagerPotato/FishAI) project first shipped — v0.5
+through v2.0, formerly published as "FishAI vX" — and this is its last, frozen version, the
+baseline the project's Monet line is measured against. It is that engine exported
 whole: the same rules engine, the same inference layer, the same nine play styles and the same
 best-response machinery, with the TypeScript annotations stripped and a protocol adapter bolted
 on the front.
@@ -36,6 +38,14 @@ declare thresholds, ask weightings, how much information to leak, how long to ho
 ask-licence — so what varies between them is *style*, not strength. The engine reads which of
 the nine each opponent seat most resembles from the public log alone, and plays the style that
 scores best against that belief.
+
+The version number names the roster it plays, not the machinery. The four stages above are
+v1.0's and none of them changed at v2.0; what v2.0 added is a **defusal term** on every style
+(`defuse: 1` on the roster's shared base, CONCESSION.md) — a bot that has watched you show a
+basis in a set it holds cards of will go after that card to take the licence back. The
+concealment half of that layer is dormant here, as in the repository. So this is v1.0's
+adaptive engine playing v2.0's styles, which the archive tag `bass-v2.0` pins to the commit and
+which is why it is not called v1.0.
 
 ### The one configuration choice, and why
 
@@ -121,7 +131,7 @@ than voiding it, and a cardless player who may still declare.
 ## Checking it
 
 ```bash
-./fish bots add fishai-1.0.zip
+./fish bots add bass-2.0.zip
 ./fish bots check fishai
 ```
 

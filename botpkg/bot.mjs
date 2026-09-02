@@ -8,10 +8,16 @@
  *
  * ## What is seated here
  *
- * FishAI v1.0 — the adaptive engine (ADAPTIVE.md): observe the public log, classify each
- * opponent seat over the nine calibrated style fingerprints, best-respond over the measured
- * 9x9 counter table, and play the chosen style through the v0.5 pipeline at hard skill. All
- * four stages run on every decision.
+ * **Bass v2.0.** Bass is the name of the agent line this project first shipped (v0.5 through
+ * v2.0, formerly published as "FishAI vX"); FishAI is the project. This package is the line's
+ * last and frozen version — the baseline the Monet line is measured against — and it is two
+ * things at once, both real: the *architecture* is v1.0's adaptive engine (ADAPTIVE.md) —
+ * observe the public log, classify each opponent seat over the nine calibrated style
+ * fingerprints, best-respond over the measured 9x9 counter table, and play the chosen style
+ * through the v0.5 pipeline at hard skill, all four stages on every decision — and every style
+ * it can delegate to carries v2.0's defusal term (CONCESSION.md; `defuse: 1` on the roster's
+ * shared base). Calling it "v1.0" would hide a term that changes what the bot does with its
+ * turn; calling it "v2.0" is right because that is the version whose roster it plays.
  *
  * The **anchor is Punter, not the repository default of Balanced**, and that is the one
  * deliberate configuration choice in this package. It is made on the project's own measurement
@@ -56,8 +62,8 @@ import { decide, decideExplained, planClaimFor, STYLE_ROSTER } from './engine/bo
 import { legalAsksFromView } from './engine/helpers.js'
 import { assignmentsToOwner, buildDeckMap, buildView, declinedTicks } from './bridge.mjs'
 
-const NAME = 'FishAI v1.0'
-const VERSION = '1.0'
+const NAME = 'Bass v2.0'
+const VERSION = '2.0'
 const PROTOCOL = 'fishlab-json-v1'
 
 const DEBUG = process.env.FISHAI_DEBUG === '1'

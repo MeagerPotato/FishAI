@@ -3,7 +3,7 @@
  *
  *     node scripts/build-bot-package.mjs
  *
- * Produces `dist/botpkg/` (the unpacked package) and `dist/fishai-1.0.zip` (the upload).
+ * Produces `dist/botpkg/` (the unpacked package) and `dist/bass-2.0.zip` (the upload).
  *
  * ## What it does, and the one thing it must not do
  *
@@ -42,7 +42,7 @@ const ENTRY = join(ROOT, 'lib/engine/bots/index.ts')
 const ENGINE_ROOT = join(ROOT, 'lib/engine')
 const ADAPTER_DIR = join(ROOT, 'botpkg')
 const OUT_DIR = join(ROOT, 'dist/botpkg')
-const ZIP_PATH = join(ROOT, 'dist/fishai-1.0.zip')
+const ZIP_PATH = join(ROOT, 'dist/bass-2.0.zip')
 
 /* ------------------------------------------------------- the engine sources --- */
 

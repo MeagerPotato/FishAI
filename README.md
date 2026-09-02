@@ -175,7 +175,7 @@ The engine can be exported as a **FishLab bot package** — a zip that a third-p
 and seats over a line-delimited JSON protocol, with no shared code between the two projects.
 
 ```bash
-npm run botpkg        # -> dist/botpkg/ and dist/fishai-1.0.zip
+npm run botpkg        # -> dist/botpkg/ and dist/bass-2.0.zip
 npm run botpkg:check  # 40 games over real stdio + the branches those games cannot reach
 ```
 
