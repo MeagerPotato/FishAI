@@ -164,33 +164,38 @@ function opponentsOf(seat) {
  * window is open, because RULES_US54.md §3.1 removes NOT_YOUR_TURN as a declare error. So it is
  * not a description of the position here; it is the field that carries the obligation.
  *
- * And the two hosts disagree about that obligation. RULES_US54.md §3.2 makes `decline` illegal
- * in two positions, because under §3 the declare window is the only thing standing between the
- * table and a state with no legal action at all. FishLab has neither position: §5.2's poll
- * always accepts `{"action":"none"}`, and §7 lists no "you had to declare" fault. It has
- * separate machinery for both —
+ * And on exactly one position the two hosts disagree about that obligation: **a seat holding
+ * the turn with an empty hand.** RULES_US54.md §3.2 makes `decline` illegal there. FishLab does
+ * not have the position at all — §5.2 sends such a seat a `pass` op, not an ask it cannot make,
+ * its poll always accepts `{"action":"none"}`, and §7 lists no "you had to declare" fault.
  *
- * - **a cardless seat holding the turn** gets §5.2's `pass` op, not an ask it cannot make;
- * - **a whole team out of cards** triggers §4's forced endgame, whose `forced` sweep walks a
- *   ladder of confidence thresholds so the best-informed seat answers first.
- *
- * Presented as a `us54` window, both of those read as MUST_DECLARE, and `decideWindow` answers
- * them from `forcedClaim` — "the least-bad claim", which applies no threshold at all because
- * under §3.2 there is genuinely nothing better to do. Sent to this host it is a *volunteered*
+ * Presented honestly as a `us54` window it reads as MUST_DECLARE, and `decideWindow` answers it
+ * from `forcedClaim` — "the least-bad claim", which applies no threshold at all because under
+ * §3.2 there is genuinely nothing better to do. Sent to *this* host it is a **volunteered**
  * declaration of a set the planner has often already proved is not the team's: measured against
  * the built package before this guard existed, a cardless turn-holder answered a poll with a
  * declaration at confidence 0.00004, and — since §5.2 re-polls after every declaration that
  * lands, on an unchanged condition — kept answering until every half-suit still in play had
- * been gifted to the opponents.
+ * been gifted to the opponents. So that position, and only it, is presented as somebody else's
+ * turn.
  *
- * One obligation does survive the trip, and it is the one §3.2 lists second: a turn-holder that
- * still holds cards, whose opponents still hold cards, and whose hand is a union of complete
- * half-suits. Decline there and the host's next request is an `ask` this hand cannot answer,
- * which stops the game (§7). That position keeps its real turn, so the engine forces exactly as
- * it would in-repo.
+ * **Only it, because an earlier version of this guard escaped a second position and should not
+ * have.** That version also substituted when every opponent of the turn-holder was out of cards
+ * — the engine's `windowCannotClose` — on two stated grounds: that `us54` could not reach it,
+ * and that §4's forced sweep would resolve it better anyway. Both were wrong.
+ * `botpkg-selftest.mjs` reaches it in a real declare window (game 50, seat 4, counts
+ * [2,0,7,0,3,0]), where the engine issues MUST_DECLARE and the in-repo bot declares HIGH-D; and
+ * a seat whose own team holds every remaining card is not deferring to a better-informed sweep
+ * there, it is declining sets it can already prove. It was this package's only divergence from
+ * native play, and `botpkg-selftest.mjs` now reports none.
  *
- * Everywhere else the two rule sets already agree and the real turn is presented unchanged. The
- * substitution is deliberately the narrowest thing that works — an opponent seat, which makes
+ * Everywhere but the stranded turn the real turn is therefore presented unchanged, so the
+ * engine forces exactly as it would in-repo — including the obligation §3.2 lists second, a
+ * turn-holder that still holds cards and whose hand is a union of complete half-suits. Decline
+ * there and the host's next request is an `ask` this hand cannot answer, which stops the game
+ * (§7).
+ *
+ * The substitution itself is the narrowest thing that works — an opponent seat, which makes
  * `windowCannotClose` read "is my own team out of cards", the condition `decideWindow` already
  * answers with an unconditional decline for the same reason (§4: every assignment would name an
  * empty seat).
@@ -203,10 +208,13 @@ function pollPresentation(state, base) {
   // `viewerCouldAskIfWindowClosed`: the counterfactual "could this seat ask if the window shut
   // onto it", which is the question §3.2 keys MUST_DECLARE on.
   const couldAsk = turn === seat && legalAsksFromView({ ...base, declareWindow: undefined }).length > 0
-  const us54Forces = oppsOfTurnAllOut || (turn === seat && !couldAsk)
-  const obliged = turn === seat && base.hand.length > 0 && !oppsOfTurnAllOut && !couldAsk
-  if (!us54Forces || obliged) return { turn, obliged }
-  return { turn: opponentsOf(seat)[0], obliged: false }
+  // The substitution fires on exactly one position, and it is deliberately the only one: a
+  // seat holding the turn with an empty hand. Presented honestly that is a `us54` MUST_DECLARE
+  // with nothing to declare from, which is the gift this guard exists to stop. Every other
+  // position keeps its real turn, so the engine forces there exactly as it would in-repo.
+  const stranded = turn === seat && base.hand.length === 0
+  if (stranded) return { turn: opponentsOf(seat)[0], obliged: false }
+  return { turn, obliged: oppsOfTurnAllOut || (turn === seat && !couldAsk) }
 }
 
 function clamp01(x) {

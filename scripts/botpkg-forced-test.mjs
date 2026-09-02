@@ -201,21 +201,32 @@ console.log("\n6. declining a poll is always legal here — the MUST_DECLARE pos
   // separate machinery for both — §5.2's `pass` op and §4's forced sweep — so `{"action":"none"}`
   // is always legal on a poll, and a declaration volunteered there is a pure gift.
   //
-  // Neither position is reachable in a us54 game, so botpkg-selftest.mjs cannot referee them
-  // (it now sends the first by hand); these are the constructed pins.
+  // Position (a) is not reachable as a us54 poll — the engine moves the turn off an empty hand
+  // before any window opens — so botpkg-selftest.mjs sends it by hand. Position (b) was once
+  // believed to be unreachable too, and is not; see below. These are the constructed pins.
   // (a) cardless seat holding the turn — FishLab's `pass` position.
   const cardless = { ...stateFor({ hand: [], counts: [9, 9, 0, 9, 9, 9] }), turn: 2 }
   const a = await send({ op: 'declare_poll', state: cardless })
   check('a cardless turn-holder declines instead of gifting', a.action === 'none', JSON.stringify(a))
 
-  // (b) every opponent out of cards — FishLab's forced-endgame trigger, which its own
-  //     confidence ladder is there to resolve. The poll must not pre-empt it.
+  // (b) every opponent of the turn-holder out of cards. This was once deferred to §4's sweep,
+  //     on the stated grounds that `us54` could not reach it. It can, and it is not even rare:
+  //     the position is exactly `windowCannotClose`, and botpkg-selftest.mjs reaches it in a
+  //     real declare window (game 50, seat 4, counts [2,0,7,0,3,0]) where the engine issues
+  //     MUST_DECLARE and the in-repo bot declares HIGH-D. Deferring was therefore both a us54
+  //     illegality and this package's only divergence from native play — and it was never free,
+  //     since a seat whose own team holds every remaining card is declining provable sets. The
+  //     poll answers it, exactly as the engine would.
   const oppsOut = { ...stateFor({ hand: ['2S', '3S', '9H', '8D'], counts: [4, 0, 4, 0, 4, 0] }), turn: 2 }
   const b = await send({ op: 'declare_poll', state: oppsOut })
-  check('an ordinary poll defers to the forced sweep when the opponents are out', b.action === 'none', JSON.stringify(b))
-  // ...and the sweep itself still answers, so deferring cannot hang the table.
+  check('an ordinary poll answers when the opponents are out, rather than deferring', b.action === 'declare', JSON.stringify(b))
+  // ...and the sweep reaches the same declaration, so the route cannot change the outcome.
   const sweep = await send({ op: 'forced', set: 0, threshold: 0, last_resort: true, state: oppsOut })
-  check('the forced sweep still answers that same position', sweep.action === 'declare', JSON.stringify(sweep))
+  check(
+    'the forced sweep reaches that same declaration',
+    sweep.action === 'declare' && sweep.set === b.set && JSON.stringify(sweep.owner) === JSON.stringify(b.owner),
+    JSON.stringify(sweep),
+  )
 
   // (c) the ONE obligation that does survive the trip: turn-holder, holding cards, opponents
   //     alive, hand a union of complete half-suits. Decline and the host's next request is an

@@ -26,7 +26,7 @@
     "bounded:single:analyze": "node scripts/bounded-single-analyze.mjs",
     "papers:build": "node scripts/build-papers.mjs",
     "botpkg": "node scripts/build-bot-package.mjs",
-    "botpkg:check": "node scripts/botpkg-selftest.mjs 40 && node scripts/botpkg-forced-test.mjs"
+    "botpkg:check": "node scripts/botpkg-selftest.mjs 200 && node scripts/botpkg-forced-test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",

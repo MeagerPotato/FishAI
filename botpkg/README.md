@@ -97,13 +97,20 @@ the allocation to the engine's fallback and still records it as the bot's own de
 **3. Declining a poll is always legal here, and it was not in the source rule set.** FishAI's
 dialect makes `decline` illegal in two positions, because there the declare window is the only
 thing between the table and a state with no legal move; its engine answers both by declaring on
-best evidence with no threshold at all. FishLab has neither position — it has the `pass` op for a
-cardless turn-holder and the forced sweep for a team out of cards — so a declaration volunteered
-there would be a pure gift. The adapter carries the distinction, and keeps the one obligation
-that does survive: a turn-holder still holding cards whose hand affords no legal ask must
-declare, because declining leads to an `ask` request it cannot answer. As a backstop it never
-volunteers a declaration its own planner prices at zero, which is the planner saying it has
-*proved* the set is not the team's.
+best evidence with no threshold at all. **One of those two positions does not exist at a FishLab
+table: a seat holding the turn with an empty hand**, which §5.2 sends a `pass` op instead. A
+declaration volunteered there is a pure gift, and the adapter declines it.
+
+The second position — a turn-holder still holding cards whose hand affords no legal ask — is real
+on both hosts and is answered on both, because declining leads to an `ask` request the hand
+cannot answer. As a backstop the adapter never volunteers a declaration its own planner prices at
+zero, which is the planner saying it has *proved* the set is not the team's.
+
+An earlier build also declined when every opponent of the turn-holder was out of cards, deferring
+to §4's forced sweep. That was a mistake and has been removed: the position is reachable in an
+ordinary `us54` game, the engine compels a declaration there, and a seat whose own team holds
+every remaining card is not deferring to a better-informed sweep — it is declining sets it can
+already prove. It was the package's only divergence from native play.
 
 Beyond those three, the rule sets agree row for row: 54 cards, nine half-suits of six, declaring
 legal at any moment from any seat, a wrong declaration awarding the set to the opponents rather
@@ -122,15 +129,20 @@ No `bots prepare` step is needed — there is nothing to install.
 
 Before it was packaged it was verified against a FishLab-shaped host driven by the repository's
 own engine, in three separate child processes over real stdio, using the §4 half-suit numbering
-and card names rather than the engine's own: 40 complete games, 13,499 replies, **zero
+and card names rather than the engine's own: 200 complete games, 68,693 replies, **zero
 divergences** from the move the in-repository bot plays on the same position. Mean reply well
 under a millisecond; the slowest single reply across a run is a few tens of milliseconds, against
 the manifest's 10-second budget.
 
-That harness has one structural blind spot, which is worth stating because it hid a real bug:
-refereed by the source engine, it can only produce positions that rule set can reach. The
-positions FishLab has and `us54` does not — a poll sent to a cardless seat still holding the turn,
-and the forced sweep — are driven directly instead, by the same suite.
+That harness has one structural blind spot, which is worth stating because it has now hidden two
+real bugs: refereed by the source engine, it can only produce positions that rule set can reach.
+The positions FishLab has and `us54` does not — a poll sent to a cardless seat still holding the
+turn, and the forced sweep — are driven directly instead, by the same suite.
+
+The second bug was the mirror image, and is the reason the game count above went up. A position
+assumed to be FishLab-only turned out to be reachable under `us54` after all, so the harness did
+referee it — but only past game 40, which is where the committed check stopped. It now runs long
+enough to reach it.
 
 ---
 
