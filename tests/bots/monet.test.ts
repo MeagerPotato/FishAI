@@ -32,12 +32,21 @@
  * The position bank is the roster mirror rather than a Punter mirror alone. A style that plays
  * itself visits a narrow set of positions, and the identity claim is about the *policy*, which must
  * hold at every position `us54` can produce — including the ones Punter's own play never reaches.
- * Nine styles × three seeds keeps that broad while staying inside a few seconds: 20,217 decisions,
- * 40,434 in-graph comparisons and 27 digests, in about two and a half seconds.
+ * Nine styles × three seeds keeps that broad while staying inside a few seconds: 20,291 decisions,
+ * 40,582 in-graph comparisons and 27 digests, in about two and a half seconds.
  *
  * **A red digest is not a test to fix.** It is the report that v0.1 no longer plays FishAI v2.0's
  * games, which is the acceptance criterion itself. Regenerating the bank to make it green deletes
  * the only evidence that v0.1 ever was what it says it was.
+ *
+ * It has been re-baselined exactly once, deliberately, and that exception is the rule restated.
+ * `reduce.ts` was corrected so that a declare emptying the turn-holder passes to a teammate rather
+ * than to seat `turn + 1` (RULES_US54.md §4) — which changes the *games*, not the policy: four of
+ * the 27 rows moved and the other 23 digests came back byte-identical. What licensed regenerating
+ * was that the criterion was re-witnessed first rather than assumed. `scripts/byte-identity.mjs`
+ * at the merge commit reports 0 mismatches over 64,115 decisions and 128,230 comparisons, with the
+ * `MUTATE=` negative control still failing. A red digest with no such sweep behind it is still a
+ * finding rather than a chore.
  */
 import { describe, expect, it } from 'vitest'
 import {
@@ -200,7 +209,7 @@ describe('Monet v0.1 ≡ the FishAI v2.0 arm, at every decision of whole us54 ga
     // game's length exactly too — the total is not an independent fact, it is their sum, and a
     // floor here would let a whole table drop out of the fixture unnoticed.
     expect(tally.decisions).toBe(MONET_V01_BANK.totalDecisions)
-    expect(tally.decisions).toBe(20_217)
+    expect(tally.decisions).toBe(20_291)
     expect(tally.comparisons).toBe(tally.decisions * V2_ARMS.length)
     expect(tally.digestsChecked).toBe(MONET_V01_BANK.games.length)
     expect(tally.mismatches).toBe(0)
