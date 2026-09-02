@@ -34,10 +34,10 @@ export interface BankGame {
 
 export const MONET_V01_BANK = {
   /** The revision the bank was recorded from. */
-  revision: 'd918d762d09bbed44ec64d0ff8c14c2547daa127',
+  revision: 'fd1948665131d1a33ee4b1484fec97779cb6435e',
   /** How that revision's v2.0 arm was addressed while recording. */
   arm: '{ skill: SKILL_PRESETS.hard, style: STYLE_ROSTER.punter }',
-  totalDecisions: 20217,
+  totalDecisions: 20291,
   games: [
     { table: 'balanced', seed: 'monet-v01-balanced-0', startSeat: 1, decisions: 605, digest: 'e4d668fb0b8e1fed' },
     { table: 'balanced', seed: 'monet-v01-balanced-1', startSeat: 3, decisions: 440, digest: '6f49c2d902bcd36e' },
@@ -56,14 +56,14 @@ export const MONET_V01_BANK = {
     { table: 'turtle', seed: 'monet-v01-turtle-2', startSeat: 5, decisions: 1448, digest: '6e69d9efd54f9caa' },
     { table: 'hoarder', seed: 'monet-v01-hoarder-0', startSeat: 1, decisions: 663, digest: 'c5e2150a8f76e68a' },
     { table: 'hoarder', seed: 'monet-v01-hoarder-1', startSeat: 3, decisions: 755, digest: '1284091844a8b2e8' },
-    { table: 'hoarder', seed: 'monet-v01-hoarder-2', startSeat: 5, decisions: 903, digest: 'ffe974238e2124e0' },
-    { table: 'scout', seed: 'monet-v01-scout-0', startSeat: 1, decisions: 837, digest: '63bf8030711db796' },
-    { table: 'scout', seed: 'monet-v01-scout-1', startSeat: 3, decisions: 825, digest: 'c7f55e48f1f9c21d' },
+    { table: 'hoarder', seed: 'monet-v01-hoarder-2', startSeat: 5, decisions: 907, digest: 'a661c73718d15e53' },
+    { table: 'scout', seed: 'monet-v01-scout-0', startSeat: 1, decisions: 831, digest: '161ca5ee05fb6638' },
+    { table: 'scout', seed: 'monet-v01-scout-1', startSeat: 3, decisions: 819, digest: 'cb59998a7e320a29' },
     { table: 'scout', seed: 'monet-v01-scout-2', startSeat: 5, decisions: 924, digest: '09557938984d8c42' },
     { table: 'ghost', seed: 'monet-v01-ghost-0', startSeat: 1, decisions: 753, digest: '2240d43a1857228a' },
     { table: 'ghost', seed: 'monet-v01-ghost-1', startSeat: 3, decisions: 797, digest: '1510b47a4b259a0b' },
     { table: 'ghost', seed: 'monet-v01-ghost-2', startSeat: 5, decisions: 674, digest: '6aaa1a387c94e53b' },
-    { table: 'archivist', seed: 'monet-v01-archivist-0', startSeat: 1, decisions: 555, digest: '459444ff8b20fcea' },
+    { table: 'archivist', seed: 'monet-v01-archivist-0', startSeat: 1, decisions: 637, digest: '35e62dfebae58639' },
     { table: 'archivist', seed: 'monet-v01-archivist-1', startSeat: 3, decisions: 752, digest: 'cfd2a5c8714343a4' },
     { table: 'archivist', seed: 'monet-v01-archivist-2', startSeat: 5, decisions: 656, digest: 'e464e5f2ef080bae' },
   ] as const satisfies readonly BankGame[],
