@@ -68,6 +68,7 @@ import type {
   ReduceResult,
   Seat,
   SeatView,
+  PolicySpec,
 } from '../../lib/engine/index.ts'
 import {
   allBooks,
@@ -80,7 +81,7 @@ import {
   us54Config,
 } from '../../lib/engine/index.ts'
 import { PACE_MAX, PACE_MIN } from './params.ts'
-import { ADAPTIVE_POLICY } from './policies.ts'
+import { DEFAULT_MODEL_ID, modelOrDefault, type PlayModel } from './models.ts'
 
 /**
  * How much of a step's interval a folded declare window costs. It emits nothing into the log,
@@ -111,6 +112,16 @@ interface AdvanceInputs {
   seed: string
   /** The human's standing Declare control: armed stops a fold at the human's own offer. */
   armed: boolean
+  /**
+   * What the five bot seats decide with — the selected model's spec (models.ts).
+   *
+   * Threaded through rather than read from a module constant, because the table can now seat
+   * more than one model and a constant would silently seat the default in a game the URL says
+   * is something else. It rides on `AdvanceInputs` beside `seed` for the same reason `seed`
+   * does: `advance` replays a whole run of bot moves in one step, and every action in that run
+   * has to come from the same policy.
+   */
+  policy: PolicySpec
 }
 
 /** The action a seat would take at this state, or `null` where the table waits on the human. */
@@ -125,7 +136,7 @@ function nextAction(state: GameState, io: AdvanceInputs): GameAction | null {
   }
   return decide(
     seatView(state, acting),
-    ADAPTIVE_POLICY,
+    io.policy,
     hashSeed(`${io.seed}:${state.moveIndex}`)(),
   )
 }
@@ -169,6 +180,8 @@ export function advance(
 
 export interface Game {
   state: GameState
+  /** The model the five bot seats are running — the one thing every seat label must agree on. */
+  model: PlayModel
   /** The human's view — everything seat 0 is allowed to know, and all any dialog reads. */
   view: SeatView
   /** Whose move it is and what kinds are legal — under us54 the declare-window option holder. */
@@ -222,7 +235,15 @@ function tallySets(state: GameState): { sets: [number, number]; unresolved: numb
  * URL's `?pace=` is where a table starts, not a leash on it, and re-seeding from the prop would
  * fight every adjustment made at the table on a page whose URL is rewritten as the game runs.
  */
-export function useGame(seed: string, initialPaceSeconds: number): Game {
+export function useGame(
+  seed: string,
+  initialPaceSeconds: number,
+  modelId: string = DEFAULT_MODEL_ID,
+): Game {
+  // Resolved per render rather than held in state: the id comes from the URL, and a table whose
+  // link changes model should re-seat rather than keep the old brain. `modelOrDefault` never
+  // returns null, so there is no render path without a policy.
+  const model = modelOrDefault(modelId)
   const [state, setState] = useState<GameState>(() => newGame(seed, us54Config, 0))
   const [armed, setArmed] = useState(false)
   const [paused, setPaused] = useState(false)
@@ -248,7 +269,7 @@ export function useGame(seed: string, initialPaceSeconds: number): Game {
   // would be caching a value that can always be recomputed, and the only way to write it would
   // be a setState inside the drive effect. Nothing advances past a fault, so a derived one is
   // just as sticky as a stored one was.
-  const io = { seed, armed }
+  const io = { seed, armed, policy: model.spec }
   const pending = finished ? null : advance(state, io)
   const fault = pending !== null && 'fault' in pending ? pending.fault : null
   const canStep = pending !== null && !('fault' in pending)
@@ -257,7 +278,7 @@ export function useGame(seed: string, initialPaceSeconds: number): Game {
   // schedules nothing — `step` below is then the only thing that moves the table.
   useEffect(() => {
     if (state.phase === 'finished' || paused) return
-    const result = advance(state, { seed, armed })
+    const result = advance(state, { seed, armed, policy: model.spec })
     if (result === null || 'fault' in result) return
     const at = state.moveIndex
     const move = paceSeconds * 1000
@@ -268,7 +289,10 @@ export function useGame(seed: string, initialPaceSeconds: number): Game {
     return () => {
       clearTimeout(timer)
     }
-  }, [state, armed, paused, paceSeconds, seed])
+    // `model.spec` is a frozen module-level object per entry (models.ts), so this dep is a
+    // stable identity, not a fresh one per render: it re-runs the loop when the table changes
+    // model and never otherwise.
+  }, [state, armed, paused, paceSeconds, seed, model.spec])
 
   /** One visible step, applied now. The same `advance` the loop uses, without the timer. */
   const step = () => {
@@ -298,6 +322,7 @@ export function useGame(seed: string, initialPaceSeconds: number): Game {
 
   return {
     state,
+    model,
     view,
     acting: summary.seat,
     kinds: summary.kinds,

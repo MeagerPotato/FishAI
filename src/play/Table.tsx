@@ -48,7 +48,6 @@ import { describePlayEvent, seatName, seatNameCap } from './format.ts'
 import { Hand } from './Hand.tsx'
 import type { PlayParams } from './params.ts'
 import { PACE_MAX, PACE_MIN, PACE_STEP } from './params.ts'
-import { ADAPTIVE_LABEL, ADAPTIVE_POLICY } from './policies.ts'
 import s from './play.module.css'
 import { PublicLog } from './PublicLog.tsx'
 import { Seats } from './Seats.tsx'
@@ -62,7 +61,7 @@ export interface TableProps {
 }
 
 export function Table({ play, onRematch, onNewGame }: TableProps) {
-  const game = useGame(play.seed, play.paceSeconds)
+  const game = useGame(play.seed, play.paceSeconds, play.modelId)
   const [humanError, setHumanError] = useState<EngineError | null>(null)
   /**
    * The pace field's TEXT, held apart from the committed number. A `type="number"` bound
@@ -84,7 +83,7 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
   // the dialog itself when the assistant is on.
   const dialogAdvice =
     play.assist && game.declareOpen && !finished
-      ? advise(view, ADAPTIVE_POLICY, hashSeed(`${play.seed}:${view.moveIndex}`)())
+      ? advise(view, game.model.spec, hashSeed(`${play.seed}:${view.moveIndex}`)())
       : null
 
   const askTurn = !windowOpen && acting === 0 && kinds.includes('ask') && !finished
@@ -185,7 +184,7 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
               </Button>
             </div>
           </div>
-          <StyleMirror view={view} names={names} />
+          <StyleMirror view={view} names={names} model={game.model} />
         </>
       ) : null}
 
@@ -216,7 +215,7 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
                 turn={state.turn}
                 finished={finished}
                 names={names}
-                policyLabelFor={(seat) => (seat === 0 ? 'You' : ADAPTIVE_LABEL)}
+                policyLabelFor={(seat) => (seat === 0 ? 'You' : game.model.label)}
               />
             </div>
 
@@ -363,6 +362,7 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
               view={view}
               seed={play.seed}
               names={names}
+              model={game.model}
               active={!finished && acting === 0 && yours}
               playable={askTurn || passTurn}
               onPlay={(action) => {

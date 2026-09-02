@@ -107,6 +107,10 @@ export {
   keepWithinBudget,
   rankBoundedFacts,
   restrictedKnowledge,
+  MONET_VERSIONS,
+  MONET_VERSION_IDS,
+  isMonetVersion,
+  monetPolicy,
 } from './bots/index.ts'
 export type {
   SeatView,
@@ -142,4 +146,5 @@ export type {
   BoundedRanking,
   BoundedRead,
   BoundedSpec,
+  MonetVersion,
 } from './bots/index.ts'

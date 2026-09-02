@@ -26,6 +26,8 @@
  */
 
 /** Seconds between the table's own steps: the range, and the lobby's default. */
+import { DEFAULT_MODEL_ID, modelById } from './models.ts'
+
 export const PACE_MIN = 0.5
 export const PACE_MAX = 10
 export const PACE_STEP = 0.5
@@ -58,6 +60,8 @@ export interface PlayParams {
   /** Seconds between the table's own steps, already clamped into the offered range. */
   paceSeconds: number
   assist: boolean
+  /** Which model the bot seats run — a `PLAY_MODELS` id (models.ts). */
+  modelId: string
 }
 
 /** The five-empty-names default, as its own value so nothing has to spell it out twice. */
@@ -103,14 +107,40 @@ export function parsePace(raw: string | null): number {
 }
 
 /**
- * The value of a `?v=` that names a mode this table no longer has, or `null` when the link is
- * fine. An ABSENT `?v=` is fine: there is one mode now, so the bare URL means it. Only a link
- * that explicitly asks for something other than `10` is refused — which is exactly the shape
- * every v0.5 link the old lobby ever wrote (`/play/table?v=05&…`) has.
+ * `?v=` used to select between the v0.5 roster and the v1.0 adaptive engine, and then — while
+ * there was one mode — meant only `10`. It now names a MODEL from [models.ts](models.ts), so
+ * the accepted set is `10` plus every shipped model id, and `LEGACY_MODE_ID` stays accepted
+ * forever because it is written into every link the old lobby ever shared.
+ *
+ * What has NOT changed is the refusal, which is the whole reason this function exists. A link
+ * naming a mode this table cannot seat is reported rather than silently redealt: the seed would
+ * still be honoured, the names would still be in the URL, and every card would fall somewhere
+ * else. `?v=05` and `?v=15` — the shape every v0.5 and v1.5 link the old lobby wrote — are
+ * still refused, because Bass v0.5 and v1.5 are archived as git tags (`bass-v0.5`,
+ * `bass-v1.5`) and cannot be expressed as a spec off today's engine. Adding them to the menu
+ * means compiling their bot brain against this rules core, not accepting the param.
+ */
+export const LEGACY_MODE_ID = '10'
+
+/**
+ * The value of a `?v=` that names something this table cannot seat, or `null` when the link is
+ * fine. An ABSENT `?v=` is fine: the bare URL means the default model.
  */
 export function retiredMode(search: string): string | null {
   const v = new URLSearchParams(search).get('v')
-  return v === null || v === '10' ? null : v
+  if (v === null || v === LEGACY_MODE_ID) return null
+  return modelById(v) === null ? v : null
+}
+
+/**
+ * The model a link asks for. Callers reach this only after `retiredMode` has returned `null`,
+ * so an unknown id cannot arrive here — but it falls back to the default rather than throwing,
+ * because a play surface must always have something to seat.
+ */
+export function parseModelId(search: string): string {
+  const v = new URLSearchParams(search).get('v')
+  if (v === null || v === LEGACY_MODE_ID) return DEFAULT_MODEL_ID
+  return modelById(v) === null ? DEFAULT_MODEL_ID : v
 }
 
 /** A fresh, non-deterministic seed — for "new game" and a first visit with no `?seed=`. */
@@ -125,11 +155,18 @@ export function freshSeed(): string {
  * which `URLSearchParams` reads as an empty pair and ignores, so `?&names=…` still parses. The
  * lobby trims it anyway rather than sharing a URL that looks broken.
  */
-export function playQuery(names: readonly string[], paceSeconds: number): string {
+export function playQuery(
+  names: readonly string[],
+  paceSeconds: number,
+  modelId: string = DEFAULT_MODEL_ID,
+): string {
   const named = names.some((n) => n !== '')
   const namesQuery = named ? `&names=${names.map(encodeURIComponent).join(',')}` : ''
   const paceQuery = paceSeconds === PACE_DEFAULT ? '' : `&pace=${paceSeconds}`
-  return `${namesQuery}${paceQuery}`
+  // Same house rule as pace: omit at the default, so a plain table still produces a plain link
+  // and every URL already shared keeps meaning exactly what it meant.
+  const modelQuery = modelId === DEFAULT_MODEL_ID ? '' : `&v=${encodeURIComponent(modelId)}`
+  return `${namesQuery}${paceQuery}${modelQuery}`
 }
 
 /** Parse a location search string. `seed` must be supplied (the page canonicalises the URL first). */
@@ -142,5 +179,6 @@ export function parsePlayParams(search: string, seed: string): PlayParams {
     namesKey: names.join(','),
     paceSeconds: parsePace(params.get('pace')),
     assist: params.get('assist') === '1',
+    modelId: parseModelId(search),
   }
 }

@@ -1,7 +1,7 @@
 /**
  * `/play` — the lobby. One mode, because there is one.
  *
- * The FishAI v1.0 adaptive engine takes every bot seat: it watches the public log, classifies
+ * The Bass v1.0 adaptive engine takes every bot seat: it watches the public log, classifies
  * what each seat appears to be playing, and best-responds off the measured counter table. It
  * offers no style pickers, because choosing a style is the job the engine does for itself, and
  * it states the measured caveat up front rather than in a footnote — over this roster the best
@@ -42,12 +42,13 @@ import {
   PACE_MIN,
   PACE_STEP,
   freshSeed,
+  parseModelId,
   parseNames,
   parsePace,
   playQuery,
   sanitizeName,
 } from '../play/params.ts'
-import { ADAPTIVE_LABEL } from '../play/policies.ts'
+import { DEFAULT_MODEL_ID, modelOrDefault, PLAY_MODELS } from '../play/models.ts'
 import s from '../play/play.module.css'
 
 const BOT_SEATS = [1, 2, 3, 4, 5] as const
@@ -55,6 +56,8 @@ const BOT_SEATS = [1, 2, 3, 4, 5] as const
 interface Lobby {
   seed: string
   names: readonly string[]
+  /** A `PLAY_MODELS` id — which bot the five seats will run (models.ts). */
+  modelId: string
   /** Held as TEXT, like the table's own field: a number input must be clearable to be typable. */
   paceText: string
 }
@@ -64,6 +67,7 @@ function initialLobby(search: string): Lobby {
   return {
     seed: params.get('seed') ?? freshSeed(),
     names: parseNames(params.get('names')),
+    modelId: parseModelId(search),
     paceText: String(parsePace(params.get('pace'))),
   }
 }
@@ -72,7 +76,8 @@ export function PlayHub() {
   const { search } = useLocation()
   const which = caseFromSearch(search)
   const [lobby, setLobby] = useState(() => initialLobby(search))
-  const { seed, names, paceText } = lobby
+  const { seed, names, paceText, modelId } = lobby
+  const model = modelOrDefault(modelId)
 
   // A cleared (or all-whitespace) seed field launches without a `seed` param at all: the table
   // then draws a fresh seed and canonicalises it into the URL — the same path as a first
@@ -84,7 +89,7 @@ export function PlayHub() {
   // truncated into the link — the field below says it is too long, and the seat stays numbered
   // until it is fixed, which is the same answer params.ts gives a hand-edited URL.
   const clean = names.map((n) => sanitizeName(n) ?? '')
-  const query = `${seedQuery}${playQuery(clean, parsePace(paceText))}`.replace(/^&/, '')
+  const query = `${seedQuery}${playQuery(clean, parsePace(paceText), modelId)}`.replace(/^&/, '')
   const launchHref = `/play/table?${query}`
 
   const setName = (i: number, value: string) => {
@@ -114,16 +119,22 @@ export function PlayHub() {
 
         <div className={s.mode}>
           <Eyebrow tone="muted" track="badge">
-            {ADAPTIVE_LABEL}
+            {model.label}
           </Eyebrow>
-          <h2 className={s.modeTitle}>Adaptive — reads the table</h2>
+          <h2 className={s.modeTitle}>{model.heading}</h2>
           <p className={s.modeBody}>
-            Every bot seat runs the classifier and best-responds using the measured payoff matrix,
-            re-derived from public information at every decision. You cannot pick its style,
-            because choosing one is the whole job it does for itself. Your teammates are seats 2
-            and 4; seats 1, 3 and 5 play against you.
+            {model.note} Your teammates are seats 2 and 4; seats 1, 3 and 5 play against you.
           </p>
-          <p className={lab.figNote}>
+          {/* The two notes below are about the adaptive engine specifically — what its version
+              label means, and the caveat that it converges on Punter. Neither is true of a fixed
+              style, so they are shown only when that is what is seated. */}
+          {model.id === DEFAULT_MODEL_ID ? (
+            <>
+              <p className={lab.figNote}>
+                You cannot pick this one&apos;s style, because choosing one is the whole job it
+                does for itself.
+              </p>
+              <p className={lab.figNote}>
             The two versions in the label are both real. The <em>architecture</em> is v1.0 —
             observe, classify, best-respond — and none of that machinery has changed. What has
             changed is the styles it plays: every roster entry now carries v2.0&apos;s defusal
@@ -135,7 +146,38 @@ export function PlayHub() {
             the nine-style roster the measured best response to every style is Punter, so a warm
             adaptive bot converges there. What its adaptivity is actually for is opponents the
             matrix never measured — you.
-          </p>
+              </p>
+            </>
+          ) : null}
+
+          <div className={s.picker} style={{ marginTop: 0 }}>
+            <div className={s.pickerRow}>
+              <label className={s.pickerLabel} htmlFor="lobby-model">
+                <span className={lab.criterionLabel}>Opponent</span>
+                <span className={s.handBookName}>which bot takes the five seats</span>
+              </label>
+              <select
+                id="lobby-model"
+                className={s.select}
+                value={modelId}
+                onChange={(event) => {
+                  const next = event.target.value
+                  setLobby((prev) => ({ ...prev, modelId: next }))
+                }}
+              >
+                {PLAY_MODELS.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+              <span className={s.pickerThesis}>
+                All five bot seats run the same model — a table that mixed them would measure the
+                matchup rather than the bot. {model.name} is written into the launch link, so a
+                shared URL reproduces the opponent as well as the deal.
+              </span>
+            </div>
+          </div>
 
           <div className={s.picker}>
             {BOT_SEATS.map((seat, i) => {

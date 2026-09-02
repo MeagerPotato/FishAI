@@ -29,7 +29,7 @@ import { ScrollRegion } from '../lab/ui/ScrollRegion.tsx'
 import lab from '../lab/ui/lab.module.css'
 import type { BotNames } from './format.ts'
 import { seatNameCap } from './format.ts'
-import { ADAPTIVE_LABEL } from './policies.ts'
+import type { PlayModel } from './models.ts'
 import s from './play.module.css'
 
 const BOT_SEATS = [1, 2, 3, 4, 5] as const
@@ -42,6 +42,8 @@ export interface StyleMirrorProps {
   view: SeatView
   /** What the player called the bots. Absent at the shared table, where there are none. */
   names?: BotNames
+  /** The model the bot seats ran — what the Played column names. */
+  model: PlayModel
 }
 
 function pct(p: number): string {
@@ -55,7 +57,7 @@ function rankedPosterior(c: SeatClassification): { id: StyleId; p: number }[] {
     .sort((a, b) => b.p - a.p)
 }
 
-export function StyleMirror({ view, names = [] }: StyleMirrorProps) {
+export function StyleMirror({ view, names = [], model }: StyleMirrorProps) {
   const reads = classifySeats(view)
   const human = reads[0]
   const humanAsks = observeSeats(view)[0].asks
@@ -138,7 +140,7 @@ export function StyleMirror({ view, names = [] }: StyleMirrorProps) {
               return (
                 <tr key={seat}>
                   <th scope="row">{seatNameCap(seat, names)}</th>
-                  <td>{ADAPTIVE_LABEL}</td>
+                  <td>{model.label}</td>
                   <td>{STYLE_ROSTER[read.top].label}</td>
                   <td data-numeric>{pct(read.confidence)}</td>
                 </tr>
