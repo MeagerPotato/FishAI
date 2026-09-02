@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "generatedAt": "2026-08-22T00:00:00.000Z",
   "engineCommit": "fixture-cyclic",
-  "rulesHash": "b4c7fef74d439fe29cbe4d4775fc4fbecdd95d0c9ce0218eb116a4b2b64b6f8d",
+  "rulesHash": "e9311958e811b7bc4cd93735fda0cbaaf6ab2485310ea5b992f2ec3569163b7c",
   "rulesFile": "RULES_US54.md",
   "ruleSet": "us54",
   "gamesTotal": 187200,

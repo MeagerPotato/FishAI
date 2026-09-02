@@ -895,6 +895,68 @@ first opponent that gives it one.
 the verbatim predictions and both calibrations' provenance; every number here is in it,
 the counter table \cite{matrixv2}, or the measurement documents \cite{rules,styles,botlab}.
 
+\section{Addendum: the turn-pass correction}
+\label{sec:addturnpass}
+
+\emph{September 2026.} A rule marked \code{[DERIVED]} in \code{RULES\_US54.md} \S4 was wrong: a
+declare that emptied the current turn-holder advanced the turn to the next seat holding cards in
+ascending cyclic order, which is an opponent whenever that opponent holds a card, where the
+owner's rulebook passes it to a teammate. Measured over 400 games, 19 of 56 such events gave the
+turn to the wrong team --- about one game in twenty-one. The engine is corrected, the rules hash
+moved, and every artifact was regenerated \cite{rules}.
+
+\textbf{The theorem is untouched, because it is a theorem.} Section~\ref{sec:theorem}'s argument
+needs one empirical fact --- that Punter's row of the measured counter table dominates every
+column --- and the counter table regenerated from the re-measured matrix still gives
+$\mathrm{BR}(i) = \textsc{punter}$ for all nine $i$. Expected payoff is still linear in belief, so
+the warm best response is still Punter under every possible read, and the oracle ablation still
+prices perfect classification at exactly $0.0000$ in all nine cells: handed the true styles, the
+agent still plays move-for-move identical games.
+
+\subsection{The isolation, and the warmup tax}
+
+The gauntlet and the mixed screen were re-run twice on one tree with the turn-pass rule as the only
+difference. \textbf{No gauntlet cell moves further than $0.0032$, every move is inside that cell's
+own standard error, and the mixed screen moves $0.0011$ against its own $\pm 0.0042$.} The
+correction is invisible to this instrument, exactly as it is to the matrix and the bit ladder
+\cite{v05paper, matrixv2}.
+
+What did move is the level, and the cause is the concession layer of v2.0, which
+postdates the committed artifact this paper reports: every roster style now carries \code{defuse}
+$=1$, and both arms of every cell delegate to the roster.
+
+\begin{table}[t]
+\centering
+\caption{The two headline costs, as published and as regenerated. The verdicts are the
+pre-registered ones and both still return CONFIRMED.}
+\label{tab:addv10}
+\footnotesize
+\begin{tabular}{@{}lll@{}}
+\toprule
+ & as published & regenerated \\
+\midrule
+P1, sharpest gauntlet cell & $-0.0108 \pm 0.0031$ ($z$ $-3.53$) & $-0.0066 \pm 0.0027$ ($z$ $-2.47$) \\
+P1, cells below the benchmark & 9 of 9 & 9 of 9 \\
+P2, truly-paired mixed screen & $-0.0136 \pm 0.0043$ & $-0.0074 \pm 0.0042$ \\
+P3, oracle ablation & exactly $0.0000$ & exactly $0.0000$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{The direction is unchanged and the evidence is weaker, and this paper says so rather than
+quoting the stronger run.} All nine gauntlet cells still sit below the paired Punter benchmark,
+which is the fact P1 was registered to test, and P1 returns CONFIRMED. But no single cell now
+rejects at the Bonferroni bound $|z| > 2.773$, where the published run had one at $z$ $-3.53$; and
+the mixed screen's interval, $[-0.0157, +0.0008]$, now \emph{includes} zero where the published
+one did not.
+
+The conclusion of this paper does not rest on either margin. It rests on the dominance theorem,
+which is unaffected, and on the oracle ablation, which is exactly zero in both runs and is the
+sharper result: \textbf{perfect classification buys nothing, and a warmup that buys nothing still
+costs something.} What the regeneration removes is the ability to say how much, at this sample.
+The warmup tax is now a direction with a bounded magnitude rather than a resolved number, and
+Section~\ref{sec:conclusion}'s claim should be read at that strength.
+
 \begin{thebibliography}{99}
 \footnotesize
 

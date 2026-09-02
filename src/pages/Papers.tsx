@@ -1,5 +1,5 @@
 /**
- * `/papers` — the nine papers, and the questions the project has actually put to a measurement.
+ * `/papers` — the ten papers, and the questions the project has actually put to a measurement.
  *
  * Everything on this page is a pointer at something the reader can open: a PDF built from the
  * committed `.tex` by `npm run papers:build`, the LaTeX source on GitHub, and the lab page that
@@ -168,7 +168,7 @@ const PAPERS: Paper[] = [
     question:
       'Is one way of playing Fish actually better than the others, or do the styles just beat each other in a circle?',
     finding:
-      'One style wins outright, and still does after the whole roster changed under it. Punter clears all four criteria written down before the tournament ran, over 309,600 games in 36 cells, and clears them again on a re-measurement taken after every style gained a defusal term: mean score .5829 → .5684, maximin .5190 → .5102 above the half, cyclic energy .0112 → .0172 against a .15 threshold. The rock-paper-scissors structure the styles were expected to form is simply not there in either run. What the re-measurement did cost is the fourth criterion, and the addendum says so plainly: exploitability .0025 → .0525 against a rivals’ median that moved .0444 → .0594, which is essentially a tie where the paper’s prose leaned on an eighteen-fold gap.',
+      'One style wins outright, and still does after the whole roster changed under it and again after a rules bug was fixed beneath it. Punter clears all four criteria written down before the tournament ran, over 309,600 games in 36 cells, and clears them on both re-measurements: mean score .5829 → .5684 → .5678, maximin .5190 → .5102 → .5107 above the half, cyclic energy .0112 → .0172 → .0174 against a .15 threshold. The rock-paper-scissors structure the styles were expected to form is simply not there in any of the three runs. The fourth criterion is where the movement is, and the addenda say so plainly: exploitability .0025 → .0525 → .0625 against a rivals’ median that moved .0444 → .0594 → .0637, which is a tie where the paper’s prose leaned on an eighteen-fold gap. The turn-pass correction itself is invisible here — no cell of the 36 moves two of its own standard errors, mean absolute move .0016 — which is a finding about the instrument, not a licence to call the bug harmless.',
     abstract:
       'Nine parameterized play styles share one identical full-strength inference engine, so that differences in outcome measure style rather than skill. The roster is evaluated in a full-precision duplicate-deal round-robin — 36 cells, 4,300 mirrored deal pairs per cell, per-cell standard error at most .005 — and the payoff matrix is analysed with mean score, maximin, Bradley–Terry, Nash averaging, α-Rank and a Hodge decomposition into transitive and cyclic parts. Two measured caveats qualify the headline and are reported as first-class results: the declare-threshold axis the roster’s labels advertise is inert across the range the roster spans, and the card-hoarding style’s signature benefit was derived, implemented, and measured to be worth nothing.',
     method:
@@ -183,9 +183,9 @@ const PAPERS: Paper[] = [
     question:
       'If one style is the best, does a bot that watches its opponents and counters them beat a bot that just plays the best style every time?',
     finding:
-      'No — it does measurably worse than nothing, and the reason is a theorem. Punter’s row of the measured counter table dominates every column and expected payoff is linear in belief, so the warm best response is Punter under every possible read: the adaptive policy provably collapses into the static winner. It then underpays for the warmup it needed to get there — below the paired Punter benchmark in all nine gauntlet cells (mean −.0108; sharpest −.0108 ± .0031, z −3.53) and losing a truly-paired 24-composition screen at −.0136 ± .0043. An oracle ablation prices perfect classification at exactly .0000: handed the true styles, the agent plays move-for-move identical games.',
+      'No — it does measurably worse than nothing, and the reason is a theorem. Punter’s row of the measured counter table dominates every column and expected payoff is linear in belief, so the warm best response is Punter under every possible read: the adaptive policy provably collapses into the static winner. It then underpays for the warmup it needed to get there — below the paired Punter benchmark in all nine gauntlet cells, and losing a truly-paired 24-composition screen. An oracle ablation prices perfect classification at exactly .0000: handed the true styles, the agent plays move-for-move identical games. On the regenerated artifact the theorem and the oracle are untouched, and the margins are weaker rather than gone: the screen reads −.0074 ± .0042 where it read −.0136 ± .0043, so its interval now includes zero, and no single gauntlet cell still clears the Bonferroni bound. Nine of nine cells remain below the benchmark, which is what the prediction was registered to test.',
     abstract:
-      'The agent is built honestly — fourteen behavioural features certified by the public log alone, calibrated diagonal-Gaussian posteriors per opponent seat, best response over the measured 9 × 9 counter table, delegation to the unchanged style-conditioned engine, all under determinism and statelessness constraints that force co-located seats to identical reads. The answer is a theorem plus a measurement. The classifier has real but bounded skill — 22.4% end-of-game top-1 against an 11.1% chance floor — and under dominance none of it can matter. Adaptation over this roster is worth less than nothing, and every knob that repairs the tax does so by collapsing the policy into the static dominant style.',
+      'The agent is built honestly — fourteen behavioural features certified by the public log alone, calibrated diagonal-Gaussian posteriors per opponent seat, best response over the measured 9 × 9 counter table, delegation to the unchanged style-conditioned engine, all under determinism and statelessness constraints that force co-located seats to identical reads. The answer is a theorem plus a measurement. The classifier has real but bounded skill — 22.0% end-of-game top-1 against an 11.1% chance floor — and under dominance none of it can matter. Adaptation over this roster is worth less than nothing, and every knob that repairs the tax does so by collapsing the policy into the static dominant style.',
     method:
       'Four predictions registered before the run, two of them refuted. A nine-cell gauntlet at 4,300 duplicate pairs per cell, a truly-paired seed-clustered mixed-population screen over 24 compositions, an oracle ablation handing the agent the true styles, and a classifier-accuracy experiment on held-out cross-play games.',
     evidence: { href: '/lab/adaptive', label: 'The adaptive engine — the whole suite' },
@@ -198,7 +198,7 @@ const PAPERS: Paper[] = [
     question:
       'How do you make a bot easier to beat without making it stupid — what should a difficulty setting actually be?',
     finding:
-      'Cap what it can remember, measured in bits, and the dial tells the truth. Set-share is non-decreasing in bits at every one of the nine adjacent rungs, from .1313 at zero bits to .5000 at the top, and the shipped tiers now carry prices: medium is worth 32.2 bits [30.8, 35.1], and the old noise-based easy tier measures below the zero-bit floor — .0446 against .1313, so a memoryless bot that reasons beats a remembering bot that dices. The headline refutation runs the other way from the prediction: memory pressure makes styles easier to classify, not harder, with top-1 rising from .1542 at 16 bits to .2295 at 64 against .2243 at full memory. An addendum then re-measures the arm after the engine gained a defusal term it inherits: against the same pre-concession v1.0, the committed −0.1255 ± 0.0590 becomes +1.4065 ± 0.1399 and +1.5290 ± 0.1418 on two banks — a different question, not a correction of that cell, which a per-pair audit shows was measured clean. And because the term’s licence scan reads the full public log while retiring only against budgeted knowledge, it partly escapes the budget: holding the opponent fixed, it is worth +0.9560 ± 0.1858 and +0.8030 ± 0.1879 at zero bits. The updated ladder is therefore not a pure memory ladder. The original one, measured before the term existed, is unaffected.',
+      'Cap what it can remember, measured in bits, and the dial tells the truth. Set-share is non-decreasing in bits at every one of the nine adjacent rungs, and the shipped tiers carry prices: medium was worth 32.2 bits [30.8, 35.1], and the old noise-based easy tier measures below the zero-bit floor, so a memoryless bot that reasons beats a remembering bot that dices. The headline refutation runs the other way from the prediction: memory pressure makes styles easier to classify, not harder. On the regenerated artifact every verdict survives and the ladder is steeper: the zero-bit floor drops .1313 → .0953 and medium reprices 32.2 → 18.0 bits [17.2, 18.7]. That is the concession layer, not the rules fix and not memory — an isolation run moves no rung by more than .0003 — and it means the tier is now measured against a ruler carrying a mechanism the tier itself does not have. The two figures answer different questions rather than disagreeing about one. An addendum then re-measures the arm after the engine gained a defusal term it inherits: against the same pre-concession v1.0, the committed −0.1255 ± 0.0590 becomes +1.4065 ± 0.1399 and +1.5290 ± 0.1418 on two banks — a different question, not a correction of that cell, which a per-pair audit shows was measured clean. And because the term’s licence scan reads the full public log while retiring only against budgeted knowledge, it partly escapes the budget: holding the opponent fixed, it is worth +0.9560 ± 0.1858 and +0.8030 ± 0.1879 at zero bits. The updated ladder is therefore not a pure memory ladder. The original one, measured before the term existed, is unaffected.',
     abstract:
       'Until now the engine’s easy tier was a six-event memory window plus a 25% uniform blunder rate — a difficulty knob that is neither monotone, interpretable, nor human-shaped. v1.5 replaces it with memory capacity capped in bits under a fixed fact tariff (2 bits per card fact, 1 per basis fact), with facts ranked by contestability rather than recency, implemented as a stateless re-derivation from the full public log at every decision. Evidence-age analysis finds the predicted forgetting signature where the budget bites — half-lives of 5, 13, 17, 33 and 49 events, rising with bits — while the noise tier is cliff-edged at its window and not flat inside it. A single-seat follow-up registered after review, and re-run at 300 seeds after its 50-seed pilot was priced at 52% power, confirms the read seat’s own signature flat at matched read count.',
     method:
@@ -267,7 +267,7 @@ const PAPERS: Paper[] = [
     question:
       'Every move in this game is announced to the table. From that public record alone, how much of how someone plays can you actually work out in one game?',
     finding:
-      'Twice chance, and no better. Single-game top-1 over nine styles rises from 16.4% at 40 events to 22.4% at the full log, against an 11.1% chance rate, with per-style accuracy running from 50.4% on the Ghost down to 5.6% on the Balanced control. The ceiling belongs to the material rather than the model: the four styles whose labelled axis is inert collapse into a cluster .20–.25 wide in observable space while the Turtle sits 3.2–3.7 away, and styles that diverge from the control on .39–2.89% of decisions offer an observer one to three revealing decisions per seat per game — some of which are structurally invisible, because declining to declare emits no event at all.',
+      'Twice chance, and no better. Single-game top-1 over nine styles rises from 16.1% at 40 events to 22.0% at the full log, against an 11.1% chance rate, with per-style accuracy running from 41.4% on the Ghost down to 3.6% on the Punter — on the regenerated artifact, where the hardest style to read is no longer the Balanced control at 5.6% but Punter, and Balanced itself has risen to 23.3%. The ceiling belongs to the material rather than the model: the four styles whose labelled axis is inert collapse into a cluster .20–.25 wide in observable space while the Turtle sits 3.2–3.7 away, and styles that diverge from the control on .39–2.89% of decisions offer an observer one to three revealing decisions per seat per game — some of which are structurally invisible, because declining to declare emits no event at all.',
     abstract:
       'This paper studies the observation problem in isolation from the adaptation problem treated by its companion: given only the public channel, how much of a seat’s play style can be recovered from a single game, and what fundamentally limits the recovery? We specify the channel exactly — including what it certifies (a hit locates a card; a declaration reveals its true holders, making foreign and own-hand-only declares exact public observations, not inferences) and what it structurally omits. From the channel we build a 14-dimensional feature vector of rates and shares per seat, calibrate a deliberately simple diagonal-Gaussian classifier on 1,350 mirror games, and report two small empirical methods findings: the Gaussian normaliser term must be dropped, and per-style variances must be shrunk halfway to pooled.',
     method:
@@ -316,6 +316,26 @@ const PAPERS: Paper[] = [
       label: 'The floor, and the two nulls it reclassifies — §8a',
       external: true,
       pathLabel: 'github.com/…/CONCESSION.md',
+    },
+  },
+  {
+    slug: 'frontier',
+    serial: '10',
+    kind: 'Cross-engine result',
+    title: 'Against the Frontier: A Cross-Engine Measurement and the Bridge Defect That Nearly Buried It',
+    question:
+      'Everything this project measured, it measured against itself. Played inside somebody else’s engine against the best bot they have written, how good is it actually?',
+    finding:
+      'Not good, and the reason is not the one the first measurement gave. FishAI wins 27.08% against SESTINA v1.0 over 7,200 games in that project’s own C++ engine, and sits below their entire published lineage — it loses to v0.5 and v0.6 too, placing between their v0.3 and v0.4, the release that added an exact deal posterior four versions before search existed there. But it declares as accurately as the frontier does: 98.42% against 98.46%. What it cannot do is prove what its own team already holds, sitting on a resolved set for 9.30 events where SESTINA sits for 2.92 — and a cheating oracle that cashes every lock instantly is worth +5.75 of the 22.17 points to even, a quarter of the gap. The other ~16.4 points are unattributed and nobody measured them.',
+    abstract:
+      'The first version of this measurement published 24.22%, a figure depressed 3.44 points by a rules-dialect mismatch in the bridge: us54 compels a cardless turn-holder to declare, their engine offers it a free pass instead, and the adapter translated the compulsion into a host that does not impose it. Every such declaration spent a set to avoid a move that costs nothing. The defect survived two adversarial audits, eight corruption counters reading zero, and a mirror-cell control that returned a perfect 50.0000% across a four-point hole — because a mirror cell plays one policy against itself on duplicate deals and is forced to 50% by construction, which their engine prints on its own power line. What caught it was a protocol counter reading zero where zero was impossible, filed at the time as a coverage gap.',
+    method:
+      'FishAI’s decision function registered as a guest bot over that project’s documented JSON-line protocol, their engine built from source in a container with floating-point contraction off so their three identity controls pass. Cells are 200 deals × 6 rotations = 1,200 games, duplicate-dealt, and every interval is quoted per deal rather than per game — the paired floor is ±6.93 points for one cell against the ±2.83 a game count would suggest, and several comparisons in the first version sat inside that band. Nothing of theirs is copied; their measured findings are cited as theirs.',
+    evidence: {
+      href: 'https://github.com/MeagerPotato/FishAI/blob/main/WHY-FISHAI-LOSES.md',
+      label: 'The loss anatomy — 139 cells, and every withdrawn number',
+      external: true,
+      pathLabel: 'github.com/…/WHY-FISHAI-LOSES.md',
     },
   },
 ]
@@ -378,7 +398,7 @@ const ANSWERED: Topic[] = [
     status: 'partly',
     question: 'Can you tell what style a seat is playing from the public log alone?',
     answer:
-      'Partly — twice chance at one game. 22.4% top-1 against an 11.1% floor at end of game, and only 16.4–20.2% at the 40–80 event horizons the engine actually acts on. Four styles read at or near chance; the Ghost reads at 50.4%. The limit is how few decisions a style reveals, not the model.',
+      'Partly — twice chance at one game. 22.0% top-1 against an 11.1% floor at end of game, and only 16.1–21.7% at the 40–80 event horizons the engine actually acts on. Four styles read at or near chance; the Ghost reads best, at 41.4% on the regenerated artifact. The limit is how few decisions a style reveals, not the model.',
     source: '/lab/adaptive#classifier · observability',
   },
 ]
@@ -568,29 +588,33 @@ export function Papers() {
       current="/papers"
       docTitle="Research papers"
       which={which}
-      stamp="six papers · built from papers/*.tex"
+      stamp="ten papers · built from papers/*.tex"
     >
       {/* ---- hero ------------------------------------------------------------------------- */}
       <Section noRule noMarks>
         <MaskedLines
           level="h1"
-          lines={['Six papers,', 'one question each,', 'and *four of the answers are no*.']}
+          lines={['Ten papers,', 'one question each,', 'and *eight of the answers are no*.']}
         />
         <div className={s.split} style={{ marginTop: 'var(--fa-sp-head)' }}>
           <Reveal as="p" className={s.prose}>
             FishAI is a bot that plays Canadian Fish and a laboratory that measures it. The
-            papers below are what the laboratory has written down: three system papers tracing
-            the engine from v0.5 to v1.5, and three focused results that take one load-bearing
-            caveat each and measure it to the end. Every one is built from a committed LaTeX
-            source, and every number in them is a field of an artifact this site renders.
+            papers below are what the laboratory has written down: four system papers tracing
+            the engine from v0.5 to v2.0, five focused results that take one load-bearing caveat
+            each and measure it to the end, and one cross-engine match played inside another
+            project&rsquo;s engine against their frontier agent. Every one is built from a
+            committed LaTeX source, and every number in them is a field of an artifact this site
+            renders.
           </Reveal>
           <Reveal as="div" className={s.stack}>
             <p className={s.prose}>
-              Four of the six headlines are <strong>negative results</strong>, and they are the
-              point rather than an embarrassment. A proved theorem measured at zero, a knob that
-              was wired and swept and never reached, an adaptive agent that provably becomes the
-              static one and then bills you for the trip — those are findings, and the series
-              reports them in the same voice as the win.
+              Eight of the ten headlines are <strong>negative results</strong>, and they are the
+              point rather than an embarrassment. A proved theorem measured at zero; a knob that
+              was wired and swept and never reached; an adaptive agent that provably becomes the
+              static one and then bills you for the trip; a rule the owner asked for that lost,
+              and won only inverted; a match against another project&rsquo;s frontier agent lost
+              at 27.08% — those are findings, and the series reports them in the same voice as
+              the two wins.
             </p>
             <div className={buttonRow}>
               <Button href="#topics" variant="line">
@@ -661,8 +685,8 @@ export function Papers() {
       {/* ---- the system papers ------------------------------------------------------------ */}
       <Section id="series" badge="The series">
         <SectionHead
-          lines={['Three system papers,', 'each answering', 'the *last one’s question*.']}
-          sub="v0.5 asks whether any style is superior and finds one. v1.0 asks whether reading the table beats committing to that winner, and finds it costs. v1.5 asks what difficulty should be if not random blundering, and finds bits. Read in order, they are one argument."
+          lines={['Four system papers,', 'each answering', 'the *last one’s question*.']}
+          sub="v0.5 asks whether any style is superior and finds one. v1.0 asks whether reading the table beats committing to that winner, and finds it costs. v1.5 asks what difficulty should be if not random blundering, and finds bits. v2.0 asks whether to avoid the opponents who would punish a conceded turn, and finds that the seat you most want to avoid is the seat you most want to ask. Read in order, they are one argument."
         />
         <div className={p.papers}>
           {PAPERS.filter((paper) => paper.kind.startsWith('System')).map((paper) => (
@@ -674,8 +698,8 @@ export function Papers() {
       {/* ---- the focused results ---------------------------------------------------------- */}
       <Section id="results" badge="Focused results">
         <SectionHead
-          lines={['Three caveats,', 'taken seriously enough', 'to get *their own papers*.']}
-          sub="Each of these began as a footnote in a larger paper and turned out to carry more weight than the thing it qualified: an absorbing resource worth nothing, a parameter that was never consulted, and the exact ceiling on reading a player from a public log."
+          lines={['Six caveats,', 'taken seriously enough', 'to get *their own papers*.']}
+          sub="Five of these began as a footnote in a larger paper and turned out to carry more weight than the thing they qualified: an absorbing resource worth nothing, a parameter that was never consulted, the exact ceiling on reading a player from a public log, what a miss actually licenses you to conclude, and what the instrument behind every null in this project could resolve. The sixth is the caveat underneath all of them — everything here was measured against ourselves — and it answers that by going and playing somebody else’s frontier agent."
         />
         <div className={p.papers}>
           {PAPERS.filter((paper) => !paper.kind.startsWith('System')).map((paper) => (
@@ -795,7 +819,7 @@ export function Papers() {
               role: 'github.com/MeagerPotato/FishAI',
               body:
                 'The engine, the simulators, the committed artifacts, and the LaTeX source of ' +
-                'all six papers under papers/. MIT licensed.',
+                'all ten papers under papers/. MIT licensed.',
             },
           ]}
         />

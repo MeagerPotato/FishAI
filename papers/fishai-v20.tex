@@ -453,6 +453,19 @@ One naming correction travels with that: the agent was briefly called ``SISTINA'
 returned nothing, and it momentarily looked as though it did not exist. It does, under the other
 spelling \cite{fishlabs}.
 
+\medskip
+\noindent\emph{Note added September 2026.} The compiler has since been installed and SESTINA v1.0
+has been played: their engine built from source, FishAI registered as a guest bot over their
+JSON-line protocol, $7{,}200$ games, lost at $27.08\%$ \cite{frontierpaper}. Nothing in this section
+is withdrawn, because none of it was a claim about what is possible in general --- no game in
+\emph{this} paper is a game against SESTINA v1.0, and the standing reported below is still the
+standing this paper measured, in the engine it measured it in. What the later match changes is how
+that standing should be read. It is not a proxy for the frontier: Section~\ref{sec:standing} finds
+FishAI one to seven points under even against their top four TypeScript bots, and against the agent
+four releases above those bots the deficit is $22.92$ points of win rate, so the near-parity below
+does not extend upward. The defusal transfer of Table~\ref{tab:xplay} is unaffected --- it is a
+paired within-opponent delta, and the later match moved no knob it depends on.
+
 \subsection{The bridge, and the handicap it imposes}
 \label{sec:bridge}
 
@@ -509,7 +522,7 @@ these bots. Note what the table does \emph{not} say: the \code{defuse: 1} column
 against all four. Defusal recovers about $1.6$ sets of a deficit it does not close; FishAI loses to
 their top bots either way, by less with the mechanism on.
 
-Since SESTINA could not be run, their reported evidence is cited as theirs
+Since SESTINA is not among the opponents measured here, their reported evidence is cited as theirs
 \cite{fishlabs,crossplay}: SESTINA v1.0 beats their pre-registered target by $+3.33$ pp $[+2.88,
 +3.78]$ over $48{,}000$ games and the deployed v0.6 policy by $+4.63$ pp $[+4.19, +5.06]$ over the
 same $48{,}000$. \emph{Frontier margins in this game are small} --- a seventh development cycle with
@@ -1099,9 +1112,15 @@ would be misreporting the work.
   concealment files executes under it; and the bounded arm's licence scan retires licences against
   budgeted knowledge while the ask history it scans is not itself budgeted, a fix that would change
   every committed v1.5 number \cite{v15paper,bounded}.
-\item \textbf{A true match against SESTINA v1.0 is possible and is blocked only by a missing
-  compiler} (Section~\ref{sec:sestina}). Their repository documents a JSON-line cross-play protocol;
-  installing a C++ toolchain would make it a day's work \cite{crossplay,fishlabs}.
+\item \textbf{A true match against SESTINA v1.0 was possible, was blocked only by a missing
+  compiler, and has since been run} (Section~\ref{sec:sestina}). Installing a C++ toolchain and
+  speaking their documented JSON-line protocol made it a day's work, as predicted; the result is
+  $27.08\%$ over $7{,}200$ games and is reported separately \cite{frontierpaper,fishlabs}. What
+  this item did not anticipate is that the first attempt returned $24.22\%$ and was wrong: the
+  adapter translated \usff{}'s compulsion to declare into a host that does not impose it, and the
+  mirror-cell control could not catch it because a mirror cell is forced to $50\%$ by
+  construction. The number was withdrawn rather than corrected. The remaining future work is
+  therefore not the match but the $16.4$ points of it that no mechanism yet explains.
 \end{itemize}
 
 \section{Conclusion}
@@ -1235,9 +1254,15 @@ A.~Hsieh. The detection floor: what a duplicate-deal instrument can and cannot r
 project; companion paper, published alongside this one, 2026. The per-pair SD, the power model, the
 two parts that did not replicate, and the reclassification of two of this paper's nulls.
 
+\bibitem{frontierpaper}
+A.~Hsieh. Against the frontier: a cross-engine measurement and the bridge defect that nearly buried
+it. FishAI project; companion paper, 2026. The $7{,}200$-game match against SESTINA v1.0 inside
+their C++ engine, the standing against their published lineage, the loss anatomy, and the withdrawn
+first measurement.
+
 \bibitem{fishlabs}
-\code{dylann4500}. fishlabs --- a Canadian Fish engine, bot family and evaluation lab. GitHub
-repository, \url{https://github.com/dylann4500/fishlabs}. The C++ SESTINA v1.0 agent and its
+\code{dylann4500}. FishLab --- a Canadian Fish engine, bot family and evaluation lab. GitHub
+repository, \url{https://github.com/dylann4500/FishLab}. The C++ SESTINA v1.0 agent and its
 reported margins, the TypeScript lab engine and its eight bots, the \code{lockout} danger-penalty
 strategy, and the JSON-line cross-play protocol. The repository carries no licence file; nothing
 from it is reproduced here.

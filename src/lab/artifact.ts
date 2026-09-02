@@ -8,7 +8,7 @@
  * an SPA rewrite, since a rewrite that does not carve out the artifact path serves index.html
  * for it. This repository ships no host config of its own; there is nothing to keep in sync.
  *
- * Four cases ship. The **default is `v2` — the current measured run**; the other three exist to
+ * Three cases ship. The **default is `v2` — the current measured run**; the other two exist to
  * keep every render path and the refusal honest, and each states what it is when loaded:
  *
  *   `v2`        **matrix v2, the default** — the 36-cell x 4,300-pair run as **re-measured at
@@ -19,23 +19,28 @@
  *               exploitability search truncated to 60 candidates; STYLES.md §6.5 reports what
  *               moved between the two and what it costs the claims made from the first. This is
  *               the committed evidence the site opens on.
- *   `dominant`  **matrix v1** — the same 36 cells on the same 4,300 seeds at `819eebb`, before
- *               the CONTAINMENT.md turn-pass existed. Kept **alongside** v2 rather than replaced
- *               by it so the engine change between them is auditable from the committed bytes:
- *               every deal is played by both engines, so `?case=v2` against `?case=dominant` is
- *               a controlled comparison rather than two independent samples.
+ *   (retired)   **matrix v1 is no longer a case.** `src/lab/data/style-results.dominant.json`
+ *               holds the same 36 cells on the same 4,300 seeds at `819eebb`, before the
+ *               CONTAINMENT.md turn-pass existed, and it was served as `?case=dominant` so that
+ *               the engine change between it and v2 was auditable from committed bytes.
  *
- *               That argument is why both files are here and it still holds — but state its reach
- *               honestly, because it has narrowed. There are now **three** engine generations and
- *               **two** committed artifacts: `819eebb`, `1667a1d`, `1fdd22e`. Only the first and
- *               the last are on disk. So the comparison these bytes support now spans *both*
- *               engine changes at once and cannot attribute anything to either alone. The middle
- *               generation is not recoverable from this repository — it exists only in git
- *               history, and the only record of what it measured is STYLES.md §6.4, which is
- *               annotated rather than overwritten for exactly that reason. Committing a third
- *               case would restore the resolution (same seeds, so it would be the same controlled
- *               comparison); until one is, do not describe a v1-vs-v2 diff as isolating a single
- *               change.
+ *               The September 2026 turn-pass correction (RULES_US54.md §4) retired it. It was
+ *               measured under the superseded rules document, so §1.1's guard refuses it, and
+ *               there is no honest re-stamp: an artifact's bytes are evidence about the rules
+ *               that produced them as much as about the engine that did.
+ *
+ *               **The file stays committed, and is deliberately not deleted.** The contained-book
+ *               paper's central result is a paired v1-against-v2 comparison, and those two files
+ *               differ by the turn-pass policy and nothing else — which is what makes it a
+ *               measurement of the move rather than of an engine generation. Deleting the file
+ *               would delete that evidence. It is simply no longer offered as a view.
+ *
+ *               `src/lab/data/style-results.precorrection.json` is the other half of that record:
+ *               the same 36 cells on the same seeds at the current engine with the turn-pass rule
+ *               reverted, so v2 against it isolates the rules correction alone. Its records digest
+ *               reproduces the pre-correction v2 exactly, which is what certifies the isolation.
+ *               It is committed evidence rather than a case, for the same reason — it carries the
+ *               old rules hash.
  *   `cyclic`    the **synthetic fixture** — generated data, not simulation output, and stamped
  *               as such on every page that loads it. It exists to prove the site can render a
  *               cyclic verdict honestly (criterion 3 fails, so the verdict is NOT a winner),
@@ -62,7 +67,6 @@ import type { GameAction, Seat } from '../../lib/engine/index.ts'
 import type { Criterion } from '../../lib/lab/analysis/index.ts'
 
 import cyclicRaw from './data/style-results.json?raw'
-import dominantRaw from './data/style-results.dominant.json?raw'
 import v2Raw from './data/style-results.v2.json?raw'
 import staleRaw from './data/style-results.stale.json?raw'
 
@@ -546,7 +550,6 @@ export function parseArtifact(text: string, source: string): LabArtifact {
 
 const SOURCES: Record<ArtifactCase, { file: string; text: string }> = {
   cyclic: { file: 'src/lab/data/style-results.json', text: cyclicRaw },
-  dominant: { file: 'src/lab/data/style-results.dominant.json', text: dominantRaw },
   v2: { file: 'src/lab/data/style-results.v2.json', text: v2Raw },
   stale: { file: 'src/lab/data/style-results.stale.json', text: staleRaw },
 }
@@ -570,12 +573,11 @@ function load(which: ArtifactCase): LoadResult {
 /**
  * Parsed once, at module load of the lab chunk. Eager rather than lazily cached on purpose: a
  * lazy cache would have to be written to during render, and a component that mutates module
- * state while rendering is exactly what the React Compiler rule set exists to catch. Four
+ * state while rendering is exactly what the React Compiler rule set exists to catch. Three
  * documents parse in single-digit milliseconds.
  */
 const LOADED: Record<ArtifactCase, LoadResult> = {
   cyclic: load('cyclic'),
-  dominant: load('dominant'),
   v2: load('v2'),
   stale: load('stale'),
 }

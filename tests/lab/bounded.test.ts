@@ -118,8 +118,19 @@ function runSingleSuite(config: BoundedLabConfig): BoundedSingleRunOutput {
   return assembleBoundedSingleRun(config, results, { wallMs: 1, workers: 1, generatedAt: '2026-01-01T00:00:00.000Z' })
 }
 
+/**
+ * The tiny run's raw task results, computed once. Both doctoring tests below need their own
+ * deep clone of these, and replaying the whole suite per test costs seconds to rebuild input
+ * this module already has.
+ */
+const SINGLE_TASK_RESULTS = planBoundedSingleTasks(TINY).map((t) => runBoundedTask(t))
+
 /** The tiny E4b run — the SAME config as RUN, so `extendBoundedResults` accepts the pair. */
-const SINGLE_RUN = runSingleSuite(TINY)
+const SINGLE_RUN = assembleBoundedSingleRun(TINY, SINGLE_TASK_RESULTS, {
+  wallMs: 1,
+  workers: 1,
+  generatedAt: '2026-01-01T00:00:00.000Z',
+})
 
 /**
  * The tiny E4b-power run: the SAME grid on a fresh, disjoint seed prefix at a different game
@@ -641,8 +652,7 @@ describe('E4b: the tiny run', () => {
   })
 
   it('a broken ∞ reproduction VOIDS the run — the P8 health gate', () => {
-    const results = planBoundedSingleTasks(TINY).map((t) => runBoundedTask(t))
-    const clone = JSON.parse(JSON.stringify(results)) as BoundedTaskResult[]
+    const clone = JSON.parse(JSON.stringify(SINGLE_TASK_RESULTS)) as BoundedTaskResult[]
     let doctored = false
     for (const tr of clone) {
       for (const r of tr.records) {
@@ -659,8 +669,7 @@ describe('E4b: the tiny run', () => {
   })
 
   it('a record straying from the registered read-seat mapping is refused', () => {
-    const results = planBoundedSingleTasks(TINY).map((t) => runBoundedTask(t))
-    const clone = JSON.parse(JSON.stringify(results)) as BoundedTaskResult[]
+    const clone = JSON.parse(JSON.stringify(SINGLE_TASK_RESULTS)) as BoundedTaskResult[]
     // Game 0's registered seat is 0; move the read to seat 4 on one record.
     clone[0].records[0].readSeat = 4
     const bad = assembleBoundedSingleRun(TINY, clone, { wallMs: 1, workers: 1, generatedAt: 'x' })
@@ -1426,10 +1435,14 @@ describe('the committed artifact', () => {
     )
     expect(a.crossDesign.fromBits).toBe(64)
     expect(a.crossDesign.toBits).toBe(BOUNDED_INF_BITS)
-    // The effect is the committed P7 64→∞ magnitude; the pilot's post-hoc power at it is the
-    // ~52% the E4b review computed — the number the power run exists to correct.
-    expect(a.crossDesign.effect).toBeCloseTo(0.005278, 5)
-    expect(a.crossDesign.pilot.postHocPower).toBeCloseTo(0.524, 2)
+    // The effect is the committed P7 64→∞ magnitude, and the pilot's post-hoc power at it is
+    // what the power run exists to correct — the pilot is underpowered at this effect by
+    // construction, and the record run is better but still far from adequate. Both numbers move
+    // whenever the artifact is regenerated; what the test pins is that the pilot is the weaker
+    // of the two, which is the reason the power run was registered at all.
+    expect(a.crossDesign.effect).toBeCloseTo(0.001574, 5)
+    expect(a.crossDesign.pilot.postHocPower).toBeCloseTo(0.107, 2)
+    expect(a.crossDesign.pilot.postHocPower).toBeLessThan(a.crossDesign.postHocPower)
   })
 })
 

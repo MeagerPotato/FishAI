@@ -822,6 +822,50 @@ measurements here say where its leverage would have to come from. Measuring
 rather than asserting cost two corrections on the way to a zero; both
 corrections, and the zero, are the point.
 
+\section{Addendum: the artifact this paper pairs, and the one the lab now serves}
+\label{sec:addregen}
+
+\emph{September 2026.} Two things happened to the matrix after this paper was written, and
+neither disturbs its result --- but the second changes what a reader will find if they open the
+lab looking for these numbers, so it is recorded here rather than left to be discovered.
+
+\textbf{First, a rules correction.} \code{RULES\_US54.md} \S4 marked a rule \code{[DERIVED]} and
+the inference was wrong: when a declare emptied the current turn-holder the engine advanced the
+turn to the next seat in ascending cyclic order holding cards, which is an opponent whenever that
+opponent holds a card, where the owner's rulebook passes the turn to a teammate. Over 400 games,
+19 of the 56 such events handed the turn to the wrong team \cite{rules54}. The engine is
+corrected and the whole corpus was regenerated at the new rules hash.
+
+\textbf{Second, and consequently, \code{style-results.v2.json} has been regenerated again.} The
+file path this paper's Section~\ref{sec:matrix} names now holds a fourth measurement of that
+matrix, not the one Table~\ref{tab:v2} reports.
+
+\subsection{Why the central result is untouched}
+
+\textbf{Nothing in Sections~\ref{sec:mirror}--\ref{sec:small} may be re-derived from the current
+artifact, and nothing in them needs to be.} This paper's measurement of the contained-book
+turn-pass is a \emph{paired} comparison between two committed artifacts, v1 and v2, which differ
+by the turn-pass policy and by nothing else \cite{artifacts}. That is what makes
+$\Delta = -0.0018 \pm 0.0014$ a measurement of the move rather than of an engine generation. The
+artifact now on that path differs from v1 by the turn-pass, the concession layer \emph{and} the
+rules correction, so substituting it would measure three changes and attribute them to one. The
+v1 and v2 files this paper reads are unchanged on disk; the pairing stands exactly as printed.
+
+\subsection{What the correction was worth, where it can be seen}
+
+The rules correction is measurable on the matrix as a whole and it is very small. Re-running the
+identical 36 cells and 4{,}300 duplicate pairs with the turn-pass rule as the only difference
+moves no cell by as much as two of its own standard errors: the mean absolute per-cell move is
+$0.0016$ and the largest is $0.0038$, against a per-cell standard error of about $0.005$. Punter's
+mean score moves by $0.0006$ and the dominance verdict is unchanged \cite{v05}.
+
+\textbf{That is a fact about the instrument, not a verdict on the defect.} A duplicate-deal design
+pairs two arms that both carry the rule, so a perturbation symmetric between them cancels --- and
+this one was symmetric. A defect firing in about one game in twenty-one was invisible to a
+309{,}600-game measurement. Section~\ref{sec:small}'s argument that a conceded turn is worth about
+one card, and that one card does not win races to five, is if anything strengthened by that: this
+matrix cannot resolve effects of the size a single turn is worth, whoever the turn goes to.
+
 \begin{thebibliography}{99}
 
 \bibitem{v05}

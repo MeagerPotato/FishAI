@@ -175,9 +175,9 @@ function windowAfter(config: RulesConfig, open: Seat | null): Partial<GameState>
  * The next seat strictly after `from`, ascending and cyclic, that still holds cards; `from`
  * itself is the last candidate, and `null` means nobody holds anything.
  *
- * RULES_US54.md §4 [DERIVED]: this is where the turn goes when a declare empties the current
- * turn-holder — a case that cannot arise under the 48-card default, where claims are
- * turn-only and so only the claimant can be emptied by their own claim.
+ * RULES_US54.md §4: this is where the turn goes when a declare empties the current turn-holder
+ * and their whole team is out, so there is no teammate to pass to. While a teammate does hold
+ * cards the turn is passed rather than advanced — see `declareTail`.
  */
 function nextSeatWithCards(hands: readonly (readonly Card[])[], from: Seat): Seat | null {
   for (let i = 1; i <= 6; i++) {
@@ -462,7 +462,7 @@ function reduceClaim(
   }
 
   // --- post-declare turn and window handling, `us54` (RULES_US54.md §1 row 16, §3, §4) ---
-  if (rules.declareTiming === 'anyTime') return declareTail(state, { hands, books, score }, seat, events)
+  if (rules.declareTiming === 'anyTime') return declareTail(state, { hands, books, score }, events)
 
   // --- post-claim cascade, `pagat48` (RULES.md §4 precedence) ---
   if (state.phase === 'endgame') {
@@ -497,8 +497,16 @@ function reduceClaim(
  *
  * RULES_US54.md §1 row 16: the turn is **unaffected**. An out-of-turn declare is an
  * interjection — play resumes with whoever held the turn; if the turn-holder declared, their
- * turn continues and they ask next (once the re-opened window closes on them). §4 adds the two
- * derived out-of-cards rules that the 48-card default can never reach, both handled below.
+ * turn continues and they ask next (once the re-opened window closes on them). §4 covers the
+ * one case the 48-card default can never reach: a declare that empties the turn-holder.
+ *
+ * That case has exactly one rule, and whose declare caused it does not enter into it. A
+ * turn-holder left with no cards passes the turn to a **teammate** of their choosing, whether
+ * their own declare emptied them or somebody else's did. Earlier revisions derived a second
+ * rule for the out-of-turn case — next seat with cards, ascending and cyclic — which hands the
+ * turn to seat `turn + 1`, an opponent, whenever that opponent holds a card. That inference was
+ * wrong against the owner's rulebook, it was measured giving the turn to the wrong team in
+ * about one game in twenty-one, and it is gone: both paths now fall into the same `awaitPass`.
  *
  * Whatever the turn ends up being, the window re-opens on it from the top (§3): a declare that
  * resolves is new public information that may make another set declarable, so the offer starts
@@ -507,35 +515,28 @@ function reduceClaim(
 function declareTail(
   state: GameState,
   patch: Pick<GameState, 'hands' | 'books' | 'score'>,
-  declarer: Seat,
   events: PublicEvent[],
 ): ReduceResult {
   const { hands } = patch
   const turn = state.turn
   const config = state.config
 
-  if (declarer !== turn) {
-    // Out-of-turn declare. It does not move the turn — unless it emptied the turn-holder, who
-    // drops out; §4 [DERIVED] then sends the turn to the next seat in ascending cyclic order
-    // that still holds cards. If the *declarer* emptied themselves they simply drop out and do
-    // NOT pass: `awaitPass` is a turn action and they never held the turn (§4 [DERIVED]).
-    const next = hands[turn].length > 0 ? turn : (nextSeatWithCards(hands, turn) ?? turn)
-    return accept(state, { ...patch, turn: next, ...windowAfter(config, next) }, events)
-  }
-
-  // The turn-holder declared: their turn continues (row 16).
+  // The turn is unaffected while the turn-holder still holds cards (row 16) — and that covers
+  // an out-of-turn declarer who emptied *themselves*: they simply drop out and do not pass,
+  // because `awaitPass` is a turn action and they never held the turn (§4).
   if (hands[turn].length > 0) return accept(state, { ...patch, ...windowAfter(config, turn) }, events)
 
-  // Emptied by their own declare. RULES.md row 20's pass is still in force here — §4 scopes it
-  // to exactly this case — but only while a teammate actually holds cards. The window closes
-  // for the duration: `awaitPass` is not a declare phase (§3.1), and it re-opens on the seat
-  // that receives the turn.
+  // The turn-holder has been emptied — by their own declare or by somebody else's; §4 makes no
+  // distinction. RULES.md row 20's pass is in force, but only while a teammate actually holds
+  // cards. The window closes for the duration: `awaitPass` is not a declare phase (§3.1), and
+  // it re-opens on the seat that receives the turn.
   if (teamSeats(seatTeam(turn)).some((s) => s !== turn && hands[s].length > 0))
     return accept(state, { ...patch, phase: 'awaitPass', ...windowAfter(config, null) }, events)
 
-  // Whole team out. `us54` has no `endgame`/`awaitDesignate` machinery (§4): the turn simply
-  // moves on to the next seat holding cards, the team with cards declares out the remaining
-  // sets in the ordinary window, and §5 guarantees the clinch arrives.
+  // Whole team out, so there is no teammate to receive the pass. `us54` has no
+  // `endgame`/`awaitDesignate` machinery (§4): the turn simply moves on to the next seat
+  // holding cards, the team with cards declares out the remaining sets in the ordinary window,
+  // and §5 guarantees the clinch arrives.
   const next = nextSeatWithCards(hands, turn)
   // `next === null` means no seat holds a card at all, i.e. all 54 are in resolved sets — which
   // is `resolved === nBooks`, already terminated above. Kept total rather than asserted.

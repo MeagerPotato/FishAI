@@ -1035,9 +1035,15 @@ Stated as designed-for or open, per the laboratory's own checklist \cite{botlab}
   re-running every style over medium-strength inference to detect style-times-skill
   interactions --- has not been run for this roster.
 \item \textbf{Self-play convention lock-in.} A style that wins this tournament may be a style
-  its own roster has learned to read \cite{hu2020}. \emph{Open:} the holdout roster and the
-  cross-play protocol against an independently written bot are specified but not yet run; the
-  artifact's cross-play block is empty.
+  its own roster has learned to read \cite{hu2020}. \emph{Partly closed, September 2026:} the
+  cross-play half has since been run. FishAI's decision function was played as a guest inside an
+  independent project's engine, against their frontier agent, and lost at $27.08\%$ over
+  $7{,}200$ games \cite{frontierpaper}. That is consistent with this threat rather than a
+  dismissal of it, but it does not confirm it either: the loss anatomy attributes the gap to how
+  long FishAI sits on a resolved set ($9.30$ events against $2.92$), leaves roughly $16.4$ of
+  the $22.17$ points to even unattributed, and isolates no convention this roster taught itself.
+  \emph{Still open:} the holdout roster is specified and not run, and this artifact's cross-play
+  block is still empty --- the match was measured in a separate harness and is not a field here.
 \item \textbf{Intransitivity misread as noise.} Designed against: explicit cyclic-energy
   metric, BH-corrected cycle enumeration, and a verdict rule with a first-class cyclic
   outcome.
@@ -1322,6 +1328,91 @@ the list so much as it supplies the first worked example for two entries already
 ``an untuned roster'' and the standing caution that every result here is conditional on the
 engine that produced it.
 
+\section{Addendum 2: the turn-pass correction, re-measured}
+\label{sec:addturnpass}
+
+\emph{September 2026.} \code{RULES\_US54.md} \S4 carried a rule marked \code{[DERIVED]} whose
+inference was wrong. A declare that emptied the current turn-holder advanced the turn to the next
+seat in ascending cyclic order still holding cards --- and because teams alternate by seat parity,
+that is seat $\mathit{turn}+1$, an \textbf{opponent}, whenever that opponent holds a card. The
+owner's rulebook passes the turn to a \textbf{teammate}, which is what row 20 already did when a
+seat's own declare emptied it. Measured over 400 games and 3{,}079 declares: 56 out-of-turn
+declares emptied the turn-holder, 37 had a teammate still holding cards, and \textbf{19 gave the
+turn to the wrong team}, about one game in twenty-one.
+
+The engine now routes both cases into one \code{awaitPass}. The rules document is corrected, its
+hash moved from \code{b4c7fef7} to \code{e9311958}, and the whole corpus was regenerated
+\cite{rules}.
+
+\subsection{The verdict survives a third time}
+
+\begin{table}[t]
+\centering
+\caption{The four criteria across all three measurements of this matrix. Table~\ref{tab:addcriteria}'s
+two columns, plus the corrected rule. The verdict is \emph{dominant} in all three.}
+\label{tab:addturnpasscrit}
+\small
+\begin{tabular}{@{}clp{3.4cm}p{3.4cm}p{3.4cm}@{}}
+\toprule
+\# & Criterion & As published & Re-measured & Rule corrected \\
+\midrule
+1 & highest mean score & Punter $0.5829$ over Blitz $0.5602$ &
+    Punter $0.5684$ over Blitz $0.5562$ &
+    Punter $0.5678$ over Blitz $0.5559$ \\
+2 & maximin $> 0.5$ & $0.5190$, CI lo $0.5119$ &
+    $0.5102$, CI lo $0.5022$ &
+    $0.5107$, CI lo $0.5026$ \\
+3 & cyclic energy $< 0.15$ & $0.0112$, none significant &
+    $0.0172$, none significant &
+    $0.0174$, none significant \\
+4 & exploitability not materially worse & $0.0025$ vs.\ median $0.0444$ &
+    $0.0525$ vs.\ median $0.0594$ &
+    $0.0625$ vs.\ median $0.0637$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Criterion 4 passes on its own terms for the first time since the re-measurement.} Punter's
+exploitability is now marginally \emph{below} the rivals' median rather than above it, which is
+what \textquotedblleft{}not materially worse\textquotedblright{} was written to mean --- though the honest reading of both right-hand
+columns is the one Section~\ref{sec:addcrit4} already gives: these are a tie, and the eighteen-fold
+gap the original prose leaned on does not exist.
+
+\subsection{The correction is below this instrument's resolution}
+
+The re-measurement is controlled: the same 36 cells, the same 4{,}300 duplicate pairs, the same
+\code{style-v1} seed prefix, 309{,}600 games, health gates clean again. And unlike
+Section~\ref{sec:addladder}'s re-run, \textbf{this one moves exactly one thing.} Between the
+artifact of Table~\ref{tab:addcriteria} and this one, \code{lib/} changed only in the adaptive
+policy and the generated counter table, neither of which a roster-versus-roster match consults.
+
+\textbf{The isolation is certified rather than argued.} The same 36 cells were re-run a second
+time on the corrected tree with the turn-pass rule --- and only that rule --- reverted. That run
+reproduces the committed artifact's records digest \code{1d7d9f30b59c00f6} exactly, and with it
+all four criteria to the digit: mean score $0.5684$ over Blitz $0.5562$, maximin $0.5102$ with
+CI$_{95}$ lower bound $0.5022$, cyclic energy $0.0172$, and $E(\text{Punter}) = 0.0525$ against a
+rivals' median of $0.0594$. Every difference in Table~\ref{tab:addturnpasscrit}'s right-hand column
+is therefore attributable to the rule and to nothing else. The reverted run is committed as
+\code{src/lab/data/style-results.precorrection.json}, as evidence rather than as a served case,
+because it carries the superseded rules hash.
+
+\textbf{No cell of the 36 moves as much as two of its own standard errors.} The mean absolute
+per-cell move is $0.0016$ and the largest is $0.0038$, against a per-cell standard error of about
+$0.005$. Per-style mean scores move by at most $0.0026$ (Turtle), and Punter's by $0.0006$.
+
+That is the finding of this addendum and it cuts both ways. The reassuring half: no conclusion in
+this paper --- not the ranking, not the dominance verdict, not the near-absence of cyclic energy
+--- was an artifact of the defective rule. The uncomfortable half: \textbf{a genuine rules defect
+that misdirected the turn in about one game in twenty-one was invisible to a 309{,}600-game
+instrument.} A duplicate-deal design pairs two arms that share the defect, and a perturbation
+symmetric between them cancels. Nothing here should be read as evidence that the defect did not
+matter to a \emph{player}; it is evidence that this measurement could not see it, which is a
+statement about the instrument.
+
+The same isolation was run for the adaptive suite and the bit ladder, and returns the same answer
+at the same strength: no gauntlet cell beyond $0.0032$, no ladder rung beyond $0.0003$, every move
+inside its own standard error \cite{adaptivepaper}.
+
 \begin{thebibliography}{99}
 \small
 
@@ -1434,6 +1525,13 @@ A.~Hsieh.
 A.~Hsieh.
 \newblock FishAI v1.0: when best-response adaptation is worth less than nothing.
 \newblock FishAI project; companion paper, published alongside this one, 2026.
+
+\bibitem{frontierpaper}
+A.~Hsieh.
+\newblock Against the frontier: a cross-engine measurement and the bridge defect that nearly
+  buried it.
+\newblock FishAI project; companion paper, 2026. The $7{,}200$-game match inside the other
+  project's engine, the loss anatomy, and the withdrawn first measurement.
 
 \bibitem{repo}
 FishAI project.

@@ -624,6 +624,92 @@ run configuration, health counters (all clean), records digest and engine commit
 \cite{artifact}; and the distance matrix of Table~\ref{tab:dist} recomputes from the
 committed fingerprints alone.
 
+\section{Addendum: re-measured on the regenerated artifact}
+\label{sec:addregen}
+
+\emph{September 2026.} Two things changed under this paper after it was written, and the
+classifier was re-calibrated and re-measured on both. The first is the concession layer of
+v2.0: every roster style now carries \code{defuse} $=1$, which changes what the nine styles
+\emph{do} and therefore what a public log about them contains. The second is a correction to
+\code{RULES\_US54.md} \S4, where a rule marked \code{[DERIVED]} advanced the turn to the next
+seat holding cards when a declare emptied the turn-holder --- an opponent, where the owner's
+rulebook passes to a teammate \cite{rules}. The fingerprints of Section~\ref{sec:classifier}
+were regenerated from fresh mirror games and the accuracy run of Section~\ref{sec:accuracy}
+re-played on the same 1{,}800 held-out cross-play games \cite{artifact}.
+
+\textbf{The headline is unchanged and the shape of the curve with it.}
+
+\begin{table}[t]
+\centering
+\caption{Single-game top-1 over nine styles, as published and as regenerated
+\cite{artifact}. Chance is $11.1\%$ throughout.}
+\label{tab:addcurve}
+\footnotesize
+\begin{tabular}{@{}lrr@{}}
+\toprule
+log horizon & as published & regenerated \\
+\midrule
+40 events   & $16.4\%$ & $16.1\%$ \\
+80 events   & $20.2\%$ & $21.7\%$ \\
+full log    & $22.4\%$ & $22.0\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Twice chance and no better, at every horizon, on both runs. Nothing in
+Sections~\ref{sec:limit} or \ref{sec:scope} moves: the ceiling is still the material rather than
+the model, and it is still set by how few decisions a style reveals.
+
+\subsection{What did move: which style is hardest to read}
+
+The per-style column is a different matter, and this addendum will not smooth it over.
+As published, end-of-game accuracy ran from $50.4\%$ on the Ghost down to $5.6\%$ on the Balanced
+control, and the Balanced-is-invisible result was used in Section~\ref{sec:limit} as the sharpest
+illustration of the divergence argument. \textbf{On the regenerated artifact the floor belongs to
+a different style.}
+
+\begin{table}[t]
+\centering
+\caption{End-of-game top-1 by style on the regenerated artifact, 1{,}200 seat-reads each
+\cite{artifact}. The published run's two anchors were Ghost $50.4\%$ and Balanced $5.6\%$.}
+\label{tab:addbystyle}
+\footnotesize
+\begin{tabular}{@{}lrlr@{}}
+\toprule
+style & top-1 & style & top-1 \\
+\midrule
+Ghost     & $41.4\%$ & Blitz     & $13.8\%$ \\
+Scout     & $32.7\%$ & Banker    & $11.3\%$ \\
+Turtle    & $32.1\%$ & Archivist & $10.6\%$ \\
+Hoarder   & $29.3\%$ & Punter    & $\mathbf{3.6\%}$ \\
+Balanced  & $23.3\%$ &           &           \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The Ghost is still the most legible style and still by a wide margin. But Balanced has risen from
+$5.6\%$ to $23.3\%$ and \textbf{Punter has fallen to $3.6\%$}, so the hardest style to identify
+from a public log is now the roster's strongest one rather than its control.
+
+Two readings are available and this paper commits to neither. The mechanical one is that the
+control is no longer the roster's midpoint: a mechanism every style inherits does not move a
+style relative to the others, but it does move where the \emph{classifier's} decision boundaries
+fall, and Section~\ref{sec:corrections}'s two calibration corrections were both fitted against a
+population that no longer exists. The substantive one is that Punter's behaviour has become the
+population's centre of mass, which would make it the style an unsure classifier defaults
+\emph{away} from. \textbf{Distinguishing them needs a divergence measurement of the regenerated
+roster against its control, and that has not been run.}
+
+\subsection{What this addendum does not re-derive}
+
+The separability geometry of Section~\ref{sec:separability} --- the cluster widths, the Turtle's
+distance from the inert group --- and the two calibration corrections of
+Section~\ref{sec:corrections} were not recomputed. They are statements about the feature space of
+the pre-concession roster, they are reported here as such, and the $40$ of $60$ control-game reads
+that forced the normaliser correction is a fact about that calibration rather than about this one.
+Anyone re-deriving them should expect the numbers to move by at least as much as
+Table~\ref{tab:addbystyle} did.
+
 \begin{thebibliography}{9}
 \small
 

@@ -11,10 +11,21 @@
  * artifact imports `./artifact.ts` and pays for it deliberately.
  */
 
-/** The four committed documents. `v2` is the current measured run and the default. */
-export type ArtifactCase = 'cyclic' | 'dominant' | 'v2' | 'stale'
+/**
+ * The three committed documents the site can serve. `v2` is the current measured run and the
+ * default.
+ *
+ * `dominant` — matrix v1, measured at `819eebb` — was a fourth until the September 2026
+ * turn-pass correction (RULES_US54.md §4). It was measured under the superseded rules document,
+ * so the §1.1 guard refuses it and no honest re-stamp exists: its bytes are evidence about the
+ * engine AND the rules that produced them. The file stays committed at
+ * `src/lab/data/style-results.dominant.json` because the contained-book paper's central result
+ * is a paired comparison between it and v2, and deleting it would delete that evidence. It is
+ * simply no longer offered as a view.
+ */
+export type ArtifactCase = 'cyclic' | 'v2' | 'stale'
 
-const CASES: readonly ArtifactCase[] = ['cyclic', 'dominant', 'v2', 'stale']
+const CASES: readonly ArtifactCase[] = ['cyclic', 'v2', 'stale']
 
 export const ARTIFACT_CASES: readonly ArtifactCase[] = CASES
 

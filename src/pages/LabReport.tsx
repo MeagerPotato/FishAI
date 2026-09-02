@@ -352,7 +352,7 @@ export function LabReport() {
       <Section id="evidence" badge="The evidence">
         <SectionHead
           lines={['Every claim on this page', 'has a page *behind it*.']}
-          sub="This report is the argument; below it are the five deep surfaces that hold the evidence, and the write-ups they feed. Every one is a deep link you can send to somebody. Four of the six write-ups are negative results, and they are listed here as the findings they are."
+          sub="This report is the argument; below it are the five deep surfaces that hold the evidence, and the write-ups they feed. Every one is a deep link you can send to somebody. Eight of the ten write-ups are negative results, and they are listed here as the findings they are."
         />
         <Board
           items={[
@@ -409,9 +409,10 @@ export function LabReport() {
               title: 'The papers',
               role: '/papers',
               body:
-                'Six write-ups with abstracts, PDFs and LaTeX sources — the tournament, the ' +
-                'adaptive result, the memory ladder, and the three focused findings the ' +
-                'caveats on this page became.',
+                'Ten write-ups with abstracts, PDFs and LaTeX sources — the tournament, the ' +
+                'adaptive result, the memory ladder, the concession paper, the five focused ' +
+                'findings the caveats on this page became, and the cross-engine match against ' +
+                'another project’s frontier agent.',
               href: '/papers',
             },
           ]}
