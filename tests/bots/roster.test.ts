@@ -15,16 +15,26 @@
  */
 import { describe, expect, it } from 'vitest'
 import {
+  BASELINE_ASK_WEIGHTS,
   POLICY_CONSTANTS,
   STYLE_IDS,
   STYLE_PRESETS,
   STYLE_ROSTER,
   SKILL_PRESETS,
+  askHitProbability,
   buildKnowledge,
   clinchTarget,
   decide,
   foreignProvableBooks,
+  hashSeed,
+  legalActionsSummary,
+  newGame,
+  rankAsks,
+  rankAsksWith,
+  reduce,
+  resolvePolicy,
   rosterStyles,
+  seatView,
   unaskableBooks,
   us54Config,
   validateStyle,
@@ -365,6 +375,38 @@ function leakSpot(): SeatView {
   })
 }
 
+/**
+ * **The dead-ask spot.** MONET.md §3.2, and the one position in this file where the *score* is
+ * not what has to change.
+ *
+ * Seat 0 holds five of LOW-C (all but `6C`) and one HIGH-D card, with the window CLOSED so the
+ * only legal move is an ask. Three recorded misses pin `6C` to `{2, 4}` — **both of them seat
+ * 0's teammates**, since the seats alternate — so no opponent can be holding it and every legal
+ * `6C` ask is a miss this seat can prove from its own knowledge.
+ *
+ * The `gambleBonus` here is *earned* — the team certainly accounts for five of LOW-C and `6C`
+ * really is the sixth — so the gamble correction leaves this position alone. The narrowing credit
+ * was not earned, and an earlier reading of this position said it was: the two candidates are
+ * seats 2 and 4, while the seat being ASKED is 1, 3 or 5, so no outcome of the ask can remove a
+ * candidate and the miss teaches this seat nothing. That is the dominant class of provable miss,
+ * and the narrowing correction takes the 12 off it — `18·(5/6) + 25 = 40.00`, down from the
+ * `18·(5/6) + 12 + 25 = 52.00` MONET.md §3.2's census recorded.
+ *
+ * At 40.00 it still outscores every live ask on the board (the best is `TD@5` at 23.50), so the
+ * scoring fixes alone do not save this position and only `minHitP` can refuse it — which is what
+ * keeps this the `minHitP` position rather than a third scoring position.
+ */
+function deadAskSpot(): SeatView {
+  return mkView({
+    seat: 0,
+    hand: ['2C', '3C', '4C', '5C', '7C', '9D'],
+    counts: [6, 10, 10, 10, 6, 12], // 6 + 10 + 10 + 10 + 6 + 12 = 54
+    turn: 0,
+    log: [gs, ask(0, 1, '6C', false), ask(0, 3, '6C', false), ask(0, 5, '6C', false)],
+    config: us54Config,
+  })
+}
+
 /* ------------------------------------------------------- the vector itself --- */
 
 describe('the STYLES.md §3 roster', () => {
@@ -457,7 +499,10 @@ describe('the STYLES.md §3 roster', () => {
     const r = STYLE_ROSTER
     expect([r.blitz.wHit, r.blitz.wProgress, r.blitz.leakEpsilon, r.blitz.signalling, r.blitz.missTarget])
       .toEqual([90, 30, 0, false, 'most'])
-    expect([r.punter.gambleBonus, r.punter.minHitP, r.punter.declareMaxUncertain]).toEqual([25, 0, 2])
+    // `minHitP` is the one entry in this file that deliberately departs from §3's row: MONET.md
+    // §3.2 replaces the 0 with the dead-ask floor. Everything else on row 3 is verbatim, and the
+    // floor has its own suite below.
+    expect([r.punter.gambleBonus, r.punter.minHitP, r.punter.declareMaxUncertain]).toEqual([25, 1e-9, 2])
     expect([r.banker.declareOnlyWhenCertain, r.banker.minHitP, r.banker.declareEagerness, r.banker.missTarget])
       .toEqual([true, 0.25, 0.2, 'fewest'])
     expect([r.turtle.declareOnlyOwnHand, r.turtle.minHitP, r.turtle.signalling, r.turtle.foreignDeclare])
@@ -687,6 +732,159 @@ describe('every style differs from Balanced, in the way its thesis claims', () =
     }
     // No two styles collapse onto each other either.
     expect(new Set(fingerprint.values()).size).toBe(STYLE_IDS.length)
+  })
+})
+
+/* --------------------------------------------- the dead-ask floor (MONET.md §3.2) --- */
+
+/**
+ * Play `games` whole `us54` games with every seat on `style`, and count the asks the mover's own
+ * knowledge proved were misses.
+ *
+ * `dead` is every such ask; `avoidable` is the subset where a live ask was also on the board,
+ * which is the only class `minHitP` can refuse — when every legal ask is dead the floor is waived
+ * so the seat still acts (`decide.ts` `preferredAsk`). The two are reported separately because
+ * conflating them is how a floor gets credited with removing misses no filter could remove.
+ *
+ * Knowledge is rebuilt with `buildKnowledge(view)`, which is full-strength. Sound for `hard` and
+ * `medium`, whose skill presets read the whole log with constraints on and `errorRate: 0`; NOT
+ * sound for `easy`, which sees a 6-event window and blunders 25% of asks, so an ask that is dead
+ * under full knowledge may be perfectly reasonable under easy's.
+ */
+function deadAskSweep(
+  style: StyleParams,
+  skill: (typeof SKILL_PRESETS)['hard'],
+  games: number,
+): { decisions: number; asks: number; dead: number; avoidable: number } {
+  let decisions = 0
+  let asks = 0
+  let dead = 0
+  let avoidable = 0
+  for (let i = 0; i < games; i++) {
+    const seed = `roster-tier-floor-${i}`
+    let s = newGame(seed, us54Config, ((i * 5 + 1) % 6) as Seat)
+    let steps = 0
+    while (s.phase !== 'finished') {
+      if (steps >= 5000) throw new Error(`${seed}: hit the 5000-step cap`)
+      const { seat } = legalActionsSummary(s)
+      const view = seatView(s, seat)
+      const a = decide(view, { skill, style }, hashSeed(`${seed}:${s.moveIndex}`)())
+      decisions++
+      if (a.type === 'ask') {
+        asks++
+        if (askHitProbability(buildKnowledge(view), a.card, a.target) === 0) {
+          dead++
+          if (rankAsks(view).some((r) => r.p > 0)) avoidable++
+        }
+      }
+      const r = reduce(s, a)
+      if (!r.ok) throw new Error(`${seed} step ${steps}: ${r.error.code}`)
+      s = r.state
+      steps++
+    }
+  }
+  return { decisions, asks, dead, avoidable }
+}
+
+describe('the dead-ask floor (MONET.md §3.2)', () => {
+  it('every ROSTER style carries a positive minHitP, so none of them considers a provable miss', () => {
+    for (const id of STYLE_IDS) {
+      expect(STYLE_ROSTER[id].minHitP, `${id}.minHitP`).toBeGreaterThan(0)
+    }
+    // The two that already carried a long-shot appetite keep it; the rest take the floor.
+    expect(STYLE_ROSTER.banker.minHitP).toBe(0.25)
+    expect(STYLE_ROSTER.turtle.minHitP).toBe(0.4)
+    for (const id of STYLE_IDS) {
+      if (id === 'banker' || id === 'turtle') continue
+      expect(STYLE_ROSTER[id].minHitP, `${id}.minHitP`).toBe(1e-9)
+    }
+  })
+
+  it('the three shipped TIERS do NOT carry it — the floor is roster-only, deliberately', () => {
+    // The scope of MONET.md §3.2, pinned rather than implied. `STYLE_PRESETS.easy/medium/hard`
+    // spread `BASELINE`, which spreads `BASELINE_ASK_WEIGHTS` — and that is where `minHitP: 0`
+    // still lives, so `decide(view, 'hard', seed)`, the tier the play surface runs, takes no
+    // dead-ask filter at all.
+    //
+    // Deliberate, and style.ts's standing discipline rather than an oversight: the three tiers
+    // are frozen, and every mechanism since CONTAINMENT.md has been introduced switched off in
+    // `BASELINE` and carried at its measured appetite in the roster instead (`containedPass: 0`,
+    // `defuse: 0`, `conceal: 0` each say so in their own comment). §3.2's arm is Punter
+    // throughout, so extending the floor to `BASELINE` would move three shipped policies that
+    // the milestone never measured.
+    //
+    // What makes that safe rather than merely conventional is the test below: the two
+    // `rankAsksWith` corrections DO reach the tiers, because they are in the scorer rather than
+    // in a style, and they turn out to be the whole of what the tiers needed.
+    for (const tier of ['easy', 'medium', 'hard'] as const) {
+      expect(STYLE_PRESETS[tier].minHitP, `${tier}.minHitP`).toBe(0)
+      expect(resolvePolicy(tier).style.minHitP, `resolvePolicy(${tier}).style.minHitP`).toBe(0)
+    }
+    expect(BASELINE_ASK_WEIGHTS.minHitP).toBe(0)
+  })
+
+  it('...and they no longer need it: the scoring fixes alone retire their AVOIDABLE dead asks', () => {
+    // The measurement that turns "roster-only" from a caveat into a bounded one. An *avoidable*
+    // dead ask is one this seat's own knowledge proves is a miss while a live ask was on the
+    // board — the class `minHitP` exists to refuse. Over 40 whole `us54` games at the hard tier
+    // there are now none.
+    //
+    // Cross-revision, on these exact seeds (`scratchpad/p8-crossrev-tiers.mjs`, `git show HEAD`
+    // vs the working tree): hard 20 avoidable -> 0, medium 42 -> 0. The tiers carry
+    // `gambleBonus: 0`, so the completion bonus never lifted a dead ask for them; what did was
+    // the narrowing credit, and the narrowing correction reaches every style. The floor's
+    // absence from the tiers is therefore a LATENT gap — nothing in this sample is left for it
+    // to catch — and not a shipped defect. If a later change re-opens it, this is the test that
+    // reports it.
+    const sweep = deadAskSweep(STYLE_PRESETS.hard, SKILL_PRESETS.hard, 40)
+    // Non-vacuity first: a sweep that played no asks would report 0 avoidable and prove nothing.
+    expect(sweep.asks, 'the sweep must actually reach the ask policy').toBeGreaterThan(3000)
+    expect(sweep.avoidable, 'avoidable dead asks at the hard tier').toBe(0)
+    // The dead asks that remain are the ones no floor could have refused: every legal ask was a
+    // provable miss, which is exactly the case `preferredAsk` waives the floor for.
+    expect(sweep.dead, 'unavoidable dead asks — the waiver case, which must survive').toBeGreaterThan(0)
+  })
+
+  it('the floor sits below every hit probability the ranker can reach, so it is a partition', () => {
+    // 1/54 is the smallest non-zero `pHit` any position can produce (knowledge.test.ts sweeps
+    // 20,000 real asks for it). A floor under that expresses no appetite at all — it separates
+    // "provably dead" from "everything else" and reorders nothing. Pinned here so that a later
+    // edit cannot quietly turn a correctness knob back into a taste.
+    for (const id of STYLE_IDS) {
+      const floor = STYLE_ROSTER[id].minHitP
+      if (floor === 1e-9) expect(floor, `${id}`).toBeLessThan(1 / 54)
+    }
+  })
+
+  it('refuses a provable miss that outscores every live ask, and takes the live ask instead', () => {
+    const view = deadAskSpot()
+    const k = buildKnowledge(view)
+    const ranked = rankAsksWith(view, k, STYLE_ROSTER.punter)
+    // The premise: the dead ask really is the top of the ranking even after the narrowing
+    // correction has taken 12 off it, and a live ask really is available under it.
+    expect([ranked[0].card, ranked[0].p, ranked[0].score]).toEqual(['6C', 0, 40])
+    const bestLive = ranked.find((r) => r.p > 0)
+    expect(bestLive?.score, 'a live ask must exist, and must still be outscored').toBe(23.5)
+
+    const played = move(view, STYLE_ROSTER.punter)
+    const chosen = ranked.find((r) => played.type === 'ask' && r.card === played.card && r.target === played.target)
+    expect(chosen?.p, `played ${key(played)}`).toBeGreaterThan(0)
+  })
+
+  it('...and it is the floor doing it: the same style at minHitP 0 takes the dead ask', () => {
+    // The counterfactual, so the test above cannot pass for some unrelated reason. This is
+    // exactly what the whole roster did before MONET.md §3.2.
+    expect(key(move(deadAskSpot(), { ...STYLE_ROSTER.punter, minHitP: 0 }))).toBe('ask 6C@1')
+  })
+
+  it('waives the floor when EVERY legal ask is dead, so a starved seat still acts', () => {
+    // Not a regression test — this held before the floor existed and has to keep holding. In
+    // `missSpot` both legal cards are pinned to the two teammates, so nothing clears any floor;
+    // dropping the whole pool would leave the seat with no move at all (decide.ts:1109-1112).
+    for (const id of STYLE_IDS) {
+      const a = move(missSpot(), STYLE_ROSTER[id])
+      expect(a.type, `${id} must still act`).toBe('ask')
+    }
   })
 })
 

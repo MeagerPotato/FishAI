@@ -168,17 +168,32 @@ describe('classifySeats — real views', () => {
   })
 
   it('smoke: turtle seats in turtle-vs-punter games read declare-only-own-hand-ish more often than chance', () => {
-    // 18 games with rotating start seats, seeds disjoint from the fingerprint calibration
+    // 54 games with rotating start seats, seeds disjoint from the fingerprint calibration
     // set. Turtle's public signature (own-hand-only declares, no foreign declares,
     // high-certainty asks) is the roster's most separable axis; "turtle-ish" here means the
     // turtle/banker never-gift families. Chance for a 2-of-9 family is 2/9 of reads. The
     // bound is deliberately loose — accuracy at scale is Stage 2's number, not this suite's,
     // and cross-play games are shorter and noisier than the mirror games the fingerprints
     // were calibrated on.
+    //
+    // **54 games, not the 18 this started at**, and the widening is not cosmetic. At 18 games
+    // (54 reads) the rate carries a standard error near 0.06 against a bar of 0.2222, so the
+    // test was close to a coin flip on a real effect: on the pre-v0.2 tree it read 0.2593 at
+    // 18 games against 0.3407 at 180. 54 games (162 reads) sits where the running rate has
+    // settled — 0.3889 here against 0.3741 at 180 — so a failure now means something moved.
+    //
+    // Something did move, once, and this is the test that caught it. `FEATURE_KEYS` includes
+    // `deadAskShare`, so `data/fingerprints.ts` is calibrated against the ask SCORER and not
+    // merely against the styles. MONET.md §3.2's two `rankAsksWith` corrections changed that
+    // population while the committed table stayed where it was, which took this read down to
+    // 0.2370 at 180 games — below the calibration comment's ~0.31 and barely above chance.
+    // Re-running `node scripts/gen-fingerprints.mjs --games 150` against the v0.2 scorer
+    // restored it to 0.3741 at 180 games and 0.3889 here. [measured, home] The lesson is in
+    // the generator's header: regenerate whenever the policy changes what a style plays.
     let familyTop = 0
     let familyMass = 0
     let reads = 0
-    for (let g = 0; g < 18; g++) {
+    for (let g = 0; g < 54; g++) {
       const pv = playUs54(
         `classify-smoke-${g}`,
         (seat) => (seatTeam(seat) === 0 ? STYLE_ROSTER.turtle : STYLE_ROSTER.punter),
@@ -191,9 +206,12 @@ describe('classifySeats — real views', () => {
         familyMass += r.posterior.turtle + r.posterior.banker
       }
     }
-    expect(reads).toBe(54)
+    expect(reads).toBe(162)
     // Strictly better than the 2/9 chance rate on both the argmax and the posterior mass
-    // (measured at calibration: ~0.31 argmax, ~0.30 mass — modest, and honestly so).
+    // (measured after the v0.2 recalibration: 0.3889 argmax, 0.3310 mass at this N — modest,
+    // and honestly so). The 2/9 bar is the chance rate itself and must never be lowered to
+    // make a run pass: a read at or below it carries no information at all, so a failure here
+    // is a report that the classifier has stopped reading, not a threshold to retune.
     expect(familyTop / reads).toBeGreaterThan(2 / 9)
     expect(familyMass / reads).toBeGreaterThan(0.25)
   })

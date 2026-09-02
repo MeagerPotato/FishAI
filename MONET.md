@@ -635,44 +635,153 @@ explains why the band is 31–37% rather than a point. v0.5 carries no target by
 
 ### 3.2 Monet v0.2 — ask-scorer correctness, with no points claimed
 
-**Ships.** Three fixes in `knowledge.ts`, all verified in the shipped source:
+**Ships.** **One roster spec change and two `knowledge.ts` fixes**, all verified in the shipped
+source. The mix matters and is not a pedantic distinction: the spec change is what invalidated
+v0.1's by-reference registry pin, and the two code changes are what the version table cannot pin
+(see *What v0.2 did to v0.1's identity mechanisms* below).
 
-- **`minHitP: 1e-9` on the roster styles.** It removes every ask the seat's own knowledge proves
-  dead, it has a legality-preserving waiver for genuinely starved turns, and **it cannot change any
-  other ask**, because no ask has p in (0, 1e-9). Consumed at `decide.ts:1109-1112`; Punter ships 0.
-- **`knowledge.ts:809`** — `const narrowing = cand.length > 1 ? 1 / (cand.length - 1) : 1`. Do not
-  grant the full 12-point narrowing credit when `cand.length <= 1` and the certain holder is not the
-  target. **A known miss narrows nothing.**
-- **`knowledge.ts:807, 814-816`** — award `gambleBonus` only when the **asked** card is the set's
-  missing one, not merely when the team accounts for five of six. The comment sitting directly above
-  it — that the asked card is by construction not one of them, by row 7 — **is wrong**:
-  `teamKnownOfBook` (`knowledge.ts:741-749`) counts every card whose certain holder is on the
-  asker's team, **teammates included**, and row 7 only forbids asking for a card *you* hold. Fix the
-  comment with the code.
+- **`minHitP: 1e-9` on the roster styles** — a **spec** change, in `roster.ts` (the `BALANCED` base
+  at :116 and Punter's restatement at :224). It removes the asks the seat's own knowledge proves
+  dead from the ask ranking, it has a legality-preserving waiver for genuinely starved turns, and
+  **it cannot change any other ask**, because no ask has p in (0, 1e-9). Consumed at
+  `decide.ts:985` and `decide.ts:1109-1112`. **Punter ships 1e-9**, as does every roster style that
+  took 0 from `BALANCED`; Banker (0.25) and Turtle (0.4) already carried an appetite and are
+  untouched. Before this milestone Punter shipped 0, and `MONET_VERSIONS['v0.1']` is where that 0
+  still lives.
+  - **Scope: roster-only.** `STYLE_PRESETS.easy/medium/hard` spread `BASELINE`, which spreads
+    `BASELINE_ASK_WEIGHTS` (`style.ts:352-359`), and that still carries `minHitP: 0` — so the three
+    shipped difficulty tiers take no floor. Deliberate: the tiers are frozen and every mechanism
+    since CONTAINMENT.md has been introduced switched off in `BASELINE` and carried at its measured
+    appetite in the roster, and §3.2's arm is Punter throughout. **The gap is latent rather than
+    live**: the two scoring fixes below *do* reach the tiers, and over 40 whole `us54` games they
+    take the tiers' *avoidable* dead asks (a provable miss with a live ask on the board) from
+    **20 → 0 at hard and 42 → 0 at medium**. [measured, home — `git show HEAD:lib` vs the working
+    tree; pinned in `tests/bots/roster.test.ts`]
+  - **What the floor does not refuse, by design:** CONTAINMENT.md's turn-pass deliberately plays a
+    guaranteed miss to hand the turn to a chosen opponent, and it is selected *after* the filter.
+    All 30 avoidable dead asks the shipped Punter still plays in 40 games are that mechanism,
+    identified by trace kind. [measured, home] "Removes every unintended dead ask" is the honest
+    reading of the bullet above.
+- **`knowledge.ts:845`** — `const narrowing = cand.includes(a.target) ? (cand.length > 1 ? 1 /
+  (cand.length - 1) : 1) : 0`. The test is **membership, not cardinality**. An ask can only narrow a
+  card's candidate set by removing the seat it was addressed to, so a target outside `cand` narrows
+  nothing *whatever the set's size*. An earlier shape of this fix keyed on `cand.length <= 1` and so
+  only zeroed the credit for a card pinned to one seat — leaving the dominant class, a card pinned
+  to two or more of the asker's own **teammates**, collecting the full 12 while no opponent could
+  possibly answer. **A known miss narrows nothing**, and the membership test is what makes that true
+  rather than merely stated.
+- **`knowledge.ts:861-866`** — award `gambleBonus` only when the **asked** card is the set's missing
+  one, not merely when the team accounts for five of six. The comment that used to sit directly
+  above it — that the asked card is by construction not one of them, by row 7 — **was wrong**:
+  `teamKnownOfBook` (`knowledge.ts:759-762`) counts every card whose certain holder is on the
+  asker's team, **teammates included**, and row 7 only forbids asking for a card *you* hold. Fixed
+  with the code, via the shared `teamCertainlyHolds` predicate (`knowledge.ts:744`) so that the
+  count and the per-card test cannot disagree about what "the team holds it" means.
 
-**Evidence.** Every avoidable dead ask scored exactly `52.00 = 18·(5/6) + 12 + 25`, which reproduces
-from the shipped weights (`knowledge.ts:758-765`, mirrored at `style.ts:352-359`). 71 dead asks in
-240 games (0.685%) against SESTINA's 10; 61 of the 71 are repeats of an identical earlier guaranteed
-miss. [measured, defective — ask-side, and the declare-side defect moved ask accuracy 0.37 points, so
-the census is essentially untouched]
+Both scoring fixes are structurally confined to `p == 0`: the narrowing credit is now gated on the
+target being a live candidate, which is exactly the condition under which `pHit` is non-zero, and
+the gamble guard fires only when a card the asker's own team certainly holds is being asked for,
+which is dead by construction. That confinement is what makes acceptance item 1 answerable over the
+whole milestone rather than over the knob alone, and it is checked rather than argued — see item 1.
+
+**Evidence.** Before the milestone every avoidable dead ask scored exactly `52.00 = 18·(5/6) + 12 +
+25`, which reproduces from the shipped weights (`knowledge.ts:772-779`, mirrored at
+`style.ts:352-359`). 71 dead asks in 240 games (0.685%) against SESTINA's 10; 61 of the 71 are
+repeats of an identical earlier guaranteed miss. [measured, defective — ask-side, and the
+declare-side defect moved ask accuracy 0.37 points, so the census is essentially untouched]
+
+**After the two scoring fixes the same census position scores 40.00 = 18·(5/6) + 25** — the 12 is
+gone, the 25 stays because that position's completion bonus is earned, and the ask is *still* the
+top of the ranking (the best live ask there scores 23.50). That last part is why `minHitP` is a
+third fix rather than belt-and-braces: the scoring corrections alone do not stop a Punter seat
+asking. Where the completion bonus is *not* earned — a teammate certainly holds the asked card —
+the same ask falls from 52.00 to 15.00, the progress term alone. [measured, home;
+`tests/bots/knowledge.test.ts`, `tests/bots/roster.test.ts`]
 
 **Expected gain: approximately zero win rate.** 0.23 avoidable dead asks/game, ~0.1 cards/game.
 
 **Acceptance test — and the point of this milestone is that it is not a win-rate test.**
 
-1. **Home identity on the unaffected population** — every ask with p > 0 unchanged, 0 mismatches over
-   ≥ 20,000 decisions with `minHitP: 1e-9`.
-2. **Mechanism counter** — the host's DEAD counter on 3 seeds × 200 deals. Measured on the defective
-   bridge it moved 76 → 39 with `minHitP` and 76 → 60 with `gambleBonus: 0`; require the same
-   direction and at least a halving.
+1. **Home identity on the unaffected population** — every ask with p > 0 unchanged, 0 mismatches
+   over **≥ 20,000 asks with p > 0**. The denominator is the protected population itself, not the
+   total decision count: non-ask decisions are out of the fixes' reach entirely and are about
+   six-sevenths of every sweep, so gating on total decisions clears a 20,000 bar on roughly 2,800
+   of the asks the claim is actually about. On the current shape that needs `--seeds 22`.
+   `scripts/byte-identity.mjs` enforces the corrected denominator and prints both numbers.
+
+   Two gates, both required, both PASS:
+
+   | gate | what varies | protected asks | mismatches | dead asks moved |
+   |---|---|---:|---:|---:|
+   | `--gate dead-ask --seeds 22` | the knob alone, on v0.1's scorer | 20,023 | **0** | 641 / 1,835 |
+   | `--gate dead-ask --seeds 22 --gate-tree wt` | the knob alone, on v0.2's scorer | 20,129 | **0** | 26 / 1,224 |
+   | `--gate dead-ask-full --seeds 22` | **the whole milestone**, v0.1 entire vs v0.2 entire | 20,023 | **0** | 913 / 1,835 |
+
+   [measured, home] Non-ask decisions moved 0 of 134,692 in every run. Negative controls fire:
+   `MUTATE_FLOOR=0.5` gives 35 protected mismatches and exit 1; `MUTATE=turtle` on the full gate
+   gives 226 and exit 1. The `dead-ask-full` gate is the one that answers this item for the
+   milestone rather than for the knob — an earlier docstring claimed no whole-milestone diff could,
+   on the false premise that the two scoring fixes move live asks on purpose.
+2. **Mechanism counter** — the host's DEAD counter on 3 seeds × 200 deals; require the same
+   direction and at least a halving. Calibrated on the defective bridge, where it moved 76 → 39
+   with `minHitP` and 76 → 60 with `gambleBonus: 0`.
+
+   > **AMENDMENT REQUIRED — this item does not pass as written.** `fish pathology` pools both
+   > teams into one DEAD number (CORRECTED-FACTS §6), and SESTINA's half is an immovable
+   > denominator: it went 150 → 152 across the change. The **pooled** counter reads
+   > **795 → 434 = 0.5459**, which is a halving missed by four hundredths. Side-attributed to the
+   > FishAI seats it reads **645 → 282 = 0.4372**, and the bot-side instrument corroborates at
+   > **1,372 → 594 = 0.4329** over six seeds. The side-attributed figure is the better
+   > measurement, but restating the bar as "side-attributed" *changes what the bar means* rather
+   > than clarifying it — the calibrating reference (76 → 39, 0.513) was itself pooled. So this is
+   > an amendment for the owner to grant, not a reading a reviewer may adopt: **do not report item
+   > 2 as a plain PASS until §3.2 item 2 is restated as "the host's DEAD counter, side-attributed
+   > to the FishAI seats".** Direction is unambiguous and passes on every counter, every seed.
 3. **Win rate must NOT move** — 6 seeds × 200 deals, |Δ| < 2.83 against v0.1. A move that clears the
-   floor here is evidence of a mistake, not of a gain.
+   floor here is evidence of a mistake, not of a gain. **PASSES**: 27.0833% → 27.2083%, Δ = +0.1250,
+   SD 0.2875 across the six seeds, and the v0.1 arm reproduces §0's published 27.0833% exactly.
+
+**What v0.2 did to v0.1's identity mechanisms, and what replaced them.** v0.1's byte-identity claim
+(§3.1) rested on three things. The spec change broke two of them, and the decision is recorded here
+rather than left to be rediscovered from a red suite:
+
+- **The registry's by-reference pin.** `MONET_VERSIONS['v0.1']` held `STYLE_ROSTER.punter` itself,
+  so editing the roster silently turned `monetPolicy('v0.1')` into v0.2's policy — an arm invoked
+  as `bot:monet-v0.1` would have measured v0.2 under v0.1's label. **Fixed:** `v0.2` is now a named
+  version and takes the by-reference slot; `v0.1` pins `minHitP: 0` explicitly, and
+  `tests/bots/monet.test.ts` pins the deviation set to exactly `{ minHitP }` so the next roster
+  spec change fails a test instead of re-labelling a measurement.
+- **The v0.1 action bank.** `tests/bots/data/monet-v01-bank.ts` digests whole games, and the two
+  scoring fixes move the `p == 0` asks; one such choice re-deals every position after it. **13 of
+  the bank's 27 games diverge on this tree even with v0.1's spec restored** — identical counts with
+  and without the spec pin, which is how we know it is the code and not the knob. No registry pin
+  can make that bank green. **Decision: the v0.1 bank is frozen as the record of the revision it
+  was taken at and is no longer replayed**; a `monet-v02-bank.ts` (36 games, 25,920 decisions) is
+  emitted as the forward baseline in its place. Regenerating the v0.1 bank was refused — it is the
+  only surviving evidence of what v0.1 played.
+- **The cross-revision sweep** is the one mechanism that survives, because it alone can materialise
+  another revision. v0.1's claim now lives there in its re-scoped, still-true form: item 1's
+  `--gate dead-ask-full` above.
+
+**The classifier had to be recalibrated, and this is the milestone's one real capability risk.**
+`FEATURE_KEYS` includes `deadAskShare`, so `lib/engine/bots/data/fingerprints.ts` is calibrated
+against the ask **scorer** and not merely against the styles. The two scoring fixes moved that
+population while the committed table stayed put, and the turtle-vs-punter read fell from **0.3407
+of reads to 0.2370** over 180 games — barely above the 2/9 = 0.2222 chance rate. Re-running
+`node scripts/gen-fingerprints.mjs --games 150` against the v0.2 scorer restored it to **0.3741**.
+[measured, home] The smoke test in `tests/bots/classify.test.ts` was widened from 18 games to 54
+in the same pass: at 18 it read 0.2593 even on the pre-v0.2 tree, close enough to the bar to be a
+coin flip on a real effect. **The v0.5 capability readout must be taken against the recalibrated
+table**, and any later milestone that changes what a style plays has to regenerate it — the
+generator's header now says so.
 
 > **Do not run a win-rate A/B to justify this.** At 0.1 cards/game the effect is far under the
 > **9,604-deals-per-point** line. The drafts quote that figure in games; the engine prints it per
 > deal and the per-deal floor governs (§6.3).
 
-**Cost.** XS for the knob, S for the two scoring fixes plus their home regression.
+**Cost.** XS for the knob, S for the two scoring fixes plus their home regression, and S again for
+the three things the milestone turned out to drag with it: the version registry, the bank decision,
+and the fingerprint recalibration.
 
 ### 3.3 Monet v0.3 — the cheap measured wins, bundled
 
@@ -1454,7 +1563,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | # | decision | state |
 |---|---|---|
 | 1 | ~~**Amend §6.2's pre-registered op-coverage row?**~~ **RESOLVED 2026-09-01 — amended on the owner's sign-off.** See §8.1 for the withdrawal record and §3.1 item 3 for the evidence. Original text: Three independent facts say the row was measured through a lossy channel and the true values are `opAsk` 51,998 · `opPoll` 363,984 · `opPass` 178 · `passfixDeclines` 184 · `opForced` 467 (§3.1 item 3). The row is left as written regardless, because a result may not rewrite the expectation it was tested against. Amending it is Allen's call. | **open** |
-| 2 | ~~**Should Monet play the post-clinch phase at all?**~~ **DOWNGRADED 2026-09-01 — it cannot change a result.** `clinchTarget` is 5 of 9 and `2 x 5 > 9`, so both teams cannot clinch; sets are never taken back, so reaching 5 is a permanent lock. **The winner under `us54` and under the host's play-all-nine is therefore identical by construction**, and the 73.9-76.5% of seat-games that run past the clinch cannot change who won. An earlier note here called it the largest un-modelled region of the foreign game and implied it might be worth points; that was wrong and is withdrawn. **What survives is a measurement hazard, not a strategy one:** the per-decision metrics the whole diagnosis rests on — ask accuracy 52.32 vs 57.38, lock hold 9.30 vs 2.92 — are summed over all ops, including the **47,868 of 416,627 (11.5%)** played after the game was already decided. If Monet behaves differently there, those headline figures are contaminated. **v0.2 splits them pre/post clinch**; nothing may be tuned against the unsplit figures after that. | **downgraded; the split is a v0.2 deliverable** |
+| 2 | ~~**Should Monet play the post-clinch phase at all?**~~ **DOWNGRADED 2026-09-01 — it cannot change a result.** `clinchTarget` is 5 of 9 and `2 x 5 > 9`, so both teams cannot clinch; sets are never taken back, so reaching 5 is a permanent lock. **The winner under `us54` and under the host's play-all-nine is therefore identical by construction**, and the 73.9-76.5% of seat-games that run past the clinch cannot change who won. An earlier note here called it the largest un-modelled region of the foreign game and implied it might be worth points; that was wrong and is withdrawn. **What survives is a measurement hazard, not a strategy one:** the per-decision metrics the whole diagnosis rests on — ask accuracy 52.32 vs 57.38, lock hold 9.30 vs 2.92 — are summed over all ops, including the **47,868 of 416,627 (11.5%)** played after the game was already decided. If Monet behaves differently there, those headline figures are contaminated. **v0.2 splits them pre/post clinch**; nothing may be tuned against the unsplit figures after that. **DELIVERED at v0.2, 6 seeds x 7,200 games, and the split changes two readings.** (a) *Declare accuracy.* The pooled 98.32 / 98.35 parity is contaminated: on the LIVE game FishAI is **ahead**, 99.24 vs 98.18, +1.07 pts, positive on 6 of 6 seeds (sign test p = 0.031 two-sided, per-seed range +0.64 to +1.50; declares cluster within a deal, so this is a paired sign test and NOT a pooled binomial interval). The post-clinch column reverses it, -4.87 — but that column is a phase `us54` does not have and **carries no roadmap target**. (b) *Lock hold.* Splitting it by when the set was CASHED was wrong: the quantity is a DURATION that straddles the clinch, so a lock formed while the deal was live and cashed after it ended had its whole wait credited to post. Split AT THE CLINCH instead, the live-phase wait is **8.44 events, not the 6.72 the cash-time bucketing reported**, and the live-phase ratio to SESTINA is **2.96x** — indistinguishable from the pooled 2.96x, where the cash-time shape had suggested 2.41x live against 4.24x post. **The apparent "the lock problem lives after the clinch" contrast was an artefact of the bucketing.** Ask accuracy is the one metric the split leaves alone: the deficit is -4.95 pre and -5.11 post against -5.08 pooled. | **downgraded; the split is DELIVERED at v0.2** |
 | 3 | **`bounded.ts`'s cost model** (§1.5). A joint posterior has no atomic-fact decomposition, so the bit budget becomes undefined. v0.5 must choose in writing between confining the posterior to the unbounded arm and giving BOUNDED.md a new cost model. | open, due at v0.5 |
 
 ---

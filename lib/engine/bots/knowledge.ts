@@ -733,18 +733,32 @@ function pHit(k: Knowledge, card: Card, target: Seat): number {
 }
 
 /**
+ * Does the viewer's TEAM certainly hold `card` right now?
+ *
+ * "Certainly" in this layer's sense: the card has a single named holder, not a candidate set
+ * that happens to be all teammates. The viewer's own hand counts — it is on the viewer's team —
+ * and so does every teammate's, which is the part the `gambleBonus` guard in `rankAsksWith`
+ * has to allow for. Factored out of `teamKnownOfBook` so that the count and the per-card test
+ * cannot disagree about what "the team holds it" means.
+ */
+function teamCertainlyHolds(k: Knowledge, card: Card): boolean {
+  const h = k.holders[card]
+  return h !== undefined && seatTeam(h) === seatTeam(k.seat)
+}
+
+/**
  * How many of the set's cards the viewer's team certainly accounts for.
  * `cards` is the set's membership under the *view's* deck, so EIGHTS resolves
  * to 8C·8D·8H·8S·XR·XB under `us54` and to [] under `pagat48`, which has no
  * such set (RULES_US54.md §1 row 3).
+ *
+ * Whole-team, teammates included — see `teamCertainlyHolds`. A caller that needs "every card
+ * of the set except the one I am asking for" must exclude the asked card itself; this total
+ * will not do it for them.
  */
 function teamKnownOfBook(k: Knowledge, cards: readonly Card[]): number {
-  const myTeam = seatTeam(k.seat)
   let n = 0
-  for (const c of cards) {
-    const h = k.holders[c]
-    if (h !== undefined && seatTeam(h) === myTeam) n++
-  }
+  for (const c of cards) if (teamCertainlyHolds(k, c)) n++
   return n
 }
 
@@ -778,10 +792,13 @@ const DEFAULT_ASK_WEIGHTS: AskWeights = Object.freeze({
  *     — which is why STYLES.md §2 requires `certaintyBonus >= 20` of every style.
  *   - progress: fraction of the asked book already certainly on the asker's
  *     team — winning a card of a nearly-secured book is worth more.
- *   - narrowing: 1/(candidates-1) — a miss on a 2-candidate card pins the
- *     card outright, so tight candidate sets make even a miss informative.
- *   - gamble: the asker's team certainly accounts for every card of the set but
- *     this one, so a hit completes it outright.
+ *   - narrowing: 1/(candidates-1) when the target is one of the candidates —
+ *     a miss on a 2-candidate card pins the card outright, so tight candidate
+ *     sets make even a miss informative. Zero when it is not: an ask can only
+ *     narrow the set by ruling out the seat it was addressed to, so a KNOWN
+ *     MISS teaches this seat nothing whatever the set's size.
+ *   - gamble: the asker's team certainly accounts for every card of the set
+ *     EXCEPT THE ONE BEING ASKED FOR, so a hit completes it outright.
  *
  * `minHitP` is deliberately NOT applied here: dropping asks from the ranking would let a style
  * talk itself out of having a legal move. The policy layer filters with a fallback instead.
@@ -806,13 +823,50 @@ export function rankAsksWith(
     const bookMembers = bookCards(book, view.config)
     const known = teamKnownOfBook(k, bookMembers)
     const progress = bookMembers.length > 0 ? known / bookMembers.length : 0
-    const narrowing = cand.length > 1 ? 1 / (cand.length - 1) : 1
+    // How much the OUTCOME of this ask would narrow the card's candidate set.
+    //
+    // The test is MEMBERSHIP, not cardinality, and the distinction is the whole fix. An ask can
+    // only narrow `cand` by removing the seat it was addressed to, so a target that is not in
+    // `cand` narrows nothing WHATEVER the set's size — the miss is already priced in, and the
+    // seat learns exactly what it knew before. Keying the credit off `cand.length` alone paid
+    // full `wNarrow` to every provable miss on a card pinned to two or more seats, which is the
+    // dominant class: a card pinned to the asker's own TEAMMATES scored the maximum 1 while no
+    // opponent could possibly answer it. **A known miss narrows nothing**, and this is the line
+    // that makes that true rather than merely stated.
+    //
+    // Among the asks that DO narrow — `target` a live candidate — the value is 1/(n - 1): a miss
+    // on one of n candidates leaves n - 1, so a 2-candidate card is pinned outright (1) and a
+    // wide one is worth proportionally less. `n === 1` is then `cand === [target]`, a CERTAIN
+    // hit, and it takes the same 1: that is what puts the certain-hit floor at
+    // `wHit + wNarrow + certaintyBonus` (102 on the shipped weights), the margin the "certain
+    // hits first" note above argues from. It is also the guard against 1/0.
+    //
+    // Every case this reaches has `p === 0` (`pHit` returns 0 the moment `target` is outside
+    // `cand`, empty set included), so no ask with a live hit probability moves — MONET.md §3.2
+    // acceptance item 1.
+    const narrowing = cand.includes(a.target) ? (cand.length > 1 ? 1 / (cand.length - 1) : 1) : 0
     const certainBonus = p === 1 ? weights.certaintyBonus : 0
-    // "Would complete": the team already certainly holds every other card of the set, so this
-    // one ask is the whole remainder. `known` counts only certainly-team-held cards, and the
-    // asked card is by construction not one of them (row 7 — you cannot ask for what you hold).
+    // "Would complete": the team certainly holds every card of the set except this one, so this
+    // one ask is the whole remainder.
+    //
+    // The asked card has to be excluded EXPLICITLY. Row 7 forbids asking for a card *you* hold,
+    // but `teamKnownOfBook` counts every card whose certain holder is on the asker's TEAM,
+    // teammates included — so the asked card can perfectly well be one of the `known`. When it
+    // is, the card the team is actually missing is a different one, a hit here would complete
+    // nothing, and `known === bookMembers.length - 1` means only "five of six", not "this ask is
+    // the sixth". (Such an ask is also dead by construction: a card a teammate certainly holds
+    // cannot be with the opponent being asked, so `p` is 0 — which is what confines this fix, like
+    // the narrowing one above, to the population MONET.md §3.2's acceptance item 1 excludes.) On
+    // the shipped Punter weights it was 25 of the 52.00 an avoidable dead ask used to score; the
+    // narrowing credit above was another 12 of it.
+    //
+    // With the asked card excluded, the test says exactly what its name claims: the one card of
+    // the set this team does not certainly hold is the one being asked for.
     const gamble =
-      weights.gambleBonus !== 0 && bookMembers.length > 0 && known === bookMembers.length - 1
+      weights.gambleBonus !== 0 &&
+      bookMembers.length > 0 &&
+      known === bookMembers.length - 1 &&
+      !teamCertainlyHolds(k, a.card)
         ? weights.gambleBonus
         : 0
     const score =

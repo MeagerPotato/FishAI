@@ -14,6 +14,8 @@
  */
 import { describe, expect, it } from 'vitest'
 import {
+  BASELINE_ASK_WEIGHTS,
+  STYLE_ROSTER,
   allBooks,
   allCards,
   bookCards,
@@ -29,6 +31,7 @@ import {
   newGame,
   randInt,
   rankAsks,
+  rankAsksWith,
   reduce,
   rngFromSeed,
   seatTeam,
@@ -47,7 +50,7 @@ import type {
   Seat,
   SeatView,
 } from '../../lib/engine/index.ts'
-import { ask, gs, mkView } from './util.ts'
+import { ask, collectBotViews, gs, mkView } from './util.ts'
 
 /** `mkView` with the 54-card rule set swapped in (RULES_US54.md §6). */
 function mkView54(v: Parameters<typeof mkView>[0]): SeatView {
@@ -444,6 +447,212 @@ describe('knowledge under us54: ground-truth soundness (300 games, 54-card deck)
     },
     600_000,
   )
+})
+
+/* ------------------------------------ the ask scorer and its dead asks --- */
+
+/**
+ * **A teammate certainly holds the asked card.** MONET.md §3.2's third defect, in one position.
+ *
+ * Seat 0 holds four of LOW-C. `6C` was publicly taken by seat **2**, a teammate, and `7C` by
+ * seat **1**, an opponent (RULES_US54.md §1 row 1 — the seats alternate). So the team certainly
+ * accounts for five of the six, and the card it is short of is `7C`, not `6C`.
+ *
+ * Asking an opponent for `6C` is legal — row 6 licences the set and row 7 only forbids naming a
+ * card *you* hold — and is a guaranteed miss. It used to score the whole
+ * `18·(5/6) + 12 + 25 = 52.00` on Punter's weights: the full progress term, the full narrowing
+ * credit, and the completion bonus, for an ask that cannot hit and would complete nothing.
+ */
+function teammateHoldsTheAskedCard(): SeatView {
+  return mkView54({
+    seat: 0,
+    hand: ['2C', '3C', '4C', '5C', '9D', 'TD'],
+    counts: [6, 10, 10, 8, 12, 8], // 6 + 10 + 10 + 8 + 12 + 8 = 54
+    turn: 0,
+    log: [gs, ask(2, 5, '6C', true), ask(1, 3, '7C', true)],
+  })
+}
+
+/**
+ * **An opponent certainly holds the asked card**, and nothing is near completion: seat 0 holds
+ * three of LOW-C, seat 3 publicly took `6C`, and the last two are unplaced. The team accounts
+ * for three of six, so no `gambleBonus` is in play at any weights — which leaves the narrowing
+ * credit alone to be looked at, and leaves seat 3 as a certain hit to read it against.
+ */
+function opponentHoldsTheAskedCard(): SeatView {
+  return mkView54({
+    seat: 0,
+    hand: ['2C', '3C', '4C', '9D', 'TD'],
+    counts: [5, 10, 10, 11, 9, 9], // 5 + 10 + 10 + 11 + 9 + 9 = 54
+    turn: 0,
+    log: [gs, ask(3, 5, '6C', true)],
+  })
+}
+
+/**
+ * **The sixth card really is the sixth, and really is unplaced.** Seat 0 holds five of LOW-C and
+ * three recorded misses pin `6C` to `{2, 4}` — both of them teammates. The control for the GAMBLE
+ * fix: the team is one card short, that card is `6C`, so the completion bonus is earned and the
+ * gamble guard must not touch it.
+ *
+ * It is emphatically *not* a control for the narrowing fix, though an earlier reading of it said
+ * so on the grounds that "a miss on a two-candidate card would pin it". A miss by seat 1, 3 or 5
+ * pins nothing: those seats were never candidates, so the ask's outcome cannot remove one and the
+ * candidate set comes back `{2, 4}` either way. This is the dominant class of provable miss and
+ * the narrowing fix is exactly what removes its credit.
+ *
+ * (No opponent can answer the ask either, which is `minHitP`'s business — roster.test.ts.)
+ */
+function theSixthCardIsGenuinelyMissing(): SeatView {
+  return mkView54({
+    seat: 0,
+    hand: ['2C', '3C', '4C', '5C', '7C', '9D'],
+    counts: [6, 10, 10, 10, 6, 12], // 6 + 10 + 10 + 10 + 6 + 12 = 54
+    turn: 0,
+    log: [gs, ask(0, 1, '6C', false), ask(0, 3, '6C', false), ask(0, 5, '6C', false)],
+  })
+}
+
+/** One ask's score, by card and target — throws rather than returning undefined. */
+function scoreOf(ranked: ReturnType<typeof rankAsks>, card: Card, target: Seat): number {
+  const r = ranked.find((x) => x.card === card && x.target === target)
+  if (r === undefined) throw new Error(`no ranked ask ${card}@${target}`)
+  return r.score
+}
+
+/** The scorer rounds to 2dp, so an expected value built from 5/6 has to be rounded the same way. */
+function round2(x: number): number {
+  return Math.round(x * 100) / 100
+}
+
+describe('the ask scorer pays nothing for a dead ask (MONET.md §3.2)', () => {
+  it('the 52.00 signature: an ask that cannot hit and completes nothing now scores 15.00', () => {
+    const view = teammateHoldsTheAskedCard()
+    const k = buildKnowledge(view)
+    // The position is what its builder claims: 6C is certain at a TEAMMATE, so every legal ask
+    // for it is a provable miss, and the card the team is actually short of is 7C.
+    expect(holderOf(k, '6C')).toBe(2)
+    expect(seatTeam(2)).toBe(seatTeam(0))
+    expect(holderOf(k, '7C')).toBe(1)
+    const ranked = rankAsksWith(view, k, STYLE_ROSTER.punter)
+    expect(ranked.find((r) => r.card === '6C' && r.target === 1)?.p).toBe(0)
+    // 18·(5/6) survives — five of the six really are on this team. The 12 and the 25 do not: a
+    // known miss narrows nothing, and 6C is one of the five, so a hit completes nothing.
+    expect(round2(18 * (5 / 6) + 12 + 25)).toBe(52)
+    expect(scoreOf(ranked, '6C', 1)).toBe(15)
+    expect(scoreOf(ranked, '6C', 3)).toBe(15)
+    expect(scoreOf(ranked, '6C', 5)).toBe(15)
+  })
+
+  it('...while the ask for the card the team IS missing keeps its completion bonus', () => {
+    // The same position, a different card, and the reason the gamble is fixed rather than
+    // deleted. 7C is the one card of LOW-C this team does not hold, so a hit really would
+    // complete the set: the 25 stays. Seats 3 and 5 are not candidates for it, so only the
+    // narrowing credit goes — 40.00 = 18·(5/6) + 25, down from the same 52.00.
+    const view = teammateHoldsTheAskedCard()
+    const ranked = rankAsksWith(view, buildKnowledge(view), STYLE_ROSTER.punter)
+    for (const target of [3, 5] as Seat[]) {
+      expect(ranked.find((r) => r.card === '7C' && r.target === target)?.p).toBe(0)
+      expect(scoreOf(ranked, '7C', target)).toBe(40)
+    }
+    // And the seat that actually holds it is a certain hit, still sorted top:
+    // 142 = 70 + 18·(5/6) + 12 + 20 + 25.
+    expect([ranked[0].card, ranked[0].target, ranked[0].p, ranked[0].score]).toEqual(['7C', 1, 1, 142])
+  })
+
+  it('the completion bonus is refused when a TEAMMATE holds the asked card', () => {
+    // `wNarrow: 0` takes the narrowing fix out of the arithmetic, so the gamble is the only term
+    // left that can move: 15.00 where it is refused, 40.00 where it is earned.
+    const gambleOnly = { ...BASELINE_ASK_WEIGHTS, wNarrow: 0, gambleBonus: 25 }
+    const dead = teammateHoldsTheAskedCard()
+    expect(scoreOf(rankAsksWith(dead, buildKnowledge(dead), gambleOnly), '6C', 1)).toBe(15)
+    const earned = theSixthCardIsGenuinelyMissing()
+    expect(scoreOf(rankAsksWith(earned, buildKnowledge(earned), gambleOnly), '6C', 1)).toBe(40)
+  })
+
+  it('a known miss narrows nothing when the card is PINNED, on the shipped weights', () => {
+    // |cand| == 1. 6C is certain at seat 3, so asking seat 1 or seat 5 for it cannot move a
+    // single candidate seat. The 12-point narrowing credit is gone and the progress term is all
+    // that is left: 9.00 = 18·(3/6).
+    const view = opponentHoldsTheAskedCard()
+    const ranked = rankAsksWith(view, buildKnowledge(view), BASELINE_ASK_WEIGHTS)
+    expect(scoreOf(ranked, '6C', 1)).toBe(9)
+    expect(scoreOf(ranked, '6C', 5)).toBe(9)
+  })
+
+  it('...and when the card has TWO candidates, neither of them the seat being asked', () => {
+    // |cand| >= 2, which is the case the first shape of this fix missed entirely and the one that
+    // carries the volume. Keying the credit off `cand.length` alone paid a *2-candidate* miss the
+    // maximum 1 — the same credit as a certain hit — because `1 / (2 - 1)` is 1. The test that
+    // was supposed to cover "a known miss narrows nothing" only ever exercised `|cand| == 1`, so
+    // it passed throughout.
+    //
+    // Here 6C is pinned to {2, 4}, both of them the asker's own teammates, so seats 1, 3 and 5
+    // are all provable misses on a two-candidate card. The credit must be 0 for every one of
+    // them, exactly as it is for the pinned case above.
+    const view = theSixthCardIsGenuinelyMissing()
+    const k = buildKnowledge(view)
+    expect(candidates(k, '6C')).toEqual([2, 4])
+    const withNarrow = rankAsksWith(view, k, BASELINE_ASK_WEIGHTS)
+    const withoutNarrow = rankAsksWith(view, k, { ...BASELINE_ASK_WEIGHTS, wNarrow: 0 })
+    for (const target of [1, 3, 5] as Seat[]) {
+      expect(scoreOf(withNarrow, '6C', target), `6C@${target}`).toBe(scoreOf(withoutNarrow, '6C', target))
+      // 15.00 = 18·(5/6), the progress term alone — `BASELINE_ASK_WEIGHTS` carries no gamble.
+      expect(scoreOf(withNarrow, '6C', target), `6C@${target}`).toBe(15)
+    }
+  })
+
+  it('...but a CERTAIN hit keeps it, which is what holds the certain-hit floor at 102', () => {
+    // The other position `cand.length <= 1` covers, and the reason the guard is not simply
+    // zeroed. A certain hit's floor is `wHit + wNarrow + certaintyBonus`; the dominance
+    // argument in `rankAsksWith`'s doc comment (certain >= 102, uncertain < 100) is exactly
+    // `wNarrow` wide, so zeroing it here would let an uncertain ask outrank a certain hit.
+    // 111 = 70 + 18·(3/6) + 12 + 20.
+    const view = opponentHoldsTheAskedCard()
+    const ranked = rankAsksWith(view, buildKnowledge(view), BASELINE_ASK_WEIGHTS)
+    expect(scoreOf(ranked, '6C', 3)).toBe(111)
+    expect([ranked[0].card, ranked[0].target, ranked[0].p]).toEqual(['6C', 3, 1])
+    expect(BASELINE_ASK_WEIGHTS.wHit + BASELINE_ASK_WEIGHTS.wNarrow + BASELINE_ASK_WEIGHTS.certaintyBonus).toBe(102)
+  })
+
+  it('the EARNED credit survives: the genuinely-missing sixth card keeps its 25, and loses the 12', () => {
+    // The census position of MONET.md §3.2, and what the two fixes do to it between them. The
+    // gamble is earned — the team holds five of LOW-C and 6C really is the sixth — so it stays.
+    // The narrowing was not: no seat this ask can be addressed to is a candidate. 40.00 =
+    // 18·(5/6) + 25, down from the 52.00 = 18·(5/6) + 12 + 25 the census recorded.
+    const view = theSixthCardIsGenuinelyMissing()
+    const k = buildKnowledge(view)
+    expect(candidates(k, '6C')).toEqual([2, 4])
+    const ranked = rankAsksWith(view, k, STYLE_ROSTER.punter)
+    expect(round2(18 * (5 / 6) + 12 + 25)).toBe(52)
+    expect(round2(18 * (5 / 6) + 25)).toBe(40)
+    expect([ranked[0].card, ranked[0].p, ranked[0].score]).toEqual(['6C', 0, 40])
+    // Still the top of the ranking, which is why `minHitP` is a separate fix rather than a
+    // belt-and-braces one: the scoring corrections alone do not stop this seat asking.
+    const bestLive = ranked.find((r) => r.p > 0)
+    expect(bestLive?.score, 'the best live ask is still outscored by the dead one').toBe(23.5)
+  })
+
+  it('no ask has a hit probability strictly inside (0, 1e-9) — the floor is a partition', () => {
+    // The premise MONET.md §3.2's `minHitP: 1e-9` rests on, checked rather than assumed.
+    // `pHit` returns 0, or `1/|candidates|`, or `unknownSlots[target]` over the unknown slots
+    // across the candidate seats — ratios of small integers bounded by the deck, so the smallest
+    // reachable non-zero value is 1/54. A floor below that refuses exactly the provable misses
+    // and cannot reorder anything else.
+    let asks = 0
+    let violations = 0
+    let smallest = 1
+    for (const { view } of collectBotViews(20, us54Config)) {
+      for (const r of rankAsks(view)) {
+        asks++
+        if (!(r.p === 0 || r.p >= 1 / 54)) violations++
+        if (r.p > 0 && r.p < smallest) smallest = r.p
+      }
+    }
+    expect(asks).toBeGreaterThan(20_000)
+    expect(violations).toBe(0)
+    expect(smallest).toBeGreaterThanOrEqual(1 / 54)
+  })
 })
 
 function assertSound(

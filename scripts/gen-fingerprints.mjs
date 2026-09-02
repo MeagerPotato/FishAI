@@ -174,6 +174,18 @@ lines.push(` * {${CHECKPOINTS.join(', ')}} events. Each bucket holds the mean an
 lines.push(' * FEATURE_KEYS vector over every seat of every qualifying game; a checkpoint bucket only')
 lines.push(' * collects games whose log outlived it (samples per bucket are in the provenance, and a')
 lines.push(' * bucket nothing reached carries the full-game stats with samples 0).')
+lines.push(' *')
+lines.push(' * **This table is a function of the POLICY, not just of the styles.** The mirror games are')
+lines.push(' * played by `decide`, and `FEATURE_KEYS` includes `deadAskShare`, `certainAskShare`,')
+lines.push(' * `completionAskShare` and `hitRate` — every one of them a description of what the ask')
+lines.push(' * scorer chose. A change to the scorer therefore moves the population the fingerprints')
+lines.push(' * describe while leaving the committed table where it was, and a stale table degrades')
+lines.push(' * `classifySeats` silently: the suite stays green except for the one loose smoke test, and')
+lines.push(' * the loss shows up as a capability number nobody re-measured. MONET.md §3.2 is the worked')
+lines.push(' * example — the two `rankAsksWith` corrections took the turtle-vs-punter read from 0.3407')
+lines.push(' * of reads down to 0.2370, barely above the 0.2222 chance rate, until this was re-run.')
+lines.push(' * **Regenerate whenever `knowledge.ts`, `decide.ts`, `style.ts` or `roster.ts` changes what')
+lines.push(' * a style plays**, and record the before/after read in the milestone.')
 lines.push(' */')
 lines.push(`import type { StyleId } from '../roster.ts'`)
 lines.push('')
@@ -224,5 +236,8 @@ lines.push('} as const')
 lines.push('')
 
 await mkdir(dirname(outPath), { recursive: true })
-await writeFile(outPath, lines.join('\n'), 'utf8')
+// CRLF, like every other file in this repository (and like `scripts/byte-identity.mjs`'s bank
+// emitter, for the reason recorded there). `core.autocrlf` normalises it away in the index either
+// way; what this avoids is the generated file being the one file on disk that is not CRLF.
+await writeFile(outPath, lines.join('\r\n'), 'utf8')
 console.log(`wrote ${outPath} (${STYLE_IDS.length} styles x ${BUCKETS.length} buckets) in ${(wallMs / 1000).toFixed(1)}s`)

@@ -113,7 +113,33 @@ const BALANCED: StyleParams = {
   wProgress: 18,
   wNarrow: 12,
   certaintyBonus: 20,
-  minHitP: 0,
+  // MONET.md §3.2. A floor at one part in a billion is a DEAD-ASK filter, not a taste. It
+  // separates the asks this seat's own knowledge proves are misses from every other ask, and it
+  // separates nothing else, because `pHit` (knowledge.ts) returns either 0 or a ratio of small
+  // integers bounded by the deck — at worst 1 / (the unidentified card slots across the asked
+  // card's candidate seats) — so no ask can land strictly inside (0, 1e-9). `decide` waives the
+  // floor when EVERY legal ask is below it, so a genuinely starved turn still acts (the two
+  // filter sites are decide.ts:985 and decide.ts:1109-1112).
+  //
+  // "Refuses every dead ask" would be too strong, and the exception is a mechanism rather than a
+  // leak: CONTAINMENT.md's turn-pass *deliberately* plays a guaranteed miss to hand the turn to a
+  // chosen opponent, and it is chosen after the filter has run (`planContainedPass`, decide.ts).
+  // Measured over 40 whole games, every avoidable dead ask the shipped Punter still plays is that
+  // mechanism, identified by trace kind.
+  //
+  // Deliberately a deviation from STYLES.md §3, which lists `minHitP 0` for every style that
+  // takes the knob from this base. 0 reads as "consider every legal ask", and that reading
+  // included asks with no chance of taking a card at all. Since nothing sits between 0 and
+  // 1e-9, the long-shot appetite the knob expresses is unchanged for every style carrying one.
+  //
+  // ROSTER-ONLY, and pinned as such. `style.ts`'s `BASELINE_ASK_WEIGHTS` — and so
+  // `STYLE_PRESETS.easy/medium/hard` — still carries `minHitP: 0`, because the three shipped
+  // tiers are frozen and every mechanism since CONTAINMENT.md has been introduced switched off
+  // there and carried at its measured appetite here. What makes that safe rather than merely
+  // conventional is that the same milestone's two `rankAsksWith` corrections DO reach the tiers,
+  // and measured over 40 whole games they already take the tiers' avoidable dead asks to zero
+  // (`tests/bots/roster.test.ts`, MONET.md §3.2).
+  minHitP: 1e-9,
   gambleBonus: 0,
 
   // (1 + 0.80)/2 — the 48-card appetite through the us54 arithmetic. See the file header.
@@ -203,14 +229,23 @@ export const STYLE_ROSTER: Readonly<Record<StyleId, StyleParams>> = Object.freez
     denialWeight: 0.65,
   }),
 
-  /** §3 row 3. `gambleBonus +25, minHitP 0, declareThreshold 0.55→0.775, declareMaxUncertain 2`. */
+  /**
+   * §3 row 3. `gambleBonus +25, minHitP 0, declareThreshold 0.55→0.775, declareMaxUncertain 2`.
+   *
+   * The `minHitP` restated here is the one setting that no longer matches §3's row: it is the
+   * dead-ask floor of MONET.md §3.2, at the same 1e-9 the BALANCED base carries and for the same
+   * reason (see there). Punter is the style that most needed it — `gambleBonus 25` is the term
+   * that used to push a guaranteed miss to the top of the ranking — and it is spelled out rather
+   * than inherited because §3 names `minHitP` as one of this row's defining settings, so a
+   * reader comparing the roster against STYLES.md has to be able to see the deviation here.
+   */
   punter: style({
     id: 'punter',
     label: 'Punter',
     family: 'aggressive',
     thesis: 'Chase the completing card; accept the gift risk.',
     gambleBonus: 25,
-    minHitP: 0,
+    minHitP: 1e-9,
     declareThreshold: 0.775,
     declareThresholdStalled: 0.5,
     declareMaxUncertain: 2,

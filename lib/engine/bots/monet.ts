@@ -23,22 +23,44 @@
  * roster entry through `style()` ([roster.ts](roster.ts)), so binding the roster object binds the
  * defusal appetite with it. v0.1 ships **no behaviour change at all**, and its acceptance test is
  * byte identity to Bass v2.0 over ≥ 20,000 `us54` decisions plus a reproduction of the known
- * 27.08% cell (MONET.md §3.1). One changed decision fails it.
+ * 27.08% cell (MONET.md §3.1). One changed decision fails it. That is a claim about the revision
+ * v0.1 shipped at and is not re-checkable here: the entry below buys back v0.1's SPEC on a later
+ * tree, never the code it ran through (see *What an entry pins*).
  *
- * So `MONET_VERSIONS['v0.1']` holds the roster and preset objects **by reference**. It is not a
- * copy of Punter's numbers and it cannot drift from them: an edit to `roster.ts` is an edit to
- * Monet v0.1 *by construction* rather than by two tables being kept in step, and
- * [tests/bots/monet.test.ts](../../../tests/bots/monet.test.ts) fails if the arm's actions move at
- * all. A duplicated vector here would have made the identity pin a test of clerical accuracy.
+ * So `MONET_VERSIONS['v0.1']` held the roster and preset objects **by reference**. The argument
+ * was that an edit to `roster.ts` is an edit to Monet v0.1 *by construction* rather than by two
+ * tables being kept in step, and that a duplicated vector here would have made the identity pin a
+ * test of clerical accuracy.
+ *
+ * **That argument was sound only while the live roster still WAS v0.1, and v0.2 ended it.**
+ * MONET.md §3.2 ships `minHitP: 1e-9` on the roster styles — a change to `STYLE_ROSTER.punter`
+ * itself. Under the by-reference binding that silently made `monetPolicy('v0.1')` return v0.2's
+ * policy: an arm invoked as `bot:monet-v0.1` would have measured v0.2 under v0.1's label, which is
+ * precisely the drift `monetPolicy`'s throw exists to prevent. So v0.1 now spreads the roster entry
+ * and **pins the one knob v0.2 moved back to its v0.1 value**, and v0.2 takes over the
+ * by-reference binding, because v0.2 is what the live roster now is.
+ *
+ * The residual hazard of the spread is named rather than hidden: a *future* roster spec change
+ * would move v0.1 again through the keys it still inherits. `monet.test.ts` pins the deviation set
+ * — v0.1's style must differ from `STYLE_ROSTER.punter` in exactly `minHitP` and nothing else — so
+ * the next such edit fails a test instead of quietly re-labelling a measurement.
  *
  * ## What an entry pins, and what it does not
  *
  * An entry pins the `PolicySpec` — the knobs `decide` reads. It does **not** pin the code behind
- * them, and several MONET.md milestones are code changes at an unchanged spec (v0.2's three
- * `knowledge.ts` fixes, v0.5's `pCardAt`, v0.6's `pAssignment`). Those versions are pinned by the
- * repo revision they shipped at, not by this table, and a number quoted for one of them is
- * reproducible only against that revision. Said here so the table is not read as a stronger promise
- * than it makes.
+ * them, and several MONET.md milestones are code changes at an unchanged spec (v0.5's `pCardAt`,
+ * v0.6's `pAssignment`). Those versions are pinned by the repo revision they shipped at, not by
+ * this table, and a number quoted for one of them is reproducible only against that revision. Said
+ * here so the table is not read as a stronger promise than it makes.
+ *
+ * v0.2 is **both**: one spec change (`minHitP`, which this table does carry) and two `knowledge.ts`
+ * scoring corrections (which it cannot). The consequence is that replaying v0.1's *spec* on this
+ * tree does not reproduce v0.1's *games* — the two corrections move exactly the asks whose hit
+ * probability is 0, and those choices deal every later position differently. So the v0.1 action
+ * bank is frozen as a record of the revision it was taken at rather than replayed here, and the
+ * surviving cross-revision claim — that no ask with p > 0 moved — lives in
+ * `scripts/byte-identity.mjs --gate dead-ask-full`, which can materialise the other revision.
+ * MONET.md §3.2 records the decision.
  *
  * There is deliberately **no `MONET_LATEST`**. A moving pointer is exactly the drift v0.1 exists to
  * remove: a caller asking for "latest" silently changes what it measures the day v0.2 lands, and
@@ -53,19 +75,32 @@ import type { PolicySpec } from './bounded.ts'
  * that have actually shipped appear here, so the union is also the honest answer to "what can be
  * measured today".
  */
-export type MonetVersion = 'v0.1'
+export type MonetVersion = 'v0.1' | 'v0.2'
 
 /**
  * Version id -> the policy that version plays, ready for `decide(view, policy, seed)`.
  *
- * `v0.1` is the Bass v2.0 arm by reference — the roster's Punter and the `hard` skill preset
- * themselves, not their values (see the header). The pair is the `BotPolicy` shape rather than the
- * bare style so that the tier is explicit at the call site: a bare `StyleParams` would resolve to
- * full-strength inference anyway ([style.ts](style.ts) `resolvePolicy`), but "at `hard`" is part of
- * what the baseline claims and it should be readable here rather than inferred from a default.
+ * Both entries are the `BotPolicy` shape rather than a bare style, so that the tier is explicit at
+ * the call site: a bare `StyleParams` would resolve to full-strength inference anyway
+ * ([style.ts](style.ts) `resolvePolicy`), but "at `hard`" is part of what the baseline claims and
+ * it should be readable here rather than inferred from a default.
+ *
+ * - `v0.2` is the live roster's Punter **by reference**, because v0.2 is what the live roster now
+ *   is. The header's un-drift-able argument applies to this entry and only to it.
+ * - `v0.1` is that same entry with `minHitP` pinned back to the 0 the roster shipped before
+ *   MONET.md §3.2 — the one knob v0.2 moved. Spelled as a spread rather than a literal vector so
+ *   that the deviation from the live roster is a single readable line; `monet.test.ts` pins the
+ *   deviation set to exactly `{ minHitP }` so that a later roster edit cannot widen it in silence.
+ *
+ * Neither entry pins the *code* the knobs run through — see the header. Naming v0.1 here buys back
+ * v0.1's SPEC on a v0.2 tree; it does not buy back v0.1's games.
  */
 export const MONET_VERSIONS: Readonly<Record<MonetVersion, PolicySpec>> = Object.freeze({
-  'v0.1': Object.freeze({ skill: SKILL_PRESETS.hard, style: STYLE_ROSTER.punter }),
+  'v0.1': Object.freeze({
+    skill: SKILL_PRESETS.hard,
+    style: Object.freeze({ ...STYLE_ROSTER.punter, minHitP: 0 }),
+  }),
+  'v0.2': Object.freeze({ skill: SKILL_PRESETS.hard, style: STYLE_ROSTER.punter }),
 })
 
 /**
@@ -73,7 +108,7 @@ export const MONET_VERSIONS: Readonly<Record<MonetVersion, PolicySpec>> = Object
  * ("Monet beats v0.2 through v0.6 as well"). Ordered, because a version list that is only a key set
  * cannot express "the one before this".
  */
-export const MONET_VERSION_IDS: readonly MonetVersion[] = Object.freeze(['v0.1'] as const)
+export const MONET_VERSION_IDS: readonly MonetVersion[] = Object.freeze(['v0.1', 'v0.2'] as const)
 
 /**
  * Is `id` a version this repo can play? For callers holding a string rather than a `MonetVersion` —
