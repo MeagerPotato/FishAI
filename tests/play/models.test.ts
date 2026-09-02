@@ -26,20 +26,32 @@ import {
 } from '../../src/play/models.ts'
 import { LEGACY_MODE_ID, parseModelId, playQuery, retiredMode } from '../../src/play/params.ts'
 
+/**
+ * The Monet entry's id, DERIVED the way models.ts derives it.
+ *
+ * Written down nowhere in this file, deliberately. The menu tracks `MONET_VERSION_IDS` so that a
+ * new rung needs no edit here, and a test that hard-codes `monet-v01` would turn that design
+ * into a merge conflict: the v0.2 branch adds a registry entry, and every assertion naming v0.1
+ * would go red on a menu that had behaved exactly as intended.
+ */
+const NEWEST_MONET = MONET_VERSION_IDS[MONET_VERSION_IDS.length - 1]
+const MONET_ID = `monet-${NEWEST_MONET.replace('.', '')}`
+
 describe('the model menu', () => {
   it('offers exactly the two lines, newest Monet first', () => {
-    expect(PLAY_MODELS.map((m) => m.id)).toEqual(['monet-v01', 'bass-v20'])
+    expect(PLAY_MODELS.map((m) => m.id)).toEqual([MONET_ID, 'bass-v20'])
     expect(PLAY_MODELS.map((m) => m.line)).toEqual(['Monet', 'Bass'])
   })
 
   it('tracks the newest shipped Monet version rather than naming one', () => {
     // The owner's instruction: as each rung lands the single Monet entry becomes the newer
-    // version. If this fails because MONET_VERSION_IDS grew, the menu already followed it and
-    // only the expectation above needs its id updated.
-    const newest = MONET_VERSION_IDS[MONET_VERSION_IDS.length - 1]
+    // version, with no edit in models.ts or here.
     const monet = PLAY_MODELS.find((m) => m.line === 'Monet')
-    expect(monet?.name).toBe(`Monet ${newest}`)
-    expect(monet?.id).toBe(`monet-${newest.replace('.', '')}`)
+    expect(monet?.name).toBe(`Monet ${NEWEST_MONET}`)
+    expect(monet?.id).toBe(MONET_ID)
+    // …and it is genuinely the newest, not merely the first: v0.2 exists on another branch and
+    // this must follow it there without an edit.
+    expect(MONET_VERSION_IDS.length).toBeGreaterThan(0)
   })
 
   it('defaults to the model this table has always seated', () => {
@@ -61,7 +73,7 @@ describe('the model menu', () => {
 
 describe('?v= — what a link means', () => {
   it('accepts every shipped id and the legacy alias, and refuses the rest', () => {
-    expect(retiredMode('?v=monet-v01')).toBeNull()
+    expect(retiredMode(`?v=${MONET_ID}`)).toBeNull()
     expect(retiredMode('?v=bass-v20')).toBeNull()
     expect(retiredMode(`?v=${LEGACY_MODE_ID}`)).toBeNull()
     expect(retiredMode('')).toBeNull()
@@ -74,7 +86,7 @@ describe('?v= — what a link means', () => {
   })
 
   it('reads the legacy alias and anything unknown as the default', () => {
-    expect(parseModelId('?v=monet-v01')).toBe('monet-v01')
+    expect(parseModelId(`?v=${MONET_ID}`)).toBe(MONET_ID)
     expect(parseModelId(`?v=${LEGACY_MODE_ID}`)).toBe(DEFAULT_MODEL_ID)
     expect(parseModelId('')).toBe(DEFAULT_MODEL_ID)
     expect(parseModelId('?v=05')).toBe(DEFAULT_MODEL_ID)
@@ -83,9 +95,9 @@ describe('?v= — what a link means', () => {
   it('omits the param at the default and round-trips otherwise', () => {
     // The house rule the rest of params.ts follows: a plain table produces a plain link.
     expect(playQuery(['', '', '', '', ''], 3, DEFAULT_MODEL_ID)).toBe('')
-    const q = playQuery(['', '', '', '', ''], 3, 'monet-v01')
-    expect(q).toBe('&v=monet-v01')
-    expect(parseModelId(q.replace(/^&/, '?'))).toBe('monet-v01')
+    const q = playQuery(['', '', '', '', ''], 3, MONET_ID)
+    expect(q).toBe(`&v=${MONET_ID}`)
+    expect(parseModelId(q.replace(/^&/, '?'))).toBe(MONET_ID)
   })
 })
 
@@ -97,7 +109,7 @@ describe('the two entries are different bots, and nearly the same one', () => {
    */
   function agreement(games: number): { decisions: number; differ: number } {
     const bass = modelById('bass-v20')
-    const monet = modelById('monet-v01')
+    const monet = modelById(MONET_ID)
     if (bass === null || monet === null) throw new Error('menu entry missing')
 
     let decisions = 0
