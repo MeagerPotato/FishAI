@@ -1552,6 +1552,22 @@ extractions are not already inside §3.4b's posterior. If §3.5a moves nothing, 
 the oracle arm as the ceiling control, plus the home regression suite. Roughly the size of the
 139-cell re-measurement that produced this roadmap's numbers, and therefore known to be affordable.
 
+> **Pre-registered 2026-09-03 for v0.4b, before the cells.** The gate runs on v0.4b's vector as it
+> stands (§3.4b), with §3.5a's extractions *not* built: (a)'s sensitivity control runs as a
+> readout, (b) waits on an emulation this repo does not yet carry, (c) stays out. What runs: the
+> SESTINA six already on record (32.75%), the v0.4 and v0.6 cells completed to six seeds (the first
+> three on record), v0.5 / v0.3 / v0.2 on all six — 36 cells at ±2.83 each — plus SESTINA with
+> `r12` off on six seeds as the §3.5a(a) control, the oracle on record (38.28% on the same ask path),
+> and the home suite on record. Every seed is a spent bank (§6.5); nothing is fitted here, so
+> nothing new is drawn. **Expectations:** the third row of the rule (< 40%), read against 32.75%
+> — the belief mechanisms this project has measured are exhausted, and §3.4b's finding names the
+> residual as communication before position; the panel monotone (v0.4b ahead of every lineage arm,
+> each cell over 50% against v0.2 and v0.3, over 33% against v0.4, v0.5 and v0.6); the `r12`-off
+> contrast +2 to +3 on six seeds, inside ±2.83 (the earlier three-seed reading was +2.58 at ±4.00),
+> its lock hold under the `r12`-on cells' 10.07 by about one event; no fault counter non-zero.
+> The forced choice below then goes to the owner as §8.3 decision 6, with this project's
+> recommendation written beside it.
+
 **The decision rule, written before the run so it cannot be negotiated after it.**
 
 | Monet at the §3.5b gate | what it means | what happens |
