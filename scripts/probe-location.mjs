@@ -38,6 +38,8 @@ const seeds = argOf('--seeds', 'loc').split(',')
 const games = Number(argOf('--games', 50))
 // A2: the per-seat step, laid over every κ > 0 row (0 = A1)
 const adapt = Number(argOf('--adapt', 0))
+// the prior's shape: count (default) or once
+const prior = argOf('--prior', 'count')
 const policy = MON.monetPolicy(version)
 if (policy.style?.pModel !== 'marginal') {
   console.error(`${version} does not build the marginal (pModel=${String(policy.style?.pModel)}); the prior has no table to weight`)
@@ -70,7 +72,7 @@ for (const s0 of seeds) {
       if (!view.declareWindow && view.phase === 'playing' && action.type === 'ask') {
         askDecisions++
         for (let j = 0; j < kappas.length; j++) {
-          const k = KNOW.buildKnowledge(view, kappas[j] > 0 ? { ...opts, choiceKappa: kappas[j], ...(adapt > 0 ? { choiceAdapt: adapt } : {}) } : opts)
+          const k = KNOW.buildKnowledge(view, kappas[j] > 0 ? { ...opts, choiceKappa: kappas[j], choicePrior: prior, ...(adapt > 0 ? { choiceAdapt: adapt } : {}) } : opts)
           const table = MARG.marginalFor(k)
           const a = acc[j]
           if (table) {
@@ -101,7 +103,7 @@ for (const s0 of seeds) {
   }
 }
 const f = (x, d = 4) => x.toFixed(d)
-console.log(`=== opponent-location score: Monet ${version} mirror games, seeds ${seeds.join(',')} x ${games}, ${decisions} decisions, ${askDecisions} ask decisions, adapt ${adapt}, ${((Date.now() - t0) / 1000).toFixed(1)}s ===`)
+console.log(`=== opponent-location score: Monet ${version} mirror games, seeds ${seeds.join(',')} x ${games}, ${decisions} decisions, ${askDecisions} ask decisions, prior ${prior}, adapt ${adapt}, ${((Date.now() - t0) / 1000).toFixed(1)}s ===`)
 console.log('kappa   | cards    p(true)  top1    | opp-held  p(true)  top1    | mate-held p(true)  top1    | asks   believed realised bias     | rounds/table')
 for (let j = 0; j < kappas.length; j++) {
   const a = acc[j]

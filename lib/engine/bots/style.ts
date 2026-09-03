@@ -277,14 +277,21 @@ export interface StyleParams extends AskWeights {
    */
   pAssignment?: 'greedy' | 'joint'
   /**
-   * MONET.md §3.6a — the ask-choice prior's strength κ (≥ 0). A seat that has asked into a
-   * half-suit has the marginal's prior weight of that half-suit's unknown cards at that seat
-   * multiplied by `1 + κ` before scaling, once (`KnowledgeOptions.choiceKappa`): a policy chases
-   * the sets it is invested in, so the choice is evidence about the chooser's hand. 0 or absent is the flat prior
+   * MONET.md §3.6a — the ask-choice prior's strength κ (≥ 0). Each ask a seat makes into a
+   * half-suit multiplies the marginal's prior weight of that half-suit's unknown cards at that seat
+   * by `1 + κ` before scaling, saturating at three asks (`KnowledgeOptions.choiceKappa`; the shape
+   * is `choicePrior`): a policy chases the sets it is invested in, so the choice is evidence about
+   * the chooser's hand. 0 or absent is the flat prior
    * every bot has shipped with, byte for byte. Reads the table `pModel: 'marginal'` builds and is
    * inert without one. Absent on every roster style and every tier.
    */
   choiceKappa?: number
+  /**
+   * MONET.md §3.6a — the prior's shape: `'count'` (absent; `(1 + κ)^min(asks, 3)`, the pre-registered
+   * form) or `'once'` (`1 + κ` for any seat that asked, however many times — the labelled
+   * alternative). Inert without `choiceKappa > 0`. Absent on every roster style and every tier.
+   */
+  choicePrior?: 'count' | 'once'
   /**
    * MONET.md §3.6a A2 — the step η (≥ 0) of the per-seat reading of the same evidence, updated
    * inside the game from every successful declaration (`KnowledgeOptions.choiceAdapt`). 0 or
@@ -679,6 +686,8 @@ export function validateStyle(style: StyleParams): string[] {
   }
   const choiceKappa = style.choiceKappa
   if (choiceKappa !== undefined && !(typeof choiceKappa === 'number' && Number.isFinite(choiceKappa) && choiceKappa >= 0)) bad.push(`choiceKappa ${String(choiceKappa)} is not a finite number >= 0`)
+  const choicePrior = style.choicePrior
+  if (choicePrior !== undefined && choicePrior !== 'count' && choicePrior !== 'once') bad.push(`choicePrior ${String(choicePrior)} is not 'count' or 'once'`)
   const choiceAdapt = style.choiceAdapt
   if (choiceAdapt !== undefined && !(typeof choiceAdapt === 'number' && Number.isFinite(choiceAdapt) && choiceAdapt >= 0)) bad.push(`choiceAdapt ${String(choiceAdapt)} is not a finite number >= 0`)
   const claimOwnership = style.claimOwnership

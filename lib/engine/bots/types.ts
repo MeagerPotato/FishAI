@@ -65,6 +65,8 @@ export interface Knowledge {
    * declaration of a half-suit the seat had asked into. Present only when the step is > 0.
    */
   choiceSeat?: number[]
+  /** The prior's shape (`KnowledgeOptions.choicePrior`); absent = `'count'`. */
+  choicePrior?: 'count' | 'once'
 }
 
 /** Options for buildKnowledge — used by the easy tier's degraded memory. */
@@ -81,12 +83,15 @@ export interface KnowledgeOptions {
    */
   marginal?: boolean
   /**
-   * MONET.md §3.6a — the ask-choice prior's strength κ (≥ 0). A seat that has asked into a half-suit
-   * has the marginal's prior weight of that half-suit's unknown cards at that seat multiplied by
-   * `1 + κ` before scaling — once, however many times it asked. Default 0: the flat prior, byte for
-   * byte — every Bass tier, every Monet version before v0.5. Read only when `marginal` is set.
+   * MONET.md §3.6a — the ask-choice prior's strength κ (≥ 0). Each ask a seat makes into a half-suit
+   * multiplies the marginal's prior weight of that half-suit's unknown cards at that seat by `1 + κ`
+   * before scaling, saturating at three asks (`choicePrior: 'count'`, the default) — or once for any
+   * seat that asked (`'once'`). Default 0: the flat prior, byte for byte — every Bass tier, every
+   * Monet version before v0.5. Read only when `marginal` is set.
    */
   choiceKappa?: number
+  /** MONET.md §3.6a — the prior's shape: `'count'` (absent) or `'once'`. Read only with `choiceKappa > 0`. */
+  choicePrior?: 'count' | 'once'
   /**
    * MONET.md §3.6a A2 — the step η (≥ 0) of the per-seat reading. At every successful declaration
    * (the one event that publishes true holders on the host), for each seat that had asked into the

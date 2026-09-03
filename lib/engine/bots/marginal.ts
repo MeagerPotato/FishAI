@@ -202,22 +202,27 @@ export function computeMarginalTable(k: Knowledge): MarginalTable | null {
   if (n === 0) return { cards, index, p, rounds: 0, converged: true, conditioned: 0 }
   // MONET.md §3.6a: the prior. Flat (1 on every admissible cell) unless the Knowledge carries the
   // ask-choice evidence, in which case a seat's `a` asks into a card's half-suit weight that seat's
-  // cell by (1 + κ) before the scaling — the margins are the same, the fixpoint is not. One ask
-  // is the whole signal: with ground truth on the fit seeds a seat that asked into a half-suit
-  // once was dealt 1.565 of its cards, twice 1.612, three or more 1.570, against 1.185 when it
-  // held one and never asked (MONET.md §3.6a). A count would weight chasing, not holding, and
-  // at κ = 4 a seventh ask would be a weight of 78,125 that 200 rounds cannot scale away.
+  // cell by (1 + κ)^min(a, 3) before the scaling (`choicePrior: 'count'`, the pre-registered form;
+  // saturating at three asks keeps the matrix conditioned — a seventh ask at κ = 4 would be a
+  // weight of 78,125 that 200 rounds cannot scale away) or by 1 + κ once for any seat that asked
+  // (`'once'`) — the margins are the same, the fixpoint is not. With ground truth on the fit seeds
+  // the DEALT count is flat in the number of asks (once 1.565, twice 1.612, three or more 1.570,
+  // against 1.185 licensed and never asked), yet the opponent-location score reads the count form
+  // higher at every κ (MONET.md §3.6a): repeated asks say where the cards still are, not where
+  // they were dealt.
   const kappa = k.choiceKappa ?? 0
   const asksInto = kappa > 0 ? k.asksInto : undefined
   // A2: the per-seat multiplier on κ, 1 everywhere unless the Knowledge read the declarations
   const seatMul = asksInto === undefined ? undefined : k.choiceSeat
+  const once = k.choicePrior === 'once'
   for (let i = 0; i < n; i++) {
     let any = false
     const row = asksInto === undefined ? undefined : asksInto[cardBook(cards[i])]
     for (const s of k.cands[cards[i]] ?? []) {
       if (need[s] > 0) {
-        const asked = row !== undefined && s !== k.seat && (row[s] ?? 0) > 0
-        p[i * 6 + s] = asked ? 1 + kappa * (seatMul === undefined ? 1 : seatMul[s]) : 1
+        const a = row === undefined || s === k.seat ? 0 : Math.min(3, row[s] ?? 0)
+        const w = 1 + kappa * (seatMul === undefined ? 1 : seatMul[s])
+        p[i * 6 + s] = a === 0 ? 1 : once ? w : Math.pow(w, a)
         any = true
       }
     }
