@@ -443,6 +443,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.9** | **the priced ask** — the contest credit on the miss branch and the exposure charge on the hit branch (§3.8d) | ≥ 37.1% (v0.4c + 2.00) on twelve fresh seeds | fit abroad on three seeds, confirm on twelve; markers from the records | M |
 | **v0.8** | **the determinized declare** — a sure set cashed when the posterior proves it, not when the walk locates it (§3.8b) | ≥ 37.1% (v0.4c + 2.00) — **read 2026-09-03: 35.15% against the base's 35.07%, +0.08 paired (SE 0.08), inside the floor; 0.13 consensus claims a game at 99.6%; nothing shipped** | home markers (claim accuracy ≥ 95%, pairs ahead ≥ +0.20), then twelve seeds abroad | M |
 | **v1.0** | **the version that passes §3.9's six conditions** | ≥ 50.0% — the owner, 2026-09-03: "about 50%, or significantly above", i.e. ≥ 52.0% at twelve seeds | §3.9 | — |
 
@@ -2769,6 +2770,86 @@ follow. The mechanism behind a contested race is R2's: the ask's value beyond it
 kept and information given away — and that is the rung, written into §8.3 as row 9 with (c) as the
 second rung, bounded by R4. Nothing in this study is a mechanism; nothing ships from it; the numbers
 are the deliverable.
+
+### 3.8d Monet v0.9 — the priced ask
+
+**Decision 8.3 row 9, taken by the owner on 2026-09-03: build v0.9 by the recommendation.** Two
+terms beside the hit chance in the ask ranker, each a Monet-only knob that is byte identity when
+absent, fitted against SESTINA directly because that is the opponent the terms are for and a cell
+costs a minute, then confirmed on fresh seeds at the floor.
+
+**The facts, all from §3.8c's records and two readouts added to the instrument since (14,400 games,
+twelve seeds):**
+
+- At SESTINA's own ask decisions Monet v0.4c's pick would hit 62.5% against SESTINA's 55.7%. Of that
+  6.8-point surplus, **4.6 points are sure misses SESTINA plays and Monet would not**: SESTINA asks
+  for a card that is on its own side of the table 26.1% of the time against the pick's 21.5% —
+  7.3% of its asks are into a set its team already holds entirely (Monet 8.9% at its own decisions,
+  5.7% for the pick at SESTINA's), the rest a card a teammate holds. The remaining 2.2 points are
+  live asks of lower probability. So SESTINA's low hit rate is two things: asks it cannot know are
+  dead, and asks it prefers although they will probably miss.
+- **A hit is not kept.** Monet's hits are taken back before the set resolves **41.0%** of the time,
+  SESTINA's **31.9%**; a Monet hit ends in a set Monet cashes 62.4% of the time, a SESTINA hit
+  75.6%. In the mirrors the rates are 38.2% (Monet) and 33.8% (SESTINA). A miss costs both sides
+  the same: the other side's run after a miss is 2.09 asks / 1.12 hits against 2.02 / 1.04, it opens
+  with a certain take-back 17.1% against 20.7%, and neither side chooses safer targets than the
+  other (the danger of the chosen target 0.90 against 0.92; §3.8c's pick would choose 0.93).
+- FishLab's own attribution of SESTINA v1.0 (their holdout lattice, read as a finding) names as its
+  largest component a linear term that rewards asks likely to miss into half-suits the opponents
+  dominate and whose ownership is still open; under it the acting team's ask accuracy falls, its
+  declaration accuracy falls, and it claims more half-suits and cashes its locks sooner — their
+  summary is that it "plays a worse game by its own KPIs" (FishLab, ADVERSARIES.md) and wins. Their
+  sweeps found ask accuracy anti-correlated with strength near the optimum, and a fit whose
+  objective was hit rate lost. Nothing of theirs is copied; the term below is that idea in this
+  ranker's units, and the exposure term is this document's own reading of the take-back rows.
+
+**The mechanism** (`lib/engine/bots/priced.ts`; the hook in `pickAsk`, gated below every certain
+hit exactly as the concession terms are, so "certain hits first" survives and a certain hit pays
+neither term):
+
+- **`contest`** — the credit on the miss branch: `contest · wHit · (1 − p) · oppMass/6 ·
+  ambiguous/6` for an ask into an unresolved set, where `oppMass` is the opponents' expected
+  share of the set on the seat's marginal table (certain holders count one) and `ambiguous` the
+  cards of it the seat cannot place. Zero for a certain hit.
+- **`exposure`** — the charge on the hit branch: `exposure · wHit · p · risk`, with
+  `risk = min(1, oppAfter) · (1 − closeChance)`: `oppAfter` the expected cards of the set still
+  with opponents after the hit (a licence they keep), `closeChance` the product over the set's
+  other unplaced cards of the best single-ask chance of taking each (the chance to run the set out
+  in one turn), and `risk` 0 when the hit would lock the set. Uncertain asks only.
+- Both are computed from the seat's public knowledge (the marginal table and the certain holders);
+  `tests/bots/priced.test.ts` pins identity at 0 or absent, the bounds and signs, certain-first
+  with both knobs on, liveness, determinism, and `validateStyle`.
+
+**The fit, abroad, pre-registered.** Every cell is 200 deals × 6 rotations = 1,200 games against
+SESTINA v1.0 on the v0.9 tree export, the base arm (v0.4c, every knob off) on the same seeds and the
+same tree, recorded with `fish_record` so the markers come from the same games. Fit seeds, three,
+drawn by §6.5's rule from `monet-v0.9-2026-09-03`: **2534720 1361408 5981661**. Arms:
+
+> | arm | override | for |
+> |---|---|---|
+> | base | — | the pair |
+> | c1 / c2 / c3 | `contest` 0.15 / 0.3 / 0.6 | the contest dose |
+> | x1 / x2 | `exposure` 0.3 / 0.6 | the exposure dose |
+> | cx | `contest` 0.3 + `exposure` 0.3 | both |
+
+The chosen arm is the one with the best mean paired gain over the three fit seeds, provided it is
+positive on at least two of them; if none is, the pair of doses nearest the best is not re-fitted —
+v0.9 closes as measured. Home duplicate pairs against v0.4c (100 on `home-a` per dose, then 600
+for the chosen arm) are **reported, not gating**: the terms price an opponent that takes cards
+back and probes contested sets, and the mirror is not that opponent.
+
+**The confirmation.** The chosen arm against SESTINA on twelve fresh seeds, drawn with the fit
+seeds from the same label: **4566970 1199342 6316791 2547589 4418288 9925819 5348261 6105833
+5507420 9426818 9607741 6361645**, paired against the base on the same seeds and tree, acceptance
+**+2.00 points** as every rung before it. Every seed listed, the SD published.
+
+**The markers**, read from the confirmation records by the attribution instrument, expected if the
+mechanism does what the facts say and recorded either way: Monet's hit rate **falls** (the pick at
+its own decisions, with v0.4c as the counterfactual, would hit more than it plays — SESTINA's
+signature, the reverse of every rung before); the share of its hits taken back falls from 41%;
+the share of its hits ending in a cashed set rises from 62%; the even-split sets move toward 50%;
+the lock hold is unchanged. A win-rate gain without these is a gain this document cannot explain
+and says so.
 
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 

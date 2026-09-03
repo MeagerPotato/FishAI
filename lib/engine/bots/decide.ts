@@ -119,6 +119,7 @@ import { preyInBook, turnYield } from './threat.ts'
 import { revealActive, revealAsk } from './reveal.ts'
 import type { RevealPick } from './reveal.ts'
 import { consensusOn, sampleDeals } from './consensus.ts'
+import { pricedActive, pricedAdjustment } from './priced.ts'
 import type { Consensus } from './consensus.ts'
 import { POLICY_CONSTANTS, SKILL_PRESETS, resolvePolicy } from './style.ts'
 import type { BotPolicy, SkillParams, StyleParams } from './style.ts'
@@ -1135,6 +1136,10 @@ function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: ActiveP
   // have to re-establish all three. Off at `conceal` absent or 0, which is every shipped tier and
   // every roster style, and under `pagat48`.
   const concealing = concealmentActive(view, style)
+  // MONET.md §3.8d — the priced terms (priced.ts): the contest credit on the miss branch and the
+  // exposure charge on the hit branch. Off at both knobs absent or 0 (every tier, every roster
+  // style), and gated below every certain hit exactly as the concession terms are.
+  const pricing = pricedActive(style)
   // Where this seat's evidence about published bases comes from. `logLicences` scans the public
   // log for row-6 asks and retires each licence against `k` — so for a BOUNDED seat the
   // *retirement* half is already budgeted (it reads that seat's restricted knowledge), while the
@@ -1178,7 +1183,8 @@ function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: ActiveP
     const gated = certainAvailable && r.p < 1
     if (!skill.refinedInference) {
       const bonus = defusing ? defusalBonus(view, k, style, r, r.p, yield_, licences!, appetite) : 0
-      return { r, refined: r.p, s: r.score + (gated ? 0 : bonus - charge), idx }
+      const priced = pricing ? pricedAdjustment(view, k, style, r, r.p) : 0
+      return { r, refined: r.p, s: r.score + (gated ? 0 : bonus - charge + priced), idx }
     }
     const base = askHitProbability(k, r.card, r.target)
     // The conditioned number stands in for the refined one everywhere below — in the score, and
@@ -1187,10 +1193,11 @@ function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: ActiveP
       ? licenceConditionedHitProbability(view, k, r.card, r.target, lambda, licences!)
       : refinedHitProbability(k, r.card, r.target)
     const bonus = defusing ? defusalBonus(view, k, style, r, refined, yield_, licences!, appetite) : 0
+    const priced = pricing ? pricedAdjustment(view, k, style, r, refined) : 0
     return {
       r,
       refined,
-      s: r.score + style.wHit * (refined - base) + (gated ? 0 : bonus - charge),
+      s: r.score + style.wHit * (refined - base) + (gated ? 0 : bonus - charge + priced),
       idx,
     }
   })

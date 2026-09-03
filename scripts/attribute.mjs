@@ -85,7 +85,7 @@ function newAcc() {
   const askT = () => ({
     n: 0, hit: 0, certain: 0, certainHit: 0, unc: 0, uncHit: 0,
     phase: { early: { n: 0, hit: 0 }, mid: { n: 0, hit: 0 }, late: { n: 0, hit: 0 } },
-    hitExists: 0, hitWhenExists: 0,
+    hitExists: 0, hitWhenExists: 0, ownLocked: 0, cfOwnLocked: 0, oppHeld: 0, cfOppHeld: 0,
     cfN: 0, cfAgree: 0, cfHit: 0, actHitAtCf: 0, cfDiff: 0, cfDiffHit: 0, actDiffHit: 0, cfNonAsk: 0,
     holding: { 1: { n: 0, hit: 0 }, 2: { n: 0, hit: 0 }, 3: { n: 0, hit: 0 }, 4: { n: 0, hit: 0 }, 5: { n: 0, hit: 0 } },
     cfHolding: { 1: { n: 0, hit: 0 }, 2: { n: 0, hit: 0 }, 3: { n: 0, hit: 0 }, 4: { n: 0, hit: 0 }, 5: { n: 0, hit: 0 } },
@@ -95,11 +95,14 @@ function newAcc() {
     locksFormed: 0, locksCashed: 0, locksBroken: 0, locksGifted: 0, locksOpen: 0, holdSum: 0, holdN: 0,
   })
   const tempoT = () => ({ runs: 0, hits: 0, passes: 0 })
+  const fateT = () => ({ hits: 0, takeBack: 0, closes: 0, takenBack: 0, converted: 0, lost: 0, open: 0 })
+  const missT = () => ({ n: 0, dangerSum: 0, dangerAny: 0, oppAsks: 0, oppHits: 0, oppFirstCertain: 0, asks: 0, askDangerSum: 0, askDangerAny: 0, cfAsks: 0, cfDangerSum: 0, cfDangerAny: 0 })
   const split = {}
   for (let k = 0; k <= 6; k++) split[k] = { n: 0, aCashed: 0, aGifted: 0, bCashed: 0, bGifted: 0, open: 0, openLocked: 0, openLeadA: 0, openLeadB: 0 }
   return {
     games: 0, wins: [0, 0], sets: [0, 0], open: 0, noClinch: 0, eventsToClinch: 0, badRecords: 0,
     split, asks: [askT(), askT()], decl: [declT(), declT()], tempo: [tempoT(), tempoT()],
+    fate: [fateT(), fateT()], miss: [missT(), missT()],
   }
 }
 
@@ -122,6 +125,17 @@ function walk(rec, cfPol, acc) {
   const lock = {} // book -> { team, at } while the six sit in one team's hands, unresolved
   let lastAskTeam = -1
   let clinchAt = null
+  const hitEntries = [] // every hit: { side, book, closes, takenBack, resolved }
+  const lastHit = new Map() // card -> the latest hit entry on it while the set is unresolved
+  let pendingMiss = null // { side, oppAsks, oppHits, first } until the missing side asks again
+  // the danger of a target for the asker's side: publicly located cards of the asker's side whose
+  // set the target holds a card of (a licence), on the true deal
+  const dangerOf = (askerSide, target) => {
+    let n = 0
+    const licence = new Set(hands[target].map(bookOf))
+    for (const [c, at] of publicAt) if (side(at) === askerSide && licence.has(bookOf(c))) n++
+    return n
+  }
 
   const sameTeamHolds = (b) => {
     let t = -1
@@ -179,8 +193,15 @@ function walk(rec, cfPol, acc) {
       A.phase[phase].n++
       if (ev.hit) A.phase[phase].hit++
       if (hitExists(ev.asker)) { A.hitExists++; if (ev.hit) A.hitWhenExists++ }
+      if (sameTeamHolds(bookOf(ev.card)) === T) A.ownLocked++
+      { const x = seatOf.get(ev.card); if (x !== undefined && side(x) !== T) A.oppHeld++ }
       { const h = A.holding[Math.min(5, Math.max(1, holdingOf(T, bookOf(ev.card))))]; h.n++; if (ev.hit) h.hit++ }
       if (T !== lastAskTeam) { acc.tempo[T].runs++; lastAskTeam = T }
+      if (pendingMiss) {
+        if (pendingMiss.side === T) { const M = acc.miss[T]; M.oppAsks += pendingMiss.oppAsks; M.oppHits += pendingMiss.oppHits; if (pendingMiss.first) M.oppFirstCertain++; pendingMiss = null }
+        else { if (pendingMiss.oppAsks === 0 && certain) pendingMiss.first = true; pendingMiss.oppAsks++; if (ev.hit) pendingMiss.oppHits++ }
+      }
+      { const M = acc.miss[T]; const d = dangerOf(T, ev.target); M.asks++; M.askDangerSum += d; if (d > 0) M.askDangerAny++ }
       if (cfPol) {
         const meta = rec.askMeta ? rec.askMeta.get(i) : undefined
         if (meta) {
@@ -215,16 +236,31 @@ function walk(rec, cfPol, acc) {
           }
           if (cfHit) A.cfHit++
           if (ev.hit) A.actHitAtCf++
+          if (sameTeamHolds(bookOf(a.card)) === T) A.cfOwnLocked++
+          { const x = seatOf.get(a.card); if (x !== undefined && side(x) !== T) A.cfOppHeld++ }
+          { const M = acc.miss[T]; const d = dangerOf(T, a.target); M.cfAsks++; M.cfDangerSum += d; if (d > 0) M.cfDangerAny++ }
           { const h = A.cfHolding[Math.min(5, Math.max(1, holdingOf(T, bookOf(a.card))))]; h.n++; if (cfHit) h.hit++ }
         }
       }
+      if (!ev.hit) {
+        const M = acc.miss[T]; const d = dangerOf(T, ev.target); M.n++; M.dangerSum += d; if (d > 0) M.dangerAny++
+        if (pendingMiss && pendingMiss.side !== T) { const P = acc.miss[pendingMiss.side]; P.oppAsks += pendingMiss.oppAsks; P.oppHits += pendingMiss.oppHits; if (pendingMiss.first) P.oppFirstCertain++ }
+        pendingMiss = { side: T, oppAsks: 0, oppHits: 0, first: false }
+      }
       if (ev.hit) {
+        const F = acc.fate[T]; F.hits++
+        if (certain) F.takeBack++
+        const prev = lastHit.get(ev.card)
+        if (prev && prev.side !== T && !prev.resolved) { prev.takenBack = true; F.takenBackOf = (F.takenBackOf || 0) + 1 }
+        const entry = { side: T, book: bookOf(ev.card), closes: false, takenBack: false, resolved: false }
+        hitEntries.push(entry); lastHit.set(ev.card, entry)
         hands[ev.target] = hands[ev.target].filter((c) => c !== ev.card)
         hands[ev.asker].push(ev.card)
         seatOf.set(ev.card, ev.asker)
         publicAt.set(ev.card, ev.asker)
         acc.tempo[T].hits++
         updateLocks(i)
+        if (lock[entry.book] && lock[entry.book].team === T && lock[entry.book].at === i) { entry.closes = true; acc.fate[T].closes++ }
       }
     } else if (ev.type === 'claim') {
       const T = side(ev.claimer)
@@ -253,6 +289,7 @@ function walk(rec, cfPol, acc) {
         seatOf.delete(c)
         publicAt.delete(c)
       }
+      for (const e of hitEntries) if (!e.resolved && e.book === b) { e.resolved = true; const F = acc.fate[e.side]; if (e.takenBack) F.takenBack++; if (outcomeTeam === e.side) F.converted++; else F.lost++ }
       resolved[b] = { book: b, outcome: ev.outcome, claimer: ev.claimer, assignments: ev.assignments, actualHolders: ev.actualHolders }
       if (outcomeTeam >= 0) { awarded[outcomeTeam]++; acc.sets[outcomeTeam]++ }
       if (clinchAt === null && (awarded[0] >= CLINCH || awarded[1] >= CLINCH)) {
@@ -266,6 +303,7 @@ function walk(rec, cfPol, acc) {
     }
   }
   if (clinchAt === null) acc.noClinch++
+  for (const e of hitEntries) if (!e.resolved) { const F = acc.fate[e.side]; if (e.takenBack) F.takenBack++; F.open++ }
   for (const b of BOOKS) {
     if (resolved[b]) continue
     acc.open++
@@ -396,6 +434,11 @@ function report(acc, head) {
     console.log(`| ${t === 0 ? 'A' : 'B'} | ${per(A.n, g, 1)} | ${pct(A.hit, A.n)} | ${pct(A.certain, A.n)} | ${pct(A.uncHit, A.unc)} | ${pct(A.phase.early.hit, A.phase.early.n)} / ${pct(A.phase.mid.hit, A.phase.mid.n)} / ${pct(A.phase.late.hit, A.phase.late.n)} | ${pct(A.hitExists, A.n)} | ${pct(A.hitWhenExists, A.hitExists)} | ${pct(A.cfAgree, A.cfN)} | ${pct(A.cfHit, A.cfN)} vs ${pct(A.actHitAtCf, A.cfN)} | ${pct(A.cfDiffHit, A.cfDiff)} / ${pct(A.actDiffHit, A.cfDiff)} (${A.cfDiff}) | ${A.cfNonAsk} |`)
   }
   console.log('')
+  console.log('-- sure misses and live asks: asks into a set the side already holds entirely (own-locked, a sure miss), and asks whose card was with the other side at all (live) - actual and counterfactual --')
+  console.log('| side | own-locked asks | cf own-locked | live asks (card on the other side) | cf live |')
+  console.log('|---|---|---|---|---|')
+  for (const t of [0, 1]) { const A = acc.asks[t]; console.log(`| ${t === 0 ? 'A' : 'B'} | ${pct(A.ownLocked, A.n)} | ${pct(A.cfOwnLocked, A.cfN)} | ${pct(A.oppHeld, A.n)} | ${pct(A.cfOppHeld, A.cfN)} |`) }
+  console.log('')
   console.log('-- asks by the asking side\u2019s holding of the asked set (cards of six already on the side): share of asks, hit; and the counterfactual\u2019s share, hit --')
   console.log('| side | 1 | 2 | 3 | 4 | 5 | cf 1 | cf 2 | cf 3 | cf 4 | cf 5 |')
   console.log('|---|---|---|---|---|---|---|---|---|---|---|')
@@ -403,6 +446,22 @@ function report(acc, head) {
     const A = acc.asks[t]
     const cellOf = (H, total) => [1, 2, 3, 4, 5].map((k) => `${pct(H[k].n, total)} / ${pct(H[k].hit, H[k].n)}`)
     console.log(`| ${t === 0 ? 'A' : 'B'} | ${cellOf(A.holding, A.n).join(' | ')} | ${cellOf(A.cfHolding, A.cfN).join(' | ')} |`)
+  }
+  console.log('')
+  console.log('-- hit fates: of each side\u2019s hits, the share that were take-backs (a certain ask on a card the target had hit), that closed the set, that were later taken back before the set resolved, and whose set the side cashed / lost / left open --')
+  console.log('| side | hits/g | take-backs | closed the set | later taken back | set cashed | set lost | set open at the clinch |')
+  console.log('|---|---|---|---|---|---|---|---|')
+  for (const t of [0, 1]) {
+    const F = acc.fate[t]
+    console.log(`| ${t === 0 ? 'A' : 'B'} | ${per(F.hits, g)} | ${pct(F.takeBack, F.hits)} | ${pct(F.closes, F.hits)} | ${pct(F.takenBack, F.hits)} | ${pct(F.converted, F.hits)} | ${pct(F.lost, F.hits)} | ${pct(F.open, F.hits)} |`)
+  }
+  console.log('')
+  console.log('-- miss costs: the danger of the chosen target (publicly located cards of the asker\u2019s side the target holds a licence for), on every ask and on the misses, the counterfactual\u2019s target at the same decisions, and the other side\u2019s run after a miss --')
+  console.log('| side | misses/g | mean danger, all asks | any danger, all asks | cf: mean danger | cf: any danger | mean danger at misses | any danger at misses | opp run after a miss: asks | hits | opp opens with a certain take-back |')
+  console.log('|---|---|---|---|---|---|---|---|---|---|---|')
+  for (const t of [0, 1]) {
+    const M = acc.miss[t]
+    console.log(`| ${t === 0 ? 'A' : 'B'} | ${per(M.n, g)} | ${ratio(M.askDangerSum, M.asks, 2)} | ${pct(M.askDangerAny, M.asks)} | ${ratio(M.cfDangerSum, M.cfAsks, 2)} | ${pct(M.cfDangerAny, M.cfAsks)} | ${ratio(M.dangerSum, M.n, 2)} | ${pct(M.dangerAny, M.n)} | ${ratio(M.oppAsks, M.n, 2)} | ${ratio(M.oppHits, M.n, 2)} | ${pct(M.oppFirstCertain, M.n)} |`)
   }
   console.log('')
   console.log('-- tempo --')
