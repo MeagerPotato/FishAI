@@ -277,6 +277,15 @@ export interface StyleParams extends AskWeights {
    */
   pAssignment?: 'greedy' | 'joint'
   /**
+   * MONET.md §3.6a — the ask-choice prior's strength κ (≥ 0). Each ask a seat makes into a
+   * half-suit multiplies the marginal's prior weight of that half-suit's unknown cards at that seat
+   * by `1 + κ` before scaling (`KnowledgeOptions.choiceKappa`): a policy chases the sets it is
+   * invested in, so the choice is evidence about the chooser's hand. 0 or absent is the flat prior
+   * every bot has shipped with, byte for byte. Reads the table `pModel: 'marginal'` builds and is
+   * inert without one. Absent on every roster style and every tier.
+   */
+  choiceKappa?: number
+  /**
    * MONET.md §3.4b item 2 — what "ours" means to the speculative declare. `'certain'` (and
    * absent) keeps `evClaim`'s structural gate: every open card's candidates must all be
    * teammates. `'priced'` drops the gate and lets the plan's probability, which carries the
@@ -631,6 +640,8 @@ export function validateStyle(style: StyleParams): string[] {
   if (pModel !== undefined && pModel !== 'slot' && pModel !== 'marginal') bad.push(`pModel ${String(pModel)} is not 'slot' or 'marginal'`)
   const pAssignment = style.pAssignment
   if (pAssignment !== undefined && pAssignment !== 'greedy' && pAssignment !== 'joint') bad.push(`pAssignment ${String(pAssignment)} is not 'greedy' or 'joint'`)
+  const choiceKappa = style.choiceKappa
+  if (choiceKappa !== undefined && !(typeof choiceKappa === 'number' && Number.isFinite(choiceKappa) && choiceKappa >= 0)) bad.push(`choiceKappa ${String(choiceKappa)} is not a finite number >= 0`)
   const claimOwnership = style.claimOwnership
   if (claimOwnership !== undefined && claimOwnership !== 'certain' && claimOwnership !== 'priced') bad.push(`claimOwnership ${String(claimOwnership)} is not 'certain' or 'priced'`)
   return bad

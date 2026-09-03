@@ -442,7 +442,7 @@ export function markResolvedGone(w: Work, view: SeatView): void {
  * the log itself certifies.
  */
 export function recordedWalk(view: SeatView): { w: Work; rec: WalkRecord } {
-  const opts: Required<KnowledgeOptions> = { logWindow: Number.POSITIVE_INFINITY, useConstraints: true, marginal: false }
+  const opts: Required<KnowledgeOptions> = { logWindow: Number.POSITIVE_INFINITY, useConstraints: true, marginal: false, choiceKappa: 0 }
   const ownCardToggle = view.config?.toggles?.askOwnCardAllowed === true
   const log: readonly PublicEvent[] = Array.isArray(view.log) ? view.log : []
   const w = newWork(view)
@@ -472,6 +472,7 @@ export function buildKnowledge(view: SeatView, options: KnowledgeOptions = {}): 
     logWindow: options.logWindow ?? Number.POSITIVE_INFINITY,
     useConstraints: options.useConstraints ?? true,
     marginal: options.marginal ?? false,
+    choiceKappa: options.choiceKappa ?? 0,
   }
   const ownCardToggle = view.config?.toggles?.askOwnCardAllowed === true
   const log: readonly PublicEvent[] = Array.isArray(view.log) ? view.log : []
@@ -492,6 +493,20 @@ export function buildKnowledge(view: SeatView, options: KnowledgeOptions = {}): 
   const runningCounts = new Array<number>(6).fill(w.deck.handSize)
   for (const ev of events) ingest(w, ev, runningCounts, opts, ownCardToggle, trackCounts)
   const k = finishKnowledge(w, view)
+  // MONET.md §3.6a: the ask-choice prior's evidence — asks per (book, seat) over the walked events,
+  // every seat but the viewer — attached only when κ > 0, so every other build keeps its shape.
+  if (opts.marginal && opts.choiceKappa > 0) {
+    const asksInto: NonNullable<Knowledge['asksInto']> = {}
+    for (const ev of events) {
+      if (ev.type !== 'ask' || ev.asker === k.seat) continue
+      if (w.deck.order.get(ev.card) === undefined) continue
+      const b = cardBook(ev.card)
+      const row = asksInto[b] ?? (asksInto[b] = [0, 0, 0, 0, 0, 0])
+      row[ev.asker]++
+    }
+    k.asksInto = asksInto
+    k.choiceKappa = opts.choiceKappa
+  }
   // MONET.md §3.4a: the calibrated marginal is derived here, on the unbounded path only — never
   // inside `finishKnowledge`, which the bounded arm's replay shares (the §3.4a scope decision).
   if (opts.marginal) attachMarginal(k)

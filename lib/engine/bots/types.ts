@@ -7,7 +7,7 @@
  * function — the type is identical to what `seatView(state, seat)` returns and
  * to the payload `GET /api/state` sends a human client.
  */
-import type { Card, PublicState, Seat } from '../types.ts'
+import type { BookId, Card, PublicState, Seat } from '../types.ts'
 
 /** Exactly what a seated player (human client or bot) is allowed to know. */
 export type SeatView = PublicState & { seat: Seat; hand: Card[] }
@@ -49,6 +49,16 @@ export interface Knowledge {
   unknownSlots: number[]
   /** Surviving unsatisfied at-least-one-of constraints (for drills/inspection). */
   constraints: KnowledgeConstraint[]
+  /**
+   * MONET.md §3.6a — the ask-choice prior's evidence: asks per book by every seat but the viewer,
+   * `asksInto[book][seat]`, read off the walked log. A seat that asked into a half-suit chose it
+   * over its other licensed half-suits, so it is more likely to hold more of it. Present only on
+   * a Knowledge built with `choiceKappa > 0` (Monet v0.5 and later); every other build keeps its
+   * shape byte for byte.
+   */
+  asksInto?: Partial<Record<BookId, number[]>>
+  /** The prior's strength the marginal is scaled with (`KnowledgeOptions.choiceKappa`); absent = flat. */
+  choiceKappa?: number
 }
 
 /** Options for buildKnowledge — used by the easy tier's degraded memory. */
@@ -64,6 +74,13 @@ export interface KnowledgeOptions {
    * object; the Knowledge itself keeps its shape.
    */
   marginal?: boolean
+  /**
+   * MONET.md §3.6a — the ask-choice prior's strength κ (≥ 0). Each ask a seat makes into a half-suit
+   * multiplies the marginal's prior weight of that half-suit's unknown cards at that seat by `1 + κ`
+   * before scaling. Default 0: the flat prior, byte for byte — every Bass tier, every Monet version
+   * before v0.5. Read only when `marginal` is set.
+   */
+  choiceKappa?: number
 }
 
 /**

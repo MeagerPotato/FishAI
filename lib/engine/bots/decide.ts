@@ -247,7 +247,9 @@ function ownTeamCards(view: SeatView): number {
 function knowledgeOptions(skill: SkillParams, style: StyleParams): KnowledgeOptions {
   // MONET.md §3.4a: the probability model is the style's choice (`pModel`), off on every tier and
   // roster style; the two skill fields are what they always were.
-  return { logWindow: skill.logWindow, useConstraints: skill.useConstraints, marginal: style.pModel === 'marginal' }
+  const marginal = style.pModel === 'marginal'
+  // MONET.md §3.6a: the ask-choice prior rides on the marginal and is nothing without it.
+  return { logWindow: skill.logWindow, useConstraints: skill.useConstraints, marginal, choiceKappa: marginal ? style.choiceKappa : undefined }
 }
 
 /**
