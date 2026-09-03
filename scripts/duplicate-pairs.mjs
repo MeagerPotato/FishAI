@@ -3,7 +3,11 @@
  * duplicate `us54` deals, paired.
  *
  *     node scripts/duplicate-pairs.mjs --a v0.3 --b v0.2 [--pairs 800] [--bank home-a]
- *         [--a-override '{"defuse":0}'] [--b-override '{...}']
+ *         [--a-override '{"defuse":0}'] [--b-override '{...}'] [--a-search '{"det":8,"cand":3,"steps":24,"z":1,"guard":"lcb"}'] [--b-search '{...}']
+ *
+ * `--a-search` / `--b-search` (MONET.md 3.8a) make that arm the search arm over its policy: every
+ * ask decision goes through `decideSearch` with the given parameters (missing keys take
+ * SEARCH_DEFAULTS); windows and everything else stay the policy's. Printed in the header.
  *
  * An override is a JSON object of style keys laid over the named version's vector — the way an
  * ablation rung is spelled (MONET.md §3.3b's defusal ladder is `--a-override '{"defuse":N}'`
@@ -54,12 +58,18 @@ const PAIRS = Number(argOf('--pairs', 800))
 const BANK = argOf('--bank', 'home-a')
 const OVER_A = argOf('--a-override', '') ? JSON.parse(argOf('--a-override', '')) : null
 const OVER_B = argOf('--b-override', '') ? JSON.parse(argOf('--b-override', '')) : null
+const SEARCH_A = argOf('--a-search', '') ? JSON.parse(argOf('--a-search', '')) : null
+const SEARCH_B = argOf('--b-search', '') ? JSON.parse(argOf('--b-search', '')) : null
+const SEARCH = SEARCH_A || SEARCH_B ? await import(pathToFileURL(join(ROOT, 'lib/engine/search/index.ts')).href) : null
+const PARAMS_A = SEARCH_A ? { ...SEARCH.SEARCH_DEFAULTS, ...SEARCH_A } : null
+const PARAMS_B = SEARCH_B ? { ...SEARCH.SEARCH_DEFAULTS, ...SEARCH_B } : null
 const withOverride = (pol, over) =>
   over ? Object.freeze({ skill: pol.skill, style: Object.freeze({ ...pol.style, ...over }) }) : pol
 const POL_A = withOverride(monetPolicy(A), OVER_A)
 const POL_B = withOverride(monetPolicy(B), OVER_B)
-const LABEL_A = `${A}${OVER_A ? ' ' + JSON.stringify(OVER_A) : ''}`
-const LABEL_B = `${B}${OVER_B ? ' ' + JSON.stringify(OVER_B) : ''}`
+const LABEL_A = `${A}${OVER_A ? ' ' + JSON.stringify(OVER_A) : ''}${PARAMS_A ? ' search ' + JSON.stringify(PARAMS_A) : ''}`
+const LABEL_B = `${B}${OVER_B ? ' ' + JSON.stringify(OVER_B) : ''}${PARAMS_B ? ' search ' + JSON.stringify(PARAMS_B) : ''}`
+const act = (view, pol, params, seed) => (params ? SEARCH.decideSearch(view, pol, seed, params).action : decide(view, pol, seed))
 
 /** One game: team `teamA` plays arm A, the other team arm B. Returns [setsA, setsB]. */
 function play(seed, teamA) {
@@ -69,8 +79,8 @@ function play(seed, teamA) {
     if (guard++ >= 6000) return null
     const { seat } = legalActionsSummary(s)
     const view = seatView(s, seat)
-    const pol = seatTeam(seat) === teamA ? POL_A : POL_B
-    const r = reduce(s, decide(view, pol, hashSeed(`${seed}:${s.moveIndex}`)()))
+    const isA = seatTeam(seat) === teamA
+    const r = reduce(s, act(view, isA ? POL_A : POL_B, isA ? PARAMS_A : PARAMS_B, hashSeed(`${seed}:${s.moveIndex}`)()))
     if (!r.ok) return null
     s = r.state
   }

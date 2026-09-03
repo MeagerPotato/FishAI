@@ -2,7 +2,11 @@
  * bench-decide.mjs — the cost of a decision, for MONET.md §3.4a item 6 (≤ 1.4 ms per decision,
  * ≤ 0.9 s per six-seat game) and §0.2's cost line (Monet at ~0.14 ms per decision, ~82 ms per game).
  *
- *     node scripts/bench-decide.mjs --version v0.4a [--games 24] [--warmup 4]
+ *     node scripts/bench-decide.mjs --version v0.4a [--games 24] [--warmup 4] [--search '{"det":8,"cand":3,"steps":24}']
+ *
+ * `--search` (MONET.md 3.8a) times the search arm over the version instead - `decideSearch` with
+ * the given parameters (missing keys take SEARCH_DEFAULTS) - which is the cost-first test's
+ * instrument: the ask-decision mean is the number the budget is read against.
  *
  * Plays `us54` mirror games of the named Monet version and times every `decide` call with
  * `performance.now()`, the engine's `reduce` excluded. Reports the mean, median and p99 per
@@ -26,6 +30,9 @@ const argOf = (flag, dflt) => {
   return i >= 0 && i + 1 < process.argv.length ? process.argv[i + 1] : dflt
 }
 const VERSION = argOf('--version', '')
+const SEARCH_ARG = argOf('--search', '') ? JSON.parse(argOf('--search', '')) : null
+const SEARCH = SEARCH_ARG ? await import(pathToFileURL(join(ROOT, 'lib/engine/search/index.ts')).href) : null
+const PARAMS = SEARCH_ARG ? { ...SEARCH.SEARCH_DEFAULTS, ...SEARCH_ARG } : null
 if (!isMonetVersion(VERSION)) {
   console.error(`--version must name a Monet version (${MONET_VERSION_IDS.join(', ')}); got ${JSON.stringify(VERSION)}`)
   process.exit(2)
@@ -44,7 +51,7 @@ function playTimed(seed, sink) {
     const view = seatView(s, seat)
     const moveSeed = hashSeed(`${seed}:${s.moveIndex}`)()
     const t0 = performance.now()
-    const action = decide(view, POLICY, moveSeed)
+    const action = PARAMS ? SEARCH.decideSearch(view, POLICY, moveSeed, PARAMS).action : decide(view, POLICY, moveSeed)
     const dt = performance.now() - t0
     gameMs += dt
     if (sink) {
