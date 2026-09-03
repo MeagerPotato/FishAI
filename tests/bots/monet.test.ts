@@ -164,7 +164,8 @@ describe('the Monet version registry names each version and resolves it to that 
     const pair = asPair(MONET_V04C, "MONET_VERSIONS['v0.4c']")
     expect(pair.skill).toBe(SKILL_PRESETS.hard)
     expect(styleDiffKeys(pair.style, (MONET_V04B as BotPolicy).style)).toEqual(['licenceLambda'])
-    expect(pair.style.licenceLambda).toBe(0.6)
+    // 0.3 by the pre-registered 0.3-vs-0.6 confirmation (MONET.md 3.4c): +1.19 paired, SE 0.30, 19 of 24
+    expect(pair.style.licenceLambda).toBe(0.3)
     expect(pair.style.pAssignment).toBe('joint')
     expect(pair.style.pModel).toBe('marginal')
     // §3.4b item 2's knob is still off the vector; the licence term is the whole of this rung.

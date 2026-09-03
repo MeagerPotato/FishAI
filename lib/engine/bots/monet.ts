@@ -121,7 +121,9 @@ export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a' | 'v0.4b' | 'v0.4c
  *   the term v0.3 shipped and §3.4a's rule took out at +1.83 inside ±2.83, put back once the
  *   24-seed cell (±1.41) that decision 5 named as the one that resolves it read +1.88, ahead on
  *   22 of 24. The correction is to the ask ranker's number only (`licence.ts`); the claim
- *   planner's table and chain are untouched.
+ *   planner's table and chain are untouched. Shipped at 0.6 first; moved to 0.3 by the
+ *   pre-registered 0.3-versus-0.6 confirmation on 24 fresh seeds (§3.4c: +1.19 paired, SE 0.30,
+ *   ahead on 19 of 24, at less than half the over-statement).
  *
  * No entry pins the *code* the knobs run through — see the header. Naming v0.1 here buys back
  * v0.1's SPEC on a v0.2 tree; it does not buy back v0.1's games.

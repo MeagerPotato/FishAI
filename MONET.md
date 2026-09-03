@@ -438,7 +438,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.3** ✅ | λ = 0.60 licence conditioning · `defuse` frozen at 1 with its interval · the score term measured and not shipped | **30.96%** (target ≥ 30.5%) | calibration bias — home ✓, abroad ✗, the finding · the `defuse` ladder at ±3.10 · lock hold for the score term (0.01–0.05 events: nothing to move) | S–M — **shipped** |
 | **v0.4a** ✅ | `pCardAt`, the calibrated marginal (`pModel: 'marginal'`) · λ measured against it and taken out | **31.94%** (bar ≥ 33.0% — **not met**; the λ-on arm reads 33.78%) | calibration — aggregate abroad ✓ 0.002, deciles ✗ · ask accuracy 51.71 → 53.91 · the marginal's own effect +4.74 (6/6) | L — **shipped, item 4 missed, on the record** |
 | **v0.4b** ✅ | `pAssignment: 'joint'`, the chain over the marginal · `claimOwnership: 'priced'` measured and not shipped | **32.75%** (bar ≥ 36.0% — **not met**; +0.81 over v0.4a, inside the floor) | lock hold 9.98 → 10.07 — **did not move: the item's FAIL and the finding** · declare accuracy 97.86 → 98.32 (6/6) · speculative declares 37 → 101 per 1,200 games at 72 → 93% | L — **shipped; the cashing channel is communication, not belief** |
-| **v0.4c** ✅ | `licenceLambda` back on the joint — the 24-seed cell decision 5 named, and the finding that λ buys tempo, not accuracy | **34.08%** over 24 seeds (paired +1.88 over v0.4b, floor ±1.41) | calibration cost +0.050 recorded · lock hold 10.28 → 9.58 · ask accuracy 53.84 → 53.04 · the 0.3-vs-0.6 confirmation pre-registered | S — **shipped** |
+| **v0.4c** ✅ | `licenceLambda` back on the joint at **0.3** — the 24-seed cell decision 5 named (0.6: +1.88 over v0.4b, 22 of 24), the finding that λ buys tempo, not accuracy, and the pre-registered 0.3-vs-0.6 confirmation on 24 fresh seeds (+1.19 paired, SE 0.30, 19 of 24) | **35.12%** over the 24 confirmation seeds at 0.3 (34.08% at 0.6 over the first 24) | calibration cost +0.020 at 0.3 (0.6: +0.050) · lock hold 9.46 → 9.42 · ask accuracy 53.12 → 53.57 | S — **shipped** |
 | **the gate readout** ✅ (2026-09-03; was to be v0.5) | **the capability readout** — the §3.5b gate at six seeds on v0.4b, the `r12`-off control, the handoff emulated at home; the search arm not priced (§3.5c is gated on the owner's row-3 choice) | **32.75%** — the rule's third row | panel 35.5 / 36.9 / 36.4 / 64.7 / 69.3 against v0.6 … v0.2 · `r12` off −0.69 · handoff 47.8 → 77.6% at home · **§8.3 decision 6 to the owner** | M — **the measurement is on the record; no code shipped** |
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
@@ -1599,8 +1599,56 @@ over-statement is below 0.6's; otherwise v0.4c stays at 0.6.** The ±1.41 readin
 either way. If it clears, the registry entry moves to 0.3 and the forward bank is regenerated on the
 same branch before the rung merges.
 
+> **Confirmed 2026-09-03 — λ moves to 0.3.** The 48 cells ran 07:59 – 08:30 UTC on the unchanged
+> bridge (image, binaries, SESTINA spec and `--games=200 --rotations=6` as every recorded cell; the
+> tree at `46a63ae` read-only throughout; both arms re-run at seed 90210 first and identical to their
+> recorded cells, every engine line but `elapsed`). The rule, applied verbatim: **(1) paired mean
+> (0.3 − 0.6) +1.1875, SD 1.4841, SE 0.3029 — 3.92 × SE against the required 2; (2) ahead on 19 of
+> 24, one tie, behind on 4, against the required 15; (3) aggregate over-statement +0.0202 against
+> 0.6's +0.0493** (worst decile 0.081 against 0.175). Pooled **35.12%** at 0.3 against 33.93% at 0.6.
+> The ±1.41 reading recorded beside it, as promised: the same +1.19 is inside the two-independent-cells
+> floor, and the paired SD (1.48) is again below that floor's implied 3.46, so the paired rule was the
+> right one to write. The markers move the way §3.4c's finding predicted for a smaller λ: ask accuracy
+> 53.12 → 53.57, declarations 3.878 → 3.922 per game, lock hold 9.46 → 9.42 events — more tempo at
+> less than half the over-statement. Seed 24 (9195024) is the one large reversal (−2.83) and is
+> reported, not explained.
+>
+> | # | seed | λ 0.6 | λ 0.3 | 0.3 − 0.6 |
+> |---|---|---|---|---|
+> | 1 | 4118411 | 34.83 | 35.00 | +0.17 |
+> | 2 | 5513005 | 35.25 | 35.75 | +0.50 |
+> | 3 | 1242624 | 35.58 | 35.17 | −0.42 |
+> | 4 | 1908182 | 33.17 | 36.75 | +3.58 |
+> | 5 | 8217906 | 31.08 | 32.25 | +1.17 |
+> | 6 | 4364985 | 32.92 | 34.58 | +1.67 |
+> | 7 | 7116864 | 34.08 | 35.17 | +1.08 |
+> | 8 | 2154839 | 32.92 | 33.92 | +1.00 |
+> | 9 | 9236699 | 35.25 | 37.83 | +2.58 |
+> | 10 | 5736580 | 35.50 | 34.58 | −0.92 |
+> | 11 | 4285114 | 32.50 | 35.42 | +2.92 |
+> | 12 | 3981270 | 32.67 | 32.67 | 0.00 |
+> | 13 | 2579303 | 33.83 | 35.50 | +1.67 |
+> | 14 | 3992572 | 33.75 | 33.50 | −0.25 |
+> | 15 | 1229699 | 34.33 | 35.67 | +1.33 |
+> | 16 | 8314641 | 34.00 | 35.08 | +1.08 |
+> | 17 | 7420129 | 32.08 | 35.42 | +3.33 |
+> | 18 | 4330275 | 33.42 | 35.83 | +2.42 |
+> | 19 | 5928678 | 34.58 | 35.17 | +0.58 |
+> | 20 | 3267537 | 33.58 | 36.75 | +3.17 |
+> | 21 | 3469159 | 34.08 | 36.00 | +1.92 |
+> | 22 | 9730512 | 34.33 | 36.08 | +1.75 |
+> | 23 | 9455971 | 33.67 | 34.67 | +1.00 |
+> | 24 | 9195024 | 37.00 | 34.17 | −2.83 |
+> | | **mean** | **33.93** | **35.12** | **+1.19** |
+>
+>
+> The registry entry is `licenceLambda: 0.3` from this commit and the forward bank is regenerated on
+> the same branch (36 games, 25,463 decisions, from the clean tree). Every seed of the run is spent
+> and listed in §6.5; the run's PREREG.md and REPORT.md sit beside its 48 cell files in the session
+> scratchpad.
+
 **Decision 5 (§8.3) is resolved:** the term is on the vector. **Shipped:** `v0.4c` = v0.4b +
-`licenceLambda` (0.6, or 0.3 by the rule above), last in the registry, so the lobby seats it; its
+`licenceLambda: 0.3` (by the rule above; 0.6 until the confirmation cleared), last in the registry, so the lobby seats it; its
 forward bank replays; suite, lint and type check green. **Home, on record:** +0.22 ± 0.24 sets per pair
 on the joint (§3.4b item 8), cost unchanged (the term is a multiply in `pickAsk`).
 
