@@ -23,6 +23,7 @@ import { canonicalAction } from './action-digest.ts'
 const BASE = monetPolicy('v0.4c') as BotPolicy
 const withStyle = (over: Partial<StyleParams>): BotPolicy => ({ skill: BASE.skill, style: { ...BASE.style, ...over } })
 const ON = withStyle({ choiceKappa: 1, choicePrior: 'count', consensusDet: 64, consensusBar: 1 })
+const DECLARE_ONLY = withStyle({ consensusDet: 64, consensusBar: 1, consensusKappa: 1 })
 const OPTS = { logWindow: BASE.skill.logWindow, useConstraints: BASE.skill.useConstraints, marginal: true }
 const team = (s: Seat) => s % 2
 
@@ -46,7 +47,7 @@ function play(seed: string, pol: BotPolicy, visit: (state: State, view: SeatView
 describe('the determinized declare', () => {
   it('consensusDet absent or 0, or a bar alone, is byte identity with the base', () => {
     const zero = withStyle({ consensusDet: 0 })
-    const barOnly = withStyle({ consensusBar: 0.5 })
+    const barOnly = withStyle({ consensusBar: 0.5, consensusKappa: 1 })
     let decisions = 0
     for (const seed of ['cons-id-a', 'cons-id-b', 'cons-id-c']) {
       play(seed, BASE, (_s, view, n) => {
@@ -94,6 +95,23 @@ describe('the determinized declare', () => {
     expect(right / claims).toBeGreaterThanOrEqual(0.8)
   }, 300_000)
 
+  it('consensusKappa sharpens the declare alone: every ask is the base ask, and consensus claims occur', () => {
+    let claims = 0
+    let asks = 0
+    for (let g = 0; g < 6; g++) {
+      play(`cons-declare-only-${g}`, DECLARE_ONLY, (_s, view, n) => {
+        const d = decideExplained(view, DECLARE_ONLY, n)
+        if (d.trace.kind === 'consensus-claim') claims++
+        if (!view.declareWindow) {
+          asks++
+          expect(canonicalAction(d.action)).toBe(canonicalAction(decide(view, BASE, n)))
+        }
+      })
+    }
+    expect(asks).toBeGreaterThan(200)
+    expect(claims).toBeGreaterThan(0)
+  }, 300_000)
+
   it('is deterministic for the same inputs', () => {
     play('cons-det-a', ON, (_s, view, n) => {
       if (!view.declareWindow) return
@@ -110,5 +128,7 @@ describe('the determinized declare', () => {
     expect(validateStyle({ ...BASE.style, consensusDet: -1 })).not.toEqual([])
     expect(validateStyle({ ...BASE.style, consensusBar: 0 })).not.toEqual([])
     expect(validateStyle({ ...BASE.style, consensusBar: 1.5 })).not.toEqual([])
+    expect(validateStyle({ ...BASE.style, consensusKappa: -1 })).not.toEqual([])
+    expect(validateStyle({ ...BASE.style, consensusDet: 64, consensusKappa: 2.5 })).toEqual([])
   })
 })

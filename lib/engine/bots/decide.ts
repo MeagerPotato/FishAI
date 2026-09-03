@@ -1621,8 +1621,12 @@ function decideWindow(view: SeatView, pol: ActivePolicy, rng: Rng, t?: Sink): Ga
     }
     let best: Consensus | null = null
     if (candidates.length > 0) {
-      // one draw of D deals a window, every candidate set read off the same deals
-      const sampled = sampleDeals(view, k, det, rng)
+      // one draw of D deals a window, every candidate set read off the same deals; with
+      // `consensusKappa` the deals come from a posterior sharpened by the choice prior for the
+      // declare alone (the asks above used `k`, the style's own)
+      const kc = style.consensusKappa
+      const kk = kc !== undefined ? buildKnowledge(view, { ...knowledgeOptions(skill, style), marginal: true, choiceKappa: kc, choicePrior: style.choicePrior ?? 'count' }) : k
+      const sampled = sampleDeals(view, kk, det, rng)
       for (const b of candidates) {
         const c = consensusOn(sampled, view, b)
         if (c.assignment === null) continue

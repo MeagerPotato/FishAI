@@ -325,6 +325,12 @@ export interface StyleParams extends AskWeights {
   /** The agreement a consensus claim needs, a share of the deals requested, in (0, 1]; absent is 1 (unanimity). */
   consensusBar?: number
   /**
+   * The choice prior's strength (`KnowledgeOptions.choiceKappa`) for the posterior the consensus
+   * samples from, and for that posterior only: the ask path keeps the style's own `choiceKappa`.
+   * Absent, the consensus samples the style's own knowledge. Inert without `consensusDet > 0`.
+   */
+  consensusKappa?: number
+  /**
    * MONET.md §3.7a item 2′ — the pre-emptive declare. The compulsion (RULES_US54.md §3.2, a window that
    * cannot close) arrives when the last opponent card leaves, and it lands on whichever seat holds
    * the turn then, with whatever it knows. In the windows before it every teammate holds the option
@@ -739,6 +745,8 @@ export function validateStyle(style: StyleParams): string[] {
   if (consensusDet !== undefined && !(Number.isInteger(consensusDet) && consensusDet >= 0)) bad.push(`consensusDet ${String(consensusDet)} is not an integer >= 0`)
   const consensusBar = style.consensusBar
   if (consensusBar !== undefined && !(typeof consensusBar === 'number' && Number.isFinite(consensusBar) && consensusBar > 0 && consensusBar <= 1)) bad.push(`consensusBar ${String(consensusBar)} is not a number in (0, 1]`)
+  const consensusKappa = style.consensusKappa
+  if (consensusKappa !== undefined && !(typeof consensusKappa === 'number' && Number.isFinite(consensusKappa) && consensusKappa >= 0)) bad.push(`consensusKappa ${String(consensusKappa)} is not a number >= 0`)
   const compelHorizon = style.compelHorizon
   if (compelHorizon !== undefined && !(typeof compelHorizon === 'number' && Number.isInteger(compelHorizon) && compelHorizon >= 0)) bad.push(`compelHorizon ${String(compelHorizon)} is not an integer >= 0`)
   const declareThresholdCompelled = style.declareThresholdCompelled
