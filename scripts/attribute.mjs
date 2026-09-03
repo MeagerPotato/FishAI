@@ -9,7 +9,7 @@
  *
  *   node scripts/attribute.mjs --home 200 [--a v0.4c] [--b v0.4c] [--cf v0.4c] [--label attr]
  *                              [--validate] [--json out.json]
- *   node scripts/attribute.mjs --records DIR [--cf v0.4c] [--json out.json]
+ *   node scripts/attribute.mjs --records DIR|FILE [--prefix s-] [--per-seed] [--cf v0.4c] [--json out.json]
  *
  * Home: team 0 plays version A and team 1 version B in our own engine, full information by
  * construction. The record kept per game is the deal, the engine's public log and, per ask,
@@ -40,6 +40,8 @@ const has = (flag) => process.argv.includes(flag)
 
 const HOME = Number(argOf('--home', 0))
 const RECORDS = argOf('--records', null)
+const PREFIX = argOf('--prefix', '')
+const PER_SEED = has('--per-seed')
 const VA = argOf('--a', 'v0.4c')
 const VB = argOf('--b', 'v0.4c')
 const CF = argOf('--cf', 'v0.4c')
@@ -288,7 +290,7 @@ const toAi = (name) => (name === 'RJ' ? 'XR' : name === 'BJ' ? 'XB' : name.start
 function* readRecords(dir) {
   // a directory of *.jsonl files, or one file
   const one = fs.statSync(dir).isFile()
-  const files = one ? [path.basename(dir)] : fs.readdirSync(dir).filter((f) => f.endsWith('.jsonl')).sort()
+  const files = one ? [path.basename(dir)] : fs.readdirSync(dir).filter((f) => f.endsWith('.jsonl') && f.startsWith(PREFIX)).sort()
   const base = one ? path.dirname(dir) : dir
   for (const f of files) {
     const lines = fs.readFileSync(path.join(base, f), 'utf8').split('\n').filter(Boolean)
@@ -309,7 +311,9 @@ function* readRecords(dir) {
         continue
       }
       if (!names) throw new Error(`${f}: a game before the header`)
-      yield toRecord(o, names, bookOfSet, `${f}:${o.deal}:${o.rot}`, header)
+      const rec = toRecord(o, names, bookOfSet, `${f}:${o.deal}:${o.rot}`, header)
+      rec.file = f
+      yield rec
     }
   }
 }
@@ -419,7 +423,39 @@ if (HOME > 0) {
   head = `home, A=${VA} (team 0) vs B=${VB} (team 1), ${HOME} games (${LABEL}-*), cf=${CF}, ${((Date.now() - t0) / 1000).toFixed(1)}s`
 } else if (RECORDS) {
   let header = null
-  for (const rec of readRecords(RECORDS)) { if (!header) header = rec.header; walk(rec, cfPol, acc) }
+  const perFile = new Map()
+  for (const rec of readRecords(RECORDS)) {
+    if (!header) header = rec.header
+    walk(rec, cfPol, acc)
+    if (PER_SEED) { if (!perFile.has(rec.file)) perFile.set(rec.file, newAcc()); walk(rec, cfPol, perFile.get(rec.file)) }
+  }
+  if (PER_SEED) {
+    const rows = []
+    console.log('-- per cell: A win, sets a game A / B, A - B by bucket (A majority / even / B majority), hit A / B, and at B decisions (cf = Monet v0.4c there): cf hit vs actual, cf agree --')
+    console.log('| cell | games | A win | sets A | sets B | A-maj | even | B-maj | hit A | hit B | B: cf hit | B: actual | B: agree |')
+    console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|')
+    for (const [f, a] of perFile) {
+      const g = a.games
+      const bucket = (ks) => { let x = 0, y = 0; for (const k of ks) { x += a.split[k].aCashed + a.split[k].aGifted; y += a.split[k].bCashed + a.split[k].bGifted } return (x - y) / g }
+      const r = { file: f, games: g, winA: a.wins[0] / g, setsA: a.sets[0] / g, setsB: a.sets[1] / g, amaj: bucket([4, 5, 6]), even: bucket([3]), bmaj: bucket([0, 1, 2]), hitA: a.asks[0].hit / a.asks[0].n, hitB: a.asks[1].hit / a.asks[1].n, cfHitB: a.asks[1].cfHit / Math.max(1, a.asks[1].cfN), actB: a.asks[1].actHitAtCf / Math.max(1, a.asks[1].cfN), agreeB: a.asks[1].cfAgree / Math.max(1, a.asks[1].cfN) }
+      rows.push(r)
+      const sg = (v) => (v >= 0 ? '+' : '') + v.toFixed(3)
+      console.log(`| ${f.replace(/.jsonl$/, '')} | ${g} | ${(100 * r.winA).toFixed(2)}% | ${r.setsA.toFixed(3)} | ${r.setsB.toFixed(3)} | ${sg(r.amaj)} | ${sg(r.even)} | ${sg(r.bmaj)} | ${(100 * r.hitA).toFixed(2)}% | ${(100 * r.hitB).toFixed(2)}% | ${(100 * r.cfHitB).toFixed(2)}% | ${(100 * r.actB).toFixed(2)}% | ${(100 * r.agreeB).toFixed(1)}% |`)
+    }
+    if (rows.length > 1) {
+      const stat = (key) => { const xs = rows.map((r) => r[key]); const m = xs.reduce((u, v) => u + v, 0) / xs.length; const sd = Math.sqrt(xs.reduce((u, v) => u + (v - m) * (v - m), 0) / (xs.length - 1)); return { m, sd, se: sd / Math.sqrt(xs.length) } }
+      const line = (name, key, pct) => { const t = stat(key); const f = (v) => (pct ? (100 * v).toFixed(2) + '%' : v.toFixed(3)); console.log(`   ${name}: mean ${f(t.m)}  SD ${f(t.sd)}  SE ${f(t.se)}`) }
+      console.log(`-- across ${rows.length} cells --`)
+      line('A win', 'winA', true); line('sets A - B', 'gap', false)
+      for (const r of rows) r.gap = r.setsA - r.setsB
+      line('sets A - B', 'gap', false); line('A-majority gap', 'amaj', false); line('even gap', 'even', false); line('B-majority gap', 'bmaj', false)
+      line('hit A', 'hitA', true); line('hit B', 'hitB', true); line('B: cf hit', 'cfHitB', true); line('B: actual hit at cf', 'actB', true)
+      for (const r of rows) r.cfMinusAct = r.cfHitB - r.actB
+      line('B: cf - actual', 'cfMinusAct', true)
+    }
+    console.log('')
+    acc.perFile = rows
+  }
   head = `bridge records ${RECORDS}: ${acc.games} games, A=${header ? header.specA : '?'} (side A) vs B=${header ? header.specB : '?'}, cf=${CF}, ${((Date.now() - t0) / 1000).toFixed(1)}s`
 } else {
   console.error('usage: node scripts/attribute.mjs (--home N [--a v] [--b v] | --records DIR) [--cf v] [--label l] [--validate] [--json f]')
