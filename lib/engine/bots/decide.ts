@@ -107,6 +107,8 @@ import {
   refinedHitProbability,
   unaskableBooks,
 } from './knowledge.ts'
+import { marginalFor } from './marginal.ts'
+import { assignJointly } from './joint.ts'
 import { planContainedPass } from './contained.ts'
 import type { ContainedPassPlan, PassValuation } from './contained.ts'
 import { defusalActive, defusalBonus, logLicences } from './defuse.ts'
@@ -391,13 +393,29 @@ export interface ClaimPlan {
  * per-card success estimates (certain-on-team = 1; certain-on-opponent = 0;
  * uncertain = chosen capacity / total candidate capacity).
  */
-function planClaim(view: SeatView, k: Knowledge, book: BookId): ClaimPlan {
+/**
+ * The joint planner's plans, memoised per `Knowledge` object and set (MONET.md §3.4b). The
+ * window's three claim branches and the trace verdicts each ask for the same set's plan, and the
+ * chain is the one planner worth remembering; the greedy planner is never cached, so every path
+ * Bass plays is exactly what it was.
+ */
+const JOINT_PLANS = new WeakMap<Knowledge, Map<BookId, ClaimPlan>>()
+
+function planClaim(view: SeatView, k: Knowledge, book: BookId, style?: StyleParams): ClaimPlan {
+  const joint = style?.pAssignment === 'joint'
+  if (joint) {
+    const cached = JOINT_PLANS.get(k)?.get(book)
+    if (cached !== undefined) return cached
+  }
   const me = view.seat
   const myTeam = seatTeam(me)
   const mates = teamSeats(myTeam)
   const capacity = [...k.unknownSlots]
   const assignments = {} as Record<Card, Seat>
   const uncertain: Card[] = []
+  // The greedy factor of each uncertain card, in `uncertain`'s order — kept so the chain can
+  // leave an open card the table does not carry at its greedy price.
+  const factors: number[] = []
   let p = 1
   for (const c of bookCards(book, view.config)) {
     const h = holderOf(k, c)
@@ -418,6 +436,7 @@ function planClaim(view: SeatView, k: Knowledge, book: BookId): ClaimPlan {
       assignments[c] = me
       p = 0
       uncertain.push(c)
+      factors.push(0)
       continue
     }
     // Deterministic greedy: highest remaining capacity, then lowest seat.
@@ -427,7 +446,9 @@ function planClaim(view: SeatView, k: Knowledge, book: BookId): ClaimPlan {
     }
     let totalCap = 0
     for (const s of cand) totalCap += Math.max(0, capacity[s])
-    p *= totalCap > 0 ? Math.max(0, capacity[best]) / totalCap : 1 / cand.length
+    const f = totalCap > 0 ? Math.max(0, capacity[best]) / totalCap : 1 / cand.length
+    p *= f
+    factors.push(f)
     if (capacity[best] > 0) capacity[best]--
     assignments[c] = best
     uncertain.push(c)
@@ -438,7 +459,35 @@ function planClaim(view: SeatView, k: Knowledge, book: BookId): ClaimPlan {
     const s = assignments[c]
     if (s === undefined || !mates.includes(s)) assignments[c] = me
   }
-  return { book, assignments, p, uncertain }
+  // MONET.md §3.4b: with the joint knob on and the table at hand, the open cards are placed by
+  // `joint.ts`'s chain instead — most certain first, the table re-scaled after each — and the
+  // plan's probability is the product of its conditionals. A plan the greedy pass already priced
+  // at 0 (a card certainly with an opponent, or with no teammate to name) stays at 0: the chain
+  // has nothing to add to an impossible claim. An open card the table does not carry (none, on a
+  // consistent view) keeps its greedy placement and its greedy factor.
+  if (joint && p > 0 && uncertain.length > 0) {
+    const table = marginalFor(k)
+    if (table) {
+      const inTable = uncertain.filter((c) => table.index.has(c))
+      if (inTable.length > 0) {
+        const chain = assignJointly(k, table, inTable, mates)
+        let q = chain.p
+        for (let i = 0; i < uncertain.length; i++) if (!table.index.has(uncertain[i])) q *= factors[i]
+        for (const c of inTable) assignments[c] = chain.assignments[c] ?? me
+        p = q
+      }
+    }
+  }
+  const plan: ClaimPlan = { book, assignments, p, uncertain }
+  if (joint) {
+    let plans = JOINT_PLANS.get(k)
+    if (plans === undefined) {
+      plans = new Map()
+      JOINT_PLANS.set(k, plans)
+    }
+    plans.set(book, plan)
+  }
+  return plan
 }
 
 /**
@@ -704,7 +753,7 @@ function certainClaim(view: SeatView, k: Knowledge, style: StyleParams, t?: Sink
     // them either. Every preset has `foreignDeclare: true` — the shipped claim search has
     // always ranged over every unresolved set — so this never fires for the tiers.
     if (foreign !== null && foreign.has(b)) continue
-    const plan = planClaim(view, k, b)
+    const plan = planClaim(view, k, b, style)
     if (plan.uncertain.length === 0 && plan.p === 1) {
       // `continue`, not `return null`: a style that refuses to spend its licences on THIS set
       // has said nothing about the next one, and a certain set it can bank for free is still
@@ -764,7 +813,7 @@ function evClaim(
     if (view.books[b]) continue
     const foreign = foreignSets.has(b)
     if (foreign && !style.foreignDeclare) continue
-    const plan = planClaim(view, k, b)
+    const plan = planClaim(view, k, b, style)
     if (plan.uncertain.length < 1 || plan.uncertain.length > style.declareMaxUncertain) continue
     // Every guessed card must be guessable onto a teammate, or the set is not certainly ours.
     let allOnTeam = true
@@ -775,7 +824,11 @@ function evClaim(
         break
       }
     }
-    if (!allOnTeam) continue
+    // MONET.md §3.4b item 2: under `claimOwnership: 'priced'` the structural gate is dropped and
+    // the plan's probability, which carries the opponents' share of every open card, meets the bar
+    // on its own. Absent (every roster style, and Monet's vector until the rule admits it), the
+    // gate stands exactly as it always has.
+    if (!allOnTeam && style.claimOwnership !== 'priced') continue
     // `max`, not override: a 0 foreign bar means "no separate bar", and the ordinary threshold
     // (stalled relaxation included) governs — which a plain assignment would have clobbered.
     const threshold = foreign ? Math.max(base, style.foreignDeclareThreshold) : base
@@ -828,7 +881,9 @@ function evClaim(
       `Declared ${best.book} speculatively — p = ${fp(best.p)} against a bar of ${fp(bestBar)}${stalled ? ` (${barTag ?? 'stalled'})` : ''}; ${n_(best.uncertain.length, 'card')} guessed (limit ${style.declareMaxUncertain}).`,
     )
     t.notes.push(`Holders: ${assignmentNote(view, best)}.`)
-    t.notes.push(`Guessed: ${best.uncertain.map(pc).join(', ')} — every candidate is a teammate, assigned to the one with the most unidentified cards.`)
+    t.notes.push(
+      `Guessed: ${best.uncertain.map(pc).join(', ')} — ${style.pAssignment === 'joint' ? 'placed by the chain over the marginal, most certain first (MONET.md §3.4b)' : 'assigned to the teammate with the most unidentified cards'}; ${style.claimOwnership === 'priced' ? 'a candidate may be an opponent, and p carries that share' : 'every candidate is a teammate'}.`,
+    )
     if (foreign) t.notes.push('A foreign declare: this hand holds no card of the set, so the whole plan is public inference.')
   }
   return { type: 'claim', seat: view.seat, book: best.book, assignments: best.assignments }
@@ -843,11 +898,11 @@ function evClaim(
  * No style gate applies: this is the branch where declining is not a move, so a style's
  * reluctance cannot be honoured without hanging the table (RULES_US54.md §3.2).
  */
-function forcedClaim(view: SeatView, k: Knowledge): GameAction {
+function forcedClaim(view: SeatView, k: Knowledge, style: StyleParams): GameAction {
   let best: ClaimPlan | null = null
   for (const b of allBooks(view.config)) {
     if (view.books[b]) continue
-    const plan = planClaim(view, k, b)
+    const plan = planClaim(view, k, b, style)
     if (
       best === null ||
       plan.p > best.p ||
@@ -1274,9 +1329,9 @@ function decideWithPlanner(view: SeatView, pol: ActivePolicy, t?: Sink): GameAct
     // exhaustion locate most of them outright, and the rest are assigned by count-consistency
     // (planClaim). Claim the most-certain book first — its reveal feeds the next
     // buildKnowledge call and pins further cards.
-    const a = forcedClaim(view, k)
+    const a = forcedClaim(view, k, style)
     if (t && a.type === 'claim') {
-      concludeForced(t, view, k, a.book, 'forced-claim', 'the endgame: every remaining card is with the claiming team, and claims are the only moves left.')
+      concludeForced(t, view, k, a.book, style, 'forced-claim', 'the endgame: every remaining card is with the claiming team, and claims are the only moves left.')
     }
     return a
   }
@@ -1297,7 +1352,7 @@ function decideWithPlanner(view: SeatView, pol: ActivePolicy, t?: Sink): GameAct
     const refusedBefore = t ? t.refused.length : 0
     const certain = certainClaim(view, k, style, t)
     if (certain !== null) {
-      if (t && certain.type === 'claim') concludeCertain(t, view, k, certain.book)
+      if (t && certain.type === 'claim') concludeCertain(t, view, k, certain.book, style)
       return certain
     }
     if (t && t.refused.length === refusedBefore) {
@@ -1338,17 +1393,17 @@ function decideWithPlanner(view: SeatView, pol: ActivePolicy, t?: Sink): GameAct
 
   // 5. Dead position: claiming on best evidence is the only progress left.
   if (stalled) {
-    const a = forcedClaim(view, k)
+    const a = forcedClaim(view, k, style)
     if (t && a.type === 'claim') {
-      concludeForced(t, view, k, a.book, 'forced-claim', `the position is ${stallNote(view)}, and claiming on best evidence is the only progress left.`)
+      concludeForced(t, view, k, a.book, style, 'forced-claim', `the position is ${stallNote(view)}, and claiming on best evidence is the only progress left.`)
     }
     return a
   }
 
   if (ranked.length === 0) {
-    const a = forcedClaim(view, k)
+    const a = forcedClaim(view, k, style)
     if (t && a.type === 'claim') {
-      concludeForced(t, view, k, a.book, 'forced-claim', 'no legal ask remains, so a claim is the only move.')
+      concludeForced(t, view, k, a.book, style, 'forced-claim', 'no legal ask remains, so a claim is the only move.')
     }
     return a
   }
@@ -1489,7 +1544,7 @@ function decideWindow(view: SeatView, pol: ActivePolicy, rng: Rng, t?: Sink): Ga
     const refusedBefore = t ? t.refused.length : 0
     const certain = certainClaim(view, k, style, t)
     if (certain !== null) {
-      if (t && certain.type === 'claim') concludeCertain(t, view, k, certain.book)
+      if (t && certain.type === 'claim') concludeCertain(t, view, k, certain.book, style)
       return certain
     }
     if (t && t.refused.length === refusedBefore) {
@@ -1514,13 +1569,14 @@ function decideWindow(view: SeatView, pol: ActivePolicy, rng: Rng, t?: Sink): Ga
     })
   }
   if (forced) {
-    const a = forcedClaim(view, k)
+    const a = forcedClaim(view, k, style)
     if (t && a.type === 'claim') {
       concludeForced(
         t,
         view,
         k,
         a.book,
+        style,
         must ? 'must-declare' : 'forced-claim',
         must
           ? 'declining is illegal here (MUST_DECLARE), so the least-bad claim is made.'
@@ -1695,8 +1751,8 @@ function concludeAsk(t: Sink, k: Knowledge, pick: RankedAsk): void {
 }
 
 /** Verdict for a certain declare — recomputes the (deterministic) plan for its holder list. */
-function concludeCertain(t: Sink, view: SeatView, k: Knowledge, book: BookId): void {
-  const plan = planClaim(view, k, book)
+function concludeCertain(t: Sink, view: SeatView, k: Knowledge, book: BookId, style: StyleParams): void {
+  const plan = planClaim(view, k, book, style)
   const foreign = !view.hand.some((c) => cardBook(c) === book)
   t.claim = { book, p: 1, uncertain: 0, foreign }
   conclude(t, 'certain-claim', `Declared ${book} — every card is certainly located on this team.`)
@@ -1710,10 +1766,11 @@ function concludeForced(
   view: SeatView,
   k: Knowledge,
   book: BookId,
+  style: StyleParams,
   kind: 'forced-claim' | 'must-declare',
   why: string,
 ): void {
-  const plan = planClaim(view, k, book)
+  const plan = planClaim(view, k, book, style)
   t.claim = { book, p: plan.p, uncertain: plan.uncertain.length, foreign: !view.hand.some((c) => cardBook(c) === book) }
   conclude(t, kind, `Declared ${book} on best evidence — ${why}`)
   t.notes.push(`The strongest available plan: p = ${fp(plan.p)} with ${n_(plan.uncertain.length, 'guessed card')}; holders: ${assignmentNote(view, plan)}.`)
@@ -1971,7 +2028,7 @@ function resolveWithView(view: SeatView, policy: PolicySpec, t?: Sink): ActivePo
  */
 export function planClaimFor(view: SeatView, policy: PolicySpec, book: BookId): ClaimPlan {
   const pol = resolveWithView(view, policy)
-  return planClaim(view, knowledgeFor(view, pol), book)
+  return planClaim(view, knowledgeFor(view, pol), book, pol.style)
 }
 
 /**

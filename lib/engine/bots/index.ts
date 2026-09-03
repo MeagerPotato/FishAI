@@ -82,6 +82,8 @@ export type { LicenceLookup } from './defuse.ts'
 export { LICENCE_MIN_Z, licenceConditionedHitProbability, licenceNormaliser, modelHoldsLicence } from './licence.ts'
 export { MARGINAL_ROUNDS, MARGINAL_TOLERANCE, attachMarginal, computeMarginalTable, marginalFor, marginalHitProbability } from './marginal.ts'
 export type { MarginalTable } from './marginal.ts'
+export { assignJointly } from './joint.ts'
+export type { JointAssignment, JointStep } from './joint.ts'
 // `PolicySpec` is re-exported from bounded.ts, where adaptive.ts's widened union gains
 // `BoundedSpec` — the acyclic arrangement documented in both file headers. Everything
 // importing the barrel gets the full five-shape union.

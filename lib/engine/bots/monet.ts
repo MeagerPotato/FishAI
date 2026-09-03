@@ -86,7 +86,7 @@ import type { PolicySpec } from './bounded.ts'
  * that have actually shipped appear here, so the union is also the honest answer to "what can be
  * measured today".
  */
-export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a'
+export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a' | 'v0.4b'
 
 /**
  * Version id -> the policy that version plays, ready for `decide(view, policy, seed)`.
@@ -113,6 +113,10 @@ export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a'
  *   2 × 2 measured it inside the floor on the new base (item 8; the λ-on arm reads +1.83 over six
  *   seeds, on the record). The a-half of v0.4 under its own id, so its cells name the spec they
  *   measured; §3.4b lands as its own.
+ * - `v0.4b` is v0.4a plus `pAssignment: 'joint'` (MONET.md §3.4b): the claim planner places a
+ *   set's open cards by `joint.ts`'s chain over the same table, most certain first, and the
+ *   plan's probability is the product of the conditionals rather than the independent product.
+ *   `claimOwnership` (item 2) stays off the vector until §3.4b's written rule admits it.
  *
  * No entry pins the *code* the knobs run through — see the header. Naming v0.1 here buys back
  * v0.1's SPEC on a v0.2 tree; it does not buy back v0.1's games.
@@ -131,6 +135,10 @@ export const MONET_VERSIONS: Readonly<Record<MonetVersion, PolicySpec>> = Object
     skill: SKILL_PRESETS.hard,
     style: Object.freeze({ ...STYLE_ROSTER.punter, pModel: 'marginal' }),
   }),
+  'v0.4b': Object.freeze({
+    skill: SKILL_PRESETS.hard,
+    style: Object.freeze({ ...STYLE_ROSTER.punter, pModel: 'marginal', pAssignment: 'joint' }),
+  }),
 })
 
 /**
@@ -138,7 +146,7 @@ export const MONET_VERSIONS: Readonly<Record<MonetVersion, PolicySpec>> = Object
  * ("Monet beats v0.2 through v0.6 as well"). Ordered, because a version list that is only a key set
  * cannot express "the one before this".
  */
-export const MONET_VERSION_IDS: readonly MonetVersion[] = Object.freeze(['v0.1', 'v0.2', 'v0.3', 'v0.4a'] as const)
+export const MONET_VERSION_IDS: readonly MonetVersion[] = Object.freeze(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b'] as const)
 
 /**
  * Is `id` a version this repo can play? For callers holding a string rather than a `MonetVersion` —

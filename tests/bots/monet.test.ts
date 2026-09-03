@@ -96,6 +96,7 @@ const MONET_V01: PolicySpec = monetPolicy('v0.1')
 const MONET_V02: PolicySpec = monetPolicy('v0.2')
 const MONET_V03: PolicySpec = monetPolicy('v0.3')
 const MONET_V04A: PolicySpec = monetPolicy('v0.4a')
+const MONET_V04B: PolicySpec = monetPolicy('v0.4b')
 
 /**
  * The live roster arm, in both spellings — written out, never read from the registry.
@@ -156,6 +157,21 @@ describe('the Monet version registry names each version and resolves it to that 
     expect(Object.isFrozen(pair.style)).toBe(true)
   })
 
+  it('v0.4b is v0.4a plus the joint, on its own vector — and differs from v0.4a in NOTHING else', () => {
+    const pair = asPair(MONET_V04B, "MONET_VERSIONS['v0.4b']")
+    expect(pair.skill).toBe(SKILL_PRESETS.hard)
+    expect(styleDiffKeys(pair.style, (MONET_V04A as BotPolicy).style)).toEqual(['pAssignment'])
+    expect(pair.style.pAssignment).toBe('joint')
+    expect(pair.style.pModel).toBe('marginal')
+    // §3.4b item 2's knob stays off the vector until the pre-registered rule admits it, so the
+    // rung's own cell is the 'joint' mechanism alone; and v0.3's licence term is still out.
+    expect(pair.style.claimOwnership).toBeUndefined()
+    expect(pair.style.licenceLambda).toBeUndefined()
+    expect(STYLE_ROSTER.punter.pAssignment).toBeUndefined()
+    expect(STYLE_ROSTER.punter.claimOwnership).toBeUndefined()
+    expect(styleDiffKeys(pair.style, STYLE_ROSTER.punter)).toEqual(['pAssignment', 'pModel'])
+  })
+
   it('v0.4a is Punter plus the marginal, on its own vector — and differs from Punter in NOTHING else', () => {
     const pair = asPair(MONET_V04A, "MONET_VERSIONS['v0.4a']")
     expect(pair.skill).toBe(SKILL_PRESETS.hard)
@@ -199,7 +215,7 @@ describe('the Monet version registry names each version and resolves it to that 
 
   it('MONET_VERSION_IDS lists every shipped version, in order, and nothing else', () => {
     expect([...MONET_VERSION_IDS]).toEqual(Object.keys(MONET_VERSIONS))
-    expect([...MONET_VERSION_IDS]).toEqual(['v0.1', 'v0.2', 'v0.3', 'v0.4a'])
+    expect([...MONET_VERSION_IDS]).toEqual(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b'])
     expect(MONET_VERSION_IDS.every((v) => isMonetVersion(v))).toBe(true)
   })
 
@@ -312,6 +328,79 @@ describe('v0.3 and v0.2 are two different policies, and nearly the same one', ()
     expect(decisions).toBeGreaterThan(3_000)
     expect(differ).toBeGreaterThan(0)
     expect(differ / decisions).toBeLessThan(0.1)
+  })
+})
+
+/**
+ * Drive whole mirror games with `driver` and ask `other` at every position; count the decisions
+ * that differ and check each one against `admissible`. The positions visited are the driver's
+ * own, so the comparison is a read of the same `SeatView` and seed.
+ */
+function divergence(
+  seeds: string[],
+  driver: PolicySpec,
+  other: PolicySpec,
+  admissible: (drove: GameAction, alt: GameAction) => boolean,
+): { decisions: number; differ: number } {
+  let decisions = 0
+  let differ = 0
+  for (const seed of seeds) {
+    let s = newGame(seed, us54Config, 0)
+    let steps = 0
+    while (s.phase !== 'finished' && steps++ < 5000) {
+      const { seat } = legalActionsSummary(s)
+      const view = seatView(s, seat)
+      const moveSeed = hashSeed(`${seed}:${s.moveIndex}`)()
+      const drove = decide(view, driver, moveSeed)
+      const alt = decide(view, other, moveSeed)
+      decisions++
+      if (canonicalAction(drove) !== canonicalAction(alt)) {
+        differ++
+        expect(admissible(drove, alt), `${seed} step ${steps}: ${canonicalAction(drove)} vs ${canonicalAction(alt)}`).toBe(true)
+      }
+      const r = reduce(s, drove)
+      if (!r.ok) throw new Error(`${seed}: ${r.error.code}`)
+      s = r.state
+    }
+  }
+  return { decisions, differ }
+}
+
+describe('v0.4b and v0.4a are two different policies, and very nearly the same one', () => {
+  it('the joint alone reaches the board rarely, and only through the claim path', () => {
+    // The registry says v0.4b is v0.4a plus `pAssignment: 'joint'`. The chain changes most
+    // plans (78% of planned sets get a different p, 46% a different placement, over 60 home
+    // games) and almost no actions: 13 of 36,093 decisions, because `evClaim`'s structural gate
+    // admits 0.6% of planned sets and the chain lifts about ten of those per sixty games over the
+    // 0.775 bar. Over these six games the measured count was 0. So the pin is the shape, not a
+    // floor: whatever differs is a declare, a decline, or a forced claim on at least one side —
+    // the ask path never reads a plan — and the share stays under a tenth of a percent.
+    const claimish = (x: GameAction): boolean => x.type === 'claim' || x.type === 'decline'
+    const { decisions, differ } = divergence(
+      ['v04b-a', 'v04b-b', 'v04b-c', 'v04b-d', 'v04b-e', 'v04b-f'],
+      MONET_V04B,
+      MONET_V04A,
+      (drove, alt) => claimish(drove) || claimish(alt),
+    )
+    expect(decisions).toBeGreaterThan(3_000)
+    expect(differ / decisions).toBeLessThan(0.001)
+  })
+
+  it("'priced' on the joint is what reaches the board: declines become speculative declares, and nothing else moves", () => {
+    // MONET.md §3.4b item 2's knob, measured as its own arm and not on the vector. With the
+    // structural gate dropped, the chain's probability meets the bar on sets an opponent might
+    // hold a card of: 68 of 36,093 home decisions over 60 games, every one a decline turned into
+    // a claim. Eight games here, and the same shape.
+    const priced: PolicySpec = { skill: (MONET_V04B as BotPolicy).skill, style: { ...(MONET_V04B as BotPolicy).style, claimOwnership: 'priced' } }
+    const { decisions, differ } = divergence(
+      ['v04b-p-a', 'v04b-p-b', 'v04b-p-c', 'v04b-p-d', 'v04b-p-e', 'v04b-p-f', 'v04b-p-g', 'v04b-p-h'],
+      priced,
+      MONET_V04B,
+      (drove, alt) => drove.type === 'claim' && alt.type === 'decline',
+    )
+    expect(decisions).toBeGreaterThan(4_000)
+    expect(differ).toBeGreaterThan(0)
+    expect(differ / decisions).toBeLessThan(0.01)
   })
 })
 
