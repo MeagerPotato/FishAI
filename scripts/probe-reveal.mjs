@@ -4,7 +4,12 @@
  * ask's publication ("the asker holds a card of this half-suit") let a teammate cash a set the team
  * already holds in full?
  *
- *   node scripts/probe-reveal.mjs [--version v0.4c] [--games 300] [--seeds reveal]
+ *   node scripts/probe-reveal.mjs [--version v0.4c] [--games 300] [--seeds reveal] [--override JSON]
+ *
+ * `--override` lays a JSON object of style keys over the version's vector (an arm), printed in the
+ * header. Its first line - locked (decision, set) pairs per game - integrates lock hold over the
+ * game from the DEAL's lock (the abroad engine's definition, MONET.md 3.4b), so read base against
+ * arm there for the reveal term's marker.
  *
  * Mirror games of `--version`. At every ask decision of seat A the true hands name the half-suits
  * LOCKED on A's team (all six cards in the team's three hands, unresolved). A locked set nobody on
@@ -41,7 +46,8 @@ const argOf = (flag, dflt) => {
 const version = argOf('--version', 'v0.4c')
 const games = Number(argOf('--games', 300))
 const seeds = argOf('--seeds', 'reveal').split(',')
-const policy = MON.monetPolicy(version)
+const override = argOf('--override', '') ? JSON.parse(argOf('--override', '')) : null
+const policy = override === null ? MON.monetPolicy(version) : { skill: MON.monetPolicy(version).skill, style: { ...MON.monetPolicy(version).style, ...override } }
 const style = policy.style
 const opts = { logWindow: policy.skill.logWindow, useConstraints: policy.skill.useConstraints, marginal: style.pModel === 'marginal' }
 const bar = style.declareThreshold
@@ -177,7 +183,7 @@ for (const s0 of seeds) {
 }
 const f = (x, d = 4) => x.toFixed(d)
 const per = (x) => f(x / Math.max(1, acc.games), 3)
-console.log(`=== reveal readout: Monet ${version} mirror games, seeds ${seeds.join(',')} x ${games} (${acc.games} games, ${acc.askDecisions} ask decisions), bar ${bar}, ${((Date.now() - t0) / 1000).toFixed(1)}s ===`)
+console.log(`=== reveal readout: Monet ${version}${override === null ? '' : ' + ' + JSON.stringify(override)} mirror games, seeds ${seeds.join(',')} x ${games} (${acc.games} games, ${acc.askDecisions} ask decisions), bar ${bar}, ${((Date.now() - t0) / 1000).toFixed(1)}s ===`)
 console.log(`locked (decision, set) pairs       ${acc.lockedSets}  (${per(acc.lockedSets)} per game)`)
 console.log(`  no teammate can prove            ${acc.unprovenSets}  (${per(acc.unprovenSets)} per game)`)
 console.log(`  ...and A can ask into it         ${acc.askable}  (${per(acc.askable)} per game)`)

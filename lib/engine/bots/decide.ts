@@ -242,6 +242,14 @@ function teammateSeats(seat: Seat): Seat[] {
 }
 
 /** Total cards held by the viewer's own team, from the public counts. */
+/** Cards in the opponents' hands, in total — the count the compulsion is measured against. */
+function opponentCards(view: SeatView): number {
+  const team = seatTeam(view.seat)
+  let n = 0
+  for (let s = 0; s < 6; s++) if (seatTeam(s as Seat) !== team) n += view.counts[s] ?? 0
+  return n
+}
+
 function ownTeamCards(view: SeatView): number {
   return teamSeats(seatTeam(view.seat)).reduce<number>((n, s) => n + view.counts[s], 0)
 }
@@ -803,13 +811,13 @@ function evClaim(
   stalled: boolean,
   t?: Sink,
   barTag?: string,
+  barOverride?: number,
 ): GameAction | null {
   const myTeam = seatTeam(view.seat)
-  const base = clinchAdjustedThreshold(
-    view,
-    style,
-    stalled ? style.declareThresholdStalled : style.declareThreshold,
-  )
+  // A bar handed in by the caller (the near-compulsion bar, MONET.md 3.7a item 2') is played as
+  // written: the clinch response below prices a failed declare against a game that would
+  // otherwise go on, and the compulsion this bar pre-empts will force a guess at any p anyway.
+  const base = barOverride ?? clinchAdjustedThreshold(view, style, stalled ? style.declareThresholdStalled : style.declareThreshold)
   const foreignSets = foreignBookSet(view)
   let best: ClaimPlan | null = null
   let bestBar = 0
@@ -1534,6 +1542,17 @@ function decideWindow(view: SeatView, pol: ActivePolicy, rng: Rng, t?: Sink): Ga
   const stalled = isDeepStalled(view)
   const must = mustDeclareNow(view)
   const forced = stalled || must
+  // MONET.md §3.7a item 2′ — near compulsion: the opponents' cards are down to `compelHorizon`, so
+  // the window that cannot close is a few actions away and will land on whichever seat holds the
+  // turn then. Every teammate holds the option in THIS window, so the speculative bar drops to
+  // `declareThresholdCompelled` here, and the seat with the best plan declares before the
+  // compulsion chooses the seat for it. Only where declining is still legal: a forced window has
+  // its own rule below. Off (absent or 0) nothing changes.
+  const near = !forced && (style.compelHorizon ?? 0) > 0 && opponentCards(view) <= (style.compelHorizon ?? 0)
+  const compelledBar = near ? style.declareThresholdCompelled : undefined
+  if (t && near && compelledBar !== undefined) {
+    t.notes.push(`Near compulsion: the opponents hold ${opponentCards(view)} cards (horizon ${style.compelHorizon}), so the speculative bar is ${compelledBar} here instead of ${style.declareThreshold}.`)
+  }
   if (t && forced) {
     t.notes.push(
       must
@@ -1588,7 +1607,7 @@ function decideWindow(view: SeatView, pol: ActivePolicy, rng: Rng, t?: Sink): Ga
     // early and the downside is a gifted set rather than a void — the un-stalled threshold
     // stays the style's own, and only a proven-dead position relaxes it, exactly as under
     // RULES.md.
-    const ev = evClaim(view, k, style, forced, t, must && !stalled ? 'forced' : undefined)
+    const ev = evClaim(view, k, style, forced, t, must && !stalled ? 'forced' : compelledBar !== undefined ? 'compelled' : undefined, compelledBar)
     if (ev !== null) return ev
   } else if (t) {
     t.refused.push({

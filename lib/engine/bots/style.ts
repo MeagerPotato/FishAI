@@ -315,6 +315,22 @@ export interface StyleParams extends AskWeights {
    */
   revealFar?: number
   /**
+   * MONET.md §3.7a item 2′ — the pre-emptive declare. The compulsion (RULES_US54.md §3.2, a window that
+   * cannot close) arrives when the last opponent card leaves, and it lands on whichever seat holds
+   * the turn then, with whatever it knows. In the windows before it every teammate holds the option
+   * in turn, so the one whose speculative plan is best can declare then. `compelHorizon` is the
+   * opponents' cards in hand, in total, at or below which a window counts as *near compulsion* and
+   * the speculative bar becomes `declareThresholdCompelled`. 0 or absent is byte identity.
+   */
+  compelHorizon?: number
+  /**
+   * MONET.md §3.7a item 2′ — the speculative bar played in a near-compulsion window, in place of
+   * `declareThreshold`; absent means `declareThreshold` (identity). The compelled seat is right
+   * about half the time believing 0.43, so any bar above that is a gain over what the position
+   * will otherwise get. Inert without `compelHorizon > 0`.
+   */
+  declareThresholdCompelled?: number
+  /**
    * MONET.md §3.6b — how the defusal appetite is read. `'scalar'` (and absent) is `defuse` as it
    * has always been; `'state'` multiplies it, once per decision, by a clipped linear function of
    * the public state — threatened sets, set lead, phase — with the slopes in `defuseState`
@@ -709,6 +725,10 @@ export function validateStyle(style: StyleParams): string[] {
   if (reveal !== undefined && !(typeof reveal === 'number' && Number.isFinite(reveal) && reveal >= 0)) bad.push(`reveal ${String(reveal)} is not a finite number >= 0`)
   const revealFar = style.revealFar
   if (revealFar !== undefined && !(typeof revealFar === 'number' && Number.isFinite(revealFar) && revealFar >= 0 && revealFar <= 1)) bad.push(`revealFar ${String(revealFar)} is not a number in [0, 1]`)
+  const compelHorizon = style.compelHorizon
+  if (compelHorizon !== undefined && !(typeof compelHorizon === 'number' && Number.isInteger(compelHorizon) && compelHorizon >= 0)) bad.push(`compelHorizon ${String(compelHorizon)} is not an integer >= 0`)
+  const declareThresholdCompelled = style.declareThresholdCompelled
+  if (declareThresholdCompelled !== undefined && !(typeof declareThresholdCompelled === 'number' && Number.isFinite(declareThresholdCompelled) && declareThresholdCompelled >= 0 && declareThresholdCompelled <= 1)) bad.push(`declareThresholdCompelled ${String(declareThresholdCompelled)} is not a number in [0, 1]`)
   const claimOwnership = style.claimOwnership
   if (claimOwnership !== undefined && claimOwnership !== 'certain' && claimOwnership !== 'priced') bad.push(`claimOwnership ${String(claimOwnership)} is not 'certain' or 'priced'`)
   return bad
