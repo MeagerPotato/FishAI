@@ -3,6 +3,12 @@
  * duplicate `us54` deals, paired.
  *
  *     node scripts/duplicate-pairs.mjs --a v0.3 --b v0.2 [--pairs 800] [--bank home-a]
+ *         [--a-override '{"defuse":0}'] [--b-override '{...}']
+ *
+ * An override is a JSON object of style keys laid over the named version's vector — the way an
+ * ablation rung is spelled (MONET.md §3.3b's defusal ladder is `--a-override '{"defuse":N}'`
+ * against the shipped `--b`). The version's own vector is never mutated, and the override is
+ * printed in the header so no number can be read without it.
  *
  * MONET.md §3.3a item 4 / §6.2's last row: every shipped change gets ≥ 800 duplicate pairs at
  * home before it is called a ship, reported with the CELL'S OWN standard deviation (§6.3 — the
@@ -46,8 +52,14 @@ for (const v of [A, B]) {
 }
 const PAIRS = Number(argOf('--pairs', 800))
 const BANK = argOf('--bank', 'home-a')
-const POL_A = monetPolicy(A)
-const POL_B = monetPolicy(B)
+const OVER_A = argOf('--a-override', '') ? JSON.parse(argOf('--a-override', '')) : null
+const OVER_B = argOf('--b-override', '') ? JSON.parse(argOf('--b-override', '')) : null
+const withOverride = (pol, over) =>
+  over ? Object.freeze({ skill: pol.skill, style: Object.freeze({ ...pol.style, ...over }) }) : pol
+const POL_A = withOverride(monetPolicy(A), OVER_A)
+const POL_B = withOverride(monetPolicy(B), OVER_B)
+const LABEL_A = `${A}${OVER_A ? ' ' + JSON.stringify(OVER_A) : ''}`
+const LABEL_B = `${B}${OVER_B ? ' ' + JSON.stringify(OVER_B) : ''}`
 
 /** One game: team `teamA` plays arm A, the other team arm B. Returns [setsA, setsB]. */
 function play(seed, teamA) {
@@ -91,7 +103,7 @@ const sd = Math.sqrt(d.reduce((a, x) => a + (x - mean) ** 2, 0) / Math.max(1, d.
 const se = sd / Math.sqrt(d.length)
 const elapsed = ((Date.now() - t0) / 1000).toFixed(1)
 
-console.log(`=== duplicate pairs: Monet ${A} vs Monet ${B}, bank ${BANK}, ${pairs} pairs (${2 * pairs} games), ${elapsed}s ===`)
+console.log(`=== duplicate pairs: Monet ${LABEL_A} vs Monet ${LABEL_B}, bank ${BANK}, ${pairs} pairs (${2 * pairs} games), ${elapsed}s ===`)
 if (capped) console.log(`!!! ${capped} pairs hit the step cap and were dropped`)
 console.log(`sets            ${setsA} vs ${setsB}  (per game ${(setsA / (2 * pairs)).toFixed(4)} vs ${(setsB / (2 * pairs)).toFixed(4)})`)
 console.log(`win rate (A)    ${((100 * winsA) / (2 * pairs)).toFixed(2)}%`)

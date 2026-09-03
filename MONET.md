@@ -32,7 +32,8 @@ path. **A number from one bridge is never subtracted from a number on another.**
 |---|---:|---:|---:|
 | Bass v2.0, corrected bridge — **the baseline** | **27.08%** | 1,200 | ±2.83 |
 | the target | **50.00%** | — | — |
-| **to find** | **22.92 points** | — | — |
+| **Monet v0.3** (§3.3), same bridge, 2026-09-03 | **30.96%** | 1,200 | ±2.83 |
+| **to find** | **22.92 points** from the baseline, **19.04** from v0.3 | — | — |
 
 [measured, corrected] Six seeds, 1,950 of 7,200 games, `bot:pf2` vs the frozen v1.0 spec. Every
 seed of the six moved the same way under the bridge repair; mean delta +3.44, SD 0.48, min +2.67.
@@ -411,7 +412,7 @@ explains why the band is 31–37% rather than a point. v0.5 carries no target by
 |---|---|---:|---|---|
 | **v0.1** ✅ | fork, instrument, record — no behaviour change | 27.08% (did not move) | byte identity + op coverage | S — **shipped** |
 | **v0.2** | ask-scorer correctness (`minHitP`, two `rankAsksWith` defects) · the pre/post-clinch metric split | 27.08% (must not move) | DEAD counter; the split reported | XS–S |
-| **v0.3** | λ = 0.60 licence conditioning · the defusal-appetite decision · **score-conditioned declare urgency** | **≥ 30.5%** | calibration bias · a written `defuse` decision with an interval · lock hold for the score term | S–M |
+| **v0.3** ✅ | λ = 0.60 licence conditioning · `defuse` frozen at 1 with its interval · the score term measured and not shipped | **30.96%** (target ≥ 30.5%) | calibration bias — home ✓, abroad ✗, the finding · the `defuse` ladder at ±3.10 · lock hold for the score term (0.01–0.05 events: nothing to move) | S–M — **shipped** |
 | **v0.4** | the belief rewrite: `pCardAt` (calibrated marginal), then `pAssignment` (the joint) | **≥ 36.0%** | ask accuracy + calibration, then **lock hold** | L–XL |
 | **v0.5** | **the capability readout** — negative certificates, count exhaustion, cross-seat handoff, and the search arm priced and measured | **no target. This rung is the measurement.** | 12 seeds, ±2.00, and a written decision on what v1.0 is | M + XL |
 | **v1.0** | **defined only after v0.5's number is read** | ≥ 50.0% | — | — |
@@ -430,7 +431,9 @@ explains why the band is 31–37% rather than a point. v0.5 carries no target by
 > declaration counts); the win-rate column is reported last and a miss against it is *not* a failure
 > if the mechanism marker moved. **[speculative]** — and if v0.3 freezes at `defuse: 1`, the 31.50%
 > arm §0.1's bound is built on is never built, so §0.1's ≈37.3% ceiling must be re-derived on the arm
-> actually shipped before v0.5's readout is interpreted against it.
+> actually shipped before v0.5's readout is interpreted against it. **It did freeze (§3.3b,
+> 2026-09-03), so that re-derivation is owed at v0.5's readout; the defuse-0 arm exists as a measured
+> rung on the v0.3 tree — 31.81% over six seeds — and not as the shipped bot.**
 
 ### 3.1 Monet v0.1 — the fork, the instrument, and the record
 
@@ -870,6 +873,77 @@ posterior than the oracle is, because it is a real policy change and not a cheat
    discovered later. Use the cell's own SD, never the generic one (§6.3).
 5. **Confirmation on a selection-free bank** — §6.5.
 
+> **Measured 2026-09-03 — v0.3a ships at λ = 0.60, on Monet's own vector.** Bridge: the corrected
+> engine and §3.2's binaries, tree `eab76b4`, 200 deals × 6 rotations per cell. Identity control
+> before anything else was read: the null arm (`licenceLambda: 0` on the v0.3 tree) and the
+> registry's own v0.2 on the same tree both reproduce v0.2's seed-90210 cell to the digit — 28.25%,
+> ask 52.3825 / 57.4515, lock hold 9.3672 — with every engine line identical but the arm's name.
+> Home: 300 mirror games per calibration read (`scripts/calibration.mjs`), 800 duplicate pairs per
+> regression cell (`scripts/duplicate-pairs.mjs`, the cell's own SD).
+>
+> **Scope, decided by measurement and not as written above.** The paragraph above says to apply the
+> conditioning where the satisfied constraint has been *dropped* and not to licensed asks generally.
+> The calibration split on v0.2's own trajectory (115,253 licensed legal asks) says the refined
+> number is short by **−0.0950** where the model dropped the constraint (n = 43,042), **−0.0401**
+> where it still holds it (38,387) and **−0.0005** where the licence is discharged (33,824).
+> Dropped-only scoping would have left a third of licensed asks at −0.04, so the shipped rule
+> conditions **every undischarged licence** and nothing else. At λ = 0.60 the pooled licensed bias
+> reads **+0.0026** on v0.2's trajectory and **−0.0032** on v0.3's own, every subset within ±0.03;
+> the dropped-only alternative would have read −0.0082 / −0.0146 (`calibration.mjs` prints both
+> columns). `tests/bots/licence.test.ts` pins the shape — one factor per set and seat, monotone in
+> λ, never reaching certainty — and λ = 0 is byte-identical to v0.2: 0 mismatches over 62,874
+> decisions against `2b89895`.
+>
+> 1. **Calibration — PASSES at home, FAILS abroad, and the failure is the milestone's finding.**
+>    Home, v0.2's trajectory: licensed **−0.0490 → +0.0026**. Abroad, on the arm's own asks with
+>    the host's outcomes (51,878 asks at seed 90210, the same arm re-run with the split counters
+>    and identical to the digit): the licensed subset is **already calibrated at λ = 0** —
+>    uncertain licensed asks read believed 0.4539 against realised 0.4596, **−0.0057** — and every
+>    λ above it over-states them, **+0.054 at 0.3, +0.140 at 0.6, +0.262 at 1.0**. Unlicensed
+>    uncertain asks are **+0.05 over-confident at every λ**; the conditioning never touches them.
+>    Pooled with the certain asks, the licensed bias goes −0.0029 → +0.0769 and the aggregate
+>    +0.0218 → +0.0638. A licence is informative at home because Monet's own asks are progress-
+>    driven; it says nothing extra about SESTINA's holdings, and λ was fitted to Monet's. The item
+>    asked for movement *toward* zero on the bridge and the number moved away from it: **FAIL as
+>    written**, recorded as such, and §3.4a item 1 now has to be read abroad and at home
+>    separately. The chosen-ask decile table is v0.4a's baseline: aggregate **+0.0194**, worst
+>    decile **0.1180** at [0.6, 0.7) (believed 0.666, realised 0.548) on v0.3's own trajectory;
+>    −0.0248 / 0.1834 on v0.2's. Neither passes §3.4a's bar, and neither was expected to.
+> 2. **Win rate — PASSES.** **30.96%** over 6 seeds × 200 deals against v0.2's **27.21%** on the
+>    same seeds and bridge: **+3.75**, positive on 6 of 6 (90210 +3.83, 4242 +3.42, 7011001 +6.00,
+>    13579 +2.08, 24680 +0.83, 31415 +6.33), over the +3.42 line at a ±2.83 floor. Against the
+>    27.08% baseline, +3.88. Per seed: 32.08 / 32.42 / 32.92 / 28.58 / 28.17 / 31.58. The factorial
+>    forecast 30.79% for this arm.
+> 3. **Panel — PASSES on direction, unresolved on size.** Paired with the null arm on the same
+>    three seeds: v0.4 **34.56 → 37.31 (+2.75)**, v0.6 **32.67 → 34.97 (+2.31)**, positive on 3 of
+>    3 each, both under ±4.00. The change moves the lineage the way it moves SESTINA.
+> 4. **Home regression — PASSES, and the predicted loss did not appear.** v0.3 against v0.2 on
+>    duplicate pairs: **+0.06 ± 0.23** sets/pair on the fitting bank `home-a` (SD 3.38, win rate
+>    50.19%) and **+0.46 ± 0.23** on the held-out `home-b` (SD 3.31, 54.31%). ASKING §6's −0.35
+>    was measured with the dropped-only rule on an older scorer; on v0.2's scorer with the blanket
+>    rule there is no loss on either bank.
+> 5. **Confirmation on a selection-free bank — PASSES by construction, and read the hard way.** λ
+>    was fitted at home (mirror games, seeds `calib-*`), so no bridge seed took part in choosing it.
+>    On the three seeds no fit of this project has ever used (13579, 24680, 31415) v0.3 reads
+>    **29.44% against v0.2's 26.36%, +3.08** on 600 deals (±4.00); on the historic triple, +4.41.
+>    Same direction on both triples; the pooled six clear.
+>
+> **What the points are made of, and what they are not.** Three measurements from the same cells.
+> (i) Monet's own ask accuracy **fell**, 52.26% → 51.71% over six seeds: fewer certain asks are
+> played (14,757 → 14,066 at 90210) and the uncertain asks' hit rate did not move (0.3345 → 0.3341).
+> (ii) **SESTINA's ask accuracy fell more**, 57.33% → 56.17%. (iii) The abroad response to λ is
+> flat once it is on — **28.06 / 32.22 / 32.47 / 31.75** at λ = 0 / 0.3 / 0.6 / 1.0 on the historic
+> triple (the 0.3 and 1.0 rungs are information cells, not a fit) — where a calibration mechanism
+> would show an optimum and a re-ranking mechanism saturates. What λ changes is *which book is
+> asked for at the target*: about 2,100 uncertain asks per cell move from unlicensed books to books
+> the target has shown a card of and is collecting. **λ's value abroad is interference with the
+> opponents' sets, not a better probability** [interpretation of three measurements, not itself
+> measured] — the channel the defusal appetite buys explicitly, which is why the factorial found
+> the two to be substitutes. Monet's engine-reported lock hold moved 9.14 → 8.77 events on the way.
+> Two consequences for the roadmap, both written where they bite: §3.4a's "it also subsumes λ" is
+> now expected to be **false** (amendment there), and §0.1's ask-accuracy-to-win-rate chain has its
+> first counterexample — +3.75 points with ask accuracy down 0.55.
+
 **Cost.** S — the patch exists (`scripts/probe-licence.mjs`, `probe-licence3.mjs`) and the byte-exact
 λ = 0 control is already built. There is no λ or licence conditioning anywhere in `lib/` today
 [verified by grep].
@@ -930,7 +1004,85 @@ others:
 4. **Report the interval, and report when the effect is under the floor.** This milestone is allowed
    to conclude "unresolved, frozen at 1" and that is a pass.
 
+> **Measured 2026-09-03 — frozen at `defuse: 1` (outcome 1).** The ladder on top of λ = 0.60, the
+> v0.3 tree, 5 seeds × 200 deals per rung (1,000 deals, ±3.10), rung 1 being v0.3's own cells on
+> the same seeds:
+>
+> | defuse | win rate (5 seeds) | vs rung 1 | positive on | resolved at ±3.10? |
+> |---:|---:|---:|---|---|
+> | **0** | **31.82%** | **+0.98** | 2 of 5 | no |
+> | 0.5 | 31.68% | +0.85 | 4 of 5 | no |
+> | **1 (shipped)** | **30.83%** | — | — | — |
+> | 2 | 29.45% | −1.38 | 0 of 5 | no |
+> | 4 | 28.13% | −2.70 | 0 of 5 | no |
+>
+> [measured, corrected] Rung 0's sixth seed (31415) reads 31.75%, so the rung's own six-seed cell
+> is **31.81%** against v0.3's 30.96%. The pre-λ ladder's inverted U is gone: with λ on, the
+> appetite is worth nothing below 1 and costs above it, which is what "substitutes" predicts, and
+> **no contrast clears the floor**. Item 1 forbids calling a rung better on that, so the constant
+> does not move. Every rung trades Monet's ask accuracy the same way λ does (52.02% at 0, 51.20% at
+> 4), so the two are also the same channel by that measure.
+>
+> **The home ladder resolves it the other way, and is on the record for the next decision.** Same
+> rungs, 800 duplicate pairs each on `home-a`, the cell's own SD: defuse 0 **+0.24 ± 0.19**
+> sets/pair (ahead at 95%), 0.5 +0.09 ± 0.15, 2 **−0.24 ± 0.15**, 4 **−0.47 ± 0.18**; the harness
+> control (v0.3 against v0.3) prints 0.0000 ± 0.0000. The held-out `home-b` replicates rung 0 at
+> **+0.23 ± 0.20**. So item 2's home re-fit would permit a move to 0 — the fit domain resolves it —
+> but item 1's bridge does not, and outcome 2 requires a resolved margin *there*. Moving on the home
+> number alone would be moving a constant on a self-play fit that the target domain reads as +0.98
+> inside ±3.10, which is CROSSPLAY §7's rule stated the other way round. Resolving the abroad
+> contrast at its measured size needs roughly ten times the deals per rung; that cell is the first
+> thing to run if the appetite is revisited, on the defuse-0 vector as a candidate v0.3.1 rather
+> than folded into v0.4 (§8.3 decision 4).
+>
+> **The factorial replicates.** Its forecasts for the two arms — 30.79% for defuse 1 / λ 0.6 and
+> 31.50% for defuse 0 / λ 0.6 — read **30.96%** and **31.81%** on the v0.3 tree with the corrected
+> instruments.
+
 **Cost.** S–M. **Target.** ≥ 31.0%, or a written freeze at v0.3's level. Both are acceptances.
+
+#### 3.3c Score-conditioned declare urgency — measured, and not shipped
+
+**What it was for.** The preamble: the policy never reads the score, and the cheap test of §3.4's
+channel is whether cashing urgency alone moves lock hold. The marker was lock hold for the score
+term.
+
+**What was measured, before any code.** `scripts/probe-score.mjs` (PROBES.md) traces every window
+decision of 300 v0.3 mirror games — 153,682 windows, 2,288 declares — and splits them by the
+deciding team's score state against the clinch target T = 5: neither / own = T−1 / opp = T−1 /
+both (126,987 / 11,965 / 11,984 / 2,746 windows).
+
+1. **Lock hold's decision half is already zero in every score state.** From "provable to some seat
+   on the owning team" to the cash: mean **0.01 / 0.04 / 0.05 / 0.02** events (neither / own / opp
+   / both; n = 1,745 / 197 / 236 / 83), p90 = 0 in all four; from "provable to the claimer" to the
+   cash, 0.01–0.03. A provable set is cashed at the next window whatever the score. §1's 6.16
+   events of lock hold are the inference half entirely, and no declare-side term can shorten a wait
+   that is not on the declare side.
+2. **The only population a lower bar could reach is the speculative near-miss set, and it is small
+   and poor.** Plans that passed every structural gate and were refused by the bar alone, per 300
+   games: at own = T−1 **178 window decisions** (mean p 0.43, median 0.50, p90 0.57, against a mean
+   bar of 0.63); at opp = T−1, 586 (mean p 0.43, bar 0.93); at both, 14 with p = 0. Declaring at
+   own = 4 on a p = 0.5 plan wins the game half the time and hands the opponents a set the other
+   half — for a set that is *already safe*: every uncertain card of a plan that passed `allOnTeam`
+   sits with a teammate, no opponent ask can take it, and the only cost of waiting is the inference
+   lag. That trade is not positive at any score, and at 0.6 window decisions per game it could not
+   be measured if it were (§3.2's 9,604-deals-per-point line).
+3. **Declares by kind × score state** (own-book / certain / speculative / must / forced): neither
+   735 / 1,001 / 9 / 0 / 3; own 62 / 135 / 13 / 1 / 0; opp 72 / 158 / 0 / 5 / 0; both 42 / 35 / 0 /
+   17 / 0. The speculative branch already fires more at own = T−1 than anywhere else, through the
+   stalled bar.
+
+**Decision.** No score term ships in v0.3, and `view.score` stays unread. The preamble's question is
+answered by measurement: cashing urgency cannot move lock hold, so §3.4's posterior is buying the
+whole of the channel, not less than it assumed. **The lever the probe does expose is on the ask
+side, at the clinch**: the 178 near-miss positions are sets that are safe but unprovable to the
+claimer, and one ask at a teammate for the uncertain card resolves the set whether it hits or
+misses — a value the ask scorer does not model, because it prices hits and not the information in a
+miss. That is §3.5a's count-exhaustion and cross-seat-handoff capability at the one score where it
+decides the game, and it is carried there as a candidate with this probe's near-miss count as its
+baseline marker.
+
+**Cost.** XS — a probe and a paragraph. **Target.** None; the measurement is the deliverable.
 
 ### 3.4 Monet v0.4 — the belief rewrite
 
@@ -957,6 +1109,13 @@ plus `conceal.ts`, `defuse.ts`, `contained.ts`, `threat.ts`. This is what makes 
 **Why it is the right next step.** It attacks the ask-accuracy deficit directly (52.32 vs 57.38), it
 leaves the declare path alone, and **it is the input `pAssignment` needs** — so §3.4b is a
 continuation rather than a second rewrite. It also subsumes λ, which is the substitution risk.
+
+> **Amended 2026-09-03 by §3.3a's measurement.** λ's points abroad arrived with Monet's ask accuracy
+> *down* 0.55 and SESTINA's down 1.16, and the licensed number was already calibrated abroad at λ =
+> 0. A calibrated marginal is therefore expected to remove λ's over-statement without replacing its
+> points. Item 8's λ-off arm is a real test, not a formality, and the roadmap's expectation is now
+> that λ stays as a separate term until a mechanism that prices the interference explicitly
+> replaces it — at which point the two are measured against each other, not assumed to nest.
 
 **Acceptance test.**
 
@@ -1581,6 +1740,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 1 | ~~**Amend §6.2's pre-registered op-coverage row?**~~ **RESOLVED 2026-09-01 — amended on the owner's sign-off.** See §8.1 for the withdrawal record and §3.1 item 3 for the evidence. Original text: Three independent facts say the row was measured through a lossy channel and the true values are `opAsk` 51,998 · `opPoll` 363,984 · `opPass` 178 · `passfixDeclines` 184 · `opForced` 467 (§3.1 item 3). The row is left as written regardless, because a result may not rewrite the expectation it was tested against. Amending it is Allen's call. | **open** |
 | 2 | ~~**Should Monet play the post-clinch phase at all?**~~ **DOWNGRADED 2026-09-01 — it cannot change a result.** `clinchTarget` is 5 of 9 and `2 x 5 > 9`, so both teams cannot clinch; sets are never taken back, so reaching 5 is a permanent lock. **The winner under `us54` and under the host's play-all-nine is therefore identical by construction**, and the 73.9-76.5% of seat-games that run past the clinch cannot change who won. An earlier note here called it the largest un-modelled region of the foreign game and implied it might be worth points; that was wrong and is withdrawn. **What survives is a measurement hazard, not a strategy one:** the per-decision metrics the whole diagnosis rests on — ask accuracy 52.32 vs 57.38, lock hold 9.30 vs 2.92 — are summed over all ops, including the **47,868 of 416,627 (11.5%)** played after the game was already decided. If Monet behaves differently there, those headline figures are contaminated. **v0.2 splits them pre/post clinch**; nothing may be tuned against the unsplit figures after that. **DELIVERED at v0.2, 6 seeds x 7,200 games, and the split changes two readings.** (a) *Declare accuracy.* The pooled 98.32 / 98.35 parity is contaminated: on the LIVE game FishAI is **ahead**, 99.24 vs 98.18, +1.07 pts, positive on 6 of 6 seeds (sign test p = 0.031 two-sided, per-seed range +0.64 to +1.50; declares cluster within a deal, so this is a paired sign test and NOT a pooled binomial interval). The post-clinch column reverses it, -4.87 — but that column is a phase `us54` does not have and **carries no roadmap target**. (b) *Lock hold.* Splitting it by when the set was CASHED was wrong: the quantity is a DURATION that straddles the clinch, so a lock formed while the deal was live and cashed after it ended had its whole wait credited to post. Split AT THE CLINCH instead, the live-phase wait is **8.44 events, not the 6.72 the cash-time bucketing reported**, and the live-phase ratio to SESTINA is **2.96x** — indistinguishable from the pooled 2.96x, where the cash-time shape had suggested 2.41x live against 4.24x post. **The apparent "the lock problem lives after the clinch" contrast was an artefact of the bucketing.** Ask accuracy is the one metric the split leaves alone: the deficit is -4.95 pre and -5.11 post against -5.08 pooled. | **downgraded; the split is DELIVERED at v0.2** |
 | 3 | **`bounded.ts`'s cost model** (§1.5). A joint posterior has no atomic-fact decomposition, so the bit budget becomes undefined. v0.5 must choose in writing between confining the posterior to the unbounded arm and giving BOUNDED.md a new cost model. | open, due at v0.5 |
+| 4 | **Move Monet's `defuse` to 0, or buy the cell that would decide it?** §3.3b: the home ladder resolves rung 0 ahead of rung 1 on both banks (+0.24 ± 0.19, +0.23 ± 0.20 sets/pair) and the bridge reads it at +0.98 inside ±3.10 — frozen at 1 by the roadmap's own rule. The abroad cell that resolves it costs roughly ten times the deals per rung. Either answer is a v0.3.1, not a v0.4 item. | open, not blocking |
 
 ---
 

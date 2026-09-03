@@ -104,7 +104,9 @@ export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3'
  *   deviation set to exactly `{ minHitP }` so that a later roster edit cannot widen it in silence.
  *
  * - `v0.3` is the roster's Punter spread with `licenceLambda: 0.6` (MONET.md §3.3a) — Monet's own
- *   vector, deliberately not a roster edit.
+ *   vector, deliberately not a roster edit. Measured 2026-09-03: 30.96% over six seeds against
+ *   SESTINA, +3.75 on v0.2 and positive on every seed; `defuse` stays at the roster's 1 by §3.3b's
+ *   written freeze, and no score term ships (§3.3c).
  *
  * No entry pins the *code* the knobs run through — see the header. Naming v0.1 here buys back
  * v0.1's SPEC on a v0.2 tree; it does not buy back v0.1's games.
