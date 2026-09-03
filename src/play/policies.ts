@@ -1,7 +1,7 @@
 /**
  * The ONE seam between the play table and the engine's policy layer.
  *
- * Every bot seat at this table is the FishAI v1.0 adaptive engine: per-seat classification from
+ * Every bot seat at this table is the Bass v1.0 adaptive engine: per-seat classification from
  * the public log plus best-response style selection off the measured counter table
  * (`lib/engine/bots/adaptive.ts`). One shared frozen spec, because the spec carries no state —
  * everything is re-derived from the seat's own `SeatView` at each decision, which is why no
@@ -56,4 +56,4 @@ export const ADAPTIVE_POLICY: PolicySpec = Object.freeze({ adaptive: true as con
  *
  * Both versions are load-bearing — see "Why the label names two versions" above.
  */
-export const ADAPTIVE_LABEL = 'FishAI v1.0 adaptive · v2.0 defusal'
+export const ADAPTIVE_LABEL = 'Bass v1.0 adaptive · v2.0 defusal'

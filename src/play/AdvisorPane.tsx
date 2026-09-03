@@ -25,7 +25,7 @@ import { advise } from './advisor.ts'
 import { CardFace } from './CardFace.tsx'
 import type { BotNames } from './format.ts'
 import { bookLabel, cardLabel, seatName, withSeatNames } from './format.ts'
-import { ADAPTIVE_POLICY } from './policies.ts'
+import type { PlayModel } from './models.ts'
 import lab from '../lab/ui/lab.module.css'
 import s from './play.module.css'
 
@@ -39,6 +39,8 @@ export interface AdvisorPaneProps {
   onPlay: (action: GameAction) => void
   /** What the player called the bots. Absent at the shared table, where there are none. */
   names?: BotNames
+  /** The model the table is seating — the pane advises with the same policy. */
+  model: PlayModel
 }
 
 /** One line naming the suggested move — shared with the declare dialog's advice strip. */
@@ -57,9 +59,20 @@ export function describeSuggestion(action: GameAction, names: BotNames = []): st
   }
 }
 
-export function AdvisorPane({ view, seed, active, playable, onPlay, names = [] }: AdvisorPaneProps) {
+export function AdvisorPane({
+  view,
+  seed,
+  active,
+  playable,
+  onPlay,
+  names = [],
+  model,
+}: AdvisorPaneProps) {
+  // The assistant reads the position with the SAME policy the bot seats run, so the pane answers
+  // "what would this opponent do in your seat" rather than second-guessing it with a different
+  // brain — which is the only reading that stays true as the model select changes.
   const explained = active
-    ? advise(view, ADAPTIVE_POLICY, hashSeed(`${seed}:${view.moveIndex}`)())
+    ? advise(view, model.spec, hashSeed(`${seed}:${view.moveIndex}`)())
     : null
 
   return (

@@ -37,6 +37,7 @@
  * the `play.ts` header prescribes for a seat whose style moves during the game.
  */
 import { ALL_SEATS, STYLE_IDS, STYLE_ROSTER, seatTeam } from '../../../lib/engine/index.ts'
+import { ADAPTIVE_LABEL } from '../../play/policies.ts'
 import type { PolicySpec, StyleId, StyleParams, Team } from '../../../lib/engine/index.ts'
 import { aggregateCell, playGameSeats, seedFor, startSeatFor } from '../../../lib/lab/index.ts'
 import type {
@@ -80,7 +81,7 @@ export function isLivePolicyId(id: string): id is LivePolicyId {
  * halves `ADAPTIVE_LABEL` prints at the play table.
  */
 export function livePolicyLabel(id: LivePolicyId): string {
-  return id === ADAPTIVE_ID ? 'FishAI v1.0 adaptive · v2.0 defusal' : STYLE_ROSTER[id].label
+  return id === ADAPTIVE_ID ? ADAPTIVE_LABEL : STYLE_ROSTER[id].label
 }
 
 /* -- the run configuration ---------------------------------------------------------------- */
