@@ -369,7 +369,7 @@ function noRecentHit(view: SeatView, n: number): boolean {
 
 /* -------------------------------------------------------- claim planning --- */
 
-interface ClaimPlan {
+export interface ClaimPlan {
   book: BookId
   assignments: Record<Card, Seat>
   /** Estimated probability the claim scores for the claimer's team. */
@@ -1937,6 +1937,27 @@ function resolveWithView(view: SeatView, policy: PolicySpec, t?: Sink): ActivePo
     ? STYLE_ROSTER[choice.style]
     : STYLE_ROSTER[ADAPTIVE_DEFAULTS.anchor]
   return { skill: SKILL_PRESETS.hard, style }
+}
+
+/**
+ * The claim planner for ONE named set, exposed for hosts whose protocol asks about a specific
+ * half-suit rather than letting the policy choose which to declare — the per-set confidence
+ * sweep of an external bot-package protocol, where a reply must name the set it was asked
+ * about and report the confidence the engine then compares against its own threshold.
+ *
+ * It is the same `planClaim` every declare branch above runs, over the same policy-resolved
+ * knowledge (`knowledgeFor(view, resolveWithView(view, policy))`), so the `p` reported through
+ * here is the number this bot's own declare decision would have used — not a parallel estimate
+ * that could drift from it.
+ *
+ * Additive and read-only: nothing in `decide` / `decideExplained` calls it, and no decision
+ * path changes because it exists. It throws exactly where `resolveWithView` throws (a
+ * malformed view reaching the bounded or adaptive resolver); callers wrap it, as both wrappers
+ * above do.
+ */
+export function planClaimFor(view: SeatView, policy: PolicySpec, book: BookId): ClaimPlan {
+  const pol = resolveWithView(view, policy)
+  return planClaim(view, knowledgeFor(view, pol), book)
 }
 
 /**

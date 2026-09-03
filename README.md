@@ -119,6 +119,7 @@ lib/engine/bots/   inference (knowledge state) + the parameterized policy
 lib/lab/           the simulation runner and the analysis pipeline
 src/               the results site — a pure reader of one committed artifact
 tests/             engine, bot, and lab test suites
+botpkg/            the FishLab bot-package adapter (see "Playing it elsewhere")
 ```
 
 Documents:
@@ -165,6 +166,37 @@ npm run bounded   # the FishAI v1.5 experiment suite (ladder, tiers, evidence ag
 npm run papers:build  # compile papers/*.tex into the committed public/papers/*.pdf
 npm run dev       # the results site — /lab report, /play solo table, /lab/live in-browser sims
 ```
+
+---
+
+## Playing it elsewhere
+
+The engine can be exported as a **FishLab bot package** — a zip that a third-party host unpacks
+and seats over a line-delimited JSON protocol, with no shared code between the two projects.
+
+```bash
+npm run botpkg        # -> dist/botpkg/ and dist/bass-2.0.zip
+npm run botpkg:check  # 40 games over real stdio + the branches those games cannot reach
+```
+
+The build strips the type annotations from the runtime import closure of
+`lib/engine/bots/index.ts` (through Node's own stripper, the same one `node file.ts` uses) and
+rewrites the import specifiers; nothing is bundled, rewritten or re-tuned, so the packaged
+engine differs from the source by type annotations alone. The adapter that fronts it lives in
+[botpkg/](botpkg/) and decides nothing — all it does is build a `SeatView` out of the host's
+state object and translate the `GameAction` that comes back.
+
+`npm run botpkg:check` is the guarantee that matters: it plays complete games with the packaged
+bot in three child processes, refereed by this repository's own engine wearing the foreign
+host's half-suit numbering and card names, and asserts **move-for-move equality** with what
+`decide` plays on the same position. Two things do not survive the trip, and both are stated at
+[botpkg/README.md](botpkg/README.md): that host publishes no true holders on a *failed* declare
+(this engine does), and its forced endgame has no counterpart in `us54`.
+
+The exported seat's one deliberate difference from the in-repo default is its adaptive anchor —
+Punter rather than Balanced, which is [ADAPTIVE.md §7.1](ADAPTIVE.md)'s own named remedy for the
+warmup toll §6.1-6.2 measure. The lab declines that remedy because conceding the dominance
+theorem is the thing it exists to report; a bot playing a match has no such obligation.
 
 ---
 

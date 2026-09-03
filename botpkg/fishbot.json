@@ -1,0 +1,16 @@
+{
+  "format": "fishlab-bot/1",
+  "id": "fishai",
+  "name": "Bass v2.0",
+  "version": "2.0",
+  "author": "MeagerPotato",
+  "description": "Bass v2.0, the FishAI project's frozen baseline line. Adaptive engine: reads each opponent seat off the public log, best-responds over a measured 9x9 style payoff matrix, and plays the choice at full inference; every style carries the v2.0 defusal term.",
+  "protocol": "fishlab-json-v1",
+  "run": ["node", "bot.mjs"],
+  "env": {
+    "FISHAI_POLICY": "adaptive",
+    "FISHAI_ANCHOR": "punter"
+  },
+  "timeout_ms": 10000,
+  "poll_off_turn": true
+}
