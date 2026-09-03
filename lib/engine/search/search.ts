@@ -28,8 +28,8 @@
  * per ask decision on the bench machine — §3.8a's budget is 100 ms, and `scripts/bench-decide.mjs`
  * is the instrument. Everything else is a few sampled deals and copies of the state.
  */
-import type { Card, GameAction, GameState, Seat } from '../types.ts'
-import { seatTeam } from '../cards.ts'
+import type { BookId, Card, GameAction, GameState, Seat } from '../types.ts'
+import { cardBook, seatTeam } from '../cards.ts'
 import { legalActionsSummary } from '../helpers.ts'
 import { reduce } from '../reduce.ts'
 import { hashSeed, mulberry32 } from '../rng.ts'
@@ -52,9 +52,18 @@ export interface SearchParams {
   z: number
   /** `'lcb'` is the arm; `'none'` is the unguarded argmax, the negative control. */
   guard: 'lcb' | 'none'
+  /**
+   * The leaf evaluator's weight on LOCKED sets at the horizon - unresolved half-suits whose six
+   * cards all sit in one team's hands (exact on a determinized deal), ours minus theirs. 0 is
+   * the pre-registered form (the set differential alone); the amendment in MONET.md 3.8a says
+   * why a weight is needed at a short horizon.
+   */
+  leafLock: number
+  /** The leaf evaluator's weight per card in hand at the horizon, ours minus theirs. 0 is the pre-registered form. */
+  leafCard: number
 }
 
-export const SEARCH_DEFAULTS: SearchParams = Object.freeze({ det: 8, cand: 3, steps: 24, z: 1, guard: 'lcb' })
+export const SEARCH_DEFAULTS: SearchParams = Object.freeze({ det: 8, cand: 3, steps: 24, z: 1, guard: 'lcb', leafLock: 0, leafCard: 0 })
 
 export interface SearchInfo {
   /** Whether a search ran at all (an ask decision with at least two candidates and one deal). */
@@ -96,8 +105,44 @@ export function stateFromView(view: SeatView, hands: readonly (readonly Card[])[
   return s
 }
 
-/** Roll a state forward `steps` actions under `spec` at every seat; the team's set differential at the end. */
-export function rollout(start: GameState, spec: PolicySpec, key: string, steps: number, team: 0 | 1): number {
+/**
+ * The leaf value of a (determinized) state for `team`: the set differential, plus `leafLock` per
+ * locked set (an unresolved half-suit wholly in one team's hands) and `leafCard` per card in hand,
+ * each ours minus theirs. Both weights 0 is the set differential alone.
+ */
+export function leafValue(s: GameState, team: 0 | 1, leafLock: number, leafCard: number): number {
+  const other = team === 0 ? 1 : 0
+  let v = s.score[team] - s.score[other]
+  if (leafCard !== 0) {
+    let ours = 0
+    let theirs = 0
+    for (let x = 0; x < 6; x++) {
+      if (seatTeam(x as Seat) === team) ours += s.hands[x].length
+      else theirs += s.hands[x].length
+    }
+    v += leafCard * (ours - theirs)
+  }
+  if (leafLock !== 0 && s.phase !== 'finished') {
+    const owner = new Map<string, 0 | 1 | -1>()
+    for (let x = 0; x < 6; x++) {
+      const t = seatTeam(x as Seat)
+      for (const c of s.hands[x]) {
+        const b = cardBook(c)
+        const o = owner.get(b)
+        if (o === undefined) owner.set(b, t)
+        else if (o !== t) owner.set(b, -1)
+      }
+    }
+    for (const [b, o] of owner) {
+      if (o === -1 || s.books[b as BookId]) continue
+      v += o === team ? leafLock : -leafLock
+    }
+  }
+  return v
+}
+
+/** Roll a state forward `steps` actions under `spec` at every seat; the leaf value for `team` at the end. */
+export function rollout(start: GameState, spec: PolicySpec, key: string, steps: number, team: 0 | 1, leafLock = 0, leafCard = 0): number {
   let s = start
   let n = 0
   while (s.phase !== 'finished' && n < steps) {
@@ -108,7 +153,7 @@ export function rollout(start: GameState, spec: PolicySpec, key: string, steps: 
     s = r.state
     n++
   }
-  return s.score[team] - s.score[team === 0 ? 1 : 0]
+  return leafValue(s, team, leafLock, leafCard)
 }
 
 function knowledgeOptionsOf(spec: PolicySpec): KnowledgeOptions {
@@ -165,7 +210,7 @@ export function decideSearch(view: SeatView, spec: PolicySpec, seed: number, par
       const r = reduce(base, { type: 'ask', seat, target: cands[i].target, card: cands[i].card })
       // A candidate the sampled deal makes illegal cannot happen (legality is public), but the
       // engine is the authority: a refused ask scores as the pick's deal, i.e. no advantage.
-      values[i].push(r.ok ? rollout(r.state, spec, key, params.steps, team) : Number.NaN)
+      values[i].push(r.ok ? rollout(r.state, spec, key, params.steps, team, params.leafLock, params.leafCard) : Number.NaN)
     }
   }
   if (deals === 0) return { action: pick, info: { ...NONE, candidates: cands.length, failedDraws: failed } }

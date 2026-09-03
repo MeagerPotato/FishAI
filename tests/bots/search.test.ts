@@ -26,7 +26,7 @@ import { canonicalAction } from './action-digest.ts'
 
 const BASE = monetPolicy('v0.4c') as BotPolicy
 const OPTS = { logWindow: BASE.skill.logWindow, useConstraints: BASE.skill.useConstraints, marginal: BASE.style.pModel === 'marginal' }
-const SMALL: SearchParams = { det: 4, cand: 3, steps: 12, z: 1, guard: 'lcb' }
+const SMALL: SearchParams = { det: 4, cand: 3, steps: 12, z: 1, guard: 'lcb', leafLock: 0, leafCard: 0 }
 
 type State = ReturnType<typeof newGame>
 interface Pos {
