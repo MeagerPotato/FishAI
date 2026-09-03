@@ -26,7 +26,9 @@ path. **A number from one bridge is never subtracted from a number on another.**
 
 ## 0. The target, stated honestly
 
-**Monet v1.0 beats SESTINA v1.0. That means crossing 50%.**
+**Monet v1.0 beats SESTINA v1.0. That means crossing 50%.** Restated by the owner on 2026-09-03: about
+50%, or a statistically significant win — on this document's floors ≥ 52.9% at six seeds or ≥ 52.0%
+at twelve (§0.3).
 
 | | win rate vs SESTINA v1.0 | deals | floor |
 |---|---:|---:|---:|
@@ -145,6 +147,19 @@ publishing the negative result. **Both are honourable outcomes and one is much c
 engine. This lab has already published three negative results that hold up — the degeneracy theorem,
 the bounded-memory refutation, and the off-limits refutation. *"Monet plays at v0.4 strength and here
 is exactly which capability it lacks, priced"* is a result of the same kind.
+
+> **The owner's call, 2026-09-03.** The gate read **32.75%** (§3.5b's record, the third row). Given the
+> forced choice — stop, split the engine, publish — the owner chose a fourth option this document had
+> not written: **keep building the fast policy toward 50%**, along the levers the record itself names,
+> one rung at a time: **v0.5 opponent reading**, with the defusal appetite made a function of the state
+> (§3.6); **v0.6 communication** — asks chosen to reveal, and the handoff played (§3.7); **v0.7 the
+> search arm**, only if a gap is left and only through §3.5c's cost-first test (§3.8). v1.0 keeps its
+> definition (§3.9); the owner restated the target as about 50%, or a statistically significant win —
+> on this document's floors ≥ 52.9% at six seeds or ≥ 52.0% at twelve. **The physics is unchanged:**
+> no mechanism on record is priced at the 17.25 points the target needs, the oracle bounds every
+> belief mechanism at 38.28% on the current ask policy, and each rung is measured before the next is
+> defined, with §3.5b's rows re-read at every gate. The project's recommendation — publish — stands on
+> the record beside the call.
 
 ---
 
@@ -390,7 +405,8 @@ cell.** Minimum three seeds; headline milestones six; anything claiming under 3 
 
 **Win-rate figures in the "target" column are design targets, not forecasts.** v0.3's
 target is measured; v0.4's is an extrapolation bounded above by the oracle, and §0.1
-explains why the band is 31–37% rather than a point. v0.5 carries no target by design.
+explains why the band is 31–37% rather than a point. The readout (§3.5) carried no target by design;
+the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 
 > **Compacted 2026-09-01 on the owner's instruction.** The ladder ran to ten rungs; it now runs to
 > six. **v0.5 carries what v1.0 was going to carry, and is measured before v1.0 is defined** — the
@@ -409,6 +425,11 @@ explains why the band is 31–37% rather than a point. v0.5 carries no target by
 > attribution is the whole reason this project's numbers are worth anything. **So each bundled
 > mechanism keeps its own marker and its own ablation cell even though it ships in one version.**
 > A compacted rung is a release boundary, never a measurement boundary.
+>
+> **Extended 2026-09-03 on the owner's instruction.** The readout kept its section (§3.5) and lost its
+> version name: the ladder now runs **v0.5 opponent reading (§3.6) → v0.6 communication (§3.7) → v0.7
+> the search arm (§3.8) → v1.0 (§3.9)**, each rung pre-registered when it opens, each carrying its own
+> markers and ablation arms, each able to stop the programme at its own gate.
 
 | version | ships | target vs SESTINA | primary acceptance metric | effort |
 |---|---|---:|---|---|
@@ -417,14 +438,19 @@ explains why the band is 31–37% rather than a point. v0.5 carries no target by
 | **v0.3** ✅ | λ = 0.60 licence conditioning · `defuse` frozen at 1 with its interval · the score term measured and not shipped | **30.96%** (target ≥ 30.5%) | calibration bias — home ✓, abroad ✗, the finding · the `defuse` ladder at ±3.10 · lock hold for the score term (0.01–0.05 events: nothing to move) | S–M — **shipped** |
 | **v0.4a** ✅ | `pCardAt`, the calibrated marginal (`pModel: 'marginal'`) · λ measured against it and taken out | **31.94%** (bar ≥ 33.0% — **not met**; the λ-on arm reads 33.78%) | calibration — aggregate abroad ✓ 0.002, deciles ✗ · ask accuracy 51.71 → 53.91 · the marginal's own effect +4.74 (6/6) | L — **shipped, item 4 missed, on the record** |
 | **v0.4b** ✅ | `pAssignment: 'joint'`, the chain over the marginal · `claimOwnership: 'priced'` measured and not shipped | **32.75%** (bar ≥ 36.0% — **not met**; +0.81 over v0.4a, inside the floor) | lock hold 9.98 → 10.07 — **did not move: the item's FAIL and the finding** · declare accuracy 97.86 → 98.32 (6/6) · speculative declares 37 → 101 per 1,200 games at 72 → 93% | L — **shipped; the cashing channel is communication, not belief** |
-| **v0.5** ✅ (readout) | **the capability readout** — the §3.5b gate at six seeds on v0.4b, the `r12`-off control, the handoff emulated at home; the search arm not priced (§3.5c is gated on the owner's row-3 choice) | **32.75%** — the rule's third row | panel 35.5 / 36.9 / 36.4 / 64.7 / 69.3 against v0.6 … v0.2 · `r12` off −0.69 · handoff 47.8 → 77.6% at home · **§8.3 decision 6 to the owner** | M — **the measurement is on the record; no code shipped** |
-| **v1.0** | **defined only after v0.5's number is read** | ≥ 50.0% | — | — |
+| **the gate readout** ✅ (2026-09-03; was to be v0.5) | **the capability readout** — the §3.5b gate at six seeds on v0.4b, the `r12`-off control, the handoff emulated at home; the search arm not priced (§3.5c is gated on the owner's row-3 choice) | **32.75%** — the rule's third row | panel 35.5 / 36.9 / 36.4 / 64.7 / 69.3 against v0.6 … v0.2 · `r12` off −0.69 · handoff 47.8 → 77.6% at home · **§8.3 decision 6 to the owner** | M — **the measurement is on the record; no code shipped** |
+| **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
+| **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
+| **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced | cost budget first, then paired arms on shared determinizations | XL |
+| **v1.0** | **the version that passes §3.9's six conditions** | ≥ 50.0% — the owner, 2026-09-03: "about 50%, or significantly above", i.e. ≥ 52.0% at twelve seeds | §3.9 | — |
 
 > **v0.5 is a readout, not an attempt.** It deliberately carries no win-rate target, because the
 > honest expectation from §0.1 is **31–37%**, not 50%. If v0.5 lands there, that is the answer to
 > "where do the capabilities lie", and v1.0 is then a decision about architecture — or about
 > publishing a negative result — taken with the number in hand rather than in advance. Writing a
 > 50% target onto v0.5 would be writing down the answer we want.
+> **It landed at 32.75% (§3.5b), and the owner's answer was a fourth option: keep building (§0.3, §8.3
+> decision 6). The version name v0.5 now belongs to §3.6's rung; this readout is §3.5.**
 
 > **These targets are additive and the evidence says the terms are not.** v0.4's 36.0% is λ's
 > shipped-config +3.71 plus the oracle's entire +5.75, stacked — the same pair §0.1 and §2.4 argue
@@ -1479,11 +1505,14 @@ ownership onsets are never proved before the deal ends [defective, 22,480 positi
 
 **Cost.** L–XL. **This is the largest single item in the roadmap and it is unavoidable.**
 
-### 3.5 Monet v0.5 — the capability readout
+### 3.5 The capability readout — was to be Monet v0.5; read 2026-09-03 on v0.4b
 
-**This is the rung the whole roadmap exists to reach, and it carries no win-rate target.** It
-ships the cheap extractions, then stops and measures, then prices the only architecture anyone
-has argued could cross 50%. Its output is a number and a written decision, not a release.
+**This was the rung the whole roadmap existed to reach, and it carried no win-rate target.** It was
+to ship the cheap extractions, then stop and measure, then price the only architecture anyone had
+argued could cross 50%. Its output was a number and a written decision, not a release: **32.75%
+(§3.5b's record) and the owner's call (§0.3).** On the owner's instruction of 2026-09-03 the version
+names v0.5, v0.6 and v0.7 belong to the rungs that follow it (§3.6–§3.8); this section keeps its
+number so that every cross-reference to §3.5a–c stays true.
 
 #### 3.5a The cheaper extractions on top of the posterior
 
@@ -1693,7 +1722,124 @@ why §3.5c is genuinely gated on §3.4b and not merely sequenced after it.
 its win rate is read. Then paired arms on shared determinizations, 6 seeds × 200 deals, with the
 unguarded determinized argmax as a named negative control.
 
-### 3.6 Monet v1.0 — defined by its acceptance test and nothing else
+### 3.6 Monet v0.5 — opponent reading, and the appetite made a function
+
+**Pre-registered 2026-09-03, before any code, on the owner's direction** (§0.3): *play as aggressive
+or conservative as is most beneficial*, and *read the patterns of the opponents*. Two mechanisms,
+each with its own knob, marker and ablation arm, shipping as one version — a release boundary, never
+a measurement boundary (§3's compaction note).
+
+**The base vector** is v0.4c if the 24-seed licence cell clears its floor (§8.3 decision 5), otherwise
+v0.4b. Every number below is a paired contrast against that base on shared deals.
+
+#### 3.6a Mechanism A — ask-choice inference (`pPrior: 'choice'`)
+
+**What the belief ignores today.** Every fact the record proves is used: an ask proves the asker holds
+a card of that half-suit and lacks the card asked; a miss proves the target lacks it; a hit moves it;
+a successful declaration places six cards. What is ignored is the **choice**. An opponent with several
+licensed half-suits chose this one, and with several opponents chose this target. A policy chases the
+sets it is invested in, so the choice is evidence about the chooser's hand — weak per event, and there
+are many events per game.
+
+**The mechanism.** The marginal's candidate matrix (§3.4a) becomes a weighted prior: every admissible
+candidate starts at 1, and each ask by seat `s` into half-suit `B` multiplies the weight of every
+unknown card of `B` still admissible at `s` by `1 + κ`. Sinkhorn scaling, the constraints and the
+joint chain (§3.4b) are unchanged — the fixpoint has the same margins over a different prior.
+`κ = 0` is byte identity with the base. Deliberately not modelled at first: which target was chosen
+(a miss already proves the target lacks the card, and a hit moves it) and declaration choices.
+
+**Reading the patterns — the second knob, its own arm.** `κ` fixed offline is a prior about
+opponents in general. The owner asked for the opponents at the table to be read: `κ_s` per opponent
+seat, updated inside the game from every **successful** declaration — the one event that publishes
+true holders on the host, where a wrong declaration reveals nothing (§3.1), and Monet must play the
+same game under both rule sets. The update compares how many times `s` had asked into the resolved
+half-suit with how many of its cards `s` actually held, and moves `κ_s` toward what that says. Nine
+half-suits a game is a thin signal, so A2 is a separate ablation arm on top of A1, is expected to read
+near zero, and ships only on its own marker.
+
+**Markers.** Ask accuracy (believed against realised on the asks, the belief rungs' marker); the
+calibration deciles (aggregate |bias| may not grow by more than 0.01 at home; abroad recorded); and a
+new home instrument with ground truth, **the opponent-location score** — the mean marginal probability
+the belief assigns to the true holder over opponent-held unknown cards, per decision. A1 must move that
+score; if it does not, `κ` is a fit to noise whatever the win rate says.
+
+**Fitting and seeds.** `κ` and A2's step size are fitted at home on this rung's six fit seeds —
+`hashSeed("monet-v0.5-fit-6")`: 5794175 8559464 5154915 1779838 6681908 4228422 — and on nothing the
+confirmation uses. Confirmation at home on the twelve — `hashSeed("monet-v0.5-confirm-12")`: 4389297
+5139251 5352970 3370441 3663060 5699158 4140136 3497573 4750522 7905601 9971419 9954521 — then abroad
+on the same twelve.
+
+#### 3.6b Mechanism B — the defusal appetite as a function of the state (`defusePolicy: 'state'`)
+
+**What exists.** `defuse.ts` prices every ask's hit branch from the threat model at every call, and
+`defuse` (§3.3b) is the one scalar that multiplies the credit, fitted at 1 as break-even. The knob's
+whole range read inside the floor abroad (§3.3b; §8.3 decision 4), so a better constant is not on
+offer. What a constant cannot do is be right both in the position where a set of ours is one ask from
+being taken and in the position where nothing of ours is threatened.
+
+**The mechanism.** The appetite becomes a table over public state: sets of ours under threat (0 / 1 /
+2+), the score state (behind / level / ahead in sets) and the phase (cards left above / below the
+median) — nine to eighteen cells, fitted on the home duplicate-pair bank on the fit seeds, with
+monotone constraints imposed (more threat, more appetite) so the table cannot fit noise cell by cell.
+`defusePolicy: 'scalar'` is byte identity with the base. The roster stays frozen, as with every Monet
+knob.
+
+**Markers.** Sets lost to opponent declarations per game (the thing the appetite is paid to prevent);
+the paired set-difference at home; and lock hold, which the appetite must not worsen.
+
+#### 3.6c Acceptance, cost, target
+
+**Home first**, on shared deals: each mechanism against the base and against the other, floors as
+§3.3b's (about ±0.20 sets per pair on 600 pairs). A mechanism whose marker does not move at home does
+not go abroad.
+
+**Abroad**, the 2 × 2 of §3.4a's shape — base, +A, +B, +A+B — at **twelve seeds** each (the twelve
+confirmation seeds above), paired floor ±2.00: 48 cells, about half an hour of bridge. **A mechanism
+ships if its paired main effect clears +2.00.** Inside the floor with the marker moved: recorded, not
+shipped, as λ was at §3.4a — unless the owner directs otherwise, which decision 5 shows is his to do.
+The interaction is reported either way.
+
+**Cost** M–L. **Target** ≥ 35.0% against SESTINA — a design target: the honest expectation is +1 to
++3 over the base, and nothing here can pass the oracle's 38.28% on the current ask policy (§3.4a),
+because both mechanisms leave that policy's information alone. **At the rung's gate, §3.5b's rows are
+re-read against the shipped number.**
+
+### 3.7 Monet v0.6 — communication: asks chosen to reveal, and the handoff played
+
+**Opens after §3.6's record; its pre-registration is written then.** The record's central finding
+(§3.4b) is that lock hold is a communication problem: a locked set's cards sit in three private hands,
+and only public events move a teammate's holding into view. The oracle on shared hands sizes the whole
+channel at **+6.75** (38.28% against 32.75%, §3.4a) and collapses lock hold from ten events to under
+one. No bot plays any of it yet.
+
+Two items, each with a marker, each an ablation arm:
+
+1. **Asks chosen to reveal.** An ask publishes a licence — the asker holds a card of that half-suit.
+   Today the ask policy pays nothing for what that tells a teammate; `signalling` spends only a
+   provably dead turn on it. The term prices the information an ask gives the two teammates about the
+   set they are trying to cash, against the hit it forgoes. **Marker: lock hold** (10.07, toward the
+   oracle's 0.4), with speculative declares' accuracy (92.8% at §3.4b) not falling.
+2. **The handoff, as policy.** §3.5a(b) measured on the emulation that the most-confident teammate is
+   right 77.6% of the time where the compelled seat is right 47.8%, and the rules let anyone declare
+   at any moment. The policy: at a window that will compel a declaration, a teammate that estimates
+   the compelled seat's confidence from the public record and beats it declares first, out of turn. A
+   shared convention, no message. **Marker: compelled-declare accuracy** at home (47.8%, toward
+   77.6%) and its price in sets per game, which §3.5a(b) sized at about 0.04 at home and left open
+   abroad.
+
+**Target** a design target of ≥ 38.0%, since this is the one rung whose ceiling the record has
+measured. Twelve seeds, ±2.00, drawn and written down when the rung opens.
+
+### 3.8 Monet v0.7 — the search arm, only if a gap is left and only through the cost-first test
+
+**Opens only if §3.7's record leaves a gap the middle row of §3.5b's rule says search might close** —
+the shipped bot under 50% and the decomposition on record naming no cheaper lever. Everything §3.5c
+says stands: cost budget first, so an arm that misses its latency target is rejected before its win
+rate is read; the unguarded determinized argmax is the named negative control; and the lab arm does
+not ship on `/play` unless the split-engine decision (§3.5b, option 2) is taken separately by the
+owner. Its pre-registration is written when it opens.
+
+### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
 
@@ -1705,7 +1851,7 @@ unguarded determinized argmax as a named negative control.
    negative seed is a claim about a seed.
 3. **The panel is monotone** — Monet beats v0.2 through v0.6 as well. A bot that beats SESTINA and
    loses to v0.5 has been fitted, not built.
-4. **Declare accuracy ≥ 98.0%** (the §3.6 parity guard) and **zero fault counters** across the whole
+4. **Declare accuracy ≥ 98.0%** (the §3.9 parity guard) and **zero fault counters** across the whole
    run.
 5. **Every control of §6.2 passes**, including op coverage, and **the mirror cell is not among them.**
 6. **The result is reproduced by a second, independently built arm** on the same spec. The seeds share
@@ -1932,6 +2078,12 @@ the original ablations.
 
 - **Draw three new banks and write them into the milestone's artifact before the fitting cell runs.**
   Reserved from this document forward and not to be used for any fit: **8675309 / 271828 / 1618033.**
+  Drawn 2026-09-03 and written down before any cell, by the engine's own `hashSeed`: the licence
+  term's 24-seed cell (§8.3 decision 5) spends **18 fresh seeds** from `"monet-v0.4c-lambda-24seeds"`
+  — 1517444 9243041 8193645 7365267 5020863 4180429 4388333 4983432 9686644 6224971 5298162 6588311
+  7776405 8102136 4867666 8667566 2053779 8555342 — beside the six on record; v0.5 (§3.6) fits on
+  **six** from `"monet-v0.5-fit-6"` and confirms on **twelve** from `"monet-v0.5-confirm-12"`, both
+  listed there. A seed that has been read is spent for fitting anything.
 - **Fit on 90210 / 4242. Confirm on 7011001 plus at least one reserved bank.**
 - **Never move a shipped roster constant on a cross-play fit.** CROSSPLAY §7 and §9.6. A constant that
   moves because SESTINA liked it has burned SESTINA as a holdout.
@@ -2108,9 +2260,9 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 1 | ~~**Amend §6.2's pre-registered op-coverage row?**~~ **RESOLVED 2026-09-01 — amended on the owner's sign-off.** See §8.1 for the withdrawal record and §3.1 item 3 for the evidence. Original text: Three independent facts say the row was measured through a lossy channel and the true values are `opAsk` 51,998 · `opPoll` 363,984 · `opPass` 178 · `passfixDeclines` 184 · `opForced` 467 (§3.1 item 3). The row is left as written regardless, because a result may not rewrite the expectation it was tested against. Amending it is Allen's call. | **open** |
 | 2 | ~~**Should Monet play the post-clinch phase at all?**~~ **DOWNGRADED 2026-09-01 — it cannot change a result.** `clinchTarget` is 5 of 9 and `2 x 5 > 9`, so both teams cannot clinch; sets are never taken back, so reaching 5 is a permanent lock. **The winner under `us54` and under the host's play-all-nine is therefore identical by construction**, and the 73.9-76.5% of seat-games that run past the clinch cannot change who won. An earlier note here called it the largest un-modelled region of the foreign game and implied it might be worth points; that was wrong and is withdrawn. **What survives is a measurement hazard, not a strategy one:** the per-decision metrics the whole diagnosis rests on — ask accuracy 52.32 vs 57.38, lock hold 9.30 vs 2.92 — are summed over all ops, including the **47,868 of 416,627 (11.5%)** played after the game was already decided. If Monet behaves differently there, those headline figures are contaminated. **v0.2 splits them pre/post clinch**; nothing may be tuned against the unsplit figures after that. **DELIVERED at v0.2, 6 seeds x 7,200 games, and the split changes two readings.** (a) *Declare accuracy.* The pooled 98.32 / 98.35 parity is contaminated: on the LIVE game FishAI is **ahead**, 99.24 vs 98.18, +1.07 pts, positive on 6 of 6 seeds (sign test p = 0.031 two-sided, per-seed range +0.64 to +1.50; declares cluster within a deal, so this is a paired sign test and NOT a pooled binomial interval). The post-clinch column reverses it, -4.87 — but that column is a phase `us54` does not have and **carries no roadmap target**. (b) *Lock hold.* Splitting it by when the set was CASHED was wrong: the quantity is a DURATION that straddles the clinch, so a lock formed while the deal was live and cashed after it ended had its whole wait credited to post. Split AT THE CLINCH instead, the live-phase wait is **8.44 events, not the 6.72 the cash-time bucketing reported**, and the live-phase ratio to SESTINA is **2.96x** — indistinguishable from the pooled 2.96x, where the cash-time shape had suggested 2.41x live against 4.24x post. **The apparent "the lock problem lives after the clinch" contrast was an artefact of the bucketing.** Ask accuracy is the one metric the split leaves alone: the deficit is -4.95 pre and -5.11 post against -5.08 pooled. | **downgraded; the split is DELIVERED at v0.2** |
 | 3 | **`bounded.ts`'s cost model** (§1.5). A joint posterior has no atomic-fact decomposition, so the bit budget becomes undefined. v0.5 must choose in writing between confining the posterior to the unbounded arm and giving BOUNDED.md a new cost model. **Taken for v0.4a and v0.4b by construction (2026-09-03): both are reads of a finished `Knowledge` behind Monet-only style knobs, so the posterior is confined to the unbounded arm and the cost model is untouched — §3.4a's and §3.4b's scope decisions.** v0.5 may reopen it if the readout wants the bounded arm to carry a posterior. | taken by construction; v0.5 may reopen |
-| 4 | **Move Monet's `defuse` to 0, or buy the cell that would decide it?** §3.3b: the home ladder resolves rung 0 ahead of rung 1 on both banks (+0.24 ± 0.19, +0.23 ± 0.20 sets/pair) and the bridge reads it at +0.98 inside ±3.10 — frozen at 1 by the roadmap's own rule. The abroad cell that resolves it costs roughly ten times the deals per rung. Either answer is a v0.3.1, not a v0.4 item. | open, not blocking |
-| 5 | **Put λ back on the marginal base?** §3.4a item 8: the rule written before the run (inside ±2.83 → subsumed, out) took it out at +1.83 (5 of 6). Every other instrument leans the other way and none abroad clears its floor — panel +2.44 (3/3) and +0.81 (2/3), home +0.24 ± 0.24 and +0.32 ± 0.24 sets/pair (resolved, small) — and the λ-on arm is the one that clears item 4 (33.78% against 31.94%), at the price of the calibration marker (+0.049 aggregate over-statement abroad, worst decile 0.17 against 0.08). The abroad cell that resolves it is 24 seeds per arm (±1.41, about 25 minutes of bridge). §3.4b's joint is the mechanism that prices the interference explicitly (§3.4a's amendment) and re-runs the 2 × 2 with λ as a factor; the cheapest answer is to wait for it. **Second reading, v0.4b (§3.4b item 8): +1.57 on the joint (5 of 6, inside ±2.83), home +0.22 ± 0.24 and +0.32 ± 0.24, the same calibration cost. Three readings, one shape — a point or two abroad inside the floor, a quarter of a set per pair at home, +0.05 of over-statement — and nothing in v0.4b priced the interference. The 24-seed cell (±1.41) would resolve it; otherwise the wait is for v0.5's readout or the owner.** | open, not blocking |
-| 6 | **The row-3 choice (§3.5b): stop in-browser at v0.4b-era strength, split the engine for a searching lab arm, or publish the negative result?** The gate read 32.75% on v0.4b — third row — with the decomposition written beside it (§3.5b's record). The project recommends option 3, with option 2 taken only if the frontier claim is wanted and only through §3.5c's cost-first test (search over a calibrated posterior is the one untested cell; its price is 300 – 600×). The one honest lever the record has not built is communication — asks chosen to reveal, the handoff's +30 points of compelled-declare accuracy at 0.13 per game — sized by the oracle at +6.75 and by nothing yet that a bot could play. v1.0 stays defined by §3.6 alone. | **open — the owner's** |
+| 4 | ~~**Move Monet's `defuse` to 0, or buy the cell that would decide it?**~~ **RESOLVED 2026-09-03 by the owner's direction: neither. The appetite becomes a function of the state in v0.5 (§3.6b), and 0-versus-1 is moot once the scalar is a table.** Original text: §3.3b: the home ladder resolves rung 0 ahead of rung 1 on both banks (+0.24 ± 0.19, +0.23 ± 0.20 sets/pair) and the bridge reads it at +0.98 inside ±3.10 — frozen at 1 by the roadmap's own rule. The abroad cell that resolves it costs roughly ten times the deals per rung. Either answer is a v0.3.1, not a v0.4 item. | **resolved by direction — v0.5, §3.6b** |
+| 5 | **Put λ back on the marginal base?** §3.4a item 8: the rule written before the run (inside ±2.83 → subsumed, out) took it out at +1.83 (5 of 6). Every other instrument leans the other way and none abroad clears its floor — panel +2.44 (3/3) and +0.81 (2/3), home +0.24 ± 0.24 and +0.32 ± 0.24 sets/pair (resolved, small) — and the λ-on arm is the one that clears item 4 (33.78% against 31.94%), at the price of the calibration marker (+0.049 aggregate over-statement abroad, worst decile 0.17 against 0.08). The abroad cell that resolves it is 24 seeds per arm (±1.41, about 25 minutes of bridge). §3.4b's joint is the mechanism that prices the interference explicitly (§3.4a's amendment) and re-runs the 2 × 2 with λ as a factor; the cheapest answer is to wait for it. **Second reading, v0.4b (§3.4b item 8): +1.57 on the joint (5 of 6, inside ±2.83), home +0.22 ± 0.24 and +0.32 ± 0.24, the same calibration cost. Three readings, one shape — a point or two abroad inside the floor, a quarter of a set per pair at home, +0.05 of over-statement — and nothing in v0.4b priced the interference. The 24-seed cell (±1.41) would resolve it; otherwise the wait is for v0.5's readout or the owner.** **Delegated to the project by the owner on 2026-09-03 — "do the research and make the decision based on what most improves Monet's capabilities and winning probability" — so the 24-seed cell this row prices is running on 18 fresh seeds (§6.5) beside the six on record, with an exploratory λ = 0.3 arm; its reading and the decision are recorded at §3.4b's addendum when it lands.** | delegated; the 24-seed cell is running |
+| 6 | ~~**The row-3 choice (§3.5b): stop in-browser at v0.4b-era strength, split the engine for a searching lab arm, or publish the negative result?**~~ **RESOLVED 2026-09-03 — the owner chose a fourth option: keep building the fast policy toward 50%, as v0.5 opponent reading (§3.6), v0.6 communication (§3.7) and v0.7 the search arm through §3.5c's cost-first test (§3.8); v1.0 stays §3.9, restated as about 50% or a significant win (§0). The project's recommendation stands on the record beside the call.** Original text: **The row-3 choice (§3.5b): stop in-browser at v0.4b-era strength, split the engine for a searching lab arm, or publish the negative result?** The gate read 32.75% on v0.4b — third row — with the decomposition written beside it (§3.5b's record). The project recommends option 3, with option 2 taken only if the frontier claim is wanted and only through §3.5c's cost-first test (search over a calibrated posterior is the one untested cell; its price is 300 – 600×). The one honest lever the record has not built is communication — asks chosen to reveal, the handoff's +30 points of compelled-declare accuracy at 0.13 per game — sized by the oracle at +6.75 and by nothing yet that a bot could play. v1.0 stays defined by §3.9 alone. | **resolved — keep building** |
 
 ---
 
