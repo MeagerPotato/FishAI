@@ -2569,6 +2569,90 @@ same opponent on the same seeds. The next rung, if there is one, is not a mechan
 on full-information records of Monet against SESTINA, the 1.2 sets a game go — and that is a decision for the
 owner (§8.3).
 
+### 3.8c The attribution study — where the sets go
+
+**Decision 8.3 row 8, taken by the owner on 2026-09-03: (a).** Not a mechanism. Full-information
+records of Monet v0.4c against SESTINA v1.0 from the bridge, read by one instrument that splits
+the set differential four ways and adds the ask policy's counterfactual at the other side's
+decisions. What comes out is a ranked list of where SESTINA's extra set a game comes from, and
+the next rung is chosen from that list by the rule written below — before the tables are read.
+
+**The data.** Their engine keeps a per-game event trace in memory and writes none of it (no flag,
+no subcommand; `v7decide --dump` is per decision and carries no hands). `fish_record` is the
+split fork (§3.2's counters-only instrument) plus a `--record=FILE` flag on `match` that
+appends, after each game, the deal and the trace as one JSON line: ground truth read after the
+game, changing no branch a policy can see, and controlled the way the split fork was — its whole
+cell output must equal `fish_split`'s on the same cell. Read 2026-09-03 on 20 deals × 6 at seed 90210 against SESTINA: identical, timing lines excluded (`monet-attr/step0.log`; 121 record lines). The record then loaded on the host with every check passing, and the counterfactual at Monet's own decisions agreed with the bridge play at 100% of its asks — the mirror cell (Monet against Monet in their engine, 120 games) at 100% on both sides — so the reconstruction is exact abroad as well as at home. The records are their
+engine's output — data under §9 — and live in the scratchpad; the loader and the instrument are
+ours and are committed (`scripts/attribute.mjs`).
+
+**The instrument, validated at home before a record was read.** On mirror games in our own engine
+the walk reconstructs every seat's view from the deal and the public log alone, and with the
+game's own decision seeds the counterfactual agrees with the play at every ask decision of both
+sides — 100% under `--validate`, which makes a disagreement fatal — while every recorded hit is
+checked against the deal the walk tracks. Abroad the loader checks every event against the
+engine's own public hand counts and every declare against its half-suit awards, so a record whose
+events and deal disagree is refused, not attributed. Everything is read over the pre-clinch
+record only: `us54` ends at five, the host plays on, and what it plays after the clinch is not
+the game.
+
+**The four splits**, per side and per game:
+
+1. **Sets by the deal's split.** For each half-suit, how many of its six cards side A was dealt
+   (0–6) against who took it and how — cashed by a correct declare, gifted by the other side's
+   wrong one, or open at the clinch (who led it; whether it was locked). The decomposition is A − B
+   per game by bucket: A majority (4–6), even (3), B majority (0–2).
+2. **Asks.** Asks a game and the hit rate; the share whose target was public-certain (a prior hit
+   put the card there) and the hit rate on the uncertain rest; by phase (0–1 / 2–3 / 4+ sets
+   resolved); the share of decisions at which a hit was available on the true deal and the hit
+   rate at those. And **the counterfactual**: at every ask decision of either side, what Monet
+   v0.4c asks from the same hand and the same public log, scored on the true deal beside the
+   actual ask — agreement, the counterfactual's hit rate against the actual's at the same points,
+   and both on the disagreements alone.
+3. **Tempo.** Share of all asks, runs a game and asks per run, hits a game, passes.
+4. **Declares and locks.** Declares a game, accuracy, gifts, forced declares; locks formed a game
+   and their fates (cashed / broken / gifted / open at the clinch) and the lock hold in events.
+
+**The cells** — every one recorded, 200 deals × 6 rotations = 1,200 games a seed, one container in
+sequence, about 25 minutes of bridge:
+
+> | cell | arms | seeds | for |
+> |---|---|---|---|
+> | S | `monet-v08-base` (v0.4c, every knob off, on the 000154e export whose `lib/` tree is byte-identical to main's) against SESTINA v1.0 | twelve fresh, §6.5's rule from `monet-attribution-2026-09-03`: 8083995 4646803 7167747 7149252 3737595 9459020 2922748 5753167 8102326 9719629 2543289 1225735 | the study |
+> | SS | SESTINA against SESTINA | the same twelve | SESTINA's own baseline for every figure |
+> | MM | Monet against Monet, in their engine | the first two | the same figures in their engine beside the home mirror in ours — the engine-equivalence check of the whole pipeline — and the counterfactual at Monet's own decisions abroad, which agrees with the play up to seed-dependent tie-breaks |
+> | home | v0.4c against v0.4c, and v0.4c against v0.2, 2,000 games each in our engine | `hm-*`, `hv2-*` | the mirror's shape, and the shape of a KNOWN gap (v0.2 is eight points behind on the bridge) on record before the unknown one is read |
+
+**Readouts, and what each points to** — written now so the decision is not read off the tables
+after the fact:
+
+- **R1, where the set goes.** The bucket carrying most of SESTINA's margin. A-majority sets ending
+  with B → the conversion (asks or defence); steals from B's majority → SESTINA's asks; gifts →
+  the declare bar (§8.3 (c) becomes the rung); open at the clinch → the race and the declare's
+  timing.
+- **R2, the counterfactual at SESTINA's decisions.** If SESTINA's actual asks hit more often than
+  Monet's counterfactual at the same points by more than the paired standard error, SESTINA
+  selects better asks from the same public information — the lever is the ask scorer, and §3.6c's
+  oracle ceiling bounds how much of that is knowledge. If they are level, the ask policy is not the
+  gap and the difference is positional. And the third case, which the control cell showed before
+  this was fixed (120 games: the counterfactual 62.9% against SESTINA's actual 54.8% at the same
+  points, and SESTINA 67.5% of the games): if SESTINA's asks hit LESS than Monet's counterfactual
+  and SESTINA still takes more sets, the hit chance is not the value of an ask — what a miss reveals,
+  what a hit denies, where the turn goes — and the rung is an ask valuation beyond the hit, which
+  §3.8a's search was the first attempt at with the wrong leaf. The control's 120 games at seed
+  90210 were read before this paragraph was written; the study's twelve seeds were not.
+- **R3, tempo.** A share of asks below SESTINA's by more than two points at equal hit rates puts the
+  difference in who is asked and when the turn moves, not in the hits — a targeting rung.
+- **R4, declares.** Gifts above SESTINA's rate → the bar; locks broken or open at the clinch that
+  SESTINA would have cashed → timing (§3.8b said the hold is not a proving problem; this says
+  whether it costs sets at all).
+- **The rule.** The next rung is the readout whose bucket carries the largest share of the margin,
+  written into §8.3 as row 9 with its numbers. If no bucket carries more than a third of it, the
+  answer is (b): v0.4c is v1.0's vector and §3.9's acceptance runs as written.
+
+**Acceptance of the study itself.** The control identical; the loader's checks pass on every game
+of every cell; the MM cell's side figures inside the home mirror's range; and every seed listed.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -2997,7 +3081,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 5 | **Put λ back on the marginal base?** §3.4a item 8: the rule written before the run (inside ±2.83 → subsumed, out) took it out at +1.83 (5 of 6). Every other instrument leans the other way and none abroad clears its floor — panel +2.44 (3/3) and +0.81 (2/3), home +0.24 ± 0.24 and +0.32 ± 0.24 sets/pair (resolved, small) — and the λ-on arm is the one that clears item 4 (33.78% against 31.94%), at the price of the calibration marker (+0.049 aggregate over-statement abroad, worst decile 0.17 against 0.08). The abroad cell that resolves it is 24 seeds per arm (±1.41, about 25 minutes of bridge). §3.4b's joint is the mechanism that prices the interference explicitly (§3.4a's amendment) and re-runs the 2 × 2 with λ as a factor; the cheapest answer is to wait for it. **Second reading, v0.4b (§3.4b item 8): +1.57 on the joint (5 of 6, inside ±2.83), home +0.22 ± 0.24 and +0.32 ± 0.24, the same calibration cost. Three readings, one shape — a point or two abroad inside the floor, a quarter of a set per pair at home, +0.05 of over-statement — and nothing in v0.4b priced the interference. The 24-seed cell (±1.41) would resolve it; otherwise the wait is for v0.5's readout or the owner.** **Delegated to the project by the owner on 2026-09-03 — "do the research and make the decision based on what most improves Monet's capabilities and winning probability" — so the 24-seed cell this row prices is running on 18 fresh seeds (§6.5) beside the six on record, with an exploratory λ = 0.3 arm; its reading and the decision are recorded at §3.4b's addendum when it lands.** **RESOLVED 2026-09-03 (§3.4c): +1.88 paired over 24 seeds, ahead on 22, clearing ±1.41 — the term ships on v0.4c; its cost (+0.050 over-statement abroad, none at home) and the finding that it buys tempo rather than accuracy are on the record, with the 0.3-versus-0.6 confirmation pre-registered.** | **resolved — v0.4c** |
 | 6 | ~~**The row-3 choice (§3.5b): stop in-browser at v0.4b-era strength, split the engine for a searching lab arm, or publish the negative result?**~~ **RESOLVED 2026-09-03 — the owner chose a fourth option: keep building the fast policy toward 50%, as v0.5 opponent reading (§3.6), v0.6 communication (§3.7) and v0.7 the search arm through §3.5c's cost-first test (§3.8); v1.0 stays §3.9, restated as about 50% or a significant win (§0). The project's recommendation stands on the record beside the call.** Original text: **The row-3 choice (§3.5b): stop in-browser at v0.4b-era strength, split the engine for a searching lab arm, or publish the negative result?** The gate read 32.75% on v0.4b — third row — with the decomposition written beside it (§3.5b's record). The project recommends option 3, with option 2 taken only if the frontier claim is wanted and only through §3.5c's cost-first test (search over a calibrated posterior is the one untested cell; its price is 300 – 600×). The one honest lever the record has not built is communication — asks chosen to reveal, the handoff's +30 points of compelled-declare accuracy at 0.13 per game — sized by the oracle at +6.75 and by nothing yet that a bot could play. v1.0 stays defined by §3.9 alone. | **resolved — keep building** |
 | 7 | **v0.5's arms read +0.4 abroad, inside the ±2.00 floor (§3.6c): ship `choiceKappa` anyway, buy the seeds that would decide it, or move on?** The rule as written ships nothing. Three arms agree on +0.37 to +0.47 (0.6 – 1.0 × SE); reading +0.4 at 2 × SE would take about a hundred seeds, an hour of bridge. The markers say the prior over-states against SESTINA (calibration +0.021 → +0.046 at κ = 1) and buys ask accuracy, not sets. **Recommendation: move on.** `choiceKappa` stays in the code off the vector, v0.6 is built on v0.4c, and if a later rung changes the calibration picture the twelve cells are re-run then (35 minutes). | open |
-| 8 | **After v0.8: four levers measured, none moved the number — what is the next rung?** Belief (§3.6, +0.47 abroad inside the floor), communication (§3.7a, behind at home), search (§3.8a, a no-op at the budget; the post-hoc lock-only leaf's abroad read is recorded there) and the declare (§3.8b, +0.08 abroad, exact to ±0.16) are each real-and-small or null against SESTINA v1.0 on twelve seeds, and the oracle ceiling (§3.6c, 38.28%) says the 15 points to the owner's 50% are not in card knowledge at all. Three ways forward, in the order this document recommends them: **(a) an attribution rung** — full-information records of Monet against SESTINA from the bridge (their engine's game output is data, not code), split by phase and mechanism to say where the 1.2 sets a game go, before any further mechanism is built; **(b) stop at v0.4c** as v1.0's vector and run §3.9's acceptance as written; **(c) another mechanism on a hypothesis this document cannot yet support** — the declare bar re-fitted against SESTINA's theft rate (the adaptive risk/benefit the owner asked for; §3.7a's home read says the bar is right at home, and abroad it has never been read). The recommendation is (a), then (b) or (c) on what it finds. | **OPEN 2026-09-03** — waiting on the owner. |
+| 8 | **After v0.8: four levers measured, none moved the number — what is the next rung?** Belief (§3.6, +0.47 abroad inside the floor), communication (§3.7a, behind at home), search (§3.8a, a no-op at the budget; the post-hoc lock-only leaf's abroad read is recorded there) and the declare (§3.8b, +0.08 abroad, exact to ±0.16) are each real-and-small or null against SESTINA v1.0 on twelve seeds, and the oracle ceiling (§3.6c, 38.28%) says the 15 points to the owner's 50% are not in card knowledge at all. Three ways forward, in the order this document recommends them: **(a) an attribution rung** — full-information records of Monet against SESTINA from the bridge (their engine's game output is data, not code), split by phase and mechanism to say where the 1.2 sets a game go, before any further mechanism is built; **(b) stop at v0.4c** as v1.0's vector and run §3.9's acceptance as written; **(c) another mechanism on a hypothesis this document cannot yet support** — the declare bar re-fitted against SESTINA's theft rate (the adaptive risk/benefit the owner asked for; §3.7a's home read says the bar is right at home, and abroad it has never been read). The recommendation is (a), then (b) or (c) on what it finds. | **taken 2026-09-03 — the owner chose (a)**; the study is §3.8c, and its readout writes row 9. |
 
 ---
 
