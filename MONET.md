@@ -2259,6 +2259,18 @@ recorded and not shipped. **Expectation:** +1 to +3. FishLab's published +2.08 f
 search, at their cost, is the prior, attributed; the correct-posterior cell is untested, which is the
 reason to run it.
 
+> **Amendment, 2026-09-03, written before any fit cell was read.** The arm was built as above
+> (`lib/engine/search/`, commit 72d16af) and costed first: **96 ms mean per ask decision** at D = 8, C = 3,
+> S = 24 (7.8 s a mirror game against 68 ms), inside the budget. Its per-decision arithmetic was then
+> looked at, and at that horizon — three or four asks and their windows — the set differential almost never
+> moves: nine candidate means in ten read exactly 0.00 and the guard fired on 6% of decisions with nothing
+> behind it. So the leaf value takes two weights, **`leafLock`** per locked set at the horizon (an unresolved
+> half-suit wholly in one team's hands, exact on the determinized deal) and **`leafCard`** per card in hand,
+> each ours minus theirs. Both 0 is the pre-registered form, which stays the default and is run as its own
+> cells; with 0.5 / 0.15 the search leaves the pick on 26% of decisions at a mean advantage of 0.33 (SE
+> 0.19). The fit reads both forms. Nothing else in the pre-registration changes: the guard, the control,
+> the budget, the seeds and the acceptance stand.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
