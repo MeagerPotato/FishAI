@@ -1137,6 +1137,37 @@ continuation rather than a second rewrite. It also subsumes λ, which is the sub
 8. **Substitution measured, not assumed** — a λ-off arm on the same build. If `pCardAt` subsumes λ,
    the λ term comes out and the roadmap says so.
 
+> **Scope decision (item 7), written 2026-09-03 before the code.** v0.4a's marginal is a *read* of
+> a finished `Knowledge`, not a stored belief: `buildKnowledge` attaches a card × seat table derived
+> from `cands`, `unknownSlots` and the surviving constraints, and nothing in the fact pool changes
+> shape. BOUNDED.md's cost model therefore stays defined and untouched — the bounded arm replays
+> atomic facts into the same `finishKnowledge`, and a read of the result costs it no bits. The
+> marginal is confined to the unbounded arm all the same: it is switched on by a Monet style knob
+> (`pModel: 'marginal'`) that no `BoundedSpec` carries, so Bass v1.5's numbers cannot move. The
+> joint (§3.4b) is where the decision bites, and it is taken there; §8.3 decision 3 stays open until
+> then. Registry id: `v0.4a`, the a-half of v0.4 on its own vector (v0.3 plus the knob); §3.4b lands
+> under its own id, so each half's cells name the spec they measured.
+>
+> **The construction, as built.** Sinkhorn scaling of the 0/1 candidate matrix over the unknown
+> cards × six seats to row sums 1 and column sums `unknownSlots`, with every surviving ≥1-of-set
+> constraint folded in on each round by the same conditioning §3.3a ships (`p → p / (1 − Π(1 − p))`
+> over the constraint's alive cards at its seat) and the margins restored after it. A memoised pure
+> read of the `Knowledge` object; an infeasible table (slots and unknown cards disagree, which only
+> an inconsistent view produces) falls back to the slot prior rather than fabricating a number.
+> `refinedHitProbability`'s first-order fold is skipped when the table exists, because the
+> constraints are already inside it; the λ conditioning sits on top of it unchanged.
+>
+> **Pre-registered expectations (§7.1), written before the run.** Home calibration on ≥ 20,000 chosen
+> asks: the slot prior reads aggregate +0.0194 / worst decile 0.1180 on v0.3's trajectory (§3.3a);
+> the marginal is expected to at least halve the worst decile, and is a FAIL on item 1 if the
+> table does not move it. Cost: ≤ 0.5 ms per decision expected against the 1.4 ms budget. Byte
+> identity with the knob absent: 0 mismatches over ≥ 20,000 protected asks, or the change is not a
+> knob. Ask accuracy abroad: item 2's bar is written against v0.2's 52.32%, but v0.3 reads 51.71%
+> and is the base this milestone is measured from, so the item is read as *up from 51.71%, toward
+> 55.0%*, and a reading under 51.71% is a FAIL whatever the win rate does. Item 8's λ-off arm: six
+> seeds beside the λ-on arm; inside ±2.83 of each other means λ is subsumed and comes out; λ-on
+> ahead by more means it stays, which is what §3.3a's interference reading predicts.
+
 **Cost.** L. **Risk.** This is the first milestone that can be wrong in a new way: it replaces a
 certainty with a probability, and a probability can be miscalibrated where a certainty cannot. §7 is
 about exactly that.
