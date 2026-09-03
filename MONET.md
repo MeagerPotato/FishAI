@@ -1879,7 +1879,7 @@ a measurement boundary (§3's compaction note).
 **The base vector** is v0.4c (§3.4c: the licence term cleared its 24-seed floor). Every number below is
 a paired contrast against it on shared deals.
 
-#### 3.6a Mechanism A — ask-choice inference (`pPrior: 'choice'`)
+#### 3.6a Mechanism A — ask-choice inference (`choiceKappa`)
 
 **What the belief ignores today.** Every fact the record proves is used: an ask proves the asker holds
 a card of that half-suit and lacks the card asked; a miss proves the target lacks it; a hit moves it;
@@ -1895,6 +1895,14 @@ joint chain (§3.4b) are unchanged — the fixpoint has the same margins over a 
 `κ = 0` is byte identity with the base. Deliberately not modelled at first: which target was chosen
 (a miss already proves the target lacks the card, and a hit moves it) and declaration choices.
 
+> **Built 2026-09-03 as `choiceKappa`** (`StyleParams` / `KnowledgeOptions`; the evidence is `Knowledge.asksInto`,
+> asks per half-suit by every seat but the viewer, read off the walked log; the weight saturates at three asks so
+> the matrix stays conditioned). The prior's shape is `choicePrior`: `'count'` (absent) is the form above;
+> `'once'` weights a seat that asked at all by `1 + κ` once. Building it found a repair the flat prior never
+> needed: the fold's clamp could scale a column by the ratio of two vanishing remainders and drive cells
+> negative (−28,912 at κ = 4 on a saturated prior); the repair is now monotone (`after = max(before, …)`)
+> and every κ = 0 bank replays unchanged.
+
 **Reading the patterns — the second knob, its own arm.** `κ` fixed offline is a prior about
 opponents in general. The owner asked for the opponents at the table to be read: `κ_s` per opponent
 seat, updated inside the game from every **successful** declaration — the one event that publishes
@@ -1903,6 +1911,13 @@ same game under both rule sets. The update compares how many times `s` had asked
 half-suit with how many of its cards `s` actually held, and moves `κ_s` toward what that says. Nine
 half-suits a game is a thin signal, so A2 is a separate ablation arm on top of A1, is expected to read
 near zero, and ships only on its own marker.
+
+> **Built as `choiceAdapt`** (the step η): at every successful declaration, each seat that had asked into the
+> resolved half-suit has its multiplier on κ moved by η · (cards of that half-suit it was dealt − 1.58), clipped
+> to [0, 2]; 1.58 is the fit-seed mean for a seat that asked, so a seat whose asks say no more than everyone's
+> stays at 1. The dealt count is the walk's own `xfix` (a card that never moved is fixed by the declaration, one
+> that moved by its first hit); a half-suit with any deal holder unknown is skipped. Every seat but the viewer is
+> read, teammates included. η = 0 is A1 byte for byte.
 
 **Markers.** Ask accuracy (believed against realised on the asks, the belief rungs' marker); the
 calibration deciles (aggregate |bias| may not grow by more than 0.01 at home; abroad recorded); and a
@@ -1915,6 +1930,46 @@ score; if it does not, `κ` is a fit to noise whatever the win rate says.
 confirmation uses. Confirmation at home on the twelve — `hashSeed("monet-v0.5-confirm-12")`: 4389297
 5139251 5352970 3370441 3663060 5699158 4140136 3497573 4750522 7905601 9971419 9954521 — then abroad
 on the same twelve.
+
+> **Home record, 2026-09-03 — A goes abroad; the shape and κ are chosen; A2's marker does not move.**
+> Everything below is on the six fit seeds unless it says the twelve; the base is v0.4c at λ = 0.3 (§3.4c).
+>
+> 1. **The evidence, with ground truth** (240 mirror games, 1,798 successful declarations): a seat that had
+>    asked into the resolved half-suit was dealt **1.565** of its six cards if it asked once, 1.612 twice,
+>    1.570 three or more times, against **1.185** for a seat that held one and never asked. The choice is
+>    evidence, as §3.6a said; the *count* of asks says nothing more about the deal. The count form still
+>    locates better (item 2): repeated asks say where the cards still are, not where they were dealt.
+> 2. **The opponent-location score moves — the marker is met.** p(true holder) over uncertain cards, one
+>    row per κ on the same 24,423 ask positions (`scripts/probe-location.mjs`):
+>
+>    | κ | count: p(true) | top-1 | marginal bias on the base's asks | once: p(true) | top-1 |
+>    |---|---|---|---|---|---|
+>    | 0 | 0.2594 | 0.3486 | −0.0575 | 0.2594 | 0.3486 |
+>    | 0.5 | 0.2717 | 0.3581 | −0.0380 | 0.2650 | 0.3546 |
+>    | 1 | **0.2820** | 0.3608 | −0.0215 | 0.2695 | 0.3572 |
+>    | 2 | 0.2958 | 0.3622 | +0.0015 | 0.2765 | 0.3593 |
+>    | 3 | 0.3036 | 0.3621 | +0.0158 | 0.2817 | 0.3600 |
+>    | 4 | 0.3085 | 0.3620 | +0.0256 | 0.2858 | 0.3602 |
+>
+> 3. **Calibration improves rather than costs, at λ = 0.3.** The chosen-ask aggregate of the policy playing
+>    itself (`scripts/calibration.mjs`, 300 games): base **−0.0353** / worst decile 0.1269 — the base
+>    under-states at 0.3 where it was exact at 0.6 (§3.4c) — and with the count prior −0.0216 / 0.099 at
+>    κ = 0.5, **−0.0122 / 0.061 at κ = 1**, +0.0003 / 0.071 at 1.5, +0.0089 / 0.097 at 2, +0.0234 / 0.167 at 3.
+>    The chosen asks hit more often: realised 0.5876 → 0.5944 (0.5) → 0.6068 (1). The bar (aggregate |bias|
+>    may not grow by 0.01) admits every κ up to 2 on this base; at λ = 0.6 it had admitted only 0.5 (κ = 1
+>    read +0.0131, κ = 2 +0.0348: the licence term and the prior over-state together).
+> 4. **Sets at home do not move, and fall past κ = 1.** Duplicate pairs against the base, fit bank, 600 pairs:
+>    count **+0.05 ± 0.24 at 0.5, −0.11 ± 0.25 at 1, −0.39 ± 0.27 at 2** (behind); once −0.12 / −0.06 / −0.12 /
+>    −0.32 (κ = 3) / −0.34 (κ = 4). A sharper belief that hits more asks and wins no more sets: the same shape
+>    as λ (§3.4c). On the twelve confirmation banks (100 pairs each) κ = 0.5 reads −0.03 ± 0.17 (ahead 6 of
+>    12) and κ = 1 **+0.02 ± 0.19** (ahead 8 of 12).
+> 5. **Chosen before any abroad cell:** the count form (the pre-registered shape, and the better marker),
+>    **κ = 1 primary** (the higher confirmation read, inside the noise; the larger marker move), κ = 0.5
+>    secondary, both to the twelve seeds abroad. Larger κ is behind at home and is not run.
+> 6. **A2's marker does not move.** With η = 0.25 / 0.5 on κ = 1 the location score reads 0.2692 → 0.2689 →
+>    0.2685 (κ = 2: 0.2761 → 0.2757 → 0.2750): the in-game estimate has nine half-suits to learn from and adds
+>    noise. A home mirror has no seat differences to read, so one information arm (κ = 0.5, η = 0.25) goes
+>    abroad, labelled; by the rule above it cannot ship on that run.
 
 #### 3.6b Mechanism B — the defusal appetite as a function of the state (`defusePolicy: 'state'`)
 
@@ -1933,6 +1988,21 @@ knob.
 
 **Markers.** Sets lost to opponent declarations per game (the thing the appetite is paid to prevent);
 the paired set-difference at home; and lock hold, which the appetite must not worsen.
+
+> **Built 2026-09-03 as `defusePolicy: 'state'` with `defuseState {threat, score, late}`**: the appetite is
+> `defuse · max(0, 1 + threat·(T − 1) + score·S + late·L)`, read once per decision (`defusalAppetite`), where
+> T counts (capped at 2) the unresolved half-suits in which this team has located cards and an opponent with
+> cards holds a live licence, S is the signed set lead clipped to ±1, and L is 1 once fewer than half the
+> cards are in hands — the linear form of the table above, with the monotone constraint `threat ≥ 0` enforced
+> by `validateStyle`. `'scalar'`, absent, or all-zero slopes is the base byte for byte.
+>
+> **Home record — B does not go abroad.** One slope at a time against the base on the second fit seed's bank,
+> 600 pairs: threat 0.5 **−0.17 ± 0.13**, threat 1 **−0.25 ± 0.15** (both behind), score −0.5 −0.04 ± 0.13,
+> score +0.5 −0.12 ± 0.15, late −0.5 +0.02 ± 0.06, late +0.5 −0.07 ± 0.06. Nothing moves the marker the
+> right way, and the one slope the pre-registration required to be positive is the one that loses most. The
+> scalar itself sits at a home optimum on the same bank: defuse 0 −0.13 ± 0.28, defuse 2 −0.20 ± 0.22. §3.6c's
+> rule applies: a mechanism whose marker does not move at home does not go abroad. The knob stays in the
+> code, off the vector, as §3.3b's `defuse` ladder did; the roster is untouched.
 
 #### 3.6c Acceptance, cost, target
 
