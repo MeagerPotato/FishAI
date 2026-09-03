@@ -2122,6 +2122,43 @@ must not.
 > Cost: two public walks per candidate set for the standing record, and one per named card per open
 > teammate for the record after the ask. Absent or 0 is byte identity (pinned over whole games).
 
+> **Home record, 2026-09-03 — item 1 does not go abroad.** Duplicate pairs against the base on the first fit
+> seed's bank (9220628), 600 pairs, the arm's sets minus the base's:
+>
+> | `reveal` | `revealFar` | paired set-diff | SD (sets/pair) |
+> |---|---|---|---|
+> | 1 | 0 (clinch only) | −0.07 ± 0.08 | 0.96 |
+> | 2 | 0 | −0.08 ± 0.08 | 0.98 |
+> | 4 | 0 | −0.09 ± 0.08 | 1.02 |
+> | 1 | 0.25 | −0.20 ± 0.29 | 3.57 |
+> | 2 | 0.25 | **−0.25 ± 0.28** | 3.49 |
+> | 4 | 0.25 | −0.18 ± 0.27 | 3.38 |
+> | 2 | 1 | −0.36 ± 0.28 | 3.45 |
+> | 4 | 1 | **−0.39 ± 0.29** | 3.58 |
+>
+> Every cell is behind. The firing diagnostic (`scripts/probe-reveal-fire.mjs`, ground truth, 200 mirror
+> games at `reveal: 4, revealFar: 1`) says why: the term fires **11.9 times a game**, the set is really on
+> the team **9.9%** of the time (the belief is honest — mean P(locked) 0.085 — and *weak*), the split is
+> right in two thirds of those, and a teammate cashes the set at the next window **5.8%** of the time. The
+> price is paid every time: the reveal ask hits 25.9% where the base's ask at the same position would have
+> hit 35.3%. By believed P(locked): below 0.1 (79% of the fires) the set is on the team 2.3% of the time
+> and the fire is an ask swap that costs four points of hit probability for nothing; at 0.2 – 0.4 the set is
+> on the team about half the time and cashes at the next window 7 – 18%, but the base's ask there would
+> have hit 64 – 74% against the reveal's 23%; above 0.5 the hand holds three or four cards of the set and
+> the "reveal" is the base's own ask (base-hit 85 – 94%), which completes the set the ordinary way. No
+> gate on P(locked) finds a bin where the cash is worth the hit given up. The clinch-only cells
+> (`revealFar: 0`, 0.88 fires a game, 8.0% cashed at the next window, hit 35.1% against the base's 42.9%)
+> sit inside the ±0.20 floor and lose a little. **The marker moves by a hair**: locked (decision, set)
+> pairs per game — lock hold integrated from the deal's lock, the abroad engine's definition — 35.06 →
+> 34.07 at `reveal: 2, revealFar: 0.25` (three fit seeds × 100 games), a 2.8% shortening bought with the
+> sets above.
+>
+> The finding is the family's (signalling flat, stalling −1.14): a deliberate miss buys one bit, and the
+> bit is worth a turn only when the asker can tell *which* set is locked — and the asker cannot; a seat
+> that could would prove the set itself. The 3.41 opportunities a game are real and are the teammates'
+> to see, not the asker's. The knobs stay in the code, off the vector; the readout, the diagnostic and
+> the public walk remain (the walk is what any later teammate-side inference will be built on).
+
 **Seeds.** Fit on six from `hashSeed("monet-v0.6-fit-6")`: **9220628 8580707 6389604 5910092 2121575
 1884435**; confirm at home and abroad on twelve from `hashSeed("monet-v0.6-confirm-12")`: **6021520 8438705
 3195511 9141082 5082131 7701419 2601210 4621978 6478725 2793161 2568302 2796767** — drawn by §6.5's rule
