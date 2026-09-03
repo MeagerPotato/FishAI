@@ -47,7 +47,7 @@
  * instances and pins its size. Whether the number is *calibrated* is an empirical question
  * answered by `scripts/calibration.mjs`, and MONET.md §3.4a's acceptance reads that harness first.
  * Not a memory: the table is a pure read of a finished `Knowledge` — `cands`, `unknownSlots`,
- * `constraints`, and the ask-choice prior (`asksInto`, `choiceKappa`) when MONET.md §3.6a's knob put
+ * `constraints`, and the ask-choice prior (`asksInto`, `choiceKappa`, `choiceSeat`) when MONET.md §3.6a's knobs put
  * one there — and nothing else — memoised per object, so BOUNDED.md's fact pool keeps its shape
  * and its cost model (the §3.4a scope decision). Not the joint: §3.4b's `pAssignment` is a
  * different object, and the declare planner does not read this table.
@@ -209,13 +209,15 @@ export function computeMarginalTable(k: Knowledge): MarginalTable | null {
   // at κ = 4 a seventh ask would be a weight of 78,125 that 200 rounds cannot scale away.
   const kappa = k.choiceKappa ?? 0
   const asksInto = kappa > 0 ? k.asksInto : undefined
+  // A2: the per-seat multiplier on κ, 1 everywhere unless the Knowledge read the declarations
+  const seatMul = asksInto === undefined ? undefined : k.choiceSeat
   for (let i = 0; i < n; i++) {
     let any = false
     const row = asksInto === undefined ? undefined : asksInto[cardBook(cards[i])]
     for (const s of k.cands[cards[i]] ?? []) {
       if (need[s] > 0) {
         const asked = row !== undefined && s !== k.seat && (row[s] ?? 0) > 0
-        p[i * 6 + s] = asked ? 1 + kappa : 1
+        p[i * 6 + s] = asked ? 1 + kappa * (seatMul === undefined ? 1 : seatMul[s]) : 1
         any = true
       }
     }

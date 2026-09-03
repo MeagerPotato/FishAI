@@ -249,7 +249,7 @@ function knowledgeOptions(skill: SkillParams, style: StyleParams): KnowledgeOpti
   // roster style; the two skill fields are what they always were.
   const marginal = style.pModel === 'marginal'
   // MONET.md §3.6a: the ask-choice prior rides on the marginal and is nothing without it.
-  return { logWindow: skill.logWindow, useConstraints: skill.useConstraints, marginal, choiceKappa: marginal ? style.choiceKappa : undefined }
+  return { logWindow: skill.logWindow, useConstraints: skill.useConstraints, marginal, choiceKappa: marginal ? style.choiceKappa : undefined, choiceAdapt: marginal ? style.choiceAdapt : undefined }
 }
 
 /**

@@ -286,6 +286,13 @@ export interface StyleParams extends AskWeights {
    */
   choiceKappa?: number
   /**
+   * MONET.md §3.6a A2 — the step η (≥ 0) of the per-seat reading of the same evidence, updated
+   * inside the game from every successful declaration (`KnowledgeOptions.choiceAdapt`). 0 or
+   * absent is A1 exactly, byte for byte; inert without `choiceKappa > 0`. Absent on every roster
+   * style and every tier.
+   */
+  choiceAdapt?: number
+  /**
    * MONET.md §3.6b — how the defusal appetite is read. `'scalar'` (and absent) is `defuse` as it
    * has always been; `'state'` multiplies it, once per decision, by a clipped linear function of
    * the public state — threatened sets, set lead, phase — with the slopes in `defuseState`
@@ -672,6 +679,8 @@ export function validateStyle(style: StyleParams): string[] {
   }
   const choiceKappa = style.choiceKappa
   if (choiceKappa !== undefined && !(typeof choiceKappa === 'number' && Number.isFinite(choiceKappa) && choiceKappa >= 0)) bad.push(`choiceKappa ${String(choiceKappa)} is not a finite number >= 0`)
+  const choiceAdapt = style.choiceAdapt
+  if (choiceAdapt !== undefined && !(typeof choiceAdapt === 'number' && Number.isFinite(choiceAdapt) && choiceAdapt >= 0)) bad.push(`choiceAdapt ${String(choiceAdapt)} is not a finite number >= 0`)
   const claimOwnership = style.claimOwnership
   if (claimOwnership !== undefined && claimOwnership !== 'certain' && claimOwnership !== 'priced') bad.push(`claimOwnership ${String(claimOwnership)} is not 'certain' or 'priced'`)
   return bad

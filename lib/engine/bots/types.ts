@@ -59,6 +59,12 @@ export interface Knowledge {
   asksInto?: Partial<Record<BookId, number[]>>
   /** The prior's strength the marginal is scaled with (`KnowledgeOptions.choiceKappa`); absent = flat. */
   choiceKappa?: number
+  /**
+   * MONET.md §3.6a A2 — the per-seat multiplier on κ, read inside the game (`KnowledgeOptions.
+   * choiceAdapt`): 1 for a seat nothing has been learned about, in [0, 2], moved by every successful
+   * declaration of a half-suit the seat had asked into. Present only when the step is > 0.
+   */
+  choiceSeat?: number[]
 }
 
 /** Options for buildKnowledge — used by the easy tier's degraded memory. */
@@ -81,6 +87,15 @@ export interface KnowledgeOptions {
    * byte — every Bass tier, every Monet version before v0.5. Read only when `marginal` is set.
    */
   choiceKappa?: number
+  /**
+   * MONET.md §3.6a A2 — the step η (≥ 0) of the per-seat reading. At every successful declaration
+   * (the one event that publishes true holders on the host), for each seat that had asked into the
+   * resolved half-suit, that seat's multiplier on κ moves by η · (cards of the half-suit the seat
+   * was dealt − 1.58), clipped to [0, 2]; 1.58 is the fit-seed mean for a seat that asked, so a seat
+   * whose asks say no more than everyone's stays at 1. Default 0: A1 exactly, byte for byte. Read
+   * only with `marginal` and `choiceKappa > 0`.
+   */
+  choiceAdapt?: number
 }
 
 /**

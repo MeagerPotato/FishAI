@@ -3,7 +3,7 @@
  * probe-location.mjs — MONET.md §3.6a, the opponent-location score: how much probability the
  * belief puts on the TRUE holder of every card it is unsure about, with ground truth, at home.
  *
- *   node scripts/probe-location.mjs --version v0.4c [--kappas 0,0.25,0.5,1,2] [--seeds a,b,c] [--games 50]
+ *   node scripts/probe-location.mjs --version v0.4c [--kappas 0,0.25,0.5,1,2] [--seeds a,b,c] [--games 50] [--adapt 0.25]
  *
  * Mirror games of `--version` against itself. The version's own vector drives the game, so every
  * κ is scored on the same positions. At each ask decision the Knowledge is built once per κ
@@ -36,6 +36,8 @@ if (!MON.isMonetVersion(version)) {
 const kappas = argOf('--kappas', '0,0.25,0.5,1,2').split(',').map(Number)
 const seeds = argOf('--seeds', 'loc').split(',')
 const games = Number(argOf('--games', 50))
+// A2: the per-seat step, laid over every κ > 0 row (0 = A1)
+const adapt = Number(argOf('--adapt', 0))
 const policy = MON.monetPolicy(version)
 if (policy.style?.pModel !== 'marginal') {
   console.error(`${version} does not build the marginal (pModel=${String(policy.style?.pModel)}); the prior has no table to weight`)
@@ -68,7 +70,7 @@ for (const s0 of seeds) {
       if (!view.declareWindow && view.phase === 'playing' && action.type === 'ask') {
         askDecisions++
         for (let j = 0; j < kappas.length; j++) {
-          const k = KNOW.buildKnowledge(view, kappas[j] > 0 ? { ...opts, choiceKappa: kappas[j] } : opts)
+          const k = KNOW.buildKnowledge(view, kappas[j] > 0 ? { ...opts, choiceKappa: kappas[j], ...(adapt > 0 ? { choiceAdapt: adapt } : {}) } : opts)
           const table = MARG.marginalFor(k)
           const a = acc[j]
           if (table) {
@@ -99,7 +101,7 @@ for (const s0 of seeds) {
   }
 }
 const f = (x, d = 4) => x.toFixed(d)
-console.log(`=== opponent-location score: Monet ${version} mirror games, seeds ${seeds.join(',')} x ${games}, ${decisions} decisions, ${askDecisions} ask decisions, ${((Date.now() - t0) / 1000).toFixed(1)}s ===`)
+console.log(`=== opponent-location score: Monet ${version} mirror games, seeds ${seeds.join(',')} x ${games}, ${decisions} decisions, ${askDecisions} ask decisions, adapt ${adapt}, ${((Date.now() - t0) / 1000).toFixed(1)}s ===`)
 console.log('kappa   | cards    p(true)  top1    | opp-held  p(true)  top1    | mate-held p(true)  top1    | asks   believed realised bias     | rounds/table')
 for (let j = 0; j < kappas.length; j++) {
   const a = acc[j]
