@@ -118,7 +118,7 @@ const MONET_LATEST: PlayModel = Object.freeze({
   spec: monetPolicy(LATEST_MONET),
   heading: 'Fixed style — Punter, at full strength',
   label: `Monet ${LATEST_MONET} · Punter at hard`,
-  note: 'The new line, under development. Plays one fixed style rather than adapting — and on this roster that is nearly the same thing, agreeing with Bass v2.0 on about 98% of decisions.',
+  note: 'The new line, under development. Plays one fixed style rather than adapting — and on this roster that is nearly the same thing, agreeing with Bass v2.0 on about 97% of decisions.',
 })
 
 /** The menu, in the order it is offered. */

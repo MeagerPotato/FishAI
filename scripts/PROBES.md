@@ -8,9 +8,9 @@ The lab proper is `npm run lab` and the `*-sim.mjs` / `*-analyze.mjs` pairs besi
 produce committed, digest-pinned artifacts. If a result matters enough to cite in a paper, it
 belongs there, not here.
 
-## Two permanent instruments that are NOT probes
+## Three permanent instruments that are NOT probes
 
-Monet's roadmap (MONET.md §3.3a, §3.4a, §6.2) makes two home measurements standing instruments,
+Monet's roadmap (MONET.md §3.3a, §3.4a, §6.2) makes three home measurements standing instruments,
 and they live beside the probes because they share the probes' harness idioms, not their status:
 their numbers are quoted in MONET.md's acceptance records and must stay reproducible.
 
@@ -18,8 +18,9 @@ their numbers are quoted in MONET.md's acceptance records and must stay reproduc
 |---|---|
 | `calibration.mjs --version vX.Y` | believed vs realised hit probability, per decile, on the chosen asks; and the licence ladder on every legal ask, split by what the model holds |
 | `duplicate-pairs.mjs --a vX.Y --b vX.Z` | the home regression cell: two Monet versions on duplicate deals, paired, with the cell's own SD; `--a-override '{"defuse":0}'` lays style keys over a version for an ablation rung |
+| `bench-decide.mjs --version vX.Y` | the cost of a decision (mean, median, p99 per decision and per ask; mean per game), against MONET.md 3.4a item 6's 1.4 ms budget; warm-up games discarded, seeds `bench-<g>` |
 
-Both name the version they measure and refuse a missing one: the registry has no "latest".
+All three name the version they measure and refuse a missing one: the registry has no "latest". `calibration.mjs` takes the same `--override` JSON as `duplicate-pairs.mjs` (MONET.md 3.4a reads the marginal at lambda 0 that way).
 
 ## Discipline these probes follow
 
