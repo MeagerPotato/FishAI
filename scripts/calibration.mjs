@@ -128,7 +128,7 @@ for (let g = 0; g < GAMES; g++) {
     decisions++
     if (!view.declareWindow && view.phase === 'playing' && action.type === 'ask') {
       askDecisions++
-      const k = buildKnowledge(view, { useConstraints: skill.useConstraints, logWindow: skill.logWindow, marginal: style.pModel === 'marginal' })
+      const k = buildKnowledge(view, { useConstraints: skill.useConstraints, logWindow: skill.logWindow, marginal: style.pModel === 'marginal', choiceKappa: style.pModel === 'marginal' ? style.choiceKappa : undefined, choiceAdapt: style.pModel === 'marginal' ? style.choiceAdapt : undefined, choicePrior: style.pModel === 'marginal' ? style.choicePrior : undefined })
       const licences = logLicences(view, k)
       const zCache = new Map()
       const normaliser = (target, book) => {

@@ -277,6 +277,44 @@ export interface StyleParams extends AskWeights {
    */
   pAssignment?: 'greedy' | 'joint'
   /**
+   * MONET.md §3.6a — the ask-choice prior's strength κ (≥ 0). Each ask a seat makes into a
+   * half-suit multiplies the marginal's prior weight of that half-suit's unknown cards at that seat
+   * by `1 + κ` before scaling, saturating at three asks (`KnowledgeOptions.choiceKappa`; the shape
+   * is `choicePrior`): a policy chases the sets it is invested in, so the choice is evidence about
+   * the chooser's hand. 0 or absent is the flat prior
+   * every bot has shipped with, byte for byte. Reads the table `pModel: 'marginal'` builds and is
+   * inert without one. Absent on every roster style and every tier.
+   */
+  choiceKappa?: number
+  /**
+   * MONET.md §3.6a — the prior's shape: `'count'` (absent; `(1 + κ)^min(asks, 3)`, the pre-registered
+   * form) or `'once'` (`1 + κ` for any seat that asked, however many times — the labelled
+   * alternative). Inert without `choiceKappa > 0`. Absent on every roster style and every tier.
+   */
+  choicePrior?: 'count' | 'once'
+  /**
+   * MONET.md §3.6a A2 — the step η (≥ 0) of the per-seat reading of the same evidence, updated
+   * inside the game from every successful declaration (`KnowledgeOptions.choiceAdapt`). 0 or
+   * absent is A1 exactly, byte for byte; inert without `choiceKappa > 0`. Absent on every roster
+   * style and every tier.
+   */
+  choiceAdapt?: number
+  /**
+   * MONET.md §3.6b — how the defusal appetite is read. `'scalar'` (and absent) is `defuse` as it
+   * has always been; `'state'` multiplies it, once per decision, by a clipped linear function of
+   * the public state — threatened sets, set lead, phase — with the slopes in `defuseState`
+   * (`defusalAppetite` in defuse.ts). Byte identity when absent, or when every slope is 0. Absent
+   * on every roster style and every tier: the roster's `defuse: 1` is a constant and stays one.
+   */
+  defusePolicy?: 'scalar' | 'state'
+  /**
+   * The slopes `defusePolicy: 'state'` reads. `threat` (≥ 0: more of our sets under an opponent's
+   * reach, more appetite — the one monotone constraint the fit may not cross), `score` (per unit of
+   * signed set lead: negative pays more to defend when behind), `late` (added once fewer than half
+   * the cards are still in hands). The multiplier is `max(0, 1 + threat·(T − 1) + score·S + late·L)`.
+   */
+  defuseState?: DefuseState
+  /**
    * MONET.md §3.4b item 2 — what "ours" means to the speculative declare. `'certain'` (and
    * absent) keeps `evClaim`'s structural gate: every open card's candidates must all be
    * teammates. `'priced'` drops the gate and lets the plan's probability, which carries the
@@ -529,6 +567,13 @@ export const SKILL_PRESETS: Readonly<Record<BotDifficulty, SkillParams>> = Objec
  */
 export type PolicySpec = BotDifficulty | StyleParams | BotPolicy
 
+/** MONET.md §3.6b — the slopes of the state-read defusal appetite (see `StyleParams.defuseState`). */
+export interface DefuseState {
+  readonly threat: number
+  readonly score: number
+  readonly late: number
+}
+
 function isBotPolicy(p: PolicySpec): p is BotPolicy {
   return typeof p === 'object' && p !== null && 'style' in p && 'skill' in p
 }
@@ -631,6 +676,20 @@ export function validateStyle(style: StyleParams): string[] {
   if (pModel !== undefined && pModel !== 'slot' && pModel !== 'marginal') bad.push(`pModel ${String(pModel)} is not 'slot' or 'marginal'`)
   const pAssignment = style.pAssignment
   if (pAssignment !== undefined && pAssignment !== 'greedy' && pAssignment !== 'joint') bad.push(`pAssignment ${String(pAssignment)} is not 'greedy' or 'joint'`)
+  const defusePolicy = style.defusePolicy
+  if (defusePolicy !== undefined && defusePolicy !== 'scalar' && defusePolicy !== 'state') bad.push(`defusePolicy ${String(defusePolicy)} is not 'scalar' or 'state'`)
+  const defuseState = style.defuseState
+  if (defuseState !== undefined) {
+    const fin = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x)
+    if (!(fin(defuseState.threat) && fin(defuseState.score) && fin(defuseState.late))) bad.push('defuseState slopes must be finite numbers')
+    else if (defuseState.threat < 0) bad.push(`defuseState.threat ${defuseState.threat} < 0 — more threat may not buy less appetite`)
+  }
+  const choiceKappa = style.choiceKappa
+  if (choiceKappa !== undefined && !(typeof choiceKappa === 'number' && Number.isFinite(choiceKappa) && choiceKappa >= 0)) bad.push(`choiceKappa ${String(choiceKappa)} is not a finite number >= 0`)
+  const choicePrior = style.choicePrior
+  if (choicePrior !== undefined && choicePrior !== 'count' && choicePrior !== 'once') bad.push(`choicePrior ${String(choicePrior)} is not 'count' or 'once'`)
+  const choiceAdapt = style.choiceAdapt
+  if (choiceAdapt !== undefined && !(typeof choiceAdapt === 'number' && Number.isFinite(choiceAdapt) && choiceAdapt >= 0)) bad.push(`choiceAdapt ${String(choiceAdapt)} is not a finite number >= 0`)
   const claimOwnership = style.claimOwnership
   if (claimOwnership !== undefined && claimOwnership !== 'certain' && claimOwnership !== 'priced') bad.push(`claimOwnership ${String(claimOwnership)} is not 'certain' or 'priced'`)
   return bad

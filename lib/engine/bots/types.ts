@@ -7,7 +7,7 @@
  * function — the type is identical to what `seatView(state, seat)` returns and
  * to the payload `GET /api/state` sends a human client.
  */
-import type { Card, PublicState, Seat } from '../types.ts'
+import type { BookId, Card, PublicState, Seat } from '../types.ts'
 
 /** Exactly what a seated player (human client or bot) is allowed to know. */
 export type SeatView = PublicState & { seat: Seat; hand: Card[] }
@@ -49,6 +49,24 @@ export interface Knowledge {
   unknownSlots: number[]
   /** Surviving unsatisfied at-least-one-of constraints (for drills/inspection). */
   constraints: KnowledgeConstraint[]
+  /**
+   * MONET.md §3.6a — the ask-choice prior's evidence: asks per book by every seat but the viewer,
+   * `asksInto[book][seat]`, read off the walked log. A seat that asked into a half-suit chose it
+   * over its other licensed half-suits, so it is more likely to hold more of it. Present only on
+   * a Knowledge built with `choiceKappa > 0` (Monet v0.5 and later); every other build keeps its
+   * shape byte for byte.
+   */
+  asksInto?: Partial<Record<BookId, number[]>>
+  /** The prior's strength the marginal is scaled with (`KnowledgeOptions.choiceKappa`); absent = flat. */
+  choiceKappa?: number
+  /**
+   * MONET.md §3.6a A2 — the per-seat multiplier on κ, read inside the game (`KnowledgeOptions.
+   * choiceAdapt`): 1 for a seat nothing has been learned about, in [0, 2], moved by every successful
+   * declaration of a half-suit the seat had asked into. Present only when the step is > 0.
+   */
+  choiceSeat?: number[]
+  /** The prior's shape (`KnowledgeOptions.choicePrior`); absent = `'count'`. */
+  choicePrior?: 'count' | 'once'
 }
 
 /** Options for buildKnowledge — used by the easy tier's degraded memory. */
@@ -64,6 +82,25 @@ export interface KnowledgeOptions {
    * object; the Knowledge itself keeps its shape.
    */
   marginal?: boolean
+  /**
+   * MONET.md §3.6a — the ask-choice prior's strength κ (≥ 0). Each ask a seat makes into a half-suit
+   * multiplies the marginal's prior weight of that half-suit's unknown cards at that seat by `1 + κ`
+   * before scaling, saturating at three asks (`choicePrior: 'count'`, the default) — or once for any
+   * seat that asked (`'once'`). Default 0: the flat prior, byte for byte — every Bass tier, every
+   * Monet version before v0.5. Read only when `marginal` is set.
+   */
+  choiceKappa?: number
+  /** MONET.md §3.6a — the prior's shape: `'count'` (absent) or `'once'`. Read only with `choiceKappa > 0`. */
+  choicePrior?: 'count' | 'once'
+  /**
+   * MONET.md §3.6a A2 — the step η (≥ 0) of the per-seat reading. At every successful declaration
+   * (the one event that publishes true holders on the host), for each seat that had asked into the
+   * resolved half-suit, that seat's multiplier on κ moves by η · (cards of the half-suit the seat
+   * was dealt − 1.58), clipped to [0, 2]; 1.58 is the fit-seed mean for a seat that asked, so a seat
+   * whose asks say no more than everyone's stays at 1. Default 0: A1 exactly, byte for byte. Read
+   * only with `marginal` and `choiceKappa > 0`.
+   */
+  choiceAdapt?: number
 }
 
 /**

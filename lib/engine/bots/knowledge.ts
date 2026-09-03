@@ -441,8 +441,17 @@ export function markResolvedGone(w: Work, view: SeatView): void {
  * recorded ones (index-aligned with `rec.constraintAt`) and the candidate masks carry only what
  * the log itself certifies.
  */
+/**
+ * MONET.md §3.6a A2 — the centre of the per-seat update: with ground truth on the six fit seeds
+ * (240 mirror games of v0.4c, 1,798 successful declarations) a seat that had asked into the resolved
+ * half-suit was dealt 1.576 of its six cards on average (1.185 when it held one and never asked). A
+ * seat whose asks say exactly that keeps its multiplier at 1; only a seat whose asks say more, or
+ * less, than everyone's moves.
+ */
+export const CHOICE_ADAPT_CENTRE = 1.58
+
 export function recordedWalk(view: SeatView): { w: Work; rec: WalkRecord } {
-  const opts: Required<KnowledgeOptions> = { logWindow: Number.POSITIVE_INFINITY, useConstraints: true, marginal: false }
+  const opts: Required<KnowledgeOptions> = { logWindow: Number.POSITIVE_INFINITY, useConstraints: true, marginal: false, choiceKappa: 0, choiceAdapt: 0, choicePrior: 'count' }
   const ownCardToggle = view.config?.toggles?.askOwnCardAllowed === true
   const log: readonly PublicEvent[] = Array.isArray(view.log) ? view.log : []
   const w = newWork(view)
@@ -472,6 +481,9 @@ export function buildKnowledge(view: SeatView, options: KnowledgeOptions = {}): 
     logWindow: options.logWindow ?? Number.POSITIVE_INFINITY,
     useConstraints: options.useConstraints ?? true,
     marginal: options.marginal ?? false,
+    choiceKappa: options.choiceKappa ?? 0,
+    choiceAdapt: options.choiceAdapt ?? 0,
+    choicePrior: options.choicePrior ?? 'count',
   }
   const ownCardToggle = view.config?.toggles?.askOwnCardAllowed === true
   const log: readonly PublicEvent[] = Array.isArray(view.log) ? view.log : []
@@ -492,6 +504,50 @@ export function buildKnowledge(view: SeatView, options: KnowledgeOptions = {}): 
   const runningCounts = new Array<number>(6).fill(w.deck.handSize)
   for (const ev of events) ingest(w, ev, runningCounts, opts, ownCardToggle, trackCounts)
   const k = finishKnowledge(w, view)
+  // MONET.md §3.6a: the ask-choice prior's evidence — asks per (book, seat) over the walked events,
+  // every seat but the viewer — attached only when κ > 0, so every other build keeps its shape.
+  // A2 (`choiceAdapt > 0`): the same walk, in order, also reads every SUCCESSFUL declaration — the
+  // one event that publishes true holders on the host — and moves each asking seat's multiplier on
+  // κ by η · (cards of that half-suit the seat was dealt − CHOICE_ADAPT_CENTRE), clipped to [0, 2].
+  // The dealt count is the walk's own `xfix` (a card that never moved is fixed by the declaration,
+  // one that moved by its first hit); a half-suit with any deal holder unknown is skipped.
+  if (opts.marginal && opts.choiceKappa > 0) {
+    const asksInto: NonNullable<Knowledge['asksInto']> = {}
+    const seatMul = opts.choiceAdapt > 0 ? [1, 1, 1, 1, 1, 1] : undefined
+    for (const ev of events) {
+      if (ev.type === 'ask') {
+        if (ev.asker === k.seat) continue
+        if (w.deck.order.get(ev.card) === undefined) continue
+        const b = cardBook(ev.card)
+        const row = asksInto[b] ?? (asksInto[b] = [0, 0, 0, 0, 0, 0])
+        row[ev.asker]++
+      } else if (ev.type === 'claim' && seatMul !== undefined) {
+        if (ev.outcome === 'void' || (ev.outcome === 'team0' ? 0 : 1) !== seatTeam(ev.claimer)) continue
+        const row = asksInto[ev.book]
+        if (row === undefined) continue
+        const dealt = [0, 0, 0, 0, 0, 0]
+        let known = true
+        for (const c of setCards(w, ev.book)) {
+          const ci = w.deck.order.get(c)
+          const h = ci === undefined ? -1 : w.xfix[ci]
+          if (h < 0) {
+            known = false
+            break
+          }
+          dealt[h]++
+        }
+        if (!known) continue
+        for (let s = 0; s < 6; s++) {
+          if (s === k.seat || (row[s] ?? 0) === 0) continue
+          seatMul[s] = Math.min(2, Math.max(0, seatMul[s] + opts.choiceAdapt * (dealt[s] - CHOICE_ADAPT_CENTRE)))
+        }
+      }
+    }
+    k.asksInto = asksInto
+    k.choiceKappa = opts.choiceKappa
+    if (seatMul !== undefined) k.choiceSeat = seatMul
+    if (opts.choicePrior === 'once') k.choicePrior = 'once'
+  }
   // MONET.md §3.4a: the calibrated marginal is derived here, on the unbounded path only — never
   // inside `finishKnowledge`, which the bounded arm's replay shares (the §3.4a scope decision).
   if (opts.marginal) attachMarginal(k)

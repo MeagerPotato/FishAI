@@ -47,7 +47,8 @@
  * instances and pins its size. Whether the number is *calibrated* is an empirical question
  * answered by `scripts/calibration.mjs`, and MONET.md §3.4a's acceptance reads that harness first.
  * Not a memory: the table is a pure read of a finished `Knowledge` — `cands`, `unknownSlots`,
- * `constraints` and nothing else — memoised per object, so BOUNDED.md's fact pool keeps its shape
+ * `constraints`, and the ask-choice prior (`asksInto`, `choiceKappa`, `choiceSeat`) when MONET.md §3.6a's knobs put
+ * one there — and nothing else — memoised per object, so BOUNDED.md's fact pool keeps its shape
  * and its cost model (the §3.4a scope decision). Not the joint: §3.4b's `pAssignment` is a
  * different object, and the declare planner does not read this table.
  *
@@ -61,6 +62,7 @@
  * table that could not be scaled.
  */
 import type { Card, Seat } from '../types.ts'
+import { cardBook } from '../cards.ts'
 import type { Knowledge } from './types.ts'
 
 /**
@@ -198,11 +200,29 @@ export function computeMarginalTable(k: Knowledge): MarginalTable | null {
   if (slots !== n) return null
   const p = new Float64Array(n * 6)
   if (n === 0) return { cards, index, p, rounds: 0, converged: true, conditioned: 0 }
+  // MONET.md §3.6a: the prior. Flat (1 on every admissible cell) unless the Knowledge carries the
+  // ask-choice evidence, in which case a seat's `a` asks into a card's half-suit weight that seat's
+  // cell by (1 + κ)^min(a, 3) before the scaling (`choicePrior: 'count'`, the pre-registered form;
+  // saturating at three asks keeps the matrix conditioned — a seventh ask at κ = 4 would be a
+  // weight of 78,125 that 200 rounds cannot scale away) or by 1 + κ once for any seat that asked
+  // (`'once'`) — the margins are the same, the fixpoint is not. With ground truth on the fit seeds
+  // the DEALT count is flat in the number of asks (once 1.565, twice 1.612, three or more 1.570,
+  // against 1.185 licensed and never asked), yet the opponent-location score reads the count form
+  // higher at every κ (MONET.md §3.6a): repeated asks say where the cards still are, not where
+  // they were dealt.
+  const kappa = k.choiceKappa ?? 0
+  const asksInto = kappa > 0 ? k.asksInto : undefined
+  // A2: the per-seat multiplier on κ, 1 everywhere unless the Knowledge read the declarations
+  const seatMul = asksInto === undefined ? undefined : k.choiceSeat
+  const once = k.choicePrior === 'once'
   for (let i = 0; i < n; i++) {
     let any = false
+    const row = asksInto === undefined ? undefined : asksInto[cardBook(cards[i])]
     for (const s of k.cands[cards[i]] ?? []) {
       if (need[s] > 0) {
-        p[i * 6 + s] = 1
+        const a = row === undefined || s === k.seat ? 0 : Math.min(3, row[s] ?? 0)
+        const w = 1 + kappa * (seatMul === undefined ? 1 : seatMul[s])
+        p[i * 6 + s] = a === 0 ? 1 : once ? w : Math.pow(w, a)
         any = true
       }
     }
@@ -222,7 +242,10 @@ export function computeMarginalTable(k: Knowledge): MarginalTable | null {
     const inA = new Set(rows)
     for (const i of rows) {
       const before = p[i * 6 + t]
-      const after = Math.min(1 - EPS, before / z)
+      // Never below `before`: a cell already within EPS of 1 stays where it is, or the repair below
+      // would scale the rest of the column by the ratio of two vanishing remainders (measured at
+      // 1e7 on a saturated prior, MONET.md §3.6a) and drive it negative.
+      const after = Math.max(before, Math.min(1 - EPS, before / z))
       p[i * 6 + t] = after
       sumBefore += before
       sumAfter += after

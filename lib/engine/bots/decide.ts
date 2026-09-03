@@ -111,7 +111,7 @@ import { marginalFor } from './marginal.ts'
 import { assignJointly } from './joint.ts'
 import { planContainedPass } from './contained.ts'
 import type { ContainedPassPlan, PassValuation } from './contained.ts'
-import { defusalActive, defusalBonus, logLicences } from './defuse.ts'
+import { defusalActive, defusalAppetite, defusalBonus, logLicences } from './defuse.ts'
 import type { LicenceLookup } from './defuse.ts'
 import { licenceConditionedHitProbability } from './licence.ts'
 import { concealmentActive, concealmentPenalty, ownCardsInBook } from './conceal.ts'
@@ -247,7 +247,9 @@ function ownTeamCards(view: SeatView): number {
 function knowledgeOptions(skill: SkillParams, style: StyleParams): KnowledgeOptions {
   // MONET.md §3.4a: the probability model is the style's choice (`pModel`), off on every tier and
   // roster style; the two skill fields are what they always were.
-  return { logWindow: skill.logWindow, useConstraints: skill.useConstraints, marginal: style.pModel === 'marginal' }
+  const marginal = style.pModel === 'marginal'
+  // MONET.md §3.6a: the ask-choice prior rides on the marginal and is nothing without it.
+  return { logWindow: skill.logWindow, useConstraints: skill.useConstraints, marginal, choiceKappa: marginal ? style.choiceKappa : undefined, choiceAdapt: marginal ? style.choiceAdapt : undefined, choicePrior: marginal ? style.choicePrior : undefined }
 }
 
 /**
@@ -1144,6 +1146,9 @@ function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: ActiveP
   // One log scan for the whole ranking, not one per ask: `turnYield` is a property of the
   // position, not of the candidate. Both terms divide by `1 + E`, so both need it.
   const yield_ = defusing || concealing ? turnYield(view) : 0
+  // MONET.md §3.6b: the appetite is a property of the position, read once per decision — `defuse`
+  // itself under `defusePolicy: 'scalar'`, the state-scaled number under `'state'`.
+  const appetite = defusing ? defusalAppetite(view, k, style, licences!) : 0
   // Neither concession term may move an ask ACROSS the certainty boundary. Both scale with
   // `prey(B)` and are unbounded relative to the 20-point `certaintyBonus` margin, so an uncertain
   // ask into a high-prey set could otherwise outrank a certain hit — trading a card that is
@@ -1158,7 +1163,7 @@ function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: ActiveP
     const charge = concealing ? concealmentPenalty(view, k, style, r, yield_, licences!) : 0
     const gated = certainAvailable && r.p < 1
     if (!skill.refinedInference) {
-      const bonus = defusing ? defusalBonus(view, k, style, r, r.p, yield_, licences!) : 0
+      const bonus = defusing ? defusalBonus(view, k, style, r, r.p, yield_, licences!, appetite) : 0
       return { r, refined: r.p, s: r.score + (gated ? 0 : bonus - charge), idx }
     }
     const base = askHitProbability(k, r.card, r.target)
@@ -1167,7 +1172,7 @@ function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: ActiveP
     const refined = conditioning
       ? licenceConditionedHitProbability(view, k, r.card, r.target, lambda, licences!)
       : refinedHitProbability(k, r.card, r.target)
-    const bonus = defusing ? defusalBonus(view, k, style, r, refined, yield_, licences!) : 0
+    const bonus = defusing ? defusalBonus(view, k, style, r, refined, yield_, licences!, appetite) : 0
     return {
       r,
       refined,
@@ -1237,7 +1242,7 @@ function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: ActiveP
     const withoutBonus = pool
       .map((x, i) => ({
         x,
-        plain: x.s - defusalBonus(view, k, style, x.r, x.refined, yield_, licences!),
+        plain: x.s - defusalBonus(view, k, style, x.r, x.refined, yield_, licences!, appetite),
         i,
       }))
       .sort((a, b) => (b.plain !== a.plain ? b.plain - a.plain : a.x.idx - b.x.idx))

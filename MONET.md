@@ -440,7 +440,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.4b** ✅ | `pAssignment: 'joint'`, the chain over the marginal · `claimOwnership: 'priced'` measured and not shipped | **32.75%** (bar ≥ 36.0% — **not met**; +0.81 over v0.4a, inside the floor) | lock hold 9.98 → 10.07 — **did not move: the item's FAIL and the finding** · declare accuracy 97.86 → 98.32 (6/6) · speculative declares 37 → 101 per 1,200 games at 72 → 93% | L — **shipped; the cashing channel is communication, not belief** |
 | **v0.4c** ✅ | `licenceLambda` back on the joint at **0.3** — the 24-seed cell decision 5 named (0.6: +1.88 over v0.4b, 22 of 24), the finding that λ buys tempo, not accuracy, and the pre-registered 0.3-vs-0.6 confirmation on 24 fresh seeds (+1.19 paired, SE 0.30, 19 of 24) | **35.12%** over the 24 confirmation seeds at 0.3 (34.08% at 0.6 over the first 24) | calibration cost +0.020 at 0.3 (0.6: +0.050) · lock hold 9.46 → 9.42 · ask accuracy 53.12 → 53.57 | S — **shipped** |
 | **the gate readout** ✅ (2026-09-03; was to be v0.5) | **the capability readout** — the §3.5b gate at six seeds on v0.4b, the `r12`-off control, the handoff emulated at home; the search arm not priced (§3.5c is gated on the owner's row-3 choice) | **32.75%** — the rule's third row | panel 35.5 / 36.9 / 36.4 / 64.7 / 69.3 against v0.6 … v0.2 · `r12` off −0.69 · handoff 47.8 → 77.6% at home · **§8.3 decision 6 to the owner** | M — **the measurement is on the record; no code shipped** |
-| **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
+| **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced | cost budget first, then paired arms on shared determinizations | XL |
 | **v1.0** | **the version that passes §3.9's six conditions** | ≥ 50.0% — the owner, 2026-09-03: "about 50%, or significantly above", i.e. ≥ 52.0% at twelve seeds | §3.9 | — |
@@ -1879,7 +1879,7 @@ a measurement boundary (§3's compaction note).
 **The base vector** is v0.4c (§3.4c: the licence term cleared its 24-seed floor). Every number below is
 a paired contrast against it on shared deals.
 
-#### 3.6a Mechanism A — ask-choice inference (`pPrior: 'choice'`)
+#### 3.6a Mechanism A — ask-choice inference (`choiceKappa`)
 
 **What the belief ignores today.** Every fact the record proves is used: an ask proves the asker holds
 a card of that half-suit and lacks the card asked; a miss proves the target lacks it; a hit moves it;
@@ -1895,6 +1895,14 @@ joint chain (§3.4b) are unchanged — the fixpoint has the same margins over a 
 `κ = 0` is byte identity with the base. Deliberately not modelled at first: which target was chosen
 (a miss already proves the target lacks the card, and a hit moves it) and declaration choices.
 
+> **Built 2026-09-03 as `choiceKappa`** (`StyleParams` / `KnowledgeOptions`; the evidence is `Knowledge.asksInto`,
+> asks per half-suit by every seat but the viewer, read off the walked log; the weight saturates at three asks so
+> the matrix stays conditioned). The prior's shape is `choicePrior`: `'count'` (absent) is the form above;
+> `'once'` weights a seat that asked at all by `1 + κ` once. Building it found a repair the flat prior never
+> needed: the fold's clamp could scale a column by the ratio of two vanishing remainders and drive cells
+> negative (−28,912 at κ = 4 on a saturated prior); the repair is now monotone (`after = max(before, …)`)
+> and every κ = 0 bank replays unchanged.
+
 **Reading the patterns — the second knob, its own arm.** `κ` fixed offline is a prior about
 opponents in general. The owner asked for the opponents at the table to be read: `κ_s` per opponent
 seat, updated inside the game from every **successful** declaration — the one event that publishes
@@ -1903,6 +1911,13 @@ same game under both rule sets. The update compares how many times `s` had asked
 half-suit with how many of its cards `s` actually held, and moves `κ_s` toward what that says. Nine
 half-suits a game is a thin signal, so A2 is a separate ablation arm on top of A1, is expected to read
 near zero, and ships only on its own marker.
+
+> **Built as `choiceAdapt`** (the step η): at every successful declaration, each seat that had asked into the
+> resolved half-suit has its multiplier on κ moved by η · (cards of that half-suit it was dealt − 1.58), clipped
+> to [0, 2]; 1.58 is the fit-seed mean for a seat that asked, so a seat whose asks say no more than everyone's
+> stays at 1. The dealt count is the walk's own `xfix` (a card that never moved is fixed by the declaration, one
+> that moved by its first hit); a half-suit with any deal holder unknown is skipped. Every seat but the viewer is
+> read, teammates included. η = 0 is A1 byte for byte.
 
 **Markers.** Ask accuracy (believed against realised on the asks, the belief rungs' marker); the
 calibration deciles (aggregate |bias| may not grow by more than 0.01 at home; abroad recorded); and a
@@ -1915,6 +1930,46 @@ score; if it does not, `κ` is a fit to noise whatever the win rate says.
 confirmation uses. Confirmation at home on the twelve — `hashSeed("monet-v0.5-confirm-12")`: 4389297
 5139251 5352970 3370441 3663060 5699158 4140136 3497573 4750522 7905601 9971419 9954521 — then abroad
 on the same twelve.
+
+> **Home record, 2026-09-03 — A goes abroad; the shape and κ are chosen; A2's marker does not move.**
+> Everything below is on the six fit seeds unless it says the twelve; the base is v0.4c at λ = 0.3 (§3.4c).
+>
+> 1. **The evidence, with ground truth** (240 mirror games, 1,798 successful declarations): a seat that had
+>    asked into the resolved half-suit was dealt **1.565** of its six cards if it asked once, 1.612 twice,
+>    1.570 three or more times, against **1.185** for a seat that held one and never asked. The choice is
+>    evidence, as §3.6a said; the *count* of asks says nothing more about the deal. The count form still
+>    locates better (item 2): repeated asks say where the cards still are, not where they were dealt.
+> 2. **The opponent-location score moves — the marker is met.** p(true holder) over uncertain cards, one
+>    row per κ on the same 24,423 ask positions (`scripts/probe-location.mjs`):
+>
+>    | κ | count: p(true) | top-1 | marginal bias on the base's asks | once: p(true) | top-1 |
+>    |---|---|---|---|---|---|
+>    | 0 | 0.2594 | 0.3486 | −0.0575 | 0.2594 | 0.3486 |
+>    | 0.5 | 0.2717 | 0.3581 | −0.0380 | 0.2650 | 0.3546 |
+>    | 1 | **0.2820** | 0.3608 | −0.0215 | 0.2695 | 0.3572 |
+>    | 2 | 0.2958 | 0.3622 | +0.0015 | 0.2765 | 0.3593 |
+>    | 3 | 0.3036 | 0.3621 | +0.0158 | 0.2817 | 0.3600 |
+>    | 4 | 0.3085 | 0.3620 | +0.0256 | 0.2858 | 0.3602 |
+>
+> 3. **Calibration improves rather than costs, at λ = 0.3.** The chosen-ask aggregate of the policy playing
+>    itself (`scripts/calibration.mjs`, 300 games): base **−0.0353** / worst decile 0.1269 — the base
+>    under-states at 0.3 where it was exact at 0.6 (§3.4c) — and with the count prior −0.0216 / 0.099 at
+>    κ = 0.5, **−0.0122 / 0.061 at κ = 1**, +0.0003 / 0.071 at 1.5, +0.0089 / 0.097 at 2, +0.0234 / 0.167 at 3.
+>    The chosen asks hit more often: realised 0.5876 → 0.5944 (0.5) → 0.6068 (1). The bar (aggregate |bias|
+>    may not grow by 0.01) admits every κ up to 2 on this base; at λ = 0.6 it had admitted only 0.5 (κ = 1
+>    read +0.0131, κ = 2 +0.0348: the licence term and the prior over-state together).
+> 4. **Sets at home do not move, and fall past κ = 1.** Duplicate pairs against the base, fit bank, 600 pairs:
+>    count **+0.05 ± 0.24 at 0.5, −0.11 ± 0.25 at 1, −0.39 ± 0.27 at 2** (behind); once −0.12 / −0.06 / −0.12 /
+>    −0.32 (κ = 3) / −0.34 (κ = 4). A sharper belief that hits more asks and wins no more sets: the same shape
+>    as λ (§3.4c). On the twelve confirmation banks (100 pairs each) κ = 0.5 reads −0.03 ± 0.17 (ahead 6 of
+>    12) and κ = 1 **+0.02 ± 0.19** (ahead 8 of 12).
+> 5. **Chosen before any abroad cell:** the count form (the pre-registered shape, and the better marker),
+>    **κ = 1 primary** (the higher confirmation read, inside the noise; the larger marker move), κ = 0.5
+>    secondary, both to the twelve seeds abroad. Larger κ is behind at home and is not run.
+> 6. **A2's marker does not move.** With η = 0.25 / 0.5 on κ = 1 the location score reads 0.2692 → 0.2689 →
+>    0.2685 (κ = 2: 0.2761 → 0.2757 → 0.2750): the in-game estimate has nine half-suits to learn from and adds
+>    noise. A home mirror has no seat differences to read, so one information arm (κ = 0.5, η = 0.25) goes
+>    abroad, labelled; by the rule above it cannot ship on that run.
 
 #### 3.6b Mechanism B — the defusal appetite as a function of the state (`defusePolicy: 'state'`)
 
@@ -1934,6 +1989,21 @@ knob.
 **Markers.** Sets lost to opponent declarations per game (the thing the appetite is paid to prevent);
 the paired set-difference at home; and lock hold, which the appetite must not worsen.
 
+> **Built 2026-09-03 as `defusePolicy: 'state'` with `defuseState {threat, score, late}`**: the appetite is
+> `defuse · max(0, 1 + threat·(T − 1) + score·S + late·L)`, read once per decision (`defusalAppetite`), where
+> T counts (capped at 2) the unresolved half-suits in which this team has located cards and an opponent with
+> cards holds a live licence, S is the signed set lead clipped to ±1, and L is 1 once fewer than half the
+> cards are in hands — the linear form of the table above, with the monotone constraint `threat ≥ 0` enforced
+> by `validateStyle`. `'scalar'`, absent, or all-zero slopes is the base byte for byte.
+>
+> **Home record — B does not go abroad.** One slope at a time against the base on the second fit seed's bank,
+> 600 pairs: threat 0.5 **−0.17 ± 0.13**, threat 1 **−0.25 ± 0.15** (both behind), score −0.5 −0.04 ± 0.13,
+> score +0.5 −0.12 ± 0.15, late −0.5 +0.02 ± 0.06, late +0.5 −0.07 ± 0.06. Nothing moves the marker the
+> right way, and the one slope the pre-registration required to be positive is the one that loses most. The
+> scalar itself sits at a home optimum on the same bank: defuse 0 −0.13 ± 0.28, defuse 2 −0.20 ± 0.22. §3.6c's
+> rule applies: a mechanism whose marker does not move at home does not go abroad. The knob stays in the
+> code, off the vector, as §3.3b's `defuse` ladder did; the roster is untouched.
+
 #### 3.6c Acceptance, cost, target
 
 **Home first**, on shared deals: each mechanism against the base and against the other, floors as
@@ -1950,6 +2020,53 @@ The interaction is reported either way.
 +3 over the base, and nothing here can pass the oracle's 38.28% on the current ask policy (§3.4a),
 because both mechanisms leave that policy's information alone. **At the rung's gate, §3.5b's rows are
 re-read against the shipped number.**
+
+> **Abroad record, 2026-09-03 — nothing ships from v0.5; the decision goes to the owner (§8.3 item 7).**
+> B did not go abroad (§3.6b), so the 2 × 2 became A's three arms against the base: `choiceKappa: 1`
+> (primary), `choiceKappa: 0.5` (secondary), `choiceKappa: 0.5, choiceAdapt: 0.25` (information — cannot
+> ship on this run), on v0.4c at λ = 0.3, the twelve confirmation seeds, 200 deals × 6 rotations a cell
+> (48 cells, 09:08 – 09:37Z). The base arm at 90210 reproduced §3.4c's λ-0.3 cell line for line before a
+> fresh seed was spent. Monet's win rate, paired per seed:
+>
+> | seed | base | κ 0.5 | κ 1 | κ 0.5 + η 0.25 | κ 0.5 − base | **κ 1 − base** | +η − base |
+> |---|---|---|---|---|---|---|---|
+> | 3370441 | 30.00 | 33.33 | 34.08 | 32.92 | +3.33 | +4.08 | +2.92 |
+> | 3497573 | 35.83 | 34.75 | 35.33 | 35.00 | −1.08 | −0.50 | −0.83 |
+> | 3663060 | 37.25 | 34.83 | 35.08 | 35.08 | −2.42 | −2.17 | −2.17 |
+> | 4140136 | 34.42 | 34.33 | 33.58 | 34.25 | −0.08 | −0.83 | −0.17 |
+> | 4389297 | 32.67 | 31.42 | 34.42 | 33.00 | −1.25 | +1.75 | +0.33 |
+> | 4750522 | 34.83 | 33.75 | 32.08 | 35.17 | −1.08 | −2.75 | +0.33 |
+> | 5139251 | 33.58 | 36.00 | 34.17 | 35.58 | +2.42 | +0.58 | +2.00 |
+> | 5352970 | 32.33 | 35.50 | 35.17 | 34.33 | +3.17 | +2.83 | +2.00 |
+> | 5699158 | 36.42 | 37.08 | 35.33 | 36.58 | +0.67 | −1.08 | +0.17 |
+> | 7905601 | 34.58 | 38.25 | 35.83 | 36.42 | +3.67 | +1.25 | +1.83 |
+> | 9954521 | 36.92 | 33.92 | 37.25 | 34.92 | −3.00 | +0.33 | −2.00 |
+> | 9971419 | 34.67 | 34.75 | 36.75 | 35.75 | +0.08 | +2.08 | +1.08 |
+> | **pooled** | **34.46** | 34.83 | **34.92** | 34.92 | +0.37 | **+0.47** | +0.46 |
+>
+> **The primary arm's paired main effect is +0.47 (SD 2.04, SE 0.59, 0.79 × SE; ahead on 7 of 12) — inside
+> the ±2.00 floor. By the rule above, A does not ship.** The secondary reads +0.37 (SE 0.66, 6 of 12) and
+> the information arm +0.46 (SE 0.46, 8 of 12): three arms agreeing on a small positive effect the twelve
+> seeds cannot resolve, and a hundred would be needed to read +0.4 at 2 × SE. The markers, mean over the
+> twelve cells (calibration n-weighted over Monet's own asks):
+>
+> | arm | win | our sets | ask accuracy | declarations / game | lock hold | calibration bias | ev-claims n / accuracy | must-declare n / accuracy |
+> |---|---|---|---|---|---|---|---|---|
+> | base | 34.46 | 3.966 | 53.53 | 3.906 | 9.46 | +0.021 | 1,084 / 92.9% | 415 / 63.6% |
+> | κ 0.5 | 34.83 | 3.969 | 54.01 | 3.910 | 9.72 | +0.033 | 1,191 / 92.3% | 467 / 71.9% |
+> | κ 1 | 34.92 | 3.970 | 54.26 | 3.919 | 9.75 | **+0.046** | 1,366 / 91.5% | 471 / 70.3% |
+> | κ 0.5 + η | 34.92 | 3.970 | 53.97 | 3.909 | 9.69 | +0.033 | 1,190 / 91.6% | 442 / 71.7% |
+>
+> Three readings. **The prior over-states abroad as λ did**: at home it repaired the base's
+> under-statement (item 3 above, −0.035 → −0.012), and against SESTINA — whose asks say less about its own
+> hand than Monet's do about Monet's — it adds to an over-statement the base already carries (+0.021 →
+> +0.046 at κ = 1); the home bar would fail every arm here. **Ask accuracy rises and sets do not**
+> (53.5 → 54.3; 3.966 → 3.970): the shape of every belief sharpening on this ladder, tempo and not sets
+> (§3.4c). **The compelled declarations improve** (must-declare 63.6% → 70 – 72% on 415 – 471 events): the
+> one place a sharper belief changes an outcome, and the population §3.5a sized at ~0.04 sets a game.
+> Lock hold does not fall (9.46 → 9.7), which is §3.4b's finding again: no belief helps a teammate prove a
+> set. The knobs stay in the code, off the vector; the roster and the registry are untouched, v0.4c
+> remains the base, and v0.6 is built on it. Run directory `monet-v05` (PREREG.md, REPORT.md, 48 cells).
 
 ### 3.7 Monet v0.6 — communication: asks chosen to reveal, and the handoff played
 
@@ -1976,6 +2093,59 @@ Two items, each with a marker, each an ablation arm:
 
 **Target** a design target of ≥ 38.0%, since this is the one rung whose ceiling the record has
 measured. Twelve seeds, ±2.00, drawn and written down when the rung opens.
+
+#### 3.7a Pre-registration — written 2026-09-03 when the rung opened, before any v0.6 code
+
+**The base** is whatever §3.6's abroad run ships (v0.4c at λ = 0.3 if nothing does). Every number is a paired
+contrast against it on shared deals, and the twelve-seed floor abroad is ±2.00.
+
+**Item 2 as written above cannot be built, and the census says so.** RULES_US54.md §3.2 offers the option to
+the turn-holder *first* and makes `decline` illegal while the turn-holder has no legal ask, so in a
+`MUST_DECLARE` window the option never travels: no teammate can declare first. On v0.4c at λ = 0.3 (2,000
+mirror games, 1,178,641 decisions) the compelled declarations are **240 — 227 `must-declare`, 13
+`forced-claim`** (an on-turn claim with no window at all). Neither kind has a moment at which a teammate
+holds the option. The emulation's numbers reproduce (as shipped 47.92%, most-confident teammate 74.17%,
+best of three 87.92%) and still measure a channel the rules do not open at that moment. **What replaces it —
+the pre-emptive declare.** The compulsion is foreseeable from the public counts: it arrives when the last
+opponent card leaves. In the windows *before* it, every teammate holds the option in turn, and the one whose
+speculative plan is best can declare then — the same information the emulation priced, spent one window
+earlier. The knob: `compelHorizon` (opponents' cards in hands, in total, at or below which the position is
+*near compulsion*; 0 = off, byte identity) and `declareThresholdCompelled` (the speculative bar played
+there, in place of `declareThreshold`'s 0.775; the compelled seat is right 47.9% believing 0.43, so any bar
+above that is a gain over what the position will otherwise get). **Marker:** the accuracy of declarations
+made near compulsion at home (`scripts/probe-handoff-declare.mjs`, extended to score every declaration at
+opponents' cards ≤ horizon, ground truth), toward the emulation's 74%; and their count per game, which must
+not exceed the compelled population it replaces by more than the fit explains. **Price:** sets per game on
+duplicate pairs; §3.5a(b) sized the whole channel at about 0.04 sets per game at home, so this item is
+small by construction and is built because it is cheap, not because it is large.
+
+**Item 1 gets a readout before a line of policy.** Its family has a record: signalling measured flat
+(49.97%, −0.013 ± 0.033 over 1,500 pairs) and stalling lost 1.14 sets at strength (conceal.ts's header),
+because a deliberate miss concedes the turn and a licence is one bit. An ask into a set the team already
+holds in full is *always* a miss (no opponent holds a card of it), so the reveal term is exactly that
+family, and it is worth building only where one bit finishes a teammate's proof. **The readout**
+(`scripts/probe-reveal.mjs`, ground truth at home): at every ask decision, for every set locked on the
+asker's team that no teammate can prove, append the asker's licence to the log and rebuild each teammate's
+knowledge — does the proof complete, or does a teammate's best plan clear the bar? **The floor, written
+now: the term is built only if such opportunities number ≥ 0.30 per game on the fit seeds; below that the
+channel is too thin to move lock hold by the ±0.20-sets floor's worth and item 1 is recorded as a readout,
+as §3.5a(b)'s handoff was.** If built: `reveal` (≥ 0, absent = identity) credits an ask into a set the
+asker's knowledge places wholly on its team, when its licence there is not yet public, by `reveal · wHit ·
+u / (1 + E)` with `u` the set's cards the public record has not placed and `E` `turnYield` — paid on both
+branches, once per set, the mirror image of `conceal`. **Markers:** lock hold at home (`probe-score.mjs`'s
+team half; the abroad engine's *lock hold*), which must fall; speculative-declare accuracy (92 – 94%), which
+must not.
+
+**Seeds.** Fit on six from `hashSeed("monet-v0.6-fit-6")`: **9220628 8580707 6389604 5910092 2121575
+1884435**; confirm at home and abroad on twelve from `hashSeed("monet-v0.6-confirm-12")`: **6021520 8438705
+3195511 9141082 5082131 7701419 2601210 4621978 6478725 2793161 2568302 2796767** — drawn by §6.5's rule
+excluding every seed read or reserved so far (87 after the draw, all distinct), the engine's `hashSeed`
+against the verbatim copy, no draw skipped.
+
+**Acceptance.** As §3.6c's: each item its own arm, home first (the marker must move; duplicate pairs not
+behind at ±0.20 on 600 pairs), then abroad at the twelve seeds; **an item ships if its paired main effect
+over the base clears +2.00**; inside the floor with the marker moved, recorded and not shipped unless the
+owner directs otherwise. The oracle's +6.75 stays the ceiling this rung is read against.
 
 ### 3.8 Monet v0.7 — the search arm, only if a gap is left and only through the cost-first test
 
@@ -2324,8 +2494,8 @@ between two bridges is not a measurement of anything.
 
 **And "replay over recorded positions" is bridge-independent only for claims about the decision
 function *given* a position.** It is not bridge-independent for any claim whose answer depends on
-which positions arise — the allocator comparison (46.52 / 47.97 / 50.76, §3.6 and §5), the
-ownership-onset shares (2.90%, 12.73%, §3.6) and the POSITION/SELECTION decomposition (§0.2) are all
+which positions arise — the allocator comparison (46.52 / 47.97 / 50.76, §3.4b and §5), the
+ownership-onset shares (2.90%, 12.73%, §3.4b) and the POSITION/SELECTION decomposition (§0.2) are all
 of that second kind, and all were replayed over positions generated by an arm that spent ~253 extra
 sets per cell. **The distinction was asserted as a category and never tested. Re-recording one cell
 of positions on `bot:pf2` and re-running one replay settles it, and it has not been run.**
@@ -2413,6 +2583,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 4 | ~~**Move Monet's `defuse` to 0, or buy the cell that would decide it?**~~ **RESOLVED 2026-09-03 by the owner's direction: neither. The appetite becomes a function of the state in v0.5 (§3.6b), and 0-versus-1 is moot once the scalar is a table.** Original text: §3.3b: the home ladder resolves rung 0 ahead of rung 1 on both banks (+0.24 ± 0.19, +0.23 ± 0.20 sets/pair) and the bridge reads it at +0.98 inside ±3.10 — frozen at 1 by the roadmap's own rule. The abroad cell that resolves it costs roughly ten times the deals per rung. Either answer is a v0.3.1, not a v0.4 item. | **resolved by direction — v0.5, §3.6b** |
 | 5 | **Put λ back on the marginal base?** §3.4a item 8: the rule written before the run (inside ±2.83 → subsumed, out) took it out at +1.83 (5 of 6). Every other instrument leans the other way and none abroad clears its floor — panel +2.44 (3/3) and +0.81 (2/3), home +0.24 ± 0.24 and +0.32 ± 0.24 sets/pair (resolved, small) — and the λ-on arm is the one that clears item 4 (33.78% against 31.94%), at the price of the calibration marker (+0.049 aggregate over-statement abroad, worst decile 0.17 against 0.08). The abroad cell that resolves it is 24 seeds per arm (±1.41, about 25 minutes of bridge). §3.4b's joint is the mechanism that prices the interference explicitly (§3.4a's amendment) and re-runs the 2 × 2 with λ as a factor; the cheapest answer is to wait for it. **Second reading, v0.4b (§3.4b item 8): +1.57 on the joint (5 of 6, inside ±2.83), home +0.22 ± 0.24 and +0.32 ± 0.24, the same calibration cost. Three readings, one shape — a point or two abroad inside the floor, a quarter of a set per pair at home, +0.05 of over-statement — and nothing in v0.4b priced the interference. The 24-seed cell (±1.41) would resolve it; otherwise the wait is for v0.5's readout or the owner.** **Delegated to the project by the owner on 2026-09-03 — "do the research and make the decision based on what most improves Monet's capabilities and winning probability" — so the 24-seed cell this row prices is running on 18 fresh seeds (§6.5) beside the six on record, with an exploratory λ = 0.3 arm; its reading and the decision are recorded at §3.4b's addendum when it lands.** **RESOLVED 2026-09-03 (§3.4c): +1.88 paired over 24 seeds, ahead on 22, clearing ±1.41 — the term ships on v0.4c; its cost (+0.050 over-statement abroad, none at home) and the finding that it buys tempo rather than accuracy are on the record, with the 0.3-versus-0.6 confirmation pre-registered.** | **resolved — v0.4c** |
 | 6 | ~~**The row-3 choice (§3.5b): stop in-browser at v0.4b-era strength, split the engine for a searching lab arm, or publish the negative result?**~~ **RESOLVED 2026-09-03 — the owner chose a fourth option: keep building the fast policy toward 50%, as v0.5 opponent reading (§3.6), v0.6 communication (§3.7) and v0.7 the search arm through §3.5c's cost-first test (§3.8); v1.0 stays §3.9, restated as about 50% or a significant win (§0). The project's recommendation stands on the record beside the call.** Original text: **The row-3 choice (§3.5b): stop in-browser at v0.4b-era strength, split the engine for a searching lab arm, or publish the negative result?** The gate read 32.75% on v0.4b — third row — with the decomposition written beside it (§3.5b's record). The project recommends option 3, with option 2 taken only if the frontier claim is wanted and only through §3.5c's cost-first test (search over a calibrated posterior is the one untested cell; its price is 300 – 600×). The one honest lever the record has not built is communication — asks chosen to reveal, the handoff's +30 points of compelled-declare accuracy at 0.13 per game — sized by the oracle at +6.75 and by nothing yet that a bot could play. v1.0 stays defined by §3.9 alone. | **resolved — keep building** |
+| 7 | **v0.5's arms read +0.4 abroad, inside the ±2.00 floor (§3.6c): ship `choiceKappa` anyway, buy the seeds that would decide it, or move on?** The rule as written ships nothing. Three arms agree on +0.37 to +0.47 (0.6 – 1.0 × SE); reading +0.4 at 2 × SE would take about a hundred seeds, an hour of bridge. The markers say the prior over-states against SESTINA (calibration +0.021 → +0.046 at κ = 1) and buys ask accuracy, not sets. **Recommendation: move on.** `choiceKappa` stays in the code off the vector, v0.6 is built on v0.4c, and if a later rung changes the calibration picture the twelve cells are re-run then (35 minutes). | open |
 
 ---
 
