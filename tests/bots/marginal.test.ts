@@ -31,6 +31,10 @@ import { STYLE_ROSTER } from '../../lib/engine/bots/roster.ts'
 import { validateStyle } from '../../lib/engine/bots/style.ts'
 import { monetPolicy } from '../../lib/engine/bots/monet.ts'
 import { legalAsksFromView } from '../../lib/engine/helpers.ts'
+import type { BotPolicy } from '../../lib/engine/bots/style.ts'
+
+/** The registry returns the wide `PolicySpec` union; every Monet version is a `BotPolicy` pair. */
+const styleOf = (v: Parameters<typeof monetPolicy>[0]) => (monetPolicy(v) as BotPolicy).style
 
 /* ------------------------------------------------------------- synthetic --- */
 
@@ -168,7 +172,7 @@ describe('a counting argument the fixpoint cannot finish is finished here', () =
 
 describe('a surviving constraint is folded in', () => {
   it('pulls its cards toward its seat, pushes them away from the others, and the margins hold', () => {
-    const cands = { '2C': [1, 2, 3], '3C': [1, 2, 3], '4C': [1, 2, 3], '9D': [1, 2, 3], 'TD': [1, 2, 3], 'JD': [1, 2, 3] }
+    const cands: Record<string, Seat[]> = { '2C': [1, 2, 3], '3C': [1, 2, 3], '4C': [1, 2, 3], '9D': [1, 2, 3], 'TD': [1, 2, 3], 'JD': [1, 2, 3] }
     const plain = synth(cands, [0, 2, 2, 2, 0, 0])
     const constrained = synth(cands, [0, 2, 2, 2, 0, 0], [{ seat: 1, cards: ['2C', '3C'] }])
     attachMarginal(plain)
@@ -266,9 +270,9 @@ describe('the knob is inert everywhere it is absent', () => {
 
   it("v0.3's number is byte-identical across the change: no roster style names a model", () => {
     for (const style of Object.values(STYLE_ROSTER)) expect(style.pModel).toBeUndefined()
-    expect(monetPolicy('v0.3').style.pModel).toBeUndefined()
-    expect(monetPolicy('v0.4a').style.pModel).toBe('marginal')
-    expect(monetPolicy('v0.4a').style.licenceLambda).toBeUndefined()
+    expect(styleOf('v0.3').pModel).toBeUndefined()
+    expect(styleOf('v0.4a').pModel).toBe('marginal')
+    expect(styleOf('v0.4a').licenceLambda).toBeUndefined()
   })
 
   it('validateStyle refuses a model it does not know', () => {
