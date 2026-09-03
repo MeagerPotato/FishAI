@@ -50,6 +50,7 @@ All three name the version they measure and refuse a missing one: the registry h
 | `probe-conceal*` | concealment | the diversion mechanism and its null |
 | `probe-v15-*` | [BOUNDED.md](../BOUNDED.md) §5a | v1.5 against v1.0, and the memory-budget curve |
 | `probe-score` | [MONET.md](../MONET.md) §3.3c | window declares, speculative near-misses and lock hold split by score state — the population a score-conditioned declare term can reach |
+| `probe-handoff-declare` | [MONET.md](../MONET.md) §3.5a(b) | the cross-seat handoff of compelled declarations, emulated at home — as shipped, the most-confident teammate, the best of three — and the forced branch's believed-vs-realised by decile |
 
 ## Harness notes, so the next one does not rediscover them
 
