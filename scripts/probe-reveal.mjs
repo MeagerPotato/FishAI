@@ -29,8 +29,9 @@ const KNOW = await import(pathToFileURL(join(ROOT, 'lib/engine/bots/knowledge.ts
 const DEC = await import(pathToFileURL(join(ROOT, 'lib/engine/bots/decide.ts')).href)
 const MON = await import(pathToFileURL(join(ROOT, 'lib/engine/bots/monet.ts')).href)
 const HELP = await import(pathToFileURL(join(ROOT, 'lib/engine/helpers.ts')).href)
-const { newGame, us54Config, legalActionsSummary, seatView, hashSeed, decide, reduce } = ENG
+const { newGame, us54Config, legalActionsSummary, seatView, hashSeed, decide, reduce, clinchTarget } = ENG
 const { allBooks, bookCards, cardBook, seatTeam } = CARDS
+const TARGET = clinchTarget(us54Config)
 const { legalAsksFromView } = HELP
 
 const argOf = (flag, dflt) => {
@@ -65,6 +66,10 @@ const acc = {
   proofCompleted: 0, // the ask makes some teammate's proof true
   barCleared: 0, // or lifts some teammate's best plan to >= bar (proof not required)
   priceSum: 0, priceN: 0, // best legal ask's p forgone, when an opportunity exists
+  bestCard: 0, // opportunities when the asker may choose WHICH card of the set to name (any legal ask into it)
+  clinch: 0, // opportunities where cashing the set would reach the clinch target
+  nearEnd: 0, // opportunities with the opponents holding <= 3 cards in total
+  byMine: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // opportunities by our cashed sets at the time
   gamesWithOpportunity: 0,
 }
 const t0 = Date.now()
@@ -106,22 +111,50 @@ for (const s0 of seeds) {
           // is A's licence in b already on the public record?
           const already = view.log.some((ev) => ev.type === 'ask' && ev.asker === seat && cardBook(ev.card) === b)
           if (already) { acc.alreadyPublic++; continue }
-          // the publication: one ask into b by A, a miss (opponents hold none of b)
-          const a = intoB[0]
-          const ev = { type: 'ask', asker: seat, target: a.target, card: a.card, hit: false }
+          // the publication: one ask into b by A, a miss (opponents hold none of b). Every legal card
+          // is tried: the card NAMED is the strong bit (row 7: the asker does not hold it).
           let completed = false
           let cleared = false
-          for (const m of mates) {
-            const v2 = seatView(s, m)
-            const k2 = KNOW.buildKnowledge({ ...v2, log: [...v2.log, ev] }, opts)
-            if (provable(k2, m, b)) { completed = true; break }
-            if (DEC.planClaimFor) {
-              const plan = DEC.planClaimFor({ ...v2, log: [...v2.log, ev] }, policy, b)
-              if (plan && plan.p >= bar && plan.uncertain.every((c) => (k2.cands[c] ?? []).every((x) => seatTeam(x) === team))) cleared = true
+          let anyCard = false
+          const tryAsk = (a, first) => {
+            const ev = { type: 'ask', asker: seat, target: a.target, card: a.card, hit: false }
+            for (const m of mates) {
+              const v2 = seatView(s, m)
+              const log2 = [...v2.log, ev]
+              const k2 = KNOW.buildKnowledge({ ...v2, log: log2 }, opts)
+              if (provable(k2, m, b)) {
+                if (first) completed = true
+                anyCard = true
+                return true
+              }
+              if (first && DEC.planClaimFor) {
+                const plan = DEC.planClaimFor({ ...v2, log: log2 }, policy, b)
+                if (plan && plan.p >= bar && plan.uncertain.every((c) => (k2.cands[c] ?? []).every((x) => seatTeam(x) === team))) cleared = true
+              }
             }
+            return false
           }
+          const seenCards = new Set()
+          let firstDone = false
+          for (const a of intoB) {
+            if (seenCards.has(a.card)) continue
+            seenCards.add(a.card)
+            tryAsk(a, !firstDone)
+            firstDone = true
+            if (anyCard && completed) break
+          }
+          if (anyCard) acc.bestCard++
           if (completed) acc.proofCompleted++
           else if (cleared) acc.barCleared++
+          if (anyCard) {
+            let mine = 0
+            for (const r of Object.values(s.books)) if (r && r.outcome !== 'void' && (r.outcome === 'team0' ? 0 : 1) === team) mine++
+            if (mine + 1 >= TARGET) acc.clinch++
+            let oppCards = 0
+            for (let x = 0; x < 6; x++) if (seatTeam(x) !== team) oppCards += s.hands[x].length
+            if (oppCards <= 3) acc.nearEnd++
+            acc.byMine[Math.min(9, mine)]++
+          }
           if (completed || cleared) {
             anyOpp = true
             if (!bestPComputed) {
@@ -152,4 +185,7 @@ console.log(`  ...licence already public        ${acc.alreadyPublic}`)
 console.log(`  one ask COMPLETES a teammate's proof   ${acc.proofCompleted}  (${per(acc.proofCompleted)} per game)`)
 console.log(`  one ask lifts a plan over the bar      ${acc.barCleared}  (${per(acc.barCleared)} per game)`)
 console.log(`opportunities per game (either)    ${per(acc.proofCompleted + acc.barCleared)}   games with any: ${acc.gamesWithOpportunity}/${acc.games}`)
+console.log(`with the CARD chosen (any legal ask into the set completes a proof)   ${acc.bestCard}  (${per(acc.bestCard)} per game)`)
+console.log(`  of those: would clinch the game ${acc.clinch}  (${per(acc.clinch)} per game);  opponents hold <= 3 cards ${acc.nearEnd}  (${per(acc.nearEnd)} per game)`)
+console.log(`  by our cashed sets at the time: ${acc.byMine.map((n, i) => `${i}:${n}`).join(' ')}`)
 console.log(`tempo price at an opportunity      best legal ask p ${f(acc.priceSum / Math.max(1, acc.priceN))} forgone (n ${acc.priceN}), the reveal ask itself a certain miss`)
