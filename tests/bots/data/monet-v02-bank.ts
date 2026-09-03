@@ -40,21 +40,21 @@ export interface BankGame {
 
 export const MONET_V02_BANK = {
   /** The revision the bank was recorded from — HEAD when the tree is 'wt'. */
-  revision: '8f8772244e413fe4f2bc7e3307049f51fb836e66',
+  revision: '94e9e6c05623d54575afe3102f1c35b3fd39d619',
   /** Which tree's module graph recorded it: 'ref' certifies cross-revision, 'wt' does not. */
   tree: 'wt',
   /** Whether lib/ or scripts/ carried uncommitted edits at the moment of recording. */
-  dirty: true,
+  dirty: false,
   /** How the recorded arm was addressed. */
   arm: 'monetPolicy("v0.2")',
-  totalDecisions: 25920,
+  totalDecisions: 25838,
   games: [
     { table: 'balanced', seed: 'monet-v02-balanced-0', startSeat: 1, decisions: 898, digest: '6c2dc98b273fa58a' },
     { table: 'balanced', seed: 'monet-v02-balanced-1', startSeat: 3, decisions: 660, digest: 'b5bc9219a7711d49' },
     { table: 'balanced', seed: 'monet-v02-balanced-2', startSeat: 5, decisions: 795, digest: 'd4847644ec44e2c0' },
     { table: 'balanced', seed: 'monet-v02-balanced-3', startSeat: 1, decisions: 762, digest: 'd3cbd676b2350407' },
     { table: 'blitz', seed: 'monet-v02-blitz-0', startSeat: 1, decisions: 646, digest: 'b9c10e5bbbd777bd' },
-    { table: 'blitz', seed: 'monet-v02-blitz-1', startSeat: 3, decisions: 653, digest: '78eb571dd31362e0' },
+    { table: 'blitz', seed: 'monet-v02-blitz-1', startSeat: 3, decisions: 576, digest: 'bc09ad56533e3f58' },
     { table: 'blitz', seed: 'monet-v02-blitz-2', startSeat: 5, decisions: 694, digest: '0fbb071921112cef' },
     { table: 'blitz', seed: 'monet-v02-blitz-3', startSeat: 1, decisions: 651, digest: '091281d5a3e73f16' },
     { table: 'punter', seed: 'monet-v02-punter-0', startSeat: 1, decisions: 769, digest: '21ab82f37e3f18d7' },
@@ -77,13 +77,13 @@ export const MONET_V02_BANK = {
     { table: 'scout', seed: 'monet-v02-scout-1', startSeat: 3, decisions: 678, digest: 'e20731286987cb91' },
     { table: 'scout', seed: 'monet-v02-scout-2', startSeat: 5, decisions: 420, digest: '4c8278612f8cf782' },
     { table: 'scout', seed: 'monet-v02-scout-3', startSeat: 1, decisions: 493, digest: 'b354461af6baa13e' },
-    { table: 'ghost', seed: 'monet-v02-ghost-0', startSeat: 1, decisions: 790, digest: '836bf37c7166f7b0' },
+    { table: 'ghost', seed: 'monet-v02-ghost-0', startSeat: 1, decisions: 791, digest: '945da62cf9780166' },
     { table: 'ghost', seed: 'monet-v02-ghost-1', startSeat: 3, decisions: 705, digest: '115164d81c14d922' },
     { table: 'ghost', seed: 'monet-v02-ghost-2', startSeat: 5, decisions: 702, digest: '87dc82b84f4e21f8' },
     { table: 'ghost', seed: 'monet-v02-ghost-3', startSeat: 1, decisions: 635, digest: '2726bce25aa5ce6c' },
     { table: 'archivist', seed: 'monet-v02-archivist-0', startSeat: 1, decisions: 609, digest: '1dc2da668b25a64a' },
     { table: 'archivist', seed: 'monet-v02-archivist-1', startSeat: 3, decisions: 679, digest: '283db397aee5cbc1' },
     { table: 'archivist', seed: 'monet-v02-archivist-2', startSeat: 5, decisions: 564, digest: 'cf766fcd7d483365' },
-    { table: 'archivist', seed: 'monet-v02-archivist-3', startSeat: 1, decisions: 615, digest: '8dbf12a68afd8260' },
+    { table: 'archivist', seed: 'monet-v02-archivist-3', startSeat: 1, decisions: 609, digest: '8c251681fa8cf211' },
   ] as const satisfies readonly BankGame[],
 } as const

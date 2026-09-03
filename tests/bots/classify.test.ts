@@ -180,7 +180,8 @@ describe('classifySeats — real views', () => {
     // (54 reads) the rate carries a standard error near 0.06 against a bar of 0.2222, so the
     // test was close to a coin flip on a real effect: on the pre-v0.2 tree it read 0.2593 at
     // 18 games against 0.3407 at 180. 54 games (162 reads) sits where the running rate has
-    // settled — 0.3889 here against 0.3741 at 180 — so a failure now means something moved.
+    // settled — 0.3827 here against 0.3685 at 180, on the committed table — so a failure now
+    // means something moved.
     //
     // Something did move, once, and this is the test that caught it. `FEATURE_KEYS` includes
     // `deadAskShare`, so `data/fingerprints.ts` is calibrated against the ask SCORER and not
@@ -188,8 +189,10 @@ describe('classifySeats — real views', () => {
     // population while the committed table stayed where it was, which took this read down to
     // 0.2370 at 180 games — below the calibration comment's ~0.31 and barely above chance.
     // Re-running `node scripts/gen-fingerprints.mjs --games 150` against the v0.2 scorer
-    // restored it to 0.3741 at 180 games and 0.3889 here. [measured, home] The lesson is in
-    // the generator's header: regenerate whenever the policy changes what a style plays.
+    // restored it to 0.3741 at 180 games and 0.3889 here; regenerated once more after v0.2 was
+    // rebased onto the turn-pass correction (f3390c6), the committed table reads 0.3685 and
+    // 0.3827. [measured, home] The lesson is in the generator's header: regenerate whenever the
+    // policy changes what a style plays.
     let familyTop = 0
     let familyMass = 0
     let reads = 0
@@ -208,7 +211,7 @@ describe('classifySeats — real views', () => {
     }
     expect(reads).toBe(162)
     // Strictly better than the 2/9 chance rate on both the argmax and the posterior mass
-    // (measured after the v0.2 recalibration: 0.3889 argmax, 0.3310 mass at this N — modest,
+    // (measured on the committed v0.2 table: 0.3827 argmax, 0.3309 mass at this N — modest,
     // and honestly so). The 2/9 bar is the chance rate itself and must never be lowered to
     // make a run pass: a read at or below it carries no information at all, so a failure here
     // is a report that the classifier has stopped reading, not a threshold to retune.

@@ -702,6 +702,16 @@ the same ask falls from 52.00 to 15.00, the progress term alone. [measured, home
 
 **Acceptance test — and the point of this milestone is that it is not a win-rate test.**
 
+> **Re-measured after the rebase (2026-09-02).** v0.2 was written against `97e0257` and rebased
+> onto `a232371`, which carries the turn-pass correction (`f3390c6`, [RULES_US54.md](RULES_US54.md)).
+> Every home number in this section was re-taken on the rebased tree: the three gates and their
+> controls, the v0.2 bank (36 games, 25,838 decisions, emitted from a clean `lib/` at `94e9e6c`),
+> the fingerprint table (`generatedAt` 2026-09-03) and the classifier read. The pre-rebase figures
+> — 20,023 / 20,129 protected asks, 641 / 26 / 913 dead asks moved, a 25,920-decision bank at
+> `8f87722`, reads of 0.3741 and 0.3889 — survive only in this branch's history. The cross-play
+> numbers, items 2 and 3, were not re-taken: the bridge plays the host's rules, and `f3390c6`
+> touched `reduce.ts` alone, which `bots/` never imports.
+
 1. **Home identity on the unaffected population** — every ask with p > 0 unchanged, 0 mismatches
    over **≥ 20,000 asks with p > 0**. The denominator is the protected population itself, not the
    total decision count: non-ask decisions are out of the fixes' reach entirely and are about
@@ -713,30 +723,32 @@ the same ask falls from 52.00 to 15.00, the progress term alone. [measured, home
 
    | gate | what varies | protected asks | mismatches | dead asks moved |
    |---|---|---:|---:|---:|
-   | `--gate dead-ask --seeds 22` | the knob alone, on v0.1's scorer | 20,023 | **0** | 641 / 1,835 |
-   | `--gate dead-ask --seeds 22 --gate-tree wt` | the knob alone, on v0.2's scorer | 20,129 | **0** | 26 / 1,224 |
-   | `--gate dead-ask-full --seeds 22` | **the whole milestone**, v0.1 entire vs v0.2 entire | 20,023 | **0** | 913 / 1,835 |
+   | `--gate dead-ask --seeds 22` | the knob alone, on v0.1's scorer | 20,048 | **0** | 638 / 1,832 |
+   | `--gate dead-ask --seeds 22 --gate-tree wt` | the knob alone, on v0.2's scorer | 20,136 | **0** | 26 / 1,224 |
+   | `--gate dead-ask-full --seeds 22` | **the whole milestone**, v0.1 entire vs v0.2 entire | 20,048 | **0** | 910 / 1,832 |
 
-   [measured, home] Non-ask decisions moved 0 of 134,692 in every run. Negative controls fire:
-   `MUTATE_FLOOR=0.5` gives 35 protected mismatches and exit 1; `MUTATE=turtle` on the full gate
-   gives 226 and exit 1. The `dead-ask-full` gate is the one that answers this item for the
+   [measured, home] Non-ask decisions moved 0 in every run (134,828 of them on the v0.1-scorer
+   tree, 131,735 on v0.2's). Negative controls fire: `MUTATE_FLOOR=0.5` gives 231 protected
+   mismatches and exit 1; `MUTATE=turtle` on the full gate gives 1,607 and exit 1. The
+   `dead-ask-full` gate is the one that answers this item for the
    milestone rather than for the knob — an earlier docstring claimed no whole-milestone diff could,
    on the false premise that the two scoring fixes move live asks on purpose.
-2. **Mechanism counter** — the host's DEAD counter on 3 seeds × 200 deals; require the same
-   direction and at least a halving. Calibrated on the defective bridge, where it moved 76 → 39
-   with `minHitP` and 76 → 60 with `gambleBonus: 0`.
+2. **Mechanism counter** — the host's DEAD counter on 3 seeds × 200 deals, **side-attributed to
+   our seats** (the Monet arm's asks, not pooled with SESTINA's); require the same direction and
+   at least a halving.
 
-   > **AMENDMENT REQUIRED — this item does not pass as written.** `fish pathology` pools both
-   > teams into one DEAD number (CORRECTED-FACTS §6), and SESTINA's half is an immovable
-   > denominator: it went 150 → 152 across the change. The **pooled** counter reads
-   > **795 → 434 = 0.5459**, which is a halving missed by four hundredths. Side-attributed to the
-   > FishAI seats it reads **645 → 282 = 0.4372**, and the bot-side instrument corroborates at
-   > **1,372 → 594 = 0.4329** over six seeds. The side-attributed figure is the better
-   > measurement, but restating the bar as "side-attributed" *changes what the bar means* rather
-   > than clarifying it — the calibrating reference (76 → 39, 0.513) was itself pooled. So this is
-   > an amendment for the owner to grant, not a reading a reviewer may adopt: **do not report item
-   > 2 as a plain PASS until §3.2 item 2 is restated as "the host's DEAD counter, side-attributed
-   > to the FishAI seats".** Direction is unambiguous and passes on every counter, every seed.
+   > **Amended 2026-09-02, at the owner's decision.** The item was first written pooled — `fish
+   > pathology` reports one DEAD number for both teams (CORRECTED-FACTS §6) — and was calibrated
+   > pooled on the defective bridge (76 → 39 with `minHitP`, 76 → 60 with `gambleBonus: 0`).
+   > Pooled, v0.2 does **not** clear it: **795 → 434 = 0.5459**, a halving missed by four
+   > hundredths, because SESTINA's half of the pool is a denominator the change cannot move
+   > (150 → 152). Side-attributed to our seats it reads **645 → 282 = 0.4372**, and the bot-side
+   > instrument corroborates at **1,372 → 594 = 0.4329** over six seeds. Restating the bar changes
+   > what it measures rather than clarifying it, so the restatement was put to the owner as an
+   > amendment instead of being adopted by a reviewer; the owner granted it. **PASSES as restated.**
+   > The pooled figure stays on the record so the amendment cannot be mistaken for a measurement.
+   > Direction is unambiguous on every counter, every seed.
+
 3. **Win rate must NOT move** — 6 seeds × 200 deals, |Δ| < 2.83 against v0.1. A move that clears the
    floor here is evidence of a mistake, not of a gain. **PASSES**: 27.0833% → 27.2083%, Δ = +0.1250,
    SD 0.2875 across the six seeds, and the v0.1 arm reproduces §0's published 27.0833% exactly.
@@ -753,10 +765,11 @@ rather than left to be rediscovered from a red suite:
   spec change fails a test instead of re-labelling a measurement.
 - **The v0.1 action bank.** `tests/bots/data/monet-v01-bank.ts` digests whole games, and the two
   scoring fixes move the `p == 0` asks; one such choice re-deals every position after it. **13 of
-  the bank's 27 games diverge on this tree even with v0.1's spec restored** — identical counts with
-  and without the spec pin, which is how we know it is the code and not the knob. No registry pin
-  can make that bank green. **Decision: the v0.1 bank is frozen as the record of the revision it
-  was taken at and is no longer replayed**; a `monet-v02-bank.ts` (36 games, 25,920 decisions) is
+  the bank's 27 games diverge on this tree even with v0.1's spec restored**, 15 with v0.2's — the
+  13 are the code and only the last two are the knob, which is how we know a registry pin cannot
+  make that bank green. (Re-measured on the rebased tree against main's rebaselined bank,
+  `fd19486`, 20,291 decisions.) **Decision: the v0.1 bank is frozen as the record of the revision it
+  was taken at and is no longer replayed**; a `monet-v02-bank.ts` (36 games, 25,838 decisions) is
   emitted as the forward baseline in its place. Regenerating the v0.1 bank was refused — it is the
   only surviving evidence of what v0.1 played.
 - **The cross-revision sweep** is the one mechanism that survives, because it alone can materialise
@@ -769,6 +782,9 @@ against the ask **scorer** and not merely against the styles. The two scoring fi
 population while the committed table stayed put, and the turtle-vs-punter read fell from **0.3407
 of reads to 0.2370** over 180 games — barely above the 2/9 = 0.2222 chance rate. Re-running
 `node scripts/gen-fingerprints.mjs --games 150` against the v0.2 scorer restored it to **0.3741**.
+After the milestone was rebased onto the turn-pass correction (`f3390c6`) the table was regenerated
+once more under the corrected rules — same command, same seeds — and the committed table
+(`generatedAt` 2026-09-03) reads **0.3685** at 180 games, 0.3827 at the smoke test's 54.
 [measured, home] The smoke test in `tests/bots/classify.test.ts` was widened from 18 games to 54
 in the same pass: at 18 it read 0.2593 even on the pre-v0.2 tree, close enough to the bar to be a
 coin flip on a real effect. **The v0.5 capability readout must be taken against the recalibrated

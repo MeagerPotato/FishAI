@@ -140,10 +140,41 @@ One bucket per checkpoint in {60, 120, 200, 300} (log prefixes of running games)
 certainty accumulates — so a mid-game observation must be read against fingerprints taken at the
 same horizon. A view whose log ends in `game_over` reads `full` whatever its length; otherwise the
 nearest checkpoint at or below the observed event count. The committed calibration
-(`FINGERPRINT_PROVENANCE`, generated 2026-08-24) records bucket occupancy honestly: **only the
-Turtle's mirror games ever outlive 200 events** (246 seat-vectors in its '200' bucket; every other
-style has 0 there and falls back to full-game stats), which is §3.4's separability structure
-showing up in the calibration itself.
+(`FINGERPRINT_PROVENANCE`; v1.0's table was generated 2026-08-24, the committed one 2026-09-03 —
+see the addendum below) records bucket occupancy honestly: **only the Turtle's mirror games ever
+outlive 200 events** (246 seat-vectors in its '200' bucket on the v1.0 table, 222 on the
+recalibrated one; every other style has 0 there and falls back to full-game stats), which is
+§3.4's separability structure showing up in the calibration itself.
+
+**Addendum (2026-09-02, Monet v0.2) — the table is calibrated against the ask scorer, not only
+against the styles.** `FEATURE_KEYS` includes `deadAskShare` (§2.3), so every fingerprint row
+carries the share of a style's asks that its scorer let through at p = 0. Monet v0.2
+([MONET.md §3.2](MONET.md)) corrected two `rankAsksWith` defects and floored the roster's
+`minHitP`, which moved exactly that population while the committed table stayed at 2026-08-24.
+The read that caught it is the turtle-vs-punter smoke test in `tests/bots/classify.test.ts`, at
+180 games: **0.3407** of reads on the v1.0 table against the v1.0 scorer, **0.2370** on the v1.0
+table against the v0.2 scorer — barely above the 2/9 = 0.2222 chance rate — and **0.3741** after
+`node scripts/gen-fingerprints.mjs --games 150` against the v0.2 scorer. The table was regenerated
+once more, same command and seeds, after v0.2 was rebased onto the turn-pass correction
+(`f3390c6`, [RULES_US54.md](RULES_US54.md)); the committed table reads **0.3685** at 180 games and
+0.3827 at the smoke test's 54. [measured, home] The smoke test was widened from 18 games to 54 in
+the same pass, because at 18 games (54 reads) its standard error near 0.06 made it a coin flip
+against the bar.
+
+Three consequences, recorded so the next reader does not have to rediscover them. **(1)** The
+committed `data/fingerprints.ts` is now the v0.2 calibration. The v1.0 table that §6.5's numbers
+were taken on lives at tag `bass-v1.0`, and §6.5 is not re-run: its numbers describe the v1.0
+engine against the v1.0 scorer, which is the pairing those experiments were about. **(2)**
+`data/counter-table.ts` was **not** regenerated. It is derived from matrix v2's games
+([BOT_LAB.md](BOT_LAB.md)), which were played on the v1.0 scorer, so in principle the scorer
+change reaches it too — but v0.2's own win-rate item measured that change at +0.1250 points,
+under the 2.83-point floor at 1,200 deals, so a re-derived table could not be told from the old
+one at any budget this repo runs. Leaving it is a decision, not an oversight. **(3)** Every later
+milestone that changes what a style plays — the ask scorer, the declare policy, anything
+`FEATURE_KEYS` can see — has to regenerate the table, and the generator's header now says so.
+The adaptive engine's agreement with Monet's fixed Punter (99.85% of decisions, recorded in
+[src/play/models.ts](src/play/models.ts) and floored at 99% by `tests/play/models.test.ts`) is
+re-measured on whatever table is committed, so it tracks a recalibration by itself.
 
 ### 3.2 Two modelling choices made by measurement, not taste
 

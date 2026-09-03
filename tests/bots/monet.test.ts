@@ -30,7 +30,7 @@
  *     survives, because it is the only one that can materialise another revision. The v0.1 claim
  *     now lives there in its re-scoped, still-true form — `--gate dead-ask-full`: over one
  *     v0.1-driven trajectory, **every ask with p > 0 is unchanged** across the whole milestone.
- *     0 mismatches over 20,023 protected asks, with 913 dead asks moved. [measured, home]
+ *     0 mismatches over 20,048 protected asks, with 910 dead asks moved. [measured, home]
  *
  * ## What this file asserts instead
  *
@@ -57,7 +57,7 @@
  * The position bank is the roster mirror rather than a Punter mirror alone. A style that plays
  * itself visits a narrow set of positions, and the claim is about the *policy*, which must hold at
  * every position `us54` can produce — including the ones Punter's own play never reaches. Nine
- * styles × four seeds keeps that broad while staying inside a few seconds: 36 games, 25,920
+ * styles × four seeds keeps that broad while staying inside a few seconds: 36 games, 25,838
  * decisions and 51,840 in-graph comparisons.
  *
  * **A red digest is not a test to fix.** It is the report that the version no longer plays the
@@ -291,7 +291,7 @@ describe('Monet v0.2 ≡ the live roster arm, at every decision of whole us54 ga
     // game's length exactly too — the total is not an independent fact, it is their sum, and a
     // floor here would let a whole table drop out of the fixture unnoticed.
     expect(tally.decisions).toBe(MONET_V02_BANK.totalDecisions)
-    expect(tally.decisions).toBe(25_920)
+    expect(tally.decisions).toBe(25_838)
     expect(tally.comparisons).toBe(tally.decisions * LIVE_ARMS.length)
     expect(tally.digestsChecked).toBe(MONET_V02_BANK.games.length)
     expect(tally.mismatches).toBe(0)
@@ -319,7 +319,7 @@ describe('the v0.1 action bank is kept as a record of the revision it was taken 
     expect(MONET_V01_BANK.revision).toMatch(/^[0-9a-f]{40}$/)
     expect(MONET_V01_BANK.arm).toBe('{ skill: SKILL_PRESETS.hard, style: STYLE_ROSTER.punter }')
     expect(MONET_V01_BANK.games.length).toBe(STYLE_IDS.length * 3)
-    expect(MONET_V01_BANK.totalDecisions).toBe(20_217)
+    expect(MONET_V01_BANK.totalDecisions).toBe(20_291)
     expect(MONET_V01_BANK.totalDecisions).toBe(
       MONET_V01_BANK.games.reduce((n, g) => n + g.decisions, 0),
     )
@@ -329,8 +329,8 @@ describe('the v0.1 action bank is kept as a record of the revision it was taken 
   it('is deliberately NOT replayed here, and its premise is checked rather than asserted', () => {
     // Replaying it would fail, and it would fail for a reason no edit to this file can fix: v0.2's
     // two `rankAsksWith` corrections move the p == 0 asks, and one such choice re-deals every
-    // position after it. Measured on this tree, 13 of the 27 games diverge — with v0.1's spec
-    // restored as well as without it, which is how we know the knob is not the cause.
+    // position after it. Measured on this tree, 13 of the 27 games diverge with v0.1's spec
+    // restored and 15 with v0.2's — the code accounts for 13, the knob only for the last two.
     //
     // What IS checkable from here is the premise: the code the bank was recorded against is not
     // the code in this tree.
@@ -342,7 +342,7 @@ describe('the v0.1 action bank is kept as a record of the revision it was taken 
     // The surviving form of v0.1's claim is cross-revision, so it cannot live in a vitest file at
     // all: `node scripts/byte-identity.mjs --gate dead-ask-full --seeds 22` materialises the
     // reference revision with `git show` and diffs the whole milestone against it, restricted to
-    // asks with p > 0. Measured: 0 mismatches over 20,023 protected asks, 913 dead asks moved.
+    // asks with p > 0. Measured: 0 mismatches over 20,048 protected asks, 910 dead asks moved.
     // MONET.md §3.2 records the run and the seed count it needs.
   })
 })
