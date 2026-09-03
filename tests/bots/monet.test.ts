@@ -74,7 +74,7 @@ import {
   seatView,
   us54Config,
 } from '../../lib/engine/index.ts'
-import type { PolicySpec, Seat, SeatView } from '../../lib/engine/index.ts'
+import type { GameAction, PolicySpec, Seat, SeatView } from '../../lib/engine/index.ts'
 import type { BotPolicy, StyleParams } from '../../lib/engine/bots/style.ts'
 import { STYLE_IDS, STYLE_ROSTER } from '../../lib/engine/bots/roster.ts'
 import { SKILL_PRESETS } from '../../lib/engine/bots/style.ts'
