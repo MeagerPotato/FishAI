@@ -202,7 +202,10 @@ export function computeMarginalTable(k: Knowledge): MarginalTable | null {
   if (n === 0) return { cards, index, p, rounds: 0, converged: true, conditioned: 0 }
   // MONET.md §3.6a: the prior. Flat (1 on every admissible cell) unless the Knowledge carries the
   // ask-choice evidence, in which case a seat's `a` asks into a card's half-suit weight that seat's
-  // cell by (1 + κ)^a before the scaling — the margins are the same, the fixpoint is not.
+  // cell by (1 + κ)^min(a, 3) before the scaling — the margins are the same, the fixpoint is not.
+  // Saturating at three asks keeps the matrix conditioned (a seventh ask at κ = 4 is a weight of
+  // 78,125 and 200 rounds do not reach the margins) and says what the evidence says: a seat that
+  // keeps asking into a set is chasing it, not holding more of it each time.
   const kappa = k.choiceKappa ?? 0
   const asksInto = kappa > 0 ? k.asksInto : undefined
   for (let i = 0; i < n; i++) {
@@ -210,7 +213,7 @@ export function computeMarginalTable(k: Knowledge): MarginalTable | null {
     const row = asksInto === undefined ? undefined : asksInto[cardBook(cards[i])]
     for (const s of k.cands[cards[i]] ?? []) {
       if (need[s] > 0) {
-        const a = row === undefined || s === k.seat ? 0 : (row[s] ?? 0)
+        const a = row === undefined || s === k.seat ? 0 : Math.min(3, row[s] ?? 0)
         p[i * 6 + s] = a > 0 ? Math.pow(1 + kappa, a) : 1
         any = true
       }
@@ -231,7 +234,10 @@ export function computeMarginalTable(k: Knowledge): MarginalTable | null {
     const inA = new Set(rows)
     for (const i of rows) {
       const before = p[i * 6 + t]
-      const after = Math.min(1 - EPS, before / z)
+      // Never below `before`: a cell already within EPS of 1 stays where it is, or the repair below
+      // would scale the rest of the column by the ratio of two vanishing remainders (measured at
+      // 1e7 on a saturated prior, MONET.md §3.6a) and drive it negative.
+      const after = Math.max(before, Math.min(1 - EPS, before / z))
       p[i * 6 + t] = after
       sumBefore += before
       sumAfter += after

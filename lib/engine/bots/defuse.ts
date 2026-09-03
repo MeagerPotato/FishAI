@@ -91,7 +91,7 @@
  * above was made under `us54` alone.
  */
 import type { BookId, Seat } from '../types.ts'
-import { cardBook } from '../cards.ts'
+import { allBooks, cardBook, deckFor, seatTeam } from '../cards.ts'
 import { rulesFor } from '../variants.ts'
 import { THREAT_COEFFICIENTS, preyInBook, seatLicences } from './threat.ts'
 import type { StyleParams } from './style.ts'
@@ -135,6 +135,46 @@ export function defusalActive(view: SeatView, style: StyleParams): boolean {
 }
 
 /**
+ * MONET.md §3.6b — the appetite as a function of the public state, read once per decision.
+ * `defuse` is multiplied by `max(0, 1 + threat·(T − 1) + score·S + late·L)`, where **T** counts
+ * (capped at 2) the unresolved half-suits in which this team has certainly-located cards AND an
+ * opponent with cards holds a live licence — the sets an opponent's reach actually threatens, the
+ * same two facts `defusalBonus` credits per ask, summed over the position; **S** is this team's
+ * set lead, signed and clipped to −1 / 0 / +1; **L** is 1 once fewer than half the deck's cards
+ * are still in hands. Under `defusePolicy: 'scalar'` (or absent) the multiplier is 1 and the
+ * number is `style.defuse`, byte for byte. Pure over `(view, k, style, licences)`; one scan of the
+ * nine half-suits, on the licence lookup the ranking already built.
+ */
+export function defusalAppetite(view: SeatView, k: Knowledge, style: StyleParams, licences: LicenceLookup): number {
+  const base = style.defuse
+  if (style.defusePolicy !== 'state' || !(base > 0)) return base
+  const slopes = style.defuseState ?? { threat: 0, score: 0, late: 0 }
+  const me = seatTeam(view.seat)
+  const opponents: Seat[] = []
+  for (let s = 0; s < 6; s++) if (seatTeam(s as Seat) !== me && (view.counts[s] ?? 0) > 0) opponents.push(s as Seat)
+  let threatened = 0
+  for (const b of allBooks(view.config)) {
+    if (view.books[b]) continue
+    if (preyInBook(view, k, b) === 0) continue
+    if (opponents.some((o) => licences(o).has(b))) threatened++
+    if (threatened >= 2) break
+  }
+  let mine = 0
+  let theirs = 0
+  for (const r of Object.values(view.books)) {
+    if (r === undefined || r.outcome === 'void') continue
+    if ((r.outcome === 'team0' ? 0 : 1) === me) mine++
+    else theirs++
+  }
+  const score = Math.sign(mine - theirs)
+  let inHands = 0
+  for (const c of view.counts) inHands += c
+  const late = inHands * 2 < deckFor(view.config).handSize * 6 ? 1 : 0
+  const m = Math.max(0, 1 + slopes.threat * (Math.min(2, threatened) - 1) + slopes.score * score + slopes.late * late)
+  return base * m
+}
+
+/**
  * The defusal credit for one ask, in the ask ranker's own score units. See the file header for
  * the derivation. Returns 0 whenever the mechanism is off, the target has published no basis in
  * the asked set, or the ask protects nothing.
@@ -151,13 +191,15 @@ export function defusalBonus(
   p: number,
   turn: number,
   licences: LicenceLookup,
+  appetite: number = style.defuse,
 ): number {
   if (!defusalActive(view, style)) return 0
+  if (!(appetite > 0)) return 0
   if (p <= 0) return 0
   const book = cardBook(ask.card)
   if (view.books[book]) return 0
   if (!licences(ask.target).has(book)) return 0
   const prey = preyInBook(view, k, book)
   if (prey === 0) return 0
-  return (style.defuse * style.wHit * p * THREAT_COEFFICIENTS.perPrey * prey) / (1 + turn)
+  return (appetite * style.wHit * p * THREAT_COEFFICIENTS.perPrey * prey) / (1 + turn)
 }

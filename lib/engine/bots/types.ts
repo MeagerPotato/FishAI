@@ -77,7 +77,7 @@ export interface KnowledgeOptions {
   /**
    * MONET.md §3.6a — the ask-choice prior's strength κ (≥ 0). Each ask a seat makes into a half-suit
    * multiplies the marginal's prior weight of that half-suit's unknown cards at that seat by `1 + κ`
-   * before scaling. Default 0: the flat prior, byte for byte — every Bass tier, every Monet version
+   * before scaling, saturating at three asks. Default 0: the flat prior, byte for byte — every Bass tier, every Monet version
    * before v0.5. Read only when `marginal` is set.
    */
   choiceKappa?: number
