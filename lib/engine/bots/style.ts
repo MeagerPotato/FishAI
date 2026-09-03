@@ -300,6 +300,53 @@ export interface StyleParams extends AskWeights {
    */
   choiceAdapt?: number
   /**
+   * MONET.md §3.7 item 1 — the reveal ask's weight (≥ 0). An ask into a half-suit this hand holds
+   * a card of, whose public record would let a teammate prove the set should it be on this team
+   * (reveal.ts), is credited `reveal · urgency · P(locked)` on top of its hit probability — P(locked)
+   * the model's belief that every card of the set is on the team — and plays over the best
+   * ordinary ask when the sum exceeds that ask's hit probability; urgency is 1 when cashing the
+   * set clinches the game and `revealFar` otherwise. 0 or absent is byte identity: the check is
+   * never run. Absent on every roster style and every tier.
+   */
+  reveal?: number
+  /**
+   * MONET.md §3.7 item 1 — the urgency (0 – 1) of a reveal ask whose set would not clinch the
+   * game. 0 or absent confines the term to the clinch. Inert without `reveal > 0`.
+   */
+  revealFar?: number
+  /**
+   * MONET.md 3.8b: the determinized declare. When > 0, a declare window samples this many deals
+   * from the seat's posterior (`determinize.ts`) and declares an unresolved set whose six cards sit
+   * on this team with the same holders in at least `consensusBar` of them, holders as sampled
+   * (`consensus.ts`). Runs after the certain claim and before the EV claim, under the same foreign
+   * and hoard rules as the certain claim. 0 or absent is byte identity.
+   */
+  consensusDet?: number
+  /** The agreement a consensus claim needs, a share of the deals requested, in (0, 1]; absent is 1 (unanimity). */
+  consensusBar?: number
+  /**
+   * The choice prior's strength (`KnowledgeOptions.choiceKappa`) for the posterior the consensus
+   * samples from, and for that posterior only: the ask path keeps the style's own `choiceKappa`.
+   * Absent, the consensus samples the style's own knowledge. Inert without `consensusDet > 0`.
+   */
+  consensusKappa?: number
+  /**
+   * MONET.md §3.7a item 2′ — the pre-emptive declare. The compulsion (RULES_US54.md §3.2, a window that
+   * cannot close) arrives when the last opponent card leaves, and it lands on whichever seat holds
+   * the turn then, with whatever it knows. In the windows before it every teammate holds the option
+   * in turn, so the one whose speculative plan is best can declare then. `compelHorizon` is the
+   * opponents' cards in hand, in total, at or below which a window counts as *near compulsion* and
+   * the speculative bar becomes `declareThresholdCompelled`. 0 or absent is byte identity.
+   */
+  compelHorizon?: number
+  /**
+   * MONET.md §3.7a item 2′ — the speculative bar played in a near-compulsion window, in place of
+   * `declareThreshold`; absent means `declareThreshold` (identity). The compelled seat is right
+   * about half the time believing 0.43, so any bar above that is a gain over what the position
+   * will otherwise get. Inert without `compelHorizon > 0`.
+   */
+  declareThresholdCompelled?: number
+  /**
    * MONET.md §3.6b — how the defusal appetite is read. `'scalar'` (and absent) is `defuse` as it
    * has always been; `'state'` multiplies it, once per decision, by a clipped linear function of
    * the public state — threatened sets, set lead, phase — with the slopes in `defuseState`
@@ -690,6 +737,20 @@ export function validateStyle(style: StyleParams): string[] {
   if (choicePrior !== undefined && choicePrior !== 'count' && choicePrior !== 'once') bad.push(`choicePrior ${String(choicePrior)} is not 'count' or 'once'`)
   const choiceAdapt = style.choiceAdapt
   if (choiceAdapt !== undefined && !(typeof choiceAdapt === 'number' && Number.isFinite(choiceAdapt) && choiceAdapt >= 0)) bad.push(`choiceAdapt ${String(choiceAdapt)} is not a finite number >= 0`)
+  const reveal = style.reveal
+  if (reveal !== undefined && !(typeof reveal === 'number' && Number.isFinite(reveal) && reveal >= 0)) bad.push(`reveal ${String(reveal)} is not a finite number >= 0`)
+  const revealFar = style.revealFar
+  if (revealFar !== undefined && !(typeof revealFar === 'number' && Number.isFinite(revealFar) && revealFar >= 0 && revealFar <= 1)) bad.push(`revealFar ${String(revealFar)} is not a number in [0, 1]`)
+  const consensusDet = style.consensusDet
+  if (consensusDet !== undefined && !(Number.isInteger(consensusDet) && consensusDet >= 0)) bad.push(`consensusDet ${String(consensusDet)} is not an integer >= 0`)
+  const consensusBar = style.consensusBar
+  if (consensusBar !== undefined && !(typeof consensusBar === 'number' && Number.isFinite(consensusBar) && consensusBar > 0 && consensusBar <= 1)) bad.push(`consensusBar ${String(consensusBar)} is not a number in (0, 1]`)
+  const consensusKappa = style.consensusKappa
+  if (consensusKappa !== undefined && !(typeof consensusKappa === 'number' && Number.isFinite(consensusKappa) && consensusKappa >= 0)) bad.push(`consensusKappa ${String(consensusKappa)} is not a number >= 0`)
+  const compelHorizon = style.compelHorizon
+  if (compelHorizon !== undefined && !(typeof compelHorizon === 'number' && Number.isInteger(compelHorizon) && compelHorizon >= 0)) bad.push(`compelHorizon ${String(compelHorizon)} is not an integer >= 0`)
+  const declareThresholdCompelled = style.declareThresholdCompelled
+  if (declareThresholdCompelled !== undefined && !(typeof declareThresholdCompelled === 'number' && Number.isFinite(declareThresholdCompelled) && declareThresholdCompelled >= 0 && declareThresholdCompelled <= 1)) bad.push(`declareThresholdCompelled ${String(declareThresholdCompelled)} is not a number in [0, 1]`)
   const claimOwnership = style.claimOwnership
   if (claimOwnership !== undefined && claimOwnership !== 'certain' && claimOwnership !== 'priced') bad.push(`claimOwnership ${String(claimOwnership)} is not 'certain' or 'priced'`)
   return bad

@@ -116,6 +116,10 @@ import type { LicenceLookup } from './defuse.ts'
 import { licenceConditionedHitProbability } from './licence.ts'
 import { concealmentActive, concealmentPenalty, ownCardsInBook } from './conceal.ts'
 import { preyInBook, turnYield } from './threat.ts'
+import { revealActive, revealAsk } from './reveal.ts'
+import type { RevealPick } from './reveal.ts'
+import { consensusOn, sampleDeals } from './consensus.ts'
+import type { Consensus } from './consensus.ts'
 import { POLICY_CONSTANTS, SKILL_PRESETS, resolvePolicy } from './style.ts'
 import type { BotPolicy, SkillParams, StyleParams } from './style.ts'
 import { STYLE_ROSTER } from './roster.ts'
@@ -148,6 +152,8 @@ export interface DecisionTrace {
     | 'certain-hit'
     | 'ranked-ask'
     | 'signalling-ask'
+    | 'reveal-ask'
+    | 'consensus-claim'
     | 'contained-pass'
     | 'decline'
     | 'must-declare'
@@ -239,6 +245,14 @@ function teammateSeats(seat: Seat): Seat[] {
 }
 
 /** Total cards held by the viewer's own team, from the public counts. */
+/** Cards in the opponents' hands, in total — the count the compulsion is measured against. */
+function opponentCards(view: SeatView): number {
+  const team = seatTeam(view.seat)
+  let n = 0
+  for (let s = 0; s < 6; s++) if (seatTeam(s as Seat) !== team) n += view.counts[s] ?? 0
+  return n
+}
+
 function ownTeamCards(view: SeatView): number {
   return teamSeats(seatTeam(view.seat)).reduce<number>((n, s) => n + view.counts[s], 0)
 }
@@ -800,13 +814,13 @@ function evClaim(
   stalled: boolean,
   t?: Sink,
   barTag?: string,
+  barOverride?: number,
 ): GameAction | null {
   const myTeam = seatTeam(view.seat)
-  const base = clinchAdjustedThreshold(
-    view,
-    style,
-    stalled ? style.declareThresholdStalled : style.declareThreshold,
-  )
+  // A bar handed in by the caller (the near-compulsion bar, MONET.md 3.7a item 2') is played as
+  // written: the clinch response below prices a failed declare against a game that would
+  // otherwise go on, and the compulsion this bar pre-empts will force a guess at any p anyway.
+  const base = barOverride ?? clinchAdjustedThreshold(view, style, stalled ? style.declareThresholdStalled : style.declareThreshold)
   const foreignSets = foreignBookSet(view)
   let best: ClaimPlan | null = null
   let bestBar = 0
@@ -1385,6 +1399,26 @@ function decideWithPlanner(view: SeatView, pol: ActivePolicy, t?: Sink): GameAct
     }
   }
 
+  // 3b. MONET.md §3.7 item 1 — the reveal ask: an ask into a half-suit this hand holds a card of,
+  //     chosen so that the public record it leaves lets a teammate PROVE the set and declare it
+  //     at the next window, should the set be on this team (reveal.ts). It is still an ask of the
+  //     opponent most likely to hold the card, so its worth is its hit probability plus the credit
+  //     `reveal · urgency · P(locked)`, and it plays when that exceeds the best ordinary ask's hit
+  //     probability; urgency is 1 when cashing the set clinches the game and `revealFar`
+  //     otherwise. Before the speculative declare deliberately: at the clinch a proof beats a
+  //     guess. Off (absent or 0) nothing here runs, and the pipeline is byte for byte the base.
+  if (revealActive(style)) {
+    const rv = revealAsk(view, k, style, knowledgeOptions(pol.skill, pol.style))
+    if (rv !== null) {
+      const p = ranked.length > 0 ? pickAsk(view, k, ranked, pol).p : 0
+      if (rv.value > p) {
+        if (t) concludeReveal(t, rv, p)
+        return { type: 'ask', seat, target: rv.target, card: rv.card }
+      }
+      if (t) t.refused.push({ kind: 'reveal-ask', reason: `a reveal into ${rv.book} would let seat ${rv.prover} prove it, but it is worth ${rv.value.toFixed(2)} (hit ${rv.pHit.toFixed(2)} + ${style.reveal ?? 0} · ${rv.urgency} · P(locked) ${rv.pLock.toFixed(2)}) against the best ordinary ask's ${p.toFixed(2)}` })
+    }
+  }
+
   // 4. Speculative declare (see evClaim). Skipped entirely by a certainty-only style.
   if (!style.declareOnlyWhenCertain && !style.declareOnlyOwnHand) {
     const ev = evClaim(view, k, style, stalled, t)
@@ -1511,6 +1545,17 @@ function decideWindow(view: SeatView, pol: ActivePolicy, rng: Rng, t?: Sink): Ga
   const stalled = isDeepStalled(view)
   const must = mustDeclareNow(view)
   const forced = stalled || must
+  // MONET.md §3.7a item 2′ — near compulsion: the opponents' cards are down to `compelHorizon`, so
+  // the window that cannot close is a few actions away and will land on whichever seat holds the
+  // turn then. Every teammate holds the option in THIS window, so the speculative bar drops to
+  // `declareThresholdCompelled` here, and the seat with the best plan declares before the
+  // compulsion chooses the seat for it. Only where declining is still legal: a forced window has
+  // its own rule below. Off (absent or 0) nothing changes.
+  const near = !forced && (style.compelHorizon ?? 0) > 0 && opponentCards(view) <= (style.compelHorizon ?? 0)
+  const compelledBar = near ? style.declareThresholdCompelled : undefined
+  if (t && near && compelledBar !== undefined) {
+    t.notes.push(`Near compulsion: the opponents hold ${opponentCards(view)} cards (horizon ${style.compelHorizon}), so the speculative bar is ${compelledBar} here instead of ${style.declareThreshold}.`)
+  }
   if (t && forced) {
     t.notes.push(
       must
@@ -1560,12 +1605,46 @@ function decideWindow(view: SeatView, pol: ActivePolicy, rng: Rng, t?: Sink): Ga
   } else if (t) {
     t.refused.push({ kind: 'certain-claim', reason: 'this style declares only sets held wholly in its own hand' })
   }
+  // MONET.md 3.8b: the determinized declare. D deals from the posterior; a set whose six cards sit
+  // on this team with the same holders in at least `consensusBar` of them is declared with those
+  // holders. Foreign and hoard rules as the certain claim's. 0 or absent is byte identity.
+  const det = style.consensusDet ?? 0
+  if (det > 0 && !style.declareOnlyOwnHand) {
+    const bar = style.consensusBar ?? 1
+    const foreign = style.foreignDeclare ? null : foreignBookSet(view)
+    const candidates: BookId[] = []
+    for (const b of allBooks(view.config)) {
+      if (view.books[b]) continue
+      if (foreign !== null && foreign.has(b)) continue
+      if (!withinHoardLimits(view, b, style)) continue
+      candidates.push(b)
+    }
+    let best: Consensus | null = null
+    if (candidates.length > 0) {
+      // one draw of D deals a window, every candidate set read off the same deals; with
+      // `consensusKappa` the deals come from a posterior sharpened by the choice prior for the
+      // declare alone (the asks above used `k`, the style's own)
+      const kc = style.consensusKappa
+      const kk = kc !== undefined ? buildKnowledge(view, { ...knowledgeOptions(skill, style), marginal: true, choiceKappa: kc, choicePrior: style.choicePrior ?? 'count' }) : k
+      const sampled = sampleDeals(view, kk, det, rng)
+      for (const b of candidates) {
+        const c = consensusOn(sampled, view, b)
+        if (c.assignment === null) continue
+        if (best === null || c.agreement > best.agreement) best = c
+      }
+    }
+    if (best !== null && best.assignment !== null && best.agreement >= bar) {
+      if (t) conclude(t, 'consensus-claim', `Declared ${best.book} on a determinization consensus: the same six holders in ${Math.round(best.agreement * 100)}% of ${det} sampled deals (bar ${bar}; ${best.teamDeals} deals put the set on this team, ${best.failed} draws failed).`)
+      return { type: 'claim', seat: view.seat, book: best.book, assignments: best.assignment }
+    }
+    if (t) t.refused.push({ kind: 'consensus-claim', reason: best === null ? `no sampled deal (${det} requested) puts an unresolved set wholly on this team` : `${best.book}: ${Math.round(best.agreement * 100)}% agreement over ${det} deals is under the bar ${bar}` })
+  }
   if (!style.declareOnlyWhenCertain && !style.declareOnlyOwnHand) {
     // A `us54` window re-opens after every declare, so there is no tempo pressure to guess
     // early and the downside is a gifted set rather than a void — the un-stalled threshold
     // stays the style's own, and only a proven-dead position relaxes it, exactly as under
     // RULES.md.
-    const ev = evClaim(view, k, style, forced, t, must && !stalled ? 'forced' : undefined)
+    const ev = evClaim(view, k, style, forced, t, must && !stalled ? 'forced' : compelledBar !== undefined ? 'compelled' : undefined, compelledBar)
     if (ev !== null) return ev
   } else if (t) {
     t.refused.push({
@@ -1637,6 +1716,20 @@ function decideUs54Ask(view: SeatView, pol: ActivePolicy, rng: Rng, t?: Sink): G
   }
   if (t) t.ranked = ranked.slice(0, 5)
   const pick = pickAsk(view, k, ranked, pol, t)
+  // MONET.md 3.7 item 1 - the reveal ask, against the pick's hit probability. This is the branch
+  // that matters under `us54`: the window is closed, the ask is the only move, and a certain hit
+  // has already sorted to the top of `ranked` (its p is 1, which no credit outbids). The same
+  // arithmetic as `decideWithPlanner`'s step 3b; see reveal.ts for what is computed.
+  if (revealActive(style)) {
+    const rv = revealAsk(view, k, style, knowledgeOptions(skill, style))
+    if (rv !== null) {
+      if (rv.value > pick.p) {
+        if (t) concludeReveal(t, rv, pick.p)
+        return { type: 'ask', seat, target: rv.target, card: rv.card }
+      }
+      if (t) t.refused.push({ kind: 'reveal-ask', reason: `a reveal into ${rv.book} would let seat ${rv.prover} prove it, but it is worth ${rv.value.toFixed(2)} (hit ${rv.pHit.toFixed(2)} + ${style.reveal ?? 0} x ${rv.urgency} x P(locked) ${rv.pLock.toFixed(2)}) against the pick's ${pick.p.toFixed(2)}` })
+    }
+  }
   // The CONTAINMENT.md turn-pass, considered against the ask the style would otherwise play.
   // This is the branch that matters under `us54`: the window is closed here, so a declare is
   // illegal (`NO_DECLARE_WINDOW`) and the seat's only move is an ask — which is precisely the
@@ -1796,6 +1889,16 @@ function concludeSignal(t: Sink, view: SeatView, target: Seat, card: Card): void
   conclude(t, 'signalling-ask', `Asked seat ${target} for ${pc(card)} — a known miss spent on signal.`)
   t.notes.push(`Every legal ask is a known miss and nothing has hit in the last ${POLICY_CONSTANTS.signalLookback} events, so no ask can gain material.`)
   t.notes.push(`The ask still publishes that this hand holds at least one card of ${book} — it holds ${held}, its strongest set, so teammates running the same inference learn the most from it.`)
+}
+
+/** Verdict for the reveal ask (MONET.md §3.7 item 1), with the price it paid. */
+function concludeReveal(t: Sink, rv: RevealPick, p: number): void {
+  conclude(t, 'reveal-ask', `Asked seat ${rv.target} for ${pc(rv.card)} — the reveal ask: if ${rv.book} is on this team, seat ${rv.prover} can now prove it.`)
+  t.notes.push(`This hand holds a card of ${rv.book}, which by its knowledge is wholly on this team with probability ${rv.pLock.toFixed(2)}, and no teammate can yet prove it. The ask publishes that a card of ${rv.book} is here and ${pc(rv.card)} is not — enough for seat ${rv.prover} to place every card of the set and declare it at the next window.`)
+  t.notes.push(
+    `It still hits with probability ${rv.pHit.toFixed(2)}; with the reveal credit it is worth ${rv.value.toFixed(2)} against the best ordinary ask's ${p.toFixed(2)}` +
+      (rv.urgency >= 1 ? ' — and cashing the set clinches the game.' : ` at the far urgency ${rv.urgency}.`),
+  )
 }
 
 /** Verdict for the contained-book turn-pass, with the arithmetic that chose it. */

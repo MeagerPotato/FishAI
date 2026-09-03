@@ -3,7 +3,12 @@
  * probe-handoff-declare.mjs — MONET.md §3.5a(b), the cross-seat handoff of a compelled
  * declaration, EMULATED at home on a Monet version.
  *
- *   node scripts/probe-handoff-declare.mjs [--version v0.4b] [--games 6000]
+ *   node scripts/probe-handoff-declare.mjs [--version v0.4b] [--games 6000] [--horizon N] [--override JSON]
+ *
+ * MONET.md §3.7a item 2′: with `--horizon N` every WINDOW declaration made while the opponents
+ * hold N cards or fewer is also scored against the true hands, by trace kind — the population the
+ * pre-emptive declare acts on, and its accuracy is the item's marker; `--override` lays a JSON
+ * object of style keys over the version's vector (the arm), printed in the header.
  *
  * At every COMPELLED declaration of `us54` mirror games — the trace says `must-declare` (a
  * window that can never close) or `forced-claim` (no legal ask, or the endgame) — the claim the
@@ -43,7 +48,9 @@ if (!MON.isMonetVersion(version)) {
   console.error(`--version must be one of ${MON.MONET_VERSION_IDS.join(', ')}; got ${JSON.stringify(version)}`)
   process.exit(2)
 }
-const policy = MON.monetPolicy(version)
+const horizon = Number(argOf('--horizon', 0))
+const override = argOf('--override', '') ? JSON.parse(argOf('--override', '')) : null
+const policy = override === null ? MON.monetPolicy(version) : { skill: MON.monetPolicy(version).skill, style: { ...MON.monetPolicy(version).style, ...override } }
 
 const holderOf = (state, card) => state.hands.findIndex((h) => h.includes(card))
 const correct = (state, claim) => CARDS.bookCards(claim.book, state.config).every((c) => holderOf(state, c) === claim.assignments[c])
@@ -70,6 +77,14 @@ const H = {
   fewestGuesses: { n: 0, right: 0, relocated: 0 },
   bestOfThree: { n: 0, right: 0 },
   deciles: Array.from({ length: 10 }, () => ({ n: 0, b: 0, h: 0 })),
+  near: {}, // kind -> { n, right, believed } for window declarations at opponents' cards <= horizon
+  nearWindows: 0,
+}
+const oppCardsOf = (state, seat) => {
+  const team = seat % 2
+  let n = 0
+  for (let x = 0; x < 6; x++) if (x % 2 !== team) n += state.hands[x].length
+  return n
 }
 const t0 = Date.now()
 for (let g = 0; g < games; g++) {
@@ -84,6 +99,16 @@ for (let g = 0; g < games; g++) {
     const a = d.action
     H.decisions++
     const kind = d.trace && d.trace.kind !== undefined ? d.trace.kind : d.kind
+    if (horizon > 0 && view.declareWindow && oppCardsOf(s, seat) <= horizon) {
+      H.nearWindows++
+      if (a.type === 'claim') {
+        const row = H.near[kind] ?? (H.near[kind] = { n: 0, right: 0, believed: 0 })
+        row.n++
+        if (correct(s, a)) row.right++
+        const pp = d.trace && d.trace.claim ? d.trace.claim.p : NaN
+        if (Number.isFinite(pp)) row.believed += pp
+      }
+    }
     if (a.type === 'claim' && (kind === 'must-declare' || kind === 'forced-claim')) {
       H.compelled++
       H.byKind[kind] = (H.byKind[kind] || 0) + 1
@@ -127,7 +152,18 @@ for (let g = 0; g < games; g++) {
   }
 }
 const pct = (x, n) => (n > 0 ? ((100 * x) / n).toFixed(2) : 'n/a')
-console.log(`=== handoff emulation: Monet ${version}, ${games} us54 mirror games, ${H.decisions} decisions, ${H.compelled} compelled declarations ${JSON.stringify(H.byKind)}, ${((Date.now() - t0) / 1000).toFixed(1)}s ===`)
+console.log(`=== handoff emulation: Monet ${version}${override === null ? '' : ' + ' + JSON.stringify(override)}, ${games} us54 mirror games, ${H.decisions} decisions, ${H.compelled} compelled declarations ${JSON.stringify(H.byKind)}, ${((Date.now() - t0) / 1000).toFixed(1)}s ===`)
+if (horizon > 0) {
+  console.log(`window declarations with the opponents at <= ${horizon} cards (${H.nearWindows} such window decisions):`)
+  let tn = 0
+  let tr = 0
+  for (const [kind, row] of Object.entries(H.near).sort()) {
+    tn += row.n
+    tr += row.right
+    console.log(`  ${kind.padEnd(16)} n=${String(row.n).padStart(5)}  right ${pct(row.right, row.n)}%  believed mean ${(row.believed / Math.max(1, row.n)).toFixed(4)}  (${(row.n / games).toFixed(3)} per game)`)
+  }
+  console.log(`  ${'all'.padEnd(16)} n=${String(tn).padStart(5)}  right ${pct(tr, tn)}%  (${(tn / games).toFixed(3)} per game)`)
+}
 console.log(`as shipped         ${pct(H.shipped.right, H.shipped.n)}%  (n=${H.shipped.n}, believed mean ${(H.shipped.believed / Math.max(1, H.shipped.n)).toFixed(4)})`)
 console.log(`own best plan      ${pct(H.ownBest.right, H.ownBest.n)}%  (the compelled seat's forcedClaim rule re-derived; the control — must equal as-shipped)`)
 console.log(`most-confident     ${pct(H.mostConfident.right, H.mostConfident.n)}%  relocated ${pct(H.mostConfident.relocated, H.mostConfident.n)}%`)

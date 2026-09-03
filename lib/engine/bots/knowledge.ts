@@ -595,6 +595,18 @@ export function finishKnowledge(w: Work, view: SeatView): Knowledge {
     }
   }
 
+  return materialise(w, view)
+}
+
+/**
+ * The fixpoint propagation over the CURRENT public counts and the materialization of the plain
+ * serializable Knowledge object — the tail `finishKnowledge` and `publicKnowledge` share, so the
+ * public walk is the private one minus exactly the own-hand step and nothing else.
+ */
+function materialise(w: Work, view: SeatView): Knowledge {
+  const deck = w.deck
+  const n = w.n
+  const me = view.seat
   const counts = Array.isArray(view.counts) ? view.counts : [0, 0, 0, 0, 0, 0]
   propagate(w, counts)
 
@@ -628,6 +640,75 @@ export function finishKnowledge(w: Work, view: SeatView): Knowledge {
     cards: k.cards.map((ci) => deck.cards[ci]),
   }))
   return { seat: me, counts: [...counts], holders, cands, gone, unknownSlots, constraints }
+}
+
+/**
+ * A hypothesis about one seat's holdings over named cards, for the reveal ask's simulation of a
+ * TEAMMATE's build (reveal.ts): `holds` are fixed at `seat` and `lacks` excluded from it, exactly
+ * as `finishKnowledge` fixes and excludes the viewer's own hand — over the named cards only, so
+ * the rest of the hypothetical hand (which the viewer cannot know) is left open. A card the record
+ * has already moved is left as the record has it: the record outranks a hypothesis.
+ */
+export interface AssumedHand {
+  seat: Seat
+  holds: readonly Card[]
+  lacks: readonly Card[]
+}
+
+function assumeHand(w: Work, a: AssumedHand): void {
+  const seat = a.seat
+  for (const c of a.holds) {
+    const ci = w.deck.order.get(c)
+    if (ci === undefined || w.pos[ci] !== ORIGINAL) continue
+    if (w.xfix[ci] !== seat) {
+      w.xfix[ci] = seat
+      w.cand[ci] = bit(seat)
+    }
+  }
+  for (const c of a.lacks) {
+    const ci = w.deck.order.get(c)
+    if (ci === undefined || w.pos[ci] !== ORIGINAL) continue
+    if (w.xfix[ci] === seat) {
+      w.xfix[ci] = -1
+      w.cand[ci] = FULL_MASK & ~bit(seat)
+    } else {
+      clearCand(w, ci, seat)
+    }
+  }
+}
+
+/**
+ * MONET.md §3.7 item 1 — the PUBLIC walk: what every seat at the table can infer from the log
+ * alone, with no hand injected. A teammate's knowledge is exactly this plus its own hand (the
+ * injection in `finishKnowledge` is the only private step), so this is the part of a teammate's
+ * inference the viewer can compute — the reveal ask (reveal.ts) appends a hypothetical ask to the
+ * log and reads here whether the record it leaves lets a teammate prove a set. `buildKnowledge`'s
+ * walk otherwise: the window, the running counts, the resolved-book safety net, the fixpoint over
+ * the current counts. No marginal and no choice prior — this is the logic alone. `seat` is the
+ * viewer's, for the record. With `assume`, one seat's hypothesised holdings over named cards are
+ * injected after the walk, before the fixpoint — a teammate's build as the viewer imagines it.
+ */
+export function publicKnowledge(view: SeatView, options: KnowledgeOptions = {}, assume?: AssumedHand): Knowledge {
+  const opts: Required<KnowledgeOptions> = {
+    logWindow: options.logWindow ?? Number.POSITIVE_INFINITY,
+    useConstraints: options.useConstraints ?? true,
+    marginal: false,
+    choiceKappa: 0,
+    choiceAdapt: 0,
+    choicePrior: 'count',
+  }
+  const ownCardToggle = view.config?.toggles?.askOwnCardAllowed === true
+  const log: readonly PublicEvent[] = Array.isArray(view.log) ? view.log : []
+  const windowed = opts.logWindow < log.length
+  const events = windowed ? log.slice(log.length - opts.logWindow) : log
+  const w = newWork(view)
+  const trackCounts = !windowed
+  if (windowed) markResolvedGone(w, view)
+  const runningCounts = new Array<number>(6).fill(w.deck.handSize)
+  for (const ev of events) ingest(w, ev, runningCounts, opts, ownCardToggle, trackCounts)
+  markResolvedGone(w, view)
+  if (assume !== undefined) assumeHand(w, assume)
+  return materialise(w, view)
 }
 
 /* ----------------------------------------------------------- query fns --- */
