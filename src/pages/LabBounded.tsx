@@ -1,5 +1,5 @@
 /**
- * `/lab/bounded` — the FishAI v1.5 results page: the bounded-memory ladder, priced.
+ * `/lab/bounded` — the Bass v1.5 results page: the bounded-memory ladder, priced.
  *
  * The page reports one committed artifact (`src/lab/data/bounded-results.json`, parsed at the
  * boundary by `bounded-artifact.ts`) against eight predictions that were written down before
@@ -242,7 +242,7 @@ export function LabBounded() {
         />
         <div className={s.split} style={{ marginTop: 'var(--fa-sp-head)' }}>
           <Reveal as="p" className={s.prose}>
-            FishAI v1.5 replaces the old difficulty knob — uniform decision noise — with a
+            Bass v1.5 replaces the old difficulty knob — uniform decision noise — with a
             memory budget: a bounded seat re-derives every fact the public log certifies, ranks
             them by relevance to a focus book, and keeps only what fits in a budget measured in
             bits (2 a card fact, 1 a basis fact). This page reports the committed v1.5

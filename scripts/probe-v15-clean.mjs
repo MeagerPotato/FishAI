@@ -1,5 +1,5 @@
 /**
- * probe-v15-clean.mjs — scratch: FishAI v1.5 (bounded-memory, POST-concession) against FishAI
+ * probe-v15-clean.mjs — scratch: Bass v1.5 (bounded-memory, POST-concession) against FishAI
  * v1.0 (adaptive) taken from a **pre-concession** tree, on duplicate deals.
  *
  * ## Why this file exists beside probe-v15-h2h.mjs
@@ -345,7 +345,7 @@ if (!isMainThread) {
   const pad = (s, n) => String(s).padEnd(n)
   const sd = (c) => `${c.setDiff >= 0 ? '+' : ''}${c.setDiff.toFixed(4)} +/- ${c.setDiffCi.toFixed(4)}`
 
-  console.log(`\nFishAI v1.5 (post-concession) vs v1.0 (pre-concession export) — us54, duplicate deals`)
+  console.log(`\nBass v1.5 (post-concession) vs v1.0 (pre-concession export) — us54, duplicate deals`)
   console.log(`bank '${BANK}', ${PAIRS} pairs/cell = ${PAIRS * 2} games/cell, ${((Date.now() - t0) / 1000).toFixed(1)}s\n`)
   console.log(
     `${pad('cell', 12)} ${pad('pairs', 6)} ${pad('bad', 4)} ${pad('setDiff (A-B) +/-95%', 24)} ${pad('share', 8)} ${pad('winRate', 8)} sets A:B`,

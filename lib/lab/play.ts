@@ -210,7 +210,7 @@ export function playGame(
 /**
  * Play one game with an explicit policy per seat — the general form `playGame` is a pure-team
  * special case of. Exists for the Tier-2 mixed-composition cells (BOT_LAB.md §5.3) and the
- * FishAI v1.0 experiments, where a team's three seats need not share a policy. Counters remain
+ * Bass v1.0 experiments, where a team's three seats need not share a policy. Counters remain
  * indexed by *team*; the caller owns the mapping from teams to whatever it is comparing. The
  * loop, the seeding, the measurement, and the emergency handling are byte-identical to
  * `playGame` — `tests/lab/play-seats.test.ts` pins that a pure-team call through this entry

@@ -1,5 +1,5 @@
 /**
- * adaptive-lab.test.ts — the FishAI v1.0 experiment suite at tiny N (SPEC Stage 2b/2c).
+ * adaptive-lab.test.ts — the Bass v1.0 experiment suite at tiny N (SPEC Stage 2b/2c).
  *
  * The full run is 125,600 games; these tests run the SAME machinery — `planAdaptiveTasks` →
  * `runAdaptiveTask` → `assembleAdaptiveRun` → `buildAdaptiveResults` → the site's boundary

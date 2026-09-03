@@ -1,5 +1,5 @@
 /**
- * bounded.ts — FishAI v1.5: the bounded-memory ladder (PLAYSTYLES.md S44–S48).
+ * bounded.ts — Bass v1.5: the bounded-memory ladder (PLAYSTYLES.md S44–S48).
  *
  * Memory capacity capped **in bits**, with the eviction policy S47 names: rank facts by
  * contestability, not recency. The cost model is Sanjay Kannan's, verbatim from the S44
@@ -81,7 +81,7 @@ import {
   recordedWalk,
 } from './knowledge.ts'
 
-/** The fifth `PolicySpec` shape: FishAI v1.5, the bounded-memory policy. */
+/** The fifth `PolicySpec` shape: Bass v1.5, the bounded-memory policy. */
 export interface BoundedSpec {
   bounded: true
   /** The memory budget in bits. >= 0 integer; anything else degrades to 0, never throws. */

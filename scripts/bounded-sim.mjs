@@ -1,5 +1,5 @@
 /**
- * bounded-sim.mjs — launcher for the FishAI v1.5 experiment suite (SPEC v1.5 Phase 2; the
+ * bounded-sim.mjs — launcher for the Bass v1.5 experiment suite (SPEC v1.5 Phase 2; the
  * pre-registered predictions are in lib/lab/bounded-types.ts and travel with the artifact).
  *
  * `node scripts/bounded-sim.mjs [--pairs N] [--tierPairs N] [--accGames N]

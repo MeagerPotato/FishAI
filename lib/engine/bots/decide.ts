@@ -67,7 +67,7 @@
  * `PassValuation` the contained-book turn-pass prices its move with (previously discarded at the
  * call site — now the arithmetic a player is told is exactly the arithmetic the bot used).
  *
- * ## The adaptive layer — FishAI v1.0
+ * ## The adaptive layer — Bass v1.0
  *
  * An `AdaptiveSpec` policy resolves *here*, not in `resolvePolicy`, because it needs the view:
  * [adaptive.ts](adaptive.ts) reads the opponents off the public log, best-responds over the
@@ -80,7 +80,7 @@
  * ordinary branch narration, so the assistant pane shows *why this style* above *why this
  * move*. The dependency is strictly one-way: this file imports adaptive.ts, never the reverse.
  *
- * ## The bounded-memory layer — FishAI v1.5
+ * ## The bounded-memory layer — Bass v1.5
  *
  * A `BoundedSpec` policy also resolves here, with the view: [bounded.ts](bounded.ts) derives
  * the fact pool from the full public log, keeps what a bit budget affords, and hands back the
@@ -1967,7 +1967,7 @@ export function planClaimFor(view: SeatView, policy: PolicySpec, book: BookId): 
  *
  * `policy` is a difficulty tier name (the three shipped presets), a bare `StyleParams` (played
  * at full-strength inference, STYLES.md §2), an explicit `{ skill, style }` pair for the
- * BOT_LAB.md §1.3 skill ablation, the FishAI v1.0 `AdaptiveSpec`, or the FishAI v1.5
+ * BOT_LAB.md §1.3 skill ablation, the Bass v1.0 `AdaptiveSpec`, or the Bass v1.5
  * `BoundedSpec` (both resolved against this view — see `resolveWithView`).
  */
 export function decide(view: SeatView, policy: PolicySpec, seed: number): GameAction {

@@ -2,7 +2,7 @@
  * Monet v0.1 — the identity pin.
  *
  * [MONET.md](../../MONET.md) §3.1 gives v0.1 exactly one behavioural acceptance criterion: **byte
- * identity to FishAI v2.0**, 0 action mismatches, "a pass/fail with no floor: one mismatch fails
+ * identity to Bass v2.0**, 0 action mismatches, "a pass/fail with no floor: one mismatch fails
  * it". A vitest file cannot check out another revision, so the full cross-revision sweep is
  * `scripts/byte-identity.mjs` (64,198 decisions against `git show HEAD:lib`, plus a `MUTATE=`
  * negative control that must fail). Three things are asserted here, and they fail for different
@@ -35,7 +35,7 @@
  * Nine styles × three seeds keeps that broad while staying inside a few seconds: 20,291 decisions,
  * 40,582 in-graph comparisons and 27 digests, in about two and a half seconds.
  *
- * **A red digest is not a test to fix.** It is the report that v0.1 no longer plays FishAI v2.0's
+ * **A red digest is not a test to fix.** It is the report that v0.1 no longer plays Bass v2.0's
  * games, which is the acceptance criterion itself. Regenerating the bank to make it green deletes
  * the only evidence that v0.1 ever was what it says it was.
  *
@@ -76,7 +76,7 @@ import { MONET_V01_BANK } from './data/monet-v01-bank.ts'
 const MONET_V01: PolicySpec = monetPolicy('v0.1')
 
 /**
- * The FishAI v2.0 arm, in both spellings — written out, never read from the registry.
+ * The Bass v2.0 arm, in both spellings — written out, never read from the registry.
  * MONET.md §1.1: `STYLE_ROSTER.punter` at `SKILL_PRESETS.hard`.
  */
 const V2_ARMS: { name: string; policy: PolicySpec }[] = [
@@ -94,7 +94,7 @@ function asPair(spec: PolicySpec, ctx: string): BotPolicy {
   return spec
 }
 
-describe('the v0.1 registry entry IS the FishAI v2.0 arm', () => {
+describe('the v0.1 registry entry IS the Bass v2.0 arm', () => {
   it('binds the roster entry and the skill preset by reference, so it cannot drift from them', () => {
     const pair = asPair(MONET_V01, "MONET_VERSIONS['v0.1']")
     // `toBe`, not `toEqual`: a copy of Punter's numbers would pass a value comparison and would
@@ -190,7 +190,7 @@ function playIdentity(row: (typeof MONET_V01_BANK.games)[number]): void {
   tally.games++
 }
 
-describe('Monet v0.1 ≡ the FishAI v2.0 arm, at every decision of whole us54 games', () => {
+describe('Monet v0.1 ≡ the Bass v2.0 arm, at every decision of whole us54 games', () => {
   for (const id of STYLE_IDS) {
     const rows = MONET_V01_BANK.games.filter((g) => g.table === id)
     it(`${id} table: ${rows.length} us54 games, every action identical`, () => {
@@ -215,7 +215,7 @@ describe('Monet v0.1 ≡ the FishAI v2.0 arm, at every decision of whole us54 ga
     expect(tally.mismatches).toBe(0)
   })
 
-  it('the bank is the FishAI v2.0 arm, recorded from a revision this tree can name', () => {
+  it('the bank is the Bass v2.0 arm, recorded from a revision this tree can name', () => {
     // A fixture whose provenance is a sentence in a comment is a fixture nobody can re-derive.
     // These two fields are what `scripts/byte-identity.mjs --ref <rev> --emit-bank` was told.
     expect(MONET_V01_BANK.revision).toMatch(/^[0-9a-f]{40}$/)

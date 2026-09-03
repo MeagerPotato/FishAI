@@ -3,7 +3,7 @@
  *
  * `node scripts/byte-identity.mjs --ref HEAD --emit-bank tests/bots/data/monet-v01-bank.ts`
  *
- * The FishAI v2.0 arm's own decisions, recorded from a COMMITTED revision and pinned here so
+ * The Bass v2.0 arm's own decisions, recorded from a COMMITTED revision and pinned here so
  * that Monet's identity claim survives the session it was measured in. Each row is one whole
  * `us54` game: the table style drives it, and the digest runs over the canonical form of the
  * action the v2.0 arm — `{ skill: SKILL_PRESETS.hard, style: STYLE_ROSTER.punter }` — returned
@@ -16,7 +16,7 @@
  * single game breaks a digest here — which is exactly what "no behaviour change" means.
  *
  * Regenerating it is a deliberate act, not a fix for a red test: a changed digest is a report
- * that v0.1 no longer plays FishAI v2.0's games, and that is the acceptance criterion itself.
+ * that v0.1 no longer plays Bass v2.0's games, and that is the acceptance criterion itself.
  */
 
 /** One whole `us54` game of the bank. */

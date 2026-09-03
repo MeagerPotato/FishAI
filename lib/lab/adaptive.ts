@@ -1,5 +1,5 @@
 /**
- * adaptive.ts — the FishAI v1.0 experiment suite: gauntlet, mixed screen, oracle ablation,
+ * adaptive.ts — the Bass v1.0 experiment suite: gauntlet, mixed screen, oracle ablation,
  * classifier accuracy (SPEC Stage 2b/2c; the data contract is
  * [adaptive-types.ts](adaptive-types.ts), the predictions it tests are written there too).
  *

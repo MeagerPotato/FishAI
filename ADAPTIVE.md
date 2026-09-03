@@ -1,6 +1,6 @@
-# ADAPTIVE.md — FishAI v1.0: the adaptive engine, and the theorem that makes it moot
+# ADAPTIVE.md — Bass v1.0: the adaptive engine, and the theorem that makes it moot
 
-FishAI v1.0 is the adaptive layer over the measured roster: it watches the public log, forms a
+Bass v1.0 is the adaptive layer over the measured roster: it watches the public log, forms a
 style posterior per opponent seat, and best-responds over the committed payoff matrix. This
 document records its architecture, the degeneracy that the committed matrix forces on it, and the
 measured verdict from the 125,600-game experiment suite — which is **negative**, was predicted to

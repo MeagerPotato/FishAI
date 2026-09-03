@@ -1,5 +1,5 @@
 /**
- * `/lab/adaptive` — the FishAI v1.0 results page, led by its negative result.
+ * `/lab/adaptive` — the Bass v1.0 results page, led by its negative result.
  *
  * The page reports one committed artifact (`src/lab/data/adaptive-results.json`, parsed at the
  * boundary by `adaptive-artifact.ts`) against four predictions that were written down before
@@ -273,7 +273,7 @@ export function LabAdaptive() {
         />
         <div className={s.split} style={{ marginTop: 'var(--fa-sp-head)' }}>
           <Reveal as="p" className={s.prose}>
-            FishAI v1.0 watches the public log, keeps a running posterior over which of the nine
+            Bass v1.0 watches the public log, keeps a running posterior over which of the nine
             styles each opponent seat is playing, and best-responds by delegating every decision
             to the style the measured counter table says pays most against that read. This page
             reports the committed v1.0 experiment suite — {count(meta.gamesTotal)} games —

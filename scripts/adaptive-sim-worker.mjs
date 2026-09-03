@@ -1,5 +1,5 @@
 /**
- * adaptive-sim-worker.mjs — the worker-thread entry for the FishAI v1.0 experiment suite.
+ * adaptive-sim-worker.mjs — the worker-thread entry for the Bass v1.0 experiment suite.
  *
  * Deliberately trivial, exactly like style-sim-worker.mjs: `scripts/` is outside
  * tsconfig.app.json's `include`, so nothing written here is typechecked. All the substance —
