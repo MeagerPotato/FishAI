@@ -202,10 +202,11 @@ export function computeMarginalTable(k: Knowledge): MarginalTable | null {
   if (n === 0) return { cards, index, p, rounds: 0, converged: true, conditioned: 0 }
   // MONET.md §3.6a: the prior. Flat (1 on every admissible cell) unless the Knowledge carries the
   // ask-choice evidence, in which case a seat's `a` asks into a card's half-suit weight that seat's
-  // cell by (1 + κ)^min(a, 3) before the scaling — the margins are the same, the fixpoint is not.
-  // Saturating at three asks keeps the matrix conditioned (a seventh ask at κ = 4 is a weight of
-  // 78,125 and 200 rounds do not reach the margins) and says what the evidence says: a seat that
-  // keeps asking into a set is chasing it, not holding more of it each time.
+  // cell by (1 + κ) before the scaling — the margins are the same, the fixpoint is not. One ask
+  // is the whole signal: with ground truth on the fit seeds a seat that asked into a half-suit
+  // once was dealt 1.565 of its cards, twice 1.612, three or more 1.570, against 1.185 when it
+  // held one and never asked (MONET.md §3.6a). A count would weight chasing, not holding, and
+  // at κ = 4 a seventh ask would be a weight of 78,125 that 200 rounds cannot scale away.
   const kappa = k.choiceKappa ?? 0
   const asksInto = kappa > 0 ? k.asksInto : undefined
   for (let i = 0; i < n; i++) {
@@ -213,8 +214,8 @@ export function computeMarginalTable(k: Knowledge): MarginalTable | null {
     const row = asksInto === undefined ? undefined : asksInto[cardBook(cards[i])]
     for (const s of k.cands[cards[i]] ?? []) {
       if (need[s] > 0) {
-        const a = row === undefined || s === k.seat ? 0 : Math.min(3, row[s] ?? 0)
-        p[i * 6 + s] = a > 0 ? Math.pow(1 + kappa, a) : 1
+        const asked = row !== undefined && s !== k.seat && (row[s] ?? 0) > 0
+        p[i * 6 + s] = asked ? 1 + kappa : 1
         any = true
       }
     }

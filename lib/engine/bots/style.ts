@@ -277,10 +277,10 @@ export interface StyleParams extends AskWeights {
    */
   pAssignment?: 'greedy' | 'joint'
   /**
-   * MONET.md §3.6a — the ask-choice prior's strength κ (≥ 0). Each ask a seat makes into a
-   * half-suit multiplies the marginal's prior weight of that half-suit's unknown cards at that seat
-   * by `1 + κ` before scaling, saturating at three asks (`KnowledgeOptions.choiceKappa`): a policy chases the sets it is
-   * invested in, so the choice is evidence about the chooser's hand. 0 or absent is the flat prior
+   * MONET.md §3.6a — the ask-choice prior's strength κ (≥ 0). A seat that has asked into a
+   * half-suit has the marginal's prior weight of that half-suit's unknown cards at that seat
+   * multiplied by `1 + κ` before scaling, once (`KnowledgeOptions.choiceKappa`): a policy chases
+   * the sets it is invested in, so the choice is evidence about the chooser's hand. 0 or absent is the flat prior
    * every bot has shipped with, byte for byte. Reads the table `pModel: 'marginal'` builds and is
    * inert without one. Absent on every roster style and every tier.
    */
