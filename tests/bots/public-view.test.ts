@@ -231,6 +231,11 @@ describe('public-view-only proof', () => {
       './bounded.ts',
       // Generated classifier calibration (scripts/gen-fingerprints.mjs): frozen numeric data
       // plus the StyleId type from './roster.ts'. No engine state is reachable from data.
+      // MONET.md §3.3a licence conditioning of the hit probability. Pure over the SeatView, the
+      // prebuilt Knowledge and the log-licence lookup; it imports only '../types.ts', '../cards.ts',
+      // './knowledge.ts', './defuse.ts' (type-only) and './types.ts' — every one on this list — so
+      // no engine state is reachable from it either.
+      './licence.ts',
       './data/fingerprints.ts',
       // Generated measured payoff table (scripts/gen-counter-table.mjs): frozen numeric data
       // plus the StyleId type, held to the same standard as the fingerprints above.

@@ -111,6 +111,7 @@ import { planContainedPass } from './contained.ts'
 import type { ContainedPassPlan, PassValuation } from './contained.ts'
 import { defusalActive, defusalBonus, logLicences } from './defuse.ts'
 import type { LicenceLookup } from './defuse.ts'
+import { licenceConditionedHitProbability } from './licence.ts'
 import { concealmentActive, concealmentPenalty, ownCardsInBook } from './conceal.ts'
 import { preyInBook, turnYield } from './threat.ts'
 import { POLICY_CONSTANTS, SKILL_PRESETS, resolvePolicy } from './style.ts'
@@ -1072,8 +1073,15 @@ function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: ActiveP
   // The concealment term consumes the SAME lookup, queried at this seat instead of at the target:
   // "have I already published a basis in this set". One scan serves both halves, and the lookup is
   // built whenever either is live.
+  //
+  // MONET.md §3.3a — licence conditioning of the hit probability itself (licence.ts). Off at
+  // `licenceLambda` absent or 0, which is every tier and every roster style, and under a skill
+  // without `refinedInference`; on, it reads the same log-licence lookup the two concession terms
+  // read, so a third consumer costs no third scan.
+  const lambda = style.licenceLambda ?? 0
+  const conditioning = skill.refinedInference && lambda > 0
   const licences: LicenceLookup | undefined =
-    defusing || concealing ? logLicences(view, k) : undefined
+    defusing || concealing || conditioning ? logLicences(view, k) : undefined
   // One log scan for the whole ranking, not one per ask: `turnYield` is a property of the
   // position, not of the candidate. Both terms divide by `1 + E`, so both need it.
   const yield_ = defusing || concealing ? turnYield(view) : 0
@@ -1095,7 +1103,11 @@ function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: ActiveP
       return { r, refined: r.p, s: r.score + (gated ? 0 : bonus - charge), idx }
     }
     const base = askHitProbability(k, r.card, r.target)
-    const refined = refinedHitProbability(k, r.card, r.target)
+    // The conditioned number stands in for the refined one everywhere below — in the score, and
+    // as the `p` the defusal credit is scaled by — so the ranker compares one belief, not two.
+    const refined = conditioning
+      ? licenceConditionedHitProbability(view, k, r.card, r.target, lambda, licences!)
+      : refinedHitProbability(k, r.card, r.target)
     const bonus = defusing ? defusalBonus(view, k, style, r, refined, yield_, licences!) : 0
     return {
       r,

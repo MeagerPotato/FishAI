@@ -90,9 +90,10 @@ import { MONET_V01_BANK } from './data/monet-v01-bank.ts'
 import { MONET_V02_BANK } from './data/monet-v02-bank.ts'
 import { ask, gs, mkView } from './util.ts'
 
-/** The two versions, addressed the way a harness addresses them. */
+/** The versions, addressed the way a harness addresses them. */
 const MONET_V01: PolicySpec = monetPolicy('v0.1')
 const MONET_V02: PolicySpec = monetPolicy('v0.2')
+const MONET_V03: PolicySpec = monetPolicy('v0.3')
 
 /**
  * The live roster arm, in both spellings — written out, never read from the registry.
@@ -141,6 +142,18 @@ describe('the Monet version registry names each version and resolves it to that 
     expect(STYLE_ROSTER.punter.minHitP).toBe(1e-9)
   })
 
+  it('v0.3 is the live arm with licenceLambda 0.6 on its own vector — and differs from it in NOTHING else', () => {
+    const pair = asPair(MONET_V03, "MONET_VERSIONS['v0.3']")
+    expect(pair.skill).toBe(SKILL_PRESETS.hard)
+    // MONET.md §3.3a's knob lives on Monet's vector and not on the roster: Bass is frozen, and a
+    // knob on the BALANCED base would move every Bass style the way `minHitP` did at v0.2. The
+    // deviation SET is pinned for the same reason v0.1's is — widen it and this line names the key.
+    expect(styleDiffKeys(pair.style, STYLE_ROSTER.punter)).toEqual(['licenceLambda'])
+    expect(pair.style.licenceLambda).toBe(0.6)
+    expect(STYLE_ROSTER.punter.licenceLambda).toBeUndefined()
+    expect(Object.isFrozen(pair.style)).toBe(true)
+  })
+
   it('v0.1 carries the knobs MONET.md §1.1 names for the baseline arm', () => {
     const pair = asPair(MONET_V01, "MONET_VERSIONS['v0.1']")
     expect(pair.style.id).toBe('punter')
@@ -167,15 +180,15 @@ describe('the Monet version registry names each version and resolves it to that 
 
   it('MONET_VERSION_IDS lists every shipped version, in order, and nothing else', () => {
     expect([...MONET_VERSION_IDS]).toEqual(Object.keys(MONET_VERSIONS))
-    expect([...MONET_VERSION_IDS]).toEqual(['v0.1', 'v0.2'])
+    expect([...MONET_VERSION_IDS]).toEqual(['v0.1', 'v0.2', 'v0.3'])
     expect(MONET_VERSION_IDS.every((v) => isMonetVersion(v))).toBe(true)
   })
 
   it('refuses an unshipped id rather than degrading to some default version', () => {
-    expect(isMonetVersion('v0.3')).toBe(false)
+    expect(isMonetVersion('v0.4')).toBe(false)
     // Inherited keys are not versions — `MONET_VERSIONS['toString']` is a function, not `undefined`.
     expect(isMonetVersion('toString')).toBe(false)
-    expect(() => monetPolicy('v0.3' as MonetVersion)).toThrow(RangeError)
+    expect(() => monetPolicy('v0.4' as MonetVersion)).toThrow(RangeError)
     expect(() => monetPolicy('toString' as MonetVersion)).toThrow(RangeError)
   })
 })
@@ -215,6 +228,38 @@ describe('v0.1 and v0.2 are two different policies, not one policy under two lab
     // v0.2 refuses it and takes a live ask instead.
     expect(v02.type).toBe('ask')
     expect(canonicalAction(v01)).not.toBe(canonicalAction(v02))
+  })
+})
+
+describe('v0.3 and v0.2 are two different policies, and nearly the same one', () => {
+  it('choose differently on a measurable minority of real decisions, and alike on the rest', () => {
+    // The registry says v0.3 is v0.2 plus `licenceLambda: 0.6`; this is the check that the knob
+    // reaches the board. Six v0.3-driven mirror games, v0.2 asked at every position. The share
+    // that moves is a property of the conditioning (licensed asks only, one factor per set and
+    // seat) and is small; the floor on agreement is a sanity bar, not a measurement.
+    let decisions = 0
+    let differ = 0
+    for (let g = 0; g < 6; g++) {
+      const seed = `monet-v03-diverge-${g}`
+      let s = newGame(seed, us54Config, g as Seat)
+      let steps = 0
+      while (s.phase !== 'finished') {
+        if (steps++ >= 5000) throw new Error(`${seed}: step cap`)
+        const { seat } = legalActionsSummary(s)
+        const view = seatView(s, seat)
+        const moveSeed = hashSeed(`${seed}:${s.moveIndex}`)()
+        const a3 = decide(view, MONET_V03, moveSeed)
+        const a2 = decide(view, MONET_V02, moveSeed)
+        decisions++
+        if (canonicalAction(a3) !== canonicalAction(a2)) differ++
+        const r = reduce(s, a3)
+        if (!r.ok) throw new Error(`${seed}: ${r.error.code}`)
+        s = r.state
+      }
+    }
+    expect(decisions).toBeGreaterThan(3_000)
+    expect(differ).toBeGreaterThan(0)
+    expect(differ / decisions).toBeLessThan(0.1)
   })
 })
 

@@ -62,6 +62,17 @@
  * `scripts/byte-identity.mjs --gate dead-ask-full`, which can materialise the other revision.
  * MONET.md §3.2 records the decision.
  *
+ * ## v0.3 is a spec change on Monet's own vector, and the roster does not move
+ *
+ * MONET.md §3.3a ships licence conditioning of the hit probability ([licence.ts](licence.ts)) at
+ * λ = 0.60. The knob is `licenceLambda`, optional on `StyleParams`, and it is set **only here**:
+ * the roster is Bass's, Bass is frozen, and a knob on the BALANCED base would have moved every
+ * Bass style the way `minHitP` did at v0.2. So v0.3 is `STYLE_ROSTER.punter` spread with the one
+ * field, exactly as v0.1 is punter spread with `minHitP` pinned back, and `monet.test.ts` pins the
+ * deviation set to `{ licenceLambda }`. The code path it switches on is inert at λ absent —
+ * `scripts/byte-identity.mjs --version v0.2` against the pre-v0.3 revision is the sweep that says
+ * so — which is what lets v0.2 keep the by-reference binding to the live roster.
+ *
  * There is deliberately **no `MONET_LATEST`**. A moving pointer is exactly the drift v0.1 exists to
  * remove: a caller asking for "latest" silently changes what it measures the day v0.2 lands, and
  * the change would surface as a shifted win rate rather than as a shifted spec. Name the version.
@@ -75,12 +86,12 @@ import type { PolicySpec } from './bounded.ts'
  * that have actually shipped appear here, so the union is also the honest answer to "what can be
  * measured today".
  */
-export type MonetVersion = 'v0.1' | 'v0.2'
+export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3'
 
 /**
  * Version id -> the policy that version plays, ready for `decide(view, policy, seed)`.
  *
- * Both entries are the `BotPolicy` shape rather than a bare style, so that the tier is explicit at
+ * All entries are the `BotPolicy` shape rather than a bare style, so that the tier is explicit at
  * the call site: a bare `StyleParams` would resolve to full-strength inference anyway
  * ([style.ts](style.ts) `resolvePolicy`), but "at `hard`" is part of what the baseline claims and
  * it should be readable here rather than inferred from a default.
@@ -92,7 +103,10 @@ export type MonetVersion = 'v0.1' | 'v0.2'
  *   that the deviation from the live roster is a single readable line; `monet.test.ts` pins the
  *   deviation set to exactly `{ minHitP }` so that a later roster edit cannot widen it in silence.
  *
- * Neither entry pins the *code* the knobs run through — see the header. Naming v0.1 here buys back
+ * - `v0.3` is the roster's Punter spread with `licenceLambda: 0.6` (MONET.md §3.3a) — Monet's own
+ *   vector, deliberately not a roster edit.
+ *
+ * No entry pins the *code* the knobs run through — see the header. Naming v0.1 here buys back
  * v0.1's SPEC on a v0.2 tree; it does not buy back v0.1's games.
  */
 export const MONET_VERSIONS: Readonly<Record<MonetVersion, PolicySpec>> = Object.freeze({
@@ -101,6 +115,10 @@ export const MONET_VERSIONS: Readonly<Record<MonetVersion, PolicySpec>> = Object
     style: Object.freeze({ ...STYLE_ROSTER.punter, minHitP: 0 }),
   }),
   'v0.2': Object.freeze({ skill: SKILL_PRESETS.hard, style: STYLE_ROSTER.punter }),
+  'v0.3': Object.freeze({
+    skill: SKILL_PRESETS.hard,
+    style: Object.freeze({ ...STYLE_ROSTER.punter, licenceLambda: 0.6 }),
+  }),
 })
 
 /**
@@ -108,7 +126,7 @@ export const MONET_VERSIONS: Readonly<Record<MonetVersion, PolicySpec>> = Object
  * ("Monet beats v0.2 through v0.6 as well"). Ordered, because a version list that is only a key set
  * cannot express "the one before this".
  */
-export const MONET_VERSION_IDS: readonly MonetVersion[] = Object.freeze(['v0.1', 'v0.2'] as const)
+export const MONET_VERSION_IDS: readonly MonetVersion[] = Object.freeze(['v0.1', 'v0.2', 'v0.3'] as const)
 
 /**
  * Is `id` a version this repo can play? For callers holding a string rather than a `MonetVersion` —
