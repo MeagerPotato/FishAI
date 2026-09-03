@@ -69,6 +69,7 @@ export {
   unaskableBooks,
   foreignProvableBooks,
   askHitProbability,
+  slotPriorHitProbability,
   refinedHitProbability,
   pc,
   BASELINE_ASK_WEIGHTS,

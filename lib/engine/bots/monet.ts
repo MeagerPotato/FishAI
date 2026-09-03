@@ -86,7 +86,7 @@ import type { PolicySpec } from './bounded.ts'
  * that have actually shipped appear here, so the union is also the honest answer to "what can be
  * measured today".
  */
-export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3'
+export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a'
 
 /**
  * Version id -> the policy that version plays, ready for `decide(view, policy, seed)`.
@@ -107,6 +107,9 @@ export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3'
  *   vector, deliberately not a roster edit. Measured 2026-09-03: 30.96% over six seeds against
  *   SESTINA, +3.75 on v0.2 and positive on every seed; `defuse` stays at the roster's 1 by §3.3b's
  *   written freeze, and no score term ships (§3.3c).
+ * - `v0.4a` is v0.3 plus `pModel: 'marginal'` (MONET.md §3.4a): the ask path's hit probability is
+ *   read off `marginal.ts`'s scaled card × seat table instead of the slot prior. The a-half of
+ *   v0.4 under its own id, so its cells name the spec they measured; §3.4b lands as its own.
  *
  * No entry pins the *code* the knobs run through — see the header. Naming v0.1 here buys back
  * v0.1's SPEC on a v0.2 tree; it does not buy back v0.1's games.
@@ -121,6 +124,10 @@ export const MONET_VERSIONS: Readonly<Record<MonetVersion, PolicySpec>> = Object
     skill: SKILL_PRESETS.hard,
     style: Object.freeze({ ...STYLE_ROSTER.punter, licenceLambda: 0.6 }),
   }),
+  'v0.4a': Object.freeze({
+    skill: SKILL_PRESETS.hard,
+    style: Object.freeze({ ...STYLE_ROSTER.punter, licenceLambda: 0.6, pModel: 'marginal' }),
+  }),
 })
 
 /**
@@ -128,7 +135,7 @@ export const MONET_VERSIONS: Readonly<Record<MonetVersion, PolicySpec>> = Object
  * ("Monet beats v0.2 through v0.6 as well"). Ordered, because a version list that is only a key set
  * cannot express "the one before this".
  */
-export const MONET_VERSION_IDS: readonly MonetVersion[] = Object.freeze(['v0.1', 'v0.2', 'v0.3'] as const)
+export const MONET_VERSION_IDS: readonly MonetVersion[] = Object.freeze(['v0.1', 'v0.2', 'v0.3', 'v0.4a'] as const)
 
 /**
  * Is `id` a version this repo can play? For callers holding a string rather than a `MonetVersion` —

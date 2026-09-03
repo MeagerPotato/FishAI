@@ -236,6 +236,10 @@ describe('public-view-only proof', () => {
       // './knowledge.ts', './defuse.ts' (type-only) and './types.ts' — every one on this list — so
       // no engine state is reachable from it either.
       './licence.ts',
+      // MONET.md §3.4a's calibrated marginal. A pure read of a finished Knowledge — it imports
+      // '../types.ts' and './types.ts' for types and nothing else — and its only state is a
+      // WeakMap cache keyed by the Knowledge object, so no engine state is reachable from it.
+      './marginal.ts',
       './data/fingerprints.ts',
       // Generated measured payoff table (scripts/gen-counter-table.mjs): frozen numeric data
       // plus the StyleId type, held to the same standard as the fingerprints above.

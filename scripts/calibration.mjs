@@ -43,6 +43,7 @@ const {
   decide,
   buildKnowledge,
   askHitProbability,
+  slotPriorHitProbability,
   refinedHitProbability,
   logLicences,
   licenceConditionedHitProbability,
@@ -64,7 +65,12 @@ if (!isMonetVersion(VERSION)) {
 }
 const GAMES = Number(argOf('--games', 300))
 const LAMBDAS = argOf('--lambdas', '0,0.25,0.4,0.5,0.6,0.75,1').split(',').map(Number)
-const POLICY = monetPolicy(VERSION)
+// An override is a JSON object of style keys laid over the version's vector, the way duplicate-pairs.mjs
+// spells an ablation rung; the header names it so no table is read without it.
+const OVERRIDE = argOf('--override', '') ? JSON.parse(argOf('--override', '')) : null
+const POLICY = OVERRIDE
+  ? Object.freeze({ skill: monetPolicy(VERSION).skill, style: Object.freeze({ ...monetPolicy(VERSION).style, ...OVERRIDE }) })
+  : monetPolicy(VERSION)
 const { skill, style } = POLICY
 const SHIPPED_LAMBDA = style.licenceLambda ?? 0
 
@@ -122,7 +128,7 @@ for (let g = 0; g < GAMES; g++) {
     decisions++
     if (!view.declareWindow && view.phase === 'playing' && action.type === 'ask') {
       askDecisions++
-      const k = buildKnowledge(view, { useConstraints: skill.useConstraints, logWindow: skill.logWindow })
+      const k = buildKnowledge(view, { useConstraints: skill.useConstraints, logWindow: skill.logWindow, marginal: style.pModel === 'marginal' })
       const licences = logLicences(view, k)
       const zCache = new Map()
       const normaliser = (target, book) => {
@@ -132,7 +138,9 @@ for (let g = 0; g < GAMES; g++) {
       }
       for (const a of legalAsksFromView(view)) {
         const truth = s.hands[a.target].includes(a.card) ? 1 : 0
-        const base = askHitProbability(k, a.card, a.target)
+        // `base` is the slot prior whatever the model, so the ladder can be read against it on every
+        // version; `refined` is the model's constrained number — the marginal on a v0.4a Knowledge.
+        const base = slotPriorHitProbability(k, a.card, a.target)
         const refined = refinedHitProbability(k, a.card, a.target)
         const book = cardBook(a.card)
         const lic = licences(a.target).has(book)
@@ -175,7 +183,7 @@ const elapsed = ((Date.now() - t0) / 1000).toFixed(1)
 
 const f4 = (x) => (Number.isFinite(x) ? x.toFixed(4) : '  -   ')
 const sgn = (x) => (x >= 0 ? '+' : '') + x.toFixed(4)
-console.log(`=== calibration: Monet ${VERSION} (licenceLambda ${SHIPPED_LAMBDA}), ${GAMES} us54 mirror games, ${elapsed}s ===`)
+console.log(`=== calibration: Monet ${VERSION}${OVERRIDE ? ' ' + JSON.stringify(OVERRIDE) : ''} (licenceLambda ${SHIPPED_LAMBDA}, pModel ${style.pModel ?? 'slot'}), ${GAMES} us54 mirror games, ${elapsed}s ===`)
 console.log(`decisions ${decisions}   ask decisions ${askDecisions}   legal asks scored ${subsets.all.n}`)
 console.log('')
 console.log('--- 1. CHOSEN asks: the probability the policy acted on, per decile (MONET.md 3.4a item 1 bar: |believed - realised| < 0.05 per decile, < 0.01 aggregate) ---')
