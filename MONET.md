@@ -2569,6 +2569,207 @@ same opponent on the same seeds. The next rung, if there is one, is not a mechan
 on full-information records of Monet against SESTINA, the 1.2 sets a game go — and that is a decision for the
 owner (§8.3).
 
+### 3.8c The attribution study — where the sets go
+
+**Decision 8.3 row 8, taken by the owner on 2026-09-03: (a).** Not a mechanism. Full-information
+records of Monet v0.4c against SESTINA v1.0 from the bridge, read by one instrument that splits
+the set differential four ways and adds the ask policy's counterfactual at the other side's
+decisions. What comes out is a ranked list of where SESTINA's extra set a game comes from, and
+the next rung is chosen from that list by the rule written below — before the tables are read.
+
+**The data.** Their engine keeps a per-game event trace in memory and writes none of it (no flag,
+no subcommand; `v7decide --dump` is per decision and carries no hands). `fish_record` is the
+split fork (§3.2's counters-only instrument) plus a `--record=FILE` flag on `match` that
+appends, after each game, the deal and the trace as one JSON line: ground truth read after the
+game, changing no branch a policy can see, and controlled the way the split fork was — its whole
+cell output must equal `fish_split`'s on the same cell. Read 2026-09-03 on 20 deals × 6 at seed 90210 against SESTINA: identical, timing lines excluded (`monet-attr/step0.log`; 121 record lines). The record then loaded on the host with every check passing, and the counterfactual at Monet's own decisions agreed with the bridge play at 100% of its asks — the mirror cell (Monet against Monet in their engine, 120 games) at 100% on both sides — so the reconstruction is exact abroad as well as at home. The records are their
+engine's output — data under §9 — and live in the scratchpad; the loader and the instrument are
+ours and are committed (`scripts/attribute.mjs`).
+
+**The instrument, validated at home before a record was read.** On mirror games in our own engine
+the walk reconstructs every seat's view from the deal and the public log alone, and with the
+game's own decision seeds the counterfactual agrees with the play at every ask decision of both
+sides — 100% under `--validate`, which makes a disagreement fatal — while every recorded hit is
+checked against the deal the walk tracks. Abroad the loader checks every event against the
+engine's own public hand counts and every declare against its half-suit awards, so a record whose
+events and deal disagree is refused, not attributed. Everything is read over the pre-clinch
+record only: `us54` ends at five, the host plays on, and what it plays after the clinch is not
+the game.
+
+**The four splits**, per side and per game:
+
+1. **Sets by the deal's split.** For each half-suit, how many of its six cards side A was dealt
+   (0–6) against who took it and how — cashed by a correct declare, gifted by the other side's
+   wrong one, or open at the clinch (who led it; whether it was locked). The decomposition is A − B
+   per game by bucket: A majority (4–6), even (3), B majority (0–2).
+2. **Asks.** Asks a game and the hit rate; the share whose target was public-certain (a prior hit
+   put the card there) and the hit rate on the uncertain rest; by phase (0–1 / 2–3 / 4+ sets
+   resolved); the share of decisions at which a hit was available on the true deal and the hit
+   rate at those. And **the counterfactual**: at every ask decision of either side, what Monet
+   v0.4c asks from the same hand and the same public log, scored on the true deal beside the
+   actual ask — agreement, the counterfactual's hit rate against the actual's at the same points,
+   and both on the disagreements alone.
+3. **Tempo.** Share of all asks, runs a game and asks per run, hits a game, passes.
+4. **Declares and locks.** Declares a game, accuracy, gifts, forced declares; locks formed a game
+   and their fates (cashed / broken / gifted / open at the clinch) and the lock hold in events.
+
+**The cells** — every one recorded, 200 deals × 6 rotations = 1,200 games a seed, one container in
+sequence, about 25 minutes of bridge:
+
+> | cell | arms | seeds | for |
+> |---|---|---|---|
+> | S | `monet-v08-base` (v0.4c, every knob off, on the 000154e export whose `lib/` tree is byte-identical to main's) against SESTINA v1.0 | twelve fresh, §6.5's rule from `monet-attribution-2026-09-03`: 8083995 4646803 7167747 7149252 3737595 9459020 2922748 5753167 8102326 9719629 2543289 1225735 | the study |
+> | SS | SESTINA against SESTINA | the same twelve | SESTINA's own baseline for every figure |
+> | MM | Monet against Monet, in their engine | the first two | the same figures in their engine beside the home mirror in ours — the engine-equivalence check of the whole pipeline — and the counterfactual at Monet's own decisions abroad, which agrees with the play up to seed-dependent tie-breaks |
+> | home | v0.4c against v0.4c, and v0.4c against v0.2, 2,000 games each in our engine | `hm-*`, `hv2-*` | the mirror's shape, and the shape of a KNOWN gap (v0.2 is eight points behind on the bridge) on record before the unknown one is read |
+
+**Readouts, and what each points to** — written now so the decision is not read off the tables
+after the fact:
+
+- **R1, where the set goes.** The bucket carrying most of SESTINA's margin. A-majority sets ending
+  with B → the conversion (asks or defence); steals from B's majority → SESTINA's asks; gifts →
+  the declare bar (§8.3 (c) becomes the rung); open at the clinch → the race and the declare's
+  timing.
+- **R2, the counterfactual at SESTINA's decisions.** If SESTINA's actual asks hit more often than
+  Monet's counterfactual at the same points by more than the paired standard error, SESTINA
+  selects better asks from the same public information — the lever is the ask scorer, and §3.6c's
+  oracle ceiling bounds how much of that is knowledge. If they are level, the ask policy is not the
+  gap and the difference is positional. And the third case, which the control cell showed before
+  this was fixed (120 games: the counterfactual 62.9% against SESTINA's actual 54.8% at the same
+  points, and SESTINA 67.5% of the games): if SESTINA's asks hit LESS than Monet's counterfactual
+  and SESTINA still takes more sets, the hit chance is not the value of an ask — what a miss reveals,
+  what a hit denies, where the turn goes — and the rung is an ask valuation beyond the hit, which
+  §3.8a's search was the first attempt at with the wrong leaf. The control's 120 games at seed
+  90210 were read before this paragraph was written; the study's twelve seeds were not.
+- **R3, tempo.** A share of asks below SESTINA's by more than two points at equal hit rates puts the
+  difference in who is asked and when the turn moves, not in the hits — a targeting rung.
+- **R4, declares.** Gifts above SESTINA's rate → the bar; locks broken or open at the clinch that
+  SESTINA would have cashed → timing (§3.8b said the hold is not a proving problem; this says
+  whether it costs sets at all).
+- **The rule.** The next rung is the readout whose bucket carries the largest share of the margin,
+  written into §8.3 as row 9 with its numbers. If no bucket carries more than a third of it, the
+  answer is (b): v0.4c is v1.0's vector and §3.9's acceptance runs as written.
+
+**Acceptance of the study itself.** The control identical; the loader's checks pass on every game
+of every cell; the MM cell's side figures inside the home mirror's range; and every seed listed.
+
+#### Record — 2026-09-03
+
+Every cell ran as pre-registered (`monet-attr/step1.log`): S, SS on the twelve seeds, MM on the first
+two, 1,200 games each, one container in sequence, 16 minutes; every record loaded with every check
+passing (14,400 + 14,400 + 2,400 games; `report.sh` → `report-s/ss/mm.txt`). The acceptance of the
+study itself holds: the control identical (above), the loader's checks clean on every game, and the MM
+cell inside the home mirror's range on every side figure — sets a game 3.78 against 3.81/3.85, hit
+58.1% against 57.9/58.7%, declares 3.78 a game at 99.1% against 3.81/3.85 at 98.7/98.9%, locks 4.04 a
+game cashed 92.7% with a hold of 7.86 events against 4.06/4.09, 92.7/93.0% and 7.83/7.70 — with the
+counterfactual at Monet's own decisions agreeing with the bridge play at 100.0% of 102,000 asks. The
+two engines play the same game, and the instrument reads it the same way in both.
+
+**S — Monet v0.4c against SESTINA v1.0, twelve seeds, 14,400 games.** Per seed (A = Monet; the gap
+columns are A − B sets a game by the deal's split; the last three are at SESTINA's ask decisions —
+what Monet would have asked there, scored on the true deal, against what SESTINA asked):
+
+> | seed | A win | sets A | sets B | A-maj | even | B-maj | hit A | hit B | cf hit | SESTINA's | agree |
+> |---|---|---|---|---|---|---|---|---|---|---|---|
+> | 1225735 | 33.00% | 3.187 | 4.263 | +0.544 | −0.388 | −1.233 | 52.49% | 55.78% | 62.14% | 55.78% | 42.8% |
+> | 2543289 | 34.58% | 3.198 | 4.211 | +0.602 | −0.415 | −1.199 | 52.51% | 55.79% | 62.80% | 55.79% | 42.8% |
+> | 2922748 | 35.00% | 3.232 | 4.245 | +0.646 | −0.399 | −1.259 | 52.06% | 55.17% | 61.54% | 55.17% | 42.6% |
+> | 3737595 | 36.92% | 3.289 | 4.197 | +0.692 | −0.407 | −1.192 | 53.05% | 55.98% | 62.90% | 55.98% | 43.2% |
+> | 4646803 | 35.08% | 3.295 | 4.197 | +0.654 | −0.347 | −1.209 | 52.39% | 55.35% | 62.25% | 55.35% | 42.6% |
+> | 5753167 | 33.08% | 3.212 | 4.291 | +0.643 | −0.430 | −1.292 | 52.30% | 55.57% | 62.63% | 55.57% | 42.9% |
+> | 7149252 | 34.50% | 3.240 | 4.244 | +0.525 | −0.381 | −1.148 | 52.86% | 56.02% | 62.91% | 56.02% | 43.2% |
+> | 7167747 | 35.00% | 3.209 | 4.253 | +0.637 | −0.436 | −1.245 | 52.38% | 55.94% | 63.11% | 55.94% | 43.2% |
+> | 8083995 | 33.00% | 3.152 | 4.285 | +0.612 | −0.463 | −1.281 | 52.08% | 55.58% | 62.49% | 55.58% | 42.6% |
+> | 8102326 | 33.83% | 3.208 | 4.251 | +0.594 | −0.442 | −1.195 | 53.00% | 56.21% | 62.70% | 56.21% | 42.8% |
+> | 9459020 | 35.08% | 3.202 | 4.238 | +0.581 | −0.437 | −1.181 | 51.93% | 55.17% | 62.23% | 55.17% | 42.4% |
+> | 9719629 | 32.25% | 3.174 | 4.315 | +0.567 | −0.418 | −1.289 | 51.86% | 55.48% | 61.99% | 55.48% | 42.7% |
+> | **mean (SE over seeds)** | **34.28% (0.37)** | 3.22 | 4.25 | **+0.608 (0.014)** | **−0.414 (0.009)** | **−1.227 (0.013)** | 52.41% (0.12) | 55.67% (0.10) | **62.48% (0.13)** | 55.67% | 42.8% |
+
+Sets a game A − B: **−1.033, SE 0.021**; SESTINA's win rate is the ladder's 65.7%. The pooled tables:
+
+> | A cards of six | sets/g | A cashed | A gifted | B cashed | B gifted | open at the clinch (A lead / B lead / locked) | P(A takes) | A − B |
+> |---|---|---|---|---|---|---|---|---|
+> | 0 | 0.11 | 0.00 | 0.01 | 0.07 | 0.00 | 0.04 (0.00 / 0.04 / 0.04) | 8.8% | −0.062 |
+> | 1 | 0.76 | 0.07 | 0.02 | 0.49 | 0.00 | 0.18 (0.01 / 0.16 / 0.04) | 15.5% | −0.398 |
+> | 2 | 2.10 | 0.47 | 0.02 | 1.25 | 0.00 | 0.36 (0.07 / 0.26 / 0.03) | 28.0% | −0.767 |
+> | 3 | 3.06 | 1.10 | 0.02 | 1.53 | 0.00 | 0.40 (0.15 / 0.06 / 0.02) | 42.2% | −0.414 |
+> | 4 | 2.10 | 1.01 | 0.01 | 0.77 | 0.01 | 0.30 (0.27 / 0.03 / 0.09) | 56.8% | +0.245 |
+> | 5 | 0.76 | 0.44 | 0.00 | 0.11 | 0.01 | 0.19 (0.19 / 0.00 / 0.13) | 78.8% | +0.326 |
+> | 6 | 0.11 | 0.04 | 0.00 | 0.00 | 0.00 | 0.06 (0.06 / 0.00 / 0.06) | 89.4% | +0.037 |
+> | **A majority 4–6** | 2.97 | 1.50 | 0.02 | 0.88 | 0.02 | 0.56 (0.52 / 0.03 / 0.28) | 62.6% | **+0.608** |
+> | **even 3** | 3.06 | 1.10 | 0.02 | 1.53 | 0.00 | 0.40 (0.15 / 0.06 / 0.02) | 42.2% | **−0.414** |
+> | **B majority 0–2** | 2.97 | 0.54 | 0.04 | 1.81 | 0.00 | 0.58 (0.09 / 0.46 / 0.10) | 24.4% | **−1.227** |
+> | all | 9.00 | 3.13 | 0.08 | 4.22 | 0.03 | 1.53 (0.76 / 0.54 / 0.41) | 43.1% | −1.033 |
+>
+> | side | asks/g | hit | public-certain share | hit on the uncertain | early / mid / late | a hit was available | hit when available | cf agree | cf hit vs actual, same points | on the disagreements: cf / actual (n) |
+> |---|---|---|---|---|---|---|---|---|---|---|
+> | Monet | 39.1 | 52.4% | 19.0% | 41.3% | 48.1% / 52.4% / 56.7% | 98.6% | 53.2% | 100.0% | 52.4% vs 52.4% | — |
+> | SESTINA | 41.7 | 55.7% | 20.2% | 44.5% | 51.8% / 56.2% / 59.1% | 98.6% | 56.4% | 42.8% | **62.5% vs 55.7%** | 53.0% / 41.1% (343,525) |
+>
+> | side | asks by the side's holding of the asked set, 1 / 2 / 3 / 4 / 5 cards: share, hit | the counterfactual's: share, hit |
+> |---|---|---|
+> | Monet | 5.4% 90.4% · 14.7% 76.6% · 24.0% 61.8% · 25.7% 50.2% · 30.2% 28.4% | the same (it is the play) |
+> | SESTINA | 6.0% 88.0% · 15.2% 76.6% · 23.6% 63.7% · 25.3% 53.4% · 29.9% 34.1% | 7.8% 94.5% · 16.1% 86.2% · 23.9% 71.0% · 25.4% 56.8% · 26.9% 36.7% |
+>
+> | side | share of asks | runs/g | asks per run | hits/g | declares/g | right | gifts/g | locks formed/g | cashed | open at the clinch | lock hold (events) |
+> |---|---|---|---|---|---|---|---|---|---|---|---|
+> | Monet | 48.4% | 18.88 | 2.07 | 20.49 | 3.16 | 99.1% | 0.03 | 3.46 | 90.5% | 8.7% (0.30/g) | 7.84 |
+> | SESTINA | 51.6% | 19.02 | 2.19 | 23.22 | 4.30 | 98.1% | 0.08 | 4.37 | 96.7% | 2.4% (0.10/g) | 4.34 |
+
+**SS — SESTINA against itself, 14,400 games**, the baseline for its figures: sets 3.79 a side, 1.43
+open at the clinch, 92.6 events to it; asks 41.4 a game at **49.4%** (Monet's mirror: 58.1%), public-
+certain share 16.7% (Monet's: 22.2%), by phase 44.8 / 48.6 / 54.7% (Monet's: 56.9 / 59.0 / 58.4%);
+21.4 runs a game of 1.94 asks (Monet's: 17.3 of 2.33); a majority is converted 70.9% (Monet's mirror:
+68.2%); declares 3.79 a game at 97.2% with 0.11 gifts (Monet's: 99.1%, 0.03); locks 3.85 a game, 95.6%
+cashed, 3.4% open at the clinch, hold **4.86** events (Monet's: 4.04, 92.7%, 6.5%, 7.86). And at
+SESTINA's decisions against itself, Monet's counterfactual would hit **54.7% against SESTINA's 49.4%**
+(SE 0.09 over seeds), agreeing with 39.6% of its asks.
+
+**Home, the known gap** — v0.4c against v0.2, 2,000 games: 53.5% and +0.32 sets a game for v0.4c,
+from every bucket (+1.016 / +0.104 / −0.800 against the mirror's +0.922 / −0.040 / −0.928); at v0.2's
+decisions the counterfactual hits **59.7% against v0.2's 57.4%**, agreeing 79.6% of the time. That is
+what a better hit-picker looks like in these tables: a small counterfactual surplus and a high
+agreement.
+
+**The readouts.**
+
+- **R1.** Of SESTINA's 1.09 extra cashed sets a game, the even sets carry **0.43 (40%)** — a 3–3 deal
+  is won by SESTINA 58 to 42 — SESTINA's steals from Monet's majorities 0.34 (0.88 of Monet's 2.97
+  majority sets against Monet's 0.54 of SESTINA's; 31%) and its better conversion of its own 0.31
+  (1.81 of 2.97 against Monet's 1.50; 29%). Gifts run the other way (Monet receives 0.08 a game,
+  SESTINA 0.03). Open at the clinch, Monet leads 0.76 sets to SESTINA's 0.54 and holds 0.30 locked
+  and uncashed to SESTINA's 0.10 — the game ends while Monet is still collecting. The pre-registration
+  named four mechanisms and left the even bucket unnamed; it is the contested race, and the largest
+  bucket by the rule, above a third.
+- **R2, the third case, decisively.** At SESTINA's own decisions Monet's counterfactual would hit
+  **62.5% against SESTINA's 55.7%** — +6.81 points, SE 0.08 over twelve seeds, the same on every seed
+  (+6.2 to +7.2), in every holding bucket (1 card: 94.5 vs 88.0; 2: 86.2 vs 76.6; 3: 71.0 vs 63.7;
+  4: 56.8 vs 53.4; 5: 36.7 vs 34.1), and in SESTINA's own mirror (54.7 vs 49.4). SESTINA agrees with
+  Monet's pick 42.8% of the time, and where they differ SESTINA's ask hits 41.1% to the pick's 53.0%.
+  SESTINA leaves a quarter of the available hit chance on the table at every decision and wins
+  65.7% of the games. **The hit chance is not the value of an ask.** What SESTINA's asks buy shows in
+  the same tables: its positions are richer — the same Monet policy hits 52.4% on Monet's own
+  positions and 62.5% on SESTINA's — and they get richer as the game goes (SESTINA's hit rate rises
+  51.8 → 56.2 → 59.1% by phase against itself 44.8 → 48.6 → 54.7%; Monet's is flat at home, 56.9 →
+  59.0 → 58.4%); its play leaves fewer public-certain asks for anyone (16.7% of asks in its mirror
+  against 22.2% in Monet's) and takes back more of what Monet's hits announce (the 0.88 steals). A hit
+  publishes a card's location to the table and a miss publishes a licence; SESTINA prices both and
+  Monet's scorer (`wHit` 90 of a 120-point scale, §3.2) prices neither.
+- **R3.** Monet's share of asks is 3.2 points below SESTINA's (48.4 / 51.6%) with runs a game equal
+  (18.9 / 19.0) and asks per run 2.07 / 2.19 — the share follows the hit rates (52.4 / 55.7%), which
+  are not equal, so R3's condition is not met and tempo is not a lever of its own.
+- **R4.** Gifts are not the problem (Monet 0.03, SESTINA 0.08 a game). The hold is 7.84 events
+  against 4.34 and 0.30 locked sets a game are still in Monet's hands when the game ends against
+  SESTINA's 0.10: the timing lever is bounded at about 0.2 sets a game, and §3.8b measured the
+  provable part of it at +0.08 points. What is left is the unprovable part — SESTINA declares at
+  98.1% and cashes 4.3 events after the lock, Monet at 99.1% and 7.8 — which is §8.3 (c)'s risk bar.
+
+**The rule, applied.** The largest bucket is the even sets at 40%, above a third, so (b) does not
+follow. The mechanism behind a contested race is R2's: the ask's value beyond its hit — information
+kept and information given away — and that is the rung, written into §8.3 as row 9 with (c) as the
+second rung, bounded by R4. Nothing in this study is a mechanism; nothing ships from it; the numbers
+are the deliverable.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -2997,7 +3198,8 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 5 | **Put λ back on the marginal base?** §3.4a item 8: the rule written before the run (inside ±2.83 → subsumed, out) took it out at +1.83 (5 of 6). Every other instrument leans the other way and none abroad clears its floor — panel +2.44 (3/3) and +0.81 (2/3), home +0.24 ± 0.24 and +0.32 ± 0.24 sets/pair (resolved, small) — and the λ-on arm is the one that clears item 4 (33.78% against 31.94%), at the price of the calibration marker (+0.049 aggregate over-statement abroad, worst decile 0.17 against 0.08). The abroad cell that resolves it is 24 seeds per arm (±1.41, about 25 minutes of bridge). §3.4b's joint is the mechanism that prices the interference explicitly (§3.4a's amendment) and re-runs the 2 × 2 with λ as a factor; the cheapest answer is to wait for it. **Second reading, v0.4b (§3.4b item 8): +1.57 on the joint (5 of 6, inside ±2.83), home +0.22 ± 0.24 and +0.32 ± 0.24, the same calibration cost. Three readings, one shape — a point or two abroad inside the floor, a quarter of a set per pair at home, +0.05 of over-statement — and nothing in v0.4b priced the interference. The 24-seed cell (±1.41) would resolve it; otherwise the wait is for v0.5's readout or the owner.** **Delegated to the project by the owner on 2026-09-03 — "do the research and make the decision based on what most improves Monet's capabilities and winning probability" — so the 24-seed cell this row prices is running on 18 fresh seeds (§6.5) beside the six on record, with an exploratory λ = 0.3 arm; its reading and the decision are recorded at §3.4b's addendum when it lands.** **RESOLVED 2026-09-03 (§3.4c): +1.88 paired over 24 seeds, ahead on 22, clearing ±1.41 — the term ships on v0.4c; its cost (+0.050 over-statement abroad, none at home) and the finding that it buys tempo rather than accuracy are on the record, with the 0.3-versus-0.6 confirmation pre-registered.** | **resolved — v0.4c** |
 | 6 | ~~**The row-3 choice (§3.5b): stop in-browser at v0.4b-era strength, split the engine for a searching lab arm, or publish the negative result?**~~ **RESOLVED 2026-09-03 — the owner chose a fourth option: keep building the fast policy toward 50%, as v0.5 opponent reading (§3.6), v0.6 communication (§3.7) and v0.7 the search arm through §3.5c's cost-first test (§3.8); v1.0 stays §3.9, restated as about 50% or a significant win (§0). The project's recommendation stands on the record beside the call.** Original text: **The row-3 choice (§3.5b): stop in-browser at v0.4b-era strength, split the engine for a searching lab arm, or publish the negative result?** The gate read 32.75% on v0.4b — third row — with the decomposition written beside it (§3.5b's record). The project recommends option 3, with option 2 taken only if the frontier claim is wanted and only through §3.5c's cost-first test (search over a calibrated posterior is the one untested cell; its price is 300 – 600×). The one honest lever the record has not built is communication — asks chosen to reveal, the handoff's +30 points of compelled-declare accuracy at 0.13 per game — sized by the oracle at +6.75 and by nothing yet that a bot could play. v1.0 stays defined by §3.9 alone. | **resolved — keep building** |
 | 7 | **v0.5's arms read +0.4 abroad, inside the ±2.00 floor (§3.6c): ship `choiceKappa` anyway, buy the seeds that would decide it, or move on?** The rule as written ships nothing. Three arms agree on +0.37 to +0.47 (0.6 – 1.0 × SE); reading +0.4 at 2 × SE would take about a hundred seeds, an hour of bridge. The markers say the prior over-states against SESTINA (calibration +0.021 → +0.046 at κ = 1) and buys ask accuracy, not sets. **Recommendation: move on.** `choiceKappa` stays in the code off the vector, v0.6 is built on v0.4c, and if a later rung changes the calibration picture the twelve cells are re-run then (35 minutes). | open |
-| 8 | **After v0.8: four levers measured, none moved the number — what is the next rung?** Belief (§3.6, +0.47 abroad inside the floor), communication (§3.7a, behind at home), search (§3.8a, a no-op at the budget; the post-hoc lock-only leaf's abroad read is recorded there) and the declare (§3.8b, +0.08 abroad, exact to ±0.16) are each real-and-small or null against SESTINA v1.0 on twelve seeds, and the oracle ceiling (§3.6c, 38.28%) says the 15 points to the owner's 50% are not in card knowledge at all. Three ways forward, in the order this document recommends them: **(a) an attribution rung** — full-information records of Monet against SESTINA from the bridge (their engine's game output is data, not code), split by phase and mechanism to say where the 1.2 sets a game go, before any further mechanism is built; **(b) stop at v0.4c** as v1.0's vector and run §3.9's acceptance as written; **(c) another mechanism on a hypothesis this document cannot yet support** — the declare bar re-fitted against SESTINA's theft rate (the adaptive risk/benefit the owner asked for; §3.7a's home read says the bar is right at home, and abroad it has never been read). The recommendation is (a), then (b) or (c) on what it finds. | **OPEN 2026-09-03** — waiting on the owner. |
+| 8 | **After v0.8: four levers measured, none moved the number — what is the next rung?** Belief (§3.6, +0.47 abroad inside the floor), communication (§3.7a, behind at home), search (§3.8a, a no-op at the budget; the post-hoc lock-only leaf's abroad read is recorded there) and the declare (§3.8b, +0.08 abroad, exact to ±0.16) are each real-and-small or null against SESTINA v1.0 on twelve seeds, and the oracle ceiling (§3.6c, 38.28%) says the 15 points to the owner's 50% are not in card knowledge at all. Three ways forward, in the order this document recommends them: **(a) an attribution rung** — full-information records of Monet against SESTINA from the bridge (their engine's game output is data, not code), split by phase and mechanism to say where the 1.2 sets a game go, before any further mechanism is built; **(b) stop at v0.4c** as v1.0's vector and run §3.9's acceptance as written; **(c) another mechanism on a hypothesis this document cannot yet support** — the declare bar re-fitted against SESTINA's theft rate (the adaptive risk/benefit the owner asked for; §3.7a's home read says the bar is right at home, and abroad it has never been read). The recommendation is (a), then (b) or (c) on what it finds. | **taken 2026-09-03 — the owner chose (a)**; the study is §3.8c, and its readout writes row 9. |
+| 9 | **After the attribution study (§3.8c): the rung is the ask's value beyond its hit.** SESTINA's 1.09 extra cashed sets a game are 40% the even sets, 31% steals from Monet's majorities, 29% its own conversion; at SESTINA's decisions Monet's counterfactual hits 62.5% to SESTINA's 55.7% (SE 0.08, every seed, every holding bucket) and SESTINA wins 65.7% — the hit chance is not the value of an ask, position is, and a hit publishes a location the opponent takes back. **Recommendation: v0.9, the priced ask** — the scorer gains two terms beside the hit: what a hit gives away (the chance the published card is taken back before the set is cashed) and what a miss reveals or learns; fitted at home on the instrument's own markers (the counterfactual surplus at the opponent's decisions, the hit rate by phase, the steals row) and confirmed abroad on twelve fresh seeds at ±2.00. **Second: (c), the risk bar on the declare**, bounded by R4 at about 0.2 sets a game (SESTINA cashes a lock in 4.3 events at 98.1%; Monet in 7.8 at 99.1%). | **OPEN 2026-09-03** — the owner's call; the study's tables are the evidence. |
 
 ---
 
