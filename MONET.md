@@ -2089,6 +2089,39 @@ branches, once per set, the mirror image of `conceal`. **Markers:** lock hold at
 team half; the abroad engine's *lock hold*), which must fall; speculative-declare accuracy (92 – 94%), which
 must not.
 
+> **The readout cleared the floor, and item 1 was built 2026-09-03 — in a different form from the one above,
+> changed before any fit cell was run.** `scripts/probe-reveal.mjs` on v0.4c at λ = 0.3, the six fit seeds ×
+> 100 mirror games (48,555 ask decisions): 38.4 locked (decision, set) pairs a game, none provable by any
+> teammate (the definition of lock hold); the asker can ask into 33.3 of them; **one ask completes a
+> teammate's proof 3.41 times a game** (4.55 with the card chosen freely), against a floor of 0.30; 0.18 of
+> those a game would clinch; the best legal ask forgone at such a moment hits with probability 0.563.
+>
+> **Why the form changed.** The paragraph above credits an ask "into a set the asker's knowledge places
+> wholly on its team". Built that way the term never fired: a seat whose knowledge places all six cards on
+> its team can prove the set itself and has already declared it, so the residue — locked *by the asker's
+> knowledge* and yet unprovable — is empty in practice. The readout's 3.41 a game are sets locked *by the
+> deal*, which the asker does not know. So the term is a hybrid (`reveal.ts`): the card is asked of the
+> opponent most likely to hold it, at the model's hit probability p, and is credited
+> **`reveal · urgency · P(locked)`** on top of p — P(locked) the model's belief that every card of the set is
+> on the team (the product over its unlocated cards of the probability a teammate holds it) — playing over
+> the ordinary pick when the sum exceeds the pick's hit probability. If it hits, the turn continues as any
+> hit does; if it misses and the set is on the team, the teammate cashes it. Urgency is 1 when cashing the
+> set would clinch the game and `revealFar` otherwise, the two knobs the fit reads.
+>
+> **What the asker computes.** A teammate's knowledge is the public walk plus its own hand and nothing else,
+> so `publicKnowledge` (knowledge.ts) walks the log with no hand injected — `finishKnowledge` minus exactly
+> its own-hand step, the materialisation shared so every existing build is byte for byte what it was —
+> and takes one seat's hypothesised holdings over named cards (`AssumedHand`). For each card it could
+> name, the asker builds the record as it would stand after the ask, injects the likeliest split of the
+> set's cards between the two teammates as each one's holdings, and reads whether that teammate then
+> places all six cards on the team. The simulation is sound: the teammate's real build injects its whole
+> hand and the fixpoint is monotone, so whenever the set is on the team and the split is right, the
+> teammate proves what the simulation says it proves (`tests/bots/reveal.test.ts`, against the true hands);
+> where the split is wrong the ask is a miss and nothing is cashed. A teammate who could already prove the
+> set under the same split gets no credit — had the split been right, the set would have been declared.
+> Cost: two public walks per candidate set for the standing record, and one per named card per open
+> teammate for the record after the ask. Absent or 0 is byte identity (pinned over whole games).
+
 **Seeds.** Fit on six from `hashSeed("monet-v0.6-fit-6")`: **9220628 8580707 6389604 5910092 2121575
 1884435**; confirm at home and abroad on twelve from `hashSeed("monet-v0.6-confirm-12")`: **6021520 8438705
 3195511 9141082 5082131 7701419 2601210 4621978 6478725 2793161 2568302 2796767** — drawn by §6.5's rule

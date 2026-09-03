@@ -6,7 +6,11 @@
  * on the declare path can only act on the speculative near-misses, and the table below is the
  * size of that population. MONET.md 3.3c records the decision this measurement supports.
  *
- *   node scripts/probe-score.mjs [games=300] [version=v0.3]
+ *   node scripts/probe-score.mjs [games=300] [version=v0.3] [override='{"reveal":2}']
+ *
+ * The optional third argument is a JSON object of style keys laid over the version's vector (the
+ * way an ablation arm is spelled elsewhere); it is printed in the header so no number can be read
+ * without it. MONET.md 3.7 item 1 reads lock hold here as the reveal term's marker.
  *
  * Three reads over mirror games of the named version, every window decision traced:
  *  1. window declares by trace kind, split by the score state of the deciding seat's team
@@ -27,7 +31,8 @@ const { monetPolicy, decideExplained, buildKnowledge } = BOTS
 
 const GAMES = Number(process.argv[2] ?? 300)
 const VERSION = process.argv[3] ?? 'v0.3'
-const POLICY = monetPolicy(VERSION)
+const OVERRIDE = process.argv[4] ? JSON.parse(process.argv[4]) : null
+const POLICY = OVERRIDE === null ? monetPolicy(VERSION) : { skill: monetPolicy(VERSION).skill, style: { ...monetPolicy(VERSION).style, ...OVERRIDE } }
 const T = clinchTarget(us54Config)
 const books = allBooks(us54Config)
 
@@ -135,7 +140,7 @@ for (let g = 0; g < GAMES; g++) {
 }
 const mean = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : NaN)
 const q = (a, p) => { const t = [...a].sort((x, y) => x - y); return t.length ? t[Math.floor(p * (t.length - 1))] : NaN }
-console.log(`=== score-state probe: Monet ${VERSION}, ${GAMES} mirror games, T=${T} ===`)
+console.log(`=== score-state probe: Monet ${VERSION}${OVERRIDE === null ? "" : " + " + JSON.stringify(OVERRIDE)}, ${GAMES} mirror games, T=${T} ===`)
 console.log(`window decisions ${windowsTotal}, declares ${declaresTotal}`)
 console.log('score state at the window: ' + KEYS.map((k) => `${k}=${windows[k]}`).join('  '))
 console.log('--- declares by trace kind x score state ---')
