@@ -110,7 +110,7 @@ export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a'
  * - `v0.4a` is the roster's Punter spread with `pModel: 'marginal'` (MONET.md §3.4a) and WITHOUT
  *   v0.3's `licenceLambda`: the ask path's hit probability is read off `marginal.ts`'s scaled
  *   card × seat table instead of the slot prior, and the licence term came out because the
- *   2 × 2 measured it inside the floor on the new base (item 8; the λ-on arm reads +1.84 over six
+ *   2 × 2 measured it inside the floor on the new base (item 8; the λ-on arm reads +1.83 over six
  *   seeds, on the record). The a-half of v0.4 under its own id, so its cells name the spec they
  *   measured; §3.4b lands as its own.
  *

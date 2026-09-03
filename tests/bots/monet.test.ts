@@ -88,6 +88,7 @@ import type { MonetVersion } from '../../lib/engine/bots/monet.ts'
 import { ActionDigest, canonicalAction } from './action-digest.ts'
 import { MONET_V01_BANK } from './data/monet-v01-bank.ts'
 import { MONET_V02_BANK } from './data/monet-v02-bank.ts'
+import { MONET_V04A_BANK } from './data/monet-v04a-bank.ts'
 import { ask, gs, mkView } from './util.ts'
 
 /** The versions, addressed the way a harness addresses them. */
@@ -405,6 +406,81 @@ describe('Monet v0.2 ≡ the live roster arm, at every decision of whole us54 ga
     // Distinct digests: 36 identical strings would pass every assertion above while proving
     // nothing, and that is precisely the shape a broken generator produces.
     expect(new Set(MONET_V02_BANK.games.map((g) => g.digest)).size).toBe(MONET_V02_BANK.games.length)
+  })
+})
+
+/* ------------------------------------------ 4b. v0.4a's forward bank, replayed --- */
+
+const forward = { games: 0, decisions: 0, digestsChecked: 0 }
+
+/**
+ * One whole `us54` game with every seat playing `table`, Monet v0.4a asked at every decision
+ * point and its answers digested against the committed bank. There is no live arm to compare
+ * against — v0.4a is not the roster, and MONET.md §3.4a's cells are what say how it plays — so
+ * this is the pure forward pin: the actions the accepted revision returned on these positions,
+ * in this order. Same derivation as `playIdentity` above and as the emitter, so the positions
+ * visited are the table style's own.
+ */
+function playForward(row: (typeof MONET_V04A_BANK.games)[number]): void {
+  const { table, seed: gameSeed } = row
+  const policy = STYLE_ROSTER[table as keyof typeof STYLE_ROSTER]
+  let s = newGame(gameSeed, us54Config, row.startSeat as Seat)
+  const digest = new ActionDigest()
+  let steps = 0
+  while (s.phase !== 'finished') {
+    if (steps >= 5000) throw new Error(`${table}/${gameSeed}: hit the 5000-step cap`)
+    const { seat } = legalActionsSummary(s)
+    const view = seatView(s, seat)
+    const moveSeed = hashSeed(`${gameSeed}:${s.moveIndex}`)()
+    digest.push(canonicalAction(decide(view, MONET_V04A, moveSeed)))
+    forward.decisions++
+    const r = reduce(s, decide(view, policy, moveSeed))
+    if (!r.ok) throw new Error(`${table}/${gameSeed} step ${steps}: ${r.error.code}`)
+    s = r.state
+    steps++
+  }
+  expect(digest.count, `${table}/${gameSeed}: decision count vs the v0.4a bank`).toBe(row.decisions)
+  expect(
+    digest.hex(),
+    `${table}/${gameSeed}: action digest vs ${MONET_V04A_BANK.revision.slice(0, 12)}`,
+  ).toBe(row.digest)
+  forward.digestsChecked++
+  forward.games++
+}
+
+describe('Monet v0.4a replays its forward bank: every action of whole us54 games, as accepted', () => {
+  for (const id of STYLE_IDS) {
+    const rows = MONET_V04A_BANK.games.filter((g) => g.table === id)
+    it(`${id} table: ${rows.length} us54 games, every digest as recorded`, () => {
+      expect(rows.length).toBe(SEEDS_PER_STYLE)
+      for (const row of rows) playForward(row)
+    }, 120_000)
+  }
+
+  it("covered the whole roster over the bank's 25,709 decisions", () => {
+    expect(forward.games).toBe(STYLE_IDS.length * SEEDS_PER_STYLE)
+    expect(forward.games).toBe(MONET_V04A_BANK.games.length)
+    // Pinned exactly, for the reason the v0.2 block gives: the total is the sum of the per-game
+    // lengths the bank already pins, and a floor would let a whole table drop out unnoticed.
+    expect(forward.decisions).toBe(MONET_V04A_BANK.totalDecisions)
+    expect(forward.decisions).toBe(25_709)
+    expect(forward.digestsChecked).toBe(MONET_V04A_BANK.games.length)
+  })
+
+  it('the v0.4a bank says what it is: a forward baseline from a clean tree this repo can name', () => {
+    expect(MONET_V04A_BANK.revision).toMatch(/^[0-9a-f]{40}$/)
+    expect(MONET_V04A_BANK.tree).toBe('wt')
+    // Recorded from the committed tree, so the named revision IS the one that reproduces these
+    // digests — the v0.2 bank could not say that (its header explains why `dirty: true` was the
+    // normal case there).
+    expect(MONET_V04A_BANK.dirty).toBe(false)
+    expect(MONET_V04A_BANK.arm).toBe('monetPolicy("v0.4a")')
+    expect(MONET_V04A_BANK.totalDecisions).toBe(
+      MONET_V04A_BANK.games.reduce((n, g) => n + g.decisions, 0),
+    )
+    expect(new Set(MONET_V04A_BANK.games.map((g) => g.digest)).size).toBe(
+      MONET_V04A_BANK.games.length,
+    )
   })
 })
 

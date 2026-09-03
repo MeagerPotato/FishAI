@@ -33,7 +33,8 @@ path. **A number from one bridge is never subtracted from a number on another.**
 | Bass v2.0, corrected bridge — **the baseline** | **27.08%** | 1,200 | ±2.83 |
 | the target | **50.00%** | — | — |
 | **Monet v0.3** (§3.3), same bridge, 2026-09-03 | **30.96%** | 1,200 | ±2.83 |
-| **to find** | **22.92 points** from the baseline, **19.04** from v0.3 | — | — |
+| **Monet v0.4a** (§3.4a), same bridge, 2026-09-03 | **31.94%** | 1,200 | ±2.83 |
+| **to find** | **22.92 points** from the baseline, **18.06** from v0.4a | — | — |
 
 [measured, corrected] Six seeds, 1,950 of 7,200 games, `bot:pf2` vs the frozen v1.0 spec. Every
 seed of the six moved the same way under the bridge repair; mean delta +3.44, SD 0.48, min +2.67.
@@ -413,7 +414,8 @@ explains why the band is 31–37% rather than a point. v0.5 carries no target by
 | **v0.1** ✅ | fork, instrument, record — no behaviour change | 27.08% (did not move) | byte identity + op coverage | S — **shipped** |
 | **v0.2** | ask-scorer correctness (`minHitP`, two `rankAsksWith` defects) · the pre/post-clinch metric split | 27.08% (must not move) | DEAD counter; the split reported | XS–S |
 | **v0.3** ✅ | λ = 0.60 licence conditioning · `defuse` frozen at 1 with its interval · the score term measured and not shipped | **30.96%** (target ≥ 30.5%) | calibration bias — home ✓, abroad ✗, the finding · the `defuse` ladder at ±3.10 · lock hold for the score term (0.01–0.05 events: nothing to move) | S–M — **shipped** |
-| **v0.4** | the belief rewrite: `pCardAt` (calibrated marginal), then `pAssignment` (the joint) | **≥ 36.0%** | ask accuracy + calibration, then **lock hold** | L–XL |
+| **v0.4a** ✅ | `pCardAt`, the calibrated marginal (`pModel: 'marginal'`) · λ measured against it and taken out | **31.94%** (bar ≥ 33.0% — **not met**; the λ-on arm reads 33.78%) | calibration — aggregate abroad ✓ 0.002, deciles ✗ · ask accuracy 51.71 → 53.91 · the marginal's own effect +4.74 (6/6) | L — **shipped, item 4 missed, on the record** |
+| **v0.4b** | `pAssignment` (the joint) and the proof-lag milestone | **≥ 36.0%** | **lock hold**, then calibration abroad | L–XL |
 | **v0.5** | **the capability readout** — negative certificates, count exhaustion, cross-seat handoff, and the search arm priced and measured | **no target. This rung is the measurement.** | 12 seeds, ±2.00, and a written decision on what v1.0 is | M + XL |
 | **v1.0** | **defined only after v0.5's number is read** | ≥ 50.0% | — | — |
 
@@ -1148,9 +1150,10 @@ continuation rather than a second rewrite. It also subsumes λ, which is the sub
 > then. Registry id: `v0.4a`, the a-half of v0.4 on its own vector (v0.3 plus the knob); §3.4b lands
 > under its own id, so each half's cells name the spec they measured.
 >
-> **The construction, as built.** Sinkhorn scaling of the 0/1 candidate matrix over the unknown
-> cards × six seats to row sums 1 and column sums `unknownSlots`, with every surviving ≥1-of-set
-> constraint folded in on each round by the same conditioning §3.3a ships (`p → p / (1 − Π(1 − p))`
+> **The construction, as built** *(the fold's placement corrected by the record below: once, after
+> the margins are met, not on each round)*. Sinkhorn scaling of the 0/1 candidate matrix over the
+> unknown cards × six seats to row sums 1 and column sums `unknownSlots`, with every surviving
+> ≥1-of-set constraint folded in by the same conditioning §3.3a ships (`p → p / (1 − Π(1 − p))`
 > over the constraint's alive cards at its seat) and the margins restored after it. A memoised pure
 > read of the `Knowledge` object; an infeasible table (slots and unknown cards disagree, which only
 > an inconsistent view produces) falls back to the slot prior rather than fabricating a number.
@@ -1167,6 +1170,121 @@ continuation rather than a second rewrite. It also subsumes λ, which is the sub
 > 55.0%*, and a reading under 51.71% is a FAIL whatever the win rate does. Item 8's λ-off arm: six
 > seeds beside the λ-on arm; inside ±2.83 of each other means λ is subsumed and comes out; λ-on
 > ahead by more means it stays, which is what §3.3a's interference reading predicts.
+
+> **Measured 2026-09-03 — v0.4a ships the marginal alone, at λ = 0, on Monet's own vector.**
+> Bridge: the corrected engine and §3.2's binaries unchanged (`fish_portable` f58f6f45…,
+> `fish_split` 95b82b18…), tree `58e4032`, 200 deals × 6 rotations per cell. Identity controls
+> before anything else was read: the null arm (`pModel: 'slot'` on the v0.4a tree, which is v0.3's
+> vector) reproduces v0.3's seed-90210 cell to the digit — 32.0833%, ask 51.6525 / 56.0333, lock
+> hold 9.03156 — and all six of v0.3's panel cells the same way (v0.4 36.08 / 38.75 / 37.08, v0.6
+> 34.25 / 37.25 / 33.42); the arm on the registry's own id reproduces the λ = 0 ablation arm's
+> 30.3333% at 90210 to the digit, so the vector that shipped is the vector that was measured. Every
+> engine line identical but the arm's name. With the knob absent, the roster arm is byte-identical
+> to v0.2's reference tree: 0 mismatches over 338,360 comparisons (22 seeds; 125,748 on the standard
+> gate). Home: 300 mirror games per calibration read, 800 duplicate pairs per regression cell.
+>
+> **The construction, corrected against brute force.** The paragraph above first said the
+> constraint fold runs "on each round". The first build did, and compounding the fold on every
+> scaling round drove a constrained card to certainty — 0.32 off an exhaustive enumeration of the
+> same position. The shipped `marginal.ts` scales to the margins first, conditions on each surviving
+> ≥1-of-set constraint **once** (duplicates and implied supersets at a seat dropped), repairs the
+> touched row and column locally, then re-scales. Against exhaustive enumeration over 200 random
+> small positions the worst card is 0.167 off and the mean 0.007 (`tests/bots/marginal.test.ts`;
+> the bars were written from that measured distribution after a 0.05 bar written before measuring
+> failed, and the assertion says so). Never exactly 0 or 1 for a card with more than one candidate
+> seat.
+>
+> **The 2 × 2, six seeds × 200 deals against SESTINA v1.0** (the slot cells are v0.2's and v0.3's,
+> on the same seeds and bridge):
+>
+> | | slot prior | marginal |
+> |---|---:|---:|
+> | λ = 0 | **27.21%** (v0.2) | **31.94%** — **v0.4a, ships** |
+> | λ = 0.60 | **30.96%** (v0.3) | **33.78%** |
+> | λ = 0.95 | — | 32.96% |
+>
+> Paired per-seed contrasts, floor ±2.83, the cell's own paired 1.96 SE in brackets:
+>
+> | contrast | mean | ahead | per seed (13579 / 24680 / 31415 / 4242 / 7011001 / 90210) |
+> |---|---:|---:|---|
+> | marginal over slot at λ = 0 — **the marginal's own effect** | **+4.74** [±1.31] | 6/6 | +6.00 / +5.92 / +6.08 / +3.50 / +4.83 / +2.08 |
+> | marginal over slot at λ = 0.60 | **+2.82** [±1.26] | 6/6 | +4.83 / +4.08 / +1.67 / +1.67 / +3.67 / +1.00 |
+> | λ = 0.60 over λ = 0 on the marginal — **item 8** | +1.83 [±1.55] | 5/6 | +0.92 / −1.00 / +1.92 / +1.58 / +4.83 / +2.75 |
+> | λ = 0.60 over λ = 0 on the slot prior (v0.3 over v0.2) | +3.75 | 6/6 | §3.3a |
+> | v0.4a over v0.3 — **the milestone contrast**, two keys apart | +0.99 [±2.26] | 3/6 | +3.92 / +5.08 / −0.25 / +0.08 / −1.17 / −1.75 |
+>
+> The interaction is **−1.92**: the marginal takes about half of λ's points, which is what §2.4
+> predicts of a first-order fold and the posterior it approximates — and the other half is the
+> interference §3.3a measured, which no probability model reproduces.
+>
+> 1. **Calibration — FAILS the decile bar everywhere, PASSES the aggregate abroad, and the
+>    disagreement between home and abroad is the finding.** Home, 25,540 chosen asks on v0.4a's
+>    own trajectory: aggregate **−0.0516**, worst decile 0.1394 (a 40-ask decile; the worst
+>    populated one is −0.113 at [0.1, 0.2), n = 1,763) — the marginal *under*-states at home in
+>    every decile, and the worst decile did not halve from 0.1180: the pre-registered FAIL. Abroad,
+>    the six shipped cells, believed against the host's outcomes: aggregate |bias| **0.0019**
+>    (0.0002 – 0.0040 per seed; v0.3 read 0.0672, v0.2 0.0218 at 90210), worst decile **0.0805**
+>    (0.0548 – 0.1202; v0.3 0.1963). With λ = 0.60 on the marginal: home −0.0003 / 0.1138, abroad
+>    **+0.0488 / 0.1734**; at λ = 0.95 abroad +0.0835 / 0.1474. So the same table reads −0.05
+>    against Monet and 0.00 against SESTINA, and the licence term's +0.05 cancels the one and is
+>    added to the other: **calibration is a property of the belief and the opponent together, not
+>    of the belief.** §7's rule that the harness runs abroad is the right one, and §3.4b is read
+>    there. The home aggregate under λ = 0.60, −0.0003, is two errors cancelling, and it is why
+>    v0.3's home read passed.
+> 2. **Ask accuracy — up, bar not reached.** **51.71% → 53.91%** over six seeds (53.69 – 54.07; the
+>    bar was 55.0). SESTINA's own read rose with it, 56.17 → 57.78. λ lowers it again on the new
+>    base — 53.13 at 0.60, 52.88 at 0.95 — §3.3a's reading reproduced: λ's points are not made of
+>    accuracy.
+> 3. **Counters — did not move.** DEAD asks **451 → 495** over six seeds (0.146% → 0.159% of
+>    311,318 asks; v0.2 594). The marginal floors every multi-candidate card at 1e-9 rather than 0,
+>    so a dead ask is `minHitP`'s floor tied at the top of a ranking with nothing above it — not
+>    the thing this milestone changed. `lastResort` 31 → 64. A FAIL on the item as written; the
+>    item was written for a mechanism that removes candidates, and this one does not.
+> 4. **Win rate — 31.94%, FAIL at the ≥ 33.0% bar.** +0.99 over v0.3 on 3 of 6 seeds, unresolved.
+>    The λ-on arm on the same build reads **33.78%** (+2.82 over v0.3, 6 of 6, resolved) and would
+>    pass; it does not ship, by item 8's rule, and the choice is §8.3 decision 5. Reported last, as
+>    the item says, and not hidden.
+> 5. **Panel — unresolved, and the shipped arm reads *against* v0.3 on the v0.4 lineage.** Three
+>    seeds, ±4.00, paired with the null arm (v0.3's vector): v0.4 **37.31 → 35.81 (−1.50, 0 of 3)**,
+>    v0.6 34.97 → 35.25 (+0.28, 2 of 3). The λ-on marginal on the same cells: v0.4 38.25 (+0.94,
+>    2 of 3), v0.6 36.06 (+1.08, 2 of 3). Against the item's own reference — the v0.4 cell at
+>    34.25, which reads 34.56 on these seeds — the shipped arm is +1.25 and the λ-on arm +3.69.
+>    Inside the floor both ways.
+> 6. **Cost — PASSES.** **0.039 ms per decision** mean (median 0.034, p99 0.106, max 0.665),
+>    **24.3 ms per six-seat game** (max 34.9), against v0.3's 0.030 / 19.0 ms on the same bench
+>    (`scripts/bench-decide.mjs`, 24 games after 4 warm-ups). The table adds about a third to a
+>    decision that was already cheap; 36× under the 1.4 ms budget.
+> 7. **Scope — held as written.** `pModel` is a Monet style knob no `BoundedSpec` carries; Bass
+>    v1.5's cost model is untouched, and the roster arm's byte identity above is the proof.
+> 8. **λ — out, by the rule written before the run.** +1.83 (5 of 6) is inside ±2.83. The
+>    mechanism marker agrees with the rule: the λ = 0 arm is the calibrated one abroad, the λ = 0.60
+>    arm over-states by +0.049. Every *other* instrument leans the other way, and none abroad
+>    clears its floor: the panel +2.44 (3 of 3) on v0.4 and +0.81 (2 of 3) on v0.6; home duplicate
+>    pairs **+0.24 ± 0.24** (`home-a`) and **+0.32 ± 0.24** (`home-b`) sets/pair, resolved and
+>    small. The build follows the pre-registration; the roadmap records the tension instead of
+>    re-deciding after the fact (§8.3 decision 5).
+>
+> **Home regression — no loss.** v0.4a against v0.3 on duplicate pairs: **+0.18 ± 0.25** (`home-a`,
+> SD 3.57, win rate 51.44%) and **−0.15 ± 0.24** (`home-b`, SD 3.45, 48.75%), unresolved both
+> ways. The λ-on marginal against v0.3: +0.46 ± 0.23 and +0.33 ± 0.24, ahead on both banks.
+> Agreement with Bass v2.0 on mirror positions: 96.86% of decisions (v0.3 98.07%).
+>
+> **The ceiling, re-built on the shipped belief (§3.4b item 5's reference).** The oracle arm — the
+> three seats of a team share their true hands and cash every lock the instant it forms; a
+> measurement of headroom, never a proposal — scores **38.28%** on three seeds (37.17 / 39.58 /
+> 38.08) where the honest arm scores 31.53 on the same seeds: **+6.75**, 3 of 3, over ±4.00. Its
+> lock hold is 0.39 – 0.42 events, its declarations 3.9 – 4.0 per game at 99.6 – 99.7%. On the
+> λ-on belief the same arm reads 40.94% against 34.58, +6.36. The cashing channel is worth on this
+> belief what it was worth at Bass (+5.75, §0.1): the belief rewrite did not shrink it, and that is
+> the whole case for §3.4b.
+>
+> **What v0.4b inherits, six seeds, the shipped arm.** Lock hold **9.98** events before cashing —
+> v0.3's 8.77 *plus* 1.21: a calibrated ask policy asks into locks it cannot yet cash, and the
+> engine counts every one. Declarations 3.80 per game at **97.86%** (v0.3 3.76 at 98.41; SESTINA
+> 5.0 – 5.2 at 98.3 – 98.5). §3.4b's parity guard was written against 98.4 and this arm is already
+> 0.55 under it, so the guard is read from 97.86. Forward bank: `tests/bots/data/monet-v04a-bank.ts`,
+> 36 games and 25,709 decisions recorded from the committed tree, replayed by
+> `tests/bots/monet.test.ts`.
 
 **Cost.** L. **Risk.** This is the first milestone that can be wrong in a new way: it replaces a
 certainty with a probability, and a probability can be miscalibrated where a certainty cannot. §7 is
@@ -1772,6 +1890,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 2 | ~~**Should Monet play the post-clinch phase at all?**~~ **DOWNGRADED 2026-09-01 — it cannot change a result.** `clinchTarget` is 5 of 9 and `2 x 5 > 9`, so both teams cannot clinch; sets are never taken back, so reaching 5 is a permanent lock. **The winner under `us54` and under the host's play-all-nine is therefore identical by construction**, and the 73.9-76.5% of seat-games that run past the clinch cannot change who won. An earlier note here called it the largest un-modelled region of the foreign game and implied it might be worth points; that was wrong and is withdrawn. **What survives is a measurement hazard, not a strategy one:** the per-decision metrics the whole diagnosis rests on — ask accuracy 52.32 vs 57.38, lock hold 9.30 vs 2.92 — are summed over all ops, including the **47,868 of 416,627 (11.5%)** played after the game was already decided. If Monet behaves differently there, those headline figures are contaminated. **v0.2 splits them pre/post clinch**; nothing may be tuned against the unsplit figures after that. **DELIVERED at v0.2, 6 seeds x 7,200 games, and the split changes two readings.** (a) *Declare accuracy.* The pooled 98.32 / 98.35 parity is contaminated: on the LIVE game FishAI is **ahead**, 99.24 vs 98.18, +1.07 pts, positive on 6 of 6 seeds (sign test p = 0.031 two-sided, per-seed range +0.64 to +1.50; declares cluster within a deal, so this is a paired sign test and NOT a pooled binomial interval). The post-clinch column reverses it, -4.87 — but that column is a phase `us54` does not have and **carries no roadmap target**. (b) *Lock hold.* Splitting it by when the set was CASHED was wrong: the quantity is a DURATION that straddles the clinch, so a lock formed while the deal was live and cashed after it ended had its whole wait credited to post. Split AT THE CLINCH instead, the live-phase wait is **8.44 events, not the 6.72 the cash-time bucketing reported**, and the live-phase ratio to SESTINA is **2.96x** — indistinguishable from the pooled 2.96x, where the cash-time shape had suggested 2.41x live against 4.24x post. **The apparent "the lock problem lives after the clinch" contrast was an artefact of the bucketing.** Ask accuracy is the one metric the split leaves alone: the deficit is -4.95 pre and -5.11 post against -5.08 pooled. | **downgraded; the split is DELIVERED at v0.2** |
 | 3 | **`bounded.ts`'s cost model** (§1.5). A joint posterior has no atomic-fact decomposition, so the bit budget becomes undefined. v0.5 must choose in writing between confining the posterior to the unbounded arm and giving BOUNDED.md a new cost model. | open, due at v0.5 |
 | 4 | **Move Monet's `defuse` to 0, or buy the cell that would decide it?** §3.3b: the home ladder resolves rung 0 ahead of rung 1 on both banks (+0.24 ± 0.19, +0.23 ± 0.20 sets/pair) and the bridge reads it at +0.98 inside ±3.10 — frozen at 1 by the roadmap's own rule. The abroad cell that resolves it costs roughly ten times the deals per rung. Either answer is a v0.3.1, not a v0.4 item. | open, not blocking |
+| 5 | **Put λ back on the marginal base?** §3.4a item 8: the rule written before the run (inside ±2.83 → subsumed, out) took it out at +1.83 (5 of 6). Every other instrument leans the other way and none abroad clears its floor — panel +2.44 (3/3) and +0.81 (2/3), home +0.24 ± 0.24 and +0.32 ± 0.24 sets/pair (resolved, small) — and the λ-on arm is the one that clears item 4 (33.78% against 31.94%), at the price of the calibration marker (+0.049 aggregate over-statement abroad, worst decile 0.17 against 0.08). The abroad cell that resolves it is 24 seeds per arm (±1.41, about 25 minutes of bridge). §3.4b's joint is the mechanism that prices the interference explicitly (§3.4a's amendment) and re-runs the 2 × 2 with λ as a factor; the cheapest answer is to wait for it. | open, not blocking |
 
 ---
 
