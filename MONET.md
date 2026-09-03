@@ -2047,6 +2047,59 @@ Two items, each with a marker, each an ablation arm:
 **Target** a design target of ≥ 38.0%, since this is the one rung whose ceiling the record has
 measured. Twelve seeds, ±2.00, drawn and written down when the rung opens.
 
+#### 3.7a Pre-registration — written 2026-09-03 when the rung opened, before any v0.6 code
+
+**The base** is whatever §3.6's abroad run ships (v0.4c at λ = 0.3 if nothing does). Every number is a paired
+contrast against it on shared deals, and the twelve-seed floor abroad is ±2.00.
+
+**Item 2 as written above cannot be built, and the census says so.** RULES_US54.md §3.2 offers the option to
+the turn-holder *first* and makes `decline` illegal while the turn-holder has no legal ask, so in a
+`MUST_DECLARE` window the option never travels: no teammate can declare first. On v0.4c at λ = 0.3 (2,000
+mirror games, 1,178,641 decisions) the compelled declarations are **240 — 227 `must-declare`, 13
+`forced-claim`** (an on-turn claim with no window at all). Neither kind has a moment at which a teammate
+holds the option. The emulation's numbers reproduce (as shipped 47.92%, most-confident teammate 74.17%,
+best of three 87.92%) and still measure a channel the rules do not open at that moment. **What replaces it —
+the pre-emptive declare.** The compulsion is foreseeable from the public counts: it arrives when the last
+opponent card leaves. In the windows *before* it, every teammate holds the option in turn, and the one whose
+speculative plan is best can declare then — the same information the emulation priced, spent one window
+earlier. The knob: `compelHorizon` (opponents' cards in hands, in total, at or below which the position is
+*near compulsion*; 0 = off, byte identity) and `declareThresholdCompelled` (the speculative bar played
+there, in place of `declareThreshold`'s 0.775; the compelled seat is right 47.9% believing 0.43, so any bar
+above that is a gain over what the position will otherwise get). **Marker:** the accuracy of declarations
+made near compulsion at home (`scripts/probe-handoff-declare.mjs`, extended to score every declaration at
+opponents' cards ≤ horizon, ground truth), toward the emulation's 74%; and their count per game, which must
+not exceed the compelled population it replaces by more than the fit explains. **Price:** sets per game on
+duplicate pairs; §3.5a(b) sized the whole channel at about 0.04 sets per game at home, so this item is
+small by construction and is built because it is cheap, not because it is large.
+
+**Item 1 gets a readout before a line of policy.** Its family has a record: signalling measured flat
+(49.97%, −0.013 ± 0.033 over 1,500 pairs) and stalling lost 1.14 sets at strength (conceal.ts's header),
+because a deliberate miss concedes the turn and a licence is one bit. An ask into a set the team already
+holds in full is *always* a miss (no opponent holds a card of it), so the reveal term is exactly that
+family, and it is worth building only where one bit finishes a teammate's proof. **The readout**
+(`scripts/probe-reveal.mjs`, ground truth at home): at every ask decision, for every set locked on the
+asker's team that no teammate can prove, append the asker's licence to the log and rebuild each teammate's
+knowledge — does the proof complete, or does a teammate's best plan clear the bar? **The floor, written
+now: the term is built only if such opportunities number ≥ 0.30 per game on the fit seeds; below that the
+channel is too thin to move lock hold by the ±0.20-sets floor's worth and item 1 is recorded as a readout,
+as §3.5a(b)'s handoff was.** If built: `reveal` (≥ 0, absent = identity) credits an ask into a set the
+asker's knowledge places wholly on its team, when its licence there is not yet public, by `reveal · wHit ·
+u / (1 + E)` with `u` the set's cards the public record has not placed and `E` `turnYield` — paid on both
+branches, once per set, the mirror image of `conceal`. **Markers:** lock hold at home (`probe-score.mjs`'s
+team half; the abroad engine's *lock hold*), which must fall; speculative-declare accuracy (92 – 94%), which
+must not.
+
+**Seeds.** Fit on six from `hashSeed("monet-v0.6-fit-6")`: **9220628 8580707 6389604 5910092 2121575
+1884435**; confirm at home and abroad on twelve from `hashSeed("monet-v0.6-confirm-12")`: **6021520 8438705
+3195511 9141082 5082131 7701419 2601210 4621978 6478725 2793161 2568302 2796767** — drawn by §6.5's rule
+excluding every seed read or reserved so far (87 after the draw, all distinct), the engine's `hashSeed`
+against the verbatim copy, no draw skipped.
+
+**Acceptance.** As §3.6c's: each item its own arm, home first (the marker must move; duplicate pairs not
+behind at ±0.20 on 600 pairs), then abroad at the twelve seeds; **an item ships if its paired main effect
+over the base clears +2.00**; inside the floor with the marker moved, recorded and not shipped unless the
+owner directs otherwise. The oracle's +6.75 stays the ceiling this rung is read against.
+
 ### 3.8 Monet v0.7 — the search arm, only if a gap is left and only through the cost-first test
 
 **Opens only if §3.7's record leaves a gap the middle row of §3.5b's rule says search might close** —
