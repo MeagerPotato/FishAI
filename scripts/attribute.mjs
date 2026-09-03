@@ -87,6 +87,8 @@ function newAcc() {
     phase: { early: { n: 0, hit: 0 }, mid: { n: 0, hit: 0 }, late: { n: 0, hit: 0 } },
     hitExists: 0, hitWhenExists: 0,
     cfN: 0, cfAgree: 0, cfHit: 0, actHitAtCf: 0, cfDiff: 0, cfDiffHit: 0, actDiffHit: 0, cfNonAsk: 0,
+    holding: { 1: { n: 0, hit: 0 }, 2: { n: 0, hit: 0 }, 3: { n: 0, hit: 0 }, 4: { n: 0, hit: 0 }, 5: { n: 0, hit: 0 } },
+    cfHolding: { 1: { n: 0, hit: 0 }, 2: { n: 0, hit: 0 }, 3: { n: 0, hit: 0 }, 4: { n: 0, hit: 0 }, 5: { n: 0, hit: 0 } },
   })
   const declT = () => ({
     n: 0, correct: 0, gifts: 0, void: 0, forced: 0,
@@ -144,6 +146,7 @@ function walk(rec, cfPol, acc) {
       }
     }
   }
+  const holdingOf = (sd, b) => { let n = 0; for (const c of BOOK_CARDS.get(b)) { const x = seatOf.get(c); if (x !== undefined && side(x) === sd) n++ } return n }
   const hitExists = (asker) => {
     const T = side(asker)
     const seen = new Set()
@@ -176,6 +179,7 @@ function walk(rec, cfPol, acc) {
       A.phase[phase].n++
       if (ev.hit) A.phase[phase].hit++
       if (hitExists(ev.asker)) { A.hitExists++; if (ev.hit) A.hitWhenExists++ }
+      { const h = A.holding[Math.min(5, Math.max(1, holdingOf(T, bookOf(ev.card))))]; h.n++; if (ev.hit) h.hit++ }
       if (T !== lastAskTeam) { acc.tempo[T].runs++; lastAskTeam = T }
       if (cfPol) {
         const meta = rec.askMeta ? rec.askMeta.get(i) : undefined
@@ -211,6 +215,7 @@ function walk(rec, cfPol, acc) {
           }
           if (cfHit) A.cfHit++
           if (ev.hit) A.actHitAtCf++
+          { const h = A.cfHolding[Math.min(5, Math.max(1, holdingOf(T, bookOf(a.card))))]; h.n++; if (cfHit) h.hit++ }
         }
       }
       if (ev.hit) {
@@ -389,6 +394,15 @@ function report(acc, head) {
   for (const t of [0, 1]) {
     const A = acc.asks[t]
     console.log(`| ${t === 0 ? 'A' : 'B'} | ${per(A.n, g, 1)} | ${pct(A.hit, A.n)} | ${pct(A.certain, A.n)} | ${pct(A.uncHit, A.unc)} | ${pct(A.phase.early.hit, A.phase.early.n)} / ${pct(A.phase.mid.hit, A.phase.mid.n)} / ${pct(A.phase.late.hit, A.phase.late.n)} | ${pct(A.hitExists, A.n)} | ${pct(A.hitWhenExists, A.hitExists)} | ${pct(A.cfAgree, A.cfN)} | ${pct(A.cfHit, A.cfN)} vs ${pct(A.actHitAtCf, A.cfN)} | ${pct(A.cfDiffHit, A.cfDiff)} / ${pct(A.actDiffHit, A.cfDiff)} (${A.cfDiff}) | ${A.cfNonAsk} |`)
+  }
+  console.log('')
+  console.log('-- asks by the asking side\u2019s holding of the asked set (cards of six already on the side): share of asks, hit; and the counterfactual\u2019s share, hit --')
+  console.log('| side | 1 | 2 | 3 | 4 | 5 | cf 1 | cf 2 | cf 3 | cf 4 | cf 5 |')
+  console.log('|---|---|---|---|---|---|---|---|---|---|---|')
+  for (const t of [0, 1]) {
+    const A = acc.asks[t]
+    const cellOf = (H, total) => [1, 2, 3, 4, 5].map((k) => `${pct(H[k].n, total)} / ${pct(H[k].hit, H[k].n)}`)
+    console.log(`| ${t === 0 ? 'A' : 'B'} | ${cellOf(A.holding, A.n).join(' | ')} | ${cellOf(A.cfHolding, A.cfN).join(' | ')} |`)
   }
   console.log('')
   console.log('-- tempo --')
