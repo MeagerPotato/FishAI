@@ -241,8 +241,9 @@ export interface StyleParams extends AskWeights {
 
   /**
    * MONET.md §3.3a — the strength λ (0..1) at which the ask ranker's hit probability is
-   * conditioned on a live row-6 licence where `knowledge.ts` has dropped the constraint
-   * ([licence.ts](licence.ts)). It is a calibration correction, not an appetite: ASKING.md §4.1
+   * conditioned on every live row-6 licence the model has not discharged — whether `knowledge.ts`
+   * still holds the constraint or has dropped it ([licence.ts](licence.ts); MONET.md §3.3a rejected
+   * the dropped-only scope). It is a calibration correction, not an appetite: ASKING.md §4.1
    * measured the engine under-pricing licensed asks by 8 points (0.2386 believed against 0.3221
    * realised) and λ = 0.60 removing the bias almost exactly. It still lives on the style vector,
    * because a bot that has shipped must keep playing the games it shipped with: absent or 0 is

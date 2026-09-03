@@ -157,6 +157,5 @@ describe('the two entries are different bots, and nearly the same one', () => {
     // decisions would need different copy, and one that agreed on all of them would be Bass.
     expect(agree).toBeGreaterThan(95)
     expect(agree).toBeLessThan(100)
-    expect(agree).toBeLessThanOrEqual(100)
   })
 })

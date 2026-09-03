@@ -86,7 +86,7 @@ import type { PolicySpec } from './bounded.ts'
  * that have actually shipped appear here, so the union is also the honest answer to "what can be
  * measured today".
  */
-export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a' | 'v0.4b'
+export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a' | 'v0.4b' | 'v0.4c'
 
 /**
  * Version id -> the policy that version plays, ready for `decide(view, policy, seed)`.
@@ -117,6 +117,13 @@ export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a' | 'v0.4b'
  *   set's open cards by `joint.ts`'s chain over the same table, most certain first, and the
  *   plan's probability is the product of the conditionals rather than the independent product.
  *   `claimOwnership` (item 2) stays off the vector until §3.4b's written rule admits it.
+ * - `v0.4c` is v0.4b plus `licenceLambda: 0.3` (MONET.md §3.4b's licence addendum; §8.3 decision 5):
+ *   the term v0.3 shipped and §3.4a's rule took out at +1.83 inside ±2.83, put back once the
+ *   24-seed cell (±1.41) that decision 5 named as the one that resolves it read +1.88, ahead on
+ *   22 of 24. The correction is to the ask ranker's number only (`licence.ts`); the claim
+ *   planner's table and chain are untouched. Shipped at 0.6 first; moved to 0.3 by the
+ *   pre-registered 0.3-versus-0.6 confirmation on 24 fresh seeds (§3.4c: +1.19 paired, SE 0.30,
+ *   ahead on 19 of 24, at less than half the over-statement).
  *
  * No entry pins the *code* the knobs run through — see the header. Naming v0.1 here buys back
  * v0.1's SPEC on a v0.2 tree; it does not buy back v0.1's games.
@@ -139,6 +146,10 @@ export const MONET_VERSIONS: Readonly<Record<MonetVersion, PolicySpec>> = Object
     skill: SKILL_PRESETS.hard,
     style: Object.freeze({ ...STYLE_ROSTER.punter, pModel: 'marginal', pAssignment: 'joint' }),
   }),
+  'v0.4c': Object.freeze({
+    skill: SKILL_PRESETS.hard,
+    style: Object.freeze({ ...STYLE_ROSTER.punter, pModel: 'marginal', pAssignment: 'joint', licenceLambda: 0.3 }),
+  }),
 })
 
 /**
@@ -146,7 +157,7 @@ export const MONET_VERSIONS: Readonly<Record<MonetVersion, PolicySpec>> = Object
  * ("Monet beats v0.2 through v0.6 as well"). Ordered, because a version list that is only a key set
  * cannot express "the one before this".
  */
-export const MONET_VERSION_IDS: readonly MonetVersion[] = Object.freeze(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b'] as const)
+export const MONET_VERSION_IDS: readonly MonetVersion[] = Object.freeze(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c'] as const)
 
 /**
  * Is `id` a version this repo can play? For callers holding a string rather than a `MonetVersion` —

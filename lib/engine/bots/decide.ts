@@ -384,16 +384,6 @@ export interface ClaimPlan {
 }
 
 /**
- * Plan a claim of `book` for the viewer's team using knowledge + counts.
- * Certain cards go to their known holders. Uncertain cards are assigned by
- * COUNT-CONSISTENCY: greedily to the candidate teammate with the most
- * remaining unidentified slots (a card is a-priori equally likely to sit in
- * any unidentified slot), decrementing a working capacity map so multiple
- * guesses stay jointly consistent with the public hand sizes. p multiplies
- * per-card success estimates (certain-on-team = 1; certain-on-opponent = 0;
- * uncertain = chosen capacity / total candidate capacity).
- */
-/**
  * The joint planner's plans, memoised per `Knowledge` object and set (MONET.md §3.4b). The
  * window's three claim branches and the trace verdicts each ask for the same set's plan, and the
  * chain is the one planner worth remembering; the greedy planner is never cached, so every path
@@ -401,6 +391,18 @@ export interface ClaimPlan {
  */
 const JOINT_PLANS = new WeakMap<Knowledge, Map<BookId, ClaimPlan>>()
 
+/**
+ * Plan a claim of `book` for the viewer's team using knowledge + counts.
+ * Certain cards go to their known holders. Uncertain cards are assigned by
+ * COUNT-CONSISTENCY: greedily to the candidate teammate with the most
+ * remaining unidentified slots (a card is a-priori equally likely to sit in
+ * any unidentified slot), decrementing a working capacity map so multiple
+ * guesses stay jointly consistent with the public hand sizes. p multiplies
+ * per-card success estimates (certain-on-team = 1; certain-on-opponent = 0;
+ * uncertain = chosen capacity / total candidate capacity). Under `pAssignment: 'joint'`
+ * (MONET.md §3.4b) the uncertain cards are then re-assigned by the chain over the marginal and
+ * `p` is the chain's; the greedy body is what every other style plays, unchanged.
+ */
 function planClaim(view: SeatView, k: Knowledge, book: BookId, style?: StyleParams): ClaimPlan {
   const joint = style?.pAssignment === 'joint'
   if (joint) {

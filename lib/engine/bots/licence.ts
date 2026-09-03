@@ -38,8 +38,9 @@
  * under-priced — and by −0.0005 where a member is certainly at the target. [measured, home] Only
  * the last is calibrated. So the correction fires on every licence the log carries that the
  * model has not discharged (a member certainly at t leaves nothing to condition on), and at
- * λ = 0.60 the pooled licensed bias reads +0.0026 on v0.2's trajectory and −0.0027 on v0.3's,
- * every subset inside ±0.02. The dropped-only variant is kept in the harness as the rejected
+ * λ = 0.60 the pooled licensed bias reads +0.0026 on v0.2's trajectory and −0.0032 on v0.3's,
+ * every subset within ±0.03 (MONET.md §3.3a is the record; an earlier draft of this comment
+ * said −0.0027 / ±0.02). The dropped-only variant is kept in the harness as the rejected
  * alternative, and `modelHoldsLicence` is exported for it.
  *
  * Pure and deterministic over `(view, k, card, target, λ, licences)`: no rng, no clock, no
