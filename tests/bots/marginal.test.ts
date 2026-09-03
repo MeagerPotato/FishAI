@@ -268,6 +268,7 @@ describe('the knob is inert everywhere it is absent', () => {
     for (const style of Object.values(STYLE_ROSTER)) expect(style.pModel).toBeUndefined()
     expect(monetPolicy('v0.3').style.pModel).toBeUndefined()
     expect(monetPolicy('v0.4a').style.pModel).toBe('marginal')
+    expect(monetPolicy('v0.4a').style.licenceLambda).toBeUndefined()
   })
 
   it('validateStyle refuses a model it does not know', () => {

@@ -155,18 +155,20 @@ describe('the Monet version registry names each version and resolves it to that 
     expect(Object.isFrozen(pair.style)).toBe(true)
   })
 
-  it('v0.4a is v0.3 plus the marginal, on its own vector — and differs from Punter in NOTHING else', () => {
+  it('v0.4a is Punter plus the marginal, on its own vector — and differs from Punter in NOTHING else', () => {
     const pair = asPair(MONET_V04A, "MONET_VERSIONS['v0.4a']")
     expect(pair.skill).toBe(SKILL_PRESETS.hard)
     // MONET.md §3.4a: the probability model is a knob on Monet's vector, absent on the roster —
     // the same reason v0.3's knob lives here. The deviation SET from Punter is pinned in full.
-    expect(styleDiffKeys(pair.style, STYLE_ROSTER.punter)).toEqual(['licenceLambda', 'pModel'])
-    expect(pair.style.licenceLambda).toBe(0.6)
+    expect(styleDiffKeys(pair.style, STYLE_ROSTER.punter)).toEqual(['pModel'])
     expect(pair.style.pModel).toBe('marginal')
     expect(STYLE_ROSTER.punter.pModel).toBeUndefined()
-    // And from v0.3 in exactly the knob: the a-half of v0.4 is one mechanism, so its cell is its
-    // ablation cell against v0.3 by construction.
-    expect(styleDiffKeys(pair.style, (MONET_V03 as BotPolicy).style)).toEqual(['pModel'])
+    // v0.3's licence term is NOT on this vector: MONET.md §3.4a item 8 measured it inside the floor
+    // on the marginal base and the pre-registered rule took it out. So v0.4a differs from v0.3 in
+    // two keys — the model added, the term removed — and the 2 × 2 on the record is what makes the
+    // pair readable, not this pin.
+    expect(pair.style.licenceLambda).toBeUndefined()
+    expect(styleDiffKeys(pair.style, (MONET_V03 as BotPolicy).style)).toEqual(['licenceLambda', 'pModel'])
     expect(Object.isFrozen(pair.style)).toBe(true)
   })
 
@@ -249,10 +251,11 @@ describe('v0.1 and v0.2 are two different policies, not one policy under two lab
 
 describe('v0.4a and v0.3 are two different policies, and nearly the same one', () => {
   it('choose differently on a measurable minority of real decisions, and alike on the rest', () => {
-    // The registry says v0.4a is v0.3 plus `pModel: 'marginal'`; this is the check that the table
-    // reaches the board. Six v0.4a-driven mirror games, v0.3 asked at every position. The share
-    // that moves is a property of how often the scaled table reorders the top of the ranking, and
-    // the ceiling on it is a sanity bar, not a measurement (the measurement is MONET.md §3.4a).
+    // The registry says v0.4a is Punter plus `pModel: 'marginal'` (and without v0.3's licence
+    // term); this is the check that the table reaches the board. Six v0.4a-driven mirror games,
+    // v0.3 asked at every position. The share that moves is a property of how often the scaled
+    // table reorders the top of the ranking plus what the licence term used to move, and the
+    // ceiling on it is a sanity bar, not a measurement (the measurement is MONET.md §3.4a).
     let decisions = 0
     let differ = 0
     for (let g = 0; g < 6; g++) {

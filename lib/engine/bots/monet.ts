@@ -107,9 +107,12 @@ export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a'
  *   vector, deliberately not a roster edit. Measured 2026-09-03: 30.96% over six seeds against
  *   SESTINA, +3.75 on v0.2 and positive on every seed; `defuse` stays at the roster's 1 by §3.3b's
  *   written freeze, and no score term ships (§3.3c).
- * - `v0.4a` is v0.3 plus `pModel: 'marginal'` (MONET.md §3.4a): the ask path's hit probability is
- *   read off `marginal.ts`'s scaled card × seat table instead of the slot prior. The a-half of
- *   v0.4 under its own id, so its cells name the spec they measured; §3.4b lands as its own.
+ * - `v0.4a` is the roster's Punter spread with `pModel: 'marginal'` (MONET.md §3.4a) and WITHOUT
+ *   v0.3's `licenceLambda`: the ask path's hit probability is read off `marginal.ts`'s scaled
+ *   card × seat table instead of the slot prior, and the licence term came out because the
+ *   2 × 2 measured it inside the floor on the new base (item 8; the λ-on arm reads +1.84 over six
+ *   seeds, on the record). The a-half of v0.4 under its own id, so its cells name the spec they
+ *   measured; §3.4b lands as its own.
  *
  * No entry pins the *code* the knobs run through — see the header. Naming v0.1 here buys back
  * v0.1's SPEC on a v0.2 tree; it does not buy back v0.1's games.
@@ -126,7 +129,7 @@ export const MONET_VERSIONS: Readonly<Record<MonetVersion, PolicySpec>> = Object
   }),
   'v0.4a': Object.freeze({
     skill: SKILL_PRESETS.hard,
-    style: Object.freeze({ ...STYLE_ROSTER.punter, licenceLambda: 0.6, pModel: 'marginal' }),
+    style: Object.freeze({ ...STYLE_ROSTER.punter, pModel: 'marginal' }),
   }),
 })
 
