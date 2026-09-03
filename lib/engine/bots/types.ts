@@ -57,6 +57,13 @@ export interface KnowledgeOptions {
   logWindow?: number
   /** Record ask set-constraints. Easy sets false (direct facts only). Default: true. */
   useConstraints?: boolean
+  /**
+   * Attach MONET.md §3.4a's calibrated marginal (`marginal.ts`) to the built Knowledge, so the
+   * hit probability answers from the scaled card × seat table instead of the slot prior. Default:
+   * false — every Bass tier, and every Monet version before v0.4a. A pure read of the finished
+   * object; the Knowledge itself keeps its shape.
+   */
+  marginal?: boolean
 }
 
 /**

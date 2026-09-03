@@ -84,6 +84,7 @@ import type { Deck } from '../cards.ts'
 import { bookCards, cardBook, deckFor, seatTeam } from '../cards.ts'
 import { legalAsksFromView } from '../helpers.ts'
 import type { AskWeights, Knowledge, KnowledgeOptions, RankedAsk, SeatView } from './types.ts'
+import { attachMarginal, marginalFor, marginalHitProbability } from './marginal.ts'
 
 /** Six seats in both rule sets — see the header; never derived from the deck. */
 const FULL_MASK = 0b111111
@@ -441,7 +442,7 @@ export function markResolvedGone(w: Work, view: SeatView): void {
  * the log itself certifies.
  */
 export function recordedWalk(view: SeatView): { w: Work; rec: WalkRecord } {
-  const opts: Required<KnowledgeOptions> = { logWindow: Number.POSITIVE_INFINITY, useConstraints: true }
+  const opts: Required<KnowledgeOptions> = { logWindow: Number.POSITIVE_INFINITY, useConstraints: true, marginal: false }
   const ownCardToggle = view.config?.toggles?.askOwnCardAllowed === true
   const log: readonly PublicEvent[] = Array.isArray(view.log) ? view.log : []
   const w = newWork(view)
@@ -470,6 +471,7 @@ export function buildKnowledge(view: SeatView, options: KnowledgeOptions = {}): 
   const opts: Required<KnowledgeOptions> = {
     logWindow: options.logWindow ?? Number.POSITIVE_INFINITY,
     useConstraints: options.useConstraints ?? true,
+    marginal: options.marginal ?? false,
   }
   const ownCardToggle = view.config?.toggles?.askOwnCardAllowed === true
   const log: readonly PublicEvent[] = Array.isArray(view.log) ? view.log : []
@@ -489,7 +491,11 @@ export function buildKnowledge(view: SeatView, options: KnowledgeOptions = {}): 
   // with nothing thrown to notice them by.
   const runningCounts = new Array<number>(6).fill(w.deck.handSize)
   for (const ev of events) ingest(w, ev, runningCounts, opts, ownCardToggle, trackCounts)
-  return finishKnowledge(w, view)
+  const k = finishKnowledge(w, view)
+  // MONET.md §3.4a: the calibrated marginal is derived here, on the unbounded path only — never
+  // inside `finishKnowledge`, which the bounded arm's replay shares (the §3.4a scope decision).
+  if (opts.marginal) attachMarginal(k)
+  return k
 }
 
 /**
@@ -681,12 +687,28 @@ export function pc(card: Card): string {
 }
 
 /**
- * Probability estimate that `target` currently holds `card`: the target's
- * unidentified slots over the total unidentified slots of all candidate seats
- * (every unknown slot is, to first order, equally likely to be this card).
+ * Probability estimate that `target` currently holds `card` — the model's own number. On a
+ * Knowledge built without the marginal it is the slot prior: the target's unidentified slots over
+ * the total unidentified slots of all candidate seats (every unknown slot is, to first order,
+ * equally likely to be this card). On a Knowledge built with `marginal: true` (MONET.md §3.4a) it
+ * is read off the scaled card × seat table instead. Certainties are the same on both: a card with
+ * one candidate is 1 there and 0 elsewhere, a gone card is 0 everywhere.
  */
 export function askHitProbability(k: Knowledge, card: Card, target: Seat): number {
   return pHit(k, card, target)
+}
+
+/**
+ * The slot prior itself, whatever the Knowledge was built with. The calibration harness reads this
+ * beside `askHitProbability` so the two models can be laid side by side on the same asks; nothing
+ * on the decision path calls it.
+ */
+export function slotPriorHitProbability(k: Knowledge, card: Card, target: Seat): number {
+  const cand = k.cands[card]
+  if (!cand || cand.length === 0) return 0
+  if (!cand.includes(target)) return 0
+  if (cand.length === 1) return 1
+  return slotPrior(k, cand, target)
 }
 
 /**
@@ -703,6 +725,10 @@ export function askHitProbability(k: Knowledge, card: Card, target: Seat): numbe
 export function refinedHitProbability(k: Knowledge, card: Card, target: Seat): number {
   const base = pHit(k, card, target)
   if (base === 0 || base === 1) return base
+  // MONET.md §3.4a: a marginal table already carries every surviving constraint, folded on every
+  // scaling round with the margins restored after each — so the first-order fold below would
+  // count the same evidence twice. The ceiling is the same one the fold applies.
+  if (marginalFor(k)) return Math.min(1 - 1e-9, base)
   let best = base
   for (const kc of k.constraints) {
     if (kc.seat !== target) continue
@@ -724,8 +750,23 @@ function pHit(k: Knowledge, card: Card, target: Seat): number {
   if (!cand || cand.length === 0) return 0
   if (!cand.includes(target)) return 0
   if (cand.length === 1) return 1
-  // Weight each candidate seat by its unidentified-card slots: every unknown
-  // slot is (to first order) equally likely to be this card.
+  // MONET.md §3.4a: a Knowledge built with the marginal answers from its table. `null` is a table
+  // that could not be scaled (an inconsistent view), and `undefined` a Knowledge built without one;
+  // both read the slot prior, so no reader ever sees a fabricated number.
+  const table = marginalFor(k)
+  if (table) {
+    const m = marginalHitProbability(table, card, target)
+    if (m !== undefined) return m
+  }
+  return slotPrior(k, cand, target)
+}
+
+/**
+ * The slot prior over a card's candidate seats: weight each candidate seat by its
+ * unidentified-card slots — every unknown slot is (to first order) equally likely to be this
+ * card. The number every bot shipped before Monet v0.4a acted on.
+ */
+function slotPrior(k: Knowledge, cand: readonly Seat[], target: Seat): number {
   let total = 0
   for (const s of cand) total += k.unknownSlots[s]
   if (total <= 0) return 1 / cand.length

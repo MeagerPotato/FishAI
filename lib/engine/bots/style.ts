@@ -256,6 +256,16 @@ export interface StyleParams extends AskWeights {
    * prices the appetite again on top of this rather than assuming the two add.
    */
   licenceLambda?: number
+  /**
+   * MONET.md §3.4a — which probability model the ask path acts on. `'slot'` (and absent) is the
+   * slot prior every bot has shipped with; `'marginal'` builds the Knowledge with `marginal.ts`'s
+   * scaled card × seat table and reads the hit probability off it (`KnowledgeOptions.marginal`).
+   * Absent on every roster style and every tier: the model is Monet's, and Bass is frozen. Like
+   * `licenceLambda`, a statement about how the seat *computes* rather than what it risks; it lives
+   * here rather than on the skill vector because the skill presets are the roster's and are shared
+   * by reference (`SKILL_PRESETS.hard` is Monet's skill, unmodified).
+   */
+  pModel?: 'slot' | 'marginal'
 
 }
 
@@ -596,5 +606,10 @@ export function validateStyle(style: StyleParams): string[] {
   // rather than extrapolated. Absent is the off switch and is sound.
   const lambda = style.licenceLambda ?? 0
   if (!(lambda >= 0 && lambda <= 1)) bad.push(`licenceLambda ${lambda} outside 0..1`)
+  // The probability model is a closed choice: an unknown name would silently read as the slot
+  // prior, and a style that thinks it plays the marginal but does not is a miscalibrated bot with
+  // a calibrated story.
+  const pModel = style.pModel
+  if (pModel !== undefined && pModel !== 'slot' && pModel !== 'marginal') bad.push(`pModel ${String(pModel)} is not 'slot' or 'marginal'`)
   return bad
 }

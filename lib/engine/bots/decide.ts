@@ -242,8 +242,10 @@ function ownTeamCards(view: SeatView): number {
 }
 
 /** The inference settings of a skill, in the shape `buildKnowledge` wants. */
-function knowledgeOptions(skill: SkillParams): KnowledgeOptions {
-  return { logWindow: skill.logWindow, useConstraints: skill.useConstraints }
+function knowledgeOptions(skill: SkillParams, style: StyleParams): KnowledgeOptions {
+  // MONET.md §3.4a: the probability model is the style's choice (`pModel`), off on every tier and
+  // roster style; the two skill fields are what they always were.
+  return { logWindow: skill.logWindow, useConstraints: skill.useConstraints, marginal: style.pModel === 'marginal' }
 }
 
 /**
@@ -262,7 +264,7 @@ interface ActivePolicy extends BotPolicy {
  * knowledge where an override is present, the ordinary skill-shaped `buildKnowledge` otherwise.
  */
 function knowledgeFor(view: SeatView, pol: ActivePolicy): Knowledge {
-  return pol.boundedK !== undefined ? pol.boundedK() : buildKnowledge(view, knowledgeOptions(pol.skill))
+  return pol.boundedK !== undefined ? pol.boundedK() : buildKnowledge(view, knowledgeOptions(pol.skill, pol.style))
 }
 
 /** First unresolved book fully contained in the viewer's own hand. */
