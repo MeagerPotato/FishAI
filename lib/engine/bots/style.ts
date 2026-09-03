@@ -315,6 +315,16 @@ export interface StyleParams extends AskWeights {
    */
   revealFar?: number
   /**
+   * MONET.md 3.8b: the determinized declare. When > 0, a declare window samples this many deals
+   * from the seat's posterior (`determinize.ts`) and declares an unresolved set whose six cards sit
+   * on this team with the same holders in at least `consensusBar` of them, holders as sampled
+   * (`consensus.ts`). Runs after the certain claim and before the EV claim, under the same foreign
+   * and hoard rules as the certain claim. 0 or absent is byte identity.
+   */
+  consensusDet?: number
+  /** The agreement a consensus claim needs, a share of the deals requested, in (0, 1]; absent is 1 (unanimity). */
+  consensusBar?: number
+  /**
    * MONET.md §3.7a item 2′ — the pre-emptive declare. The compulsion (RULES_US54.md §3.2, a window that
    * cannot close) arrives when the last opponent card leaves, and it lands on whichever seat holds
    * the turn then, with whatever it knows. In the windows before it every teammate holds the option
@@ -725,6 +735,10 @@ export function validateStyle(style: StyleParams): string[] {
   if (reveal !== undefined && !(typeof reveal === 'number' && Number.isFinite(reveal) && reveal >= 0)) bad.push(`reveal ${String(reveal)} is not a finite number >= 0`)
   const revealFar = style.revealFar
   if (revealFar !== undefined && !(typeof revealFar === 'number' && Number.isFinite(revealFar) && revealFar >= 0 && revealFar <= 1)) bad.push(`revealFar ${String(revealFar)} is not a number in [0, 1]`)
+  const consensusDet = style.consensusDet
+  if (consensusDet !== undefined && !(Number.isInteger(consensusDet) && consensusDet >= 0)) bad.push(`consensusDet ${String(consensusDet)} is not an integer >= 0`)
+  const consensusBar = style.consensusBar
+  if (consensusBar !== undefined && !(typeof consensusBar === 'number' && Number.isFinite(consensusBar) && consensusBar > 0 && consensusBar <= 1)) bad.push(`consensusBar ${String(consensusBar)} is not a number in (0, 1]`)
   const compelHorizon = style.compelHorizon
   if (compelHorizon !== undefined && !(typeof compelHorizon === 'number' && Number.isInteger(compelHorizon) && compelHorizon >= 0)) bad.push(`compelHorizon ${String(compelHorizon)} is not an integer >= 0`)
   const declareThresholdCompelled = style.declareThresholdCompelled

@@ -272,6 +272,10 @@ describe('public-view-only proof', () => {
       // './types.ts' - every one already on this list - so no engine state is reachable from it,
       // and the only hand it reads is the viewer's own (`view.hand`).
       './reveal.ts',
+      // MONET.md 3.8b: './determinize.ts' samples deals from a seat's view and knowledge, and
+      // './consensus.ts' reads a set's holders off them - neither touches engine state.
+      './determinize.ts',
+      './consensus.ts',
       // The MONET.md version registry: a frozen table mapping a Monet version id to the
       // `PolicySpec` that version plays, plus two total pure functions over it. It imports
       // only './roster.ts', './style.ts' and './bounded.ts' (type-only) — every one already

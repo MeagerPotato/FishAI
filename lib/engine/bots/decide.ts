@@ -118,6 +118,8 @@ import { concealmentActive, concealmentPenalty, ownCardsInBook } from './conceal
 import { preyInBook, turnYield } from './threat.ts'
 import { revealActive, revealAsk } from './reveal.ts'
 import type { RevealPick } from './reveal.ts'
+import { consensusFor } from './consensus.ts'
+import type { Consensus } from './consensus.ts'
 import { POLICY_CONSTANTS, SKILL_PRESETS, resolvePolicy } from './style.ts'
 import type { BotPolicy, SkillParams, StyleParams } from './style.ts'
 import { STYLE_ROSTER } from './roster.ts'
@@ -151,6 +153,7 @@ export interface DecisionTrace {
     | 'ranked-ask'
     | 'signalling-ask'
     | 'reveal-ask'
+    | 'consensus-claim'
     | 'contained-pass'
     | 'decline'
     | 'must-declare'
@@ -1601,6 +1604,28 @@ function decideWindow(view: SeatView, pol: ActivePolicy, rng: Rng, t?: Sink): Ga
     }
   } else if (t) {
     t.refused.push({ kind: 'certain-claim', reason: 'this style declares only sets held wholly in its own hand' })
+  }
+  // MONET.md 3.8b: the determinized declare. D deals from the posterior; a set whose six cards sit
+  // on this team with the same holders in at least `consensusBar` of them is declared with those
+  // holders. Foreign and hoard rules as the certain claim's. 0 or absent is byte identity.
+  const det = style.consensusDet ?? 0
+  if (det > 0 && !style.declareOnlyOwnHand) {
+    const bar = style.consensusBar ?? 1
+    const foreign = style.foreignDeclare ? null : foreignBookSet(view)
+    let best: Consensus | null = null
+    for (const b of allBooks(view.config)) {
+      if (view.books[b]) continue
+      if (foreign !== null && foreign.has(b)) continue
+      if (!withinHoardLimits(view, b, style)) continue
+      const c = consensusFor(view, k, b, det, rng)
+      if (c.assignment === null) continue
+      if (best === null || c.agreement > best.agreement) best = c
+    }
+    if (best !== null && best.assignment !== null && best.agreement >= bar) {
+      if (t) conclude(t, 'consensus-claim', `Declared ${best.book} on a determinization consensus: the same six holders in ${Math.round(best.agreement * 100)}% of ${det} sampled deals (bar ${bar}; ${best.teamDeals} deals put the set on this team, ${best.failed} draws failed).`)
+      return { type: 'claim', seat: view.seat, book: best.book, assignments: best.assignment }
+    }
+    if (t) t.refused.push({ kind: 'consensus-claim', reason: best === null ? `no sampled deal (${det} requested) puts an unresolved set wholly on this team` : `${best.book}: ${Math.round(best.agreement * 100)}% agreement over ${det} deals is under the bar ${bar}` })
   }
   if (!style.declareOnlyWhenCertain && !style.declareOnlyOwnHand) {
     // A `us54` window re-opens after every declare, so there is no tempo pressure to guess
