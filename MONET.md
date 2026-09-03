@@ -438,6 +438,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.3** ✅ | λ = 0.60 licence conditioning · `defuse` frozen at 1 with its interval · the score term measured and not shipped | **30.96%** (target ≥ 30.5%) | calibration bias — home ✓, abroad ✗, the finding · the `defuse` ladder at ±3.10 · lock hold for the score term (0.01–0.05 events: nothing to move) | S–M — **shipped** |
 | **v0.4a** ✅ | `pCardAt`, the calibrated marginal (`pModel: 'marginal'`) · λ measured against it and taken out | **31.94%** (bar ≥ 33.0% — **not met**; the λ-on arm reads 33.78%) | calibration — aggregate abroad ✓ 0.002, deciles ✗ · ask accuracy 51.71 → 53.91 · the marginal's own effect +4.74 (6/6) | L — **shipped, item 4 missed, on the record** |
 | **v0.4b** ✅ | `pAssignment: 'joint'`, the chain over the marginal · `claimOwnership: 'priced'` measured and not shipped | **32.75%** (bar ≥ 36.0% — **not met**; +0.81 over v0.4a, inside the floor) | lock hold 9.98 → 10.07 — **did not move: the item's FAIL and the finding** · declare accuracy 97.86 → 98.32 (6/6) · speculative declares 37 → 101 per 1,200 games at 72 → 93% | L — **shipped; the cashing channel is communication, not belief** |
+| **v0.4c** ✅ | `licenceLambda` back on the joint — the 24-seed cell decision 5 named, and the finding that λ buys tempo, not accuracy | **34.08%** over 24 seeds (paired +1.88 over v0.4b, floor ±1.41) | calibration cost +0.050 recorded · lock hold 10.28 → 9.58 · ask accuracy 53.84 → 53.04 · the 0.3-vs-0.6 confirmation pre-registered | S — **shipped** |
 | **the gate readout** ✅ (2026-09-03; was to be v0.5) | **the capability readout** — the §3.5b gate at six seeds on v0.4b, the `r12`-off control, the handoff emulated at home; the search arm not priced (§3.5c is gated on the owner's row-3 choice) | **32.75%** — the rule's third row | panel 35.5 / 36.9 / 36.4 / 64.7 / 69.3 against v0.6 … v0.2 · `r12` off −0.69 · handoff 47.8 → 77.6% at home · **§8.3 decision 6 to the owner** | M — **the measurement is on the record; no code shipped** |
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
@@ -1505,6 +1506,104 @@ ownership onsets are never proved before the deal ends [defective, 22,480 positi
 
 **Cost.** L–XL. **This is the largest single item in the roadmap and it is unavoidable.**
 
+#### 3.4c Monet v0.4c — the licence term at power, and what it buys
+
+**Pre-registered 2026-09-03, before any cell** (`monet-v04c-lambda/PREREG.md` in the session
+scratchpad): the confirmatory paired contrast λ = 0.6 against λ off on v0.4b's vector over **24 seeds**
+— the six on record (§3.4b item 8) taken as recorded, plus 18 fresh seeds drawn from the engine's own
+`hashSeed("monet-v0.4c-lambda-24seeds")` and listed in §6.5 — at the ±1.41 floor §8.3 decision 5 named
+as the abroad cell that resolves it. Expectation +1.5 ± 1.4, ahead on ≥ 15 of 24. Reading rule on the
+paired mean: ≥ +1.41 clears; between 0 and +1.41 positive but unresolved; ≤ 0 out. Calibration recorded
+per arm as a cost, not a veto. A λ = 0.3 arm, derived only after the 36 confirmatory cells, runs on the
+same 24 seeds as **exploratory** and cannot ship by itself. The owner delegated the decision to the
+project on 2026-09-03 — *do the research and decide on what most improves Monet's winning probability*.
+
+**Identity first.** Both recorded cells at seed 90210 re-run on the tree of the day reproduce the record
+to the digit (31.4167% / 33.75%, every engine line but `elapsed` identical, the calibration tables
+identical), so the instrument is the one every number below is quoted against.
+
+**The 24-seed table** (Monet win %, n = 1,200 games per cell; rows 1–6 from the record):
+
+| # | seed | λ off (v0.4b) | λ 0.6 | 0.6 − off | λ 0.3 *exploratory* | 0.3 − off | 0.3 − 0.6 |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 90210 | 31.42 | 33.75 | +2.33 | 32.00 | +0.58 | −1.75 |
+| 2 | 4242 | 34.00 | 35.08 | +1.08 | 35.08 | +1.08 | 0.00 |
+| 3 | 7011001 | 32.42 | 37.00 | +4.58 | 37.17 | +4.75 | +0.17 |
+| 4 | 13579 | 32.83 | 33.75 | +0.92 | 34.58 | +1.75 | +0.83 |
+| 5 | 24680 | 34.50 | 33.00 | −1.50 | 34.50 | 0.00 | +1.50 |
+| 6 | 31415 | 31.33 | 33.33 | +2.00 | 33.42 | +2.08 | +0.08 |
+| 7 | 1517444 | 33.58 | 36.67 | +3.08 | 35.83 | +2.25 | −0.83 |
+| 8 | 9243041 | 30.50 | 32.83 | +2.33 | 34.00 | +3.50 | +1.17 |
+| 9 | 8193645 | 28.92 | 31.33 | +2.42 | 31.25 | +2.33 | −0.08 |
+| 10 | 7365267 | 33.58 | 34.83 | +1.25 | 35.42 | +1.83 | +0.58 |
+| 11 | 5020863 | 32.83 | 33.58 | +0.75 | 34.58 | +1.75 | +1.00 |
+| 12 | 4180429 | 29.75 | 35.17 | +5.42 | 34.25 | +4.50 | −0.92 |
+| 13 | 4388333 | 34.75 | 34.83 | +0.08 | 36.17 | +1.42 | +1.33 |
+| 14 | 4983432 | 32.42 | 35.00 | +2.58 | 36.33 | +3.92 | +1.33 |
+| 15 | 9686644 | 31.42 | 34.50 | +3.08 | 34.42 | +3.00 | −0.08 |
+| 16 | 6224971 | 32.25 | 33.33 | +1.08 | 33.42 | +1.17 | +0.08 |
+| 17 | 5298162 | 33.25 | 34.42 | +1.17 | 37.75 | +4.50 | +3.33 |
+| 18 | 6588311 | 31.42 | 34.00 | +2.58 | 35.83 | +4.42 | +1.83 |
+| 19 | 7776405 | 32.33 | 32.92 | +0.58 | 33.25 | +0.92 | +0.33 |
+| 20 | 8102136 | 31.50 | 36.50 | +5.00 | 35.92 | +4.42 | −0.58 |
+| 21 | 4867666 | 29.75 | 31.92 | +2.17 | 32.75 | +3.00 | +0.83 |
+| 22 | 8667566 | 33.50 | 33.58 | +0.08 | 36.25 | +2.75 | +2.67 |
+| 23 | 2053779 | 31.17 | 34.33 | +3.17 | 36.00 | +4.83 | +1.67 |
+| 24 | 8555342 | 33.42 | 32.33 | −1.08 | 33.92 | +0.50 | +1.58 |
+| | **mean** | **32.20** | **34.08** | **+1.88** | *34.75* | *+2.55* | *+0.67* |
+
+(Differences are computed from the exact win counts; the table rounds to two places.) The paired
+contrast **λ 0.6 − off: mean +1.8819, SD 1.7271, SE 0.3526, ahead on 22 of 24**, behind on two
+(24680 −1.50, 8555342 −1.08). The six recorded seeds alone read +1.57 (5 of 6); the 18 fresh seeds
+alone +1.99 (17 of 18) — the fresh half repeats the recorded half. **+1.88 ≥ +1.41: the term clears the
+floor, and v0.4c ships it.** Pooled, 34.08% against 32.20% for the same bot without it.
+
+**The cost, as pre-registered** (aggregate believed − realised on the arm's own asks, summed over
+the 24 cells; the worst decile beside it):
+
+| arm | own asks | believed | realised | aggregate | worst decile |
+|---|---:|---:|---:|---:|---:|
+| λ off (v0.4b) | 1,244,250 | 0.5405 | 0.5384 | **+0.0022** | 0.083 |
+| λ 0.6 | 1,235,467 | 0.5801 | 0.5304 | **+0.0497** | 0.178 at [0.6, 0.7) |
+| λ 0.3 *exploratory* | 1,235,001 | 0.5556 | 0.5350 | +0.0206 | 0.081 |
+
+**What the term buys, on the markers — and it is not what §3.3a said it was.** λ was shipped at v0.3
+as a calibration correction: licensed asks were under-priced by eight points at home and λ = 0.6
+removed the bias. At home that is still exactly true — on v0.4c's own vector the chosen-ask aggregate
+reads −0.0003 (believed 0.5816, realised 0.5819, 300 mirror games) against **−0.0521** for v0.4b
+without it. Abroad the same term **over**-states by +0.0497 where the bare marginal is calibrated to
++0.0022: **the licence bias is opponent-dependent** — a licence predicts a hit against the roster and
+predicts it much less against SESTINA. And the win rate rises anyway, through a channel the markers
+name: over 24 cells, λ 0.6 **lowers ask accuracy** (53.84 → 53.04, behind on 24 of 24) and **shortens
+lock hold** (10.28 → 9.58 events, ahead on 24 of 24), with declarations per game up (+0.08, 22 of 24)
+and mean sets up (+0.077, 22 of 24). The term makes the bot ask into the sets it is licensed in —
+the sets its team is invested in — more often than a calibrated ranker would; each such ask cashes a
+lock sooner. **λ buys tempo, not accuracy.** That is the cashing channel of §3.4b, opened a crack by
+an ask-side bias rather than by communication, and it is why the correct-by-calibration reading and
+the wins-more reading disagree.
+
+**The exploratory arm, labelled.** λ = 0.3 reads 34.75% on the same 24 seeds: +2.55 over λ off
+(ahead on 23, one tie), **+0.67 over λ 0.6 (SD 1.16, SE 0.24, ahead on 17 of 24, behind on 6)**, at less
+than half the over-statement (+0.0206) and the same worst decile as the bare marginal. It was derived
+after the confirmatory cells and selected on the seeds it was read on, so it is a hypothesis with a
+price, not a result: a smaller λ may buy the tempo at a lower calibration cost. It cannot ship on these
+seeds.
+
+**Pre-registered 2026-09-03, before any cell: the 0.3-versus-0.6 confirmation.** Both arms on **24
+fresh seeds** from `hashSeed("monet-v0.4c-lambda03-confirm-24")` (§6.5), paired. The two arms share
+every deal and most decisions, so the document's binomial floor (±1.41 at 24 seeds, built for two
+independent cells) overstates their noise by about three to one (measured paired SD 1.16 against the
+floor's implied 3.46); the reading rule is therefore the paired one, written here: **λ moves to 0.3
+if the fresh paired mean (0.3 − 0.6) is ≥ 2 × its own SE, ahead on ≥ 15 of 24, and its aggregate
+over-statement is below 0.6's; otherwise v0.4c stays at 0.6.** The ±1.41 reading is recorded beside it
+either way. If it clears, the registry entry moves to 0.3 and the forward bank is regenerated on the
+same branch before the rung merges.
+
+**Decision 5 (§8.3) is resolved:** the term is on the vector. **Shipped:** `v0.4c` = v0.4b +
+`licenceLambda` (0.6, or 0.3 by the rule above), last in the registry, so the lobby seats it; its
+forward bank replays; suite, lint and type check green. **Home, on record:** +0.22 ± 0.24 sets per pair
+on the joint (§3.4b item 8), cost unchanged (the term is a multiply in `pickAsk`).
+
 ### 3.5 The capability readout — was to be Monet v0.5; read 2026-09-03 on v0.4b
 
 **This was the rung the whole roadmap existed to reach, and it carried no win-rate target.** It was
@@ -1729,8 +1828,8 @@ or conservative as is most beneficial*, and *read the patterns of the opponents*
 each with its own knob, marker and ablation arm, shipping as one version — a release boundary, never
 a measurement boundary (§3's compaction note).
 
-**The base vector** is v0.4c if the 24-seed licence cell clears its floor (§8.3 decision 5), otherwise
-v0.4b. Every number below is a paired contrast against that base on shared deals.
+**The base vector** is v0.4c (§3.4c: the licence term cleared its 24-seed floor). Every number below is
+a paired contrast against it on shared deals.
 
 #### 3.6a Mechanism A — ask-choice inference (`pPrior: 'choice'`)
 
@@ -2084,6 +2183,9 @@ the original ablations.
   7776405 8102136 4867666 8667566 2053779 8555342 — beside the six on record; v0.5 (§3.6) fits on
   **six** from `"monet-v0.5-fit-6"` and confirms on **twelve** from `"monet-v0.5-confirm-12"`, both
   listed there. A seed that has been read is spent for fitting anything.
+  The 0.3-versus-0.6 confirmation (§3.4c) spends **24 fresh seeds** from `"monet-v0.4c-lambda03-confirm-24"`:
+  4118411 5513005 1242624 1908182 8217906 4364985 7116864 2154839 9236699 5736580 4285114 3981270
+  2579303 3992572 1229699 8314641 7420129 4330275 5928678 3267537 3469159 9730512 9455971 9195024.
 - **Fit on 90210 / 4242. Confirm on 7011001 plus at least one reserved bank.**
 - **Never move a shipped roster constant on a cross-play fit.** CROSSPLAY §7 and §9.6. A constant that
   moves because SESTINA liked it has burned SESTINA as a holdout.
@@ -2261,7 +2363,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 2 | ~~**Should Monet play the post-clinch phase at all?**~~ **DOWNGRADED 2026-09-01 — it cannot change a result.** `clinchTarget` is 5 of 9 and `2 x 5 > 9`, so both teams cannot clinch; sets are never taken back, so reaching 5 is a permanent lock. **The winner under `us54` and under the host's play-all-nine is therefore identical by construction**, and the 73.9-76.5% of seat-games that run past the clinch cannot change who won. An earlier note here called it the largest un-modelled region of the foreign game and implied it might be worth points; that was wrong and is withdrawn. **What survives is a measurement hazard, not a strategy one:** the per-decision metrics the whole diagnosis rests on — ask accuracy 52.32 vs 57.38, lock hold 9.30 vs 2.92 — are summed over all ops, including the **47,868 of 416,627 (11.5%)** played after the game was already decided. If Monet behaves differently there, those headline figures are contaminated. **v0.2 splits them pre/post clinch**; nothing may be tuned against the unsplit figures after that. **DELIVERED at v0.2, 6 seeds x 7,200 games, and the split changes two readings.** (a) *Declare accuracy.* The pooled 98.32 / 98.35 parity is contaminated: on the LIVE game FishAI is **ahead**, 99.24 vs 98.18, +1.07 pts, positive on 6 of 6 seeds (sign test p = 0.031 two-sided, per-seed range +0.64 to +1.50; declares cluster within a deal, so this is a paired sign test and NOT a pooled binomial interval). The post-clinch column reverses it, -4.87 — but that column is a phase `us54` does not have and **carries no roadmap target**. (b) *Lock hold.* Splitting it by when the set was CASHED was wrong: the quantity is a DURATION that straddles the clinch, so a lock formed while the deal was live and cashed after it ended had its whole wait credited to post. Split AT THE CLINCH instead, the live-phase wait is **8.44 events, not the 6.72 the cash-time bucketing reported**, and the live-phase ratio to SESTINA is **2.96x** — indistinguishable from the pooled 2.96x, where the cash-time shape had suggested 2.41x live against 4.24x post. **The apparent "the lock problem lives after the clinch" contrast was an artefact of the bucketing.** Ask accuracy is the one metric the split leaves alone: the deficit is -4.95 pre and -5.11 post against -5.08 pooled. | **downgraded; the split is DELIVERED at v0.2** |
 | 3 | **`bounded.ts`'s cost model** (§1.5). A joint posterior has no atomic-fact decomposition, so the bit budget becomes undefined. v0.5 must choose in writing between confining the posterior to the unbounded arm and giving BOUNDED.md a new cost model. **Taken for v0.4a and v0.4b by construction (2026-09-03): both are reads of a finished `Knowledge` behind Monet-only style knobs, so the posterior is confined to the unbounded arm and the cost model is untouched — §3.4a's and §3.4b's scope decisions.** v0.5 may reopen it if the readout wants the bounded arm to carry a posterior. | taken by construction; v0.5 may reopen |
 | 4 | ~~**Move Monet's `defuse` to 0, or buy the cell that would decide it?**~~ **RESOLVED 2026-09-03 by the owner's direction: neither. The appetite becomes a function of the state in v0.5 (§3.6b), and 0-versus-1 is moot once the scalar is a table.** Original text: §3.3b: the home ladder resolves rung 0 ahead of rung 1 on both banks (+0.24 ± 0.19, +0.23 ± 0.20 sets/pair) and the bridge reads it at +0.98 inside ±3.10 — frozen at 1 by the roadmap's own rule. The abroad cell that resolves it costs roughly ten times the deals per rung. Either answer is a v0.3.1, not a v0.4 item. | **resolved by direction — v0.5, §3.6b** |
-| 5 | **Put λ back on the marginal base?** §3.4a item 8: the rule written before the run (inside ±2.83 → subsumed, out) took it out at +1.83 (5 of 6). Every other instrument leans the other way and none abroad clears its floor — panel +2.44 (3/3) and +0.81 (2/3), home +0.24 ± 0.24 and +0.32 ± 0.24 sets/pair (resolved, small) — and the λ-on arm is the one that clears item 4 (33.78% against 31.94%), at the price of the calibration marker (+0.049 aggregate over-statement abroad, worst decile 0.17 against 0.08). The abroad cell that resolves it is 24 seeds per arm (±1.41, about 25 minutes of bridge). §3.4b's joint is the mechanism that prices the interference explicitly (§3.4a's amendment) and re-runs the 2 × 2 with λ as a factor; the cheapest answer is to wait for it. **Second reading, v0.4b (§3.4b item 8): +1.57 on the joint (5 of 6, inside ±2.83), home +0.22 ± 0.24 and +0.32 ± 0.24, the same calibration cost. Three readings, one shape — a point or two abroad inside the floor, a quarter of a set per pair at home, +0.05 of over-statement — and nothing in v0.4b priced the interference. The 24-seed cell (±1.41) would resolve it; otherwise the wait is for v0.5's readout or the owner.** **Delegated to the project by the owner on 2026-09-03 — "do the research and make the decision based on what most improves Monet's capabilities and winning probability" — so the 24-seed cell this row prices is running on 18 fresh seeds (§6.5) beside the six on record, with an exploratory λ = 0.3 arm; its reading and the decision are recorded at §3.4b's addendum when it lands.** | delegated; the 24-seed cell is running |
+| 5 | **Put λ back on the marginal base?** §3.4a item 8: the rule written before the run (inside ±2.83 → subsumed, out) took it out at +1.83 (5 of 6). Every other instrument leans the other way and none abroad clears its floor — panel +2.44 (3/3) and +0.81 (2/3), home +0.24 ± 0.24 and +0.32 ± 0.24 sets/pair (resolved, small) — and the λ-on arm is the one that clears item 4 (33.78% against 31.94%), at the price of the calibration marker (+0.049 aggregate over-statement abroad, worst decile 0.17 against 0.08). The abroad cell that resolves it is 24 seeds per arm (±1.41, about 25 minutes of bridge). §3.4b's joint is the mechanism that prices the interference explicitly (§3.4a's amendment) and re-runs the 2 × 2 with λ as a factor; the cheapest answer is to wait for it. **Second reading, v0.4b (§3.4b item 8): +1.57 on the joint (5 of 6, inside ±2.83), home +0.22 ± 0.24 and +0.32 ± 0.24, the same calibration cost. Three readings, one shape — a point or two abroad inside the floor, a quarter of a set per pair at home, +0.05 of over-statement — and nothing in v0.4b priced the interference. The 24-seed cell (±1.41) would resolve it; otherwise the wait is for v0.5's readout or the owner.** **Delegated to the project by the owner on 2026-09-03 — "do the research and make the decision based on what most improves Monet's capabilities and winning probability" — so the 24-seed cell this row prices is running on 18 fresh seeds (§6.5) beside the six on record, with an exploratory λ = 0.3 arm; its reading and the decision are recorded at §3.4b's addendum when it lands.** **RESOLVED 2026-09-03 (§3.4c): +1.88 paired over 24 seeds, ahead on 22, clearing ±1.41 — the term ships on v0.4c; its cost (+0.050 over-statement abroad, none at home) and the finding that it buys tempo rather than accuracy are on the record, with the 0.3-versus-0.6 confirmation pre-registered.** | **resolved — v0.4c** |
 | 6 | ~~**The row-3 choice (§3.5b): stop in-browser at v0.4b-era strength, split the engine for a searching lab arm, or publish the negative result?**~~ **RESOLVED 2026-09-03 — the owner chose a fourth option: keep building the fast policy toward 50%, as v0.5 opponent reading (§3.6), v0.6 communication (§3.7) and v0.7 the search arm through §3.5c's cost-first test (§3.8); v1.0 stays §3.9, restated as about 50% or a significant win (§0). The project's recommendation stands on the record beside the call.** Original text: **The row-3 choice (§3.5b): stop in-browser at v0.4b-era strength, split the engine for a searching lab arm, or publish the negative result?** The gate read 32.75% on v0.4b — third row — with the decomposition written beside it (§3.5b's record). The project recommends option 3, with option 2 taken only if the frontier claim is wanted and only through §3.5c's cost-first test (search over a calibrated posterior is the one untested cell; its price is 300 – 600×). The one honest lever the record has not built is communication — asks chosen to reveal, the handoff's +30 points of compelled-declare accuracy at 0.13 per game — sized by the oracle at +6.75 and by nothing yet that a bot could play. v1.0 stays defined by §3.9 alone. | **resolved — keep building** |
 
 ---
