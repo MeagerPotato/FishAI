@@ -265,6 +265,13 @@ describe('public-view-only proof', () => {
       // this list — so no engine state is reachable from it, and it reads no hand but the
       // viewer's own (`view.hand`, which is the viewer's by definition).
       './conceal.ts',
+      // MONET.md 3.7 item 1: './reveal.ts' builds the PUBLIC walk of the log as it would stand
+      // after a hypothetical ask (`publicKnowledge`, no hand injected at all) and reads whether a
+      // teammate could then prove a set. It imports only '../types.ts', '../cards.ts',
+      // '../helpers.ts', '../variants.ts', './knowledge.ts', './style.ts' (type-only) and
+      // './types.ts' - every one already on this list - so no engine state is reachable from it,
+      // and the only hand it reads is the viewer's own (`view.hand`).
+      './reveal.ts',
       // The MONET.md version registry: a frozen table mapping a Monet version id to the
       // `PolicySpec` that version plays, plus two total pure functions over it. It imports
       // only './roster.ts', './style.ts' and './bounded.ts' (type-only) — every one already

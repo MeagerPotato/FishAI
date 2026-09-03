@@ -116,6 +116,8 @@ import type { LicenceLookup } from './defuse.ts'
 import { licenceConditionedHitProbability } from './licence.ts'
 import { concealmentActive, concealmentPenalty, ownCardsInBook } from './conceal.ts'
 import { preyInBook, turnYield } from './threat.ts'
+import { revealActive, revealAsk } from './reveal.ts'
+import type { RevealPick } from './reveal.ts'
 import { POLICY_CONSTANTS, SKILL_PRESETS, resolvePolicy } from './style.ts'
 import type { BotPolicy, SkillParams, StyleParams } from './style.ts'
 import { STYLE_ROSTER } from './roster.ts'
@@ -148,6 +150,7 @@ export interface DecisionTrace {
     | 'certain-hit'
     | 'ranked-ask'
     | 'signalling-ask'
+    | 'reveal-ask'
     | 'contained-pass'
     | 'decline'
     | 'must-declare'
@@ -1385,6 +1388,26 @@ function decideWithPlanner(view: SeatView, pol: ActivePolicy, t?: Sink): GameAct
     }
   }
 
+  // 3b. MONET.md §3.7 item 1 — the reveal ask: an ask into a half-suit this hand holds a card of,
+  //     chosen so that the public record it leaves lets a teammate PROVE the set and declare it
+  //     at the next window, should the set be on this team (reveal.ts). It is still an ask of the
+  //     opponent most likely to hold the card, so its worth is its hit probability plus the credit
+  //     `reveal · urgency · P(locked)`, and it plays when that exceeds the best ordinary ask's hit
+  //     probability; urgency is 1 when cashing the set clinches the game and `revealFar`
+  //     otherwise. Before the speculative declare deliberately: at the clinch a proof beats a
+  //     guess. Off (absent or 0) nothing here runs, and the pipeline is byte for byte the base.
+  if (revealActive(style)) {
+    const rv = revealAsk(view, k, style, knowledgeOptions(pol.skill, pol.style))
+    if (rv !== null) {
+      const p = ranked.length > 0 ? pickAsk(view, k, ranked, pol).p : 0
+      if (rv.value > p) {
+        if (t) concludeReveal(t, rv, p)
+        return { type: 'ask', seat, target: rv.target, card: rv.card }
+      }
+      if (t) t.refused.push({ kind: 'reveal-ask', reason: `a reveal into ${rv.book} would let seat ${rv.prover} prove it, but it is worth ${rv.value.toFixed(2)} (hit ${rv.pHit.toFixed(2)} + ${style.reveal ?? 0} · ${rv.urgency} · P(locked) ${rv.pLock.toFixed(2)}) against the best ordinary ask's ${p.toFixed(2)}` })
+    }
+  }
+
   // 4. Speculative declare (see evClaim). Skipped entirely by a certainty-only style.
   if (!style.declareOnlyWhenCertain && !style.declareOnlyOwnHand) {
     const ev = evClaim(view, k, style, stalled, t)
@@ -1637,6 +1660,20 @@ function decideUs54Ask(view: SeatView, pol: ActivePolicy, rng: Rng, t?: Sink): G
   }
   if (t) t.ranked = ranked.slice(0, 5)
   const pick = pickAsk(view, k, ranked, pol, t)
+  // MONET.md 3.7 item 1 - the reveal ask, against the pick's hit probability. This is the branch
+  // that matters under `us54`: the window is closed, the ask is the only move, and a certain hit
+  // has already sorted to the top of `ranked` (its p is 1, which no credit outbids). The same
+  // arithmetic as `decideWithPlanner`'s step 3b; see reveal.ts for what is computed.
+  if (revealActive(style)) {
+    const rv = revealAsk(view, k, style, knowledgeOptions(skill, style))
+    if (rv !== null) {
+      if (rv.value > pick.p) {
+        if (t) concludeReveal(t, rv, pick.p)
+        return { type: 'ask', seat, target: rv.target, card: rv.card }
+      }
+      if (t) t.refused.push({ kind: 'reveal-ask', reason: `a reveal into ${rv.book} would let seat ${rv.prover} prove it, but it is worth ${rv.value.toFixed(2)} (hit ${rv.pHit.toFixed(2)} + ${style.reveal ?? 0} x ${rv.urgency} x P(locked) ${rv.pLock.toFixed(2)}) against the pick's ${pick.p.toFixed(2)}` })
+    }
+  }
   // The CONTAINMENT.md turn-pass, considered against the ask the style would otherwise play.
   // This is the branch that matters under `us54`: the window is closed here, so a declare is
   // illegal (`NO_DECLARE_WINDOW`) and the seat's only move is an ask — which is precisely the
@@ -1796,6 +1833,16 @@ function concludeSignal(t: Sink, view: SeatView, target: Seat, card: Card): void
   conclude(t, 'signalling-ask', `Asked seat ${target} for ${pc(card)} — a known miss spent on signal.`)
   t.notes.push(`Every legal ask is a known miss and nothing has hit in the last ${POLICY_CONSTANTS.signalLookback} events, so no ask can gain material.`)
   t.notes.push(`The ask still publishes that this hand holds at least one card of ${book} — it holds ${held}, its strongest set, so teammates running the same inference learn the most from it.`)
+}
+
+/** Verdict for the reveal ask (MONET.md §3.7 item 1), with the price it paid. */
+function concludeReveal(t: Sink, rv: RevealPick, p: number): void {
+  conclude(t, 'reveal-ask', `Asked seat ${rv.target} for ${pc(rv.card)} — the reveal ask: if ${rv.book} is on this team, seat ${rv.prover} can now prove it.`)
+  t.notes.push(`This hand holds a card of ${rv.book}, which by its knowledge is wholly on this team with probability ${rv.pLock.toFixed(2)}, and no teammate can yet prove it. The ask publishes that a card of ${rv.book} is here and ${pc(rv.card)} is not — enough for seat ${rv.prover} to place every card of the set and declare it at the next window.`)
+  t.notes.push(
+    `It still hits with probability ${rv.pHit.toFixed(2)}; with the reveal credit it is worth ${rv.value.toFixed(2)} against the best ordinary ask's ${p.toFixed(2)}` +
+      (rv.urgency >= 1 ? ' — and cashing the set clinches the game.' : ` at the far urgency ${rv.urgency}.`),
+  )
 }
 
 /** Verdict for the contained-book turn-pass, with the arithmetic that chose it. */

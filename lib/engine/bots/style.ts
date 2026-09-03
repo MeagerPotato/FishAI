@@ -300,6 +300,21 @@ export interface StyleParams extends AskWeights {
    */
   choiceAdapt?: number
   /**
+   * MONET.md §3.7 item 1 — the reveal ask's weight (≥ 0). An ask into a half-suit this hand holds
+   * a card of, whose public record would let a teammate prove the set should it be on this team
+   * (reveal.ts), is credited `reveal · urgency · P(locked)` on top of its hit probability — P(locked)
+   * the model's belief that every card of the set is on the team — and plays over the best
+   * ordinary ask when the sum exceeds that ask's hit probability; urgency is 1 when cashing the
+   * set clinches the game and `revealFar` otherwise. 0 or absent is byte identity: the check is
+   * never run. Absent on every roster style and every tier.
+   */
+  reveal?: number
+  /**
+   * MONET.md §3.7 item 1 — the urgency (0 – 1) of a reveal ask whose set would not clinch the
+   * game. 0 or absent confines the term to the clinch. Inert without `reveal > 0`.
+   */
+  revealFar?: number
+  /**
    * MONET.md §3.6b — how the defusal appetite is read. `'scalar'` (and absent) is `defuse` as it
    * has always been; `'state'` multiplies it, once per decision, by a clipped linear function of
    * the public state — threatened sets, set lead, phase — with the slopes in `defuseState`
@@ -690,6 +705,10 @@ export function validateStyle(style: StyleParams): string[] {
   if (choicePrior !== undefined && choicePrior !== 'count' && choicePrior !== 'once') bad.push(`choicePrior ${String(choicePrior)} is not 'count' or 'once'`)
   const choiceAdapt = style.choiceAdapt
   if (choiceAdapt !== undefined && !(typeof choiceAdapt === 'number' && Number.isFinite(choiceAdapt) && choiceAdapt >= 0)) bad.push(`choiceAdapt ${String(choiceAdapt)} is not a finite number >= 0`)
+  const reveal = style.reveal
+  if (reveal !== undefined && !(typeof reveal === 'number' && Number.isFinite(reveal) && reveal >= 0)) bad.push(`reveal ${String(reveal)} is not a finite number >= 0`)
+  const revealFar = style.revealFar
+  if (revealFar !== undefined && !(typeof revealFar === 'number' && Number.isFinite(revealFar) && revealFar >= 0 && revealFar <= 1)) bad.push(`revealFar ${String(revealFar)} is not a number in [0, 1]`)
   const claimOwnership = style.claimOwnership
   if (claimOwnership !== undefined && claimOwnership !== 'certain' && claimOwnership !== 'priced') bad.push(`claimOwnership ${String(claimOwnership)} is not 'certain' or 'priced'`)
   return bad
