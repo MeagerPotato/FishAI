@@ -118,7 +118,7 @@ import { concealmentActive, concealmentPenalty, ownCardsInBook } from './conceal
 import { preyInBook, turnYield } from './threat.ts'
 import { revealActive, revealAsk } from './reveal.ts'
 import type { RevealPick } from './reveal.ts'
-import { consensusFor } from './consensus.ts'
+import { consensusOn, sampleDeals } from './consensus.ts'
 import type { Consensus } from './consensus.ts'
 import { POLICY_CONSTANTS, SKILL_PRESETS, resolvePolicy } from './style.ts'
 import type { BotPolicy, SkillParams, StyleParams } from './style.ts'
@@ -1612,14 +1612,22 @@ function decideWindow(view: SeatView, pol: ActivePolicy, rng: Rng, t?: Sink): Ga
   if (det > 0 && !style.declareOnlyOwnHand) {
     const bar = style.consensusBar ?? 1
     const foreign = style.foreignDeclare ? null : foreignBookSet(view)
-    let best: Consensus | null = null
+    const candidates: BookId[] = []
     for (const b of allBooks(view.config)) {
       if (view.books[b]) continue
       if (foreign !== null && foreign.has(b)) continue
       if (!withinHoardLimits(view, b, style)) continue
-      const c = consensusFor(view, k, b, det, rng)
-      if (c.assignment === null) continue
-      if (best === null || c.agreement > best.agreement) best = c
+      candidates.push(b)
+    }
+    let best: Consensus | null = null
+    if (candidates.length > 0) {
+      // one draw of D deals a window, every candidate set read off the same deals
+      const sampled = sampleDeals(view, k, det, rng)
+      for (const b of candidates) {
+        const c = consensusOn(sampled, view, b)
+        if (c.assignment === null) continue
+        if (best === null || c.agreement > best.agreement) best = c
+      }
     }
     if (best !== null && best.assignment !== null && best.agreement >= bar) {
       if (t) conclude(t, 'consensus-claim', `Declared ${best.book} on a determinization consensus: the same six holders in ${Math.round(best.agreement * 100)}% of ${det} sampled deals (bar ${bar}; ${best.teamDeals} deals put the set on this team, ${best.failed} draws failed).`)

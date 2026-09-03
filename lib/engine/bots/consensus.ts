@@ -31,20 +31,39 @@ export interface Consensus {
   assignment: Record<Card, Seat> | null
 }
 
+/** `det` deals drawn from the viewer's posterior; `failed` counts draws the sampler could not complete. */
+export interface SampledDeals {
+  det: number
+  deals: Card[][][]
+  failed: number
+}
+
+/** Draw `det` deals once, to read every candidate set off the same deals. */
+export function sampleDeals(view: SeatView, k: Knowledge, det: number, rng: Rng): SampledDeals {
+  const deals: Card[][][] = []
+  let failed = 0
+  for (let d = 0; d < det; d++) {
+    const hands = sampleDeal(view, k, rng)
+    if (hands === null) failed++
+    else deals.push(hands)
+  }
+  return { det, deals, failed }
+}
+
 /** The determinization consensus for `book` from the viewer's posterior over `det` sampled deals. */
 export function consensusFor(view: SeatView, k: Knowledge, book: BookId, det: number, rng: Rng): Consensus {
+  return consensusOn(sampleDeals(view, k, det, rng), view, book)
+}
+
+/** The consensus for `book` read off deals already drawn. */
+export function consensusOn(sampled: SampledDeals, view: SeatView, book: BookId): Consensus {
+  const { det, deals, failed } = sampled
   const cards = bookCards(book, view.config)
   const want = new Set<Card>(cards)
   const team = seatTeam(view.seat)
   const counts = new Map<string, number>()
-  let failed = 0
   let teamDeals = 0
-  for (let d = 0; d < det; d++) {
-    const hands = sampleDeal(view, k, rng)
-    if (hands === null) {
-      failed++
-      continue
-    }
+  for (const hands of deals) {
     const holder = new Map<Card, Seat>()
     for (let s = 0; s < 6; s++) for (const c of hands[s]) if (want.has(c)) holder.set(c, s as Seat)
     let ours = true
