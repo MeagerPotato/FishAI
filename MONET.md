@@ -441,7 +441,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.4c** ✅ | `licenceLambda` back on the joint at **0.3** — the 24-seed cell decision 5 named (0.6: +1.88 over v0.4b, 22 of 24), the finding that λ buys tempo, not accuracy, and the pre-registered 0.3-vs-0.6 confirmation on 24 fresh seeds (+1.19 paired, SE 0.30, 19 of 24) | **35.12%** over the 24 confirmation seeds at 0.3 (34.08% at 0.6 over the first 24) | calibration cost +0.020 at 0.3 (0.6: +0.050) · lock hold 9.46 → 9.42 · ask accuracy 53.12 → 53.57 | S — **shipped** |
 | **the gate readout** ✅ (2026-09-03; was to be v0.5) | **the capability readout** — the §3.5b gate at six seeds on v0.4b, the `r12`-off control, the handoff emulated at home; the search arm not priced (§3.5c is gated on the owner's row-3 choice) | **32.75%** — the rule's third row | panel 35.5 / 36.9 / 36.4 / 64.7 / 69.3 against v0.6 … v0.2 · `r12` off −0.69 · handoff 47.8 → 77.6% at home · **§8.3 decision 6 to the owner** | M — **the measurement is on the record; no code shipped** |
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
-| **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
+| **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced | cost budget first, then paired arms on shared determinizations | XL |
 | **v1.0** | **the version that passes §3.9's six conditions** | ≥ 50.0% — the owner, 2026-09-03: "about 50%, or significantly above", i.e. ≥ 52.0% at twelve seeds | §3.9 | — |
 
@@ -2159,6 +2159,39 @@ must not.
 > to see, not the asker's. The knobs stay in the code, off the vector; the readout, the diagnostic and
 > the public walk remain (the walk is what any later teammate-side inference will be built on).
 
+> **Item 2′ built 2026-09-03 as `compelHorizon` / `declareThresholdCompelled`** (style.ts; the window plays the
+> compelled bar, as written and without the clinch response, where declining is still legal and the opponents
+> hold at most `compelHorizon` cards; absent or 0 is byte identity — `tests/bots/compel.test.ts`). **Home
+> record — item 2′ does not go abroad either.** Duplicate pairs against the base, bank 9220628, 600 pairs:
+>
+> | horizon | bar | paired set-diff |
+> |---|---|---|
+> | 10 | 0.5 | −0.07 ± 0.08 |
+> | 6 | 0.5 | −0.04 ± 0.05 |
+> | 6 | 0.6 | −0.05 ± 0.04 |
+> | 4 | 0.5 | −0.02 ± 0.04 |
+> | 2 | 0.5 | **0.00 ± 0.02** |
+> | 2 | 0.6 | −0.00 ± 0.01 |
+> | 1 | 0.5 | −0.02 ± 0.02 |
+>
+> Behind at wide horizons, a no-op at tight ones, and the marker says why (`scripts/probe-handoff-declare.mjs
+> --horizon`, 2,000 mirror games, every window declaration with the opponents at or below the horizon scored
+> against the true hands). At horizon 6 the base makes 0.06 speculative window declarations a game there at
+> 82.6% and 0.114 compelled ones at 48.9%; with the bar at 0.5 the speculative ones become **0.226 a game at
+> 60.6%** while the compelled fall only to 0.079 — and the *certain* claims fall from 0.840 to 0.764 a game.
+> The pre-emptive declare does not mostly replace the compulsion it was built to pre-empt; it replaces
+> certain claims that would have come a few actions later, with a guess right three times in five. At
+> horizon 2 the same shape at a smaller scale (speculative 0.032 → 0.086 a game at 69.4%, compelled 0.114 →
+> 0.095, certain 0.257 → 0.243) nets to nothing. The emulation's 74% was the accuracy of the *best-informed*
+> teammate's plan at the compelled moment; a bar cannot pick that seat, it can only lower every seat's
+> price, and the seats that clear it first are the ones whose plans are not yet proofs.
+>
+> **The rung's verdict: v0.6 ships nothing.** Both communication items are built, pinned and off the vector;
+> neither moved sets at home, so neither went abroad (§3.6c's rule). §3.4b's channel — the 3.4 sets a game a
+> teammate could prove with one more fact — is real and stays open, and this rung's finding is that the
+> *asker* cannot see it and the *window* cannot select for it. What is left on the record is position (§0.2),
+> and §3.8 opens.
+
 **Seeds.** Fit on six from `hashSeed("monet-v0.6-fit-6")`: **9220628 8580707 6389604 5910092 2121575
 1884435**; confirm at home and abroad on twelve from `hashSeed("monet-v0.6-confirm-12")`: **6021520 8438705
 3195511 9141082 5082131 7701419 2601210 4621978 6478725 2793161 2568302 2796767** — drawn by §6.5's rule
@@ -2178,6 +2211,53 @@ says stands: cost budget first, so an arm that misses its latency target is reje
 rate is read; the unguarded determinized argmax is the named negative control; and the lab arm does
 not ship on `/play` unless the split-engine decision (§3.5b, option 2) is taken separately by the
 owner. Its pre-registration is written when it opens.
+
+#### 3.8a Pre-registration — written 2026-09-03 when the rung opened, before any v0.7 code
+
+**Opened by the rule.** §3.5b's third row (32.75% on v0.4b; 34.5 – 35.1% at λ = 0.3) leaves the shipped bot
+under 50%. §3.6 read the last belief lever at +0.47 inside the floor; §3.7 found both communication items
+flat or behind at home — the asker cannot tell which set is locked, and the compulsion is a channel of
+about 0.04 sets a game. The decomposition on record names no cheaper lever: position (§0.2) is what is
+left, and search over a correct posterior is the one untested cell (§3.5c). The base is v0.4c.
+
+**The arm** (`lib/engine/search/`, a lab arm: `/play` seats the fast policy unchanged, and the bots
+directory's public-view proof is untouched because the search lives outside it and reaches the engine's
+`reduce` there). Information-set determinization search on the **ask decision only** — windows are v0.4c's.
+At an ask decision: (1) **D determinizations** of the unseen cards are sampled from §3.4a's table — each
+unlocated card to a candidate seat with free capacity, in proportion to the marginal, the licence
+constraints honoured by rejection; the viewer's own hand and every located card are fixed; (2) the
+**candidates** are the fast ranker's top C asks, the pick among them; (3) each candidate is played on each
+determinization and the game **rolled out for S actions under v0.4c at every seat**, the same rollout seed
+for every candidate on a determinization (paired), scored by the team's set differential at the horizon,
+a finished game scoring its result; (4) the candidate with the highest mean paired advantage over the pick
+plays only if its **lower confidence bound** over the D determinizations clears zero (mean − z · SE > 0),
+otherwise the pick plays. Knobs `det` (D), `cand` (C), `steps` (S), `z`; **the unguarded argmax (z = 0
+with no bound, the plain best mean) is the named negative control.** The sampler's fidelity is its own
+reading at home (`scripts/probe-determinize.mjs`: the sampled deal's per-card accuracy against the true
+deal, beside the marginal's top-1).
+
+**Cost first.** The budget is **≤ 100 ms mean per ask decision** on the bench machine at the arm's fitted
+(D, C, S) (`scripts/bench-decide.mjs`, the search arm named), about 700× today's 0.14 ms and the order
+§3.5c measured (81 ms at 576 `decide` calls). An arm over budget is rejected before its win rate is read.
+At the bridge the arm's wall clock per game is reported beside the cell.
+
+**Markers at home.** The rollout's paired advantage of the played candidate over the pick, which must be
+positive on the fit seeds or the arm is a no-op; duplicate pairs against v0.4c on the fit bank (not behind
+at ±0.20; the expectation is ahead — this is the first rung whose home marker is the number itself); the
+negative control beside it.
+
+**Seeds.** Fit on six from `hashSeed("monet-v0.7-fit-6")`: **3150867 9742538 4824841 8665093 2488551
+9695050**; confirm at home and abroad on twelve from `hashSeed("monet-v0.7-confirm-12")`: **9715909 1657910
+5562102 8242985 3593118 2057008 6962430 6081385 9709672 3768516 5398011 2496080** — §6.5's rule (each draw
+1,000,000 + h mod 9,000,000 off the engine's `hashSeed` against the verbatim label, no draw skipped), all
+distinct from every seed this document names.
+
+**Acceptance.** Cost first, as above. Then the arm ships to the registry as v0.7 — a lab entry the lobby does
+not seat unless the owner takes §3.5b's option 2 — if its paired main effect over v0.4c clears **+2.00** at
+the twelve seeds abroad, the negative control and the wall clock reported beside it; inside the floor,
+recorded and not shipped. **Expectation:** +1 to +3. FishLab's published +2.08 for the correct form of
+search, at their cost, is the prior, attributed; the correct-posterior cell is untested, which is the
+reason to run it.
 
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
