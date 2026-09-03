@@ -2395,6 +2395,64 @@ points or better**; the base lane is re-run in the same containers. Expectation:
 the bridge's 9-versus-3 lock hold: if every event of it were converted the gain would be of the order of a
 third of a set a team-game, and nothing here can exceed what the posterior can prove.
 
+#### Home record — 2026-09-03
+
+**Two amendments before any cell was read as a verdict.** (1) The hook as first committed (56a3863) sampled its D
+deals once per candidate set; it samples once per window since 0430402, the probe's own arithmetic. (2) The
+pre-registered forms put the choice prior on the *asks* as well as the declare (`choiceKappa` is a knob of the
+whole posterior), and at 100 pairs the asks' divergence buries the declare: k1 (the prior alone, §3.6's knob)
++0.01 ± 0.64, F2 +0.07 ± 0.65, F3 +0.03 ± 0.64, F4 −0.30 ± 0.63, against F1 (the consensus on the v0.4c posterior,
+asks untouched) +0.06 ± 0.10 with a paired SD of 0.49 — the games are the same games but for the claims. So a
+knob was added, `consensusKappa` (000154e): the choice prior for the posterior the *declare* samples from, and for
+that only; every ask stays byte-identical to v0.4c (pinned), and duplicate pairs read the declare by itself. The
+forms below are those; F2 as pre-registered is superseded by them and its 100-pair read stands above.
+
+**The declare-only forms, 200 pairs on the first fit bank (1040131), paired against v0.4c:**
+
+> | form | D | bar | κ (declare only) | paired set-diff | SE |
+> |---|---|---|---|---|---|
+> | d1 | 64 | 1 | — | +0.075 | 0.036 |
+> | d2 | 64 | 1 | 1 | +0.095 | 0.044 |
+> | d3 | 64 | 1 | 2.5 | +0.200 | 0.070 |
+> | d4 | 64 | 0.95 | 1 | +0.155 | 0.065 |
+> | d5 | 128 | 1 | 1 | +0.105 | 0.043 |
+> | d6 | 64 | 0.90 | 2.5 | +0.250 | 0.141 |
+>
+> Every form ahead, and the more it claims the more it gains and the wider its read. The confirmation at 600 pairs,
+> 100 on each of the six fit banks: **d2 +0.088 ± 0.046 (SE 0.023; every bank positive, +0.01 to +0.15); d3 +0.103 ± 0.062 (SE 0.032); d4 +0.130 ± 0.057 (SE 0.029; every bank positive, +0.01 to +0.19).**
+
+**The marker** (`scripts/probe-handoff-declare.mjs --horizon 54`, 2,000 mirror games a form, every window declaration
+scored on the true deal by trace kind; the base's certain claims are 4.30 a game at 100% and its EV claims 0.15 a game
+at 84.1%):
+
+> | form | consensus claims a game | right | certain claims a game (base 4.303) | EV claims a game (base 0.151, 84.1%) |
+> |---|---|---|---|---|
+> | d2 | **0.275** | **99.82%** (549 claims, one wrong) | 4.109 | 0.093, 76.3% |
+> | d3 | 0.447 | 97.54% | 3.983 | 0.081, 73.9% |
+> | d4 | 0.378 | 98.81% | 4.027 | 0.086, 76.2% |
+> | d6 | 1.188 | 75.12% — fails the gate | 3.535 | 0.038, 72.7% |
+>
+> The consensus claims are certain claims made earlier — the certain claims fall by about what the consensus
+> claims add, and the declarations a game and their accuracy over all kinds hold (d2: 7.612 a game at 98.90%
+> against the base's 7.596 at 98.86%). d6, the widest form, is a losing gamble as the pre-registration said a
+> claim under 95% would be, and its wide 200-pair read was that gamble's noise.
+>
+> And abroad, a 60-game pilot of the pre-registered F2 at seed 90210 (`monet-v08/pilot.log`): 10 consensus claims,
+> 10 right, beside 158 certain claims — the path through the bridge is proven and the claim is as sound against
+> SESTINA's deals as against Monet's.
+
+> **Home verdict: the mechanism is real, sound and small.** Ahead on every fit bank at four standard errors, right
+> 99.8% of the time, and worth +0.09 to +0.13 of a set a pair — under the +0.20 the pre-registration expected. The
+> pool is the limit: 0.28–0.38 provable-but-unlocated locks a game, cashed some windows earlier, and the probe's
+> ceiling (the 6% of locks that die at the clinch) is only reachable for the ones the posterior can prove. **d2**
+> (D 64, unanimity, κ 1 on the declare alone) is the form abroad — launched on the probe's and the pilot's accuracy
+> before this marker landed, the marker confirming it — as `monet-v08-f2` on the twelve confirmation seeds beside
+> the base on the same tree (000154e). The expectation from the home read is inside the +2.00 floor: v0.4c's λ
+> read about +0.4 a pair at home for +2.4 points abroad, and +0.09 is a fifth of that. If the race against SESTINA
+> prices an early cash higher than mirror play does, the number will say so; if it reads inside the floor, that
+> is the result and nothing ships. d4 (bar 0.95) is the one alternative worth a second abroad read if d2 lands
+> near the floor.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
