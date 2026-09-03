@@ -442,7 +442,8 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **the gate readout** ✅ (2026-09-03; was to be v0.5) | **the capability readout** — the §3.5b gate at six seeds on v0.4b, the `r12`-off control, the handoff emulated at home; the search arm not priced (§3.5c is gated on the owner's row-3 choice) | **32.75%** — the rule's third row | panel 35.5 / 36.9 / 36.4 / 64.7 / 69.3 against v0.6 … v0.2 · `r12` off −0.69 · handoff 47.8 → 77.6% at home · **§8.3 decision 6 to the owner** | M — **the measurement is on the record; no code shipped** |
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
-| **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad on the twelve seeds** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.8** | **the determinized declare** — a sure set cashed when the posterior proves it, not when the walk locates it (§3.8b) | ≥ 37.1% (v0.4c + 2.00) | home markers (claim accuracy ≥ 95%, pairs ahead ≥ +0.20), then twelve seeds abroad | M |
 | **v1.0** | **the version that passes §3.9's six conditions** | ≥ 50.0% — the owner, 2026-09-03: "about 50%, or significantly above", i.e. ≥ 52.0% at twelve seeds | §3.9 | — |
 
 > **v0.5 is a readout, not an attempt.** It deliberately carries no win-rate target, because the
@@ -2270,6 +2271,129 @@ reason to run it.
 > cells; with 0.5 / 0.15 the search leaves the pick on 26% of decisions at a mean advantage of 0.33 (SE
 > 0.19). The fit reads both forms. Nothing else in the pre-registration changes: the guard, the control,
 > the budget, the seeds and the acceptance stand.
+
+> **Home record, 2026-09-03.** Cost first: 96 ms a searched ask decision at the pre-registered D 8 · C 3 · S 24
+> (`scripts/bench-decide.mjs --search`), inside the 100 ms budget; the wider form (D 12 · C 4) costs twice the
+> budget and the deeper one (S 40) 1.7 times it, so both are out on the cost rule whatever they read, and they
+> were read only to see whether either would have been worth pricing. Duplicate pairs against v0.4c on the
+> first fit bank (3150867), 100 pairs a cell, the search at every ask decision of the A arm:
+>
+> | form | paired set-diff | SE |
+> |---|---|---|
+> | **pre-registered** — D 8 · C 3 · S 24 · z 1, guarded | **+0.41** | 0.31 |
+> | the negative control — the same, unguarded argmax | +0.42 | 0.35 |
+> | deeper, S 40 (1.7× the budget) | +0.60 | 0.34 |
+> | wider, D 12 · C 4 (2× the budget) | −0.08 | 0.33 |
+> | leaf 0.7 / 0.10 | −0.01 | 0.39 |
+> | leaf 0.5 / 0.15 | −0.53 | 0.34 |
+> | leaf 0.3 / 0.20 | −1.36 | 0.35 |
+> | leaf 0.5 / 0.15, unguarded | −1.48 | 0.34 |
+> | leaf 1.0 / 0 (a locked set counts as a set, no card term) | +0.61 | 0.32 |
+>
+> The confirmation at 600 pairs, 100 on each of the six fit banks: the pre-registered form **−0.14 ± 0.25 (SE 0.13; the six banks +0.41, +0.09, +0.21, −0.90, −0.44, −0.21 — the first bank's +0.41 was the
+> one every search form read hot on, all of them sharing its B games)**; the
+> control −0.12 ± 0.28 (SE 0.14); and the lock-only leaf (1.0 / 0), a third leaf form added after the two above read behind and so
+> post-hoc, **+0.16 ± 0.26** (SE 0.14; five banks of six positive) — and its marker, on the same 100 probe games, a true paired
+> advantage of **+0.043 (SE 0.020)** in its own units of sets-and-locks, 12.9% of searched decisions played, hit rate 59.1% →
+> 57.1%.
+>
+> **The marker** (`scripts/probe-search.mjs`: 100 mirror games a form with the search at every seat, and every
+> searched decision scored by a paired rollout of the pick and of what was played from the *true* state, the
+> arm's own rollout key):
+>
+> | form | played a candidate | the arm's own belief in it | its **true** paired advantage | true hit rate, pick → played |
+> |---|---|---|---|---|
+> | pre-registered | 8.8% of searched decisions (7.3 a game) | +0.39 sets | **+0.033 (SE 0.026)** | 59.2% → 57.8% |
+> | control, unguarded | 25.5% (21.6 a game) | +0.24 | +0.001 (SE 0.014) | 61.7% → 56.5% |
+> | leaf 0.5 / 0.15 | 22.2% | +0.37 | +0.049 (SE 0.017), in its own leaf units | 60.0% → 55.6% |
+> | leaf 0.7 / 0.10 | 22.0% | +0.31 | −0.010 (SE 0.016) | 60.5% → 56.3% |
+>
+> What the pre-registered guard held back — the best-mean candidate on the 1,467 searched decisions where it
+> did not clear — had a true advantage of −0.034 (SE 0.015): the guard holds back the right things. What it
+> lets through is worth +0.03 of a set at the horizon, against a belief of +0.39. That gap is the optimiser's
+> curse at eight deals: a candidate's mean over the deals carries an SE of 0.20, the best of two such means
+> clears `mean − SE > 0` on noise, and the true effect is a tenth of the belief. Resolving a +0.03 effect per
+> decision would take of the order of 350 deals — forty times the budget. The leaf evaluator is a design error,
+> recorded as one: its card term charges a cashed set its six cards (a set is +1, the cards −0.9 at 0.15, a lock
+> kept +0.5), so rollouts that claim score below rollouts that sit on a lock; the metric is optimised (+0.049 in
+> its own units) and the sets go the other way (−0.53). Every form trades hit rate for what the rollout
+> believes in, two to five points of it.
+>
+> **The rung's verdict: the pre-registered form is a no-op and does not go abroad; the lock-only leaf goes abroad as the
+> fit's form, flagged post-hoc.** The pre-registered form fails both home markers (pairs −0.14 ± 0.25, true advantage
+> +0.03 ± 0.03) and so does its control. The lock-only leaf — *a locked set is a set*, by the licence-rule fact §3.8b
+> records — clears them as written, by a hair (true advantage +0.043, SE 0.020; pairs +0.16 ± 0.26, not behind), and it is
+> the third setting of the leaf knobs, chosen after two read behind, so it carries a post-hoc flag: §3.8a's acceptance
+> abroad, +2.00 on the twelve confirmation seeds against the base on the same tree, is the only number that can ship it.
+> Cost unchanged at 96 ms. Whatever it reads, the finding stands: at this budget the search's per-decision signal is
+> about a twentieth of its noise, the ranker's own alternatives are not better than its pick, and a search that could
+> help would need a different candidate generator and a leaf that is not a rollout. §3.5c's untested cell is tested:
+> the correct posterior does not make the search pay at 100 ms.
+
+### 3.8b Monet v0.8 — the determinized declare
+
+#### Pre-registration — written 2026-09-03 after §3.8a's record and before any v0.8 cell
+
+**What the record says.** Three facts, all read on the true deal at home while §3.8a was being closed:
+
+1. **A locked set cannot be broken.** The licence rule (an ask needs a card of the half-suit, RULES_US54.md §3)
+   means no opponent can ask into a set held wholly by one team, and a declaration names holders on the
+   declarer's own team only. `scripts/probe-lockfate.mjs`, 200 v0.4c mirror games: 8.19 locks a game (both
+   teams), **93.0% cashed whole, 1.0% gifted by a wrong declaration, 6.0% dead when the clinch ends the game.**
+   A lock's only risk is the race. Between forming and being cashed a lock waits 44.7 events and 19.8 declare
+   windows of its own team.
+2. **Monet declares certainties.** On the bridge (a recorded v0.4c cell, 1,200 games) 96.6% of its declarations
+   are certain or own-book claims; the EV claim fires 0.06 a game. The FishLab engine's lock-hold instrument
+   reads Monet cashing a lock **9.0–9.8 events** after it forms and SESTINA **3.2–3.4**, on every recorded cell.
+   §3.7's channel was real, then, but its value is not the sets a teammate could prove — those get cashed
+   anyway, 93% of them — it is the *time*: under the clinch rule a sure set uncashed when the opponents reach
+   five is a set lost, and a set cashed early is a step in the race.
+3. **A determinization consensus reads locks the walk cannot locate.** `scripts/probe-consensus.mjs` (100 mirror
+   games, 64 deals a window from `determinize.ts`'s sampler, every unresolved set the option seat holds a card
+   of and does not claim): with the v0.4c posterior, window-sets where all 64 deals agree on the six holders
+   0.50 a game, **100% right**; with the choice prior on (`choiceKappa` 1, `choicePrior` `count`, §3.6's knob)
+   **1.20 a game at 100%**, and 1.13 a game at [0.9, 1) agreement 93.8% right; with κ 2.5, 1.22 a game at 97.5%
+   and 5.28 a game at [0.9, 1) 90.2%. (These count a lock at every window it persists through; distinct locks
+   are fewer.) The idea is SESTINA's own documented mechanism — a declaration on the agreement of its
+   determinizations (`det=12` in its spec) — implemented here on FishAI's sampler and posterior.
+
+**Mechanism.** At a declare window, after the certain claim and before the EV claim: D deals are sampled from
+the seat's posterior; for every unresolved set the seat holds a card of (the certain claim's foreign and hoard
+rules), the modal full assignment among the deals that put the set on this team, its share of the D deals
+requested the *agreement* (failed draws count against it); the set with the highest agreement is declared with
+those holders if the agreement is at least the bar. Knobs `consensusDet` (D; 0 or absent is byte identity —
+`tests/bots/consensus.test.ts`) and `consensusBar` (absent is 1, unanimity). `lib/engine/bots/consensus.ts`;
+the sampler moved from `lib/engine/search/` to `lib/engine/bots/determinize.ts`, inside the public-view
+boundary it never crossed. Cost about a millisecond a window at D 64.
+
+**Why this and not another ask-side change.** v0.5 sharpened the posterior and asks did not turn into sets
+(asks are near the oracle's ceiling, §3.6c); v0.6 tried to let *teammates* prove sets and the asker cannot
+see the lock (§3.7a); v0.7 searched the ask (§3.8a). The one decision none of them touched is the window's
+own, taken on the seat's own posterior, and it is the decision the clinch rule prices.
+
+**Forms.** F1: v0.4c + `consensusDet` 64 at unanimity, no choice prior. **F2 (the candidate): F1 with the choice
+prior on (`choiceKappa` 1, `choicePrior` `count`).** F3: F2 at bar 0.95. F4: κ 2.5 at unanimity. F2 is what
+goes abroad unless F1 reads as well (then F1, the smaller change); F3 and F4 are read beside them and go abroad
+only if F2 fails at home and one of them clears.
+
+**Markers at home.** (i) Consensus claims a game and their accuracy on the true deal
+(`scripts/probe-handoff-declare.mjs --horizon 54`, which scores every window declaration by trace kind): a
+consensus claim under **95%** right is a losing gamble against a lock that waits and gets cashed 93% of the
+time, so the accuracy must clear that and the certain claim's own rate must not fall. (ii) Duplicate pairs
+against v0.4c on the fit bank at 600 pairs: **the expectation is ahead by +0.20 or more** — the mechanism's
+home ceiling is the 6% of locks that die at the clinch, about 0.5 sets a pair, and a read that is not a visible
+fraction of it means the claims come too late to matter.
+
+**Seeds.** Fit on six from `hashSeed("monet-v0.8-fit-6")`: **1040131 6238226 6457974 9867486 2523658 1497907**;
+confirm at home and abroad on twelve from `hashSeed("monet-v0.8-confirm-12")`: **8718162 7308760 6281262
+9492659 5628665 2751758 6520945 3420750 6055122 7723592 4637435 8159782** — §6.5's rule, no draw skipped, all
+distinct from every seed this document names (checked by grep before they were written down).
+
+**Acceptance.** Home markers first, in the order above. Abroad: the chosen form against SESTINA v1.0 on the
+twelve confirmation seeds, paired against the v0.4c base on the same seeds and the same tree, **+2.00 win-rate
+points or better**; the base lane is re-run in the same containers. Expectation: +1 to +3 points. The bound is
+the bridge's 9-versus-3 lock hold: if every event of it were converted the gain would be of the order of a
+third of a set a team-game, and nothing here can exceed what the posterior can prove.
 
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
