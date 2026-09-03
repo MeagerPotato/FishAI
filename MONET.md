@@ -442,7 +442,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **the gate readout** ✅ (2026-09-03; was to be v0.5) | **the capability readout** — the §3.5b gate at six seeds on v0.4b, the `r12`-off control, the handoff emulated at home; the search arm not priced (§3.5c is gated on the owner's row-3 choice) | **32.75%** — the rule's third row | panel 35.5 / 36.9 / 36.4 / 64.7 / 69.3 against v0.6 … v0.2 · `r12` off −0.69 · handoff 47.8 → 77.6% at home · **§8.3 decision 6 to the owner** | M — **the measurement is on the record; no code shipped** |
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
-| **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad on the twelve seeds** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
 | **v0.8** | **the determinized declare** — a sure set cashed when the posterior proves it, not when the walk locates it (§3.8b) | ≥ 37.1% (v0.4c + 2.00) — **read 2026-09-03: 35.15% against the base's 35.07%, +0.08 paired (SE 0.08), inside the floor; 0.13 consensus claims a game at 99.6%; nothing shipped** | home markers (claim accuracy ≥ 95%, pairs ahead ≥ +0.20), then twelve seeds abroad | M |
 | **v1.0** | **the version that passes §3.9's six conditions** | ≥ 50.0% — the owner, 2026-09-03: "about 50%, or significantly above", i.e. ≥ 52.0% at twelve seeds | §3.9 | — |
 
@@ -2376,6 +2376,35 @@ reason to run it.
 > about a twentieth of its noise, the ranker's own alternatives are not better than its pick, and a search that could
 > help would need a different candidate generator and a leaf that is not a rollout. §3.5c's untested cell is tested:
 > the correct posterior does not make the search pay at 100 ms.
+
+#### Abroad record — 2026-09-03: the lock-only leaf on the twelve confirmation seeds
+
+`monet-v07-s` (MONET_SEARCH D 8 · C 3 · S 24 · z 1, guarded, `leafLock` 1, `leafCard` 0) against SESTINA v1.0, 1,200
+games a cell, paired against the v0.4c base on the same seeds and the same tree (73bf8cd; identity at 90210 identical).
+The search lanes ran four, then three, containers wide on a 12-CPU, 23.5 GB VM — the cells are slow (96 ms an ask)
+and nine containers at once ran a bot out of memory, which is now a recorded limit of the bridge. `monet-v07/report.mjs`:
+
+| seed | base | lock-only leaf | leaf − base |
+|---|---|---|---|
+| 1657910 | 36.17 | 33.83 | −2.33 |
+| 2057008 | 32.67 | 35.17 | +2.50 |
+| 2496080 | 34.67 | 36.83 | +2.17 |
+| 3593118 | 37.67 | 35.42 | −2.25 |
+| 3768516 | 37.50 | 33.58 | −3.92 |
+| 5398011 | 34.83 | 36.00 | +1.17 |
+| 5562102 | 30.92 | 34.92 | +4.00 |
+| 6081385 | 35.92 | 34.33 | −1.58 |
+| 6962430 | 35.67 | 35.58 | −0.08 |
+| 8242985 | 35.17 | 35.33 | +0.17 |
+| 9709672 | 34.75 | 35.17 | +0.42 |
+| 9715909 | 33.00 | 34.42 | +1.42 |
+| **pooled** | **34.91** | **35.05** | **+0.14** |
+
+**Paired +0.14 points, SD 2.31, SE 0.67 (0.21 × SE), ahead on 7 seeds and behind on 5, against a floor of
++2.00: inside the floor; nothing ships from v0.7.** The lock-only leaf's home read (+0.16 ± 0.26) said as much, and the
+marker said why: at eight deals the search's per-decision signal is a twentieth of its noise, and a locked set counted
+as a set does not change what the ranker's own alternatives are worth. §3.5c's cell is closed: the correct posterior
+does not make a 100 ms search pay, in either leaf.
 
 ### 3.8b Monet v0.8 — the determinized declare
 
