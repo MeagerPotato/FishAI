@@ -27,6 +27,10 @@ import { monetPolicy } from '../../lib/engine/bots/monet.ts'
 import { STYLE_ROSTER } from '../../lib/engine/bots/roster.ts'
 import { SKILL_PRESETS, validateStyle } from '../../lib/engine/bots/style.ts'
 import { canonicalAction } from './action-digest.ts'
+import type { BotPolicy } from '../../lib/engine/bots/style.ts'
+
+/** The registry returns the wide `PolicySpec` union; every Monet version is a `BotPolicy` pair. */
+const styleOf = (v: Parameters<typeof monetPolicy>[0]) => (monetPolicy(v) as BotPolicy).style
 
 /* --------------------------------------------------------------- helpers --- */
 
@@ -326,8 +330,8 @@ describe('validateStyle closes both knobs', () => {
     expect(validateStyle({ ...base, claimOwnership: 'priced' })).toEqual([])
     expect(validateStyle({ ...base, pAssignment: 'exact' as 'joint' })).toEqual([expect.stringContaining('pAssignment')])
     expect(validateStyle({ ...base, claimOwnership: 'never' as 'priced' })).toEqual([expect.stringContaining('claimOwnership')])
-    expect(monetPolicy('v0.4b').style.pAssignment).toBe('joint')
-    expect(monetPolicy('v0.4a').style.pAssignment).toBeUndefined()
+    expect(styleOf('v0.4b').pAssignment).toBe('joint')
+    expect(styleOf('v0.4a').pAssignment).toBeUndefined()
     for (const id of Object.keys(STYLE_ROSTER) as (keyof typeof STYLE_ROSTER)[]) {
       expect(STYLE_ROSTER[id].pAssignment, id).toBeUndefined()
       expect(STYLE_ROSTER[id].claimOwnership, id).toBeUndefined()
