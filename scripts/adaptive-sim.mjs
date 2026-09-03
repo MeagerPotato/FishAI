@@ -1,5 +1,5 @@
 /**
- * adaptive-sim.mjs — launcher for the FishAI v1.0 experiment suite (SPEC Stage 2b; the
+ * adaptive-sim.mjs — launcher for the Bass v1.0 experiment suite (SPEC Stage 2b; the
  * pre-registered predictions are in lib/lab/adaptive-types.ts and travel with the artifact).
  *
  * `node scripts/adaptive-sim.mjs [--pairs N] [--mirrorPairs N] [--mixedPairs N]

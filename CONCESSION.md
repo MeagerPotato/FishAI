@@ -1,7 +1,7 @@
-# CONCESSION.md — FishAI v2.0: the three-sided ask
+# CONCESSION.md — Bass v2.0: the three-sided ask
 
 > **Naming.** "v1.5" is taken: it is the bounded-memory ladder ([BOUNDED.md](BOUNDED.md),
-> `papers/fishai-v15.tex`). This generation is **FishAI v2.0**, always written with its prefix and
+> `papers/fishai-v15.tex`). This generation is **Bass v2.0**, always written with its prefix and
 > two decimals — bare "v2" already means *matrix v2*, the payoff artifact.
 
 Every ask in Canadian Fish is three things at once:

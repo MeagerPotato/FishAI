@@ -604,7 +604,10 @@ export function Papers() {
             each and measure it to the end, and one cross-engine match played inside another
             project&rsquo;s engine against their frontier agent. Every one is built from a
             committed LaTeX source, and every number in them is a field of an artifact this site
-            renders.
+            renders. The four system papers are titled <em>FishAI vX</em> because that
+            is what the agent line was called when they were published; the line has since been
+            renamed <strong>Bass</strong> — the project is still FishAI — and the papers keep
+            their published titles.
           </Reveal>
           <Reveal as="div" className={s.stack}>
             <p className={s.prose}>

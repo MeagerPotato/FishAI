@@ -1,5 +1,5 @@
 /**
- * adaptive.ts — FishAI v1.0: best-response style selection over the measured counter table
+ * adaptive.ts — Bass v1.0: best-response style selection over the measured counter table
  * (SPEC Stage 1C; BOT_LAB.md §4-5; the observation and classification layers are
  * [observe.ts](observe.ts) and [classify.ts](classify.ts), the payoffs are
  * [data/counter-table.ts](data/counter-table.ts)).
@@ -107,7 +107,7 @@ import type { SeatClassification } from './classify.ts'
 import { COUNTER_TABLE } from './data/counter-table.ts'
 import type { PolicySpec as StaticPolicySpec } from './style.ts'
 
-/** The fourth `PolicySpec` shape: FishAI v1.0, the adaptive policy. */
+/** The fourth `PolicySpec` shape: Bass v1.0, the adaptive policy. */
 export interface AdaptiveSpec {
   adaptive: true
   /** Lab-only oracle: true styles per seat (null for non-styled seats). Bypasses the classifier. */
@@ -252,7 +252,7 @@ function chooseAtCut(view: SeatView, spec: AdaptiveSpec, cut: number): PhaseChoi
 }
 
 /**
- * The FishAI v1.0 style choice for this view — see the file header for the whole rule. Pure
+ * The Bass v1.0 style choice for this view — see the file header for the whole rule. Pure
  * and deterministic over `(view, spec)`; never reads the clock, the rng, or anything but the
  * public log, the seat and the config. `decide` calls this at every adaptive decision; the
  * truncation makes that affordable (one `observeSeats` scan of at most `events` log entries

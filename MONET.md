@@ -1,7 +1,7 @@
 # MONET.md — the roadmap from Monet v0.1 to Monet v1.0
 
-**FishAI v2.0 is frozen as LEGACY.** Monet is a new line, starting at v0.1, whose stated goal is
-**Monet v1.0 beats SESTINA v1.0**. FishAI v2.0 is the baseline Monet must beat and the thing Monet
+**Bass v2.0 is frozen as LEGACY.** Monet is a new line, starting at v0.1, whose stated goal is
+**Monet v1.0 beats SESTINA v1.0**. Bass v2.0 is the baseline Monet must beat and the thing Monet
 inherits from: the engine, the rules, the harness, the documents, and one measured policy.
 
 > **Correction carried into this document.** Every number in the two draft write-ups this roadmap
@@ -30,7 +30,7 @@ path. **A number from one bridge is never subtracted from a number on another.**
 
 | | win rate vs SESTINA v1.0 | deals | floor |
 |---|---:|---:|---:|
-| FishAI v2.0, corrected bridge — **the baseline** | **27.08%** | 1,200 | ±2.83 |
+| Bass v2.0, corrected bridge — **the baseline** | **27.08%** | 1,200 | ±2.83 |
 | the target | **50.00%** | — | — |
 | **to find** | **22.92 points** | — | — |
 
@@ -67,7 +67,7 @@ Stacking the two channels with **full additivity that the evidence says will not
 
 | stack, most favourable reading the evidence permits | win rate |
 |---|---:|
-| baseline (FishAI v2.0, corrected bridge) | 27.08% |
+| baseline (Bass v2.0, corrected bridge) | 27.08% |
 | + best measured asking arm (licence conditioning, defuse off) | 31.50% |
 | + the cashing channel **at its cheating ceiling** (+5.75) | **≈ 37.3%** |
 | **still under even by** | **≈ 12.7 points** |
@@ -149,7 +149,7 @@ is exactly which capability it lacks, priced"* is a result of the same kind.
 
 ### 1.1 The policy
 
-Monet v0.1 is FishAI v2.0's `STYLE_ROSTER.punter` at `SKILL_PRESETS.hard`, unchanged. That arm is
+Monet v0.1 is Bass v2.0's `STYLE_ROSTER.punter` at `SKILL_PRESETS.hard`, unchanged. That arm is
 the one every corrected number in this document was measured on, and it carries `defuse: 1` from the
 `BALANCED` base (`lib/engine/bots/roster.ts:165`), which every roster entry inherits through
 `style()`.
@@ -434,7 +434,7 @@ explains why the band is 31–37% rather than a point. v0.5 carries no target by
 
 ### 3.1 Monet v0.1 — the fork, the instrument, and the record
 
-**Ships.** The FishAI v2.0 policy, unchanged in every reachable path, under the Monet name. Plus:
+**Ships.** The Bass v2.0 policy, unchanged in every reachable path, under the Monet name. Plus:
 
 - **The confirmed `major` audit finding, fixed.** The defect was `observe.ts:301-304` *as of
   `d918d76`* — line anchors are given against the revision the defect lived in, because the fix
@@ -504,7 +504,7 @@ explains why the band is 31–37% rather than a point. v0.5 carries no target by
 
 **Acceptance test.**
 
-1. **Byte identity to FishAI v2.0** — 0 action mismatches over ≥ 20,000 `us54` decisions across the
+1. **Byte identity to Bass v2.0** — 0 action mismatches over ≥ 20,000 `us54` decisions across the
    roster against committed HEAD. This is a pass/fail with no floor: one mismatch fails it.
 
    **PASS, and re-runnable.** `scripts/byte-identity.mjs` materialises the reference revision file

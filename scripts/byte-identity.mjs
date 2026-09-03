@@ -1,7 +1,7 @@
 /**
  * byte-identity.mjs — MONET.md §3.1 acceptance item 1, made re-runnable.
  *
- * *"Byte identity to FishAI v2.0 — 0 action mismatches over >= 20,000 us54 decisions across the
+ * *"Byte identity to Bass v2.0 — 0 action mismatches over >= 20,000 us54 decisions across the
  * roster against committed HEAD. This is a pass/fail with no floor: one mismatch fails it."*
  *
  * A vitest file cannot check out another revision, so the *cross-revision* half of that promise
@@ -40,7 +40,7 @@
  * replays. That fixture is what survives this session: the sweep proves identity *now*, the bank
  * keeps failing on a `decide.ts` regression a month from now, when no reference tree is at hand.
  * The bank is generated entirely from the REFERENCE tree — its `newGame`, its `reduce`, its
- * `decide`, its roster — so it records what FishAI v2.0 did, not what the candidate does.
+ * `decide`, its roster — so it records what Bass v2.0 did, not what the candidate does.
  *
  * Exit code is the verdict: 0 pass, 1 fail, 2 the harness could not be trusted to answer.
  */
@@ -127,7 +127,7 @@ try {
   await import(refUrl('lib/engine/bots/monet.ts'))
   refHasMonet = true
 } catch {
-  /* expected of any FishAI v2.0-era revision */
+  /* expected of any Bass v2.0-era revision */
 }
 
 /* ------------------------------------------------------------------------ the sweep --- */
@@ -249,7 +249,7 @@ if (EMIT_BANK) {
   const games = []
   let total = 0
   // Driven ENTIRELY by the reference tree — its newGame, its reduce, its roster, its decide.
-  // The bank must record what FishAI v2.0 did; borrowing the candidate's game loop would let a
+  // The bank must record what Bass v2.0 did; borrowing the candidate's game loop would let a
   // change there hide inside the fixture it is supposed to be measured against.
   for (const row of bankSchedule(refRoster.STYLE_IDS, 3)) {
     const table = refRoster.STYLE_ROSTER[row.table]
@@ -277,7 +277,7 @@ if (EMIT_BANK) {
   L.push(' *')
   L.push(` * \`node scripts/byte-identity.mjs --ref ${REF} --emit-bank ${EMIT_BANK}\``)
   L.push(' *')
-  L.push(' * The FishAI v2.0 arm\'s own decisions, recorded from a COMMITTED revision and pinned here so')
+  L.push(' * The Bass v2.0 arm\'s own decisions, recorded from a COMMITTED revision and pinned here so')
   L.push(' * that Monet\'s identity claim survives the session it was measured in. Each row is one whole')
   L.push(' * `us54` game: the table style drives it, and the digest runs over the canonical form of the')
   L.push(' * action the v2.0 arm — `{ skill: SKILL_PRESETS.hard, style: STYLE_ROSTER.punter }` — returned')
@@ -290,7 +290,7 @@ if (EMIT_BANK) {
   L.push(' * single game breaks a digest here — which is exactly what "no behaviour change" means.')
   L.push(' *')
   L.push(' * Regenerating it is a deliberate act, not a fix for a red test: a changed digest is a report')
-  L.push(' * that v0.1 no longer plays FishAI v2.0\'s games, and that is the acceptance criterion itself.')
+  L.push(' * that v0.1 no longer plays Bass v2.0\'s games, and that is the acceptance criterion itself.')
   L.push(' */')
   L.push('')
   L.push('/** One whole `us54` game of the bank. */')

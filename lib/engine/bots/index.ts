@@ -51,7 +51,7 @@ export {
 } from './contained.ts'
 export { decide, decideExplained, planClaimFor } from './decide.ts'
 export type { ClaimPlan, DecisionTrace, ExplainedDecision } from './decide.ts'
-// --- FishAI v1.0: observation, classification, adaptive selection ----------------------------
+// --- Bass v1.0: observation, classification, adaptive selection ----------------------------
 export { FEATURE_KEYS, featureVector, observeSeats, replayCounts, replayedCounts } from './observe.ts'
 export type { CountReplay, FeatureKey, SeatObservation } from './observe.ts'
 export { checkpointBucket, classifySeat, classifySeats } from './classify.ts'
@@ -62,7 +62,7 @@ export { COUNTER_TABLE } from './data/counter-table.ts'
 export type { CounterTable } from './data/counter-table.ts'
 export { ADAPTIVE_DEFAULTS, ADAPTIVE_PHASE_EVENTS, chooseStyle, isAdaptiveSpec } from './adaptive.ts'
 export type { AdaptiveChoice, AdaptiveSpec } from './adaptive.ts'
-// --- FishAI v1.5: the bounded-memory ladder --------------------------------------------------
+// --- Bass v1.5: the bounded-memory ladder --------------------------------------------------
 export {
   BOUNDED_DEFAULTS,
   boundedRead,
@@ -73,7 +73,7 @@ export {
   restrictedKnowledge,
 } from './bounded.ts'
 export type { BoundedFact, BoundedFactKind, BoundedRanking, BoundedRead, BoundedSpec } from './bounded.ts'
-// --- FishAI v2.0: the concession layer (CONCESSION.md) ---------------------------------------
+// --- Bass v2.0: the concession layer (CONCESSION.md) ---------------------------------------
 export { THREAT_COEFFICIENTS, preyInBook, seatLicences, seatThreat, turnYield } from './threat.ts'
 export type { SeatThreat } from './threat.ts'
 export { defusalActive, defusalBonus, logLicences } from './defuse.ts'

@@ -1,5 +1,5 @@
 /**
- * probe-v15-anchor.mjs — scratch: establish what is COMPARABLE between FishAI v1.0 (adaptive)
+ * probe-v15-anchor.mjs — scratch: establish what is COMPARABLE between Bass v1.0 (adaptive)
  * and v1.5 (bounded). Three questions, all decided by replay, none by argument:
  *
  *  Q1. What style does a v1.0 adaptive seat actually delegate to, over real us54 games?

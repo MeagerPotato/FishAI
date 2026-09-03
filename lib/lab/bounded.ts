@@ -1,5 +1,5 @@
 /**
- * bounded.ts — the FishAI v1.5 experiment suite: ladder monotonicity, tier calibration,
+ * bounded.ts — the Bass v1.5 experiment suite: ladder monotonicity, tier calibration,
  * evidence-age analysis, style under memory pressure (SPEC v1.5 Phase 2; the data contract is
  * [bounded-types.ts](bounded-types.ts), the pre-registered predictions are written there too).
  *

@@ -4,20 +4,29 @@ A bot that plays **Canadian Fish** (Literature), and the simulation lab built to
 
 > **Is there a quantitatively superior play style — or do styles just counter each other?**
 
-Four engines now live here. **FishAI v0.5** is the style-conditioned engine that question is
+Four engines now live here. **Bass v0.5** is the style-conditioned engine that question is
 asked of: nine parameterized styles over one shared inference engine, with a traced assistant.
-**FishAI v1.0** is the adaptive engine built on top — it classifies what the other seats appear
+**Bass v1.0** is the adaptive engine built on top — it classifies what the other seats appear
 to be playing from the public log and best-responds off the measured payoff table. Its measured
 verdict is a negative result reported with the same care as a positive one: over this roster the
 best response to *everything* is Punter, so adaptation converges to the dominant style and then
-underpays for its warmup ([ADAPTIVE.md](ADAPTIVE.md)). **FishAI v1.5** is the bounded-memory
+underpays for its warmup ([ADAPTIVE.md](ADAPTIVE.md)). **Bass v1.5** is the bounded-memory
 ladder — difficulty as a bit budget with an explicit eviction policy, replacing the old noise
 knob. Measured: strength is monotone in bits at every rung, the shipped medium tier prices at ≈
 32 bits, the old noise-based easy tier prices *below keeping nothing at all*, and mild memory
 pressure makes styles *easier* to classify in the whole-ecology design — a refuted prediction
-reported as the headline it is ([BOUNDED.md](BOUNDED.md)). **FishAI v2.0** is the concession
+reported as the headline it is ([BOUNDED.md](BOUNDED.md)). **Bass v2.0** is the concession
 layer — what a conceded turn costs, why the off-limits avoidance rule loses, and why inverting
 it into a defusal term wins ([CONCESSION.md](CONCESSION.md)).
+
+**On names.** *FishAI* is the project — this repository, the site and the laboratory. The agent
+line those four engines make up, v0.5 through v2.0, is **Bass**: frozen at v2.0, and the baseline
+the new line is measured against. It was published as "FishAI vX" until the Monet line opened,
+and the ten papers keep those titles because they are published artifacts. The new line is
+**Monet** ([MONET.md](MONET.md)). Each frozen Bass version is an annotated git tag —
+`bass-v0.5`, `bass-v1.0`, `bass-v1.5`, `bass-v2.0` — at the commit where it was last whole.
+An old arm must come from its tag and never from today's roster, whose shared base carries
+v2.0's `defuse` term; a "v1.0" built from the current roster is wrong on 1 decision in 64.
 
 **What the `/play` table actually seats.** Every bot seat is the v1.0 adaptive engine, and only
 v1.0: no bounded-memory budget is built anywhere on the play surface, and there is no
@@ -131,9 +140,9 @@ Documents:
 | [STYLES.md](STYLES.md) | The nine styles, the `StyleParams` vector, and §6's two measured caveats on the roster |
 | [BOT_LAB.md](BOT_LAB.md) | Experimental design — duplicate deals, metrics, Nash averaging, α-Rank, exploitability |
 | [CONTAINMENT.md](CONTAINMENT.md) | The contained-book result: why an unclaimed team-held book is a resource |
-| [ADAPTIVE.md](ADAPTIVE.md) | FishAI v1.0 — observe → classify → best-respond, the dominance degeneracy, and the measured verdict |
-| [BOUNDED.md](BOUNDED.md) | FishAI v1.5 — memory in bits, the ladder that prices the tiers, and the P7/P8 attribution record |
-| [CONCESSION.md](CONCESSION.md) | FishAI v2.0 — what a conceded turn costs, why the off-limits rule loses, and why inverting it wins |
+| [ADAPTIVE.md](ADAPTIVE.md) | Bass v1.0 — observe → classify → best-respond, the dominance degeneracy, and the measured verdict |
+| [BOUNDED.md](BOUNDED.md) | Bass v1.5 — memory in bits, the ladder that prices the tiers, and the P7/P8 attribution record |
+| [CONCESSION.md](CONCESSION.md) | Bass v2.0 — what a conceded turn costs, why the off-limits rule loses, and why inverting it wins |
 | [ASKING.md](ASKING.md) | Who to ask and for what: the inference soundness audit, ask calibration, and the full ask matrix |
 | [CROSSPLAY.md](CROSSPLAY.md) | FishAI played inside a third-party engine: the foreign-engine replication of defusal, and **27.08% against SESTINA v1.0** — below their whole published lineage. Its §9 was corrected after a bridge defect, a powerless control and four pooled counters were found in the first version |
 | [WHY-FISHAI-LOSES.md](WHY-FISHAI-LOSES.md) | The account of the cross-play deficit: FishAI declares as accurately as the frontier (98.42% vs 98.46%) and takes **9.30 events to prove a set SESTINA proves in 2.92**. 139 cells, 166,800 games |
@@ -161,8 +170,8 @@ Requires Node ≥ 23.6 (the engine is erasable-syntax TypeScript that Node strip
 npm install
 npm test          # engine, bot, and lab suites
 npm run lab       # the style-vs-style simulation (matrix)
-npm run adaptive  # the FishAI v1.0 experiment suite (gauntlet, mixed screen, oracle, classifier)
-npm run bounded   # the FishAI v1.5 experiment suite (ladder, tiers, evidence age, accuracy)
+npm run adaptive  # the Bass v1.0 experiment suite (gauntlet, mixed screen, oracle, classifier)
+npm run bounded   # the Bass v1.5 experiment suite (ladder, tiers, evidence age, accuracy)
 npm run papers:build  # compile papers/*.tex into the committed public/papers/*.pdf
 npm run dev       # the results site — /lab report, /play solo table, /lab/live in-browser sims
 ```

@@ -1,5 +1,5 @@
 /**
- * bounded-sim-worker.mjs — the worker-thread entry for the FishAI v1.5 experiment suite.
+ * bounded-sim-worker.mjs — the worker-thread entry for the Bass v1.5 experiment suite.
  *
  * Deliberately trivial, exactly like adaptive-sim-worker.mjs: `scripts/` is outside
  * tsconfig.app.json's `include`, so nothing written here is typechecked. All the substance —

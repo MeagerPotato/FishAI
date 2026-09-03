@@ -1,5 +1,5 @@
 /**
- * bounded.test.ts — the FishAI v1.5 experiment suite at tiny N (SPEC v1.5 Phase 2).
+ * bounded.test.ts — the Bass v1.5 experiment suite at tiny N (SPEC v1.5 Phase 2).
  *
  * The full run is ~60k games; these tests run the SAME machinery — `planBoundedTasks` →
  * `runBoundedTask` → `assembleBoundedRun` → `buildBoundedResults` — at 1–2 pairs per cell, so

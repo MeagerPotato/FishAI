@@ -1,5 +1,5 @@
 /**
- * bounded-types.ts — the data contract of the FishAI v1.5 experiment suite (SPEC v1.5 Phase 2;
+ * bounded-types.ts — the data contract of the Bass v1.5 experiment suite (SPEC v1.5 Phase 2;
  * the bounded-memory ladder of PLAYSTYLES.md S44–S48; [bounded.ts](bounded.ts) for the
  * machinery that fills these shapes).
  *

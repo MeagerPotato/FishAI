@@ -1,5 +1,5 @@
 /**
- * probe-v15-h2h.mjs — scratch: FishAI v1.5 (bounded-memory) head-to-head against FishAI v1.0
+ * probe-v15-h2h.mjs — scratch: Bass v1.5 (bounded-memory) head-to-head against Bass v1.0
  * (adaptive), on DUPLICATE deals (BOT_LAB.md §5.1): every seed played in both orientations with
  * the start seat held identical, so the deal is never a confound.
  *
@@ -154,7 +154,7 @@ function agg(cellId) {
 const out = { bank: BANK, pairs: PAIRS, variant: 'us54', cells: cells.map((c) => agg(c.id)) }
 writeFileSync(OUT, JSON.stringify(out, null, 2))
 
-console.log(`\nFishAI v1.5 (bounded, balanced) vs v1.0 (adaptive) — us54, duplicate deals`)
+console.log(`\nBass v1.5 (bounded, balanced) vs v1.0 (adaptive) — us54, duplicate deals`)
 console.log(`bank '${BANK}', ${PAIRS} pairs/cell = ${PAIRS * 2} games/cell, ${(Date.now() - t0) / 1000}s\n`)
 const pad = (s, n) => String(s).padEnd(n)
 console.log(

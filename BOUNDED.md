@@ -1,6 +1,6 @@
-# BOUNDED.md — FishAI v1.5: the bounded-memory ladder, and what it prices
+# BOUNDED.md — Bass v1.5: the bounded-memory ladder, and what it prices
 
-FishAI v1.5 replaces the project's difficulty knob. The old tiers handicapped a bot with a
+Bass v1.5 replaces the project's difficulty knob. The old tiers handicapped a bot with a
 6-event log window plus 25% uniform decision noise; v1.5 caps **memory, in bits**, with an
 explicit eviction policy — a first-class policy axis (PLAYSTYLES.md S44–S48) alongside style and
 skill. This document records the model, the engine design, the four pre-registration episodes

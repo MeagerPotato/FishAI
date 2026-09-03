@@ -32,7 +32,7 @@ export { aggregateCell, runHealth } from './aggregate.ts'
 export { assembleRun, defaultWorkers, digest, runLab, runPool, toJsonl } from './run.ts'
 export { payoffMatrix, renderHealth, renderRun, styleSummaries } from './report.ts'
 export type { StyleSummary } from './report.ts'
-// --- FishAI v1.0 experiment suite (SPEC Stage 2b/2c) -----------------------------------------
+// --- Bass v1.0 experiment suite (SPEC Stage 2b/2c) -----------------------------------------
 export {
   DEFAULT_ADAPTIVE_CONFIG,
   MIXED_COMPOSITION_STRIDE,
@@ -52,7 +52,7 @@ export {
 } from './adaptive.ts'
 export type { AdaptiveArtifactInputs, AdaptiveBenchmarkInput, AdaptiveTask, MixedPooled } from './adaptive.ts'
 export { ADAPTIVE_PREDICTIONS, ADAPTIVE_SCHEMA_VERSION } from './adaptive-types.ts'
-// --- FishAI v1.5 experiment suite (SPEC v1.5 Phase 2) ----------------------------------------
+// --- Bass v1.5 experiment suite (SPEC v1.5 Phase 2) ----------------------------------------
 export {
   DEFAULT_BOUNDED_CONFIG,
   EVIDENCE_AGE_BANDS,

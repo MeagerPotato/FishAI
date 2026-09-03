@@ -3,7 +3,7 @@
  *
  * ## What Monet is
  *
- * [MONET.md](../../../MONET.md) freezes FishAI v2.0 as LEGACY and opens a new agent line at v0.1,
+ * [MONET.md](../../../MONET.md) freezes Bass v2.0 as LEGACY and opens a new agent line at v0.1,
  * whose stated goal is that **Monet v1.0 beats SESTINA v1.0** — the frontier bot the inherited arm
  * loses to at **27.08%** over six seeds (MONET.md §0, `[measured, corrected]`). Everything the line
  * intends to change is *belief*: the ask scorer's probability term, `pCardAt`, `pAssignment`, and
@@ -17,12 +17,12 @@
  *
  * ## v0.1 is deliberately behaviour-identical, and that is the milestone
  *
- * MONET.md §1.1: Monet v0.1 **is** FishAI v2.0's `STYLE_ROSTER.punter` played at
+ * MONET.md §1.1: Monet v0.1 **is** Bass v2.0's `STYLE_ROSTER.punter` played at
  * `SKILL_PRESETS.hard`, unchanged in every reachable path. That includes the `defuse: 1` it
  * inherits — `defuse` is not a per-style knob; it sits on the `BALANCED` base and reaches every
  * roster entry through `style()` ([roster.ts](roster.ts)), so binding the roster object binds the
  * defusal appetite with it. v0.1 ships **no behaviour change at all**, and its acceptance test is
- * byte identity to FishAI v2.0 over ≥ 20,000 `us54` decisions plus a reproduction of the known
+ * byte identity to Bass v2.0 over ≥ 20,000 `us54` decisions plus a reproduction of the known
  * 27.08% cell (MONET.md §3.1). One changed decision fails it.
  *
  * So `MONET_VERSIONS['v0.1']` holds the roster and preset objects **by reference**. It is not a
@@ -58,7 +58,7 @@ export type MonetVersion = 'v0.1'
 /**
  * Version id -> the policy that version plays, ready for `decide(view, policy, seed)`.
  *
- * `v0.1` is the FishAI v2.0 arm by reference — the roster's Punter and the `hard` skill preset
+ * `v0.1` is the Bass v2.0 arm by reference — the roster's Punter and the `hard` skill preset
  * themselves, not their values (see the header). The pair is the `BotPolicy` shape rather than the
  * bare style so that the tier is explicit at the call site: a bare `StyleParams` would resolve to
  * full-strength inference anyway ([style.ts](style.ts) `resolvePolicy`), but "at `hard`" is part of

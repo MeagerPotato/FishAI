@@ -1,5 +1,5 @@
 /**
- * adaptive-types.ts — the data contract of the FishAI v1.0 experiment suite (SPEC Stage 2b/2c;
+ * adaptive-types.ts — the data contract of the Bass v1.0 experiment suite (SPEC Stage 2b/2c;
  * BOT_LAB.md §4-6 for the measurement discipline; [adaptive.ts](adaptive.ts) for the machinery
  * that fills these shapes).
  *

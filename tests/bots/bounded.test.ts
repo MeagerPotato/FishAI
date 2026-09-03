@@ -1,5 +1,5 @@
 /**
- * bounded.test.ts — FishAI v1.5: the bounded-memory ladder (SPEC v1.5 Phase 1; PLAYSTYLES.md
+ * bounded.test.ts — Bass v1.5: the bounded-memory ladder (SPEC v1.5 Phase 1; PLAYSTYLES.md
  * S44–S48), against the six obligations of the spec.
  *
  * The load-bearing test is the LARGE-BUDGET EQUIVALENCE PIN. With bits large enough to hold

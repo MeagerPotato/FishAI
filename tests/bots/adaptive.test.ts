@@ -1,5 +1,5 @@
 /**
- * adaptive.test.ts — FishAI v1.0: the adaptive policy is legal-by-construction, deterministic,
+ * adaptive.test.ts — Bass v1.0: the adaptive policy is legal-by-construction, deterministic,
  * and honest about what the measured counter table makes of it.
  *
  * The load-bearing test here is the DEGENERACY PIN. The committed counter table (matrix v2,

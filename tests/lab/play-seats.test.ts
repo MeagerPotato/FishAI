@@ -2,7 +2,7 @@
  * play-seats.test.ts — the per-seat entry point (`playGameSeats`) against the pure-team one.
  *
  * `playGame` is the measured instrument the whole matrix stands on, so the generalisation that
- * unlocks mixed compositions (BOT_LAB.md §5.3) and the FishAI v1.0 experiments must be pinned to
+ * unlocks mixed compositions (BOT_LAB.md §5.3) and the Bass v1.0 experiments must be pinned to
  * it, not merely resemble it: a pure-team call routed through `playGameSeats` has to reproduce
  * `playGame` field-for-field, or the mixed cells would be measured by a *different* instrument
  * than the matrix they are read against. The remaining tests are about the new surface only —
