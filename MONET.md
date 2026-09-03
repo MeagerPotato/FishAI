@@ -443,7 +443,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad on the twelve seeds** | cost budget first, then paired arms on shared determinizations | XL |
-| **v0.8** | **the determinized declare** — a sure set cashed when the posterior proves it, not when the walk locates it (§3.8b) | ≥ 37.1% (v0.4c + 2.00) | home markers (claim accuracy ≥ 95%, pairs ahead ≥ +0.20), then twelve seeds abroad | M |
+| **v0.8** | **the determinized declare** — a sure set cashed when the posterior proves it, not when the walk locates it (§3.8b) | ≥ 37.1% (v0.4c + 2.00) — **read 2026-09-03: 35.15% against the base's 35.07%, +0.08 paired (SE 0.08), inside the floor; 0.13 consensus claims a game at 99.6%; nothing shipped** | home markers (claim accuracy ≥ 95%, pairs ahead ≥ +0.20), then twelve seeds abroad | M |
 | **v1.0** | **the version that passes §3.9's six conditions** | ≥ 50.0% — the owner, 2026-09-03: "about 50%, or significantly above", i.e. ≥ 52.0% at twelve seeds | §3.9 | — |
 
 > **v0.5 is a readout, not an attempt.** It deliberately carries no win-rate target, because the
@@ -2452,6 +2452,46 @@ at 84.1%):
 > prices an early cash higher than mirror play does, the number will say so; if it reads inside the floor, that
 > is the result and nothing ships. d4 (bar 0.95) is the one alternative worth a second abroad read if d2 lands
 > near the floor.
+
+#### Abroad record — 2026-09-03: nothing ships from v0.8
+
+d2 (`monet-v08-f2`: `consensusDet` 64, `consensusBar` 1, `consensusKappa` 1) against SESTINA v1.0 on the twelve
+confirmation seeds, 1,200 games a cell, paired against the v0.4c base on the same seeds and the same tree (000154e;
+identity at 90210 identical, engine lines and calibration). `monet-v08/report.mjs`:
+
+| seed | base | d2 | d2 − base |
+|---|---|---|---|
+| 2751758 | 34.50 | 34.25 | −0.25 |
+| 3420750 | 34.17 | 34.50 | +0.33 |
+| 4637435 | 33.75 | 33.50 | −0.25 |
+| 5628665 | 33.75 | 33.58 | −0.17 |
+| 6055122 | 36.42 | 36.92 | +0.50 |
+| 6281262 | 33.92 | 34.25 | +0.33 |
+| 6520945 | 36.42 | 36.67 | +0.25 |
+| 7308760 | 38.50 | 38.42 | −0.08 |
+| 7723592 | 33.33 | 33.58 | +0.25 |
+| 8159782 | 37.50 | 37.67 | +0.17 |
+| 8718162 | 34.67 | 34.83 | +0.17 |
+| 9492659 | 33.92 | 33.67 | −0.25 |
+| **pooled** | **35.07** | **35.15** | **+0.08** |
+
+**Paired +0.083 points, SD 0.27, SE 0.08 (1.1 × SE), ahead on 7 seeds and behind on 5, against a floor of ±2.00.**
+Inside the floor by a wide margin; nothing ships. The mechanism did what it does at home: **1,885 consensus claims
+in 14,400 games (0.13 a game), 1,877 right (99.58%)**, the certain claims down from 37,595 to 34,355 as some of them
+were cashed earlier by the consensus; sets a game 3.976 against 3.977, ask accuracy 53.57 against 53.55, and the
+lock-hold instrument 9.42 events against 9.50. The paired SD of 0.27 points is the tightest this document has
+recorded — the asks are byte-identical and the games diverge only at a consensus claim — so the read is exact for
+its size: the sets the consensus cashes early would have been cashed anyway, before anyone's clinch, and the race
+does not price the earlier cash.
+
+**What the rung leaves on the record.** The 9-versus-3 lock hold is not a proving problem. A 64-deal consensus
+on the seat's posterior finds a tenth of a set a game that the walk cannot locate, at 99.6%, and moves the hold
+by 0.08 events; SESTINA's three-event cash is not made of locks proved from the public log, at least not by any
+posterior this codebase can sample. Four rungs have now tested the four levers the design named — belief (§3.6),
+communication (§3.7), search (§3.8a) and the declare (§3.8b) — and each is real and small or null against the
+same opponent on the same seeds. The next rung, if there is one, is not a mechanism but an attribution: where,
+on full-information records of Monet against SESTINA, the 1.2 sets a game go — and that is a decision for the
+owner (§8.3).
 
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
