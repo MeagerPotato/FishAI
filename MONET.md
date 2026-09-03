@@ -34,7 +34,8 @@ path. **A number from one bridge is never subtracted from a number on another.**
 | the target | **50.00%** | — | — |
 | **Monet v0.3** (§3.3), same bridge, 2026-09-03 | **30.96%** | 1,200 | ±2.83 |
 | **Monet v0.4a** (§3.4a), same bridge, 2026-09-03 | **31.94%** | 1,200 | ±2.83 |
-| **to find** | **22.92 points** from the baseline, **18.06** from v0.4a | — | — |
+| **Monet v0.4b** (§3.4b), same bridge, 2026-09-03 | **32.75%** | 1,200 | ±2.83 |
+| **to find** | **22.92 points** from the baseline, **17.25** from v0.4b | — | — |
 
 [measured, corrected] Six seeds, 1,950 of 7,200 games, `bot:pf2` vs the frozen v1.0 spec. Every
 seed of the six moved the same way under the bridge repair; mean delta +3.44, SD 0.48, min +2.67.
@@ -415,7 +416,7 @@ explains why the band is 31–37% rather than a point. v0.5 carries no target by
 | **v0.2** | ask-scorer correctness (`minHitP`, two `rankAsksWith` defects) · the pre/post-clinch metric split | 27.08% (must not move) | DEAD counter; the split reported | XS–S |
 | **v0.3** ✅ | λ = 0.60 licence conditioning · `defuse` frozen at 1 with its interval · the score term measured and not shipped | **30.96%** (target ≥ 30.5%) | calibration bias — home ✓, abroad ✗, the finding · the `defuse` ladder at ±3.10 · lock hold for the score term (0.01–0.05 events: nothing to move) | S–M — **shipped** |
 | **v0.4a** ✅ | `pCardAt`, the calibrated marginal (`pModel: 'marginal'`) · λ measured against it and taken out | **31.94%** (bar ≥ 33.0% — **not met**; the λ-on arm reads 33.78%) | calibration — aggregate abroad ✓ 0.002, deciles ✗ · ask accuracy 51.71 → 53.91 · the marginal's own effect +4.74 (6/6) | L — **shipped, item 4 missed, on the record** |
-| **v0.4b** | `pAssignment` (the joint) and the proof-lag milestone | **≥ 36.0%** | **lock hold**, then calibration abroad | L–XL |
+| **v0.4b** ✅ | `pAssignment: 'joint'`, the chain over the marginal · `claimOwnership: 'priced'` measured and not shipped | **32.75%** (bar ≥ 36.0% — **not met**; +0.81 over v0.4a, inside the floor) | lock hold 9.98 → 10.07 — **did not move: the item's FAIL and the finding** · declare accuracy 97.86 → 98.32 (6/6) · speculative declares 37 → 101 per 1,200 games at 72 → 93% | L — **shipped; the cashing channel is communication, not belief** |
 | **v0.5** | **the capability readout** — negative certificates, count exhaustion, cross-seat handoff, and the search arm priced and measured | **no target. This rung is the measurement.** | 12 seeds, ±2.00, and a written decision on what v1.0 is | M + XL |
 | **v1.0** | **defined only after v0.5's number is read** | ≥ 50.0% | — | — |
 
@@ -1341,6 +1342,141 @@ ownership onsets are never proved before the deal ends [defective, 22,480 positi
 > channel is **+5.75**. With the oracle's own levels now re-derived, the temptation to reach for +20
 > is larger, and it is still wrong.
 
+> **Scope decision (§1.5, §8.3 decision 3), written 2026-09-03 before the code.** v0.4b's joint is
+> a *chain of reads* of the same table v0.4a attaches: `pAssignment` assigns a set's open cards one
+> at a time, most certain first, each conditional read off the table re-scaled with the previous
+> assignments fixed, and the plan's probability is the product of those conditionals — the chain
+> rule, on the maximum-entropy table. No fact enters the pool, no fact leaves it, and no
+> `BoundedSpec` carries the knob, so BOUNDED.md's cost model stays defined and Bass v1.5's numbers
+> cannot move. Decision 3 is therefore taken the way v0.4a took it — **the posterior is confined to
+> the unbounded arm** — and stays open only for v0.5 to reopen if the readout wants the bounded arm
+> to carry one. Registry id `v0.4b` = v0.4a plus `pAssignment: 'joint'`; the null arm
+> (`pAssignment: 'greedy'` on the v0.4b tree) is v0.4a's vector and must reproduce its six cells to
+> the digit before anything else is read.
+>
+> **Two mechanisms, two knobs, one rung.** Item 1 of the ships list is the knob above. Item 2 —
+> `certainClaim` stopping being the definition of "ours" — is a second knob, `claimOwnership:
+> 'certain' | 'priced'`: under `'priced'`, `evClaim`'s structural gate (every open card's
+> candidates all teammates, §2.3 loss 3) is dropped and the plan's chain probability, which already
+> carries the opponents' share of every open card, is what meets the bar. It is the mechanism that
+> can move lock hold by more than a fraction, and it is the one that can break the parity guard, so
+> it is measured as its own arm and **ships only if the rule below admits it**; the registry vector
+> carries `'joint'` alone until that reading is on the record. `certainClaim` itself is unchanged:
+> a plan with no open card and p = 1 is found by the same planner, so the roadmap's "p = 1 special
+> case" holds by construction and the gate order is not touched. The bridge arm counts each declare
+> by the branch that made it — certain, speculative, forced — with its outcome, so accuracy is read
+> per branch and not only pooled.
+>
+> **Pre-registered expectations (§7.1), written before the run.** Every bar is read against v0.4a's
+> own six-seed numbers (§3.4a's record), not v0.3's.
+>
+> 1. Lock hold: **9.98** → the bar is ≤ 5.0 as written. The replay measurement above prices the
+>    joint's assignment accuracy at +1.5 to +4 points over greedy at ownership positions, and the
+>    mechanism reaches lock hold only through speculative declares that now clear 0.775; so the
+>    expectation for `'joint'` alone is a move of 0.3 – 1.5 events, for `'priced'` more, and **the
+>    ≤ 5.0 bar is expected to FAIL on this rung.** The marker must move ≥ 0.5 events paired over
+>    six seeds, or the mechanism is not reaching the board and the rung is a FAIL whatever else
+>    moves.
+> 2. Declarations per game: **3.80** → bar ≥ 4.5; expected +0.1 – 0.4 for `'joint'`.
+> 3. Declare accuracy: the guard is **≥ 97.86%**, v0.4a's own (the 98.0 line was written against
+>    98.42, which v0.4a already sits under). `'joint'` is expected non-decreasing (forced claims
+>    improve); `'priced'` is expected to cost 0.5 – 1.5 points, and **`'priced'` ships only if its
+>    six-seed accuracy is ≥ 97.86% and its lock hold is under `'joint'`'s by ≥ 0.5.**
+> 4. Win rate: the oracle on the shipped belief reads 38.28% on three seeds (§3.4a), so the 36.0%
+>    target stands as written. Expected: `'joint'` inside ±2.83 of v0.4a's 31.94; a resolved gain
+>    is not expected on this rung. The v0.4 panel cell at ≥ 45% is expected to FAIL (v0.4a reads
+>    35.81 there).
+> 5. The ceiling is on the record already (done at v0.4a); an arm above 38.28% on those seeds is a
+>    defect in the oracle arm first.
+> 6. Cost: expected ≤ 0.3 ms per decision mean (the chain runs on window decisions, memoised per
+>    `Knowledge` and set), against the 1.4 ms budget.
+> 7. Home regression at 800 pairs on both banks, expected inside its interval; `decideExplained`
+>    parity holds because the chain is a pure function of the `Knowledge` and draws no rng.
+> 8. λ, again (§8.3 decision 5): the λ = 0.60 arm beside the `'joint'` arm, six seeds. Inside
+>    ±2.83 and the vector stays as it is; ahead by more than the floor and the roadmap records that
+>    as the measured answer to decision 5, for the owner to take.
+
+> **Measured 2026-09-03 — v0.4b ships the joint alone; `'priced'` measured and not shipped.**
+> Bridge unchanged (binaries f58f6f45… / 95b82b18…), tree `b3198db`, 200 deals × 6 rotations per
+> cell. Identity first: the null arm (`pAssignment: 'greedy'` on the v0.4b tree, which is v0.4a's
+> vector) reproduces all six of v0.4a's cells to the digit — 30.33 / 32.50 / 31.75 / 32.50 / 33.25
+> / 31.33 — every engine line identical but the arm's name; the roster arm is byte-identical with
+> the knobs absent (0 mismatches over 62,874 decisions against `79e4dc5`). The bridge arm now
+> attributes every declare to the branch that made it, with the believed p (`sum-declare.mjs`),
+> so accuracy is read per branch below. Home: 800 duplicate pairs per cell; the cost bench on 24
+> games after 4 warm-ups.
+>
+> **Before the bridge, at home: the joint alone barely reaches the board, and the gate is why.**
+> Over 60 mirror games (36,093 decisions, 189,308 planned sets) the chain changes the probability
+> of 78% of the sets with open cards and the placement of 46%, and changes **13 decisions** —
+> because `evClaim`'s structural gate (every open card's candidates all teammates) admits 1,081 of
+> the 186,565 sets with open cards (0.58%), and among those the chain lifts ten over the 0.775 bar
+> that the independent product did not (12 against 3). Dropping the gate (`claimOwnership:
+> 'priced'`) changes 68 decisions, every one a decline turned into a speculative declare. The pins
+> in `tests/bots/monet.test.ts` say exactly that; §2.2's nine dead knobs stay dead behind the gate.
+>
+> **The cells, six seeds × 200 deals against SESTINA v1.0** (per seed 90210 / 4242 / 7011001 /
+> 13579 / 24680 / 31415; v0.4a's cells are the null arm's, on record in §3.4a):
+>
+> | arm | win rate | vs v0.4a (31.94) | lock hold | declarations / game | declare accuracy | speculative declares per 1,200 games |
+> |---|---:|---:|---:|---:|---:|---:|
+> | v0.4a (the null arm: greedy) | 31.94% | — | 9.98 | 3.80 | 97.86% | 37 at 72.5% |
+> | **v0.4b: joint — ships** | **32.75%** (31.42 / 34.00 / 32.42 / 32.83 / 34.50 / 31.33) | **+0.81** [±0.46], 5 of 6, one tie | **10.07** (+0.09) | 3.80 | **98.32%** (+0.46, 6 of 6) | 101 at 92.8% |
+> | joint + `'priced'` | 32.49% | +0.54, 5 of 6 (−0.26 against the joint, 1 of 6) | 9.95 (−0.12 against the joint) | 3.81 | 97.90% (−0.42 against the joint) | 236 at 89.1% |
+> | joint + λ = 0.60 | 34.32% | +2.38 (+1.57 against the joint [±1.60], 5 of 6) | 9.49 | 3.87 | 98.24% | — |
+>
+> 1. **Lock hold — FAIL, and the marker did not move: 9.98 → 10.07.** Under the rule written above
+>    (≥ 0.5 events, or the mechanism is not reaching the board) this is the rung's FAIL on its
+>    primary item, recorded as such.
+> 2. **Declarations per game — FAIL**, 3.80 → 3.80, against a bar of 4.5.
+> 3. **Declare accuracy — PASSES the guard, and is the rung's measured gain: 97.86 → 98.32%, ahead
+>    on 6 of 6 seeds.** Per branch: speculative declares 37 → 101 per 1,200 games at 72.5 → 92.8%
+>    accuracy, the chain's believed p calibrated where the branch fires (believed 0.89 – 0.91
+>    against realised 0.86 – 0.96 per cell); must-declares 48 → 36 per 1,200 games at 37.9 → 66.8%
+>    — the chain's placement is right where the greedy one guessed; the certain and own-hand
+>    branches unchanged at 100%. The gain is fewer gifted sets, not sooner-cashed ones.
+> 4. **Win rate — FAIL at 36.0%: 32.75%**, +0.81 over v0.4a on 5 of 6 seeds with one tie, inside
+>    ±2.83 as expected. Panel, three seeds, ±4.00, against v0.4a's own cells: v0.4 **35.81 →
+>    36.94** (+1.14, 3 of 3), v0.6 35.25 → 36.11 (+0.86, 3 of 3); the v0.4 cell at ≥ 45% FAILS as
+>    expected.
+> 5. **Ceiling — held.** No arm reads above the 38.28% oracle on its seeds (the λ arm's 37.00 at
+>    7011001 sits under the oracle's 38.08 there).
+> 6. **Cost — PASSES: 0.105 ms per decision** mean (median 0.092, p99 0.277), 63 ms per six-seat
+>    game (max 100); 2.6× v0.4a's 0.040 because the chain runs at every window poll, inside the
+>    0.3 ms written above and 13× under the 1.4 ms budget.
+> 7. **Home regression — no loss, and almost no change.** Joint against v0.4a: **+0.04 ± 0.04**
+>    (`home-a`) and **+0.05 ± 0.05** (`home-b`) sets per pair, with the pair SD at 0.65 rather than
+>    3.4 because the two arms play the same game in nearly every pair. `decideExplained` parity is
+>    pinned on real positions (`tests/bots/joint.test.ts`). The ask path is untouched: ask accuracy
+>    53.9 – 54.1, abroad calibration aggregate 0.0020 / worst decile 0.082 (v0.4a 0.0019 / 0.081).
+> 8. **λ, third reading, same answer.** +1.57 on the joint (5 of 6, [±1.60]), inside ±2.83; home
+>    **+0.22 ± 0.24** (`home-a`) and **+0.32 ± 0.24** (`home-b`, ahead); calibration cost identical
+>    to §3.4a's (+0.049 aggregate over-statement abroad, worst decile 0.17 against 0.08). The vector
+>    stays as it is; §8.3 decision 5 carries the reading.
+>
+> **`'priced'` does not ship, by the rule written above.** Its accuracy, 97.90%, clears the 97.86%
+> guard by four hundredths; its lock hold, 9.95, is under the joint's by 0.12 rather than 0.5. It
+> fires 6.4× the null arm's speculative declares (236 per 1,200 games at 89.1%) and the total
+> declarations per game do not move (3.81 against 3.80): the speculative cashes *replace* certain
+> cashes of the same sets, an event or two earlier. Home: +0.03 ± 0.04 and +0.02 ± 0.05 sets per
+> pair over the joint. Kept behind its knob for v0.5's readout.
+>
+> **The finding, and it changes the roadmap.** §3.4b was written as "the change that moves the
+> 3.2×". Measured, the joint moves declare accuracy and not lock hold, and `'priced'` — which fires
+> on everything the chain prices above the bar — moves lock hold by a tenth of an event. The
+> ten-event proof lag is not spent waiting for a belief to sharpen: a locked set's six cards sit in
+> three private hands, and nothing but a public event moves a teammate's holding into any seat's
+> view. **Lock hold is a communication problem, not a belief problem.** The oracle collapses it to
+> 0.4 by sharing hands, which no belief can do; the honest channel left is the ask policy choosing
+> asks that reveal — a hit moves a card in public, a miss licenses a set in public — which is v0.5's
+> cross-seat handoff readout, now the item that carries the cashing channel's +6.75. §0.1's
+> arithmetic stands; §3.4b's premise does not.
+>
+> **What v0.5 inherits.** v0.4b's vector, six seeds: 32.75%, lock hold 10.07, declarations 3.80 per
+> game at 98.32%, speculative declares 101 per 1,200 games at 92.8%. Forward bank
+> `tests/bots/data/monet-v04b-bank.ts`, 36 games and 26,648 decisions from the committed tree,
+> replayed by `tests/bots/monet.test.ts`.
+
 **Cost.** L–XL. **This is the largest single item in the roadmap and it is unavoidable.**
 
 ### 3.5 Monet v0.5 — the capability readout
@@ -1888,9 +2024,9 @@ where the old value stays visible. Anything less is choosing the answer you want
 |---|---|---|
 | 1 | ~~**Amend §6.2's pre-registered op-coverage row?**~~ **RESOLVED 2026-09-01 — amended on the owner's sign-off.** See §8.1 for the withdrawal record and §3.1 item 3 for the evidence. Original text: Three independent facts say the row was measured through a lossy channel and the true values are `opAsk` 51,998 · `opPoll` 363,984 · `opPass` 178 · `passfixDeclines` 184 · `opForced` 467 (§3.1 item 3). The row is left as written regardless, because a result may not rewrite the expectation it was tested against. Amending it is Allen's call. | **open** |
 | 2 | ~~**Should Monet play the post-clinch phase at all?**~~ **DOWNGRADED 2026-09-01 — it cannot change a result.** `clinchTarget` is 5 of 9 and `2 x 5 > 9`, so both teams cannot clinch; sets are never taken back, so reaching 5 is a permanent lock. **The winner under `us54` and under the host's play-all-nine is therefore identical by construction**, and the 73.9-76.5% of seat-games that run past the clinch cannot change who won. An earlier note here called it the largest un-modelled region of the foreign game and implied it might be worth points; that was wrong and is withdrawn. **What survives is a measurement hazard, not a strategy one:** the per-decision metrics the whole diagnosis rests on — ask accuracy 52.32 vs 57.38, lock hold 9.30 vs 2.92 — are summed over all ops, including the **47,868 of 416,627 (11.5%)** played after the game was already decided. If Monet behaves differently there, those headline figures are contaminated. **v0.2 splits them pre/post clinch**; nothing may be tuned against the unsplit figures after that. **DELIVERED at v0.2, 6 seeds x 7,200 games, and the split changes two readings.** (a) *Declare accuracy.* The pooled 98.32 / 98.35 parity is contaminated: on the LIVE game FishAI is **ahead**, 99.24 vs 98.18, +1.07 pts, positive on 6 of 6 seeds (sign test p = 0.031 two-sided, per-seed range +0.64 to +1.50; declares cluster within a deal, so this is a paired sign test and NOT a pooled binomial interval). The post-clinch column reverses it, -4.87 — but that column is a phase `us54` does not have and **carries no roadmap target**. (b) *Lock hold.* Splitting it by when the set was CASHED was wrong: the quantity is a DURATION that straddles the clinch, so a lock formed while the deal was live and cashed after it ended had its whole wait credited to post. Split AT THE CLINCH instead, the live-phase wait is **8.44 events, not the 6.72 the cash-time bucketing reported**, and the live-phase ratio to SESTINA is **2.96x** — indistinguishable from the pooled 2.96x, where the cash-time shape had suggested 2.41x live against 4.24x post. **The apparent "the lock problem lives after the clinch" contrast was an artefact of the bucketing.** Ask accuracy is the one metric the split leaves alone: the deficit is -4.95 pre and -5.11 post against -5.08 pooled. | **downgraded; the split is DELIVERED at v0.2** |
-| 3 | **`bounded.ts`'s cost model** (§1.5). A joint posterior has no atomic-fact decomposition, so the bit budget becomes undefined. v0.5 must choose in writing between confining the posterior to the unbounded arm and giving BOUNDED.md a new cost model. | open, due at v0.5 |
+| 3 | **`bounded.ts`'s cost model** (§1.5). A joint posterior has no atomic-fact decomposition, so the bit budget becomes undefined. v0.5 must choose in writing between confining the posterior to the unbounded arm and giving BOUNDED.md a new cost model. **Taken for v0.4a and v0.4b by construction (2026-09-03): both are reads of a finished `Knowledge` behind Monet-only style knobs, so the posterior is confined to the unbounded arm and the cost model is untouched — §3.4a's and §3.4b's scope decisions.** v0.5 may reopen it if the readout wants the bounded arm to carry a posterior. | taken by construction; v0.5 may reopen |
 | 4 | **Move Monet's `defuse` to 0, or buy the cell that would decide it?** §3.3b: the home ladder resolves rung 0 ahead of rung 1 on both banks (+0.24 ± 0.19, +0.23 ± 0.20 sets/pair) and the bridge reads it at +0.98 inside ±3.10 — frozen at 1 by the roadmap's own rule. The abroad cell that resolves it costs roughly ten times the deals per rung. Either answer is a v0.3.1, not a v0.4 item. | open, not blocking |
-| 5 | **Put λ back on the marginal base?** §3.4a item 8: the rule written before the run (inside ±2.83 → subsumed, out) took it out at +1.83 (5 of 6). Every other instrument leans the other way and none abroad clears its floor — panel +2.44 (3/3) and +0.81 (2/3), home +0.24 ± 0.24 and +0.32 ± 0.24 sets/pair (resolved, small) — and the λ-on arm is the one that clears item 4 (33.78% against 31.94%), at the price of the calibration marker (+0.049 aggregate over-statement abroad, worst decile 0.17 against 0.08). The abroad cell that resolves it is 24 seeds per arm (±1.41, about 25 minutes of bridge). §3.4b's joint is the mechanism that prices the interference explicitly (§3.4a's amendment) and re-runs the 2 × 2 with λ as a factor; the cheapest answer is to wait for it. | open, not blocking |
+| 5 | **Put λ back on the marginal base?** §3.4a item 8: the rule written before the run (inside ±2.83 → subsumed, out) took it out at +1.83 (5 of 6). Every other instrument leans the other way and none abroad clears its floor — panel +2.44 (3/3) and +0.81 (2/3), home +0.24 ± 0.24 and +0.32 ± 0.24 sets/pair (resolved, small) — and the λ-on arm is the one that clears item 4 (33.78% against 31.94%), at the price of the calibration marker (+0.049 aggregate over-statement abroad, worst decile 0.17 against 0.08). The abroad cell that resolves it is 24 seeds per arm (±1.41, about 25 minutes of bridge). §3.4b's joint is the mechanism that prices the interference explicitly (§3.4a's amendment) and re-runs the 2 × 2 with λ as a factor; the cheapest answer is to wait for it. **Second reading, v0.4b (§3.4b item 8): +1.57 on the joint (5 of 6, inside ±2.83), home +0.22 ± 0.24 and +0.32 ± 0.24, the same calibration cost. Three readings, one shape — a point or two abroad inside the floor, a quarter of a set per pair at home, +0.05 of over-statement — and nothing in v0.4b priced the interference. The 24-seed cell (±1.41) would resolve it; otherwise the wait is for v0.5's readout or the owner.** | open, not blocking |
 
 ---
 

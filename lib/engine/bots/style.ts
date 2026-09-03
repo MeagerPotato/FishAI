@@ -266,6 +266,23 @@ export interface StyleParams extends AskWeights {
    * by reference (`SKILL_PRESETS.hard` is Monet's skill, unmodified).
    */
   pModel?: 'slot' | 'marginal'
+  /**
+   * MONET.md §3.4b — how a claim's open cards are placed. `'greedy'` (and absent) is the
+   * capacity-greedy assignment with the independent product every bot has shipped with;
+   * `'joint'` is `joint.ts`'s chain over the marginal — the most certain open card first, the
+   * table re-scaled after each — with the product of its conditionals as the plan's probability.
+   * It reads the table `pModel: 'marginal'` attaches and is inert without one. Absent on every
+   * roster style and every tier.
+   */
+  pAssignment?: 'greedy' | 'joint'
+  /**
+   * MONET.md §3.4b item 2 — what "ours" means to the speculative declare. `'certain'` (and
+   * absent) keeps `evClaim`'s structural gate: every open card's candidates must all be
+   * teammates. `'priced'` drops the gate and lets the plan's probability, which carries the
+   * opponents' share of every open card, meet the bar on its own. Measured as its own arm, and
+   * on Monet's vector only if §3.4b's written rule admits it; absent everywhere else.
+   */
+  claimOwnership?: 'certain' | 'priced'
 
 }
 
@@ -611,5 +628,9 @@ export function validateStyle(style: StyleParams): string[] {
   // a calibrated story.
   const pModel = style.pModel
   if (pModel !== undefined && pModel !== 'slot' && pModel !== 'marginal') bad.push(`pModel ${String(pModel)} is not 'slot' or 'marginal'`)
+  const pAssignment = style.pAssignment
+  if (pAssignment !== undefined && pAssignment !== 'greedy' && pAssignment !== 'joint') bad.push(`pAssignment ${String(pAssignment)} is not 'greedy' or 'joint'`)
+  const claimOwnership = style.claimOwnership
+  if (claimOwnership !== undefined && claimOwnership !== 'certain' && claimOwnership !== 'priced') bad.push(`claimOwnership ${String(claimOwnership)} is not 'certain' or 'priced'`)
   return bad
 }

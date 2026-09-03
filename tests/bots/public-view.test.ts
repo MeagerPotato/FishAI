@@ -240,6 +240,7 @@ describe('public-view-only proof', () => {
       // '../types.ts' and './types.ts' for types and nothing else — and its only state is a
       // WeakMap cache keyed by the Knowledge object, so no engine state is reachable from it.
       './marginal.ts',
+      './joint.ts',
       './data/fingerprints.ts',
       // Generated measured payoff table (scripts/gen-counter-table.mjs): frozen numeric data
       // plus the StyleId type, held to the same standard as the fingerprints above.
