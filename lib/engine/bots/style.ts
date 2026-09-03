@@ -239,6 +239,24 @@ export interface StyleParams extends AskWeights {
    */
   conceal?: number
 
+  /**
+   * MONET.md §3.3a — the strength λ (0..1) at which the ask ranker's hit probability is
+   * conditioned on a live row-6 licence where `knowledge.ts` has dropped the constraint
+   * ([licence.ts](licence.ts)). It is a calibration correction, not an appetite: ASKING.md §4.1
+   * measured the engine under-pricing licensed asks by 8 points (0.2386 believed against 0.3221
+   * realised) and λ = 0.60 removing the bias almost exactly. It still lives on the style vector,
+   * because a bot that has shipped must keep playing the games it shipped with: absent or 0 is
+   * the off switch, every preset and every roster style carries none, so the three tiers and the
+   * whole Bass line are byte-identical with or without this field. Monet v0.3 carries it on its
+   * own vector ([monet.ts](monet.ts)) and nowhere else.
+   *
+   * Read only under a `refinedInference` skill and only in `pickAsk`: the correction is to the
+   * number the ranker compares, and the same evidence is what the `defuse` appetite is paid for by
+   * another route — ASKING.md §6 measured the two as substitutes, which is why MONET.md §3.3b
+   * prices the appetite again on top of this rather than assuming the two add.
+   */
+  licenceLambda?: number
+
 }
 
 /**
@@ -573,5 +591,10 @@ export function validateStyle(style: StyleParams): string[] {
   // refused. (`undefined >= 0` is false, hence the explicit read.)
   const conceal = style.conceal ?? 0
   if (!(conceal >= 0)) bad.push(`conceal ${conceal} < 0`)
+  // A conditioning strength: 0 is the shipped number and 1 the full conditioning. Outside that
+  // range it is no longer an interpolation between two meaningful quantities, so it is refused
+  // rather than extrapolated. Absent is the off switch and is sound.
+  const lambda = style.licenceLambda ?? 0
+  if (!(lambda >= 0 && lambda <= 1)) bad.push(`licenceLambda ${lambda} outside 0..1`)
   return bad
 }

@@ -8,6 +8,19 @@ The lab proper is `npm run lab` and the `*-sim.mjs` / `*-analyze.mjs` pairs besi
 produce committed, digest-pinned artifacts. If a result matters enough to cite in a paper, it
 belongs there, not here.
 
+## Two permanent instruments that are NOT probes
+
+Monet's roadmap (MONET.md §3.3a, §3.4a, §6.2) makes two home measurements standing instruments,
+and they live beside the probes because they share the probes' harness idioms, not their status:
+their numbers are quoted in MONET.md's acceptance records and must stay reproducible.
+
+| script | what it answers |
+|---|---|
+| `calibration.mjs --version vX.Y` | believed vs realised hit probability, per decile, on the chosen asks; and the licence ladder on every legal ask, split by what the model holds |
+| `duplicate-pairs.mjs --a vX.Y --b vX.Z` | the home regression cell: two Monet versions on duplicate deals, paired, with the cell's own SD; `--a-override '{"defuse":0}'` lays style keys over a version for an ablation rung |
+
+Both name the version they measure and refuse a missing one: the registry has no "latest".
+
 ## Discipline these probes follow
 
 - **Duplicate deals.** Every seed is played in both orientations, so the deal is never a confound
@@ -35,6 +48,7 @@ belongs there, not here.
 | `probe-concentration*` | §4.3 | reciprocity, ask clustering, and whether it costs anything |
 | `probe-conceal*` | concealment | the diversion mechanism and its null |
 | `probe-v15-*` | [BOUNDED.md](../BOUNDED.md) §5a | v1.5 against v1.0, and the memory-budget curve |
+| `probe-score` | [MONET.md](../MONET.md) §3.3c | window declares, speculative near-misses and lock hold split by score state — the population a score-conditioned declare term can reach |
 
 ## Harness notes, so the next one does not rediscover them
 
