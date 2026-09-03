@@ -440,7 +440,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.4b** ✅ | `pAssignment: 'joint'`, the chain over the marginal · `claimOwnership: 'priced'` measured and not shipped | **32.75%** (bar ≥ 36.0% — **not met**; +0.81 over v0.4a, inside the floor) | lock hold 9.98 → 10.07 — **did not move: the item's FAIL and the finding** · declare accuracy 97.86 → 98.32 (6/6) · speculative declares 37 → 101 per 1,200 games at 72 → 93% | L — **shipped; the cashing channel is communication, not belief** |
 | **v0.4c** ✅ | `licenceLambda` back on the joint at **0.3** — the 24-seed cell decision 5 named (0.6: +1.88 over v0.4b, 22 of 24), the finding that λ buys tempo, not accuracy, and the pre-registered 0.3-vs-0.6 confirmation on 24 fresh seeds (+1.19 paired, SE 0.30, 19 of 24) | **35.12%** over the 24 confirmation seeds at 0.3 (34.08% at 0.6 over the first 24) | calibration cost +0.020 at 0.3 (0.6: +0.050) · lock hold 9.46 → 9.42 · ask accuracy 53.12 → 53.57 | S — **shipped** |
 | **the gate readout** ✅ (2026-09-03; was to be v0.5) | **the capability readout** — the §3.5b gate at six seeds on v0.4b, the `r12`-off control, the handoff emulated at home; the search arm not priced (§3.5c is gated on the owner's row-3 choice) | **32.75%** — the rule's third row | panel 35.5 / 36.9 / 36.4 / 64.7 / 69.3 against v0.6 … v0.2 · `r12` off −0.69 · handoff 47.8 → 77.6% at home · **§8.3 decision 6 to the owner** | M — **the measurement is on the record; no code shipped** |
-| **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
+| **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad on the twelve seeds** | cost budget first, then paired arms on shared determinizations | XL |
 | **v0.8** | **the determinized declare** — a sure set cashed when the posterior proves it, not when the walk locates it (§3.8b) | ≥ 37.1% (v0.4c + 2.00) — **read 2026-09-03: 35.15% against the base's 35.07%, +0.08 paired (SE 0.08), inside the floor; 0.13 consensus claims a game at 99.6%; nothing shipped** | home markers (claim accuracy ≥ 95%, pairs ahead ≥ +0.20), then twelve seeds abroad | M |
@@ -2022,6 +2022,53 @@ The interaction is reported either way.
 because both mechanisms leave that policy's information alone. **At the rung's gate, §3.5b's rows are
 re-read against the shipped number.**
 
+> **Abroad record, 2026-09-03 — nothing ships from v0.5; the decision goes to the owner (§8.3 item 7).**
+> B did not go abroad (§3.6b), so the 2 × 2 became A's three arms against the base: `choiceKappa: 1`
+> (primary), `choiceKappa: 0.5` (secondary), `choiceKappa: 0.5, choiceAdapt: 0.25` (information — cannot
+> ship on this run), on v0.4c at λ = 0.3, the twelve confirmation seeds, 200 deals × 6 rotations a cell
+> (48 cells, 09:08 – 09:37Z). The base arm at 90210 reproduced §3.4c's λ-0.3 cell line for line before a
+> fresh seed was spent. Monet's win rate, paired per seed:
+>
+> | seed | base | κ 0.5 | κ 1 | κ 0.5 + η 0.25 | κ 0.5 − base | **κ 1 − base** | +η − base |
+> |---|---|---|---|---|---|---|---|
+> | 3370441 | 30.00 | 33.33 | 34.08 | 32.92 | +3.33 | +4.08 | +2.92 |
+> | 3497573 | 35.83 | 34.75 | 35.33 | 35.00 | −1.08 | −0.50 | −0.83 |
+> | 3663060 | 37.25 | 34.83 | 35.08 | 35.08 | −2.42 | −2.17 | −2.17 |
+> | 4140136 | 34.42 | 34.33 | 33.58 | 34.25 | −0.08 | −0.83 | −0.17 |
+> | 4389297 | 32.67 | 31.42 | 34.42 | 33.00 | −1.25 | +1.75 | +0.33 |
+> | 4750522 | 34.83 | 33.75 | 32.08 | 35.17 | −1.08 | −2.75 | +0.33 |
+> | 5139251 | 33.58 | 36.00 | 34.17 | 35.58 | +2.42 | +0.58 | +2.00 |
+> | 5352970 | 32.33 | 35.50 | 35.17 | 34.33 | +3.17 | +2.83 | +2.00 |
+> | 5699158 | 36.42 | 37.08 | 35.33 | 36.58 | +0.67 | −1.08 | +0.17 |
+> | 7905601 | 34.58 | 38.25 | 35.83 | 36.42 | +3.67 | +1.25 | +1.83 |
+> | 9954521 | 36.92 | 33.92 | 37.25 | 34.92 | −3.00 | +0.33 | −2.00 |
+> | 9971419 | 34.67 | 34.75 | 36.75 | 35.75 | +0.08 | +2.08 | +1.08 |
+> | **pooled** | **34.46** | 34.83 | **34.92** | 34.92 | +0.37 | **+0.47** | +0.46 |
+>
+> **The primary arm's paired main effect is +0.47 (SD 2.04, SE 0.59, 0.79 × SE; ahead on 7 of 12) — inside
+> the ±2.00 floor. By the rule above, A does not ship.** The secondary reads +0.37 (SE 0.66, 6 of 12) and
+> the information arm +0.46 (SE 0.46, 8 of 12): three arms agreeing on a small positive effect the twelve
+> seeds cannot resolve, and a hundred would be needed to read +0.4 at 2 × SE. The markers, mean over the
+> twelve cells (calibration n-weighted over Monet's own asks):
+>
+> | arm | win | our sets | ask accuracy | declarations / game | lock hold | calibration bias | ev-claims n / accuracy | must-declare n / accuracy |
+> |---|---|---|---|---|---|---|---|---|
+> | base | 34.46 | 3.966 | 53.53 | 3.906 | 9.46 | +0.021 | 1,084 / 92.9% | 415 / 63.6% |
+> | κ 0.5 | 34.83 | 3.969 | 54.01 | 3.910 | 9.72 | +0.033 | 1,191 / 92.3% | 467 / 71.9% |
+> | κ 1 | 34.92 | 3.970 | 54.26 | 3.919 | 9.75 | **+0.046** | 1,366 / 91.5% | 471 / 70.3% |
+> | κ 0.5 + η | 34.92 | 3.970 | 53.97 | 3.909 | 9.69 | +0.033 | 1,190 / 91.6% | 442 / 71.7% |
+>
+> Three readings. **The prior over-states abroad as λ did**: at home it repaired the base's
+> under-statement (item 3 above, −0.035 → −0.012), and against SESTINA — whose asks say less about its own
+> hand than Monet's do about Monet's — it adds to an over-statement the base already carries (+0.021 →
+> +0.046 at κ = 1); the home bar would fail every arm here. **Ask accuracy rises and sets do not**
+> (53.5 → 54.3; 3.966 → 3.970): the shape of every belief sharpening on this ladder, tempo and not sets
+> (§3.4c). **The compelled declarations improve** (must-declare 63.6% → 70 – 72% on 415 – 471 events): the
+> one place a sharper belief changes an outcome, and the population §3.5a sized at ~0.04 sets a game.
+> Lock hold does not fall (9.46 → 9.7), which is §3.4b's finding again: no belief helps a teammate prove a
+> set. The knobs stay in the code, off the vector; the roster and the registry are untouched, v0.4c
+> remains the base, and v0.6 is built on it. Run directory `monet-v05` (PREREG.md, REPORT.md, 48 cells).
+
 ### 3.7 Monet v0.6 — communication: asks chosen to reveal, and the handoff played
 
 **Opens after §3.6's record; its pre-registration is written then.** The record's central finding
@@ -2920,6 +2967,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 4 | ~~**Move Monet's `defuse` to 0, or buy the cell that would decide it?**~~ **RESOLVED 2026-09-03 by the owner's direction: neither. The appetite becomes a function of the state in v0.5 (§3.6b), and 0-versus-1 is moot once the scalar is a table.** Original text: §3.3b: the home ladder resolves rung 0 ahead of rung 1 on both banks (+0.24 ± 0.19, +0.23 ± 0.20 sets/pair) and the bridge reads it at +0.98 inside ±3.10 — frozen at 1 by the roadmap's own rule. The abroad cell that resolves it costs roughly ten times the deals per rung. Either answer is a v0.3.1, not a v0.4 item. | **resolved by direction — v0.5, §3.6b** |
 | 5 | **Put λ back on the marginal base?** §3.4a item 8: the rule written before the run (inside ±2.83 → subsumed, out) took it out at +1.83 (5 of 6). Every other instrument leans the other way and none abroad clears its floor — panel +2.44 (3/3) and +0.81 (2/3), home +0.24 ± 0.24 and +0.32 ± 0.24 sets/pair (resolved, small) — and the λ-on arm is the one that clears item 4 (33.78% against 31.94%), at the price of the calibration marker (+0.049 aggregate over-statement abroad, worst decile 0.17 against 0.08). The abroad cell that resolves it is 24 seeds per arm (±1.41, about 25 minutes of bridge). §3.4b's joint is the mechanism that prices the interference explicitly (§3.4a's amendment) and re-runs the 2 × 2 with λ as a factor; the cheapest answer is to wait for it. **Second reading, v0.4b (§3.4b item 8): +1.57 on the joint (5 of 6, inside ±2.83), home +0.22 ± 0.24 and +0.32 ± 0.24, the same calibration cost. Three readings, one shape — a point or two abroad inside the floor, a quarter of a set per pair at home, +0.05 of over-statement — and nothing in v0.4b priced the interference. The 24-seed cell (±1.41) would resolve it; otherwise the wait is for v0.5's readout or the owner.** **Delegated to the project by the owner on 2026-09-03 — "do the research and make the decision based on what most improves Monet's capabilities and winning probability" — so the 24-seed cell this row prices is running on 18 fresh seeds (§6.5) beside the six on record, with an exploratory λ = 0.3 arm; its reading and the decision are recorded at §3.4b's addendum when it lands.** **RESOLVED 2026-09-03 (§3.4c): +1.88 paired over 24 seeds, ahead on 22, clearing ±1.41 — the term ships on v0.4c; its cost (+0.050 over-statement abroad, none at home) and the finding that it buys tempo rather than accuracy are on the record, with the 0.3-versus-0.6 confirmation pre-registered.** | **resolved — v0.4c** |
 | 6 | ~~**The row-3 choice (§3.5b): stop in-browser at v0.4b-era strength, split the engine for a searching lab arm, or publish the negative result?**~~ **RESOLVED 2026-09-03 — the owner chose a fourth option: keep building the fast policy toward 50%, as v0.5 opponent reading (§3.6), v0.6 communication (§3.7) and v0.7 the search arm through §3.5c's cost-first test (§3.8); v1.0 stays §3.9, restated as about 50% or a significant win (§0). The project's recommendation stands on the record beside the call.** Original text: **The row-3 choice (§3.5b): stop in-browser at v0.4b-era strength, split the engine for a searching lab arm, or publish the negative result?** The gate read 32.75% on v0.4b — third row — with the decomposition written beside it (§3.5b's record). The project recommends option 3, with option 2 taken only if the frontier claim is wanted and only through §3.5c's cost-first test (search over a calibrated posterior is the one untested cell; its price is 300 – 600×). The one honest lever the record has not built is communication — asks chosen to reveal, the handoff's +30 points of compelled-declare accuracy at 0.13 per game — sized by the oracle at +6.75 and by nothing yet that a bot could play. v1.0 stays defined by §3.9 alone. | **resolved — keep building** |
+| 7 | **v0.5's arms read +0.4 abroad, inside the ±2.00 floor (§3.6c): ship `choiceKappa` anyway, buy the seeds that would decide it, or move on?** The rule as written ships nothing. Three arms agree on +0.37 to +0.47 (0.6 – 1.0 × SE); reading +0.4 at 2 × SE would take about a hundred seeds, an hour of bridge. The markers say the prior over-states against SESTINA (calibration +0.021 → +0.046 at κ = 1) and buys ask accuracy, not sets. **Recommendation: move on.** `choiceKappa` stays in the code off the vector, v0.6 is built on v0.4c, and if a later rung changes the calibration picture the twelve cells are re-run then (35 minutes). | open |
 
 ---
 
