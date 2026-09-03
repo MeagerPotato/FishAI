@@ -417,7 +417,7 @@ explains why the band is 31–37% rather than a point. v0.5 carries no target by
 | **v0.3** ✅ | λ = 0.60 licence conditioning · `defuse` frozen at 1 with its interval · the score term measured and not shipped | **30.96%** (target ≥ 30.5%) | calibration bias — home ✓, abroad ✗, the finding · the `defuse` ladder at ±3.10 · lock hold for the score term (0.01–0.05 events: nothing to move) | S–M — **shipped** |
 | **v0.4a** ✅ | `pCardAt`, the calibrated marginal (`pModel: 'marginal'`) · λ measured against it and taken out | **31.94%** (bar ≥ 33.0% — **not met**; the λ-on arm reads 33.78%) | calibration — aggregate abroad ✓ 0.002, deciles ✗ · ask accuracy 51.71 → 53.91 · the marginal's own effect +4.74 (6/6) | L — **shipped, item 4 missed, on the record** |
 | **v0.4b** ✅ | `pAssignment: 'joint'`, the chain over the marginal · `claimOwnership: 'priced'` measured and not shipped | **32.75%** (bar ≥ 36.0% — **not met**; +0.81 over v0.4a, inside the floor) | lock hold 9.98 → 10.07 — **did not move: the item's FAIL and the finding** · declare accuracy 97.86 → 98.32 (6/6) · speculative declares 37 → 101 per 1,200 games at 72 → 93% | L — **shipped; the cashing channel is communication, not belief** |
-| **v0.5** | **the capability readout** — negative certificates, count exhaustion, cross-seat handoff, and the search arm priced and measured | **no target. This rung is the measurement.** | 12 seeds, ±2.00, and a written decision on what v1.0 is | M + XL |
+| **v0.5** ✅ (readout) | **the capability readout** — the §3.5b gate at six seeds on v0.4b, the `r12`-off control, the handoff emulated at home; the search arm not priced (§3.5c is gated on the owner's row-3 choice) | **32.75%** — the rule's third row | panel 35.5 / 36.9 / 36.4 / 64.7 / 69.3 against v0.6 … v0.2 · `r12` off −0.69 · handoff 47.8 → 77.6% at home · **§8.3 decision 6 to the owner** | M — **the measurement is on the record; no code shipped** |
 | **v1.0** | **defined only after v0.5's number is read** | ≥ 50.0% | — | — |
 
 > **v0.5 is a readout, not an attempt.** It deliberately carries no win-rate target, because the
@@ -1540,6 +1540,42 @@ as the sensitivity control (if (a) works the gap between those cells narrows), 6
 home regression at 800 pairs with endgame accuracy as the primary metric because the win-rate effect
 is near the floor.
 
+> **Measured 2026-09-03 on v0.4b, as readouts — no code shipped.**
+>
+> **(a) The sensitivity control, six seeds, and it goes the other way.** v0.4b against SESTINA
+> with `r12` off reads **32.06%** (30.42 / 35.25 / 33.50 / 31.75 / 29.17 / 32.25) against 32.75%
+> with it on: **−0.69** paired [±2.00], ahead on 3 of 6, inside ±2.83. The mechanism is real and
+> priced at nothing: with the host's denial coordinate off, SESTINA's own lock hold rises 3.37 →
+> 4.41 and Monet's ask accuracy rises 53.9 → 55.4, Monet's lock hold falls 10.07 → 9.62 — and the
+> win rate does not move. The earlier +2.58 was three seeds at ±4.00 on a Bass-era arm; on v0.4b
+> at six seeds the channel §3.5a(a) was written to attack is not what holds Monet down, and the
+> base rate it needed (the withdrawal above) is moot for this arm. Negative certificates and count
+> exhaustion stay unbuilt, on this evidence.
+>
+> **(b) The handoff, emulated at home on three versions, 6,000 mirror games each** (the same
+> instrument as the drafts', rebuilt: every compelled declaration — `must-declare` and
+> `forced-claim` — scored against the true hands, beside the claim each teammate would make
+> from its own view by `forcedClaim`'s rule):
+>
+> | version | compelled per game | as shipped | most-confident teammate | fewest guesses | best of three | relocated |
+> |---|---:|---:|---:|---:|---:|---:|
+> | v0.2 | 0.103 (n = 620) | 43.55% | 76.29% | 75.97% | 88.55% | 84.8% |
+> | v0.4a | 0.142 (n = 854) | 39.46% | 70.61% | 70.26% | 83.37% | 81.7% |
+> | **v0.4b** | 0.130 (n = 778) | **47.81%** | **77.63%** | 75.58% | **90.62%** | 83.0% |
+>
+> The drafts' 39.86 → 72.10 → 86.58 reproduces on v0.4a (39.46 → 70.61 → 83.37); the chain lifts
+> every column by five to eight points. **Use p to choose the declarer** holds: the most-confident
+> teammate is right 77.6% of the time where the compelled seat is right 47.8%. **Never to gate
+> declaring** also holds: on the compelled claims v0.4b's believed p is under-stated by 0.08 –
+> 0.17 across [0.1, 0.5), calibrated at [0.5, 0.6) (n = 300, −0.009), and over-stated by 0.15 –
+> 0.33 above 0.7 (n = 42) — a ranking, not a probability. **The price of the channel is small:**
+> +30 points of accuracy on 0.13 compelled declarations per game is about 0.04 sets per game at
+> home, and the host compels through its own sweep abroad (`engine-forced` 8 – 12 per 1,200
+> games), so the number the bridge could show is smaller still. It is not built; it is a readout,
+> and it is the one cheap honest communication mechanism the record has priced.
+>
+> **(c)** Unchanged: the forced endgame stays out.
+
 **Cost.** M. **Target.** ≥ 37.0% — **the top of the band §0.1 licenses**, and reached only if these
 extractions are not already inside §3.4b's posterior. If §3.5a moves nothing, that is a result about
 §3.4b having done the job, not a failure, and it must be reported that way.
@@ -1588,6 +1624,37 @@ the oracle arm as the ceiling control, plus the home regression suite. Roughly t
    remaining 13 points are trajectory rather than belief, here is the decomposition and here is the
    price of closing it"* is a result of the same kind as this lab's other three, and it is cheaper
    and more defensible than a frontier claim the project cannot afford to back.
+
+> **The gate, read 2026-09-03 on v0.4b — the third row.** Thirty-six cells at six seeds × 200
+> deals, ±2.83 each, tree `35f1aaa` (v0.4b's vector), bridge unchanged:
+>
+> | opponent | 90210 | 4242 | 7011001 | 13579 | 24680 | 31415 | **mean** | SD |
+> |---|---:|---:|---:|---:|---:|---:|---:|---:|
+> | **SESTINA v1.0** | 31.42 | 34.00 | 32.42 | 32.83 | 34.50 | 31.33 | **32.75%** | 1.31 |
+> | v0.6 | 32.92 | 39.67 | 35.75 | 35.08 | 32.75 | 36.58 | **35.46%** | 2.57 |
+> | v0.5 | 36.33 | 35.50 | 36.67 | 37.50 | 38.08 | 37.00 | **36.85%** | 0.90 |
+> | v0.4 | 35.42 | 37.25 | 38.17 | 35.42 | 38.33 | 33.67 | **36.38%** | 1.84 |
+> | v0.3 | 65.00 | 66.83 | 64.00 | 65.00 | 63.25 | 64.08 | **64.69%** | 1.24 |
+> | v0.2 | 68.58 | 68.83 | 71.08 | 69.67 | 68.08 | 69.42 | **69.28%** | 1.05 |
+> | SESTINA, `r12` off | 30.42 | 35.25 | 33.50 | 31.75 | 29.17 | 32.25 | 32.06% | 2.17 |
+>
+> The panel is monotone inside the floor: the frontier hardest, v0.6 next, v0.4 and v0.5 within
+> half a point of each other, v0.3 and v0.2 beaten two games in three. Every seed of every row is
+> reported; no fault counter fired (the expected `win-condition` warnings only, §3.1). The oracle
+> on the same ask path reads 38.28% (§3.4a); no arm is above it. **32.75% is the third row: the
+> belief mechanisms this project has measured are exhausted.** v0.2 → v0.4b bought +5.54 points
+> on this bridge (27.21 → 32.75, every rung inside its own floor except the marginal's +4.74), the
+> ceiling of the cashing channel is +6.75 by cheating (§3.4a), and §3.4b found that the channel is
+> communication rather than belief. The 17.25 points that remain are, on this record: about 6.75
+> in a cashing channel that only public events can close, a point or two of licence interference
+> that no calibrated model reproduces (three readings, §8.3 decision 5), and a residual the
+> roadmap's own §0.2 names as position — the leading hypothesis, not a finding.
+>
+> **The forced choice goes to the owner as §8.3 decision 6, with this project's recommendation
+> beside it:** option 3 — publish the negative result with the decomposition above — and option
+> 2 only if the frontier claim is wanted, at §3.5c's cost-first test, because search over a
+> calibrated posterior is the one untested cell and its price is known to be 300 – 600×. Option 1
+> is what the site ships today either way: the lobby seats the latest registry version.
 
 #### 3.5c The lab arm, and why it cannot be priced before §3.4b
 
@@ -2043,6 +2110,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 3 | **`bounded.ts`'s cost model** (§1.5). A joint posterior has no atomic-fact decomposition, so the bit budget becomes undefined. v0.5 must choose in writing between confining the posterior to the unbounded arm and giving BOUNDED.md a new cost model. **Taken for v0.4a and v0.4b by construction (2026-09-03): both are reads of a finished `Knowledge` behind Monet-only style knobs, so the posterior is confined to the unbounded arm and the cost model is untouched — §3.4a's and §3.4b's scope decisions.** v0.5 may reopen it if the readout wants the bounded arm to carry a posterior. | taken by construction; v0.5 may reopen |
 | 4 | **Move Monet's `defuse` to 0, or buy the cell that would decide it?** §3.3b: the home ladder resolves rung 0 ahead of rung 1 on both banks (+0.24 ± 0.19, +0.23 ± 0.20 sets/pair) and the bridge reads it at +0.98 inside ±3.10 — frozen at 1 by the roadmap's own rule. The abroad cell that resolves it costs roughly ten times the deals per rung. Either answer is a v0.3.1, not a v0.4 item. | open, not blocking |
 | 5 | **Put λ back on the marginal base?** §3.4a item 8: the rule written before the run (inside ±2.83 → subsumed, out) took it out at +1.83 (5 of 6). Every other instrument leans the other way and none abroad clears its floor — panel +2.44 (3/3) and +0.81 (2/3), home +0.24 ± 0.24 and +0.32 ± 0.24 sets/pair (resolved, small) — and the λ-on arm is the one that clears item 4 (33.78% against 31.94%), at the price of the calibration marker (+0.049 aggregate over-statement abroad, worst decile 0.17 against 0.08). The abroad cell that resolves it is 24 seeds per arm (±1.41, about 25 minutes of bridge). §3.4b's joint is the mechanism that prices the interference explicitly (§3.4a's amendment) and re-runs the 2 × 2 with λ as a factor; the cheapest answer is to wait for it. **Second reading, v0.4b (§3.4b item 8): +1.57 on the joint (5 of 6, inside ±2.83), home +0.22 ± 0.24 and +0.32 ± 0.24, the same calibration cost. Three readings, one shape — a point or two abroad inside the floor, a quarter of a set per pair at home, +0.05 of over-statement — and nothing in v0.4b priced the interference. The 24-seed cell (±1.41) would resolve it; otherwise the wait is for v0.5's readout or the owner.** | open, not blocking |
+| 6 | **The row-3 choice (§3.5b): stop in-browser at v0.4b-era strength, split the engine for a searching lab arm, or publish the negative result?** The gate read 32.75% on v0.4b — third row — with the decomposition written beside it (§3.5b's record). The project recommends option 3, with option 2 taken only if the frontier claim is wanted and only through §3.5c's cost-first test (search over a calibrated posterior is the one untested cell; its price is 300 – 600×). The one honest lever the record has not built is communication — asks chosen to reveal, the handoff's +30 points of compelled-declare accuracy at 0.13 per game — sized by the oracle at +6.75 and by nothing yet that a bot could play. v1.0 stays defined by §3.6 alone. | **open — the owner's** |
 
 ---
 
