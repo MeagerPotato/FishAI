@@ -11,7 +11,7 @@ import { decide, hashSeed, legalActionsSummary, newGame, reduce, seatView, us54C
 import type { SeatView } from '../../lib/engine/index.ts'
 import { cardBook } from '../../lib/engine/cards.ts'
 import { buildKnowledge } from '../../lib/engine/bots/knowledge.ts'
-import { marginalFor } from '../../lib/engine/bots/marginal.ts'
+import { attachMarginal, marginalFor } from '../../lib/engine/bots/marginal.ts'
 import { STYLE_ROSTER } from '../../lib/engine/bots/roster.ts'
 import { validateStyle } from '../../lib/engine/bots/style.ts'
 import type { BotPolicy } from '../../lib/engine/bots/style.ts'
@@ -87,6 +87,8 @@ describe("under 'count' the weight saturates at three asks", () => {
       if (!row3) continue
       // clamp every count at 3 and rebuild the table from the same Knowledge: identical
       const clamped = { ...k, asksInto: Object.fromEntries(Object.entries(k.asksInto ?? {}).map(([b, row]) => [b, row?.map((n) => Math.min(3, n))])) }
+      // the table is memoised per Knowledge object: the copy needs its own attached
+      attachMarginal(clamped as typeof k)
       const ta = marginalFor(k)
       const tb = marginalFor(clamped as typeof k)
       if (!ta || !tb) continue
