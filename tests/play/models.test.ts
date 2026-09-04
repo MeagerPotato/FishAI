@@ -152,7 +152,7 @@ describe('the two entries are different bots, and nearly the same one', () => {
     // Measured: 99.85% at Monet v0.1/v0.2 (a fixed Punter against the adaptive engine that
     // converges on Punter), 98.07% at v0.3, whose licence conditioning moves a share of the
     // licensed asks (MONET.md §3.3a), 96.86% at v0.4a, whose marginal reorders more of them
-    // (§3.4a). The copy says "about 97%"; the floor here is the honesty
+    // (§3.4a), 95.78% at v0.9, whose contest credit moves the likely-miss asks (§3.8d). The copy says "about 96%"; the floor here is the honesty
     // bar for that sentence, not a target — a Monet that agreed with Bass on fewer than 95% of
     // decisions would need different copy, and one that agreed on all of them would be Bass.
     expect(agree).toBeGreaterThan(95)
