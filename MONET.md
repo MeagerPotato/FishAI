@@ -443,6 +443,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.12** | **the closing ask** — §3.8g's rung: a ranker credit for an ask that would bring a set the side already holds most of within reach, counted by certainty and by belief (`closing`, `closingBelief`, §3.8h) | ≥ 42.1% (the corrected v0.9 + 2.00) on twelve fresh seeds | fit abroad on three fresh seeds, confirm on twelve; markers from the records through §3.8g's instrument | M |
 | **v0.11** | **the declare priced on the records, and the compulsion translated** — the risk bar priced at a quarter of a point and not built; the bridge's MUSTFIX (§3.8f), the home compulsion no longer answered into the host's optional poll | the fix's paired value on §3.8e's twelve seeds against the recorded v0.9 cells; predicted +1.4 to +2.0 — **read 2026-09-04: +1.28 paired (SD 0.29, SE 0.08), ahead on 12 of 12; the corrected v0.9 reads 40.11%; every marker as written; not a rung, no policy ships, the bar not built** | the records first, one identity cell, twelve paired cells | S |
 | **v0.10** | **the exposure rung** — §3.8d's exposure charge fitted on v0.9's vector, gated as built and with the charge on certain hits (`exposureCertain`, §3.8e) | ≥ 40.9% (v0.9 + 2.00) — **read 2026-09-04: 39.90% against v0.9's 38.83%, +1.07 paired (SD 1.89, SE 0.54), ahead on 8 of 12; every pre-registered marker as written, about a point each; nothing shipped** | fit abroad on three fresh seeds, confirm on twelve; markers from the records | M |
 | **v0.9** ✅ | **the priced ask** — the contest credit on the miss branch of the ask ranker, `contest: 0.6` on v0.4c's vector (§3.8d); the exposure charge measured +3.31 alone and +0.67 on top, and stays off the vector | ≥ 37.1% (v0.4c + 2.00) — **read 2026-09-04: 38.92% against the base's 34.88%, +4.04 paired (SD 1.63, SE 0.47), ahead on 12 of 12 fresh seeds** | fit abroad on three seeds (pre-registered ladder, then the amendment's extension at +1.0 over the pick — not met), confirm on twelve; the instrument's markers from the records (two of five as written; the mechanism that won is the contest, not the take-back) | S — **shipped** |
@@ -3456,6 +3457,107 @@ events to resolution toward 34, the two-against-four bucket up from −0.35 sets
 rate allowed to fall. Scratch state, not committed: `$SP/monet-v11/maj` (the pooled and per-seed
 outputs, SPREAD-fix.txt, the replications), `maj-spread.mjs`, `run-majority.sh`.
 
+
+### 3.8h Monet v0.12 — the closing ask
+
+**The owner's direction, 2026-09-04: "open the pr then build v0.12 by your recommendation."**
+§8.3 row 12's rung, built on §3.8g's records: a credit in the ask ranker for an ask that would
+bring a set the side already holds most of within reach.
+
+**What the study fixed before a line of code** (§3.8g, 14,400 corrected games, replicated on
+28,800): where a chase is legal Monet takes it at 31.6% of decisions against SESTINA's 36.2%; the
+majorities a side chases are cashed 59.8% against 68.7%, six events later; Monet's marginal rates
+21.4% of the opponent-held missing cards as its own side's against 11.1% at SESTINA's positions;
+and where every missing card is *known* to sit with an opponent both policies chase only one
+decision in five, preferring another certain hit. The bound on the deal's split is 0.39 sets a
+game, about +5.8 points at v0.9's exchange rate.
+
+**The mechanism** (`lib/engine/bots/closing.ts`, its own module and its own predicate):
+
+> `closing · wHit · p · lock`, where `lock = 1 − outstanding / horizon`, `outstanding` is the
+> number of the set's other cards the seat cannot certainly place on its own team, and
+> `horizon` is what a bare majority may be missing (2 of 6). So `lock` is 1 when the hit would
+> leave nothing of the set outside the side's hands, 0.5 when it would leave one card, and 0 at
+> two or more: the credit fires only at a **seat-known holding of four or five of six** and pays
+> double on the completing ask. `closingBelief` counts the open cards by belief instead — a card
+> nobody can place counts against the side only by its opponent mass — so the belief form is
+> pointwise the larger credit over the larger population, and the gap between the forms is §3.8g's
+> R1 priced.
+
+Four properties are pinned in `tests/bots/closing.test.ts` rather than argued: the knob absent
+or 0 (and the form switch without it) is byte identity at every decision; the credit is bounded by
+`closing · wHit`, is 0 for a resolved set, for `p` 0 and for a sure miss into the side's own
+majority, and fires only at a seat-known four or five; the belief form is pointwise at least the
+certain form; and **the credit never promotes an uncertain ask above a certain hit** — it is
+gated below every legal certain hit with *no* ungating switch, because §3.8g measured that neither
+policy makes that trade, so a credit that bought it would be arguing with its own evidence. It is
+live *among* certain hits, which is the bucket the study named. The hook is one appended `+ (…)`
+group in each of `pickAsk`'s two score branches, the existing text untouched, so the five
+committed replay banks reproduce with the knob absent; the full suite is green at 1,061 tests.
+
+**Three limits, written down before the cells rather than discovered after them.**
+
+1. **The gate narrows the reachable population.** With a certain hit legal anywhere in the
+   ranking, an uncertain candidate is gated to 0. So the credit reaches (a) chases that are
+   themselves certain hits, competing against another certain hit — precisely §3.8g's one-in-five
+   bucket — and (b) positions with no certain hit at all. It does *not* reach most of the raw
+   31.6%-against-36.2% gap, which is uncertain chases. The rung is therefore a test of the
+   mechanism the study named, not of the whole bound.
+2. **The seat-known majority is a subset of the deal-time one.** §3.8g counted a side holding four
+   or five *by the deal*; a seat can only count what it can place, so a real majority whose
+   teammate cards are unlocated earns nothing. Measured at home on v0.9 self-play, a seat-known
+   holding of four or more is **16.0%** of the (seat, unresolved set it holds a card of) pairs
+   (125 at four and 31 at five of 977), so the population is real but strictly smaller than the
+   bound's. A null at every dose is partly a statement about coverage, and the record will say so.
+3. **The dose must clear the near-tie window.** `leakEpsilon` is 0.5 and `leaky` is true at
+   `leakThreshold` 4 — exactly this credit's population — and the near-tie sort puts leaky books
+   *last*, so the existing information-protection tiebreak actively deprioritises closing asks. At
+   `wHit` 70 the smallest dose below fires 3.5 points at `lock` 0.5 and `p` 1, well outside the
+   window; low-`p` candidates at that dose sit inside it and are ordered by the leak rule, not by
+   this credit. Whatever the fit measures therefore includes overriding that preference.
+
+**The fit, abroad, pre-registered before its cells.** Base: the corrected v0.9 (`contest` 0.6 on
+`MONET_ARM=v0.4c`, MUSTFIX on — §3.8f), on the v0.12 tree export, proven byte-identical to
+§3.8f's recorded `conf-fix` cell at seed 5682873 before a fresh seed is spent. Fit seeds, three,
+drawn by §6.5's rule from `monet-v0.12-2026-09-04` and skipping every seed any Monet run has
+spent: **2952702 7314900 3847388**. Every cell 1,200 games against SESTINA v1.0, recorded.
+
+> | arm | override beside `contest` 0.6 | for |
+> |---|---|---|
+> | base | — | the pair |
+> | w1 / w2 / w3 / w4 | `closing` 0.1 / 0.25 / 0.5 / 1.0 | the dose, counted by certainty |
+> | b2 / b3 | `closing` 0.25 / 0.5 + `closingBelief` | the same doses, counted by belief |
+
+The scale, so the ladder is not a guess: `wHit` is 70, so the credit's ceiling is `closing · 70`
+and the gap between its two rungs is `closing · 35`. Beside it the base ranker already pays
+`gambleBonus` 25 on the completing ask, `wProgress` 18 a card, and `certaintyBonus` 20 for a
+certain hit. w1 can just reorder two certain hits; w4 is deliberately hot, to bracket the fit from
+above rather than assume the top.
+
+The chosen arm is the one with the best mean paired gain over the three fit seeds, provided it is
+positive on at least two of them; if none is, v0.12 closes as measured and the closing credit is
+recorded as worth what the fit says. Home duplicate pairs (600 on `home-a` for the chosen arm)
+are reported, not gating. **The lobby agreement is read at every arm, not only the winner**:
+`src/play/models.ts` seats the newest version and `tests/play/models.test.ts` requires above 95%
+agreement with Bass v2.0, where v0.9 sits at 95.78% — a breach is a finding about the dose, and
+the "about 96%" copy is asserted honest, so the floor does not move to fit the bot.
+
+**The confirmation.** The chosen arm against SESTINA on twelve fresh seeds, drawn by the same rule
+from `monet-v0.12-confirm-2026-09-04` — **7252293 8962154 7103556 7871142 1027753 8456196
+7184028 1717986 2495762 8576423 3622224 7871039** — paired against the base on the same seeds and
+tree, acceptance **+2.00 points over the corrected v0.9** (≥ 42.1%, against its 40.11% on
+§3.8f's twelve). Every seed listed, the SD published.
+
+**The markers**, from the confirmation records through §3.8g's own instrument, expected if the
+credit does what its name says and recorded either way: the chase rate at legal-chase decisions
+**rises** from 31.6% toward SESTINA's 36.2%; the conversion of chased majorities rises from 59.8%
+toward 68.7%; the events to resolution fall from 39.9 toward 33.7; the two-against-four bucket
+rises from −0.35 sets a game; and the ask hit rate is **allowed to fall** — §3.8c established that
+the hit chance is not the value of an ask, and this credit deliberately buys a worse hit rate for
+a closed set. The record will also report the fit split by rung (seat-known four against five),
+because the base already pays `gambleBonus` on the second and nothing extra on the first. A
+win-rate gain without these is a gain this document cannot explain and says so; a rung that closes
+under the floor is recorded with the same table.
 
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 

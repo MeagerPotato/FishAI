@@ -278,6 +278,9 @@ describe('public-view-only proof', () => {
       './consensus.ts',
       // MONET.md 3.8d: './priced.ts' reads the marginal table and the certain holders - public knowledge.
       './priced.ts',
+      // MONET.md 3.8h: './closing.ts' reads the certain holders and, under `closingBelief`, the same
+      // `askHitProbability` the ranker scores with - public knowledge, and it never reads a hand.
+      './closing.ts',
       // The MONET.md version registry: a frozen table mapping a Monet version id to the
       // `PolicySpec` that version plays, plus two total pure functions over it. It imports
       // only './roster.ts', './style.ts' and './bounded.ts' (type-only) — every one already
