@@ -443,7 +443,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
-| **v0.11** | **the declare priced on the records, and the compulsion translated** — the risk bar priced at a quarter of a point and not built; the bridge's MUSTFIX (§3.8f), the home compulsion no longer answered into the host's optional poll | the fix's paired value on §3.8e's twelve seeds against the recorded v0.9 cells; predicted +1.4 to +2.0; not a rung, no policy ships | the records first, one identity cell, twelve paired cells | S |
+| **v0.11** | **the declare priced on the records, and the compulsion translated** — the risk bar priced at a quarter of a point and not built; the bridge's MUSTFIX (§3.8f), the home compulsion no longer answered into the host's optional poll | the fix's paired value on §3.8e's twelve seeds against the recorded v0.9 cells; predicted +1.4 to +2.0 — **read 2026-09-04: +1.28 paired (SD 0.29, SE 0.08), ahead on 12 of 12; the corrected v0.9 reads 40.11%; every marker as written; not a rung, no policy ships, the bar not built** | the records first, one identity cell, twelve paired cells | S |
 | **v0.10** | **the exposure rung** — §3.8d's exposure charge fitted on v0.9's vector, gated as built and with the charge on certain hits (`exposureCertain`, §3.8e) | ≥ 40.9% (v0.9 + 2.00) — **read 2026-09-04: 39.90% against v0.9's 38.83%, +1.07 paired (SD 1.89, SE 0.54), ahead on 8 of 12; every pre-registered marker as written, about a point each; nothing shipped** | fit abroad on three fresh seeds, confirm on twelve; markers from the records | M |
 | **v0.9** ✅ | **the priced ask** — the contest credit on the miss branch of the ask ranker, `contest: 0.6` on v0.4c's vector (§3.8d); the exposure charge measured +3.31 alone and +0.67 on top, and stays off the vector | ≥ 37.1% (v0.4c + 2.00) — **read 2026-09-04: 38.92% against the base's 34.88%, +4.04 paired (SD 1.63, SE 0.47), ahead on 12 of 12 fresh seeds** | fit abroad on three seeds (pre-registered ladder, then the amendment's extension at +1.0 over the pick — not met), confirm on twelve; the instrument's markers from the records (two of five as written; the mechanism that won is the contest, not the take-back) | S — **shipped** |
 | **v0.8** | **the determinized declare** — a sure set cashed when the posterior proves it, not when the walk locates it (§3.8b) | ≥ 37.1% (v0.4c + 2.00) — **read 2026-09-03: 35.15% against the base's 35.07%, +0.08 paired (SE 0.08), inside the floor; 0.13 consensus claims a game at 99.6%; nothing shipped** | home markers (claim accuracy ≥ 95%, pairs ahead ≥ +0.20), then twelve seeds abroad | M |
@@ -3246,6 +3246,94 @@ gain this document cannot explain and says so.
 
 **Not built: the risk bar.** Item 2 is the reason — its price on the records is a quarter of a
 point at best, and §8.3 row 11 puts that beside the finding for the owner.
+
+#### Record — 2026-09-04
+
+**MUSTFIX is the bridge's translation from here: +1.28 paired on the twelve seeds, ahead on
+every one, every marker as written. The corrected v0.9 reads 40.11% against SESTINA v1.0 on
+§3.8e's seeds, from 38.83%. Nothing on Monet's vector changes; nothing in `lib/` changes; the
+risk bar is not built.** Twelve cells of 1,200 games, the fix arm (v0.9's recorded form on the
+v0.10 tree export `8ab3fe0`, the patched bridge file with `MONET_MUSTFIX=1`) against the
+recorded v0.9 cells on the same seeds, tree and opponent; the patched file with the switch off
+reproduced §3.8d's c3 cell at seed 2534720 line for line before the first cell.
+
+> | seed | v0.9, old bridge | v0.9, MUSTFIX | paired |
+> |---|---|---|---|
+> | 2344938 | 35.75 | 37.25 | +1.50 |
+> | 4334282 | 39.50 | 40.58 | +1.08 |
+> | 4920114 | 39.33 | 40.75 | +1.42 |
+> | 5682873 | 40.25 | 41.83 | +1.58 |
+> | 5690135 | 37.92 | 39.17 | +1.25 |
+> | 6007102 | 38.17 | 39.25 | +1.08 |
+> | 6848576 | 39.83 | 41.17 | +1.33 |
+> | 7140858 | 37.00 | 38.00 | +1.00 |
+> | 7951876 | 39.25 | 40.42 | +1.17 |
+> | 8516315 | 40.42 | 42.33 | +1.92 |
+> | 8816427 | 38.33 | 39.17 | +0.83 |
+> | 9677918 | 40.17 | 41.42 | +1.25 |
+> | **mean** | **38.83** | **40.11** | **+1.28** (SD 0.29, SE 0.08, t 15.3; ahead on 12 of 12) |
+
+**Against the prediction.** The pre-registration predicted +1.4 to +2.0 from the one seed read in
+full; the 24-seed count, finished after the cells were launched, says that seed ran high: the
+certain plans a teammate gave away with Monet at four are **144 in 14,400 games on §3.8e's seeds
+and 162 on §3.8d's** — 1.0 to 1.1 points — and the measured +1.28 sits with that count, not with
+the one-seed range. The difference over the count is what the host's ladder adds where no
+teammate is certain. The spread is a quarter of the exposure rung's (SD 0.29 against 1.89):
+the fix moves a fixed population of endgames and nothing else.
+
+**The markers, as written.** Over the twelve cells (14,400 games), the fix's bot against the
+recorded base's: `mustfixDeclines` **4,817** (0.33 a game); the compelled claims Monet still
+makes in a poll 21, every one certain and right, from 483 at 61.9% (`must-declare`) and 55 at
+34.5% (`forced-claim`, the stall-breaker); `opForced` 34,927 from 17,789 and the host's
+`last_resort` demands 492 from 249, every one answered; the host's ladder now makes 265 of
+Monet's compelled declarations at 59.6% right (`engine-forced-decide` 220 at 67.3%,
+`engine-forced-plan` 45 at 22.2%) where the old bridge's poll made 538 at 59.1% — the
+compelled population halves, because the certain teammate takes the set in the same poll round
+(certain claims 39,506 from 39,294, own-book claims 11,196 from 11,139). Their engine's lines:
+declarations **4.03 a game at 99.73%** from 4.08 at 98.01% (Monet's wrong declarations 0.011 a
+game from 0.081), sets 4.16 from 4.12, lock hold 6.98 from 6.78, ask accuracy 55.26 from 55.25,
+the calibration bias +0.006 both. On the fix's own records through the instrument, the certain plans a teammate gave away fall to **10 in 14,400 games, 8 with Monet at four, from 174 and 144**; the plans cashed a window later 5,859 from 5,678; those open in decided games 282 from 302.
+SESTINA's lines are unchanged within noise.
+
+**The 24-seed study, for the record** (both record sets, 28,800 games; the one-seed numbers of
+the pre-registration held on every item):
+
+1. The reliability of the plan's p, Monet's seats over its declarable sets, right by the deal:
+   one guess at p [0.5, 0.7) **31.8% / 31.5%** (119,091 / 116,935 probes), at [0.7, 0.9) 47.1% /
+   48.0%; two guesses at [0.3, 0.5) **53.8% / 52.9%**, at [0.5, 0.7) 74.9% / 74.7%, at [0.7, 0.9)
+   88.9% / 90.1%; three or more at [0.3, 0.5) 57.2% / 57.2%, at [0.5, 0.7) **78.8% / 77.7%**, at
+   [0.7, 0.9) 91.3% / 97.4%. SESTINA's seats over its sets: one guess at [0.5, 0.7) 30.7% /
+   30.1%; two at [0.3, 0.5) 54.4% / 53.8%; three or more at [0.5, 0.7) 85.4% / 84.2%.
+2. The rules, sets of differential a game: the gated bar at 0.775 **+0.001 / +0.002** (270 / 286
+   fires at 79.6% / 79.7%), at 0.9 +0.003 / +0.003; the plan's p alone at 0.9 +0.013 / +0.013
+   (98.8% / 98.7% right), at 0.775 −0.016 / −0.015, at 0.5 −0.870 / −0.883; the best
+   guess-count-aware form (0.9 on one guess, 0.8 on two, 0.7 on three or more) **+0.013 /
+   +0.014** (1,100 / 1,079 fires at 97.7% / 97.8%). Monet's declarable sets: 6.69 / 6.70 a game;
+   cashed by Monet 50.4% / 50.2%, got by the other side 35.4% / 35.5%, open at the clinch 14.2%
+   / 14.2%.
+3. SESTINA's declarations by Monet's plan p at its seat: (0, 0.5) **5,300 at 84.3% / 5,204 at
+   83.5%**, 0.37 / 0.36 a game, Monet's own plan right 81.1% / 80.8% of them; [0.5, 0.775) 1,162
+   at 85.4% / 1,145 at 83.2%; [0.775, 1) 311 at 74.3% / 324 at 74.4%. Monet's own below
+   certainty: 0.077 / 0.081 a game, right 50.6% / 52.1%.
+4. The certain plans never cashed: 6,154 / 6,153 fires a set, 5,678 / 5,645 cashed a window
+   later, **174 / 191 given away by a teammate's wrong declaration — 144 / 162 with Monet at
+   four, 155 / 165 with SESTINA at four, none by an engine-forced declaration** — 302 / 317
+   open in decided games, 41 / 43 foreign; no game on any of the 24 seeds ended with Monet at
+   four holding an uncashed lock the other side's clinch cut off — what was lost was given, not
+   left.
+
+**What is fixed by this record.** The bridge: every arm from here carries MUSTFIX
+(`$SP/mkarm-v11.mjs`, the v0.7 template plus the poll rule, `MONET_MUSTFIX=1` in the manifest,
+the label carrying `mustfix=1`), and every Monet number abroad before 2026-09-04 — v0.4c's
+34.28%, v0.9's 38.92% and 38.83%, v0.10's 39.90% — was read on the old bridge and is lower than
+the same policy reads on the corrected one by about 1.3 points; the pairs within a rung were on
+the same bridge and stand. **The ladder's base is the corrected v0.9, 40.11% on these twelve
+seeds, and a rung needs +2.00 over it.** Nothing ships in the repo but the instrument
+(`scripts/attribute.mjs --locks`, `--locks-both`, `--locks-why`) and this record; the lobby
+plays the same v0.9. Scratch state, not committed: `$SP/monet-v11` (the identity cell, the twelve
+cells and their records, REPORT-fix.txt, the three instrument passes, the lane logs,
+sum-counters.mjs), `$SP/arm_v11`, `$SP/mkarm-v11.mjs`.
+
 
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
