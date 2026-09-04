@@ -51,6 +51,8 @@ const LOCKS = process.argv.includes('--locks')
 const LOCK_BARS = [0.5, 0.6, 0.7, 0.775, 0.9]
 const LOCK_MIN_CARDS = Number(argOf('--locks-min', 4))
 const LOCKS_WHY = process.argv.includes('--locks-why') // ask decide() at every certain-plan window and print the ones A never cashed
+const MAJORITY = process.argv.includes('--majority') // MONET.md 3.8g: the majority conversion at ask decisions (needs --cf)
+const MAJ_P = [0, 0.1, 0.3, 0.5, 0.7] // own-side mass bins: [0,0.1) [0.1,0.3) [0.3,0.5) [0.5,0.7) [0.7,1]
 const LOCKS_BOTH = process.argv.includes('--locks-both') // probe B's declarable sets from B's seats too (the reliability table only)
 const CALIB_P = [0.1, 0.3, 0.5, 0.7, 0.9, 1] // bin lower bounds: [0.1,0.3) [0.3,0.5) [0.5,0.7) [0.7,0.9) [0.9,1) and p = 1
 // Declare rules priced on the records: a rule fires at the earliest window (before A's own declare of
@@ -208,6 +210,86 @@ function walk(rec, cfPol, acc) {
   }
   const OPTS = cfPol ? { logWindow: cfPol.skill.logWindow, useConstraints: cfPol.skill.useConstraints, marginal: true } : null
   const track = {} // book -> { seq: [{ i, pg, rg, pa, ra }], declaredAt } for sets A's side could declare
+  // --majority: book -> [episode of side 0, episode of side 1]; an episode opens when the side first
+  // holds four of the six by the deal and closes when the set resolves (or at the clinch)
+  const maj = {}
+  const newMajAcc = () => ({
+    cards: [0, 1].map(() => MAJ_P.map(() => ({ n: 0, chased: 0 }))),
+    dec: [0, 1].map(() => ({ n: 0, chased: 0, chaseHit: 0, other: 0, otherHit: 0, bestRight: 0, bestRightNo: 0, noTable: 0, byMax: MAJ_P.map(() => ({ n: 0, chased: 0 })), otherHold: [0, 0, 0, 0, 0, 0], otherHoldHit: [0, 0, 0, 0, 0, 0] })),
+    ep: [0, 1].map(() => ({ n: 0, chased: { n: 0, cashed: 0, taken: 0, open: 0, ev: 0 }, not: { n: 0, cashed: 0, taken: 0, open: 0, ev: 0 }, legalSum: 0, chaseSum: 0 })),
+  })
+  const majBin = (x) => { let j = 0; for (let q = 0; q < MAJ_P.length; q++) if (x >= MAJ_P[q]) j = q; return j }
+  const openMaj = (i) => {
+    for (const b of BOOKS) {
+      if (resolved[b]) continue
+      if (!maj[b]) maj[b] = [null, null]
+      for (const T2 of [0, 1]) if (!maj[b][T2] && holdingOf(T2, b) >= 4) maj[b][T2] = { at: i, legal: 0, chased: 0 }
+    }
+  }
+  const finishMaj = (b, outcomeTeam, i) => {
+    if (!maj[b]) return
+    if (!acc.maj) acc.maj = newMajAcc()
+    for (const T2 of [0, 1]) {
+      const e = maj[b][T2]
+      if (!e) continue
+      const E = acc.maj.ep[T2]
+      const K = E[e.chased > 0 ? 'chased' : 'not']
+      E.n++; E.legalSum += e.legal; E.chaseSum += e.chased
+      K.n++; K.ev += i - e.at
+      K[outcomeTeam === T2 ? 'cashed' : outcomeTeam === -1 ? 'open' : 'taken']++
+      maj[b][T2] = null
+    }
+  }
+  // at an ask decision: the asker's actionable majorities, the opponents' cards of them, the mass
+  const majDecision = (view, ev, T, i) => {
+    if (!acc.maj) acc.maj = newMajAcc()
+    const a = ev.asker
+    const sets = []
+    for (const b of BOOKS) {
+      if (resolved[b] || !maj[b] || !maj[b][T] || holdingOf(T, b) < 4) continue
+      if (!hands[a].some((c) => bookOf(c) === b)) continue
+      sets.push(b)
+    }
+    if (sets.length === 0) return
+    const D = acc.maj.dec[T]
+    D.n++
+    const k = ENG.buildKnowledge(view, OPTS)
+    const tbl = BOTS.attachMarginal(k)
+    let maxOwn = 0, bestP = -1, bestRight = false, chase = false, chaseBook = null
+    for (const b of sets) {
+      maj[b][T].legal++
+      for (const c of BOOK_CARDS.get(b)) {
+        const x = seatOf.get(c)
+        if (x === undefined || side(x) === T) continue
+        // an opponent holds c: the asker's own-side mass on it, and its best opponent target
+        const cand = k.cands[c] ?? []
+        let own = 0, target = -1, tp = -1
+        if (cand.length === 1) { own = side(cand[0]) === T ? 1 : 0; target = cand[0]; tp = 1 }
+        else {
+          const j = tbl ? tbl.index.get(c) : undefined
+          if (j === undefined) { D.noTable++; continue }
+          for (let s2 = 0; s2 < 6; s2++) { const v = tbl.p[j * 6 + s2]; if (side(s2) === T) own += v; else if (v > tp) { tp = v; target = s2 } }
+        }
+        const bin = majBin(own)
+        acc.maj.cards[T][bin].n++
+        if (ev.card === c) { acc.maj.cards[T][bin].chased++; chase = true; chaseBook = b }
+        if (own > maxOwn) maxOwn = own
+        if (tp > bestP) { bestP = tp; bestRight = target === x }
+      }
+    }
+    if (chase) { D.chased++; if (ev.hit) D.chaseHit++; maj[chaseBook][T].chased++ } else {
+      D.other++
+      if (ev.hit) D.otherHit++
+      if (bestRight) D.bestRightNo++
+      const h = Math.min(5, holdingOf(T, bookOf(ev.card)))
+      D.otherHold[h]++
+      if (ev.hit) D.otherHoldHit[h]++
+    }
+    if (bestRight) D.bestRight++
+    const M = D.byMax[majBin(maxOwn)]
+    M.n++
+    if (chase) M.chased++
+  }
   const probe = (b, i, seat) => {
     const state = {
       config: us54Config, seed: rec.label, phase: 'playing', turn: seat,
@@ -351,6 +433,7 @@ function walk(rec, cfPol, acc) {
           log: rec.events.slice(0, i), moveIndex: meta ? meta.moveIndex : i,
         }
         const view = seatView(state, ev.asker)
+        if (MAJORITY) { openMaj(i); majDecision(view, ev, T, i) }
         const seed = meta ? meta.seed : hashSeed(`${rec.label}:cf:${i}`)()
         const a = decide(view, cfPol, seed)
         if (a.type !== 'ask') A.cfNonAsk++
@@ -417,6 +500,7 @@ function walk(rec, cfPol, acc) {
         }
         if (track[b]) { if (T === 0 && correct) track[b].declaredAt = i; finishSet(b, outcomeTeam === 0 ? 'us' : 'them', i, T, !!ev.forced) }
       }
+      if (MAJORITY && cfPol) finishMaj(b, clinchAt !== null && i > clinchAt ? -1 : outcomeTeam, clinchAt !== null && i > clinchAt ? clinchAt : i)
       const L = lock[b]
       if (L) {
         if (L.team === T && correct) { D.locksCashed++; D.holdSum += i - L.at; D.holdN++ }
@@ -445,6 +529,7 @@ function walk(rec, cfPol, acc) {
   }
   if (clinchAt === null) acc.noClinch++
   if (LOCKS && cfPol) { const end = clinchAt === null ? rec.events.length : clinchAt; if (clinchAt === null) probeWindow(end); for (const b of BOOKS) if (track[b]) finishSet(b, 'open', end) }
+  if (MAJORITY && cfPol) { const end = clinchAt === null ? rec.events.length : clinchAt; for (const b of BOOKS) finishMaj(b, -1, end) }
   for (const e of hitEntries) if (!e.resolved) { const F = acc.fate[e.side]; if (e.takenBack) F.takenBack++; F.open++ }
   const lostWithLock = [false, false]
   for (const b of BOOKS) {
@@ -664,6 +749,24 @@ function report(acc, head) {
   for (const t of [0, 1]) {
     const D = acc.decl[t]
     console.log(`| ${t === 0 ? 'A' : 'B'} | ${per(D.n, g)} | ${pct(D.correct, D.n)} | ${per(D.gifts, g)} | ${D.void} | ${per(D.locksFormed, g)} | ${pct(D.locksCashed, D.locksFormed)} | ${pct(D.locksBroken, D.locksFormed)} | ${pct(D.locksGifted, D.locksFormed)} | ${pct(D.locksOpen, D.locksFormed)} | ${ratio(D.holdSum, D.holdN, 2)} |`)
+  }
+  if (acc.maj) {
+    const labels = ['[0, 0.1)', '[0.1, 0.3)', '[0.3, 0.5)', '[0.5, 0.7)', '[0.7, 1]']
+    console.log('-- the majority conversion (--majority): at ask decisions where the asker holds a card of an unresolved set its side holds four or five of, the cards the opponents hold, by the asker\'s own-side mass on each through the counterfactual\'s marginal (every one is with an opponent) --')
+    console.log('| side | ' + labels.map((l) => `${l}: cards (chased)`).join(' | ') + ' | no table |')
+    console.log('|---|---|---|---|---|---|---|')
+    for (const t of [0, 1]) { const C = acc.maj.cards[t]; console.log(`| ${t === 0 ? 'A' : 'B'} | ${C.map((c) => `${c.n} (${pct(c.chased, c.n)})`).join(' | ')} | ${acc.maj.dec[t].noTable} |`) }
+    console.log('')
+    console.log('-- the decisions: with a legal chase (the asker holds a card of the set, an opponent holds a card of it) how often the ask taken chases, and how each kind of ask fares; the best chase = the marginal\'s best opponent target for the most-located missing card --')
+    console.log('| side | decisions | /game | chased | chase hit | other ask | other hit | best chase target right (all / at the other asks) | the other asks by the side\'s holding of the asked set, 0-5: n (hit) | by the largest own-side mass on a missing card: ' + labels.map((l) => `${l} chased`).join(' | ') + ' |')
+    console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|')
+    for (const t of [0, 1]) { const D = acc.maj.dec[t]; console.log(`| ${t === 0 ? 'A' : 'B'} | ${D.n} | ${per(D.n, g)} | ${pct(D.chased, D.n)} | ${pct(D.chaseHit, D.chased)} | ${D.other} | ${pct(D.otherHit, D.other)} | ${pct(D.bestRight, D.n)} / ${pct(D.bestRightNo, D.other)} | ${D.otherHold.map((n, h) => `${h}: ${n} (${pct(D.otherHoldHit[h], n)})`).join(', ')} | ${D.byMax.map((m) => `${m.n}: ${pct(m.chased, m.n)}`).join(' | ')} |`) }
+    console.log('')
+    console.log('-- the episodes: a set from the first ask decision at which a side holds four of six by the deal to its resolution (or the clinch), by whether the side ever chased an opponent-held card of it --')
+    console.log('| side | episodes/game | legal chase decisions each | chases each | ever chased | chased: cashed / taken / open (events) | never chased: cashed / taken / open (events) |')
+    console.log('|---|---|---|---|---|---|---|')
+    for (const t of [0, 1]) { const E = acc.maj.ep[t]; const f = (K) => `${pct(K.cashed, K.n)} / ${pct(K.taken, K.n)} / ${pct(K.open, K.n)} (${f2(K.ev / Math.max(1, K.n))})`; console.log(`| ${t === 0 ? 'A' : 'B'} | ${per(E.n, g)} | ${f2(E.legalSum / Math.max(1, E.n))} | ${f2(E.chaseSum / Math.max(1, E.n))} | ${pct(E.chased.n, E.n)} | ${f(E.chased)} | ${f(E.not)} |`) }
+    console.log('')
   }
   return gap
 }
