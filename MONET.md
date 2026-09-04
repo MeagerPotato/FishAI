@@ -443,6 +443,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.10** | **the exposure rung** — §3.8d's exposure charge fitted on v0.9's vector, gated as built and with the charge on certain hits (`exposureCertain`, §3.8e) | ≥ 40.9% (v0.9 + 2.00) on twelve fresh seeds | fit abroad on three fresh seeds, confirm on twelve; markers from the records | M |
 | **v0.9** ✅ | **the priced ask** — the contest credit on the miss branch of the ask ranker, `contest: 0.6` on v0.4c's vector (§3.8d); the exposure charge measured +3.31 alone and +0.67 on top, and stays off the vector | ≥ 37.1% (v0.4c + 2.00) — **read 2026-09-04: 38.92% against the base's 34.88%, +4.04 paired (SD 1.63, SE 0.47), ahead on 12 of 12 fresh seeds** | fit abroad on three seeds (pre-registered ladder, then the amendment's extension at +1.0 over the pick — not met), confirm on twelve; the instrument's markers from the records (two of five as written; the mechanism that won is the contest, not the take-back) | S — **shipped** |
 | **v0.8** | **the determinized declare** — a sure set cashed when the posterior proves it, not when the walk locates it (§3.8b) | ≥ 37.1% (v0.4c + 2.00) — **read 2026-09-03: 35.15% against the base's 35.07%, +0.08 paired (SE 0.08), inside the floor; 0.13 consensus claims a game at 99.6%; nothing shipped** | home markers (claim accuracy ≥ 95%, pairs ahead ≥ +0.20), then twelve seeds abroad | M |
 | **v1.0** | **the version that passes §3.9's six conditions** | ≥ 50.0% — the owner, 2026-09-03: "about 50%, or significantly above", i.e. ≥ 52.0% at twelve seeds | §3.9 | — |
@@ -2984,6 +2985,71 @@ floor stands. Scratch state, not committed: `$SP/monet-v09` (cells, calib files,
 REPORT-fit-ext.txt, REPORT-conf.txt, markers-*.txt, 341 MB of records), `$SP/arm_v09`,
 `$SP/fishai-v09`.
 
+
+### 3.8e Monet v0.10 — the exposure rung
+
+**The owner's direction, 2026-09-04: "merge 26 then build the exposure rung by your
+recommendation."** The exposure charge — §3.8d's second term, what a hit gives away — fitted on
+v0.9's vector and confirmed on fresh seeds at the floor, with the one form change the v0.9
+pre-registration deferred: the charge on certain hits.
+
+**The facts this rung starts from (§3.8d's records).**
+
+- On the v0.9 fit seeds the exposure charge alone read +3.31 paired over v0.4c at 0.6 (SD 1.31,
+  ahead on 3 of 3), −0.11 at 0.3 and +1.89 at 1.0 (SD 2.67). On top of `contest` 0.6 it read
+  **+0.67** (0.6 + 0.6 against 0.6 alone: +0.42 / +1.75 / −0.17) and +0.11 (1.0 + 0.6). **The
+  honest prior for the dose ladder as built is under the +2.00 floor.**
+- What the charge did at v0.4c (the x2 records, 3,600 games): it changed 5.9% of asks, at
+  decisions where the greedy pick would hit 37.4% and the priced ask hit 14.6% — it gave up
+  exposed hits for near-sure misses; its sure-miss asks rose to 11.8% from 9.4%; its hit rate fell
+  below its own counterfactual (50.7% against 52.0%, the SESTINA signature); its locks cashed
+  92.6% from 89.8%. It did not cut its own take-backs much (39.6% from 40.9%).
+- v0.9 pays the take-back cost and wins anyway: its hits are later taken back 43.4% of the time
+  against v0.4c's 41.0%, SESTINA's 36.3%. The cost the charge prices is real and larger under
+  v0.9 than before.
+- SESTINA leaves hits on the table: at its own decisions v0.4c's pick would hit 66.1% against its
+  56.0% (v0.9 games), a hit was available 98.4% of the time and it hit 56.9% of those. Some of
+  the hits it declines are certain. v0.9's form cannot decline a certain hit: both priced terms
+  are gated below any legal certain hit and a certain hit pays neither.
+
+**The mechanism.** The charge as built (`exposure · wHit · p · risk`, priced.ts) at four doses on
+v0.9's vector, and one new knob, **`exposureCertain`** (§3.8e; style.ts, priced.ts, the gate in
+`pickAsk`): with it true and a live exposure charge, a certain hit the opponents can take back
+pays `exposure · wHit · risk` like any other hit, and an uncertain ask keeps its contest credit
+and exposure charge beside a legal certain hit — so an exposed certain hit can lose to a
+contested ask. False, absent, or true without `exposure` is byte identity (pinned in
+`tests/bots/priced.test.ts`, with the v0.9 forward bank unchanged).
+
+**The fit, abroad, pre-registered before its cells.** Base: v0.9 (`contest` 0.6, the recorded
+form of the arm that shipped), on the v0.10 tree export, proven byte-identical to §3.8d's
+recorded c3 cell at seed 2534720 before a fresh seed is spent. Fit seeds, three, drawn by §6.5's
+rule from `monet-v0.10-2026-09-04`: **6032457 5204470 7996480**. Every cell 1,200 games against
+SESTINA v1.0, recorded. Arms, every one on v0.9's vector:
+
+> | arm | override beside `contest` 0.6 | for |
+> |---|---|---|
+> | base | — | the pair |
+> | e1 / e2 / e3 / e4 | `exposure` 0.3 / 0.6 / 1.0 / 1.5 | the dose, gated as built |
+> | u1 / u2 | `exposure` 0.6 / 1.0 + `exposureCertain` | the dose, the charge on certain hits, ungated |
+
+The chosen arm is the one with the best mean paired gain over the three fit seeds, provided it is
+positive on at least two of them; if none is, v0.10 closes as measured and the exposure charge is
+recorded as worth what the fit says on top of v0.9. Home duplicate pairs (600 on `home-a` for the
+chosen arm) are reported, not gating.
+
+**The confirmation.** The chosen arm against SESTINA on twelve fresh seeds: the twelve §3.8d's
+amendment drew on 2026-09-03 from `monet-v0.9-ext-2026-09-03` for a second confirmation that
+never ran, unused since — **5682873 5690135 6007102 4920114 7140858 4334282 8816427 6848576
+8516315 2344938 9677918 7951876** — paired against the base (v0.9) on the same seeds and tree,
+acceptance **+2.00 points over v0.9** (≥ 40.9%). Every seed listed, the SD published.
+
+**The markers**, from the confirmation records through §3.8c's instrument, expected if the charge
+does what its name says and recorded either way: Monet's hits later taken back **fall** from
+43.4%; its hit rate sits **below** its v0.4c counterfactual (the signature v0.9 did not show);
+its sure-miss asks rise; under `exposureCertain`, its "hit when available" falls below v0.9's
+55.3% while its sets a game rise; lock cashing rises from 91.5%. A win-rate gain without these is
+a gain this document cannot explain and says so; a rung that closes under the floor is recorded
+with the same table.
 
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 

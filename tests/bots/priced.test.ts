@@ -15,7 +15,7 @@ import { decide, hashSeed, legalActionsSummary, newGame, reduce, seatView, us54C
 import type { Seat, SeatView } from '../../lib/engine/index.ts'
 import { buildKnowledge, rankAsksWith } from '../../lib/engine/bots/knowledge.ts'
 import { monetPolicy } from '../../lib/engine/bots/monet.ts'
-import { contestBonus, exposurePenalty, hitExposure, pricedActive } from '../../lib/engine/bots/priced.ts'
+import { contestBonus, exposurePenalty, hitExposure, pricedActive, pricedUngated } from '../../lib/engine/bots/priced.ts'
 import { validateStyle } from '../../lib/engine/bots/style.ts'
 import type { BotPolicy, StyleParams } from '../../lib/engine/bots/style.ts'
 import { canonicalAction } from './action-digest.ts'
@@ -23,6 +23,8 @@ import { canonicalAction } from './action-digest.ts'
 const BASE = monetPolicy('v0.4c') as BotPolicy
 const withStyle = (over: Partial<StyleParams>): BotPolicy => ({ skill: BASE.skill, style: { ...BASE.style, ...over } })
 const ON = withStyle({ contest: 0.4, exposure: 0.5 })
+/** MONET.md §3.8e — the v0.10 form: the same doses, the charge on certain hits too, the terms ungated. */
+const UNGATED = withStyle({ contest: 0.4, exposure: 0.5, exposureCertain: true })
 const OPTS = { logWindow: BASE.skill.logWindow, useConstraints: BASE.skill.useConstraints, marginal: true }
 
 type State = ReturnType<typeof newGame>
@@ -135,9 +137,65 @@ describe('the priced ask', () => {
     expect(again).toEqual(first)
   })
 
+  it('exposureCertain false or absent is byte identity with the gated form, and true without exposure is identity with the base', () => {
+    expect(pricedUngated(ON.style)).toBe(false)
+    expect(pricedUngated(withStyle({ contest: 0.4, exposure: 0.5, exposureCertain: false }).style)).toBe(false)
+    expect(pricedUngated(withStyle({ contest: 0.4, exposureCertain: true }).style)).toBe(false)
+    expect(pricedUngated(UNGATED.style)).toBe(true)
+    const falsy = withStyle({ contest: 0.4, exposure: 0.5, exposureCertain: false })
+    const alone = withStyle({ exposureCertain: true })
+    let decisions = 0
+    play('priced-certain-id', ON, (_s, view, n) => {
+      expect(canonicalAction(decide(view, falsy, n))).toBe(canonicalAction(decide(view, ON, n)))
+      expect(canonicalAction(decide(view, alone, n))).toBe(canonicalAction(decide(view, BASE, n)))
+      decisions++
+    })
+    expect(decisions).toBeGreaterThan(300)
+  })
+
+  it('with exposureCertain on, a certain hit pays the charge and can be skipped: the pick differs from the gated form at some decision where a certain hit is legal, bounded, deterministic', () => {
+    let certainDecisions = 0
+    let skipped = 0
+    let charged = 0
+    const first: string[] = []
+    for (const seed of ['priced-ungated-a', 'priced-ungated-b']) {
+      play(seed, UNGATED, (_s, view, n) => {
+        if (!isAskDecision(view)) return
+        const k = buildKnowledge(view, OPTS)
+        const ranked = rankAsksWith(view, k, UNGATED.style)
+        for (const r of ranked) {
+          const charge = exposurePenalty(view, k, UNGATED.style, r, r.p)
+          expect(charge).toBeGreaterThanOrEqual(0)
+          expect(charge).toBeLessThanOrEqual(0.5 * UNGATED.style.wHit + 1e-9)
+          if (r.p === 1 && charge > 0) charged++
+        }
+        if (!ranked.some((r) => r.p === 1)) return
+        certainDecisions++
+        const a = decide(view, UNGATED, n)
+        if (first.length < 40) first.push(canonicalAction(a))
+        if (a.type === 'ask' && ranked.find((r) => r.card === a.card && r.target === a.target)?.p !== 1) skipped++
+      })
+    }
+    expect(certainDecisions).toBeGreaterThan(30)
+    // the form's one new freedom, exercised: an exposed certain hit lost to another ask somewhere
+    expect(charged).toBeGreaterThan(0)
+    expect(skipped).toBeGreaterThan(0)
+    const again: string[] = []
+    for (const seed of ['priced-ungated-a', 'priced-ungated-b']) {
+      play(seed, UNGATED, (_s, view, n) => {
+        if (!isAskDecision(view)) return
+        if (!rankAsksWith(view, buildKnowledge(view, OPTS), UNGATED.style).some((r) => r.p === 1)) return
+        if (again.length < 40) again.push(canonicalAction(decide(view, UNGATED, n)))
+      })
+    }
+    expect(again).toEqual(first)
+  })
+
   it('validateStyle rejects a negative appetite and accepts 0 and absent', () => {
     expect(validateStyle({ ...BASE.style, contest: -0.1 }).length).toBeGreaterThan(0)
     expect(validateStyle({ ...BASE.style, exposure: -1 }).length).toBeGreaterThan(0)
+    expect(validateStyle({ ...BASE.style, exposureCertain: 1 as unknown as boolean }).length).toBeGreaterThan(0)
+    expect(validateStyle(UNGATED.style)).toEqual(validateStyle(BASE.style))
     expect(validateStyle({ ...BASE.style, contest: 0, exposure: 0 })).toEqual(validateStyle(BASE.style))
     expect(validateStyle(ON.style)).toEqual(validateStyle(BASE.style))
   })
