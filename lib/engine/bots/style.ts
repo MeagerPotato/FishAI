@@ -331,6 +331,20 @@ export interface StyleParams extends AskWeights {
    */
   consensusKappa?: number
   /**
+   * MONET.md §3.8d — the contest credit (priced.ts), the appetite for asks that will probably miss
+   * into a set the opponents dominate and nobody can yet place: `contest · wHit · (1 − p) ·
+   * oppMass/6 · ambiguous/6` on the miss branch, gated below every certain hit. 0 or absent is
+   * byte identity. Absent on every roster style and every tier.
+   */
+  contest?: number
+  /**
+   * MONET.md §3.8d — the exposure charge (priced.ts), what a hit gives away: `exposure · wHit · p ·
+   * risk`, where risk is the chance the opponents keep a licence in the set after the hit and the
+   * team cannot run the rest of it out in one turn. Uncertain asks only, so a certain hit stays
+   * first. 0 or absent is byte identity. Absent on every roster style and every tier.
+   */
+  exposure?: number
+  /**
    * MONET.md §3.7a item 2′ — the pre-emptive declare. The compulsion (RULES_US54.md §3.2, a window that
    * cannot close) arrives when the last opponent card leaves, and it lands on whichever seat holds
    * the turn then, with whatever it knows. In the windows before it every teammate holds the option
@@ -747,6 +761,10 @@ export function validateStyle(style: StyleParams): string[] {
   if (consensusBar !== undefined && !(typeof consensusBar === 'number' && Number.isFinite(consensusBar) && consensusBar > 0 && consensusBar <= 1)) bad.push(`consensusBar ${String(consensusBar)} is not a number in (0, 1]`)
   const consensusKappa = style.consensusKappa
   if (consensusKappa !== undefined && !(typeof consensusKappa === 'number' && Number.isFinite(consensusKappa) && consensusKappa >= 0)) bad.push(`consensusKappa ${String(consensusKappa)} is not a number >= 0`)
+  const contest = style.contest
+  if (contest !== undefined && !(typeof contest === 'number' && Number.isFinite(contest) && contest >= 0)) bad.push(`contest ${String(contest)} is not a number >= 0`)
+  const exposure = style.exposure
+  if (exposure !== undefined && !(typeof exposure === 'number' && Number.isFinite(exposure) && exposure >= 0)) bad.push(`exposure ${String(exposure)} is not a number >= 0`)
   const compelHorizon = style.compelHorizon
   if (compelHorizon !== undefined && !(typeof compelHorizon === 'number' && Number.isInteger(compelHorizon) && compelHorizon >= 0)) bad.push(`compelHorizon ${String(compelHorizon)} is not an integer >= 0`)
   const declareThresholdCompelled = style.declareThresholdCompelled

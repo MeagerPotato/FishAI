@@ -276,6 +276,8 @@ describe('public-view-only proof', () => {
       // './consensus.ts' reads a set's holders off them - neither touches engine state.
       './determinize.ts',
       './consensus.ts',
+      // MONET.md 3.8d: './priced.ts' reads the marginal table and the certain holders - public knowledge.
+      './priced.ts',
       // The MONET.md version registry: a frozen table mapping a Monet version id to the
       // `PolicySpec` that version plays, plus two total pure functions over it. It imports
       // only './roster.ts', './style.ts' and './bounded.ts' (type-only) — every one already
