@@ -3335,6 +3335,128 @@ cells and their records, REPORT-fix.txt, the three instrument passes, the lane l
 sum-counters.mjs), `$SP/arm_v11`, `$SP/mkarm-v11.mjs`.
 
 
+### 3.8g The majority conversion — a records study
+
+**The owner's direction, 2026-09-04: "merge 27 and 28 then go on the study."** The study §3.8f
+proposed in place of a rung: where the two-against-four bucket's 0.35 sets a game — 47% of the
+0.73 sets a game between Monet and SESTINA at the clinch — actually goes, read on the corrected
+v0.9 records (§3.8f's twelve fix cells, 14,400 games) and replicated on the twenty-four old-bridge
+cells of §3.8d and §3.8e (28,800 games; the bridge correction touches only the endgame after the
+opponents are out of cards, where no ask is made). No cell is spent. The decision rule below was
+written before any corrected record was read.
+
+**The instrument.** `scripts/attribute.mjs --majority --cf v0.9`. At every ask decision, for
+every unresolved set the asker's side holds four or five of by the deal and the asker holds a card
+of — an *actionable majority*, one the asker has the licence to close — the cards the opponents
+hold: the asker's own-side mass on each through v0.9's marginal (every such card is with an
+opponent by construction, so that mass is the miscalibration itself), whether the ask taken
+*chases* one of them (asks an opponent for it), the best chase's target by the marginal against
+the true holder, and what the non-chase asks were (the side's holding of the set asked into). An
+*episode* runs from the first ask decision at which a side holds four of six to the set's
+resolution or the clinch, split by whether the side ever chased. Both sides, SESTINA's decisions
+through Monet's inference. Validated on one old-bridge seed before this was written (5682873 of
+§3.8e's base cell, 1,200 games), the pilot:
+
+> | | Monet | SESTINA (Monet's inference) |
+> |---|---|---|
+> | opponent-held cards of actionable majorities at ask decisions | 146,582 | 131,078 |
+> | of them rated ≥ 0.5 on the asker's own side | **20.9%** | 11.1% |
+> | decisions with a legal chase, a game | 39.4 | 38.5 |
+> | the ask taken chases | **31.7%** | **36.3%** |
+> | a chase hits | 71.9% | 69.4% |
+> | the marginal's best target is right, where the ask did not chase | 40.7% | 46.3% |
+> | the non-chase asks: sure misses into the side's own majority | 32.7% | 35.2% |
+> | episodes a game / ever chased | 6.69 / 83.3% | 6.59 / 88.9% |
+> | converted when chased / when never chased | 60.1% / 4.9% | **68.2%** / 9.6% |
+> | events to resolution, chased | 39.3 | 32.8 |
+
+**The readouts, pre-registered.**
+
+- **R1, the belief.** The share of opponent-held majority cards on which Monet's own-side mass is
+  at or above 0.5, against the same inference at SESTINA's decisions (pilot 20.9% / 11.1%), and
+  the chase rate by that mass.
+- **R2, the chase.** The chase rate at decisions with a legal chase (pilot 31.7% / 36.3%), the
+  chase's hit rate, the best chase target's accuracy where the ask did not chase, and the
+  composition of the non-chase asks.
+- **R3, the episodes.** Episodes a game, the share ever chased (pilot 83.3% / 88.9%), the
+  conversion when chased and when never chased (60.1% / 68.2%; 4.9% / 9.6%), and the events to
+  resolution. Every readout pooled over the twelve corrected cells and per seed for the spread.
+
+**The rule.** (a) If Monet chases less than SESTINA per legal decision *and* converts less when it
+chases, each by more than two seed-to-seed standard deviations, the rung is **the closing ask**:
+a ranker credit for chasing an opponent-held card of the side's own majority, a Monet-only knob at
+byte identity when absent, fitted abroad on three fresh seeds and confirmed on twelve at +2.00
+over 40.11%. Its bound on paper is the conversion gap times the 2.16 four-card majorities a game
+at v0.9's exchange rate (0.27 sets a game bought +4.04), and the honest prior for a third ranker
+term is v0.10's: under the floor. It is built only if the bound clears the floor. (b) If the chase
+rate falls with the own-side mass and R1's share at Monet's decisions stands well above
+SESTINA's, the lever is **the calibration** of the marginal's own-side mass on the cards of a
+majority, and the rung is a correction to that mass on the ask path. (c) If Monet chases as often
+and converts as well, the bucket's margin sits in the target (R2's best-target accuracy) or in
+tempo, neither a policy knob, and the next rung goes to the even sets. Row 12 says which. Nothing
+ships from the study; the numbers are the deliverable.
+
+#### Record — 2026-09-04
+
+**The rule's clause (a) fires, and (b) with it: SESTINA chases its majorities more often and
+converts them better, by ten seed-to-seed standard deviations each, and Monet's chase is dulled
+by a belief that rates one opponent-held card in five as its own. The rung is the closing ask,
+weighted by the side's holding and not by that belief; its bound on paper is 0.39 sets a game,
+about +5.8 points at v0.9's exchange rate, and clears the floor.** The twelve corrected cells
+(14,400 games) pooled; the two old-bridge replications (§3.8e's twelve base cells, §3.8d's twelve
+c3 cells, 28,800 games) read the same to a tenth of a point on every line, as the fix touches no
+ask — the same result, reported as such. The per-seed spread is over the twelve corrected cells.
+
+**R1, the belief.** Of the 1,808,653 opponent-held cards of Monet's actionable majorities at its
+ask decisions, **21.4%** carry an own-side mass at or above 0.5 (21.41 ± 0.40 a seed); at
+SESTINA's decisions through the same inference 11.1% (11.13 ± 0.20; paired +10.28, SE 0.12,
+12 of 12). The card-level chase rate by that mass, Monet against SESTINA: [0, 0.1) **72.3% /
+65.1%**, [0.1, 0.3) 27.2 / 24.6, [0.3, 0.5) 5.6 / 6.5, [0.5, 0.7) **7.0 / 16.0**, [0.7, 1] **11.7 /
+16.9**. The cards Monet wrongly rates as its own it chases at half SESTINA's rate, and it has
+twice as many of them.
+
+**R2, the chase.** Decisions with a legal chase 39.6 a game (SESTINA 38.7). The ask taken
+chases **31.6% / 36.2%** (paired −4.59, SD 0.40, SE 0.11, ahead on 0 of 12). A chase hits 72.1% /
+70.1%. The marginal's best target for the most-located missing card is right 50.5% / 55.5% over
+all decisions and **40.9% / 45.3%** where the ask did not chase (−4.41, SE 0.28, 0 of 12). The
+non-chase asks: **a third are sure misses into the side's own majority on both sides** (33.2% /
+35.7%: a card a teammate holds, asked of an opponent), 35.3% / 33.1% into a three-card set (hit
+60.4% / 61.6%), 23.2% / 22.8% into a two-card set (71.2% / 73.1%), 8.3% / 8.4% into a one-card
+set (83.2% / 86.3%). By the largest own-side mass on a missing card, the chase rate is not
+monotone on either side — [0, 0.1) 21.2% / 26.3%, [0.1, 0.3) 52.6 / 52.8, [0.3, 0.5) 26.8 / 31.4,
+[0.5, 0.7) 37.5 / 48.7, [0.7, 1] 42.0 / 44.1 — and SESTINA chases more at every level but one:
+where every missing card is known to be with an opponent, a chase that would hit is taken at one
+decision in five by either policy, because other certain hits are on offer and both prefer them.
+That preference is what a closing credit prices.
+
+**R3, the episodes.** 6.69 / 6.60 a game, 13.4 / 12.0 legal-chase decisions each, 1.87 / 2.12
+chases each (13.9% / 17.7% of legal decisions), ever chased **83.5% / 89.2%** (−5.72, SE 0.15,
+0 of 12). Converted when chased **59.8% / 68.7%** (−8.94, SD 0.89, SE 0.26, 0 of 12); taken by
+the other side 29.9% / 26.3%; open at the clinch 10.3% / 5.0%; events to resolution **39.9 /
+33.7** (+6.14, SE 0.10, 12 of 12). Never chased: converted 4.3% / 8.3%, taken 62.4% / 52.5%,
+open 33.3% / 39.2%.
+
+**The bound.** On the deal's split, Monet cashes 50.9% of its four-card sets (2.16 a game) and
+SESTINA 62.5% of its own, 56% against 75% of the five-card (0.75 a game): 0.25 + 0.14 = **0.39
+sets a game**, which at v0.9's exchange rate (0.27 sets a game bought +4.04) is +5.8 points if
+captured whole; a third of it is a rung. The mechanism named by the reads: SESTINA closes its
+majorities first, sooner and more often, and Monet's ranker prefers a certain hit elsewhere or an
+ask into an even set, with a fifth of its closing chances hidden behind a belief that the missing
+card is already its own.
+
+**What is fixed by this record.** Nothing on Monet's vector; the instrument
+(`scripts/attribute.mjs --majority`) and this record. Decision row 12 carries the rung it names:
+**v0.12, the closing ask** — a credit in `pickAsk` for an ask that would close the side's own
+majority, fitted abroad in two forms, one weighted by the side's holding of the set as the seat
+knows it (four or five of six: its own cards and the cards certainly with teammates) and one
+weighted also by the marginal's chance that the card is not the side's own — the second inherits
+R1's miscalibration and the fit says by how much. Byte identity at 0. Markers from the records:
+the chase rate at legal-chase decisions toward 36%, the conversion when chased toward 69%, the
+events to resolution toward 34, the two-against-four bucket up from −0.35 sets a game, the hit
+rate allowed to fall. Scratch state, not committed: `$SP/monet-v11/maj` (the pooled and per-seed
+outputs, SPREAD-fix.txt, the replications), `maj-spread.mjs`, `run-majority.sh`.
+
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -3766,7 +3888,8 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 8 | **After v0.8: four levers measured, none moved the number — what is the next rung?** Belief (§3.6, +0.47 abroad inside the floor), communication (§3.7a, behind at home), search (§3.8a, a no-op at the budget; the post-hoc lock-only leaf's abroad read is recorded there) and the declare (§3.8b, +0.08 abroad, exact to ±0.16) are each real-and-small or null against SESTINA v1.0 on twelve seeds, and the oracle ceiling (§3.6c, 38.28%) says the 15 points to the owner's 50% are not in card knowledge at all. Three ways forward, in the order this document recommends them: **(a) an attribution rung** — full-information records of Monet against SESTINA from the bridge (their engine's game output is data, not code), split by phase and mechanism to say where the 1.2 sets a game go, before any further mechanism is built; **(b) stop at v0.4c** as v1.0's vector and run §3.9's acceptance as written; **(c) another mechanism on a hypothesis this document cannot yet support** — the declare bar re-fitted against SESTINA's theft rate (the adaptive risk/benefit the owner asked for; §3.7a's home read says the bar is right at home, and abroad it has never been read). The recommendation is (a), then (b) or (c) on what it finds. | **taken 2026-09-03 — the owner chose (a)**; the study is §3.8c, and its readout writes row 9. |
 | 9 | **After the attribution study (§3.8c): the rung is the ask's value beyond its hit.** SESTINA's 1.09 extra cashed sets a game are 40% the even sets, 31% steals from Monet's majorities, 29% its own conversion; at SESTINA's decisions Monet's counterfactual hits 62.5% to SESTINA's 55.7% (SE 0.08, every seed, every holding bucket) and SESTINA wins 65.7% — the hit chance is not the value of an ask, position is, and a hit publishes a location the opponent takes back. **Recommendation: v0.9, the priced ask** — the scorer gains two terms beside the hit: what a hit gives away (the chance the published card is taken back before the set is cashed) and what a miss reveals or learns; fitted at home on the instrument's own markers (the counterfactual surplus at the opponent's decisions, the hit rate by phase, the steals row) and confirmed abroad on twelve fresh seeds at ±2.00. **Second: (c), the risk bar on the declare**, bounded by R4 at about 0.2 sets a game (SESTINA cashes a lock in 4.3 events at 98.1%; Monet in 7.8 at 99.1%). | **taken 2026-09-03 — the owner chose v0.9 ("build v0.9 by your recommendation"); CLEARED 2026-09-04**: contest 0.6 at +4.04 paired against v0.4c on twelve fresh seeds, ahead on all twelve (§3.8d). The exposure charge (the take-back half of the recommendation) is the forward bank. (c), the declare risk bar, stays second. |
 | 10 | **After v0.10: the ask ranker's terms are measured out — what is the next rung?** The contest credit moved the even sets and the majorities and shipped (+4.04); the exposure charge on top of it is worth +1.07 on twelve seeds, real and under the floor (§3.8e). SESTINA's remaining 0.73 sets a game over v0.9, by the deal's split on v0.9's twelve base cells of this rung (14,400 games): **47% is the two-against-four bucket** — SESTINA converts its four-card majorities 70.9% of the time, Monet its own 62.5% — 28% the even sets (46.0% to Monet), 21% the one-against-five (SESTINA 87.4%, Monet 81.8%), 4% the rest. Where a majority becomes a set is the declare: SESTINA declares 4.18 sets a game at 98.2% right and holds a lock 5.3 events; Monet 3.37 at 98.9% and 5.9, on a fixed threshold of 0.775 that does not ask what the wait costs. **Recommendation: (c), the risk bar on the declare** — a declare threshold that prices the position (the chance of being right against what a wrong declare gifts and what waiting concedes: the licence the opponents keep while the set is open, the take-back the records count) in place of the fixed 0.775 — the owner's own direction of 2026-09-03 (adaptive risk/benefit), bounded by §3.8c's R4 at about 0.2 sets a game, which at v0.9's exchange rate (0.27 sets a game bought +4.04) is a rung. Fitted abroad on three fresh seeds, confirmed on twelve at +2.00 over v0.9, its markers the declare count, accuracy and gifts and the lock hold. Second: the closing ask at four and five cards, where SESTINA's asks hit 33.8% to Monet's 32.9% at the same holding. Not recommended: a third term on the ask ranker. | **TAKEN 2026-09-04** — the owner chose (c); §3.8f priced it on the records before building it. |
-| 11 | **After §3.8f's records: the declare's lever is not the bar.** Priced on v0.9's own records at the earliest window a rule fires, every bar and every guess-count-aware form is worth under 0.02 sets a game, because a set the other side gets was never a lock and a set Monet cashes anyway pays nothing for coming earlier. What the records found instead is a bridge translation: Monet's home compulsion (`MUST_DECLARE`) answered into the host's optional poll, the lowest seat guessing while a teammate is certain, at four sets — 17 won games handed over in 1,200 on the seed read. That is fixed in the bridge (MUSTFIX) and measured paired on twelve seeds; it is not a rung. **The next rung, on the corrected base:** SESTINA's 0.37 declarations a game at positions Monet's chain rates under 0.5 (right 84%, Monet's own plan right 81% there) are an inference gap — its belief is sharpened by an ask-choice prior and determinizations, Monet's chain is an under-confident product of conditionals (two guesses at p 0.3–0.5 are right 54%). The candidates are §3.6's choice prior on the plan's table and §3.8b's consensus at a calibrated bar, both measured small at home on v0.4c and never abroad on v0.9; the other candidate is the closing ask at four and five cards (row 10's second). | **OPEN 2026-09-04** — the owner's call, after §3.8f's record. |
+| 11 | **After §3.8f's records: the declare's lever is not the bar.** Priced on v0.9's own records at the earliest window a rule fires, every bar and every guess-count-aware form is worth under 0.02 sets a game, because a set the other side gets was never a lock and a set Monet cashes anyway pays nothing for coming earlier. What the records found instead is a bridge translation: Monet's home compulsion (`MUST_DECLARE`) answered into the host's optional poll, the lowest seat guessing while a teammate is certain, at four sets — 17 won games handed over in 1,200 on the seed read. That is fixed in the bridge (MUSTFIX) and measured paired on twelve seeds; it is not a rung. **The next rung, on the corrected base:** SESTINA's 0.37 declarations a game at positions Monet's chain rates under 0.5 (right 84%, Monet's own plan right 81% there) are an inference gap — its belief is sharpened by an ask-choice prior and determinizations, Monet's chain is an under-confident product of conditionals (two guesses at p 0.3–0.5 are right 54%). The candidates are §3.6's choice prior on the plan's table and §3.8b's consensus at a calibrated bar, both measured small at home on v0.4c and never abroad on v0.9; the other candidate is the closing ask at four and five cards (row 10's second). | **TAKEN 2026-09-04** — the owner chose the records study first (§3.8g); row 12 carries its verdict. |
+| 12 | **After §3.8g's study: the two-against-four bucket is the closing ask.** On 14,400 corrected games, replicated on 28,800 old-bridge ones to a tenth of a point, SESTINA chases an opponent-held card of its own majority at 36.2% of the decisions where it can and Monet at 31.6% (SE 0.11), converts the majorities it chases 68.7% of the time to Monet's 59.8% (SE 0.26) and 6 events sooner, and Monet rates 21% of the missing cards as already its own (SESTINA's positions 11%) and chases those at half the rate. Where every missing card is known to sit with an opponent both policies chase only one decision in five, preferring another certain hit. The bound is 0.39 sets a game, +5.8 points at the exchange rate. **Recommendation: v0.12, the closing ask** — a `pickAsk` credit for an ask that closes the side's own four- or five-card majority, in two forms (weighted by the side's holding as the seat knows it; weighted also by the marginal's chance the card is not the side's own), fitted abroad on three fresh seeds by §3.8d's rule and confirmed on twelve at +2.00 over the corrected v0.9 (≥ 42.1%); the honest prior for a third ranker term is v0.10's, under the floor, against a bound three times a rung. Not recommended: a calibration correction to the marginal alone — the belief explains the chase's dullness but not the preference. | **OPEN 2026-09-04** — the owner's call. |
 
 ---
 
