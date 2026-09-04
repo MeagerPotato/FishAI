@@ -443,6 +443,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.11** | **the declare priced on the records, and the compulsion translated** — the risk bar priced at a quarter of a point and not built; the bridge's MUSTFIX (§3.8f), the home compulsion no longer answered into the host's optional poll | the fix's paired value on §3.8e's twelve seeds against the recorded v0.9 cells; predicted +1.4 to +2.0; not a rung, no policy ships | the records first, one identity cell, twelve paired cells | S |
 | **v0.10** | **the exposure rung** — §3.8d's exposure charge fitted on v0.9's vector, gated as built and with the charge on certain hits (`exposureCertain`, §3.8e) | ≥ 40.9% (v0.9 + 2.00) — **read 2026-09-04: 39.90% against v0.9's 38.83%, +1.07 paired (SD 1.89, SE 0.54), ahead on 8 of 12; every pre-registered marker as written, about a point each; nothing shipped** | fit abroad on three fresh seeds, confirm on twelve; markers from the records | M |
 | **v0.9** ✅ | **the priced ask** — the contest credit on the miss branch of the ask ranker, `contest: 0.6` on v0.4c's vector (§3.8d); the exposure charge measured +3.31 alone and +0.67 on top, and stays off the vector | ≥ 37.1% (v0.4c + 2.00) — **read 2026-09-04: 38.92% against the base's 34.88%, +4.04 paired (SD 1.63, SE 0.47), ahead on 12 of 12 fresh seeds** | fit abroad on three seeds (pre-registered ladder, then the amendment's extension at +1.0 over the pick — not met), confirm on twelve; the instrument's markers from the records (two of five as written; the mechanism that won is the contest, not the take-back) | S — **shipped** |
 | **v0.8** | **the determinized declare** — a sure set cashed when the posterior proves it, not when the walk locates it (§3.8b) | ≥ 37.1% (v0.4c + 2.00) — **read 2026-09-03: 35.15% against the base's 35.07%, +0.08 paired (SE 0.08), inside the floor; 0.13 consensus claims a game at 99.6%; nothing shipped** | home markers (claim accuracy ≥ 95%, pairs ahead ≥ +0.20), then twelve seeds abroad | M |
@@ -3141,6 +3142,111 @@ committed: `$SP/monet-v10` (cells, calib files, REPORT-fit.txt, REPORT-conf.txt,
 the records), `$SP/arm_v10`, `$SP/fishai-v10`.
 
 
+### 3.8f Monet v0.11 — the declare priced on the records, and the compulsion translated
+
+**The owner's direction, 2026-09-04: "let's go with your recommendation"** — §8.3 row 10's (c), the
+risk bar on the declare. Before a knob was built, the declare was priced on the records v0.9's
+runs left behind (§3.8e's twelve base cells and §3.8d's twelve c3 cells, 28,800 games against
+SESTINA, every window of every game), because a bar can only move the sets a declare can reach
+and the records say which those are.
+
+**The instrument.** `scripts/attribute.mjs --locks` (with `--locks-both`, `--locks-why`): at every
+window of every recorded game, every unresolved set with at least four of its six cards on a side
+by the deal is probed from every seat of that side that holds cards, through v0.9's own planner
+(`planClaimFor`, the chain over the marginal): the plan's p, its guessed-card count, whether the
+speculative gate would pass, and whether the plan is right by the deal — the set entirely on that
+side and every holder named right. From those probes: the reliability of p (probes binned by
+guessed cards and p against the truth); each side's declarations binned by the claimer's own plan
+p; and declare *rules* priced at the earliest window that satisfies them, before the side's own
+declaration of the set, against what actually happened to the set, in sets of differential —
+right: 0 if the side cashed it anyway, +2 if the other side had got it, +1 if it stayed open at
+the clinch; wrong: −2 / 0 / −1 — with the reason a fired plan was never played read off
+`decide()` itself at that window. A failed declaration's claim event carries only the holders a
+hit had shown, as the bridge bot builds it, so the counterfactual knows exactly what the live
+bot knew (the same numbers either way on the seed read).
+
+**What the records say** (the first seed read in full, 5682873 of §3.8e's confirmation, v0.9
+against SESTINA, 1,200 games; the 24-seed run goes into the record beside it):
+
+1. **The plan's p is over-confident with one guessed card and under-confident with two or
+   more.** Probes of Monet's declarable sets from Monet's seats, right by the deal: one guess at
+   p [0.5, 0.7) **30.9%** right (10,093 probes), at [0.7, 0.9) 47.2%; two guesses at [0.3, 0.5)
+   **53.6%** (22,218), at [0.5, 0.7) 71.6%, at [0.7, 0.9) 86.1%; three or more at [0.3, 0.5)
+   60.9%, at [0.5, 0.7) **82.7%**, above 0.7 100% — and three-guess plans are never fired
+   (`declareMaxUncertain` 2). SESTINA's positions, probed the same way from its seats, show the
+   same curve (one guess at [0.5, 0.7) 27.7%; two at [0.3, 0.5) 52.3%; three or more at [0.5,
+   0.7) 96.9%).
+2. **The bar is worth about nothing.** Rules priced at the earliest window, sets of differential a
+   game: the speculative gate as shipped at 0.775 **+0.003** (27 fires, 85.2% right), at 0.9
+   +0.003; the plan's p alone at 0.9 +0.013, at 0.775 −0.010, at 0.5 −0.921; the best
+   guess-count-aware rule (never on one guess, 0.7 on two, 0.5 on three or more) **+0.018**
+   (147 fires, 89.8% right). The reason is structural: a set the other side got was never a
+   lock — the licence rule means a lock cannot be broken — so no declaration could have saved it
+   (of 237 such sets the plan's p reached 0.5 on, the plan was right on 10); a set Monet cashes
+   anyway pays nothing for being cashed earlier; and a wrong declaration on one of those costs
+   two. What is left for a bar is the 14.2% of Monet's declarable sets open at the clinch, and a
+   plan right on those is rare below certainty. At v0.9's exchange rate (0.27 sets a game bought
+   +4.04) the whole lever is a quarter of a point.
+3. **SESTINA declares where Monet's planner says under 0.5, and is right.** Its declarations by
+   Monet's plan p at its own seat: p = 1 53,448 on the twelve §3.8e seeds; [0.775, 1) 311 at
+   74.3%; [0.5, 0.775) 1,162 at **85.4%**; (0, 0.5) **5,300 at 84.3%, 0.37 a game, with Monet's
+   own plan right 81.1% of them**. Monet's below-certainty declarations are 0.077 a game at
+   57%. Item 1 says this is selection, not a different planner: SESTINA declares the positions
+   its belief (the choice prior at κ 2.5 and its determinizations, in its spec) has sharpened,
+   and Monet's chain rates them by the same under-confident product. Cashing those sets is an
+   inference question (§3.6's prior, §3.8b's consensus), and both were measured small at home.
+4. **The certain plans that were never cashed are the finding.** 538 times a Monet seat held a
+   plan with every card certain that its side did not cash at that window; 497 were cashed a
+   window later; **41 never were: 17 given to SESTINA by a teammate's wrong declaration, every
+   one with Monet at four sets and 14 with SESTINA at four as well — a won game handed over — 21
+   left open in games already decided (5-x or x-5), and 3 foreign.** `decide()` asked at each
+   of those windows declares the set. The tails show what happened instead: a `player_out`
+   event, then the lowest-numbered Monet seat's claim of that set, wrong, at p about 0.5. That is
+   RULES_US54.md §3.2's compulsion — with every opponent out of cards the window can never
+   close, `decline` is illegal, and every Monet seat's `decideWindow` returns `forcedClaim`'s
+   argmax with no style gate — answered into this host's *optional* `declare_poll`, where the
+   lowest seat that answers wins the round. The host's own compulsion for that position is its
+   forced endgame: a sweep of confidence thresholds set by set, each seat asked whether it is
+   willing at that threshold, and only then a demand (BOT_PACKAGE.md §5.2's `forced`, which the
+   adapter already answers with the honest p). In the recorded cells Monet's `must-declare`
+   claims are 40–45 a cell at 55–78% right, believing 0.50–0.53; its `forced-claim`s (the
+   stall-breaker, a home rule for a table of decliners that this host never needs) 4–7 at
+   14–50%.
+
+**The mechanism is a bridge correction, not a policy knob: MUSTFIX.** In the adapter's
+`opPoll`, a claim whose trace kind is `must-declare` or `forced-claim` and whose plan is not
+certain (p < 1) is answered `none`; a certain one goes out as before; the `forced` op is
+unchanged. The certain teammate's claim then lands in the same poll round, and where nobody is
+certain the host's ladder orders the team by reported confidence — the most-confident-teammate
+selector §3.5a(b) emulated (77.6% right where the compelled seat was 47.8%), provided here by
+the host's rules at no cost. It is the same class of translation as the adapter's PASSFIX
+(§3.1): a home rule that exists because `us54` has no pass, spent on a host that has one.
+Behind `MONET_MUSTFIX=1`; with the switch absent the patched file reproduced §3.8d's recorded
+c3 cell at seed 2534720 byte for byte (every engine line but `elapsed`) before any cell was
+spent. Nothing in `lib/` changes; the lobby and every home number are untouched.
+
+**The measurement, pre-registered before its cells.** The fix arm (v0.9's recorded form,
+`contest` 0.6 on `MONET_ARM=v0.4c`, the v0.10 tree export `8ab3fe0` that §3.8e proved is v0.9
+in their engine) on §3.8e's twelve confirmation seeds — 5682873 5690135 6007102 4920114 7140858
+4334282 8816427 6848576 8516315 2344938 9677918 7951876 — paired against §3.8e's recorded v0.9
+cells on the same seeds and tree, SESTINA unchanged, every cell recorded. **Prediction, from the
+seed read in full: +1.4 to +2.0 points** (17 games in 1,200 lost with a certain teammate, 24 with
+a teammate at p ≥ 0.5), read against v0.9's 38.83% on these seeds. The rule: the fix becomes the
+bridge's translation if the paired mean is positive and the markers move as written; its value
+is recorded either way, and it is not a rung — it ships no policy, and every abroad number Monet
+has published carried the handicap it removes. **The corrected v0.9 is the ladder's base from
+here**, and a rung still needs +2.00 over it.
+
+**Markers** (the fix's cells against the base's, through §3.8c's instrument and the bot's own
+counters): `mustfixDeclines` > 0 with `dk_must_declare` and `dk_forced_claim` near 0 and
+`opForced` up; the instrument's "the other side got it by a teammate's wrong declare, A at four"
+column near 0 from 17 a seed; Monet's gifts a game down from 0.03 and its declarations a game
+and their accuracy up; SESTINA's lines unchanged within noise. A win-rate gain without these is a
+gain this document cannot explain and says so.
+
+**Not built: the risk bar.** Item 2 is the reason — its price on the records is a quarter of a
+point at best, and §8.3 row 11 puts that beside the finding for the owner.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -3571,7 +3677,8 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 7 | **v0.5's arms read +0.4 abroad, inside the ±2.00 floor (§3.6c): ship `choiceKappa` anyway, buy the seeds that would decide it, or move on?** The rule as written ships nothing. Three arms agree on +0.37 to +0.47 (0.6 – 1.0 × SE); reading +0.4 at 2 × SE would take about a hundred seeds, an hour of bridge. The markers say the prior over-states against SESTINA (calibration +0.021 → +0.046 at κ = 1) and buys ask accuracy, not sets. **Recommendation: move on.** `choiceKappa` stays in the code off the vector, v0.6 is built on v0.4c, and if a later rung changes the calibration picture the twelve cells are re-run then (35 minutes). | open |
 | 8 | **After v0.8: four levers measured, none moved the number — what is the next rung?** Belief (§3.6, +0.47 abroad inside the floor), communication (§3.7a, behind at home), search (§3.8a, a no-op at the budget; the post-hoc lock-only leaf's abroad read is recorded there) and the declare (§3.8b, +0.08 abroad, exact to ±0.16) are each real-and-small or null against SESTINA v1.0 on twelve seeds, and the oracle ceiling (§3.6c, 38.28%) says the 15 points to the owner's 50% are not in card knowledge at all. Three ways forward, in the order this document recommends them: **(a) an attribution rung** — full-information records of Monet against SESTINA from the bridge (their engine's game output is data, not code), split by phase and mechanism to say where the 1.2 sets a game go, before any further mechanism is built; **(b) stop at v0.4c** as v1.0's vector and run §3.9's acceptance as written; **(c) another mechanism on a hypothesis this document cannot yet support** — the declare bar re-fitted against SESTINA's theft rate (the adaptive risk/benefit the owner asked for; §3.7a's home read says the bar is right at home, and abroad it has never been read). The recommendation is (a), then (b) or (c) on what it finds. | **taken 2026-09-03 — the owner chose (a)**; the study is §3.8c, and its readout writes row 9. |
 | 9 | **After the attribution study (§3.8c): the rung is the ask's value beyond its hit.** SESTINA's 1.09 extra cashed sets a game are 40% the even sets, 31% steals from Monet's majorities, 29% its own conversion; at SESTINA's decisions Monet's counterfactual hits 62.5% to SESTINA's 55.7% (SE 0.08, every seed, every holding bucket) and SESTINA wins 65.7% — the hit chance is not the value of an ask, position is, and a hit publishes a location the opponent takes back. **Recommendation: v0.9, the priced ask** — the scorer gains two terms beside the hit: what a hit gives away (the chance the published card is taken back before the set is cashed) and what a miss reveals or learns; fitted at home on the instrument's own markers (the counterfactual surplus at the opponent's decisions, the hit rate by phase, the steals row) and confirmed abroad on twelve fresh seeds at ±2.00. **Second: (c), the risk bar on the declare**, bounded by R4 at about 0.2 sets a game (SESTINA cashes a lock in 4.3 events at 98.1%; Monet in 7.8 at 99.1%). | **taken 2026-09-03 — the owner chose v0.9 ("build v0.9 by your recommendation"); CLEARED 2026-09-04**: contest 0.6 at +4.04 paired against v0.4c on twelve fresh seeds, ahead on all twelve (§3.8d). The exposure charge (the take-back half of the recommendation) is the forward bank. (c), the declare risk bar, stays second. |
-| 10 | **After v0.10: the ask ranker's terms are measured out — what is the next rung?** The contest credit moved the even sets and the majorities and shipped (+4.04); the exposure charge on top of it is worth +1.07 on twelve seeds, real and under the floor (§3.8e). SESTINA's remaining 0.73 sets a game over v0.9, by the deal's split on v0.9's twelve base cells of this rung (14,400 games): **47% is the two-against-four bucket** — SESTINA converts its four-card majorities 70.9% of the time, Monet its own 62.5% — 28% the even sets (46.0% to Monet), 21% the one-against-five (SESTINA 87.4%, Monet 81.8%), 4% the rest. Where a majority becomes a set is the declare: SESTINA declares 4.18 sets a game at 98.2% right and holds a lock 5.3 events; Monet 3.37 at 98.9% and 5.9, on a fixed threshold of 0.775 that does not ask what the wait costs. **Recommendation: (c), the risk bar on the declare** — a declare threshold that prices the position (the chance of being right against what a wrong declare gifts and what waiting concedes: the licence the opponents keep while the set is open, the take-back the records count) in place of the fixed 0.775 — the owner's own direction of 2026-09-03 (adaptive risk/benefit), bounded by §3.8c's R4 at about 0.2 sets a game, which at v0.9's exchange rate (0.27 sets a game bought +4.04) is a rung. Fitted abroad on three fresh seeds, confirmed on twelve at +2.00 over v0.9, its markers the declare count, accuracy and gifts and the lock hold. Second: the closing ask at four and five cards, where SESTINA's asks hit 33.8% to Monet's 32.9% at the same holding. Not recommended: a third term on the ask ranker. | **OPEN 2026-09-04** — the owner's call. |
+| 10 | **After v0.10: the ask ranker's terms are measured out — what is the next rung?** The contest credit moved the even sets and the majorities and shipped (+4.04); the exposure charge on top of it is worth +1.07 on twelve seeds, real and under the floor (§3.8e). SESTINA's remaining 0.73 sets a game over v0.9, by the deal's split on v0.9's twelve base cells of this rung (14,400 games): **47% is the two-against-four bucket** — SESTINA converts its four-card majorities 70.9% of the time, Monet its own 62.5% — 28% the even sets (46.0% to Monet), 21% the one-against-five (SESTINA 87.4%, Monet 81.8%), 4% the rest. Where a majority becomes a set is the declare: SESTINA declares 4.18 sets a game at 98.2% right and holds a lock 5.3 events; Monet 3.37 at 98.9% and 5.9, on a fixed threshold of 0.775 that does not ask what the wait costs. **Recommendation: (c), the risk bar on the declare** — a declare threshold that prices the position (the chance of being right against what a wrong declare gifts and what waiting concedes: the licence the opponents keep while the set is open, the take-back the records count) in place of the fixed 0.775 — the owner's own direction of 2026-09-03 (adaptive risk/benefit), bounded by §3.8c's R4 at about 0.2 sets a game, which at v0.9's exchange rate (0.27 sets a game bought +4.04) is a rung. Fitted abroad on three fresh seeds, confirmed on twelve at +2.00 over v0.9, its markers the declare count, accuracy and gifts and the lock hold. Second: the closing ask at four and five cards, where SESTINA's asks hit 33.8% to Monet's 32.9% at the same holding. Not recommended: a third term on the ask ranker. | **TAKEN 2026-09-04** — the owner chose (c); §3.8f priced it on the records before building it. |
+| 11 | **After §3.8f's records: the declare's lever is not the bar.** Priced on v0.9's own records at the earliest window a rule fires, every bar and every guess-count-aware form is worth under 0.02 sets a game, because a set the other side gets was never a lock and a set Monet cashes anyway pays nothing for coming earlier. What the records found instead is a bridge translation: Monet's home compulsion (`MUST_DECLARE`) answered into the host's optional poll, the lowest seat guessing while a teammate is certain, at four sets — 17 won games handed over in 1,200 on the seed read. That is fixed in the bridge (MUSTFIX) and measured paired on twelve seeds; it is not a rung. **The next rung, on the corrected base:** SESTINA's 0.37 declarations a game at positions Monet's chain rates under 0.5 (right 84%, Monet's own plan right 81% there) are an inference gap — its belief is sharpened by an ask-choice prior and determinizations, Monet's chain is an under-confident product of conditionals (two guesses at p 0.3–0.5 are right 54%). The candidates are §3.6's choice prior on the plan's table and §3.8b's consensus at a calibrated bar, both measured small at home on v0.4c and never abroad on v0.9; the other candidate is the closing ask at four and five cards (row 10's second). | **OPEN 2026-09-04** — the owner's call, after §3.8f's record. |
 
 ---
 
