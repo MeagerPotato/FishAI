@@ -443,7 +443,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
-| **v0.10** | **the exposure rung** — §3.8d's exposure charge fitted on v0.9's vector, gated as built and with the charge on certain hits (`exposureCertain`, §3.8e) | ≥ 40.9% (v0.9 + 2.00) on twelve fresh seeds | fit abroad on three fresh seeds, confirm on twelve; markers from the records | M |
+| **v0.10** | **the exposure rung** — §3.8d's exposure charge fitted on v0.9's vector, gated as built and with the charge on certain hits (`exposureCertain`, §3.8e) | ≥ 40.9% (v0.9 + 2.00) — **read 2026-09-04: 39.90% against v0.9's 38.83%, +1.07 paired (SD 1.89, SE 0.54), ahead on 8 of 12; every pre-registered marker as written, about a point each; nothing shipped** | fit abroad on three fresh seeds, confirm on twelve; markers from the records | M |
 | **v0.9** ✅ | **the priced ask** — the contest credit on the miss branch of the ask ranker, `contest: 0.6` on v0.4c's vector (§3.8d); the exposure charge measured +3.31 alone and +0.67 on top, and stays off the vector | ≥ 37.1% (v0.4c + 2.00) — **read 2026-09-04: 38.92% against the base's 34.88%, +4.04 paired (SD 1.63, SE 0.47), ahead on 12 of 12 fresh seeds** | fit abroad on three seeds (pre-registered ladder, then the amendment's extension at +1.0 over the pick — not met), confirm on twelve; the instrument's markers from the records (two of five as written; the mechanism that won is the contest, not the take-back) | S — **shipped** |
 | **v0.8** | **the determinized declare** — a sure set cashed when the posterior proves it, not when the walk locates it (§3.8b) | ≥ 37.1% (v0.4c + 2.00) — **read 2026-09-03: 35.15% against the base's 35.07%, +0.08 paired (SE 0.08), inside the floor; 0.13 consensus claims a game at 99.6%; nothing shipped** | home markers (claim accuracy ≥ 95%, pairs ahead ≥ +0.20), then twelve seeds abroad | M |
 | **v1.0** | **the version that passes §3.9's six conditions** | ≥ 50.0% — the owner, 2026-09-03: "about 50%, or significantly above", i.e. ≥ 52.0% at twelve seeds | §3.9 | — |
@@ -3051,6 +3051,96 @@ its sure-miss asks rise; under `exposureCertain`, its "hit when available" falls
 a gain this document cannot explain and says so; a rung that closes under the floor is recorded
 with the same table.
 
+#### Record — 2026-09-04
+
+**v0.10 closes as measured: the exposure charge on v0.9's vector is worth +1.07 paired on twelve
+fresh seeds, under the +2.00 floor. Nothing ships; `monetPolicy('v0.9')` stays the shipped
+policy and `exposureCertain` is off everywhere.** Every cell 1,200 games against SESTINA v1.0,
+both arms on the v0.10 tree export (commit `8ab3fe0`), the base arm — v0.9's recorded form,
+`contest` 0.6 on v0.4c — proven byte-identical to §3.8d's recorded c3 cell at seed 2534720
+before a fresh seed was spent, every game recorded.
+
+**The fit (three fresh seeds, paired against v0.9's 37.86%).**
+
+> | arm | beside `contest` 0.6 | 5204470 | 6032457 | 7996480 | paired mean | SD | ahead |
+> |---|---|---|---|---|---|---|---|
+> | e1 | `exposure` 0.3 | +1.33 | −1.08 | −1.33 | −0.36 | 1.47 | 1 of 3 |
+> | e2 | `exposure` 0.6 | +3.08 | +1.67 | −0.42 | +1.44 | 1.76 | 2 of 3 |
+> | e3 | `exposure` 1.0 | −1.25 | +2.17 | −0.17 | +0.25 | 1.75 | 1 of 3 |
+> | e4 | `exposure` 1.5 | −4.25 | −3.08 | −7.58 | −4.97 | 2.34 | 0 of 3 |
+> | **u1** | **`exposure` 0.6 + `exposureCertain`** | **+2.92** | **+2.67** | **−0.75** | **+1.61** | **2.05** | **2 of 3** |
+> | u2 | `exposure` 1.0 + `exposureCertain` | −1.00 | +2.58 | +0.08 | +0.56 | 1.84 | 2 of 3 |
+
+The rule picked u1. The dose peaks at 0.6 in both forms and is ruinous at 1.5 (the charge then
+outweighs the hit: ask accuracy 47.3% from 55.1%); the gated and ungated forms at 0.6 sit within
+noise of each other (+1.44 and +1.61, SE about 1.0 at three seeds).
+
+**The confirmation (twelve fresh seeds, u1 against v0.9, 14,400 games a side).**
+
+> | seed | v0.9 | u1 | paired |
+> |---|---|---|---|
+> | 5682873 | 40.25 | 39.33 | −0.92 |
+> | 5690135 | 37.92 | 40.75 | +2.83 |
+> | 6007102 | 38.17 | 38.33 | +0.17 |
+> | 4920114 | 39.33 | 39.83 | +0.50 |
+> | 7140858 | 37.00 | 40.17 | +3.17 |
+> | 4334282 | 39.50 | 41.33 | +1.83 |
+> | 8816427 | 38.33 | 39.75 | +1.42 |
+> | 6848576 | 39.83 | 39.75 | −0.08 |
+> | 8516315 | 40.42 | 39.67 | −0.75 |
+> | 2344938 | 35.75 | 40.83 | +5.08 |
+> | 9677918 | 40.17 | 40.92 | +0.75 |
+> | 7951876 | 39.25 | 38.08 | −1.17 |
+> | **mean** | **38.83** | **39.90** | **+1.07** (SD 1.89, SE 0.54, t 1.96; ahead on 8 of 12) |
+
+Two standard errors above zero and two under the floor: real, and half a rung. v0.9's 38.83% over
+these seeds sits with its 38.92% over §3.8d's twelve. Their engine's markers, means over the
+cells: ask accuracy 54.60% from 55.25%, declarations 4.11 a game from 4.08 at 98.2% from 98.0%,
+lock hold 6.76 from 6.78, the calibration bias +0.007 from +0.006. At home, 600 duplicate pairs on
+`home-a` (reported, not gating): +0.04 ± 0.25 sets a pair for u1, +0.10 ± 0.25 for the gated
+0.6 — nothing, as with every priced term in the mirror.
+
+**The markers, from the confirmation records through §3.8c's instrument (u1 against v0.9,
+14,400 games each; the counterfactual is v0.9 at u1's own decisions).** Every pre-registered
+marker came in as written, and the rung still did not clear: the charge does what its name says,
+by about a point each.
+
+> | marker | pre-registered | v0.9 | u1 | as written? |
+> |---|---|---|---|---|
+> | Monet's hits later taken back | falls from 43% | 43.3% | 42.2% | **yes**, by 1.1 |
+> | Monet's hit rate against its counterfactual | below it | 54.3% (= its own) | 53.7% (counterfactual 54.4%) | **yes**, by 0.7 |
+> | sure-miss asks (into a set its side holds entirely) | rise | 6.0% | 6.9% | **yes** |
+> | hit when available (`exposureCertain`) / sets a game | falls below 55.3% / rise | 55.3% / 3.41 | 54.6% / 3.45 | **yes** |
+> | locks cashed | rise from 91.5% | 91.5% | 91.9% | **yes**, barely |
+
+What the records show:
+
+- **The charge changes 7.1% of Monet's asks (42,200), and at those decisions it gives up hits.**
+  v0.9's pick would hit 38.8% there; u1's ask hits 28.7%. Its hits a game fall to 22.1 from 22.6,
+  its asks a game to 41.2 from 41.6, and the game runs 93.4 events to the clinch from 94.3. Its
+  own hits are taken back less (42.2% from 43.3%) and end in a cashed set more (64.8% from
+  63.6%); its misses are made at slightly safer targets (mean danger 0.60 from 0.64; SESTINA opens
+  with a certain take-back after 21.1% of them from 21.7%).
+- **The freedom to skip a certain hit is barely used.** The gated form at the same dose changes
+  6.5% of asks against u1's 7.1% on the fit records and reads the same markers within noise; the
+  extra decisions are about a quarter of a game each. "Hit when available" falls to 54.6% from
+  55.3%.
+- **The sets barely move.** 3.45 / 4.10 from 3.41 / 4.14: +0.04 a game for Monet, −0.04 for
+  SESTINA. The even sets 46.3% from 46.0%; the two-card sets 30.8% from 29.1%; the four-card
+  61.8% from 62.5%. Declares 3.40 a game from 3.37 at 99.0% from 98.9%; lock hold 6.00 from 5.92.
+
+So the take-back cost that §3.8c measured is priced correctly by the charge, and pricing it is
+worth about a point on top of the contest credit, not two: the exposed hits it declines were
+mostly worth taking. The exposure charge is recorded, off the vector, and this document does not
+recommend a third look at the ask ranker's terms.
+
+**What is fixed by this record.** Nothing on Monet's vector. `exposureCertain` stays in the code
+behind byte identity (off on every version and every roster style) with its pins in
+`tests/bots/priced.test.ts`; the v0.9 forward bank replays unchanged. Scratch state, not
+committed: `$SP/monet-v10` (cells, calib files, REPORT-fit.txt, REPORT-conf.txt, markers-*.txt,
+the records), `$SP/arm_v10`, `$SP/fishai-v10`.
+
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -3481,6 +3571,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 7 | **v0.5's arms read +0.4 abroad, inside the ±2.00 floor (§3.6c): ship `choiceKappa` anyway, buy the seeds that would decide it, or move on?** The rule as written ships nothing. Three arms agree on +0.37 to +0.47 (0.6 – 1.0 × SE); reading +0.4 at 2 × SE would take about a hundred seeds, an hour of bridge. The markers say the prior over-states against SESTINA (calibration +0.021 → +0.046 at κ = 1) and buys ask accuracy, not sets. **Recommendation: move on.** `choiceKappa` stays in the code off the vector, v0.6 is built on v0.4c, and if a later rung changes the calibration picture the twelve cells are re-run then (35 minutes). | open |
 | 8 | **After v0.8: four levers measured, none moved the number — what is the next rung?** Belief (§3.6, +0.47 abroad inside the floor), communication (§3.7a, behind at home), search (§3.8a, a no-op at the budget; the post-hoc lock-only leaf's abroad read is recorded there) and the declare (§3.8b, +0.08 abroad, exact to ±0.16) are each real-and-small or null against SESTINA v1.0 on twelve seeds, and the oracle ceiling (§3.6c, 38.28%) says the 15 points to the owner's 50% are not in card knowledge at all. Three ways forward, in the order this document recommends them: **(a) an attribution rung** — full-information records of Monet against SESTINA from the bridge (their engine's game output is data, not code), split by phase and mechanism to say where the 1.2 sets a game go, before any further mechanism is built; **(b) stop at v0.4c** as v1.0's vector and run §3.9's acceptance as written; **(c) another mechanism on a hypothesis this document cannot yet support** — the declare bar re-fitted against SESTINA's theft rate (the adaptive risk/benefit the owner asked for; §3.7a's home read says the bar is right at home, and abroad it has never been read). The recommendation is (a), then (b) or (c) on what it finds. | **taken 2026-09-03 — the owner chose (a)**; the study is §3.8c, and its readout writes row 9. |
 | 9 | **After the attribution study (§3.8c): the rung is the ask's value beyond its hit.** SESTINA's 1.09 extra cashed sets a game are 40% the even sets, 31% steals from Monet's majorities, 29% its own conversion; at SESTINA's decisions Monet's counterfactual hits 62.5% to SESTINA's 55.7% (SE 0.08, every seed, every holding bucket) and SESTINA wins 65.7% — the hit chance is not the value of an ask, position is, and a hit publishes a location the opponent takes back. **Recommendation: v0.9, the priced ask** — the scorer gains two terms beside the hit: what a hit gives away (the chance the published card is taken back before the set is cashed) and what a miss reveals or learns; fitted at home on the instrument's own markers (the counterfactual surplus at the opponent's decisions, the hit rate by phase, the steals row) and confirmed abroad on twelve fresh seeds at ±2.00. **Second: (c), the risk bar on the declare**, bounded by R4 at about 0.2 sets a game (SESTINA cashes a lock in 4.3 events at 98.1%; Monet in 7.8 at 99.1%). | **taken 2026-09-03 — the owner chose v0.9 ("build v0.9 by your recommendation"); CLEARED 2026-09-04**: contest 0.6 at +4.04 paired against v0.4c on twelve fresh seeds, ahead on all twelve (§3.8d). The exposure charge (the take-back half of the recommendation) is the forward bank. (c), the declare risk bar, stays second. |
+| 10 | **After v0.10: the ask ranker's terms are measured out — what is the next rung?** The contest credit moved the even sets and the majorities and shipped (+4.04); the exposure charge on top of it is worth +1.07 on twelve seeds, real and under the floor (§3.8e). SESTINA's remaining 0.73 sets a game over v0.9, by the deal's split on v0.9's twelve base cells of this rung (14,400 games): **47% is the two-against-four bucket** — SESTINA converts its four-card majorities 70.9% of the time, Monet its own 62.5% — 28% the even sets (46.0% to Monet), 21% the one-against-five (SESTINA 87.4%, Monet 81.8%), 4% the rest. Where a majority becomes a set is the declare: SESTINA declares 4.18 sets a game at 98.2% right and holds a lock 5.3 events; Monet 3.37 at 98.9% and 5.9, on a fixed threshold of 0.775 that does not ask what the wait costs. **Recommendation: (c), the risk bar on the declare** — a declare threshold that prices the position (the chance of being right against what a wrong declare gifts and what waiting concedes: the licence the opponents keep while the set is open, the take-back the records count) in place of the fixed 0.775 — the owner's own direction of 2026-09-03 (adaptive risk/benefit), bounded by §3.8c's R4 at about 0.2 sets a game, which at v0.9's exchange rate (0.27 sets a game bought +4.04) is a rung. Fitted abroad on three fresh seeds, confirmed on twelve at +2.00 over v0.9, its markers the declare count, accuracy and gifts and the lock hold. Second: the closing ask at four and five cards, where SESTINA's asks hit 33.8% to Monet's 32.9% at the same holding. Not recommended: a third term on the ask ranker. | **OPEN 2026-09-04** — the owner's call. |
 
 ---
 
