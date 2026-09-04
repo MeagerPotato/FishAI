@@ -30,6 +30,7 @@ import path from 'node:path'
 const ENG = await import(pathToFileURL(process.cwd() + '/lib/engine/index.ts').href)
 const MON = await import(pathToFileURL(process.cwd() + '/lib/engine/bots/monet.ts').href)
 const CARDS = await import(pathToFileURL(process.cwd() + '/lib/engine/cards.ts').href)
+const BOTS = await import(pathToFileURL(process.cwd() + '/lib/engine/bots/index.ts').href)
 const { newGame, us54Config, legalActionsSummary, seatView, hashSeed, reduce, decide } = ENG
 
 function argOf(flag, dflt) {
@@ -45,6 +46,24 @@ const PER_SEED = has('--per-seed')
 const VA = argOf('--a', 'v0.4c')
 const VB = argOf('--b', 'v0.4c')
 const CF = argOf('--cf', 'v0.4c')
+// --locks: the declare priced on the records (a plan per declarable set per A seat per window; ~15 s a cell)
+const LOCKS = process.argv.includes('--locks')
+const LOCK_BARS = [0.5, 0.6, 0.7, 0.775, 0.9]
+const LOCK_MIN_CARDS = Number(argOf('--locks-min', 4))
+const LOCKS_WHY = process.argv.includes('--locks-why') // ask decide() at every certain-plan window and print the ones A never cashed
+const LOCKS_BOTH = process.argv.includes('--locks-both') // probe B's declarable sets from B's seats too (the reliability table only)
+const CALIB_P = [0.1, 0.3, 0.5, 0.7, 0.9, 1] // bin lower bounds: [0.1,0.3) [0.3,0.5) [0.5,0.7) [0.7,0.9) [0.9,1) and p = 1
+// Declare rules priced on the records: a rule fires at the earliest window (before A's own declare of
+// the set) where some A seat's plan satisfies it. u = guessed cards; u = 0 is the certain plan, the
+// base's own business, priced once on its own and excluded from every speculative rule.
+const RULES = []
+RULES.push({ name: 'certain plan (u = 0), any seat', fire: (r) => r.u === 0 && r.p >= 1 })
+for (const bar of LOCK_BARS) RULES.push({ name: `any u >= 1, p >= ${bar}`, fire: (r) => r.u >= 1 && r.p >= bar })
+for (const bar of LOCK_BARS) RULES.push({ name: `gated u >= 1, p >= ${bar}`, fire: (r) => r.u >= 1 && r.gate && r.p >= bar })
+for (const [b1, b2, b3] of [[0.9, 0.5, 0.5], [0.9, 0.6, 0.5], [0.9, 0.7, 0.5], [0.9, 0.7, 0.6], [0.9, 0.8, 0.6], [0.9, 0.8, 0.7], [0.95, 0.7, 0.5], [2, 0.7, 0.5], [2, 0.8, 0.6], [2, 0.8, 0.5], [2, 0.9, 0.7], [2, 2, 0.5], [2, 2, 0.7]]) {
+  RULES.push({ name: `by u: u1 >= ${b1 > 1 ? 'never' : b1}, u2 >= ${b2 > 1 ? 'never' : b2}, u3+ >= ${b3}`, fire: (r) => r.u === 0 ? false : r.u === 1 ? r.p >= b1 : r.u === 2 ? r.p >= b2 : r.p >= b3 })
+}
+const newRuleStat = () => ({ fired: 0, right: 0, wrong: 0, savedSum: 0, byOutcome: { us: { n: 0, right: 0 }, them: { n: 0, right: 0 }, open: { n: 0, right: 0 } }, ev: 0, byU: [0, 0, 0, 0], foreign: 0, lostForeign: 0, giftedByMate: 0, atFinal: 0, openAtFour: 0, winIfCashed: 0, giftAtFour: 0, giftClinch: 0, giftForced: 0 })
 const LABEL = argOf('--label', 'attr')
 const JSON_OUT = argOf('--json', null)
 const VALIDATE = has('--validate')
@@ -93,15 +112,27 @@ function newAcc() {
   const declT = () => ({
     n: 0, correct: 0, gifts: 0, void: 0, forced: 0,
     locksFormed: 0, locksCashed: 0, locksBroken: 0, locksGifted: 0, locksOpen: 0, holdSum: 0, holdN: 0,
+    locksOpenAtFourLost: 0, gamesLostWithLock: 0, // uncashed locks of this side at four sets when the other side clinched, and the games
+    // --locks: the claimer's own plan p at its declares, by bin: the declare's outcome and the plan's own truth
+    pBins: Object.fromEntries(['certain', 'high', 'mid', 'low', 'none'].map((k) => [k, { n: 0, right: 0, planRight: 0 }])),
+  })
+  const barT = () => ({ fired: 0, right: 0, wrong: 0, savedSum: 0, byOutcome: { us: { n: 0, right: 0 }, them: { n: 0, right: 0 }, open: { n: 0, right: 0 } }, ev: 0 })
+  const lockStat = () => ({
+    sets: 0, windows: 0, outcome: { us: 0, them: 0, open: 0 },
+    // at the first window: the best gated p, the best any p, and whether the set was already a lock
+    firstGated: 0, firstAny: 0, firstLock: 0,
+    gated: Object.fromEntries(LOCK_BARS.map((b) => [b, barT()])),
+    any: Object.fromEntries(LOCK_BARS.map((b) => [b, barT()])),
   })
   const tempoT = () => ({ runs: 0, hits: 0, passes: 0 })
   const fateT = () => ({ hits: 0, takeBack: 0, closes: 0, takenBack: 0, converted: 0, lost: 0, open: 0 })
   const missT = () => ({ n: 0, dangerSum: 0, dangerAny: 0, oppAsks: 0, oppHits: 0, oppFirstCertain: 0, asks: 0, askDangerSum: 0, askDangerAny: 0, cfAsks: 0, cfDangerSum: 0, cfDangerAny: 0 })
   const split = {}
+  const locks = LOCKS ? lockStat() : null
   for (let k = 0; k <= 6; k++) split[k] = { n: 0, aCashed: 0, aGifted: 0, bCashed: 0, bGifted: 0, open: 0, openLocked: 0, openLeadA: 0, openLeadB: 0 }
   return {
     games: 0, wins: [0, 0], sets: [0, 0], open: 0, noClinch: 0, eventsToClinch: 0, badRecords: 0,
-    split, asks: [askT(), askT()], decl: [declT(), declT()], tempo: [tempoT(), tempoT()],
+    split, asks: [askT(), askT()], decl: [declT(), declT()], locks, tempo: [tempoT(), tempoT()],
     fate: [fateT(), fateT()], miss: [missT(), missT()],
   }
 }
@@ -175,10 +206,110 @@ function walk(rec, cfPol, acc) {
     }
     return false
   }
+  const OPTS = cfPol ? { logWindow: cfPol.skill.logWindow, useConstraints: cfPol.skill.useConstraints, marginal: true } : null
+  const track = {} // book -> { seq: [{ i, pg, rg, pa, ra }], declaredAt } for sets A's side could declare
+  const probe = (b, i, seat) => {
+    const state = {
+      config: us54Config, seed: rec.label, phase: 'playing', turn: seat,
+      hands: hands.map((h, x) => (x !== seat ? [...h] : CARDS.sortHand(h, us54Config))),
+      books: { ...resolved }, score: [awarded[0], awarded[1]],
+      log: rec.events.slice(0, i), moveIndex: i,
+    }
+    const view = seatView(state, seat)
+    const plan = BOTS.planClaimFor(view, cfPol, b)
+    const myTeam = side(seat)
+    let gate = plan.uncertain.length <= cfPol.style.declareMaxUncertain
+    if (gate && plan.uncertain.length > 0) {
+      const k = ENG.buildKnowledge(view, OPTS)
+      for (const c of plan.uncertain) { const cand = k.cands[c] ?? []; if (cand.length === 0 || !cand.every((x) => side(x) === myTeam)) { gate = false; break } }
+    }
+    let right = sameTeamHolds(b) === myTeam
+    if (right) for (const [c, x] of Object.entries(plan.assignments)) if (seatOf.get(c) !== x) { right = false; break }
+    let why
+    if (LOCKS_WHY && plan.uncertain.length === 0 && plan.p >= 1) {
+      const nextAsk = rec.events.slice(i).find((e) => e.type === 'ask')
+      const turn = nextAsk ? nextAsk.asker : seat
+      const v2 = { ...view, declareWindow: { option: seat, declined: ((seat - turn) % 6 + 6) % 6 } }
+      const d = BOTS.decideExplained(v2, cfPol, 1)
+      const refused = (d.trace.refused ?? []).filter((r) => String(r.reason).includes(b)).map((r) => `${r.kind}: ${r.reason}`)
+      why = `${d.action.type}${d.action.type === 'claim' ? ' ' + d.action.book : ''} [${d.trace.kind}] ${d.trace.headline}${refused.length ? ' | refused ' + refused.join(' ; ') : ''}`
+    }
+    return { p: plan.p, gate, right, u: plan.uncertain.length, lock: sameTeamHolds(b) === myTeam, foreign: !hands[seat].some((c) => bookOf(c) === b), seat, why }
+  }
+  const tallyCalib = (sd, r) => {
+    if (!acc.calib) acc.calib = [0, 1].map(() => [0, 1, 2, 3].map(() => CALIB_P.map(() => ({ n: 0, right: 0, lock: 0, gn: 0, gright: 0 }))))
+    const ub = Math.min(3, r.u)
+    let pb = -1
+    for (let j = 0; j < CALIB_P.length; j++) if (r.p >= CALIB_P[j]) pb = j
+    if (pb < 0) return
+    const C = acc.calib[sd][ub][pb]
+    C.n++
+    if (r.right) C.right++
+    if (r.lock) C.lock++
+    if (r.gate) { C.gn++; if (r.right) C.gright++ }
+  }
+  const probeWindow = (i) => {
+    for (const sd of [0, 1]) {
+      if (sd === 1 && !LOCKS_BOTH) continue
+      for (const b of BOOKS) {
+        if (resolved[b] || holdingOf(sd, b) < LOCK_MIN_CARDS) continue
+        let pg = 0, pa = 0
+        const ps = []
+        for (let x = 0; x < 6; x++) {
+          if (side(x) !== sd || hands[x].length === 0) continue
+          const r = probe(b, i, x)
+          tallyCalib(sd, r)
+          if (sd === 0) ps.push(r)
+          if (r.p > pa) pa = r.p
+          if (r.gate && r.p > pg) pg = r.p
+        }
+        if (sd !== 0) continue
+        if (!track[b]) { track[b] = { seq: [], declaredAt: -1 }; const S = acc.locks; S.sets++; S.firstGated += pg; S.firstAny += pa; if (sameTeamHolds(b) === 0) S.firstLock++ }
+        track[b].seq.push({ i, ps })
+        acc.locks.windows++
+      }
+    }
+  }
+  const finishSet = (b, outcome, endIndex, claimerSide, claimForced) => {
+    const T = track[b]
+    if (!T) return
+    const S = acc.locks
+    S.outcome[outcome]++
+    if (!S.rules) S.rules = RULES.map(() => newRuleStat())
+    for (let ri = 0; ri < RULES.length; ri++) {
+      const rule = RULES[ri]
+      let hit = null, at = -1
+      for (const w of T.seq) {
+        if (T.declaredAt >= 0 && w.i >= T.declaredAt) break
+        for (const r of w.ps) if (rule.fire(r) && (hit === null || r.p > hit.p)) hit = r
+        if (hit) { at = w.i; break }
+      }
+      if (!hit) continue
+      const B = S.rules[ri]
+      B.fired++
+      B.byU[Math.min(3, hit.u)]++
+      const O = B.byOutcome[outcome]
+      O.n++
+      if (hit.right) { B.right++; O.right++ } else B.wrong++
+      B.savedSum += endIndex - at
+      if (hit.foreign) { B.foreign++; if (outcome !== 'us') B.lostForeign++ }
+      if (outcome === 'them' && claimerSide === 0) { B.giftedByMate++; if (awarded[0] === 4) B.giftAtFour++; if (awarded[1] === 4) B.giftClinch++; if (claimForced) B.giftForced++ }
+      if (outcome === 'open' && at === rec.events.length - 1) B.atFinal++
+      if (outcome === 'open' && awarded[0] === 4) { B.openAtFour++; if (hit.right && awarded[1] >= 5) B.winIfCashed++ }
+      if (LOCKS_WHY && ri === 0 && outcome !== 'us') console.error(`WHY ${rec.label} set ${b} seat ${hit.seat} window ${at} of ${rec.events.length} score ${awarded[0]}-${awarded[1]} outcome ${outcome}${hit.foreign ? ' foreign' : ''} hand ${hands[hit.seat] ? hands[hit.seat].length : '?'} -> ${hit.why}
+   tail: ${rec.events.slice(at).map((e) => e.type === 'claim' ? `claim@${e.claimer} ${e.book}${e.forced ? '!' : ''} ${e.outcome}` : e.type === 'ask' ? `ask@${e.asker}>${e.target} ${e.card} ${e.hit ? 'hit' : 'miss'}` : e.type === 'pass' ? `pass@${e.from}>${e.to}` : e.type).join(' ; ')}`)
+      // set differential (A minus the other side) against what actually happened to the set:
+      // right: cashed by A anyway 0, the other side got it +2, open at the clinch +1;
+      // wrong (a gift): A would have cashed it -2, the other side got it anyway 0, open -1.
+      B.ev += hit.right ? (outcome === 'us' ? 0 : outcome === 'them' ? 2 : 1) : (outcome === 'us' ? -2 : outcome === 'them' ? 0 : -1)
+    }
+    delete track[b]
+  }
   updateLocks(0)
 
   for (let i = 0; i < rec.events.length; i++) {
     const ev = rec.events[i]
+    if (LOCKS && cfPol) probeWindow(i)
     if (ev.type === 'ask') {
       const T = side(ev.asker)
       const A = acc.asks[T]
@@ -276,6 +407,16 @@ function walk(rec, cfPol, acc) {
       const sp = acc.split[split0[b]]
       if (outcomeTeam === 0) sp[correct ? 'aCashed' : 'aGifted']++
       else if (outcomeTeam === 1) sp[correct ? 'bCashed' : 'bGifted']++
+      if (LOCKS && cfPol) {
+        if (hands[ev.claimer] !== undefined) {
+          const r = probe(b, i, ev.claimer)
+          const bin = r.p >= 1 ? 'certain' : r.p >= 0.775 ? 'high' : r.p >= 0.5 ? 'mid' : r.p > 0 ? 'low' : 'none'
+          D.pBins[bin].n++
+          if (correct) D.pBins[bin].right++
+          if (r.right) D.pBins[bin].planRight++
+        }
+        if (track[b]) { if (T === 0 && correct) track[b].declaredAt = i; finishSet(b, outcomeTeam === 0 ? 'us' : 'them', i, T, !!ev.forced) }
+      }
       const L = lock[b]
       if (L) {
         if (L.team === T && correct) { D.locksCashed++; D.holdSum += i - L.at; D.holdN++ }
@@ -303,17 +444,21 @@ function walk(rec, cfPol, acc) {
     }
   }
   if (clinchAt === null) acc.noClinch++
+  if (LOCKS && cfPol) { const end = clinchAt === null ? rec.events.length : clinchAt; if (clinchAt === null) probeWindow(end); for (const b of BOOKS) if (track[b]) finishSet(b, 'open', end) }
   for (const e of hitEntries) if (!e.resolved) { const F = acc.fate[e.side]; if (e.takenBack) F.takenBack++; F.open++ }
+  const lostWithLock = [false, false]
   for (const b of BOOKS) {
     if (resolved[b]) continue
     acc.open++
     const sp = acc.split[split0[b]]
     sp.open++
-    if (lock[b]) { sp.openLocked++; acc.decl[lock[b].team].locksOpen++ }
+    if (lock[b] && LOCKS_WHY) console.error(`OPENLOCK ${rec.label} set ${b} team ${lock[b].team} score ${awarded[0]}-${awarded[1]} formed at ${lock[b].at} of ${rec.events.length}`)
+    if (lock[b]) { sp.openLocked++; acc.decl[lock[b].team].locksOpen++; if (awarded[lock[b].team] === 4 && awarded[1 - lock[b].team] >= 5) { acc.decl[lock[b].team].locksOpenAtFourLost++; lostWithLock[lock[b].team] = true } }
     const c0 = BOOK_CARDS.get(b).filter((c) => side(seatOf.get(c)) === 0).length
     if (c0 > 3) sp.openLeadA++
     else if (c0 < 3) sp.openLeadB++
   }
+  for (const t of [0, 1]) if (lostWithLock[t]) acc.decl[t].gamesLostWithLock++
   acc.games++
 }
 
@@ -366,6 +511,7 @@ function toRecord(o, names, bookOfSet, label, header) {
   const hands = hands0.map((h) => [...h])
   const seatOf = new Map()
   hands0.forEach((h, x) => h.forEach((c) => seatOf.set(c, x)))
+  const publicAt = new Map() // card -> the seat a hit publicly moved it to, as the bridge bot tracks it
   const events = []
   const outcomes = []
   let prevCounts = hands0.map((h) => h.length)
@@ -377,19 +523,21 @@ function toRecord(o, names, bookOfSet, label, header) {
     if (kind === 0) {
       const c = names[card]
       events.push({ type: 'ask', asker: actor, target, card: c, hit: !!success })
-      if (success) { hands[target] = hands[target].filter((d) => d !== c); hands[actor].push(c); seatOf.set(c, actor) }
+      if (success) { hands[target] = hands[target].filter((d) => d !== c); hands[actor].push(c); seatOf.set(c, actor); publicAt.set(c, actor) }
     } else if (kind === 1 || kind === 3) {
       const book = bookOfSet[set]
       const assignments = {}
       const actualHolders = {}
-      for (let j = 0; j < 6; j++) { const c = names[set * 6 + j]; assignments[c] = owner[j]; actualHolders[c] = seatOf.get(c) }
+      // as the bridge bot's claimEvent: a right declaration publishes every holder; a wrong one only
+      // the cards a hit had already shown, so the counterfactual knows exactly what the live bot knew
+      for (let j = 0; j < 6; j++) { const c = names[set * 6 + j]; assignments[c] = owner[j]; if (success) actualHolders[c] = seatOf.get(c); else { const x = publicAt.get(c); if (x !== undefined) actualHolders[c] = x } }
       const T = team(actor)
       const outcomeTeam = success ? T : 1 - T
       const ev = { type: 'claim', claimer: actor, book, assignments, actualHolders, outcome: `team${outcomeTeam}` }
       if (kind === 3) ev.forced = true
       events.push(ev)
       outcomes.push([set, outcomeTeam])
-      for (let j = 0; j < 6; j++) { const c = names[set * 6 + j]; const x = seatOf.get(c); if (x !== undefined) hands[x] = hands[x].filter((d) => d !== c); seatOf.delete(c) }
+      for (let j = 0; j < 6; j++) { const c = names[set * 6 + j]; const x = seatOf.get(c); if (x !== undefined) hands[x] = hands[x].filter((d) => d !== c); seatOf.delete(c); publicAt.delete(c) }
     } else if (kind === 2) {
       events.push({ type: 'pass', from: actor, to: target })
     } else throw new Error(`${label}: unknown event kind ${kind}`)
@@ -403,6 +551,7 @@ function toRecord(o, names, bookOfSet, label, header) {
 
 /* ---------------------------------------------------------------- report --- */
 
+const f2 = (x) => (Number.isFinite(x) ? x.toFixed(2) : 'n/a')
 const pct = (a, b) => (b > 0 ? ((100 * a) / b).toFixed(1) + '%' : '-')
 const per = (a, g, d = 2) => (g > 0 ? (a / g).toFixed(d) : '-')
 const ratio = (a, b, d = 3) => (b > 0 ? (a / b).toFixed(d) : '-')
@@ -472,6 +621,42 @@ function report(acc, head) {
     const T = acc.tempo[t]
     console.log(`| ${t === 0 ? 'A' : 'B'} | ${pct(acc.asks[t].n, askTotal)} | ${per(T.runs, g)} | ${ratio(acc.asks[t].n, T.runs, 2)} | ${per(T.hits, g)} | ${per(T.passes, g)} |`)
   }
+  console.log('')
+  if (acc.locks) {
+    console.log('-- the declare, priced (--locks): each side\'s declares by the claimer\'s own plan p through the counterfactual planner: how often the declare was right, and how often the PLAN was right --')
+    console.log('| side | p = 1 | right | plan right | [0.775, 1) | right | plan right | [0.5, 0.775) | right | plan right | (0, 0.5) | right | plan right | p = 0 | right |')
+    console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|')
+    for (const t of [0, 1]) { const P = acc.decl[t].pBins; const c = (k) => `${P[k].n} | ${pct(P[k].right, P[k].n)} | ${pct(P[k].planRight, P[k].n)}`; console.log(`| ${t === 0 ? 'A' : 'B'} | ${c('certain')} | ${c('high')} | ${c('mid')} | ${c('low')} | ${P.none.n} | ${pct(P.none.right, P.none.n)} |`) }
+    const S = acc.locks
+    console.log('')
+    console.log(`-- A\'s declarable sets (at least ${LOCK_MIN_CARDS} of six on A\'s side by the deal at some window): ${S.sets} (${per(S.sets, g)} a game), ${per(S.windows, S.sets)} windows each; at the first window the best gated p averages ${f2(S.firstGated / Math.max(1, S.sets))}, the best any-form p ${f2(S.firstAny / Math.max(1, S.sets))}, and ${pct(S.firstLock, S.sets)} were already locks --`)
+    console.log(`   outcome: A cashed ${pct(S.outcome.us, S.sets)}, the other side got it ${pct(S.outcome.them, S.sets)}, open at the clinch ${pct(S.outcome.open, S.sets)}`)
+    console.log('')
+    console.log('-- declare rules priced on the records: the earliest window (before A\'s own declare) where some A seat\'s plan satisfies the rule, against what actually happened to the set; EV in sets of differential (A minus the other side): right = 0 if A cashed anyway, +2 if the other side had got it, +1 if it stayed open; wrong = -2 / 0 / -1 --')
+    console.log('| rule | fires | by u (0/1/2/3+) | right | wrong | events earlier | on sets A cashed anyway (wrong) | on sets the other side got (right) | on sets open at the clinch (right) | EV sets a game | foreign (of them not cashed by A) | the other side got it by a teammate\'s wrong declare | open: fired at the final window | open at A = 4 (right, and the other side clinched: a win if cashed) | of the teammate gifts: A at four (a win thrown) / the other side at four (their clinch) / by an engine-forced declare |')
+    console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|')
+    if (S.rules) for (let ri = 0; ri < RULES.length; ri++) {
+      const B = S.rules[ri]
+      console.log(`| ${RULES[ri].name} | ${B.fired} (${per(B.fired, g, 3)}/g) | ${B.byU.join('/')} | ${pct(B.right, B.fired)} | ${B.wrong} | ${f2(B.savedSum / Math.max(1, B.fired))} | ${B.byOutcome.us.n} (${B.byOutcome.us.n - B.byOutcome.us.right}) | ${B.byOutcome.them.n} (${B.byOutcome.them.right}) | ${B.byOutcome.open.n} (${B.byOutcome.open.right}) | ${(B.ev / Math.max(1, g)).toFixed(3)} | ${B.foreign} (${B.lostForeign}) | ${B.giftedByMate} | ${B.atFinal} | ${B.openAtFour} (${B.winIfCashed}) | ${B.giftAtFour} / ${B.giftClinch} / ${B.giftForced} |`)
+    }
+    console.log('')
+  }
+  if (acc.calib) {
+    const labels = ['[0.1, 0.3)', '[0.3, 0.5)', '[0.5, 0.7)', '[0.7, 0.9)', '[0.9, 1)', 'p = 1']
+    for (const sd of [0, 1]) {
+      const rows = acc.calib[sd]
+      if (rows.every((u) => u.every((c) => c.n === 0))) continue
+      console.log(`-- reliability of the plan's p, ${sd === 0 ? 'A' : 'B'}'s seats over ${sd === 0 ? 'A' : 'B'}'s declarable sets (every window, every seat with cards, through the counterfactual planner): probes | right (set on the side and every holder named right) | the set was a lock at that window | gated probes | gated right --`)
+      console.log('| guessed cards | ' + labels.join(' | ') + ' |')
+      console.log('|---|' + labels.map(() => '---').join('|') + '|')
+      for (let ub = 0; ub < 4; ub++) {
+        const cells = rows[ub].map((C) => C.n === 0 ? '-' : `${C.n} / ${pct(C.right, C.n)} / lock ${pct(C.lock, C.n)} / g ${C.gn} ${pct(C.gright, C.gn)}`)
+        console.log(`| ${ub === 3 ? '3+' : ub} | ${cells.join(' | ')} |`)
+      }
+      console.log('')
+    }
+  }
+  for (const t of [0, 1]) { const D = acc.decl[t]; console.log(`-- ${t === 0 ? 'A' : 'B'} finished at four sets with an uncashed lock while the other side clinched: ${D.locksOpenAtFourLost} sets in ${D.gamesLostWithLock} games (${pct(D.gamesLostWithLock, g)} of games) --`) }
   console.log('')
   console.log('-- declares and locks --')
   console.log('| side | declares/g | right | gifts/g | void | locks formed/g | cashed | broken | gifted | open at the end | lock hold (events, cashed) |')
