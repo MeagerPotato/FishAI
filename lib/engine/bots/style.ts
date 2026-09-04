@@ -345,6 +345,15 @@ export interface StyleParams extends AskWeights {
    */
   exposure?: number
   /**
+   * MONET.md §3.8e — the exposure charge on CERTAIN hits too, and the priced terms ungated. With
+   * `exposure > 0` and this true, a certain hit the opponents can take back pays
+   * `exposure · wHit · risk`, and an uncertain ask keeps its contest credit and exposure charge
+   * even when a certain hit is legal — so an exposed certain hit can lose to a contested ask,
+   * which the v0.9 form never allows. Absent or false is byte identity with v0.9's gate; true
+   * without `exposure` is byte identity too. Absent on every roster style and every tier.
+   */
+  exposureCertain?: boolean
+  /**
    * MONET.md §3.7a item 2′ — the pre-emptive declare. The compulsion (RULES_US54.md §3.2, a window that
    * cannot close) arrives when the last opponent card leaves, and it lands on whichever seat holds
    * the turn then, with whatever it knows. In the windows before it every teammate holds the option
@@ -765,6 +774,8 @@ export function validateStyle(style: StyleParams): string[] {
   if (contest !== undefined && !(typeof contest === 'number' && Number.isFinite(contest) && contest >= 0)) bad.push(`contest ${String(contest)} is not a number >= 0`)
   const exposure = style.exposure
   if (exposure !== undefined && !(typeof exposure === 'number' && Number.isFinite(exposure) && exposure >= 0)) bad.push(`exposure ${String(exposure)} is not a number >= 0`)
+  const exposureCertain = style.exposureCertain
+  if (exposureCertain !== undefined && typeof exposureCertain !== 'boolean') bad.push(`exposureCertain ${String(exposureCertain)} is not a boolean`)
   const compelHorizon = style.compelHorizon
   if (compelHorizon !== undefined && !(typeof compelHorizon === 'number' && Number.isInteger(compelHorizon) && compelHorizon >= 0)) bad.push(`compelHorizon ${String(compelHorizon)} is not an integer >= 0`)
   const declareThresholdCompelled = style.declareThresholdCompelled

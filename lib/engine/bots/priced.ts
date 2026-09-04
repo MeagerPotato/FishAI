@@ -29,7 +29,10 @@
  * Both terms are in the ranker's own units (`wHit` buys one unit of hit probability), both are
  * computed from the seat's public knowledge only — the marginal table and the certain holders —
  * and both are gated in `pickAsk` the way the concession terms are: they never move an uncertain
- * ask above a certain hit, and a certain hit pays neither.
+ * ask above a certain hit, and a certain hit pays neither — unless `exposureCertain` is on
+ * (MONET.md §3.8e, the v0.10 form): then a certain hit pays the exposure charge like any other,
+ * and `pickAsk` leaves both terms in place beside a legal certain hit, so an exposed certain hit
+ * can lose to a contested ask. `pricedUngated` below is that switch, read once per decision.
  *
  * Pure and deterministic over `(view, k, style, ask, p)`: no clock, no rng, no module state.
  */
@@ -42,6 +45,14 @@ import type { Knowledge, RankedAsk, SeatView } from './types.ts'
 /** Is either priced term live for this style? Read once per decision. */
 export function pricedActive(style: StyleParams): boolean {
   return (style.contest ?? 0) > 0 || (style.exposure ?? 0) > 0
+}
+
+/**
+ * MONET.md §3.8e — are the priced terms ungated, and the exposure charge due on certain hits? Only
+ * with a live exposure charge AND `exposureCertain: true`; `exposureCertain` alone changes nothing.
+ */
+export function pricedUngated(style: StyleParams): boolean {
+  return (style.exposure ?? 0) > 0 && style.exposureCertain === true
 }
 
 /** How the set looks to this seat: the opponents' expected share of it, and how much of it nobody can place. */
@@ -140,12 +151,14 @@ export function hitExposure(view: SeatView, k: Knowledge, card: Card): Exposure 
 
 /**
  * The exposure charge: `exposure · wHit · p · risk` for an uncertain ask into an unresolved set.
- * Zero for a certain hit (it stays first), for a resolved set, and when the knob is absent or 0.
+ * Zero for a certain hit (it stays first) unless `exposureCertain` is on (§3.8e), for a resolved
+ * set, and when the knob is absent or 0.
  */
 export function exposurePenalty(view: SeatView, k: Knowledge, style: StyleParams, ask: RankedAsk, p: number): number {
   const appetite = style.exposure ?? 0
   if (!(appetite > 0)) return 0
-  if (p <= 0 || p >= 1) return 0
+  if (p <= 0) return 0
+  if (p >= 1 && !pricedUngated(style)) return 0
   const book = cardBook(ask.card)
   if (view.books[book]) return 0
   const x = hitExposure(view, k, ask.card)
