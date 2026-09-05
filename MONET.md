@@ -4113,9 +4113,12 @@ A pair is in the population iff `d` is a **pre-clinch** ask decision and `c` **i
 marginal table**. The second clause does the work: `marginal.ts` defines its rows as the cards with
 more than one candidate, so certainties, the seat's own hand and resolved sets are excluded **by
 the data structure rather than by a filter**, and no score is inflated by free correctness or made
-a function of how many certainties a position happens to carry. The pre-clinch cut is explicit —
-`attribute.mjs`'s walk records `clinchAt` but does **not** stop there, and **7.5% of ask decisions
-(2,745 of 36,699, measured) fall after a side has taken its fifth set.** Two nested populations:
+a function of how many certainties a position happens to carry. The population is pre-clinch **by
+construction**: the walk `break`s out of the game the moment a side is awarded its fifth set
+("whatever a host plays after the clinch is not the game"), which drops 8,936 of the 110,391 asks
+a 1,200-game cell records — **8.1%**, and every one of them from a deal already decided. The
+instrument nonetheless asserts the cut itself and reports the count, so the guarantee is pinned
+rather than remembered; it reads **0**. Two nested populations:
 **P_ask**, where `s` also holds a card of `cardBook(c)` so the ask is legal — **primary for the
 bound and every falsifier**, because the licence rule means nothing outside it can become an action
 — and **P_all**, primary for the mechanism diagnosis. Measured, the split is **56.1% / 43.9%**, and
@@ -4326,6 +4329,137 @@ warning that a belief-weighted closing form read **−0.472 and −2.167, losing
 where it should bite; **M4, `conceal`**; **M5, within-side resolution**, against §3.5c's 300–600×
 price; and **M-NULL, nothing on this axis — a first-class candidate.**
 
+
+#### Record — 2026-09-04
+
+**The premise of row 14 does not survive its own study. The belief about which side holds a missing
+card is CALIBRATED — reliability is 0.22% of its Brier score over 19 million labelled pairs on two
+disjoint twelve-seed corpora — and §3.8g R1's 21.4% against 11.1% is a base rate and a confidence
+distribution, not an error. Three falsifiers fire (F1, F3's second clause, F6), so by the rule as
+written the assignment axis CLOSES. Nothing ships. What the study found instead is a
+deduction defect, and it names the rung.** No cell was spent; every number below is read off
+records already on disk.
+
+**The instrument certifies itself three ways before a number is believed.** The `shipped` arm —
+the belief injected through the `boundedK` seam without a patch — reproduces `decide()` at
+**49,787 of 49,787** Monet decisions, so any later difference is the injected belief and nothing
+else. The hoist that shares one belief build between `--majority` and `--assign` leaves §3.8g's
+report **identical to the digit** on a re-run seed. And Stage 0's move rates reproduce the
+published counts exactly: `closing` w3 **8,287 asks, 1.38%** (§3.8h's 8,287 / 1.4%), `chase` h2
+**1,996** and h4 **7,219** (§3.8i's), `contest` **15.21%** (§3.8d's 15.2%). Tripwires on both
+corpora: the true holder outside `cands` **0 of 19,158,000** — the belief is sound and can only be
+miscalibrated, never wrong — tables that would not scale **0**, post-clinch decisions **0**.
+
+**B0, the pricer, FAILS its own retro-validation, and that is the first result.** Fitted on fifteen
+arm-points spanning +4.04 to −7.56: leave-one-out RMSE **3.71** against a 1.50 bar, sign right on
+**9 of 15** against a bar of 12, R² **0.069**. The pre-registered consequence binds — **this study
+reports asks and sets and refuses to convert either into points.** The reason is worth more than the
+pricer would have been: **the sign belongs to the mechanism, not to the move rate.** `contest`
+moved **15.21%** of Monet's asks for **+4.04**; `chase` h4 moved **5.05%** for **−7.56**. Within a
+family the relation is tight (chase R² 0.810, the favourable arms 0.903); across families it carries
+no information at all. "Asks moved" is a magnitude with no direction — which is also the
+retrospective explanation of §3.8g's tenfold over-statement, since it assumed a single conversion
+rate that does not exist.
+
+**R1, the belief.** Licensed population, at Monet's own decisions:
+
+> | corpus | pairs | mean q | realised y | bias q−y | Brier | reliability | resolution | uncertainty | REL/Brier |
+> |---|---|---|---|---|---|---|---|---|---|
+> | primary, `conf-base` × 12 | 9,503,599 | 0.4232 | 0.4246 | **−0.0014** | 0.2280 | 0.0005 | 0.0159 | 0.2443 | **0.0022** |
+> | replication, `conf-fix` × 12 | 9,475,021 | 0.4238 | 0.4259 | **−0.0020** | 0.2281 | 0.0006 | 0.0160 | 0.2445 | **0.0026** |
+
+The two disjoint twelves agree to **0.0006** on the bias and **0.0001** on reliability. **F1 fires
+by a factor of about fifty** on both, on all three of its conditions, and the sign of what little
+bias there is runs **negative** — Monet slightly *under*-states its own side, the opposite of the
+direction row 14 assumed. Where the curve does leave the diagonal it is under-confident at the top:
+[0.6, 0.7) reads 0.645 → 0.722 and [0.8, 0.9) 0.840 → 0.928, so §3.4a's decile bar of 0.05 is
+failed by one bin at 0.077 while its aggregate bar of 0.01 passes at 0.0014. The belief is honest
+and **not very informative**: resolution 0.0159 against an uncertainty of 0.2443. The loss, such as
+it is, is resolution and not calibration — the pre-registered prediction P3, the one flagged as
+least certain, and it decides the cheapest mechanism.
+
+**F6 fires by arithmetic, with nothing fitted.** Murphy gives Brier = REL − RES + UNC, so a perfect
+monotone recalibration removes at most REL: **0.22% of Brier**, against F6's bar of 15%. **No
+recalibration map, fitted on any corpus, can reach the bar.** M1 is dead twice over.
+
+**Why §3.8g R1 is not diagnostic, measured directly.** Recomputing its own statistic on this
+broader population reproduces its structure — P(q ≥ 0.5 | y = 0) is **11.48%** at Monet's decisions
+against **5.48%** at SESTINA's, a ratio of 2.1× where §3.8g read 1.9×. **But the identical gap is
+present on the cards the seat gets RIGHT: 26.71% against 15.78%, a ratio of 1.7×.** A
+miscalibration would be asymmetric — inflated false positives beside normal true positives. There
+is no asymmetry. Monet's belief is more confident at Monet's positions because those positions
+carry more of its own side outstanding: the base rate is **42.4%** against **39.6%**. §3.8g's
+clause (b), and row 14's premise with it, rested on a statistic that a perfectly calibrated
+forecaster reproduces.
+
+**B1, the reachability bracket** (one seed, 49,787 Monet ask decisions; reported in asks because
+Stage 0 licensed no conversion):
+
+> | arm | flips | % of Monet's asks | a game | the base ask was a sure miss | sure miss → live | column drift |
+> |---|---|---|---|---|---|---|
+> | `shipped` | **0** | 0.0% | 0.00 | — | 0 | 0 |
+> | `side-p` | 17,510 | **35.2%** | 14.59 | 73.5% | 12,281 | 0.017 |
+> | `side-c` | 19,464 | **39.1%** | 16.22 | 68.2% | 12,338 | 0.000 |
+> | `seat-p` | 24,558 | **49.3%** | 20.46 | 45.8% | 10,895 | 0.020 |
+
+**F2 does not fire**: 35–39% against a bar of 4.74% pre-registered, or 8.7% at the fitted
+favourable slope — clear by four to eight times either way. Perfect side knowledge reaches the
+policy at scale, and three flips in four displace an ask that was a **sure miss into the seat's own
+side**, which is exactly the channel §3.8i named. Connection was never the problem.
+
+**F3's second clause fires, and it relocates the question.** `seat-p` moves **49.3%** of asks
+against `side-p`'s **35.2%** — and `side-c`, the full side oracle *with* the certainties it creates,
+still only reaches 39.1%. **The ranker is markedly more sensitive to which SEAT holds a card than
+to which SIDE holds it.** Row 14 named the half of the belief the policy cares about less.
+
+**F3's first clause is not evaluable, and the reason is a finding in its own right.** An
+equal-magnitude, information-free null cannot be constructed: pinning cards to sides other than the
+truth violates the seats' slot counts, the instance becomes infeasible, and Sinkhorn cannot restore
+the margins. Measured column drift is **12.0** for a coin-flip side and **3.0** even for a
+count-preserving label shuffle, against **0.017** for `side-p` and **0.000** for `side-c`.
+**Feasibility is not separable from correctness here**, so the nuisance arm is reported and not
+used. An arm that reorders asks because it is incoherent would price the incoherence.
+
+**R2, where the error lives — and this is what the study found instead.** Bias · Brier · n:
+
+> | split | A (Monet) | B |
+> |---|---|---|
+> | **a licence for the set is on record at the TRUE holder — yes** | **−0.0851** · 0.1325 · 2.20M | **+0.1161** · 0.0984 · 2.57M |
+> | — no | +0.0129 · 0.2403 · 14.51M | −0.0203 · 0.2421 · 14.68M |
+> | \|cands\| = 2 / 3 / 4 / 5 | −0.0178 / −0.0258 / −0.0074 / +0.0030 | +0.0134 / +0.0120 / +0.0019 / −0.0015 |
+> | the true holder later asks into the set — no / yes | −0.0299 / +0.0146 | −0.0016 / +0.0008 |
+
+**The licence split is the largest effect in the study by an order of magnitude.** Where the ask log
+carries a licence for the card's true holder — 13% of the population — the belief becomes far more
+informative (Brier **0.1325** against an aggregate 0.2280) and far more biased (**−0.085** at A,
+**+0.116** at B, a twenty-point spread). The evidence is being read, and read with a systematic
+offset. The error also concentrates at **|cands| = 2–3**, precisely where the counting argument is
+near-exact and only a missed deduction can separate two seats. Both point the same way, and away
+from the mechanism row 14 assumed.
+
+**What is fixed by this record.** Nothing on Monet's vector. The instrument
+(`scripts/attribute.mjs --assign`, with `--assign-rerank`'s injection arms and the `boundedK` seam
+that needs no engine change), the pricer's failure, and the numbers above. **Decision row 15
+carries the reading: the assignment axis is closed on its calibration, and the candidate that
+survives is M3, the deduction fix** — arc-consistency over the at-least-one-of constraints, or exact
+conditioning on the small residual instance in `marginal.ts` — justified by the licence split and
+the |cands| = 2–3 concentration, and it is a **correctness fix rather than a dose**, so §6.3's
+floor does not gate it and no seeds are burned choosing a knob. M1 is dead (F1 and F6). M2 is not
+supported: the "true holder later asks" split moves the bias by 4.5 points against the licence
+split's twenty. Against all of it stands the honest prior of five consecutive measured negatives,
+and **M-NULL — §3.9's acceptance on v0.9's vector — remains a first-class candidate.**
+
+**Predictions, scored.** P0 **hit** (soundness 0 of 19.2M, `noTable` 0). P2 **missed** — I predicted
++0.005 to +0.03 and the answer is −0.0014, an order of magnitude smaller and the other sign.
+**P3 hit**, and it was the one I flagged as least certain. P5's `side-p` band of 3–12% **missed
+badly** at 35.2%. **P9 hit**: the study returns "not the binding constraint". The pilot disclosure
+stands — the `side-c` flip rate was seen on one seed before the rest was read, and no prediction was
+offered for it.
+
+**Scratch state, not committed:** `$SP/monet-v14/{stage0.sh,pricer.mjs,out/}` with the fifteen
+arm-point cells, `HOIST-BEFORE/AFTER.txt`, `out/{PRICER,stage1,stage2,assign-primary,assign-replication}.txt`;
+the probes `$SP/{cost,feas,sound,drift,mutcheck,pop,fidelity2,seam2}-v14.mjs`; the design panel's
+output at `$SP/v14-synthesis.md` and the measured ground facts at `$SP/v14-ground-facts.md`.
 
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
@@ -4762,7 +4896,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 12 | **After §3.8g's study: the two-against-four bucket is the closing ask.** On 14,400 corrected games, replicated on 28,800 old-bridge ones to a tenth of a point, SESTINA chases an opponent-held card of its own majority at 36.2% of the decisions where it can and Monet at 31.6% (SE 0.11), converts the majorities it chases 68.7% of the time to Monet's 59.8% (SE 0.26) and 6 events sooner, and Monet rates 21% of the missing cards as already its own (SESTINA's positions 11%) and chases those at half the rate. Where every missing card is known to sit with an opponent both policies chase only one decision in five, preferring another certain hit. The bound is 0.39 sets a game, +5.8 points at the exchange rate. **Recommendation: v0.12, the closing ask** — a `pickAsk` credit for an ask that closes the side's own four- or five-card majority, in two forms (weighted by the side's holding as the seat knows it; weighted also by the marginal's chance the card is not the side's own), fitted abroad on three fresh seeds by §3.8d's rule and confirmed on twelve at +2.00 over the corrected v0.9 (≥ 42.1%); the honest prior for a third ranker term is v0.10's, under the floor, against a bound three times a rung. Not recommended: a calibration correction to the marginal alone — the belief explains the chase's dullness but not the preference. | **ANSWERED 2026-09-04** — built as v0.12 (§3.8h) and measured at +0.583 paired, under the floor. The rung the study named is real and small; the belief form is measurably worse than useless. Row 13 carries what follows. |
 | 13 | **After v0.12: the closing credit is worth a quarter of a rung, and the gate is why — lift it, or change axis?** The credit does exactly what §3.8g asked and reads **+0.583 paired (SE 0.23, 9 of 12)** against a +5.8-point bound. It fires at 27.4% of ask decisions and moves 1.4% of the asks abroad, six firings in seven one card short of completing, buying a seven-point-worse hit on the asks it moves. Every marker moved as written by about a tenth of its gap. The reason the rung is a tenth of the bound is structural and was pre-registered as limit 1: the credit is gated below every certain hit, so it never reaches an **uncertain** chase, and uncertain chases are where SESTINA's 36.2%-against-31.6% lead actually sits. §3.8g does not license lifting the gate — it measured the one-in-five preference only where every missing card is *known* to be with an opponent, which is not those positions. **Recommendation: v0.13, the chase appetite** — a second, separately fitted appetite paying the same `lock` credit to uncertain chases, pre-registered as its own arm with its own dose ladder and with the never-chased episode share (Monet 83.5% ever chased against SESTINA 89.2%; the never-chased episodes are taken by the opponents 61.9% of the time) as the marker it must move. It is the one rung the study's numbers still point at, and it should be the **last ranker term tried**: three in a row have read between +0.5 and +1.1 against floors of +2.00, which is itself evidence that the ask ranker is close to spent and the remaining 4.4 points are somewhere else. Not recommended: refitting the belief form at a smaller dose — it lost on six seeds of six and the mechanism for why is measured. | **ANSWERED 2026-09-04** — built as v0.13 (§3.8i) on the owner's word and **closed on the fit**: every eligible dose loses, monotonically to −7.56, and the twelve confirmation seeds were never spent. The gate was not the story. The credit moved 2,000 to 7,200 asks and gave up an ask that hit 100.0% for one that hit 29.7–50.1%, yet the chase rate did not move — because a seat cannot tell a chase from a sure miss into its own majority. Row 14 carries what follows. |
 | 14 | **After v0.13: the ask ranker is finished, and the binding constraint is the inference — what is the next axis?** Four terms fitted on one vector: `contest` shipped at +4.04, then `exposure` +1.07, the declare bar priced at under 0.02 sets a game and not built, `closing` +0.583, and `chase` negative at **every** dose §6.3 permitted, monotonically to −7.56 (§3.8i). The last one is the informative one. It moved thousands of asks, gave up an ask that hit **100.0%** for one that hit 29.7–50.1%, and **did not move the chase rate at all** (31.5% → 31.8% against a +1.5 bar), because its own-locked asks rose while its counterfactual's fell: the asks a seat-known majority credit buys are §3.8g's sure misses into the side's own majority, not chases. That converges with §3.8g R1 from the other direction — Monet rates 21.4% of opponent-held missing cards as its own side's against 11.1% at SESTINA's positions. **The constraint is not how the ranker spends its belief; it is the belief.** Recommendation: **v0.14, the assignment**, on the one quantity every remaining marker runs through — which side holds a missing card. §3.8g named it as clause (b) and row 12 declined it while a ranker term was still untried; none is now. It is measurable without a rung: the calibration of `pAssignment`/the marginal on the opponent-held missing cards is already recorded on every bridge cell, and the study should be run on the records first (§3.8c's and §3.8g's shape) before any code, so the bound is priced before a dose is fitted. Not recommended: another ranker term, at any gate, in any form — four reads say the axis is spent. | **TAKEN 2026-09-04** — the owner chose it ("open the prs then go on v0.14"). §3.8j is pre-registered on the records before any code: the instrument, the bound as a bracket, seven falsifiers and the predictions. Row 15 carries the answer. |
-| 15 | **After §3.8j: is the assignment the binding constraint, and what does v0.14 build?** The study is pre-registered and its corpora are on disk; the reads and the falsifiers are written in §3.8j. The pilot already says the belief REACHES the policy at scale — a full side oracle changes Monet's chosen ask at **38.6%** of its decisions on one seed, eight times the 1.97-asks-a-game bar — so the cheap kill does not fire and the question is value, not connection. Candidates ranked in §3.8j: **M3** the deduction fix, **M1** a fitted recalibration (carrying §3.8h's −0.472 / −2.167 warning on belief-weighted forms), **M2** `choiceKappa` rescoped, **M4** `conceal`, **M5** within-side resolution, and **M-NULL**. Pre-registered prediction, against row 14's own premise: **the study returns "not the binding constraint".** | **OPEN** — awaiting §3.8j's record. |
+| 15 | **After §3.8j: is the assignment the binding constraint, and what does v0.14 build?** The study is pre-registered and its corpora are on disk; the reads and the falsifiers are written in §3.8j. The pilot already says the belief REACHES the policy at scale — a full side oracle changes Monet's chosen ask at **38.6%** of its decisions on one seed, eight times the 1.97-asks-a-game bar — so the cheap kill does not fire and the question is value, not connection. Candidates ranked in §3.8j: **M3** the deduction fix, **M1** a fitted recalibration (carrying §3.8h's −0.472 / −2.167 warning on belief-weighted forms), **M2** `choiceKappa` rescoped, **M4** `conceal`, **M5** within-side resolution, and **M-NULL**. Pre-registered prediction, against row 14's own premise: **the study returns "not the binding constraint".** | **ANSWERED 2026-09-04** — the axis is CLOSED on its calibration. Reliability is **0.22% of Brier** over 19M pairs on two disjoint twelves (bias −0.0014 / −0.0020, agreeing to 0.0006), so F1 fires ~50× and F6 fires by arithmetic: a perfect recalibration can remove at most 0.22%, against a 15% bar. §3.8g R1 is a base rate — its A/B gap is the same size on the cards the seat gets RIGHT (26.7% vs 15.8%) as on the ones it gets wrong (11.5% vs 5.5%). F3 relocates the question: `seat-p` moves 49.3% of asks against `side-p`'s 35.2%, so the ranker cares more about WHICH SEAT than WHICH SIDE. **Recommendation: M3, the deduction fix** — the licence split is the largest effect in the study (bias −0.085 at a Brier of 0.133 on 13% of the population, against an aggregate 0.228) and the error concentrates at \|cands\| = 2–3; it is a correctness fix, not a dose, so §6.3's floor does not gate it. M1 is dead twice over; M2 unsupported (4.5 points against the licence split's 20). **M-NULL stays first-class** on the prior of five measured negatives. Row 16 is the owner's call. |
 
 ---
 

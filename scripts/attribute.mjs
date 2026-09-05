@@ -31,7 +31,7 @@ const ENG = await import(pathToFileURL(process.cwd() + '/lib/engine/index.ts').h
 const MON = await import(pathToFileURL(process.cwd() + '/lib/engine/bots/monet.ts').href)
 const CARDS = await import(pathToFileURL(process.cwd() + '/lib/engine/cards.ts').href)
 const BOTS = await import(pathToFileURL(process.cwd() + '/lib/engine/bots/index.ts').href)
-const { newGame, us54Config, legalActionsSummary, seatView, hashSeed, reduce, decide } = ENG
+const { newGame, us54Config, legalActionsSummary, seatView, hashSeed, mulberry32, reduce, decide } = ENG
 
 function argOf(flag, dflt) {
   const i = process.argv.indexOf(flag)
@@ -53,6 +53,16 @@ const LOCK_MIN_CARDS = Number(argOf('--locks-min', 4))
 const LOCKS_WHY = process.argv.includes('--locks-why') // ask decide() at every certain-plan window and print the ones A never cashed
 const MAJORITY = process.argv.includes('--majority') // MONET.md 3.8g: the majority conversion at ask decisions (needs --cf)
 const MAJ_P = [0, 0.1, 0.3, 0.5, 0.7] // own-side mass bins: [0,0.1) [0.1,0.3) [0.3,0.5) [0.5,0.7) [0.7,1]
+const ASSIGN = process.argv.includes('--assign') // MONET.md §3.8j: the assignment calibration (needs --cf)
+const ASSIGN_POP = argOf('--assign-pop', 'both') // licensed | all | both
+const ASSIGN_NULL = process.argv.includes('--assign-null') // score the slot prior beside the marginal
+const ASSIGN_SPLITS = process.argv.includes('--assign-splits') // §3.8j R2: where the error lives
+const VALIDATE_ASSIGN = process.argv.includes('--validate-assign') // fatal if a tripwire trips
+const ASSIGN_RERANK = argOf('--assign-rerank', '') // §3.8j B1: shipped,side-p,seat-p,side-c,nuisance
+const rerankArms = ASSIGN_RERANK ? ASSIGN_RERANK.split(',').map((x) => x.trim()).filter(Boolean) : []
+// §3.8j R1 reads deciles so §3.4a's standing bar ("every decile within 0.05, the aggregate within
+// 0.01") transfers unchanged rather than needing a new one.
+const ASSIGN_DEC = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 const LOCKS_BOTH = process.argv.includes('--locks-both') // probe B's declarable sets from B's seats too (the reliability table only)
 const CALIB_P = [0.1, 0.3, 0.5, 0.7, 0.9, 1] // bin lower bounds: [0.1,0.3) [0.3,0.5) [0.5,0.7) [0.7,0.9) [0.9,1) and p = 1
 // Declare rules priced on the records: a rule fires at the earliest window (before A's own declare of
@@ -240,8 +250,270 @@ function walk(rec, cfPol, acc) {
       maj[b][T2] = null
     }
   }
+  // ---------------------------------------------------------------- §3.8j ---
+  // The assignment study. The population is `tbl.cards` itself — `marginal.ts` defines its rows as
+  // the cards with more than one candidate — so certainties, the seat's own hand and resolved sets
+  // are excluded BY THE DATA STRUCTURE and no score is inflated by free correctness. `q` is the
+  // seat's own-side mass, the identical expression `majDecision` uses; `y` is the truth.
+  const newAssignAcc = () => ({
+    // [side][pop] with pop 0 = licensed (the seat could legally ask for the card), 1 = not
+    bins: [0, 1].map(() => [0, 1].map(() => ASSIGN_DEC.map(() => ({ n: 0, q: 0, y: 0 })))),
+    tot: [0, 1].map(() => [0, 1].map(() => ({ n: 0, q: 0, y: 0, brier: 0, ll: 0, nullBrier: 0, nullQ: 0 }))),
+    dec: [0, 0],
+    truthNotCandidate: 0, noTable: 0, nonConverged: 0, tables: 0, postClinch: 0,
+    // §3.8j R2, the splits: each indicts a mechanism. [side][bucket]
+    s1: [0, 1].map(() => [0, 0, 0, 0, 0].map(() => ({ n: 0, q: 0, y: 0, brier: 0 }))), // |cands| 2,3,4,5,6+
+    s3: [0, 1].map(() => [0, 1].map(() => ({ n: 0, q: 0, y: 0, brier: 0 }))), // a licence for the set is on the record at the TRUE holder
+    s4: [0, 1].map(() => [0, 1].map(() => ({ n: 0, q: 0, y: 0, brier: 0 }))), // the true holder LATER asks into the set
+    s5: [0, 1].map(() => [0, 0, 0, 0, 0, 0].map(() => ({ n: 0, q: 0, y: 0, brier: 0 }))), // own side's true holding of the set
+    s6: [0, 1].map(() => [0, 0, 0].map(() => ({ n: 0, q: 0, y: 0, brier: 0 }))), // surviving constraints naming the card
+    s7: [0, 1].map(() => [0, 1].map(() => ({ n: 0, q: 0, y: 0, brier: 0 }))), // the table converged
+    s8: [0, 1].map(() => [0, 0, 0].map(() => ({ n: 0, q: 0, y: 0, brier: 0 }))), // phase: early / mid / late
+  })
+  const decBin = (x) => { let j = 0; for (let d = 0; d < ASSIGN_DEC.length; d++) if (x >= ASSIGN_DEC[d]) j = d; return j }
+  const put = (cell, q, y) => { cell.n++; cell.q += q; cell.y += y; if (cell.brier !== undefined) cell.brier += (q - y) * (q - y) }
+
+  // For S4: the ask indices, per (seat, book), so "did the true holder later ask into this set?"
+  // is a lookup rather than a scan. Built once a game.
+  let asksAfter = null
+  const buildAsksAfter = () => {
+    asksAfter = new Map()
+    for (let j = 0; j < rec.events.length; j++) {
+      const e = rec.events[j]
+      if (e.type !== 'ask') continue
+      const key = e.asker + '|' + bookOf(e.card)
+      let a = asksAfter.get(key)
+      if (!a) { a = []; asksAfter.set(key, a) }
+      a.push(j)
+    }
+  }
+  const askedLater = (seat, book, i) => {
+    const a = asksAfter.get(seat + '|' + book)
+    // ascending, and a handful of entries: the last one decides
+    return a !== undefined && a.length > 0 && a[a.length - 1] > i
+  }
+
+  // ---------------------------------------------------- §3.8j B1, the arms ---
+  // Each arm builds a FRESH Knowledge, patches the belief, and calls the REAL `decide` through the
+  // `boundedK` seam (`resolvePolicy` returns a {skill, style} spec verbatim, so the extra property
+  // rides along and `knowledgeFor` calls it). The shipped read is never mutated.
+  //
+  // `side-p` and `seat-p` move mass inside the table and leave `cands` alone, so `pHit`'s
+  // short-circuits mean they can neither create nor destroy a certainty: they are the LOWER end of
+  // the bracket. `side-c` narrows `cands` and re-scales, which does create certainties: the UPPER
+  // end. `nuisance` is the negative control — the same magnitude of movement, but WITHIN each side,
+  // so it carries no information about the side split at all.
+  const newRerankAcc = () => ({ n: 0, flips: 0, sameCard: 0, diffCard: 0, nonAsk: 0, throws: 0,
+    baseDead: 0, armDead: 0, deadToLive: 0, liveToDead: 0, certainDisplaced: 0, drift: 0 })
+  // A patched table is not the marginal of any distribution over assignments until its margins are
+  // restored: rows sum to 1 (a card is somewhere) and columns to `unknownSlots` (a seat's free
+  // slots are all filled). Without this an arm reorders asks partly because it is INCOHERENT, and
+  // the study would be pricing the incoherence rather than the information. `side-c` needs none of
+  // this — it narrows `cands` and lets `attachMarginal` scale — which is why its drift reads 0.
+  const rescale = (tbl, k) => {
+    if (!tbl) return
+    const n = tbl.cards.length
+    const p = tbl.p
+    const need = k.unknownSlots
+    for (let round = 0; round < 200; round++) {
+      let moved = 0
+      for (let s2 = 0; s2 < 6; s2++) {
+        let sum = 0
+        for (let r = 0; r < n; r++) sum += p[r * 6 + s2]
+        if (sum > 0) {
+          const f = (need[s2] ?? 0) / sum
+          for (let r = 0; r < n; r++) { const v = p[r * 6 + s2]; const w = v * f; if (Math.abs(w - v) > moved) moved = Math.abs(w - v); p[r * 6 + s2] = w }
+        }
+      }
+      for (let r = 0; r < n; r++) {
+        let sum = 0
+        for (let s2 = 0; s2 < 6; s2++) sum += p[r * 6 + s2]
+        if (sum > 0) {
+          const f = 1 / sum
+          for (let s2 = 0; s2 < 6; s2++) { const v = p[r * 6 + s2]; const w = v * f; if (Math.abs(w - v) > moved) moved = Math.abs(w - v); p[r * 6 + s2] = w }
+        }
+      }
+      if (moved < 1e-9) break
+    }
+  }
+  const patchTable = (arm, k, tbl, T, rng) => {
+    if (!tbl) return 0
+    let drift = 0
+    // the nuisance labels: this decision's own true sides, shuffled across its rows
+    let fakeSides = null
+    if (arm === 'nuisance') {
+      const labels = []
+      for (let r = 0; r < tbl.cards.length; r++) { const x = seatOf.get(tbl.cards[r]); labels.push(x === undefined ? undefined : side(x)) }
+      const idx = labels.map((_, z) => z).filter((z) => labels[z] !== undefined)
+      for (let z = idx.length - 1; z > 0; z--) { const w = Math.floor(rng() * (z + 1)); const t = idx[z]; idx[z] = idx[w]; idx[w] = t }
+      const pool = labels.filter((v) => v !== undefined)
+      fakeSides = new Array(labels.length)
+      let q = 0
+      for (const z of idx) fakeSides[z] = pool[q++]
+    }
+    for (let r = 0; r < tbl.cards.length; r++) {
+      const c = tbl.cards[r]
+      const x = seatOf.get(c)
+      if (x === undefined) continue
+      const trueSide = side(x)
+      const base = r * 6
+      if (arm === 'side-p') {
+        let keep = 0
+        for (let s2 = 0; s2 < 6; s2++) if (side(s2) === trueSide) keep += tbl.p[base + s2]
+        if (!(keep > 0)) continue
+        for (let s2 = 0; s2 < 6; s2++) tbl.p[base + s2] = side(s2) === trueSide ? tbl.p[base + s2] / keep : 0
+      } else if (arm === 'seat-p') {
+        // side totals held fixed; within the TRUE side every unit of mass moves onto the truth
+        let own = 0
+        for (let s2 = 0; s2 < 6; s2++) if (side(s2) === trueSide) { own += tbl.p[base + s2]; tbl.p[base + s2] = 0 }
+        tbl.p[base + x] = own
+      } else if (arm === 'nuisance') {
+        // The null control for `side-p`, and it has to be built with care. An equal-magnitude
+        // perturbation onto a COIN-FLIP side is not a fair null: pinning cards to sides other than
+        // the truth generically violates the seats' slot counts, so the instance becomes infeasible
+        // and Sinkhorn cannot restore the margins (measured: column drift 12 against side-p's 0.02).
+        // FEASIBILITY ITSELF CARRIES THE INFORMATION. So the null keeps the MULTISET of true sides
+        // over this decision's rows and shuffles only which row gets which label: the same number of
+        // cards is pinned to each side, the aggregate is exactly as feasible as the truth, and
+        // nothing is said about WHICH card is where. Labels are built once per decision below.
+        const fake = fakeSides[r]
+        if (fake === undefined) continue
+        let keep = 0
+        for (let s2 = 0; s2 < 6; s2++) if (side(s2) === fake) keep += tbl.p[base + s2]
+        if (!(keep > 0)) continue
+        for (let s2 = 0; s2 < 6; s2++) tbl.p[base + s2] = side(s2) === fake ? tbl.p[base + s2] / keep : 0
+      }
+    }
+    rescale(tbl, k)
+    // the health line the study prints beside every injected arm: a table whose columns have
+    // drifted off `unknownSlots` is no longer the marginal of any distribution over assignments
+    for (let s2 = 0; s2 < 6; s2++) {
+      let sum = 0
+      for (let r = 0; r < tbl.cards.length; r++) sum += tbl.p[r * 6 + s2]
+      const d = Math.abs(sum - (k.unknownSlots[s2] ?? 0))
+      if (d > drift) drift = d
+    }
+    return drift
+  }
+  const sideOracleK = (k) => {
+    const cands = {}
+    const holders = { ...k.holders }
+    const certainAt = [0, 0, 0, 0, 0, 0]
+    for (const [c, list] of Object.entries(k.cands)) {
+      if (list.length === 0) { cands[c] = []; continue }
+      const x = seatOf.get(c)
+      if (x === undefined || list.length === 1) { cands[c] = [...list]; if (list.length === 1) certainAt[list[0]]++; continue }
+      const keep = list.filter((s2) => side(s2) === side(x))
+      if (keep.length === 0) { cands[c] = [...list]; continue }
+      cands[c] = keep
+      if (keep.length === 1) { holders[c] = keep[0]; certainAt[keep[0]]++ }
+    }
+    return { seat: k.seat, counts: [...k.counts], holders, cands, gone: [...k.gone],
+      unknownSlots: k.counts.map((n, s2) => Math.max(0, (n ?? 0) - certainAt[s2])),
+      constraints: k.constraints.map((x) => ({ seat: x.seat, cards: [...x.cards] })) }
+  }
+  const assignRerank = (view, ev, T, i, seed, baseAction) => {
+    if (rerankArms.length === 0 || !cfPol) return
+    if (awarded[0] >= CLINCH || awarded[1] >= CLINCH) return
+    if (!baseAction || baseAction.type !== 'ask') return
+    if (!acc.rerank) acc.rerank = {}
+    const dead = (a) => { const x = seatOf.get(a.card); return x !== undefined && side(x) === T }
+    for (const arm of rerankArms) {
+      const R = (acc.rerank[arm] ??= newRerankAcc())
+      R.n++
+      try {
+        let ka
+        if (arm === 'side-c') {
+          ka = sideOracleK(ENG.buildKnowledge(view, OPTS))
+          BOTS.attachMarginal(ka)
+        } else {
+          ka = ENG.buildKnowledge(view, OPTS)
+          const ta = BOTS.attachMarginal(ka)
+          if (arm !== 'shipped') {
+            const rng = mulberry32(hashSeed(`${rec.label}:${i}:${arm}`)())
+            const d = patchTable(arm, ka, ta, T, rng)
+            if (d > R.drift) R.drift = d
+          }
+        }
+        const a2 = decide(view, { ...cfPol, boundedK: () => ka }, seed)
+        if (a2.type !== 'ask') { R.nonAsk++; continue }
+        const same = a2.card === baseAction.card && a2.target === baseAction.target
+        if (arm === 'shipped' && !same) throw new Error(`${rec.label}: event ${i}: the shipped arm disagrees with decide()`)
+        if (same) continue
+        R.flips++
+        if (a2.card === baseAction.card) R.sameCard++; else R.diffCard++
+        const bd = dead(baseAction), ad = dead(a2)
+        if (bd) R.baseDead++
+        if (ad) R.armDead++
+        if (bd && !ad) R.deadToLive++
+        if (!bd && ad) R.liveToDead++
+        // a certain hit displaced: the base ask was provably going to hit
+        if (publicAt.get(baseAction.card) === baseAction.target) R.certainDisplaced++
+      } catch (e) {
+        if (VALIDATE_ASSIGN) throw e
+        R.throws++
+      }
+    }
+  }
+  const assignDecision = (view, k, tbl, ev, T, i) => {
+    if (!acc.assign) acc.assign = newAssignAcc()
+    const AS = acc.assign
+    // PRE-CLINCH ONLY (§3.8j). The walk does NOT stop at the clinch — it records `clinchAt` and
+    // keeps going — so decisions taken after a side has its fifth set must be excluded here or
+    // the population carries decisions from games whose outcome is already settled.
+    if (awarded[0] >= CLINCH || awarded[1] >= CLINCH) { AS.postClinch++; return }
+    AS.dec[T]++
+    if (!tbl) { AS.noTable++; return }
+    AS.tables++
+    if (tbl.converged === false) AS.nonConverged++
+    if (asksAfter === null) buildAsksAfter()
+    const me = ev.asker
+    const myBooks = new Set(hands[me].map(bookOf))
+    const done = awarded[0] + awarded[1]
+    const ph = done <= 1 ? 0 : done <= 3 ? 1 : 2
+    for (let r = 0; r < tbl.cards.length; r++) {
+      const c = tbl.cards[r]
+      const x = seatOf.get(c)
+      if (x === undefined) continue // gone; not a live card
+      const cand = k.cands[c] ?? []
+      // the soundness pin: the model may never rule the truth out. A single failure VOIDS the study.
+      if (!cand.includes(x)) {
+        AS.truthNotCandidate++
+        if (VALIDATE_ASSIGN) throw new Error(`${rec.label}: event ${i} seat ${me}: true holder ${x} of ${c} is outside cands [${cand}]`)
+      }
+      let q = 0
+      for (let s2 = 0; s2 < 6; s2++) if (side(s2) === T) q += tbl.p[r * 6 + s2]
+      if (q < 0) q = 0
+      if (q > 1) q = 1
+      const y = side(x) === T ? 1 : 0
+      const pop = myBooks.has(bookOf(c)) ? 0 : 1
+      const B = AS.bins[T][pop][decBin(q)]
+      B.n++; B.q += q; B.y += y
+      const T2 = AS.tot[T][pop]
+      T2.n++; T2.q += q; T2.y += y
+      T2.brier += (q - y) * (q - y)
+      T2.ll += -(y ? Math.log(Math.max(1e-12, q)) : Math.log(Math.max(1e-12, 1 - q)))
+      if (ASSIGN_NULL) {
+        // the slot prior over the same candidates: the belief the marginal replaced (§3.4a)
+        let nq = 0
+        for (const s2 of cand) if (side(s2) === T) nq += BOTS.slotPriorHitProbability(k, c, s2)
+        if (nq > 1) nq = 1
+        T2.nullQ += nq
+        T2.nullBrier += (nq - y) * (nq - y)
+      }
+      if (!ASSIGN_SPLITS) continue
+      const b = bookOf(c)
+      put(AS.s1[T][Math.min(4, Math.max(0, cand.length - 2))], q, y)
+      put(AS.s3[T][k.constraints.some((kc) => kc.seat === x && kc.cards.some((u) => bookOf(u) === b)) ? 1 : 0], q, y)
+      put(AS.s4[T][askedLater(x, b, i) ? 1 : 0], q, y)
+      put(AS.s5[T][Math.min(5, holdingOf(T, b))], q, y)
+      put(AS.s6[T][Math.min(2, k.constraints.filter((kc) => kc.cards.includes(c)).length)], q, y)
+      put(AS.s7[T][tbl.converged === false ? 0 : 1], q, y)
+      put(AS.s8[T][ph], q, y)
+    }
+  }
   // at an ask decision: the asker's actionable majorities, the opponents' cards of them, the mass
-  const majDecision = (view, ev, T, i) => {
+  const majDecision = (view, k, tbl, ev, T, i) => {
     if (!acc.maj) acc.maj = newMajAcc()
     const a = ev.asker
     const sets = []
@@ -253,8 +525,7 @@ function walk(rec, cfPol, acc) {
     if (sets.length === 0) return
     const D = acc.maj.dec[T]
     D.n++
-    const k = ENG.buildKnowledge(view, OPTS)
-    const tbl = BOTS.attachMarginal(k)
+    // §3.8j: the belief is built once at the call site and shared with assignDecision.
     let maxOwn = 0, bestP = -1, bestRight = false, chase = false, chaseBook = null
     for (const b of sets) {
       maj[b][T].legal++
@@ -433,7 +704,12 @@ function walk(rec, cfPol, acc) {
           log: rec.events.slice(0, i), moveIndex: meta ? meta.moveIndex : i,
         }
         const view = seatView(state, ev.asker)
-        if (MAJORITY) { openMaj(i); majDecision(view, ev, T, i) }
+        // §3.8j: one belief build for both readouts. `majDecision` used to build its own after
+        // an early return; the hoist is pinned by diffing a --majority seed before and after.
+        let k8j = null, tbl8j = null
+        if (MAJORITY || ASSIGN) { k8j = ENG.buildKnowledge(view, OPTS); tbl8j = BOTS.attachMarginal(k8j) }
+        if (MAJORITY) { openMaj(i); majDecision(view, k8j, tbl8j, ev, T, i) }
+        if (ASSIGN) assignDecision(view, k8j, tbl8j, ev, T, i)
         const seed = meta ? meta.seed : hashSeed(`${rec.label}:cf:${i}`)()
         const a = decide(view, cfPol, seed)
         if (a.type !== 'ask') A.cfNonAsk++
@@ -450,6 +726,8 @@ function walk(rec, cfPol, acc) {
           }
           if (cfHit) A.cfHit++
           if (ev.hit) A.actHitAtCf++
+          // §3.8j B1: the arms, at Monet's own decisions, against the base decision just taken
+          if (T === 0) assignRerank(view, ev, T, i, seed, a)
           if (sameTeamHolds(bookOf(a.card)) === T) A.cfOwnLocked++
           { const x = seatOf.get(a.card); if (x !== undefined && side(x) !== T) A.cfOppHeld++ }
           { const M = acc.miss[T]; const d = dangerOf(T, a.target); M.cfAsks++; M.cfDangerSum += d; if (d > 0) M.cfDangerAny++ }
@@ -749,6 +1027,86 @@ function report(acc, head) {
   for (const t of [0, 1]) {
     const D = acc.decl[t]
     console.log(`| ${t === 0 ? 'A' : 'B'} | ${per(D.n, g)} | ${pct(D.correct, D.n)} | ${per(D.gifts, g)} | ${D.void} | ${per(D.locksFormed, g)} | ${pct(D.locksCashed, D.locksFormed)} | ${pct(D.locksBroken, D.locksFormed)} | ${pct(D.locksGifted, D.locksFormed)} | ${pct(D.locksOpen, D.locksFormed)} | ${ratio(D.holdSum, D.holdN, 2)} |`)
+  }
+  if (acc.rerank) {
+    const asksA = acc.asks[0].n
+    console.log('-- MONET.md §3.8j B1: the reachability bracket. Each arm patches the belief and calls the REAL decide() through the boundedK seam; `shipped` is the identity control and must read 0 flips. Reported in ASKS, not points: §3.8j\'s Stage 0 retro-validation FAILED (LOO RMSE 3.71 against a 1.50 bar, sign right on 9 of 15), so no single points-per-ask rate is licensed --')
+    console.log('| arm | decisions | flips | % of Monet\'s asks | flips a game | diff card / same card | base ask was a sure miss | arm ask is | sure miss -> live | live -> sure miss | certain hit displaced | non-ask | max column drift | throws |')
+    console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|')
+    for (const arm of rerankArms) {
+      const R = acc.rerank[arm]
+      if (!R) continue
+      console.log(`| \`${arm}\` | ${R.n} | **${R.flips}** | **${pct(R.flips, R.n)}** | ${per(R.flips, g, 2)} | ${R.diffCard} / ${R.sameCard} | ${pct(R.baseDead, R.flips)} | ${pct(R.armDead, R.flips)} | ${R.deadToLive} | ${R.liveToDead} | ${R.certainDisplaced} | ${R.nonAsk} | ${R.drift.toExponential(1)} | ${R.throws} |`)
+    }
+    console.log('')
+    console.log(`(Monet's asks in this corpus: ${asksA}, ${per(asksA, g, 1)} a game. The pre-registered F2 bar was 4.74% = 1.97 asks a game from one arm's ratio; the fitted favourable slope of +0.230 points per 1% moved would put it at 8.7% = 3.6 a game. Both are quoted because Stage 0 licensed neither.)`)
+    console.log('')
+  }
+  if (acc.assign) {
+    const AS = acc.assign
+    const POPS = ASSIGN_POP === 'licensed' ? [0] : ASSIGN_POP === 'all' ? [1] : [0, 1]
+    const popName = (p) => (p === 0 ? 'licensed' : 'unlicensed')
+    const f4 = (x) => (Number.isFinite(x) ? x.toFixed(4) : 'n/a')
+    const sg4 = (x) => (Number.isFinite(x) ? (x >= 0 ? '+' : '') + x.toFixed(4) : 'n/a')
+    console.log('-- MONET.md §3.8j R1: the assignment. At every pre-clinch ask decision, for every card the seat CANNOT place (a row of the marginal), the seat\'s own-side mass q against the truth y. The population is the table\'s own rows, so certainties are excluded by construction --')
+    console.log('| tripwire | value | pin |')
+    console.log('|---|---|---|')
+    console.log(`| the true holder outside cands | **${AS.truthNotCandidate}** | must be 0 — the study is VOID otherwise |`)
+    console.log(`| tables that would not scale | ${AS.noTable} | expected 0 |`)
+    console.log(`| tables not converged | ${AS.nonConverged} of ${AS.tables} | ${pct(AS.nonConverged, AS.tables)} |`)
+    console.log(`| ask decisions scored | A ${AS.dec[0]} / B ${AS.dec[1]} | ${per(AS.dec[0], g, 1)} / ${per(AS.dec[1], g, 1)} a game |`)
+    console.log(`| post-clinch decisions excluded | ${AS.postClinch} | ${pct(AS.postClinch, AS.postClinch + AS.dec[0] + AS.dec[1])} of all ask decisions |`)
+    console.log('')
+    for (const p of POPS) {
+      console.log(`-- the reliability curve, ${popName(p)} population (A = Monet, B = SESTINA's decisions through Monet's inference) --`)
+      console.log('| side | ' + ASSIGN_DEC.map((d, j) => `[${d.toFixed(1)}, ${(j + 1 < ASSIGN_DEC.length ? ASSIGN_DEC[j + 1] : 1).toFixed(1)}]`).join(' | ') + ' |')
+      console.log('|---|' + ASSIGN_DEC.map(() => '---|').join(''))
+      for (const t of [0, 1]) {
+        const row = AS.bins[t][p].map((b) => (b.n > 0 ? `${(b.q / b.n).toFixed(3)}→${(b.y / b.n).toFixed(3)} (${b.n})` : '-'))
+        console.log(`| ${t === 0 ? 'A' : 'B'} | ${row.join(' | ')} |`)
+      }
+      console.log('')
+      console.log(`| side | pairs | mean q | realised y | bias q−y | Brier | reliability | resolution | uncertainty | log loss${ASSIGN_NULL ? ' | slot-prior Brier | slot-prior mean' : ''} |`)
+      console.log('|---|---|---|---|---|---|---|---|---|---|' + (ASSIGN_NULL ? '---|---|' : ''))
+      for (const t of [0, 1]) {
+        const T2 = AS.tot[t][p]
+        if (T2.n === 0) { console.log(`| ${t === 0 ? 'A' : 'B'} | 0 | - | - | - | - | - | - | - | -${ASSIGN_NULL ? ' | - | -' : ''} |`); continue }
+        const qbar = T2.q / T2.n, ybar = T2.y / T2.n
+        // Murphy: Brier = reliability − resolution + uncertainty, over the decile bins
+        let rel = 0, res = 0
+        for (const b of AS.bins[t][p]) {
+          if (b.n === 0) continue
+          const qk = b.q / b.n, yk = b.y / b.n
+          rel += (b.n / T2.n) * (qk - yk) * (qk - yk)
+          res += (b.n / T2.n) * (yk - ybar) * (yk - ybar)
+        }
+        const unc = ybar * (1 - ybar)
+        const extra = ASSIGN_NULL ? ` | ${f4(T2.nullBrier / T2.n)} | ${f4(T2.nullQ / T2.n)}` : ''
+        console.log(`| ${t === 0 ? 'A' : 'B'} | ${T2.n} | ${f4(qbar)} | ${f4(ybar)} | **${sg4(qbar - ybar)}** | ${f4(T2.brier / T2.n)} | ${f4(rel)} | ${f4(res)} | ${f4(unc)} | ${f4(T2.ll / T2.n)}${extra} |`)
+      }
+      console.log('')
+    }
+    if (ASSIGN_SPLITS) {
+      const blocks = [
+        ['S1 |cands| (2 / 3 / 4 / 5 / 6+) — the Sinkhorn spread itself', AS.s1, ['2', '3', '4', '5', '6+']],
+        ['S3 a licence for the set is on the record at the TRUE holder (no / yes) — constraint propagation from the ask log', AS.s3, ['no', 'yes']],
+        ['S4 the true holder LATER asks into the set (no / yes) — choiceKappa\'s evidence, absent from v0.9', AS.s4, ['no', 'yes']],
+        ['S5 the deciding side\'s TRUE holding of the set (0-5) — the §3.8g / §3.8i population', AS.s5, ['0', '1', '2', '3', '4', '5']],
+        ['S6 surviving constraints naming the card (0 / 1 / 2+) — the one-shot conditioning of marginal.ts step 3', AS.s6, ['0', '1', '2+']],
+        ['S7 the table converged (no / yes)', AS.s7, ['no', 'yes']],
+        ['S8 phase by sets awarded (early / mid / late)', AS.s8, ['early', 'mid', 'late']],
+      ]
+      console.log('-- §3.8j R2: where the error lives. Each cell is bias (q−y) then Brier then n; both populations pooled --')
+      for (const [name, blk, labels] of blocks) {
+        console.log(`| ${name} | ` + labels.join(' | ') + ' |')
+        console.log('|---|' + labels.map(() => '---|').join(''))
+        for (const t of [0, 1]) {
+          const row = blk[t].map((c) => (c.n > 0 ? `${sg4(c.q / c.n - c.y / c.n)} · ${f4(c.brier / c.n)} · ${c.n}` : '-'))
+          console.log(`| ${t === 0 ? 'A' : 'B'} | ${row.join(' | ')} |`)
+        }
+        console.log('')
+      }
+    }
   }
   if (acc.maj) {
     const labels = ['[0, 0.1)', '[0.1, 0.3)', '[0.3, 0.5)', '[0.5, 0.7)', '[0.7, 1]']
