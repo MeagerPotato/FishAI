@@ -121,6 +121,7 @@ import type { RevealPick } from './reveal.ts'
 import { consensusOn, sampleDeals } from './consensus.ts'
 import { pricedActive, pricedAdjustment, pricedUngated } from './priced.ts'
 import { closingActive, closingCredit } from './closing.ts'
+import { chaseActive, chaseCredit } from './chase.ts'
 import type { Consensus } from './consensus.ts'
 import { POLICY_CONSTANTS, SKILL_PRESETS, resolvePolicy } from './style.ts'
 import type { BotPolicy, SkillParams, StyleParams } from './style.ts'
@@ -1151,6 +1152,17 @@ function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: ActiveP
   // a third priced term: riding `pricedAdjustment` would let a later `exposureCertain` rung ungate
   // this credit with no edit here, which is the one behaviour §3.8g says it must not buy.
   const closingOn = closingActive(style)
+  // MONET.md §3.8i — the chase appetite (chase.ts): the OTHER arm of the same ternary below. The
+  // closing credit prices the closing asks that stand beside a certain hit; this prices the ones
+  // §3.8h's gate refuses, at its own separately fitted dose. A PARTITION and not a third term: a
+  // candidate is gated or it is not, so neither appetite can ever pay the other's population and
+  // the v0.13 delta is separable from v0.12's by construction. Off at `chase` absent or 0 (every
+  // tier, every roster style). Its own predicate beside `closingOn`, and deliberately keyed on
+  // `gated` alone and never on `ungated`: a later `exposureCertain` rung must move the priced group
+  // and nothing else. This rung buys its promotions with a credit that is visible in the score and
+  // bounded by `chase · wHit` — never by widening the gate, which on this vector also stands in
+  // front of a LIVE defusal credit.
+  const chaseOn = chaseActive(style)
   // Where this seat's evidence about published bases comes from. `logLicences` scans the public
   // log for row-6 asks and retires each licence against `k` — so for a BOUNDED seat the
   // *retirement* half is already budgeted (it reads that seat's restricted knowledge), while the
@@ -1199,7 +1211,12 @@ function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: ActiveP
       // equality, so re-associating the existing sum would move its last bit and every committed
       // replay bank would go red with this knob provably absent.
       const closingCr = closingOn ? closingCredit(view, k, style, r, r.p) : 0
-      return { r, refined: r.p, s: r.score + (gated ? 0 : bonus - charge) + (gated && !ungated ? 0 : priced) + (gated ? 0 : closingCr), idx }
+      // MONET.md §3.8i — the same appended group, its gated arm filled in. With `chase` absent
+      // `chaseCr` is the literal 0 the ternary already carried, so this expression, its operands,
+      // its arity and its association are bit for bit what v0.12 shipped and the six committed
+      // replay banks reproduce with the knob provably absent.
+      const chaseCr = chaseOn ? chaseCredit(view, k, style, r, r.p, gated) : 0
+      return { r, refined: r.p, s: r.score + (gated ? 0 : bonus - charge) + (gated && !ungated ? 0 : priced) + (gated ? chaseCr : closingCr), idx }
     }
     const base = askHitProbability(k, r.card, r.target)
     // The conditioned number stands in for the refined one everywhere below — in the score, and
@@ -1211,10 +1228,15 @@ function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: ActiveP
     const priced = pricing ? pricedAdjustment(view, k, style, r, refined) : 0
     // Appended, never folded — see the note in the branch above.
     const closingCr = closingOn ? closingCredit(view, k, style, r, refined) : 0
+    // The gated arm of the same group (§3.8i). Fed `refined`, exactly as `closingCr` is, so the
+    // ranker still compares one belief; `gated` is still read off the slot prior `r.p`, so a
+    // candidate that is gated with `refined === 1` is paid by neither appetite — v0.12's own
+    // behaviour in the mirror case, and the conservative direction.
+    const chaseCr = chaseOn ? chaseCredit(view, k, style, r, refined, gated) : 0
     return {
       r,
       refined,
-      s: r.score + style.wHit * (refined - base) + (gated ? 0 : bonus - charge) + (gated && !ungated ? 0 : priced) + (gated ? 0 : closingCr),
+      s: r.score + style.wHit * (refined - base) + (gated ? 0 : bonus - charge) + (gated && !ungated ? 0 : priced) + (gated ? chaseCr : closingCr),
       idx,
     }
   })

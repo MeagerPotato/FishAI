@@ -377,6 +377,32 @@ export interface StyleParams extends AskWeights {
    */
   closingBelief?: boolean
   /**
+   * MONET.md §3.8i — the chase appetite (chase.ts), the second, separately fitted appetite that
+   * pays §3.8h's own `lock` credit to the UNCERTAIN chases §3.8h's gate refuses:
+   * `chase · wHit · lock`, over the same population and through the same `closingPicture` walk, at
+   * exactly the candidates `pickAsk` gates the closing credit out of. The two appetites PARTITION
+   * the candidates — a candidate is paid `closing` or `chase`, never both — so the doses are
+   * separable and `chase` absent beside a live `closing` is byte identity with v0.12. It
+   * deliberately reverses §3.8h's refusal, and the reversal is licensed by §3.8g R2's own bucket
+   * table (where every missing card is known to be with an opponent SESTINA still chases 26.3% to
+   * Monet's 21.2%, a wider gap than the aggregate), not by §3.8h's prose. 0 or absent is byte
+   * identity. Absent on every roster style and every tier.
+   */
+  chase?: number
+  /**
+   * MONET.md §3.8i — the chase credit scaled by the hit chance, `chase · wHit · p · lock`, which is
+   * §3.8h's closing credit with the gate lifted and nothing else changed: the control arm. Absent
+   * (the primary, flat form) pays every chase in the population equally, because §3.8g R1 measures
+   * Monet chasing the missing cards it rates at 0.5–0.7 own-side at 7.0% and at 0.7–1 at 11.7%
+   * against SESTINA's 16.0% and 16.9% — high own-side mass is low `p` on the opponent, so the
+   * chases Monet declines are the low-`p` ones and a `p` factor pays least exactly where the gap
+   * is. Measured at home at matched move rate and matched rung mix, the flat form promotes chases
+   * about 0.04 lower in `p`; the two are pre-registered as an ordered pair. Absent or false is the
+   * flat form; true without `chase` is byte identity outright. Absent on every roster style and
+   * every tier.
+   */
+  chaseScaled?: boolean
+  /**
    * MONET.md §3.7a item 2′ — the pre-emptive declare. The compulsion (RULES_US54.md §3.2, a window that
    * cannot close) arrives when the last opponent card leaves, and it lands on whichever seat holds
    * the turn then, with whatever it knows. In the windows before it every teammate holds the option
@@ -803,6 +829,13 @@ export function validateStyle(style: StyleParams): string[] {
   if (closing !== undefined && !(typeof closing === 'number' && Number.isFinite(closing) && closing >= 0)) bad.push(`closing ${String(closing)} is not a number >= 0`)
   const closingBelief = style.closingBelief
   if (closingBelief !== undefined && typeof closingBelief !== 'boolean') bad.push(`closingBelief ${String(closingBelief)} is not a boolean`)
+  // The `>= 0` refusal is load-bearing rather than decoration: a NEGATIVE `chase` is a penalty on
+  // closing asks, a different mechanism wearing this one's name, and a dose sweep must not be able
+  // to wander into it.
+  const chase = style.chase
+  if (chase !== undefined && !(typeof chase === 'number' && Number.isFinite(chase) && chase >= 0)) bad.push(`chase ${String(chase)} is not a number >= 0`)
+  const chaseScaled = style.chaseScaled
+  if (chaseScaled !== undefined && typeof chaseScaled !== 'boolean') bad.push(`chaseScaled ${String(chaseScaled)} is not a boolean`)
   const compelHorizon = style.compelHorizon
   if (compelHorizon !== undefined && !(typeof compelHorizon === 'number' && Number.isInteger(compelHorizon) && compelHorizon >= 0)) bad.push(`compelHorizon ${String(compelHorizon)} is not an integer >= 0`)
   const declareThresholdCompelled = style.declareThresholdCompelled

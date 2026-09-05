@@ -13,6 +13,7 @@ import { buildKnowledge } from '../../lib/engine/bots/knowledge.ts'
 import { preyInBook, seatLicences } from '../../lib/engine/bots/threat.ts'
 import { defusalActive, logLicences } from '../../lib/engine/bots/defuse.ts'
 import { concealmentActive, concealmentPenalty } from '../../lib/engine/bots/conceal.ts'
+import { chaseCredit } from '../../lib/engine/bots/chase.ts'
 import { deepFreeze } from '../engine/util.ts'
 import { collectBotViews, collectPositions } from './util.ts'
 
@@ -117,6 +118,11 @@ describe('public-view-only proof', () => {
    * `BotDifficulty | StyleParams | BotPolicy`, widened again in adaptive.ts and bounded.ts.
    */
   const CONCEALER: StyleParams = Object.freeze({ ...STYLE_ROSTER.balanced, conceal: 2 })
+  /**
+   * MONET.md 3.8i: the chase appetite is Monet-only, so no roster style opens its gate either.
+   * A live dose on a roster style makes chase.ts execute under the same proxy as the rest.
+   */
+  const CHASER: StyleParams = Object.freeze({ ...STYLE_ROSTER.balanced, chase: 3 })
 
   it(
     '(d) the concession layer executes under the same proxy: a roster style and a conceal style, under us54',
@@ -128,7 +134,8 @@ describe('public-view-only proof', () => {
       // gates on positions where the terms are live.
       expect(STYLE_ROSTER.balanced.defuse).toBeGreaterThan(0)
       expect(validateStyle(CONCEALER)).toEqual([])
-      const specs: readonly StyleParams[] = [STYLE_ROSTER.balanced, CONCEALER]
+      expect(validateStyle(CHASER)).toEqual([])
+      const specs: readonly StyleParams[] = [STYLE_ROSTER.balanced, CONCEALER, CHASER]
 
       const us54Views = collectBotViews(4, us54Config)
       expect(us54Views.length).toBeGreaterThan(100)
@@ -156,6 +163,7 @@ describe('public-view-only proof', () => {
       // than every call returning early from a gate.
       let preyBearingLicences = 0
       let concealmentCharges = 0
+      let chaseCredits = 0
       for (const { view } of us54Views) {
         const k = buildKnowledge(view)
         const licences = logLicences(view, k)
@@ -167,10 +175,12 @@ describe('public-view-only proof', () => {
         for (const a of legalAsksFromView(view)) {
           const ranked = { ...a, score: 0, p: 0.5, reason: 'probe' }
           if (concealmentPenalty(view, k, CONCEALER, ranked, 1, licences) > 0) concealmentCharges++
+          if (chaseCredit(view, k, CHASER, ranked, 0.5, true) > 0) chaseCredits++
         }
       }
       expect(preyBearingLicences).toBeGreaterThan(0)
       expect(concealmentCharges).toBeGreaterThan(0)
+      expect(chaseCredits).toBeGreaterThan(0)
     },
     180_000,
   )
@@ -281,6 +291,10 @@ describe('public-view-only proof', () => {
       // MONET.md 3.8h: './closing.ts' reads the certain holders and, under `closingBelief`, the same
       // `askHitProbability` the ranker scores with - public knowledge, and it never reads a hand.
       './closing.ts',
+      // MONET.md 3.8i: './chase.ts' is the other arm of 3.8h's gate. It reads the certain holders
+      // through './knowledge.ts' and the majority walk through './closing.ts' - a strict subset of
+      // what './closing.ts' already reads, and it never reads a hand.
+      './chase.ts',
       // The MONET.md version registry: a frozen table mapping a Monet version id to the
       // `PolicySpec` that version plays, plus two total pure functions over it. It imports
       // only './roster.ts', './style.ts' and './bounded.ts' (type-only) — every one already
