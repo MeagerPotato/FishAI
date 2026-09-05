@@ -120,6 +120,7 @@ import { revealActive, revealAsk } from './reveal.ts'
 import type { RevealPick } from './reveal.ts'
 import { consensusOn, sampleDeals } from './consensus.ts'
 import { pricedActive, pricedAdjustment, pricedUngated } from './priced.ts'
+import { closingActive, closingCredit } from './closing.ts'
 import type { Consensus } from './consensus.ts'
 import { POLICY_CONSTANTS, SKILL_PRESETS, resolvePolicy } from './style.ts'
 import type { BotPolicy, SkillParams, StyleParams } from './style.ts'
@@ -1143,6 +1144,13 @@ function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: ActiveP
   // MONET.md §3.8e — with `exposureCertain` on (and a live exposure charge) the priced terms stand
   // beside a legal certain hit, and the certain hit pays its own exposure charge (priced.ts).
   const ungated = pricing && pricedUngated(style)
+  // MONET.md §3.8h — the closing credit (closing.ts): an ask that would bring a set the side
+  // already holds most of within reach. Off at `closing` absent or 0 (every tier, every roster
+  // style), and gated below every certain hit — with no ungating switch, because §3.8g measured
+  // that neither policy prefers an uncertain chase to a certain hit. Its own predicate rather than
+  // a third priced term: riding `pricedAdjustment` would let a later `exposureCertain` rung ungate
+  // this credit with no edit here, which is the one behaviour §3.8g says it must not buy.
+  const closingOn = closingActive(style)
   // Where this seat's evidence about published bases comes from. `logLicences` scans the public
   // log for row-6 asks and retires each licence against `k` — so for a BOUNDED seat the
   // *retirement* half is already budgeted (it reads that seat's restricted knowledge), while the
@@ -1187,7 +1195,11 @@ function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: ActiveP
     if (!skill.refinedInference) {
       const bonus = defusing ? defusalBonus(view, k, style, r, r.p, yield_, licences!, appetite) : 0
       const priced = pricing ? pricedAdjustment(view, k, style, r, r.p) : 0
-      return { r, refined: r.p, s: r.score + (gated ? 0 : bonus - charge) + (gated && !ungated ? 0 : priced), idx }
+      // APPENDED, never folded into the groups before it: the sort below breaks ties on exact
+      // equality, so re-associating the existing sum would move its last bit and every committed
+      // replay bank would go red with this knob provably absent.
+      const closingCr = closingOn ? closingCredit(view, k, style, r, r.p) : 0
+      return { r, refined: r.p, s: r.score + (gated ? 0 : bonus - charge) + (gated && !ungated ? 0 : priced) + (gated ? 0 : closingCr), idx }
     }
     const base = askHitProbability(k, r.card, r.target)
     // The conditioned number stands in for the refined one everywhere below — in the score, and
@@ -1197,10 +1209,12 @@ function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: ActiveP
       : refinedHitProbability(k, r.card, r.target)
     const bonus = defusing ? defusalBonus(view, k, style, r, refined, yield_, licences!, appetite) : 0
     const priced = pricing ? pricedAdjustment(view, k, style, r, refined) : 0
+    // Appended, never folded — see the note in the branch above.
+    const closingCr = closingOn ? closingCredit(view, k, style, r, refined) : 0
     return {
       r,
       refined,
-      s: r.score + style.wHit * (refined - base) + (gated ? 0 : bonus - charge) + (gated && !ungated ? 0 : priced),
+      s: r.score + style.wHit * (refined - base) + (gated ? 0 : bonus - charge) + (gated && !ungated ? 0 : priced) + (gated ? 0 : closingCr),
       idx,
     }
   })

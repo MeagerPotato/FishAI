@@ -354,6 +354,29 @@ export interface StyleParams extends AskWeights {
    */
   exposureCertain?: boolean
   /**
+   * MONET.md §3.8h — the closing credit (closing.ts), the appetite for an ask that would bring a
+   * set the side already holds most of within reach: `closing · wHit · p · lock`, where `lock` is
+   * 1 when the hit would leave nothing of the set outside the side's own hands, 0.5 when it would
+   * leave one card, and 0 at two or more — so under `us54` the credit fires only at a seat-known
+   * holding of four or five of six, and pays double on the completing ask. The seat counts its
+   * side's holding as it KNOWS it: its own cards and the cards it can certainly place with a
+   * teammate. Gated below every certain hit, with no ungating switch (§3.8g measured that neither
+   * policy prefers an uncertain chase to a certain hit). 0 or absent is byte identity. Absent on
+   * every roster style and every tier.
+   */
+  closing?: number
+  /**
+   * MONET.md §3.8h — the closing credit counted by BELIEF rather than by certainty: a card of the
+   * set nobody can place counts against the side only by the chance an opponent holds it, so the
+   * credit is pointwise larger over a larger population. The gap between the two forms is §3.8g's
+   * R1 — Monet's marginal rates 21.4% of the opponent-held missing cards as its own side's, where
+   * the same inference at SESTINA's positions reads 11.1% — so this form knowingly over-credits
+   * the sets that are not near closing, and the fit prices that. Absent or false is byte identity
+   * with the certain form; true without `closing` is byte identity outright. Absent on every
+   * roster style and every tier.
+   */
+  closingBelief?: boolean
+  /**
    * MONET.md §3.7a item 2′ — the pre-emptive declare. The compulsion (RULES_US54.md §3.2, a window that
    * cannot close) arrives when the last opponent card leaves, and it lands on whichever seat holds
    * the turn then, with whatever it knows. In the windows before it every teammate holds the option
@@ -776,6 +799,10 @@ export function validateStyle(style: StyleParams): string[] {
   if (exposure !== undefined && !(typeof exposure === 'number' && Number.isFinite(exposure) && exposure >= 0)) bad.push(`exposure ${String(exposure)} is not a number >= 0`)
   const exposureCertain = style.exposureCertain
   if (exposureCertain !== undefined && typeof exposureCertain !== 'boolean') bad.push(`exposureCertain ${String(exposureCertain)} is not a boolean`)
+  const closing = style.closing
+  if (closing !== undefined && !(typeof closing === 'number' && Number.isFinite(closing) && closing >= 0)) bad.push(`closing ${String(closing)} is not a number >= 0`)
+  const closingBelief = style.closingBelief
+  if (closingBelief !== undefined && typeof closingBelief !== 'boolean') bad.push(`closingBelief ${String(closingBelief)} is not a boolean`)
   const compelHorizon = style.compelHorizon
   if (compelHorizon !== undefined && !(typeof compelHorizon === 'number' && Number.isInteger(compelHorizon) && compelHorizon >= 0)) bad.push(`compelHorizon ${String(compelHorizon)} is not an integer >= 0`)
   const declareThresholdCompelled = style.declareThresholdCompelled
