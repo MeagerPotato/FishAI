@@ -699,7 +699,11 @@ function walk(rec, cfPol, acc) {
       const c = tbl.cards[r]
       const x = seatOf.get(c)
       if (x === undefined) continue
-      if (!(e.p[r * 6 + x] > 0)) { X.unsound++; if (VALIDATE_ASSIGN) throw new Error(`${rec.label}: event ${i} seat ${me}: the exact marginal is 0 at the true holder of ${c}`) }
+      // §3.8l: the shipped table's own hard zeros at the true holder (marginal.ts's one-shot repair can
+      // zero every other card at a seat whose conditioned cells claim all of its slots); the alt table
+      // inherits them, so under --assign-alt a zero is counted and the pin is that the knob adds none
+      if (!(tbl.p[r * 6 + x] > 0)) X.unsoundShipped = (X.unsoundShipped ?? 0) + 1
+      if (!(e.p[r * 6 + x] > 0)) { X.unsound++; if (VALIDATE_ASSIGN && !ASSIGN_ALT) throw new Error(`${rec.label}: event ${i} seat ${me}: the exact marginal is 0 at the true holder of ${c}`) }
       let qs = 0, qe = 0
       for (let s2 = 0; s2 < 6; s2++) if (side(s2) === T) { qs += tbl.p[r * 6 + s2]; qe += e.p[r * 6 + s2] }
       qs = Math.min(1, Math.max(0, qs)); qe = Math.min(1, Math.max(0, qe))
@@ -1316,7 +1320,7 @@ function report(acc, head) {
     if (acc.exact) {
       const X = acc.exact
       console.log(`-- MONET.md §3.8k R1${ASSIGN_ALT ? ` (§3.8l: the second table is ${ALT_NAME}, not the exact posterior)` : ''}: the exact posterior under the same model against the Sinkhorn table, on the SAME pairs at the sampled decisions (A = Monet, B = SESTINA\'s decisions through Monet\'s inference); Brier and Murphy for each --`)
-      console.log(`| tripwire | value |\n|---|---|\n| sampled decisions | A ${X.dec[0]} / B ${X.dec[1]} |\n| exact fallbacks (constraint cap or state cap) | ${X.fallback} |\n| tables that would not scale | ${X.noTable} |\n| exact marginal 0 at the true holder | **${X.unsound}** — must be 0, the study is VOID otherwise |${ASSIGN_ALT ? `\n| §3.8l alt rows differing from the shipped rows | **${X.rowMismatch ?? 0}** — must be 0 |` : ''}`)
+      console.log(`| tripwire | value |\n|---|---|\n| sampled decisions | A ${X.dec[0]} / B ${X.dec[1]} |\n| exact fallbacks (constraint cap or state cap) | ${X.fallback} |\n| tables that would not scale | ${X.noTable} |\n| exact marginal 0 at the true holder | **${X.unsound}** — must be 0, the study is VOID otherwise |${ASSIGN_ALT ? `\n| §3.8l alt rows differing from the shipped rows | **${X.rowMismatch ?? 0}** — must be 0 |\n| §3.8l shipped table 0 at the true holder | **${X.unsoundShipped ?? 0}** — the Sinkhorn table's own zeros; the alt count above may not exceed it |` : ''}`)
       const murphy = (bins, qKey, n) => { let rel = 0, res = 0, ybar = 0; for (const b of bins) ybar += b.y; ybar /= Math.max(1, n); for (const b of bins) { if (b.n === 0) continue; const qk = b[qKey] / b.n, yk = b.y / b.n; rel += (b.n / n) * (qk - yk) * (qk - yk); res += (b.n / n) * (yk - ybar) * (yk - ybar) } return { rel, res } }
       for (const p of POPS) {
         console.log(`| ${popName(p)} | pairs | realised y | Sinkhorn: mean q · bias · Brier · REL · RES | ${ALT_NAME}: mean q · bias · Brier · REL · RES | **Brier change** | of the change, resolution |`)

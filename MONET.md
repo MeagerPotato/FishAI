@@ -4987,6 +4987,28 @@ excluded — every seed spent, read or reserved so far — `$SP/seeds-v16.mjs`),
 study prices a belief, not a bot. No points from the records: the pricer failed (§3.8j Stage 0).
 Nothing about the search or the position channel (§3.8a, §0.2), which no belief study reads.
 
+#### Amendment — 2026-09-05, before any fit number was read
+
+The first launch of the fit died on its own soundness pin at every family: "the alt marginal is 0
+at the true holder", within the first sixty games of each fit seed. The h = 0 identity arm — the
+shipped table itself — dies at the same event of the same game. **The zeros are the shipped
+Sinkhorn table's own.** Where they come from, measured on 2,075 positions of three self-play games
+(v0.9 both sides, `$SP/monet-v16/zero-diag.mjs`): 727 candidate cells (0.26% of 277,564, in 8.0%
+of positions) are exactly 0 in the shipped table; every one of them sits at a seat carrying a
+surviving licence constraint, and 670 of the 727 at a seat whose conditioned cells sum to at least
+its free slots — `marginal.ts` step 3's repair, "the other cards at t give up what A gained", with
+`need[t] − sumAfter ≤ 0`, so they give up everything. In self-play none of the 727 was at the true
+holder; on the bridge records one is, early in each fit seed. So the pin as written — "alt marginal
+0 at a true holder must be 0" — was a pin on the shipped table's defect, not on the knob, and the
+pin runs at every 64th decision were too sparse to meet it. **Changed now, before the fit:** under
+`--assign-alt` a zero at the true holder is counted, not fatal, and the shipped table's own zeros
+at the true holder are counted beside it; **the pin is that the knob adds no zero — alt's count may
+not exceed the shipped table's — and the seam and row pins stay fatal.** The families, the grid, the
+selection rule, the falsifiers and the predictions are unchanged. The defect itself — a hard zero on
+a feasible cell, which no belief should carry — is a shipped-table correction and is **not** taken
+inside this rung: it is named for the next pre-registration, with its rate on the records reported
+by this one.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
