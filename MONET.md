@@ -3137,18 +3137,6 @@ worth about a point on top of the contest credit, not two: the exposed hits it d
 mostly worth taking. The exposure charge is recorded, off the vector, and this document does not
 recommend a third look at the ask ranker's terms.
 
-**What was pre-registered and NOT run, stated plainly.** Three readouts of §3.8j were not built:
-**R3, the synchronous six-seat control** (and with it F4 as written), **B1b, the declare budget**,
-and **B2, the misattributed-set ceiling** (and with it F5). R3 was verified *feasible* before the
-pre-registration — 1,706 Knowledge builds over 300 sampled positions, all scaled, zero throws — and
-it remains the cleanest way to separate position generation from inference. It was not needed to
-reach this record's conclusion: three falsifiers fire without it (F1, F3's second clause, F6), which
-is the rule's own threshold, and the question R3 exists to answer is answered more directly by the
-true-positive mirror above — the A/B gap is the same size on the cards the seat gets right as on the
-ones it gets wrong, which no amount of position control can explain away. B1b and B2 price a rung
-that F1 and F6 have already killed, so they were left off the critical path exactly as the staged
-plan allowed. **If row 16 revisits the axis, R3 is the first thing to build.**
-
 **What is fixed by this record.** Nothing on Monet's vector. `exposureCertain` stays in the code
 behind byte identity (off on every version and every roster style) with its pins in
 `tests/bots/priced.test.ts`; the v0.9 forward bank replays unchanged. Scratch state, not
@@ -4448,6 +4436,18 @@ informative (Brier **0.1325** against an aggregate 0.2280) and far more biased (
 offset. The error also concentrates at **|cands| = 2–3**, precisely where the counting argument is
 near-exact and only a missed deduction can separate two seats. Both point the same way, and away
 from the mechanism row 14 assumed.
+
+**What was pre-registered and NOT run, stated plainly.** Three readouts of §3.8j were not built:
+**R3, the synchronous six-seat control** (and with it F4 as written), **B1b, the declare budget**,
+and **B2, the misattributed-set ceiling** (and with it F5). R3 was verified *feasible* before the
+pre-registration — 1,706 Knowledge builds over 300 sampled positions, all scaled, zero throws — and
+it remains the cleanest way to separate position generation from inference. It was not needed to
+reach this record's conclusion: three falsifiers fire without it (F1, F3's second clause, F6), which
+is the rule's own threshold, and the question R3 exists to answer is answered more directly by the
+true-positive mirror above — the A/B gap is the same size on the cards the seat gets right as on the
+ones it gets wrong, which no amount of position control can explain away. B1b and B2 price a rung
+that F1 and F6 have already killed, so they were left off the critical path exactly as the staged
+plan allowed. **If row 16 revisits the axis, R3 is the first thing to build.**
 
 **What is fixed by this record.** Nothing on Monet's vector. The instrument
 (`scripts/attribute.mjs --assign`, with `--assign-rerank`'s injection arms and the `boundedK` seam

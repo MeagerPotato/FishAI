@@ -60,6 +60,28 @@ const ASSIGN_SPLITS = process.argv.includes('--assign-splits') // §3.8j R2: whe
 const VALIDATE_ASSIGN = process.argv.includes('--validate-assign') // fatal if a tripwire trips
 const ASSIGN_RERANK = argOf('--assign-rerank', '') // §3.8j B1: shipped,side-p,seat-p,side-c,nuisance
 const rerankArms = ASSIGN_RERANK ? ASSIGN_RERANK.split(',').map((x) => x.trim()).filter(Boolean) : []
+// §3.8j B1b: the patched belief through planClaimFor — shipped | side-p | seat-p | side-c (needs --locks)
+const LOCKS_ARM = argOf('--locks-arm', '')
+// §3.8j B2: the misattributed-set ceiling over --majority's episodes, per --assign-rerank arm and per --b2-arm
+const B2 = process.argv.includes('--b2')
+const B2_THETA = [0.3, 0.5, 0.7]
+// §3.8j B2's retro-validation: an arm whose abroad value is already measured, as knobs overlaid on
+// the --cf policy's style — closing=0.5 is v0.12's w3, chase=4 is v0.13's h4 — decided as a one-step
+// counterfactual at the base's own decisions and reported as the arm `retro`
+const B2_ARM = argOf('--b2-arm', '')
+// the same overlay on the --cf policy itself: on the arm's OWN records the counterfactual must then
+// agree with the play 100.0%, which pins the in-engine arm to the bridge arm before it prices anything
+const CF_KNOBS = argOf('--cf-knobs', '')
+const parseKnobs = (spec) => {
+  const o = {}
+  for (const kv of String(spec || '').split(',').map((x) => x.trim()).filter(Boolean)) {
+    const [k, v] = kv.split('=')
+    o[k] = v === 'true' ? true : v === 'false' ? false : Number(v)
+    if (typeof o[k] === 'number' && Number.isNaN(o[k])) throw new Error(`bad knob ${kv}`)
+  }
+  return o
+}
+const withKnobs = (pol, spec) => (spec ? { ...pol, style: { ...pol.style, ...parseKnobs(spec) } } : pol)
 // §3.8j R1 reads deciles so §3.4a's standing bar ("every decile within 0.05, the aggregate within
 // 0.01") transfers unchanged rather than needing a new one.
 const ASSIGN_DEC = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
@@ -223,6 +245,7 @@ function walk(rec, cfPol, acc) {
   // --majority: book -> [episode of side 0, episode of side 1]; an episode opens when the side first
   // holds four of the six by the deal and closes when the set resolves (or at the clinch)
   const maj = {}
+  const majLast = [] // §3.8j B2: this decision's actionable majority sets, with the largest own-side mass on an opponent-held card of each
   const newMajAcc = () => ({
     cards: [0, 1].map(() => MAJ_P.map(() => ({ n: 0, chased: 0 }))),
     dec: [0, 1].map(() => ({ n: 0, chased: 0, chaseHit: 0, other: 0, otherHit: 0, bestRight: 0, bestRightNo: 0, noTable: 0, byMax: MAJ_P.map(() => ({ n: 0, chased: 0 })), otherHold: [0, 0, 0, 0, 0, 0], otherHoldHit: [0, 0, 0, 0, 0, 0] })),
@@ -233,7 +256,7 @@ function walk(rec, cfPol, acc) {
     for (const b of BOOKS) {
       if (resolved[b]) continue
       if (!maj[b]) maj[b] = [null, null]
-      for (const T2 of [0, 1]) if (!maj[b][T2] && holdingOf(T2, b) >= 4) maj[b][T2] = { at: i, legal: 0, chased: 0 }
+      for (const T2 of [0, 1]) if (!maj[b][T2] && holdingOf(T2, b) >= 4) maj[b][T2] = { at: i, legal: 0, chased: 0, hid: B2_THETA.map(() => 0), hidFlip: {}, hidInto: {} }
     }
   }
   const finishMaj = (b, outcomeTeam, i) => {
@@ -247,6 +270,7 @@ function walk(rec, cfPol, acc) {
       E.n++; E.legalSum += e.legal; E.chaseSum += e.chased
       K.n++; K.ev += i - e.at
       K[outcomeTeam === T2 ? 'cashed' : outcomeTeam === -1 ? 'open' : 'taken']++
+      if (B2 && T2 === 0) b2Finish(e, outcomeTeam)
       maj[b][T2] = null
     }
   }
@@ -412,11 +436,68 @@ function walk(rec, cfPol, acc) {
       unknownSlots: k.counts.map((n, s2) => Math.max(0, (n ?? 0) - certainAt[s2])),
       constraints: k.constraints.map((x) => ({ seat: x.seat, cards: [...x.cards] })) }
   }
+  // ------------------------------------------------------ §3.8j B1b and B2 ---
+  // B1b: one arm's Knowledge for a probing seat, built the way assignRerank builds it, handed to
+  // the claim planner. `planClaimFor` resolves a {skill, style} spec verbatim, so `boundedK` rides
+  // along exactly as it does for `decide`, and `planClaim`'s joint reads `marginalFor(k)` — the
+  // WeakMap memo `attachMarginal` filled, i.e. the very table patched in place. That identity is
+  // asserted, not assumed.
+  const armKnowledge = (arm, view, T, label) => {
+    if (arm === 'side-c') { const ka = sideOracleK(ENG.buildKnowledge(view, OPTS)); BOTS.attachMarginal(ka); return ka }
+    const ka = ENG.buildKnowledge(view, OPTS)
+    const ta = BOTS.attachMarginal(ka)
+    if (ta && BOTS.marginalFor(ka) !== ta) throw new Error(`${rec.label}: marginalFor does not return the attached table`)
+    if (arm !== 'shipped') patchTable(arm, ka, ta, T, mulberry32(hashSeed(label)()))
+    return ka
+  }
+  // B2: at a Monet ask decision, once the arms have decided, mark the decision on every actionable
+  // majority episode where the chance was HIDDEN — own-side mass q >= theta on an opponent-held
+  // card of the set, the seat holding a card of it so the ask was legal — and note which arms
+  // flipped here, and whether the new ask went INTO the set.
+  const b2Mark = (T, flips) => {
+    for (const { b, maxOwn } of majLast) {
+      const e = maj[b] && maj[b][T]
+      if (!e) continue
+      for (let t = 0; t < B2_THETA.length; t++) {
+        if (maxOwn < B2_THETA[t]) continue
+        e.hid[t]++
+        for (const [arm, f] of Object.entries(flips)) {
+          if (!f || !f.flipped) continue
+          const hf = e.hidFlip[arm] ?? (e.hidFlip[arm] = B2_THETA.map(() => 0))
+          hf[t]++
+          if (f.card !== undefined && bookOf(f.card) === b) { const hi = e.hidInto[arm] ?? (e.hidInto[arm] = B2_THETA.map(() => 0)); hi[t]++ }
+        }
+      }
+    }
+  }
+  const newB2Acc = () => ({ eps: 0, atRisk: 0, taken: 0, open: 0, hidAny: B2_THETA.map(() => 0), hidOnly: B2_THETA.map(() => 0), arms: {} })
+  // an episode of Monet's closes: if the set was taken or left open, count it against every arm
+  // that flipped at one of its hidden chances — 'any' if there was at least one hidden chance,
+  // 'only' if EVERY legal chance in the episode was hidden (the loss cannot be blamed on a chance
+  // the belief showed plainly)
+  const b2Finish = (e, outcomeTeam) => {
+    const Z = (acc.b2 ??= newB2Acc())
+    Z.eps++
+    if (outcomeTeam === 0) return
+    Z.atRisk++
+    if (outcomeTeam === -1) Z.open++; else Z.taken++
+    for (let t = 0; t < B2_THETA.length; t++) {
+      const only = e.hid[t] > 0 && e.hid[t] === e.legal
+      if (e.hid[t] > 0) Z.hidAny[t]++
+      if (only) Z.hidOnly[t]++
+      for (const arm of Object.keys(e.hidFlip)) {
+        const A = (Z.arms[arm] ??= { any: B2_THETA.map(() => 0), only: B2_THETA.map(() => 0), into: B2_THETA.map(() => 0) })
+        if (e.hidFlip[arm][t] > 0) { A.any[t]++; if (only) A.only[t]++ }
+        if (e.hidInto[arm] && e.hidInto[arm][t] > 0) A.into[t]++
+      }
+    }
+  }
   const assignRerank = (view, ev, T, i, seed, baseAction) => {
-    if (rerankArms.length === 0 || !cfPol) return
-    if (awarded[0] >= CLINCH || awarded[1] >= CLINCH) return
-    if (!baseAction || baseAction.type !== 'ask') return
+    if (rerankArms.length === 0 || !cfPol) return {}
+    if (awarded[0] >= CLINCH || awarded[1] >= CLINCH) return {}
+    if (!baseAction || baseAction.type !== 'ask') return {}
     if (!acc.rerank) acc.rerank = {}
+    const out = {} // §3.8j B2: arm -> { flipped, card }
     const dead = (a) => { const x = seatOf.get(a.card); return x !== undefined && side(x) === T }
     for (const arm of rerankArms) {
       const R = (acc.rerank[arm] ??= newRerankAcc())
@@ -436,11 +517,12 @@ function walk(rec, cfPol, acc) {
           }
         }
         const a2 = decide(view, { ...cfPol, boundedK: () => ka }, seed)
-        if (a2.type !== 'ask') { R.nonAsk++; continue }
+        if (a2.type !== 'ask') { R.nonAsk++; out[arm] = { flipped: true, card: undefined }; continue }
         const same = a2.card === baseAction.card && a2.target === baseAction.target
         if (arm === 'shipped' && !same) throw new Error(`${rec.label}: event ${i}: the shipped arm disagrees with decide()`)
-        if (same) continue
+        if (same) { out[arm] = { flipped: false }; continue }
         R.flips++
+        out[arm] = { flipped: true, card: a2.card }
         if (a2.card === baseAction.card) R.sameCard++; else R.diffCard++
         const bd = dead(baseAction), ad = dead(a2)
         if (bd) R.baseDead++
@@ -454,6 +536,7 @@ function walk(rec, cfPol, acc) {
         R.throws++
       }
     }
+    return out
   }
   const assignDecision = (view, k, tbl, ev, T, i) => {
     if (!acc.assign) acc.assign = newAssignAcc()
@@ -515,6 +598,7 @@ function walk(rec, cfPol, acc) {
   // at an ask decision: the asker's actionable majorities, the opponents' cards of them, the mass
   const majDecision = (view, k, tbl, ev, T, i) => {
     if (!acc.maj) acc.maj = newMajAcc()
+    majLast.length = 0
     const a = ev.asker
     const sets = []
     for (const b of BOOKS) {
@@ -529,6 +613,7 @@ function walk(rec, cfPol, acc) {
     let maxOwn = 0, bestP = -1, bestRight = false, chase = false, chaseBook = null
     for (const b of sets) {
       maj[b][T].legal++
+      let setMax = 0
       for (const c of BOOK_CARDS.get(b)) {
         const x = seatOf.get(c)
         if (x === undefined || side(x) === T) continue
@@ -545,8 +630,10 @@ function walk(rec, cfPol, acc) {
         acc.maj.cards[T][bin].n++
         if (ev.card === c) { acc.maj.cards[T][bin].chased++; chase = true; chaseBook = b }
         if (own > maxOwn) maxOwn = own
+        if (own > setMax) setMax = own
         if (tp > bestP) { bestP = tp; bestRight = target === x }
       }
+      majLast.push({ b, maxOwn: setMax })
     }
     if (chase) { D.chased++; if (ev.hit) D.chaseHit++; maj[chaseBook][T].chased++ } else {
       D.other++
@@ -569,11 +656,13 @@ function walk(rec, cfPol, acc) {
       log: rec.events.slice(0, i), moveIndex: i,
     }
     const view = seatView(state, seat)
-    const plan = BOTS.planClaimFor(view, cfPol, b)
+    // §3.8j B1b: the arm's belief through the SAME planner, via the boundedK seam; the gate reads the same object
+    const kArm = LOCKS_ARM ? armKnowledge(LOCKS_ARM, view, side(seat), `${rec.label}:${i}:${seat}:${b}:${LOCKS_ARM}`) : null
+    const plan = kArm ? BOTS.planClaimFor(view, { ...cfPol, boundedK: () => kArm }, b) : BOTS.planClaimFor(view, cfPol, b)
     const myTeam = side(seat)
     let gate = plan.uncertain.length <= cfPol.style.declareMaxUncertain
     if (gate && plan.uncertain.length > 0) {
-      const k = ENG.buildKnowledge(view, OPTS)
+      const k = kArm ?? ENG.buildKnowledge(view, OPTS)
       for (const c of plan.uncertain) { const cand = k.cands[c] ?? []; if (cand.length === 0 || !cand.every((x) => side(x) === myTeam)) { gate = false; break } }
     }
     let right = sameTeamHolds(b) === myTeam
@@ -727,7 +816,20 @@ function walk(rec, cfPol, acc) {
           if (cfHit) A.cfHit++
           if (ev.hit) A.actHitAtCf++
           // §3.8j B1: the arms, at Monet's own decisions, against the base decision just taken
-          if (T === 0) assignRerank(view, ev, T, i, seed, a)
+          if (T === 0) {
+            const fl = assignRerank(view, ev, T, i, seed, a)
+            // §3.8j B2's retro-validation: the measured arm as a one-step counterfactual at the base's decision
+            if (b2ArmPol) {
+              const a3 = decide(view, b2ArmPol, seed)
+              const same3 = a3.type === 'ask' && a3.card === a.card && a3.target === a.target
+              fl.retro = { flipped: !same3, card: a3.type === 'ask' ? a3.card : undefined }
+              const RR = (acc.retro ??= { n: 0, flips: 0, nonAsk: 0 })
+              RR.n++
+              if (!same3) RR.flips++
+              if (a3.type !== 'ask') RR.nonAsk++
+            }
+            if (B2 && MAJORITY) b2Mark(T, fl)
+          }
           if (sameTeamHolds(bookOf(a.card)) === T) A.cfOwnLocked++
           { const x = seatOf.get(a.card); if (x !== undefined && side(x) !== T) A.cfOppHeld++ }
           { const M = acc.miss[T]; const d = dangerOf(T, a.target); M.cfAsks++; M.cfDangerSum += d; if (d > 0) M.cfDangerAny++ }
@@ -1108,6 +1210,19 @@ function report(acc, head) {
       }
     }
   }
+  if (acc.b2) {
+    const Z = acc.b2
+    const armList = [...rerankArms, ...(B2_ARM ? ['retro'] : [])]
+    console.log('-- MONET.md §3.8j B2: the misattributed-set ceiling. Monet\'s majority episodes (four or more of six on its side by the deal, first ask decision to resolution or the clinch) that ended TAKEN or OPEN, in which at some decision the seat on turn held a card of the set (the ask was legal), carried own-side mass q >= theta on an opponent-held card of it (the chance was HIDDEN by the belief), and the arm flipped there. In SETS A GAME. Class prior, printed as pre-registered: §3.8g\'s bound of 0.39 sets a game delivered 0.039 (+0.583 at 14.96 points a set), a tenfold shrinkage --')
+    console.log(`   episodes ${Z.eps} (${per(Z.eps, g)} a game); at risk (taken or open) ${Z.atRisk} = ${per(Z.atRisk, g)} a game (taken ${Z.taken}, open ${Z.open}); with a hidden chance at theta 0.3 / 0.5 / 0.7 — any: ${Z.hidAny.map((n) => per(n, g, 3)).join(' / ')} a game; only hidden chances: ${Z.hidOnly.map((n) => per(n, g, 3)).join(' / ')} a game (no flip required)${acc.retro ? `; retro arm [${B2_ARM}]: ${acc.retro.flips} flips at ${acc.retro.n} Monet decisions (${pct(acc.retro.flips, acc.retro.n)}, ${per(acc.retro.flips, g)} a game), non-ask ${acc.retro.nonAsk}` : ''}`)
+    console.log('| arm | theta | any hidden chance: episodes | sets a game | only hidden chances: episodes | sets a game | (post hoc) the flip is INTO the set: episodes | sets a game |')
+    console.log('|---|---|---|---|---|---|---|---|')
+    for (const arm of armList) {
+      const A = Z.arms[arm] ?? { any: B2_THETA.map(() => 0), only: B2_THETA.map(() => 0), into: B2_THETA.map(() => 0) }
+      for (let t = 0; t < B2_THETA.length; t++) console.log(`| \`${arm}\` | ${B2_THETA[t]} | ${A.any[t]} | **${per(A.any[t], g, 3)}** | ${A.only[t]} | **${per(A.only[t], g, 3)}** | ${A.into[t]} | ${per(A.into[t], g, 3)} |`)
+    }
+    console.log('')
+  }
   if (acc.maj) {
     const labels = ['[0, 0.1)', '[0.1, 0.3)', '[0.3, 0.5)', '[0.5, 0.7)', '[0.7, 1]']
     console.log('-- the majority conversion (--majority): at ask decisions where the asker holds a card of an unresolved set its side holds four or five of, the cards the opponents hold, by the asker\'s own-side mass on each through the counterfactual\'s marginal (every one is with an opponent) --')
@@ -1131,7 +1246,8 @@ function report(acc, head) {
 
 /* ------------------------------------------------------------------ main --- */
 
-const cfPol = CF && CF !== 'none' ? MON.monetPolicy(CF) : null
+const cfPol = CF && CF !== 'none' ? withKnobs(MON.monetPolicy(CF), CF_KNOBS) : null
+const b2ArmPol = B2_ARM && cfPol ? withKnobs(cfPol, B2_ARM) : null
 const t0 = Date.now()
 const acc = newAcc()
 let head
