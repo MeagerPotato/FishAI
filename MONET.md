@@ -4596,6 +4596,127 @@ and the owner took it.
 — the pins (`b1b-plain/shipped`, `b2-majplain/shipped`, `b2-retro-ident`, `pin-w3`, `pin-h4`),
 the retro rows, the per-seed B1b outputs on both twelves, and the B2 arm runs.
 
+### 3.8k Monet v0.15 — the deduction fix, studied on the records before any code
+
+**The question, in one sentence.** How much of Monet's belief error is the *approximation* —
+Sinkhorn scaling plus one-shot conditioning in `marginal.ts` — as opposed to the *model* it
+approximates, and does removing the approximation move asks?
+
+**Why this question and not another.** §3.8j closed the assignment axis on calibration (F1, F6)
+and located what error there is in two places: where the ask log carries a licence for the card's
+true holder (bias −0.085 at a Brier of 0.133, 13% of the population) and at |cands| = 2–3. Both
+are exactly where `marginal.ts` approximates: the one-shot conditioning `p ← p / (1 − Π(1 − p))`
+uses the product of marginals for the event's probability and is applied once, and the Sinkhorn
+table is the maximum-entropy table with the right margins, not the matching count's own marginals
+— `marginal.ts`'s own header says both. The exact object it approximates is well defined: the
+marginal of the uniform distribution over every assignment of the unknown cards to seats that
+honours the candidates, the slot counts and every surviving at-least-one-of constraint. So M3 has
+a ceiling that can be measured without deciding how to build it: **compute the exact posterior
+under the same model, inject it through the same seam, and read Brier and asks moved.** If the
+exact posterior is not better, M3 is dead before a line of `lib/` is written; if it is better and
+moves nothing, likewise. Only if both survive does the design question — how to approximate the
+exact posterior within the engine's time budget — get asked. §3.8j's addendum bounds the answer
+from above before it is asked: the misattribution channel carries 0.33 sets a game under a
+*perfect* side belief, and this is not a perfect belief but the exact one under an incomplete
+model.
+
+#### The instrument
+
+`scripts/exact-marginal.mjs`: a forward–backward DP over the table's cards, state = (remaining
+slots per seat, bitmask of the constraints already satisfied), counts as doubles, the constraints
+deduplicated exactly as `marginal.ts`'s `minimalConstraints` does (an implied constraint is
+redundant for an exact count, so dropping it changes nothing). **Verified before this was
+written:** against brute-force enumeration on 218 feasible random instances the worst entry differs
+by **4.4e-16**; on 1,769 real pre-clinch decisions (home self-play, v0.9 both sides) it never fell
+back at a constraint cap of 10, its rows sum to 1 and its columns to `unknownSlots` to 1e-14, and it
+costs **75 ms a decision** (p50 29, p90 173, p99 695, max 2,342 ms; p50 65k states, max 5.3M). The
+residual instance at a Monet decision is 28 unknown cards at the median (p90 43), with 3 surviving
+constraints (p90 5, p99 8, max 10); Sinkhorn costs 0.04 ms. **So the exact table is a study
+instrument, not a shippable one**, and the study measures the ceiling of M3 before any bounded
+form of it is designed.
+
+Two additions to `scripts/attribute.mjs`, both inside §3.8j's frame:
+
+- `--assign-rerank exact` — a p-only arm in B1's bracket: `tbl.p` replaced in place by the exact
+  marginal (`cands` untouched, so it can neither create nor destroy a certainty, like `side-p`),
+  then the real `decide` through `boundedK`. `sink` is its identity control — the same replacement
+  by the table's own values. Both run at the sampled decisions only.
+- `--assign-exact` — at the sampled decisions, both tables' `q` on the **same** (card, side) pairs:
+  Brier and Murphy's decomposition for each, the S1 / S3 / S8 splits for each, the size of the
+  disagreement `|q_exact − q_Sinkhorn|`, the pairs the two tables put on opposite sides of 0.5 and
+  how often the exact one is right there, and the exact table's own soundness pin. The exact table
+  is computed once a decision and shared with the arm.
+
+**Population and cost.** Pre-clinch ask decisions on `conf-base` × 12 (primary) and `conf-fix` × 12
+(replication), **sampled one decision in eight by the walk's event index** (`i % 8 === 0`; fixed
+here, not a knob), scored at both sides' decisions for R1 and at Monet's for R2–R3: about 10
+scored decisions a game, ~16 minutes a seed, both twelves in under two hours four-wide. No cell is
+spent. The `shipped` and `side-p` arms run at every decision beside them, so the bracket is on the
+page.
+
+**Pins, run before this was written, on `conf-fix-5682873` at every 64th event index:** `shipped`
+**0 of 49,787**; `sink` **0 flips of 503**; exact fallbacks **0**; the exact marginal at the true
+holder **positive at every scored pair** (503 decisions at A, 558 at B); the table cache leaves the
+output byte-identical to the uncached run. **Disclosure, in §3.8g's manner:** that pin run wrote
+its full report to disk, including the exact-against-Sinkhorn comparison at those 1,061 decisions;
+only the tripwire lines were read, and the comparison was not. The one size seen while checking the
+instrument is the largest single entry by which the two tables differed on the 1,769 self-play
+decisions: **0.283**. It is a size, not a score.
+
+**The study is void rather than negative if:** the exact marginal is 0 at any true holder (the
+truth is feasible under the model, so this is a bug); `sink` or `shipped` flips anywhere; fallbacks
+exceed 1% of sampled decisions; or the two corpora disagree on the sign of R1.
+
+#### The readouts
+
+- **R1, the ceiling on accuracy.** Brier(exact) against Brier(Sinkhorn) on the licensed
+  population at A, pooled and on S3 (a licence for the set on record at the true holder: no / yes),
+  S1 (|cands|) and S8 (phase), with Murphy's decomposition for both — §3.8j says the loss is
+  resolution, so the exact table's gain should be resolution, not reliability.
+- **R2, the ceiling on reach.** `flips(exact)` as a share of Monet's sampled asks, beside
+  `shipped` 0 and `side-p` 35.5%, with B1's classification (sure miss → live, certain hit
+  displaced — predicted 0 exactly, as for every p-arm).
+- **R3, the ceiling on sets.** B2's surviving cell, (θ = 0.5, only-chance), for the `exact` arm at
+  the sampled decisions — its own channel ceiling, against `side-p`'s 0.33 on the same cell (an
+  episode counts when a sampled hidden chance flipped, so the read is a lower bound on the
+  unsampled one, and is quoted as such).
+- **R4, where the tables disagree.** `|q_exact − q_Sinkhorn|` by size, and the share of pairs on
+  opposite sides of 0.5 with the exact table's accuracy there.
+
+#### The falsifiers
+
+| | fires when | and then |
+|---|---|---|
+| **K1** the approximation is not the error | Brier(exact) is not below Brier(Sinkhorn) by **≥ 5%** on S3 = yes at A, on both corpora | the licence-split error belongs to the model, not to the approximation: M3 is dead, and what is left is evidence the model does not read (M2's `choiceKappa`, already unsupported) or M-NULL |
+| **K2** nothing moves | `flips(exact)` < **2%** of Monet's sampled asks | an exact belief changes almost nothing the ranker does, so no bounded approximation to it can do more |
+| **K3** the sets are not there | R3 < **0.05** sets a game at (0.5, only-chance) | the channel is closed to a belief that is exact under this model |
+| **K4** the gain is calibration after all | ≥ 70% of the exact table's Brier gain is reliability | contradicts §3.8j P3; the study is re-read before anything is designed |
+
+**K1 or K2 alone closes M3.** Any of them fires → row 17 carries M-NULL as the leading candidate.
+
+#### Predictions, written before the rest is read
+
+| # | prediction | why |
+|---|---|---|
+| Q0 | soundness exactly 0; `sink` and `shipped` 0 flips; fallbacks 0 | pins, already measured on one seed |
+| Q1 | Brier(exact) below Brier(Sinkhorn) by **1–3%** pooled at A | the approximation is good on average — §3.8j measured REL 0.0005 |
+| Q2 | on S3 = yes, by **8–20%**, and the bias there moves from −0.085 toward **−0.03 … +0.02** | the one-shot conditioning is where the two tables differ most |
+| Q3 | the gain is **≥ 70% resolution** | §3.8j P3, and REL is already 0.22% of Brier |
+| Q4 | `flips(exact)` **4–12%** of Monet's sampled asks | below `side-p`'s 35%, above F2's old bar; the largest entry seen differs by 0.28 |
+| Q5 | R3 at (0.5, only) **0.08–0.20** sets a game | a quarter to a half of `side-p`'s 0.33 |
+| Q6 | at \|cands\| = 2 the two tables agree to 0.02 on average; the disagreement lives at 3–6 | with two candidates and one constraint the one-shot rule is nearly exact |
+
+**What may not be concluded.** Nothing about a shippable form: the exact table costs 2,000× the
+Sinkhorn one at the median, and this study prices the ceiling of any bounded approximation, not one
+of them. No points: the pricer failed (§3.8j Stage 0). If M3 survives, the design that follows —
+exact where the state count is under a cap and Sinkhorn elsewhere, or a better conditioning — is
+its own pre-registration with its own identity pins, and its abroad read is a twelve-seed cell
+against the corrected v0.9 base with the +2.00 floor reported even though a correctness fix is not
+gated on it.
+
+**Seeds.** No cell. `hashSeed("monet-v0.15-fit-3")` and `hashSeed("monet-v0.15-confirm-12")` are
+reserved now for whatever follows, unspent.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**

@@ -31,6 +31,7 @@ const ENG = await import(pathToFileURL(process.cwd() + '/lib/engine/index.ts').h
 const MON = await import(pathToFileURL(process.cwd() + '/lib/engine/bots/monet.ts').href)
 const CARDS = await import(pathToFileURL(process.cwd() + '/lib/engine/cards.ts').href)
 const BOTS = await import(pathToFileURL(process.cwd() + '/lib/engine/bots/index.ts').href)
+const EXACT = await import(pathToFileURL(process.cwd() + '/scripts/exact-marginal.mjs').href) // §3.8k: the exact posterior under the same model
 const { newGame, us54Config, legalActionsSummary, seatView, hashSeed, mulberry32, reduce, decide } = ENG
 
 function argOf(flag, dflt) {
@@ -72,6 +73,10 @@ const B2_ARM = argOf('--b2-arm', '')
 // the same overlay on the --cf policy itself: on the arm's OWN records the counterfactual must then
 // agree with the play 100.0%, which pins the in-engine arm to the bridge arm before it prices anything
 const CF_KNOBS = argOf('--cf-knobs', '')
+// §3.8k: both tables' q scored on the same sampled pairs, and the sampling every N-th event index
+const ASSIGN_EXACT = process.argv.includes('--assign-exact')
+const EXACT_EVERY = Number(argOf('--exact-every', 8))
+const EXACT_OPTS = { maxConstraints: 12, maxStates: 8_000_000 }
 const parseKnobs = (spec) => {
   const o = {}
   for (const kv of String(spec || '').split(',').map((x) => x.trim()).filter(Boolean)) {
@@ -328,7 +333,7 @@ function walk(rec, cfPol, acc) {
   // end. `nuisance` is the negative control — the same magnitude of movement, but WITHIN each side,
   // so it carries no information about the side split at all.
   const newRerankAcc = () => ({ n: 0, flips: 0, sameCard: 0, diffCard: 0, nonAsk: 0, throws: 0,
-    baseDead: 0, armDead: 0, deadToLive: 0, liveToDead: 0, certainDisplaced: 0, drift: 0 })
+    baseDead: 0, armDead: 0, deadToLive: 0, liveToDead: 0, certainDisplaced: 0, drift: 0, fallback: 0, unsound: 0, skipped: 0 })
   // A patched table is not the marginal of any distribution over assignments until its margins are
   // restored: rows sum to 1 (a card is somewhere) and columns to `unknownSlots` (a seat's free
   // slots are all filled). Without this an arm reorders asks partly because it is INCOHERENT, and
@@ -501,12 +506,30 @@ function walk(rec, cfPol, acc) {
     const dead = (a) => { const x = seatOf.get(a.card); return x !== undefined && side(x) === T }
     for (const arm of rerankArms) {
       const R = (acc.rerank[arm] ??= newRerankAcc())
+      // §3.8k: the exact arms run at the sampled decisions only; the sampling is by the walk's event index
+      if ((arm === 'exact' || arm === 'sink') && i % EXACT_EVERY !== 0) { R.skipped++; continue }
       R.n++
       try {
         let ka
         if (arm === 'side-c') {
           ka = sideOracleK(ENG.buildKnowledge(view, OPTS))
           BOTS.attachMarginal(ka)
+        } else if (arm === 'exact' || arm === 'sink') {
+          // §3.8k: a p-only arm in B1's frame. `exact` replaces the table's entries in place by the
+          // exact marginal under the same model (cands untouched, so no certainty is created or
+          // destroyed); `sink` replaces them by themselves and must read 0 flips.
+          ka = ENG.buildKnowledge(view, OPTS)
+          const ta = BOTS.attachMarginal(ka)
+          if (ta && arm === 'exact') {
+            const sameRows = exactCache !== null && exactCache.i === i && exactCache.cards.length === ta.cards.length && exactCache.cards.every((c, r) => c === ta.cards[r])
+            const e = sameRows ? { p: exactCache.p } : EXACT.exactMarginal(ka, ta, EXACT_OPTS)
+            if (!e) { R.fallback++; continue }
+            // the soundness pin: the truth is a feasible assignment, so its marginal is positive everywhere
+            for (let r = 0; r < ta.cards.length; r++) { const x = seatOf.get(ta.cards[r]); if (x !== undefined && !(e.p[r * 6 + x] > 0)) { R.unsound++; if (VALIDATE_ASSIGN) throw new Error(`${rec.label}: event ${i}: the exact marginal is 0 at the true holder of ${ta.cards[r]}`) } }
+            ta.p.set(e.p)
+          } else if (ta && arm === 'sink') {
+            ta.p.set(ta.p.slice())
+          }
         } else {
           ka = ENG.buildKnowledge(view, OPTS)
           const ta = BOTS.attachMarginal(ka)
@@ -593,6 +616,56 @@ function walk(rec, cfPol, acc) {
       put(AS.s6[T][Math.min(2, k.constraints.filter((kc) => kc.cards.includes(c)).length)], q, y)
       put(AS.s7[T][tbl.converged === false ? 0 : 1], q, y)
       put(AS.s8[T][ph], q, y)
+    }
+    if (ASSIGN_EXACT && i % EXACT_EVERY === 0) exactScore(k, tbl, T, me, i)
+  }
+  // §3.8k: both tables' q on the SAME pairs at the sampled decisions — Sinkhorn against exact —
+  // with the S1 / S3 / S8 splits, the size of the disagreement, and the exact table's soundness pin.
+  const newExactAcc = () => {
+    const cell = () => ({ n: 0, qs: 0, qe: 0, y: 0, bs: 0, be: 0 })
+    const bins = () => ASSIGN_DEC.map(() => ({ n: 0, qs: 0, qe: 0, y: 0 }))
+    return {
+      dec: [0, 0], fallback: 0, unsound: 0, noTable: 0,
+      tot: [0, 1].map(() => [0, 1].map(cell)), binsS: [0, 1].map(() => [0, 1].map(bins)), binsE: [0, 1].map(() => [0, 1].map(bins)),
+      s1: [0, 1].map(() => [0, 0, 0, 0, 0].map(cell)), s3: [0, 1].map(() => [0, 1].map(cell)), s8: [0, 1].map(() => [0, 0, 0].map(cell)),
+      dq: [0, 1].map(() => [0, 0, 0, 0, 0]), // |q_exact - q_sink| in [0,.02) [.02,.05) [.05,.1) [.1,.2) [.2,1]
+      cross: [0, 0], crossRight: [0, 0], // the two tables on opposite sides of 0.5, and how often the exact one is right there
+    }
+  }
+  let exactCache = null // { i, cards, p }: this decision's exact table, shared with the `exact` arm
+  const exactScore = (k, tbl, T, me, i) => {
+    if (!acc.exact) acc.exact = newExactAcc()
+    const X = acc.exact
+    X.dec[T]++
+    if (!tbl) { X.noTable++; return }
+    const e = EXACT.exactMarginal(k, tbl, EXACT_OPTS)
+    if (!e) { X.fallback++; return }
+    exactCache = { i, cards: tbl.cards, p: e.p }
+    const myBooks = new Set(hands[me].map(bookOf))
+    const done = awarded[0] + awarded[1]
+    const ph = done <= 1 ? 0 : done <= 3 ? 1 : 2
+    for (let r = 0; r < tbl.cards.length; r++) {
+      const c = tbl.cards[r]
+      const x = seatOf.get(c)
+      if (x === undefined) continue
+      if (!(e.p[r * 6 + x] > 0)) { X.unsound++; if (VALIDATE_ASSIGN) throw new Error(`${rec.label}: event ${i} seat ${me}: the exact marginal is 0 at the true holder of ${c}`) }
+      let qs = 0, qe = 0
+      for (let s2 = 0; s2 < 6; s2++) if (side(s2) === T) { qs += tbl.p[r * 6 + s2]; qe += e.p[r * 6 + s2] }
+      qs = Math.min(1, Math.max(0, qs)); qe = Math.min(1, Math.max(0, qe))
+      const y = side(x) === T ? 1 : 0
+      const pop = myBooks.has(bookOf(c)) ? 0 : 1
+      const put2 = (cell) => { cell.n++; cell.qs += qs; cell.qe += qe; cell.y += y; cell.bs += (qs - y) * (qs - y); cell.be += (qe - y) * (qe - y) }
+      put2(X.tot[T][pop])
+      { const B = X.binsS[T][pop][decBin(qs)]; B.n++; B.qs += qs; B.y += y }
+      { const B = X.binsE[T][pop][decBin(qe)]; B.n++; B.qe += qe; B.y += y }
+      const cand = k.cands[c] ?? []
+      const b = bookOf(c)
+      put2(X.s1[T][Math.min(4, Math.max(0, cand.length - 2))])
+      put2(X.s3[T][k.constraints.some((kc) => kc.seat === x && kc.cards.some((u) => bookOf(u) === b)) ? 1 : 0])
+      put2(X.s8[T][ph])
+      const d = Math.abs(qe - qs)
+      X.dq[T][d < 0.02 ? 0 : d < 0.05 ? 1 : d < 0.1 ? 2 : d < 0.2 ? 3 : 4]++
+      if ((qs >= 0.5) !== (qe >= 0.5)) { X.cross[T]++; if ((qe >= 0.5) === (y === 1)) X.crossRight[T]++ }
     }
   }
   // at an ask decision: the asker's actionable majorities, the opponents' cards of them, the mass
@@ -1142,6 +1215,7 @@ function report(acc, head) {
     }
     console.log('')
     console.log(`(Monet's asks in this corpus: ${asksA}, ${per(asksA, g, 1)} a game. The pre-registered F2 bar was 4.74% = 1.97 asks a game from one arm's ratio; the fitted favourable slope of +0.230 points per 1% moved would put it at 8.7% = 3.6 a game. Both are quoted because Stage 0 licensed neither.)`)
+    for (const arm of ['exact', 'sink']) { const R = acc.rerank[arm]; if (R) console.log(`(§3.8k \`${arm}\`: run at ${R.n} sampled decisions (every ${EXACT_EVERY}th event index; ${R.skipped} skipped), exact fallbacks ${R.fallback}, exact marginal 0 at the true holder ${R.unsound} — must be 0.)`) }
     console.log('')
   }
   if (acc.assign) {
@@ -1186,6 +1260,42 @@ function report(acc, head) {
         const extra = ASSIGN_NULL ? ` | ${f4(T2.nullBrier / T2.n)} | ${f4(T2.nullQ / T2.n)}` : ''
         console.log(`| ${t === 0 ? 'A' : 'B'} | ${T2.n} | ${f4(qbar)} | ${f4(ybar)} | **${sg4(qbar - ybar)}** | ${f4(T2.brier / T2.n)} | ${f4(rel)} | ${f4(res)} | ${f4(unc)} | ${f4(T2.ll / T2.n)}${extra} |`)
       }
+      console.log('')
+    }
+    if (acc.exact) {
+      const X = acc.exact
+      console.log('-- MONET.md §3.8k R1: the exact posterior under the same model against the Sinkhorn table, on the SAME pairs at the sampled decisions (A = Monet, B = SESTINA\'s decisions through Monet\'s inference); Brier and Murphy for each --')
+      console.log(`| tripwire | value |\n|---|---|\n| sampled decisions | A ${X.dec[0]} / B ${X.dec[1]} |\n| exact fallbacks (constraint cap or state cap) | ${X.fallback} |\n| tables that would not scale | ${X.noTable} |\n| exact marginal 0 at the true holder | **${X.unsound}** — must be 0, the study is VOID otherwise |`)
+      const murphy = (bins, qKey, n) => { let rel = 0, res = 0, ybar = 0; for (const b of bins) ybar += b.y; ybar /= Math.max(1, n); for (const b of bins) { if (b.n === 0) continue; const qk = b[qKey] / b.n, yk = b.y / b.n; rel += (b.n / n) * (qk - yk) * (qk - yk); res += (b.n / n) * (yk - ybar) * (yk - ybar) } return { rel, res } }
+      for (const p of POPS) {
+        console.log(`| ${popName(p)} | pairs | realised y | Sinkhorn: mean q · bias · Brier · REL · RES | exact: mean q · bias · Brier · REL · RES | **Brier change** | of the change, resolution |`)
+        console.log('|---|---|---|---|---|---|---|')
+        for (const t of [0, 1]) {
+          const C = X.tot[t][p]
+          if (C.n === 0) { console.log(`| ${t === 0 ? 'A' : 'B'} | 0 | - | - | - | - | - |`); continue }
+          const ybar = C.y / C.n, ms = murphy(X.binsS[t][p], 'qs', C.n), me2 = murphy(X.binsE[t][p], 'qe', C.n)
+          const bs = C.bs / C.n, be = C.be / C.n
+          const dres = (ms.res - me2.res), dtot = be - bs
+          console.log(`| ${t === 0 ? 'A' : 'B'} | ${C.n} | ${f4(ybar)} | ${f4(C.qs / C.n)} · ${sg4(C.qs / C.n - ybar)} · ${f4(bs)} · ${f4(ms.rel)} · ${f4(ms.res)} | ${f4(C.qe / C.n)} · ${sg4(C.qe / C.n - ybar)} · ${f4(be)} · ${f4(me2.rel)} · ${f4(me2.res)} | **${sg4(dtot)} (${(100 * dtot / Math.max(1e-12, bs)).toFixed(1)}%)** | ${dtot !== 0 ? (100 * (-dres) / Math.max(1e-12, -dtot)).toFixed(0) + '%' : '-'} |`)
+        }
+        console.log('')
+      }
+      const blocks2 = [
+        ['S1 |cands| (2 / 3 / 4 / 5 / 6+)', X.s1, ['2', '3', '4', '5', '6+']],
+        ['S3 a licence for the set on record at the TRUE holder (no / yes)', X.s3, ['no', 'yes']],
+        ['S8 phase (early / mid / late)', X.s8, ['early', 'mid', 'late']],
+      ]
+      console.log('-- §3.8k R1 by split: each cell is Sinkhorn bias · Brier → exact bias · Brier (n); both populations pooled --')
+      for (const [name, blk, labels] of blocks2) {
+        console.log(`| ${name} | ` + labels.join(' | ') + ' |')
+        console.log('|---|' + labels.map(() => '---|').join(''))
+        for (const t of [0, 1]) console.log(`| ${t === 0 ? 'A' : 'B'} | ` + blk[t].map((c) => (c.n > 0 ? `${sg4(c.qs / c.n - c.y / c.n)} · ${f4(c.bs / c.n)} → ${sg4(c.qe / c.n - c.y / c.n)} · ${f4(c.be / c.n)} (${c.n})` : '-')).join(' | ') + ' |')
+        console.log('')
+      }
+      console.log('-- §3.8k R4: |q_exact − q_Sinkhorn| by size, and the pairs the two tables put on opposite sides of 0.5 (with how often the exact one is right there) --')
+      console.log('| side | [0, .02) | [.02, .05) | [.05, .1) | [.1, .2) | [.2, 1] | opposite sides of 0.5 | exact right there |')
+      console.log('|---|---|---|---|---|---|---|---|')
+      for (const t of [0, 1]) { const tot = X.dq[t].reduce((u, v) => u + v, 0); console.log(`| ${t === 0 ? 'A' : 'B'} | ${X.dq[t].map((n) => pct(n, tot)).join(' | ')} | ${X.cross[t]} (${pct(X.cross[t], tot)}) | ${pct(X.crossRight[t], X.cross[t])} |`) }
       console.log('')
     }
     if (ASSIGN_SPLITS) {
