@@ -4717,6 +4717,157 @@ gated on it.
 **Seeds.** No cell. `hashSeed("monet-v0.15-fit-3")` and `hashSeed("monet-v0.15-confirm-12")` are
 reserved now for whatever follows, unspent.
 
+#### Record — 2026-09-05
+
+**M3 is dead, and the reason is the most useful thing v0.15 measured: the approximation in
+`marginal.ts` is not the error — the MODEL it approximates is.** The exact posterior under the same
+model — uniform over every assignment the candidates, the slot counts and the licence constraints
+allow — is *worse* than the Sinkhorn table it was supposed to correct: Brier **+0.19% / +0.18%** at
+Monet's decisions on the two twelves, worse on **24 of 24 seeds**, and **+4.5% / +4.5%** on the
+licence split where §3.8j had located the error. **K1 fires on both corpora and K3 fires.** Nothing
+is built, nothing in `lib/` is touched, no cell was spent, and the study ran as pre-registered —
+one decision in eight, both twelves, about 10.5 minutes a seed against the 16 predicted.
+
+**Tripwires.** Sampled decisions A 71,852 / B 74,516 (primary) and 72,419 / 73,730 (replication);
+exact fallbacks **7 and 6** (0.005% of sampled decisions, against a 1% void bar); the exact marginal
+at the true holder **positive at every scored decision** (`unsound` 0); the true holder outside
+`cands` **0**; `sink` **0 flips** of 144,271; `shipped` **0** of 1,198,622. The two corpora agree on
+the sign of every readout, so the study is not void.
+
+**R1, the ceiling on accuracy — it is below the floor it stands on.** Licensed population, the
+same pairs for both tables, at the sampled decisions:
+
+> | corpus, side | pairs | y | Sinkhorn bias · Brier · REL · RES | exact bias · Brier · REL · RES | Brier change | per seed |
+> |---|---|---|---|---|---|---|
+> | primary, A | 1,105,780 | 0.4267 | −0.0018 · 0.2271 · 0.0006 · 0.0171 | −0.0019 · 0.2276 · 0.0006 · 0.0166 | **+0.0004 (+0.19%)** | worse on 12 of 12 |
+> | primary, B | 1,117,888 | 0.3957 | −0.0041 · 0.2231 · 0.0006 · 0.0156 | −0.0047 · 0.2235 · 0.0006 · 0.0151 | +0.0004 (+0.19%) | 12 of 12 |
+> | replication, A | 1,112,750 | 0.4279 | −0.0024 · 0.2272 · 0.0006 · 0.0171 | −0.0025 · 0.2276 · 0.0006 · 0.0167 | **+0.0004 (+0.18%)** | 12 of 12 |
+> | replication, B | 1,101,108 | 0.3949 | −0.0043 · 0.2229 · 0.0006 · 0.0157 | −0.0049 · 0.2233 · 0.0006 · 0.0153 | +0.0004 (+0.18%) | 12 of 12 |
+
+Reliability is unchanged at 0.0006 and **resolution falls** (0.0171 → 0.0166): the exact table is
+not less honest, it is less informative. The unlicensed population reads the same way, +0.31 to
++0.33%, worse on every seed.
+
+By split (primary shown; the replication agrees within 0.1 point on every row; Sinkhorn bias ·
+Brier → exact bias · Brier, then the change):
+
+> | split | A | B |
+> |---|---|---|
+> | **S3 licence at the true holder — yes** | −0.0877 · 0.1327 → −0.0886 · 0.1387 (273,030), **+4.5%** | +0.1158 · 0.0984 → +0.1164 · 0.1030 (319,748), **+4.7%** |
+> | S3 — no | +0.0142 · 0.2402 → +0.0144 · 0.2398 (1,680,900), −0.1% | −0.0219 · 0.2421 → −0.0220 · 0.2418 (1,688,951), −0.1% |
+> | S1 \|cands\| = 2 | −0.0182 · 0.1681 → −0.0131 · 0.1719 (45,152), **+2.3%** | +0.0126 · 0.1295 → +0.0070 · 0.1330 (53,424), **+2.7%** |
+> | S1 = 3 | −0.0258 · 0.1952 → −0.0241 · 0.1970 (126,877), +0.9% | +0.0125 · 0.1811 → +0.0103 · 0.1829 (147,758), +1.0% |
+> | S1 = 4 | −0.0079 · 0.2154 → −0.0077 · 0.2170 (155,950), +0.7% | +0.0005 · 0.2112 → −0.0002 · 0.2126 (153,806), +0.7% |
+> | S1 = 5 | +0.0033 · 0.2300 → +0.0030 · 0.2303 (1,625,951), +0.1% | −0.0016 · 0.2263 → −0.0011 · 0.2265 (1,653,711), +0.1% |
+> | S8 early / mid / late | −0.0% / +0.1% / **+1.3%** | 0.0% / +0.1% / +1.2% |
+
+**Where §3.8j located the error, the exact table is worse, not better.** On the licence split the
+exact posterior raises the Brier by 4.5% and leaves the bias where it was (−0.088); at |cands| = 2
+it is worse by 2.3%, at 3 by 0.9%, at 5 by 0.1%; late in the game, when the constraints are many
+and the exact table departs furthest from Sinkhorn, by 1.3%. **K1 fires** — the bar was a 5%
+*improvement* on S3 = yes at A, and the reading is a 4.5% deterioration, on both twelves.
+
+**R2, reach.** The `exact` arm changes Monet's ask at **2.74% / 2.71%** of the sampled decisions
+(1,969 of 71,852; 1,963 of 72,419; per-seed SE 0.07 / 0.04) — above K2's 2% bar, so K2 does not
+fire; beside it `side-p` reads 35.56% / 35.47% at every decision. The flips are symmetric — 203 /
+188 turn a sure miss into a live ask and **248 / 266 turn a live ask into a sure miss** — which is
+what noise around a near-identical table looks like, not a direction. Certain-hit displacement is
+**0**, as predicted for a p-only arm.
+
+**R3, sets.** B2's surviving cell for the `exact` arm reads **0.003 / 0.005** sets a game at
+(θ = 0.5, only-chance) — a lower bound, since only a sampled hidden chance can count, but 0.071 /
+0.067 even at θ = 0.3 and 0.037 on the discarded (0.5, any) cell — against `side-p`'s 0.328 / 0.334
+on the same cell and the same records. **K3 fires** against a bar of 0.05.
+
+**R4, where the tables disagree.** 92.5% / 92.4% of A's pairs differ by under 0.02, 0.2% by 0.1 or
+more, 0.0% by 0.2 or more (the 0.283 disclosed in the pre-registration was the largest single entry
+on 1,769 self-play decisions). The two tables put **1.92% / 1.93%** of Monet's pairs on opposite
+sides of 0.5 — and there the exact one is right **47.6% / 47.4%** of the time, the Sinkhorn one
+52.4% / 52.6%; at B, 0.99% / 1.02% of pairs, the exact one right 43.2% / 44.2%.
+
+**What this means.** A posterior computed exactly under a model can be further from the truth than
+an approximation to it only if the truth is not drawn from the model. The deal is uniform and every
+public fact is honoured exactly, so what the model lacks is not inference but a **likelihood** —
+the players' choices carry information the constraints do not. The post-hoc diagnostic below
+measures the gap directly: a seat that has asked into a set holds "at least one" of its alive cards
+under the model and in fact holds about **1.5** of them, whether two or five are alive. The exact
+table expects *less* than the Sinkhorn table at every alive count — the one-shot conditioning
+under-conditions relative to the exact rule — and at two to four alive cards that shortfall points
+toward the truth, so removing it made the Brier worse exactly where the licence-split error lives
+(S3 = yes, |cands| = 2–3, late in the game) and better only where the model over-shoots, at five.
+**The "deduction defect" §3.8j named was the model's flat prior showing through an approximation
+that softened it.** M3 — arc-consistency, exact conditioning, any better inference under this model
+— cannot help, because the model is already inferred better than it deserves.
+
+**Post hoc, and labelled so — where the truth leaves the model.** Added to the instrument after
+the pre-registered study had finished and run on six seeds, three of each corpus, to explain the
+result rather than to reach it: for every surviving licence constraint at the sampled decisions —
+"seat *t* holds at least one of these alive cards of the set" — the true count at *t* against what
+each table expects, by the number of alive cards:
+
+> | licensed seat (relative to the decider) | alive cards | constraints | truth: mean count (per-seed min–max, six seeds) | truth: P(2 or more) | Sinkhorn expects | exact expects |
+> |---|---|---|---|---|---|---|
+> | own side | 2 | 28832 | 1.496 (1.469–1.507) | 49.6% | 1.147 | 1.133 |
+> | own side | 3 | 28358 | 1.524 (1.501–1.568) | 40.5% | 1.272 | 1.246 |
+> | own side | 4 | 28876 | 1.495 (1.463–1.566) | 37.3% | 1.386 | 1.349 |
+> | own side | 5 | 18035 | 1.460 (1.438–1.485) | 35.9% | 1.525 | 1.465 |
+> | other side | 2 | 49073 | 1.469 (1.455–1.490) | 46.9% | 1.138 | 1.134 |
+> | other side | 3 | 46780 | 1.521 (1.484–1.556) | 40.3% | 1.282 | 1.259 |
+> | other side | 4 | 50287 | 1.461 (1.440–1.480) | 35.7% | 1.380 | 1.350 |
+> | other side | 5 | 41973 | 1.427 (1.404–1.459) | 33.9% | 1.504 | 1.456 |
+> | primary only, own side | 2 | 14511 | 1.486 (1.469–1.502) | 48.6% | 1.148 | 1.134 |
+> | primary only, other side | 2 | 24461 | 1.465 (1.455–1.474) | 46.5% | 1.140 | 1.135 |
+> | replication only, own side | 2 | 14321 | 1.505 (1.504–1.507) | 50.5% | 1.147 | 1.132 |
+> | replication only, other side | 2 | 24612 | 1.474 (1.465–1.490) | 47.4% | 1.136 | 1.133 |
+
+A licensed seat holds **about 1.5** of the set's alive cards whether two, three, four or five are
+alive. The model's expectation, uniform over the feasible assignments, rises with the alive count
+from 1.14 to 1.52 instead — a third of a card short at two alive cards, a quarter at three, a tenth
+at four, and slightly over at five. At two alive cards the seat holds **both about half the time;
+the Sinkhorn table says 14 to 15%, the exact one 13%.** §3.6a saw the same thing from the deal on the fit
+seeds: a seat that had asked into a set was dealt **1.565** of it against **1.185** for one that
+held a card and never asked, where the plain deal gives **1.46** to any seat holding at least one —
+the ask says the seat holds more than a licence-holder, silence says it holds less, and the model
+reads both as "at least one".
+
+**What is fixed by this record.** Nothing on Monet's vector. `scripts/exact-marginal.mjs` stays as
+an instrument — the exact posterior under the model, pinned against brute force — with
+`attribute.mjs --assign-rerank exact|sink --assign-exact` (which now also prints the licence-holding
+readout, marked post hoc in the code) and the seam that carried it. **Decision row 17 carries the
+reading.** What the result points at is a likelihood over the players' choices, and the code
+already holds the crude form of exactly that: §3.6a's `choiceKappa` with `choicePrior: 'once'`
+multiplies the asker's cell for every card of the asked set by (1 + κ), which weights an assignment
+by (1 + κ) to the power of the holding — a geometric likelihood in the very quantity the diagnostic
+finds under-modelled. §3.8j's "M2 unsupported" rested on the licence split belonging to M3; with M3
+dead, the licence split is M2's by elimination, and the diagnostic measures it directly. The
+arithmetic on one bucket says how far v0.5 was from the dose: at two alive cards the model's odds
+on "both" are 0.15 to 0.85 and the truth's are 0.49 to 0.51, a factor of about six, so a geometric
+likelihood wants (1 + κ) ≈ 6 where v0.5 took κ = 1 abroad (+0.47, SE 0.59, inside the floor) and
+the count form saturates at three asks. That is arithmetic, not a calibration; the calibration is a
+records study through the same seam, with the same instrument and the same falsifiers, and no cell.
+Against it stands the honest prior of **six consecutive measured negatives** — v0.10 through v0.15
+— and the ceiling §3.8j's addendum put on the whole channel: 0.33 sets a game under a *perfect*
+belief, half a point at the class prior. **M-NULL, §3.9's acceptance on v0.9's vector, is now the
+leading candidate**, and the even-3 bucket — §3.8c R1's largest single bucket, never attacked by
+any rung — the leading alternative to it.
+
+**Predictions, scored.** Q0 **hit on three of its four pins** — soundness 0, `sink` 0, `shipped` 0
+— and missed on the fourth: fallbacks were 7 and 6, not 0. **Q1 missed on the sign**: the exact
+table is worse pooled, not 1–3% better. **Q2 missed badly**: S3 = yes reads +4.5% worse, not 8–20%
+better, and the bias did not move. Q3 is moot as written — there is no gain to decompose — though
+what did move is all resolution, downward (REL 0.0006 → 0.0006, RES 0.0171 → 0.0166). **Q4 missed**:
+2.7% of asks, under the 4–12% band. **Q5 missed by an order of magnitude**: 0.003–0.005 against
+0.08–0.20. **Q6 missed on what can be read**: the Brier change is largest at |cands| = 2 (+2.3%)
+and falls with the candidate count, the opposite of "the disagreement lives at 3–6"; the mean
+disagreement by |cands| was not among the readouts recorded, so its first clause is unscored. None
+of the seven cleanly. The pre-registration was wrong about the direction of nearly everything it
+predicted, and the falsifiers it wrote caught that in an afternoon, on records, for nothing.
+
+**Scratch state, not committed:** `$SP/monet-v15/{run-v15.sh,v15-agg.mjs,run-diag.sh,diag-agg.mjs,attribute-diag.mjs,out/}`
+— the 24 per-seed outputs, the pin runs (`pins-seed*.txt`, whose comparison table was not read
+before the pre-registration was committed), and the six diagnostic runs (`diag-*.txt`; the scratch
+copy of the instrument that produced them is byte-identical to the committed one).
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -5154,6 +5305,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 14 | **After v0.13: the ask ranker is finished, and the binding constraint is the inference — what is the next axis?** Four terms fitted on one vector: `contest` shipped at +4.04, then `exposure` +1.07, the declare bar priced at under 0.02 sets a game and not built, `closing` +0.583, and `chase` negative at **every** dose §6.3 permitted, monotonically to −7.56 (§3.8i). The last one is the informative one. It moved thousands of asks, gave up an ask that hit **100.0%** for one that hit 29.7–50.1%, and **did not move the chase rate at all** (31.5% → 31.8% against a +1.5 bar), because its own-locked asks rose while its counterfactual's fell: the asks a seat-known majority credit buys are §3.8g's sure misses into the side's own majority, not chases. That converges with §3.8g R1 from the other direction — Monet rates 21.4% of opponent-held missing cards as its own side's against 11.1% at SESTINA's positions. **The constraint is not how the ranker spends its belief; it is the belief.** Recommendation: **v0.14, the assignment**, on the one quantity every remaining marker runs through — which side holds a missing card. §3.8g named it as clause (b) and row 12 declined it while a ranker term was still untried; none is now. It is measurable without a rung: the calibration of `pAssignment`/the marginal on the opponent-held missing cards is already recorded on every bridge cell, and the study should be run on the records first (§3.8c's and §3.8g's shape) before any code, so the bound is priced before a dose is fitted. Not recommended: another ranker term, at any gate, in any form — four reads say the axis is spent. | **TAKEN 2026-09-04** — the owner chose it ("open the prs then go on v0.14"). §3.8j is pre-registered on the records before any code: the instrument, the bound as a bracket, seven falsifiers and the predictions. Row 15 carries the answer. |
 | 15 | **After §3.8j: is the assignment the binding constraint, and what does v0.14 build?** The study is pre-registered and its corpora are on disk; the reads and the falsifiers are written in §3.8j. The pilot already says the belief REACHES the policy at scale — a full side oracle changes Monet's chosen ask at **38.6%** of its decisions on one seed, eight times the 1.97-asks-a-game bar — so the cheap kill does not fire and the question is value, not connection. Candidates ranked in §3.8j: **M3** the deduction fix, **M1** a fitted recalibration (carrying §3.8h's −0.472 / −2.167 warning on belief-weighted forms), **M2** `choiceKappa` rescoped, **M4** `conceal`, **M5** within-side resolution, and **M-NULL**. Pre-registered prediction, against row 14's own premise: **the study returns "not the binding constraint".** | **ANSWERED 2026-09-04** — the axis is CLOSED on its calibration. Reliability is **0.22% of Brier** over 19M pairs on two disjoint twelves (bias −0.0014 / −0.0020, agreeing to 0.0006), so F1 fires ~50× and F6 fires by arithmetic: a perfect recalibration can remove at most 0.22%, against a 15% bar. §3.8g R1 is a base rate — its A/B gap is the same size on the cards the seat gets RIGHT (26.7% vs 15.8%) as on the ones it gets wrong (11.5% vs 5.5%). F3 relocates the question: `seat-p` moves 49.3% of asks against `side-p`'s 35.2%, so the ranker cares more about WHICH SEAT than WHICH SIDE. **Recommendation: M3, the deduction fix** — the licence split is the largest effect in the study (bias −0.085 at a Brier of 0.133 on 13% of the population, against an aggregate 0.228) and the error concentrates at \|cands\| = 2–3; it is a correctness fix, not a dose, so §6.3's floor does not gate it. M1 is dead twice over; M2 unsupported (4.5 points against the licence split's 20). **M-NULL stays first-class** on the prior of five measured negatives. Row 16 is the owner's call. |
 | 16 | **After B1b and B2: is the declare the rung, or the deduction — and what is v0.15?** The two readouts the record left unrun were run the next day (§3.8j's addendum). B2 discards half of itself on its own validation — the (θ = 0.3, any) cell would have promised +7 and +12 points to arms that delivered +0.58 and −7.56 — and on the surviving (θ = 0.5, only-chance) cell F5 does not fire: a perfect side belief has **0.33 sets a game** at stake in Monet's majority episodes where every chance was hidden (0.42 with the seat), +5 to +6 points at the exchange rate, half a point at the tenfold class prior. B1b's declare budget is **+0.09 to +0.14 sets of differential a game** under the oracles, at the floor — but 80–96% of it is sets open at the clinch, which in `us54` sit in decided games, and the win-relevant units are 0.002–0.03 a game. **Recommendation: v0.15 is M3, the deduction fix, studied on the records before any code** — the exact conditioning on the residual instance measured against the Sinkhorn table on the licence split and at \|cands\| = 2–3, and injected through the same seam so its flips sit inside B1's bracket, before `marginal.ts` is touched; the room is bounded above by B2's 0.33. Not recommended: the declare (B1b), a recalibration (F1, F6), another ranker term (rows 12–14). M-NULL stays first-class. | **TAKEN 2026-09-05** — the owner: run B1b and B2, then "we'll go with your recommendations". B1b's budget is at the floor in sets and under half a point in wins under an oracle, so the declare is not the rung. **v0.15 is M3, studied on the records first.** |
+| 17 | **After §3.8k: the deduction fix is dead — the model, not the inference, is the error. What is v0.16, if anything?** The exact posterior under `marginal.ts`'s own model is *worse* than the Sinkhorn table on 24 of 24 seeds (+0.19% Brier pooled, **+4.5% on the licence split**), moves 2.7% of asks symmetrically, and carries 0.003–0.005 sets a game on B2's surviving cell; K1 and K3 fire. The post-hoc diagnostic says why: a seat that has asked into a set holds **about 1.5** of its alive cards whether two or five are alive — both of two about half the time, where the model says 15% — so the players' choices carry a likelihood the constraints do not, and exact inference only sharpens the wrong prior. Six rungs have now read negative in a row (v0.10–v0.15), and the belief channel's ceiling is 0.33 sets a game under a *perfect* belief (§3.8j addendum). **Recommendation: M-NULL leads — §3.9's acceptance on v0.9's vector.** Before it is taken, one probe costs no cell and settles the last open question on this axis: **the licence likelihood** — `choiceKappa` with `choicePrior: 'once'`, the geometric-in-the-holding weight the code already carries, **calibrated on the records** to the measured holding (the crude arithmetic on the two-alive bucket wants (1 + κ) ≈ 6, against the κ = 1 v0.5 took abroad) and read through the same seam with the same falsifiers: K1's bar on S3 = yes, K2's on asks moved, B2's cell. If it cannot clear them the belief axis closes for good, and row 18 chooses between §3.9 and **the even-3 bucket** — §3.8c R1's largest single bucket, ~40% of SESTINA's extra sets a game, never attacked by any rung. Not recommended: any dose fitted abroad on the belief before that probe; any further inference change under this model; another ranker term. | *open — the owner's call* |
 
 ---
 

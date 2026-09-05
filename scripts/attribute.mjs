@@ -630,6 +630,8 @@ function walk(rec, cfPol, acc) {
       s1: [0, 1].map(() => [0, 0, 0, 0, 0].map(cell)), s3: [0, 1].map(() => [0, 1].map(cell)), s8: [0, 1].map(() => [0, 0, 0].map(cell)),
       dq: [0, 1].map(() => [0, 0, 0, 0, 0]), // |q_exact - q_sink| in [0,.02) [.02,.05) [.05,.1) [.1,.2) [.2,1]
       cross: [0, 0], crossRight: [0, 0], // the two tables on opposite sides of 0.5, and how often the exact one is right there
+      // post hoc: per surviving constraint, the true count at the licensed seat against each table's expectation
+      licenceHold: [0, 1].map(() => [0, 1, 2, 3, 4, 5].map(() => ({ n: 0, truth: 0, sink: 0, exact: 0, atLeast2: 0 }))),
     }
   }
   let exactCache = null // { i, cards, p }: this decision's exact table, shared with the `exact` arm
@@ -641,6 +643,21 @@ function walk(rec, cfPol, acc) {
     const e = EXACT.exactMarginal(k, tbl, EXACT_OPTS)
     if (!e) { X.fallback++; return }
     exactCache = { i, cards: tbl.cards, p: e.p }
+    for (const kc of k.constraints) {
+      const t = kc.seat
+      let truth = 0, sk = 0, ex = 0, alive = 0
+      for (const c of kc.cards) {
+        const r = tbl.index.get(c)
+        if (r === undefined) continue
+        alive++
+        if (seatOf.get(c) === t) truth++
+        sk += tbl.p[r * 6 + t]
+        ex += e.p[r * 6 + t]
+      }
+      if (alive === 0) continue
+      const H = X.licenceHold[side(t) === T ? 0 : 1][Math.min(5, alive - 1)]
+      H.n++; H.truth += truth; H.sink += sk; H.exact += ex; if (truth >= 2) H.atLeast2++
+    }
     const myBooks = new Set(hands[me].map(bookOf))
     const done = awarded[0] + awarded[1]
     const ph = done <= 1 ? 0 : done <= 3 ? 1 : 2
@@ -1296,6 +1313,11 @@ function report(acc, head) {
       console.log('| side | [0, .02) | [.02, .05) | [.05, .1) | [.1, .2) | [.2, 1] | opposite sides of 0.5 | exact right there |')
       console.log('|---|---|---|---|---|---|---|---|')
       for (const t of [0, 1]) { const tot = X.dq[t].reduce((u, v) => u + v, 0); console.log(`| ${t === 0 ? 'A' : 'B'} | ${X.dq[t].map((n) => pct(n, tot)).join(' | ')} | ${X.cross[t]} (${pct(X.cross[t], tot)}) | ${pct(X.crossRight[t], X.cross[t])} |`) }
+      console.log('')
+      console.log('-- §3.8k, post hoc: per surviving licence constraint (seat t holds at least one of these alive cards of a set), the TRUE count at t against what each table expects; by whether t is on the deciding side, and by the number of alive cards --')
+      console.log('| licensed seat | alive cards | constraints | truth: mean count | P(2 or more) | Sinkhorn expects | exact expects |')
+      console.log('|---|---|---|---|---|---|---|')
+      for (const o of [0, 1]) for (let a = 0; a < 6; a++) { const H = X.licenceHold[o][a]; if (H.n === 0) continue; console.log(`| ${o === 0 ? 'own side' : 'other side'} | ${a === 5 ? '6+' : a + 1} | ${H.n} | ${(H.truth / H.n).toFixed(3)} | ${pct(H.atLeast2, H.n)} | ${(H.sink / H.n).toFixed(3)} | ${(H.exact / H.n).toFixed(3)} |`) }
       console.log('')
     }
     if (ASSIGN_SPLITS) {
