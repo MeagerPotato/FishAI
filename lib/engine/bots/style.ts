@@ -300,6 +300,15 @@ export interface StyleParams extends AskWeights {
    */
   choiceAdapt?: number
   /**
+   * MONET.md §3.8l — the licence conditioning calibrated to a measured holding: h > 0 makes the
+   * marginal scale each surviving "holds at least one of these" constraint so the licensed seat's
+   * expected count over the set's alive cards is min(h, alive) (`KnowledgeOptions.licenceHold`).
+   * §3.8k measured the truth at about 1.5 whether two or five cards are alive. 0 or absent is the
+   * one-shot conditioning every version before v0.16 played, byte for byte. Reads the table
+   * `pModel: 'marginal'` builds and is inert without one. Absent on every roster style and every tier.
+   */
+  licenceHold?: number
+  /**
    * MONET.md §3.7 item 1 — the reveal ask's weight (≥ 0). An ask into a half-suit this hand holds
    * a card of, whose public record would let a teammate prove the set should it be on this team
    * (reveal.ts), is credited `reveal · urgency · P(locked)` on top of its hit probability — P(locked)
@@ -809,6 +818,9 @@ export function validateStyle(style: StyleParams): string[] {
   if (choicePrior !== undefined && choicePrior !== 'count' && choicePrior !== 'once') bad.push(`choicePrior ${String(choicePrior)} is not 'count' or 'once'`)
   const choiceAdapt = style.choiceAdapt
   if (choiceAdapt !== undefined && !(typeof choiceAdapt === 'number' && Number.isFinite(choiceAdapt) && choiceAdapt >= 0)) bad.push(`choiceAdapt ${String(choiceAdapt)} is not a finite number >= 0`)
+  // A target holding above six cards, or below zero, is not a holding of a half-suit.
+  const licenceHold = style.licenceHold
+  if (licenceHold !== undefined && !(typeof licenceHold === 'number' && Number.isFinite(licenceHold) && licenceHold >= 0 && licenceHold <= 6)) bad.push(`licenceHold ${String(licenceHold)} is not a number in [0, 6]`)
   const reveal = style.reveal
   if (reveal !== undefined && !(typeof reveal === 'number' && Number.isFinite(reveal) && reveal >= 0)) bad.push(`reveal ${String(reveal)} is not a finite number >= 0`)
   const revealFar = style.revealFar

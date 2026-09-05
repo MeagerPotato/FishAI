@@ -47,8 +47,8 @@
  * instances and pins its size. Whether the number is *calibrated* is an empirical question
  * answered by `scripts/calibration.mjs`, and MONET.md §3.4a's acceptance reads that harness first.
  * Not a memory: the table is a pure read of a finished `Knowledge` — `cands`, `unknownSlots`,
- * `constraints`, and the ask-choice prior (`asksInto`, `choiceKappa`, `choiceSeat`) when MONET.md §3.6a's knobs put
- * one there — and nothing else — memoised per object, so BOUNDED.md's fact pool keeps its shape
+ * `constraints`, the ask-choice prior (`asksInto`, `choiceKappa`, `choiceSeat`) when MONET.md §3.6a's knobs put
+ * one there, and §3.8l's `licenceHold` when that knob is set — and nothing else — memoised per object, so BOUNDED.md's fact pool keeps its shape
  * and its cost model (the §3.4a scope decision). Not the joint: §3.4b's `pAssignment` is a
  * different object, and the declare planner does not read this table.
  *
@@ -79,6 +79,10 @@ export const MARGINAL_TOLERANCE = 1e-9
  * own ceiling reserves them, so no reader mistakes a scaled number for a fact.
  */
 const EPS = 1e-9
+/** MONET.md §3.8l: rounds of the licence-holding fit (each alternated with a full row/column pass). */
+const HOLD_ROUNDS = 8
+/** A seat's licence targets may claim at most this share of its free slots, or the fit is infeasible. */
+const HOLD_SHARE = 0.95
 
 /** The scaled table. Rows are the unknown cards in canonical order; entry `i * 6 + seat`. */
 export interface MarginalTable {
@@ -266,6 +270,41 @@ export function computeMarginalTable(k: Knowledge): MarginalTable | null {
     }
   }
 
+  // MONET.md §3.8l: the licence conditioning calibrated to a MEASURED holding. §3.8k found that a
+  // seat licensed to a set holds about 1.5 of the set's alive cards whether two or five are alive,
+  // where the table above — uniform over the feasible assignments, conditioned once on "at least
+  // one" — expects 1.14 rising to 1.52. With `licenceHold` = h set, each surviving constraint's
+  // cells are scaled so the licensed seat's expected count over its alive cards is min(h, |A|), as
+  // one more margin in the same proportional fitting, alternated with the rows and the columns;
+  // where a seat's targets would claim more than HOLD_SHARE of its free slots they are cut back
+  // pro rata so the fitting stays feasible. Absent or 0 is the table above, byte for byte.
+  const hold = k.licenceHold ?? 0
+  if (hold > 0 && constraints.length > 0) {
+    const targets = constraints.map(({ rows }) => Math.min(hold, rows.length))
+    const perSeat = [0, 0, 0, 0, 0, 0]
+    constraints.forEach(({ seat: t }, j) => { perSeat[t] += targets[j] })
+    constraints.forEach(({ seat: t }, j) => { if (perSeat[t] > need[t] * HOLD_SHARE) targets[j] *= (need[t] * HOLD_SHARE) / perSeat[t] })
+    for (let round = 0; round < HOLD_ROUNDS; round++) {
+      let moved = 0
+      constraints.forEach(({ seat: t, rows }, j) => {
+        let sum = 0
+        for (const i of rows) sum += p[i * 6 + t]
+        if (!(sum > 0)) return
+        const g = targets[j] / sum
+        for (const i of rows) {
+          const before = p[i * 6 + t]
+          if (!(before > 0) || before >= 1) continue
+          const after = Math.min(1 - EPS, before * g)
+          p[i * 6 + t] = after
+          scaleRowExcept(p, i, t, (1 - after) / (1 - before))
+          const d = Math.abs(after - before)
+          if (d > moved) moved = d
+        }
+      })
+      if (moved < MARGINAL_TOLERANCE) break
+      scaleToMargins(p, n, need)
+    }
+  }
   const second = constraints.length > 0 ? scaleToMargins(p, n, need) : { rounds: 0, converged: true }
   return {
     cards,

@@ -75,14 +75,24 @@ const B2_ARM = argOf('--b2-arm', '')
 const CF_KNOBS = argOf('--cf-knobs', '')
 // §3.8k: both tables' q scored on the same sampled pairs, and the sampling every N-th event index
 const ASSIGN_EXACT = process.argv.includes('--assign-exact')
-const EXACT_EVERY = Number(argOf('--exact-every', 8))
+// §3.8l: an alternative belief — the --cf policy's knowledge built with extra KnowledgeOptions
+// (choiceKappa / choicePrior / choiceAdapt, MONET.md §3.6a) — scored against the shipped table on
+// the SAME pairs through §3.8k's machinery (`--assign-alt`), and played through the boundedK seam
+// as the rerank arm `alt`, pinned at every decision to the policy carrying the same knobs in its
+// style. The alt table is Sinkhorn-cheap, so its default sampling is every decision.
+const ALT_KNOBS = argOf('--alt-knobs', '') // e.g. choiceKappa=5,choicePrior=once
+const ASSIGN_ALT = process.argv.includes('--assign-alt')
+if (ASSIGN_ALT && !ALT_KNOBS) throw new Error('--assign-alt needs --alt-knobs')
+if (ASSIGN_ALT && ASSIGN_EXACT) throw new Error('--assign-alt and --assign-exact are exclusive')
+const ALT_NAME = ASSIGN_ALT ? `alt[${ALT_KNOBS}]` : 'exact'
+const EXACT_EVERY = Number(argOf('--exact-every', ASSIGN_ALT ? 1 : 8))
 const EXACT_OPTS = { maxConstraints: 12, maxStates: 8_000_000 }
 const parseKnobs = (spec) => {
   const o = {}
   for (const kv of String(spec || '').split(',').map((x) => x.trim()).filter(Boolean)) {
     const [k, v] = kv.split('=')
-    o[k] = v === 'true' ? true : v === 'false' ? false : Number(v)
-    if (typeof o[k] === 'number' && Number.isNaN(o[k])) throw new Error(`bad knob ${kv}`)
+    o[k] = v === 'true' ? true : v === 'false' ? false : Number.isNaN(Number(v)) ? v : Number(v)
+    if (v === undefined || v === '') throw new Error(`bad knob ${kv}`)
   }
   return o
 }
@@ -246,6 +256,9 @@ function walk(rec, cfPol, acc) {
     return false
   }
   const OPTS = cfPol ? { logWindow: cfPol.skill.logWindow, useConstraints: cfPol.skill.useConstraints, marginal: true } : null
+  // §3.8l: the same options with the alt knobs laid over them, and the policy that carries the knobs in its style
+  const ALT_OPTS = OPTS && ALT_KNOBS ? { ...OPTS, ...parseKnobs(ALT_KNOBS) } : null
+  const altPol = cfPol && ALT_KNOBS ? withKnobs(cfPol, ALT_KNOBS) : null
   const track = {} // book -> { seq: [{ i, pg, rg, pa, ra }], declaredAt } for sets A's side could declare
   // --majority: book -> [episode of side 0, episode of side 1]; an episode opens when the side first
   // holds four of the six by the deal and closes when the set resolves (or at the clinch)
@@ -507,7 +520,7 @@ function walk(rec, cfPol, acc) {
     for (const arm of rerankArms) {
       const R = (acc.rerank[arm] ??= newRerankAcc())
       // §3.8k: the exact arms run at the sampled decisions only; the sampling is by the walk's event index
-      if ((arm === 'exact' || arm === 'sink') && i % EXACT_EVERY !== 0) { R.skipped++; continue }
+      if ((arm === 'exact' || arm === 'sink' || arm === 'alt') && i % EXACT_EVERY !== 0) { R.skipped++; continue }
       R.n++
       try {
         let ka
@@ -530,6 +543,12 @@ function walk(rec, cfPol, acc) {
           } else if (ta && arm === 'sink') {
             ta.p.set(ta.p.slice())
           }
+        } else if (arm === 'alt') {
+          // §3.8l: the alternative belief itself — cands untouched, the prior over them reweighted (§3.6a)
+          if (!ALT_OPTS) throw new Error('--assign-rerank alt needs --alt-knobs')
+          ka = ENG.buildKnowledge(view, ALT_OPTS)
+          const ta = BOTS.attachMarginal(ka)
+          if (ta && BOTS.marginalFor(ka) !== ta) throw new Error(`${rec.label}: marginalFor does not return the attached alt table`)
         } else {
           ka = ENG.buildKnowledge(view, OPTS)
           const ta = BOTS.attachMarginal(ka)
@@ -540,6 +559,11 @@ function walk(rec, cfPol, acc) {
           }
         }
         const a2 = decide(view, { ...cfPol, boundedK: () => ka }, seed)
+        if (arm === 'alt') {
+          // the seam pin: the policy with the same knobs in its style, through its own knowledge path, must agree
+          const a3 = decide(view, altPol, seed)
+          if (a3.type !== a2.type || a3.card !== a2.card || a3.target !== a2.target) { R.seamDisagree = (R.seamDisagree ?? 0) + 1; if (VALIDATE_ASSIGN) throw new Error(`${rec.label}: event ${i}: the alt seam disagrees with the knob policy`) }
+        }
         if (a2.type !== 'ask') { R.nonAsk++; out[arm] = { flipped: true, card: undefined }; continue }
         const same = a2.card === baseAction.card && a2.target === baseAction.target
         if (arm === 'shipped' && !same) throw new Error(`${rec.label}: event ${i}: the shipped arm disagrees with decide()`)
@@ -617,7 +641,7 @@ function walk(rec, cfPol, acc) {
       put(AS.s7[T][tbl.converged === false ? 0 : 1], q, y)
       put(AS.s8[T][ph], q, y)
     }
-    if (ASSIGN_EXACT && i % EXACT_EVERY === 0) exactScore(k, tbl, T, me, i)
+    if ((ASSIGN_EXACT || ASSIGN_ALT) && i % EXACT_EVERY === 0) exactScore(k, tbl, T, me, i, view)
   }
   // §3.8k: both tables' q on the SAME pairs at the sampled decisions — Sinkhorn against exact —
   // with the S1 / S3 / S8 splits, the size of the disagreement, and the exact table's soundness pin.
@@ -635,13 +659,23 @@ function walk(rec, cfPol, acc) {
     }
   }
   let exactCache = null // { i, cards, p }: this decision's exact table, shared with the `exact` arm
-  const exactScore = (k, tbl, T, me, i) => {
+  const exactScore = (k, tbl, T, me, i, view) => {
     if (!acc.exact) acc.exact = newExactAcc()
     const X = acc.exact
     X.dec[T]++
     if (!tbl) { X.noTable++; return }
-    const e = EXACT.exactMarginal(k, tbl, EXACT_OPTS)
-    if (!e) { X.fallback++; return }
+    let e
+    if (ASSIGN_ALT) {
+      // §3.8l: the alt table on the same rows — the knobs reweight the prior, they never change cands
+      const ka = ENG.buildKnowledge(view, ALT_OPTS)
+      const ta = BOTS.attachMarginal(ka)
+      if (!ta) { X.noTable++; return }
+      if (ta.cards.length !== tbl.cards.length || ta.cards.some((c, r) => c !== tbl.cards[r])) { X.rowMismatch = (X.rowMismatch ?? 0) + 1; if (VALIDATE_ASSIGN) throw new Error(`${rec.label}: event ${i}: the alt table's rows differ from the shipped table's`); return }
+      e = { p: ta.p }
+    } else {
+      e = EXACT.exactMarginal(k, tbl, EXACT_OPTS)
+      if (!e) { X.fallback++; return }
+    }
     exactCache = { i, cards: tbl.cards, p: e.p }
     for (const kc of k.constraints) {
       const t = kc.seat
@@ -1232,7 +1266,7 @@ function report(acc, head) {
     }
     console.log('')
     console.log(`(Monet's asks in this corpus: ${asksA}, ${per(asksA, g, 1)} a game. The pre-registered F2 bar was 4.74% = 1.97 asks a game from one arm's ratio; the fitted favourable slope of +0.230 points per 1% moved would put it at 8.7% = 3.6 a game. Both are quoted because Stage 0 licensed neither.)`)
-    for (const arm of ['exact', 'sink']) { const R = acc.rerank[arm]; if (R) console.log(`(§3.8k \`${arm}\`: run at ${R.n} sampled decisions (every ${EXACT_EVERY}th event index; ${R.skipped} skipped), exact fallbacks ${R.fallback}, exact marginal 0 at the true holder ${R.unsound} — must be 0.)`) }
+    for (const arm of ['exact', 'sink', 'alt']) { const R = acc.rerank[arm]; if (R) console.log(`(§3.8k \`${arm}\`: run at ${R.n} sampled decisions (every ${EXACT_EVERY}th event index; ${R.skipped} skipped), exact fallbacks ${R.fallback}, exact marginal 0 at the true holder ${R.unsound} — must be 0.${arm === 'alt' ? ` §3.8l seam disagreements ${R.seamDisagree ?? 0} — must be 0.` : ''})`) }
     console.log('')
   }
   if (acc.assign) {
@@ -1281,11 +1315,11 @@ function report(acc, head) {
     }
     if (acc.exact) {
       const X = acc.exact
-      console.log('-- MONET.md §3.8k R1: the exact posterior under the same model against the Sinkhorn table, on the SAME pairs at the sampled decisions (A = Monet, B = SESTINA\'s decisions through Monet\'s inference); Brier and Murphy for each --')
-      console.log(`| tripwire | value |\n|---|---|\n| sampled decisions | A ${X.dec[0]} / B ${X.dec[1]} |\n| exact fallbacks (constraint cap or state cap) | ${X.fallback} |\n| tables that would not scale | ${X.noTable} |\n| exact marginal 0 at the true holder | **${X.unsound}** — must be 0, the study is VOID otherwise |`)
+      console.log(`-- MONET.md §3.8k R1${ASSIGN_ALT ? ` (§3.8l: the second table is ${ALT_NAME}, not the exact posterior)` : ''}: the exact posterior under the same model against the Sinkhorn table, on the SAME pairs at the sampled decisions (A = Monet, B = SESTINA\'s decisions through Monet\'s inference); Brier and Murphy for each --`)
+      console.log(`| tripwire | value |\n|---|---|\n| sampled decisions | A ${X.dec[0]} / B ${X.dec[1]} |\n| exact fallbacks (constraint cap or state cap) | ${X.fallback} |\n| tables that would not scale | ${X.noTable} |\n| exact marginal 0 at the true holder | **${X.unsound}** — must be 0, the study is VOID otherwise |${ASSIGN_ALT ? `\n| §3.8l alt rows differing from the shipped rows | **${X.rowMismatch ?? 0}** — must be 0 |` : ''}`)
       const murphy = (bins, qKey, n) => { let rel = 0, res = 0, ybar = 0; for (const b of bins) ybar += b.y; ybar /= Math.max(1, n); for (const b of bins) { if (b.n === 0) continue; const qk = b[qKey] / b.n, yk = b.y / b.n; rel += (b.n / n) * (qk - yk) * (qk - yk); res += (b.n / n) * (yk - ybar) * (yk - ybar) } return { rel, res } }
       for (const p of POPS) {
-        console.log(`| ${popName(p)} | pairs | realised y | Sinkhorn: mean q · bias · Brier · REL · RES | exact: mean q · bias · Brier · REL · RES | **Brier change** | of the change, resolution |`)
+        console.log(`| ${popName(p)} | pairs | realised y | Sinkhorn: mean q · bias · Brier · REL · RES | ${ALT_NAME}: mean q · bias · Brier · REL · RES | **Brier change** | of the change, resolution |`)
         console.log('|---|---|---|---|---|---|---|')
         for (const t of [0, 1]) {
           const C = X.tot[t][p]
@@ -1315,7 +1349,7 @@ function report(acc, head) {
       for (const t of [0, 1]) { const tot = X.dq[t].reduce((u, v) => u + v, 0); console.log(`| ${t === 0 ? 'A' : 'B'} | ${X.dq[t].map((n) => pct(n, tot)).join(' | ')} | ${X.cross[t]} (${pct(X.cross[t], tot)}) | ${pct(X.crossRight[t], X.cross[t])} |`) }
       console.log('')
       console.log('-- §3.8k, post hoc: per surviving licence constraint (seat t holds at least one of these alive cards of a set), the TRUE count at t against what each table expects; by whether t is on the deciding side, and by the number of alive cards --')
-      console.log('| licensed seat | alive cards | constraints | truth: mean count | P(2 or more) | Sinkhorn expects | exact expects |')
+      console.log(`| licensed seat | alive cards | constraints | truth: mean count | P(2 or more) | Sinkhorn expects | ${ALT_NAME} expects |`)
       console.log('|---|---|---|---|---|---|---|')
       for (const o of [0, 1]) for (let a = 0; a < 6; a++) { const H = X.licenceHold[o][a]; if (H.n === 0) continue; console.log(`| ${o === 0 ? 'own side' : 'other side'} | ${a === 5 ? '6+' : a + 1} | ${H.n} | ${(H.truth / H.n).toFixed(3)} | ${pct(H.atLeast2, H.n)} | ${(H.sink / H.n).toFixed(3)} | ${(H.exact / H.n).toFixed(3)} |`) }
       console.log('')

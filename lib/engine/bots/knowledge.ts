@@ -451,7 +451,7 @@ export function markResolvedGone(w: Work, view: SeatView): void {
 export const CHOICE_ADAPT_CENTRE = 1.58
 
 export function recordedWalk(view: SeatView): { w: Work; rec: WalkRecord } {
-  const opts: Required<KnowledgeOptions> = { logWindow: Number.POSITIVE_INFINITY, useConstraints: true, marginal: false, choiceKappa: 0, choiceAdapt: 0, choicePrior: 'count' }
+  const opts: Required<KnowledgeOptions> = { logWindow: Number.POSITIVE_INFINITY, useConstraints: true, marginal: false, choiceKappa: 0, choiceAdapt: 0, choicePrior: 'count', licenceHold: 0 }
   const ownCardToggle = view.config?.toggles?.askOwnCardAllowed === true
   const log: readonly PublicEvent[] = Array.isArray(view.log) ? view.log : []
   const w = newWork(view)
@@ -484,6 +484,7 @@ export function buildKnowledge(view: SeatView, options: KnowledgeOptions = {}): 
     choiceKappa: options.choiceKappa ?? 0,
     choiceAdapt: options.choiceAdapt ?? 0,
     choicePrior: options.choicePrior ?? 'count',
+    licenceHold: options.licenceHold ?? 0,
   }
   const ownCardToggle = view.config?.toggles?.askOwnCardAllowed === true
   const log: readonly PublicEvent[] = Array.isArray(view.log) ? view.log : []
@@ -548,6 +549,9 @@ export function buildKnowledge(view: SeatView, options: KnowledgeOptions = {}): 
     if (seatMul !== undefined) k.choiceSeat = seatMul
     if (opts.choicePrior === 'once') k.choicePrior = 'once'
   }
+  // MONET.md §3.8l: the licence conditioning's target holding rides on the marginal like the prior
+  // above and is nothing without it; marginal.ts reads it, nothing else does.
+  if (opts.marginal && opts.licenceHold > 0) k.licenceHold = opts.licenceHold
   // MONET.md §3.4a: the calibrated marginal is derived here, on the unbounded path only — never
   // inside `finishKnowledge`, which the bounded arm's replay shares (the §3.4a scope decision).
   if (opts.marginal) attachMarginal(k)
@@ -696,6 +700,7 @@ export function publicKnowledge(view: SeatView, options: KnowledgeOptions = {}, 
     choiceKappa: 0,
     choiceAdapt: 0,
     choicePrior: 'count',
+    licenceHold: 0,
   }
   const ownCardToggle = view.config?.toggles?.askOwnCardAllowed === true
   const log: readonly PublicEvent[] = Array.isArray(view.log) ? view.log : []
