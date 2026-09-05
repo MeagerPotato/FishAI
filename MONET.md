@@ -4043,6 +4043,559 @@ vector against a bound of +5.8 points, and the last one is the informative one: 
 the missing chases, found that a seat cannot identify them, and paid a hundred points a decision to
 learn it. **Row 14 changes axis.**
 
+### 3.8j The assignment — a records study, pre-registered
+
+**The owner's direction, 2026-09-04: "open the prs then go on v0.14."** Decision row 14's
+recommendation, taken: the ask ranker is closed after four terms and the reading that closed it —
+§3.8i's — names the binding constraint as *the inference about which side holds a missing card*.
+That is a claim about a belief and it has never been measured directly. This study measures it,
+prices what perfect side knowledge would be worth, and is written so that it can come back and say
+**the assignment is not the constraint either**. Nothing ships from it; the numbers are the
+deliverable, and the deliverable includes "do nothing". Run on records already on disk —
+28,800 games — so **no cell is spent**, exactly as §3.8c and §3.8g were. The rules below were
+written before any record was read through the new flag, with the one disclosed exception in §3.8j
+item 12.
+
+**Why the premise is in doubt before the study starts, and this is the study's own reason to
+exist.** §3.8g R1 reports that Monet rates 21.4% of opponent-held missing cards as its own side's
+against 11.1% at SESTINA's positions. Read in `attribute.mjs`'s `majDecision`, that statistic is
+computed over a population *conditioned on the truth* — `if (x === undefined || side(x) === T)
+continue` keeps only cards an opponent actually holds — and it counts certainly-located cards in
+its denominator. So it is `P(q ≥ 0.5 | y = 0)`: **a false-positive rate on a truth-selected,
+certainty-diluted population, not a calibration error.** A perfectly calibrated belief also puts
+own-side mass on cards that turn out to be with an opponent; that is what a probability means. And
+the two sides' numbers come from two different distributions of position, with nothing controlling
+for phase, hand size, score or log length. Against that, `monet-v11/REPORT-fix.txt` records v0.9's
+own believed-vs-realised **hit** calibration abroad, on this very corpus, at **+0.0059** — near
+§3.4a's λ = 0 read (0.0019), not its λ = 0.60 read (+0.0488). The side mass is a coarsening of that
+same table. **Row 14's premise may not survive its own study, and the pre-registration says so
+before the numbers are read.**
+
+#### The seam — the whole real policy runs on an injected belief, with nothing in `lib/` touched
+
+`decide` → `resolveWithView` (`decide.ts:2150`): the spec is not a `BoundedSpec`
+(`isBoundedShaped` tests `Object.hasOwn(p, 'bounded')`) and not an `AdaptiveSpec`, so it falls to
+`resolvePolicy` (`style.ts:735`), where `isBotPolicy` — `'style' in p && 'skill' in p` — is true
+and the spec is **returned verbatim**, extra properties and all. `knowledgeFor` (`decide.ts:287`)
+then returns `pol.boundedK()` in place of its own build. So
+
+> `decide(view, { ...monetPolicy('v0.9'), boundedK: () => kInjected }, seed)`
+
+runs the entire real ask path — `rankAsksWith` then `pickAsk` with `contest`, the gate,
+`licenceConditionedHitProbability`, `minHitP` and both near-tie windows — on a belief of the
+study's choosing. **Verified on records before this was written: injecting the *same* Knowledge
+reproduces `decide()` bit-identically at 4,527 of 4,527 Monet ask decisions, zero throws.** The
+`--locks` declare channel takes the same seam through `planClaimFor(view, {...pol, boundedK}, b)`.
+`attachMarginal`'s table is memoised in a `WeakMap` keyed on the Knowledge object and its `p` is a
+live `Float64Array`, so an arm may patch the belief either by mutating `p` or by narrowing `cands`
+and re-scaling. This is what makes the study a *policy* counterfactual rather than a ranker one:
+the raw ranker's top-1 is the policy's chosen ask only **72.5%** of the time (measured, 3,910 of
+5,396), so a bound read off `rankAsksWith` would have been measuring the wrong function.
+
+#### The estimand and the population
+
+At an ask decision `d` by seat `s` on side `T`, for a card `c`:
+
+- **`q(d,c)`** = the seat's **own-side mass** = `Σ_{side(s')=T} tbl.p[j*6+s']`, from
+  `k = buildKnowledge(view, OPTS)` with v0.9's own `OPTS`, `tbl = attachMarginal(k)`. This is
+  character-for-character the expression `majDecision` already computes, so §3.8g R1 falls out as a
+  special case rather than a second implementation.
+- **`y(d,c)`** = 1 iff the true holder is on side `T`, from `dealt` via the walk's `seatOf`.
+
+The estimand is the **joint law of `(q, y)`** — a reliability curve plus proper scores, never one
+number. Two justifications for choosing the side mass over the six-seat distribution or the argmax:
+the one ranker term that ever cleared the floor is an explicit function of it (`priced.ts`'s
+`contestBonus` reads `opponentMass = Σ_{opponents} askHitProbability`, and since rows sum to 1 with
+the asker's own entry at 0, `opponentMass = 1 − q` exactly); and an argmax discards the confidence
+that a Murphy decomposition needs.
+
+A pair is in the population iff `d` is a **pre-clinch** ask decision and `c` **is a row of the
+marginal table**. The second clause does the work: `marginal.ts` defines its rows as the cards with
+more than one candidate, so certainties, the seat's own hand and resolved sets are excluded **by
+the data structure rather than by a filter**, and no score is inflated by free correctness or made
+a function of how many certainties a position happens to carry. The population is pre-clinch **by
+construction**: the walk `break`s out of the game the moment a side is awarded its fifth set
+("whatever a host plays after the clinch is not the game"), which drops 8,936 of the 110,391 asks
+a 1,200-game cell records — **8.1%**, and every one of them from a deal already decided. The
+instrument nonetheless asserts the cut itself and reports the count, so the guarantee is pinned
+rather than remembered; it reads **0**. Two nested populations:
+**P_ask**, where `s` also holds a card of `cardBook(c)` so the ask is legal — **primary for the
+bound and every falsifier**, because the licence rule means nothing outside it can become an action
+— and **P_all**, primary for the mechanism diagnosis. Measured, the split is **56.1% / 43.9%**, and
+the two are never pooled without saying so. Both sides' decisions: Monet's seats are **A**,
+SESTINA's seats through Monet's inference are **B**.
+
+**The belief is sound, which is what makes the estimand well posed.** Over 477,985 (decision, card)
+checks, `cands[c]` contained the true holder **477,985 times — zero exclusions**. The inference is
+never *wrong* in the sense of ruling the truth out; it can only be miscalibrated, spreading mass
+badly among candidates it correctly keeps alive. `truthNotCandidate > 0` anywhere **voids the
+study** rather than becoming a finding.
+
+#### The corpora and their roles, fixed now
+
+| role | records | seeds | games |
+|---|---|---|---|
+| primary, and the **fitting** set for any recalibration map | `monet-v12/records --prefix conf-base-` | 12 | 14,400 |
+| replication, and **out-of-sample** evaluation | `monet-v11/records --prefix conf-fix-` | 12 (disjoint) | 14,400 |
+| third read | `monet-v13/records --prefix fit-base-` | 3 | 3,600 |
+
+The two twelves share **no seed** (checked). Nothing fitted on one is evaluated on itself.
+**Corpus-integrity check, done before the pre-registration rather than assumed:**
+`monet-v11 conf-fix-*` carries three arm ids in a 4/4/4 split (`bot:monet-v11-fix`, `-fix-l1`,
+`-fix-l2`); all three `EXPECT-` files read identically — `override={"contest":0.6} mustfix=1` —
+under one `ARM_MD5` and one `specB`, so they are lane labels for a single vector and the corpus
+pools. `monet-v12 conf-base-*` is uniformly `bot:monet-v12-base`.
+
+**Identity pins, checked before any new number is believed.** (a) The `--majority` block on
+`monet-v11 conf-fix-*` reproduces §3.8g's published R1 to the digit — 21.41 ± 0.40 / 11.13 ± 0.20,
+paired +10.28, SE 0.12, 12 of 12 — since §3.8g was measured there. (b) `--validate-assign` at
+100.0%: the unpatched `shipped` arm must equal `decide()` everywhere. (c) The refactor that hoists
+the belief build out of `majDecision` is diffed to the digit on one seed before and after.
+
+#### The readouts
+
+**R1 — the reliability curve.** Deciles of `q` against realised `ȳ`, so §3.4a's standing bar
+("every decile within 0.05, the aggregate within 0.01") transfers unchanged. Per bin: `n`, mean
+`q`, realised share, bias, and the per-seed spread. Then **Brier with its Murphy decomposition into
+reliability, resolution and uncertainty**, and **log loss**. Reliability says whether the belief is
+*honest*; resolution says whether it is *informative*. Only the pair distinguishes "correct the
+calibration" from "there is no signal to correct", and that distinction is what decides whether the
+cheapest mechanism is alive. The slot prior is scored alongside (nearly free) so the marginal's own
+contribution on this population is visible. Reported at A and at B.
+
+**R2 — where the error lives.** Splits chosen so each indicts a mechanism rather than describing a
+quantity: `|cands|` (2/3/4/5/6 — the Sinkhorn spread itself); cards live; sets awarded; **whether a
+licence for `c`'s set was published for the true holder** (constraint propagation from the ask
+log); the side's holding of `c`'s set; surviving constraints mentioning `c` (the one-shot
+conditioning in `marginal.ts` step 3); **whether the true holder later asked into the set**
+(`choiceKappa`'s evidence, absent from v0.9's vector); and the table's `converged` flag.
+
+**R3 — the position control, and it is the answer to §3.8g's composition problem.** At every eighth
+ask decision, build the Knowledge for **all six seats over the same byte-identical log** and score
+every one. The position is then held literally constant and only the chair and the hand differ.
+Verified feasible: 1,706 builds over 300 sampled positions, every one scaled, zero throws. This
+replaces reweighting, which can only adjust for the covariates someone thought to name.
+
+#### The bound — a bracket, and a pricer that must first reproduce answers already known
+
+No bound here uses a hit rate as a value (§3.8c: SESTINA hits less and wins more; §3.8h: Monet hit
+seven points worse on purpose and won +0.58), none replays forward past a changed action, and
+**none may be quoted until the same arithmetic has reproduced the measured abroad deltas of arms
+already on disk.** That last clause is what §3.8g's 0.39-sets-a-game bound lacked; it over-stated
+the delivered result by a factor of ten.
+
+**B0, the pricer.** Currency is **asks moved a game** in matched one-step counterfactual units,
+which `attribute.mjs --cf` already counts. Fit measured paired points on matched move rate over the
+thirteen-plus arm-points on disk, spanning **+4.04 to −7.56** across four mechanisms — an
+interpolation across the sign, not an extrapolation. The two known anchors: `closing` moved 1.38%
+of Monet's asks for **+0.583** (+0.422 points per 1% moved) and the `chase` ladder moved 1.33–4.82%
+for **−1.08 to −7.56** (−0.81 to −1.57 per 1%). **Favourable and adverse rates are reported
+separately, because the ladder shows them asymmetric**, and a flip budget is priced at the
+favourable rate only as an upper bound. Quoted only if leave-one-out RMSE ≤ 1.5 points with the
+sign right on ≥ 12 of the arm-points; otherwise the study reports asks and sets and **refuses to
+convert to points at all**, and says so in its headline.
+
+> **The kill switch this produces:** +2.00 (the twelve-seed floor) ÷ +0.422 (the best favourable
+> rate any rung has recorded) = **4.74% of Monet's asks = 1.97 asks a game.**
+
+**B1, the reachability bracket.** At every Monet ask decision, build a fresh Knowledge, patch it,
+and call the **real `decide`** through the seam. Six nested arms — `shipped` (the identity control),
+`recal` (a fitted monotone map: what a recalibration knob would actually ship), `side-p` (own-side
+entries zeroed, true side renormalised, `cands` untouched), `seat-p` (side masses held, mass moved
+*within* each side onto the truth), `side-c` (`cands` narrowed to the true side and re-scaled), and
+a **`nuisance` control** of equal total variation carrying no side information. `flips(recal) ≤
+flips(side-p) ≤ flips(side-c)` is checked as a free consistency test; a violation is a bug, not a
+finding. **The bracket is the deliverable, never a single arm.** A p-only patch cannot cross the
+certainty boundary — `pHit` short-circuits on `cands` before consulting the table, and on v0.9
+(`pricedUngated` false) a certain hit always outscores any uncertain ask — so `side-p` is the
+**lower** end and `side-c` the upper. That same structural fact is the sharpest difference from
+v0.13: **no assignment mechanism, at any dose, can displace an ask that hits 100.0%.** Certain-hit
+displacement is therefore predicted at exactly 0 for the p-arms, and anything else is a bug in the
+patch. Each flip is classified — dead→live, retarget, re-card, live→dead, became a deliberate
+`containedPass`, or the arm declared instead of asking (counted separately, a free read on the
+declare channel).
+
+**B1b, the declare budget.** The same patched Knowledge through `planClaimFor`, re-running
+`--locks`' existing RULES/EV table, which is already denominated in **sets of differential**. §3.4b
+and §3.6c predict this is near zero. If it is not, v0.14 is a declare rung and not an ask rung, and
+the study has found something row 14 did not name.
+
+**B2, the misattributed-set ceiling.** Reusing `--majority`'s episode tracker: episodes that ended
+taken or open in which a Monet seat on turn carried `q ≥ θ` on an opponent-held card of that set,
+had the ask legally available, and a B1 arm actually flipped there. Reported in **sets a game** at
+θ = 0.3 / 0.5 / 0.7. **Its own validation comes first and is mandatory: computed retroactively on
+v0.12's and v0.13's own flip sets, it must price those two at or under +1 point, or it is
+discarded.** A ceiling that would not have caught the last two failures is not a ceiling. §3.8g's
+tenfold shrinkage is printed in the header of every table carrying it, as the class prior.
+
+#### The falsifiers — seven numbers, any three of which close the axis
+
+**F2 and F5 are computed and read first**, before any calibration table is interpreted; that
+ordering is what stops the study becoming another marker hunt. **F2 or F5 alone refuses a dose.**
+
+| | fires when | and then |
+|---|---|---|
+| **F1** the belief is already calibrated | `REL/B < 0.12` **and** aggregate \|bias\| < 0.02 **and** Cox slope in [0.90, 1.10] on P_ask at A | a recalibration knob is dead, and §3.8g R1 was a threshold statistic |
+| **F2** **the kill test** | the `side-c` arm changes Monet's ask at **< 4.74% of pre-clinch decisions (< 1.97 a game)** | perfect side knowledge cannot clear the floor, so no approximation to it can — answer row 14 with the null and stop |
+| **F3** the axis is not distinguished | `flips(side-p) ≤ flips(nuisance)`, or `flips(seat-p) ≫ flips(side-p)` | the injection does nothing specific, or row 14 named the wrong half of the belief (seat, not side) |
+| **F4** the position confound | the **six-seat synchronous** A−B gap ≤ **+3.0** points against the cross-position +10.28 | ≥ 70% of R1 was position generation; the object is whatever makes Monet's positions harder, which is not a belief axis |
+| **F5** the sets are not there | B2 < **0.30** sets a game at (θ = 0.3, any), or < **0.10** at (θ = 0.5, only-chance) | against a 0.134 floor and §3.8g's realised tenth, not a rung |
+| **F6** nothing is reducible | out-of-sample Brier reduction < 15%, map fitted on `monet-v12` and evaluated on `monet-v11` | with F1, the axis closes outright |
+| **F7** leakage, not inference | the A−B gap dissolves under the true-holder's-policy split, or A seats locate ≥ 0.5 more teammate cards a decision | the lever is `conceal` — publication, not inference |
+
+**The study is void rather than negative if:** `truthNotCandidate > 0`; the `shipped` arm disagrees
+with `decide()` anywhere; §3.8g R1 is not reproduced on `monet-v11`; or the error concentrates on
+non-converged tables.
+
+**What the roadmap does on a negative, named now** so the branch is not invented afterwards: the
+ladder will have measured out both the ask ranker (four terms) and the belief, and row 15 goes to
+**(i) the even-3 bucket** — §3.8c R1's largest single bucket, ~40% of SESTINA's extra sets a game, a
+3–3 deal won 58–42, never attacked by any rung and not a belief question; **(ii) `conceal`**, the
+only built mechanism in the tree with no number at all, which has fired on 0.000% of asks under
+every shipped style; or **(iii) stop** — §3.9's acceptance on v0.9's vector. Five consecutive
+well-measured negatives is a stronger artefact than a sixth fitted knob.
+
+#### The instrument, its cost, and the stop-ladder
+
+New flags on `scripts/attribute.mjs`; **nothing in `lib/` is touched**: `--assign`,
+`--assign-pop licensed|all|both`, `--assign-null`, `--assign-sync N`, `--assign-splits`,
+`--assign-rerank <arms>`, `--assign-recal FILE`, `--assign-declare`, `--assign-episodes`,
+`--flip-json`, `--assign-json`, `--validate-assign`. The belief build is hoisted out of
+`majDecision` and shared, so R1 and §3.8g's block read one table. `--per-seed` walks every record
+twice and must never be combined with `--assign`; per-file JSON is pooled offline.
+
+**Cost, measured rather than estimated:** a Knowledge and marginal at every one of 101,455 ask
+decisions costs **12.5 s per 1,200-game file**; the real-plus-oracle double pass costs about the
+same; `--majority` over 14,400 games is 198.4 s. Everything but the declare channel is ~8.5 minutes
+single-process per 14,400 games, and the corpus is twelve independent files, so **2–4 minutes wall
+at four lanes** (more lanes contend: the same class of cell reads 749 s at three lanes and 1,529 s
+at twelve). **This is not a compute-constrained study, and no sampling scheme is needed.**
+
+The staging *is* the stop-ladder: (0) B0's retro-validation on existing flags only, and the
+thresholds freeze after it; (1) tripwires on one already-spent seed of the replication corpus;
+(2) `side-c`, `side-p`, `nuisance` on that seed — **F2 and F3, and if F2 fires, stop and write the
+negative**; (3) the primary twelve; (4) the six-seat control on four seeds; (5) the replication
+twelve and the out-of-sample map; (6) the declare channel, conditional and off the critical path;
+(7) the three-seed third read.
+
+#### The disclosure — the one number already seen, and why it is reported here
+
+Proving the seam bites required running it, and the flip count came with it. §3.8g set the
+precedent by publishing its own one-seed pilot inside its pre-registration; this does the same
+rather than pretend the number was not seen.
+
+> **Pilot, `conf-base-1027753`, 1,200 games, 4,527 Monet ask decisions.** The `side-c`
+> full-information side oracle changes Monet's chosen ask at **38.6%** of them (1,748). All 1,748
+> are ask→ask: **1,657 change the card, 91 keep the card and change the opponent, none becomes a
+> claim or a pass.** The identity control was exact at 4,527 of 4,527.
+
+**So F2 does not fire on the upper arm.** 38.6% is roughly 16 of Monet's ~41.6 asks a game, eight
+times the 1.97 bar; the belief demonstrably reaches the policy at scale. That settles *connection*
+and leaves *value* entirely open — v0.13 moved 2 asks a game and lost 7.56 points. Because this
+quantity was seen, **no prediction is offered for `side-c`**; the predictions below cover the arms
+that have not been run and the twelve-seed spread.
+
+#### Predictions, written before the rest is read
+
+| # | prediction | why |
+|---|---|---|
+| P0 | `truthNotCandidate` exactly 0; `noTable` ≈ 0 | pins, not guesses — both measured at 0 already |
+| P1 | `ȳ` on P_ask **0.28–0.40** both sides; `ȳ_A − ȳ_B` **+0.01 to +0.05** | two teammates against three opponents, own cards excluded |
+| P2 | aggregate bias at A **+0.005 to +0.03**, own side over-stated | v0.9's abroad hit calibration is measured at **+0.0059**; the side mass coarsens that table |
+| **P3** | **`REL/B < 0.12` — the loss is RESOLUTION, not calibration** | a max-entropy Sinkhorn scaling under hard constraints is near-calibrated on average and weak at discrimination. **The prediction I am least sure of, and the one that decides whether a recalibration knob is alive at all.** If it holds, §3.8g R1's 21.4% was a false-positive rate and row 14's premise does not survive |
+| P4 | the **six-seat synchronous** A−B gap **+4 to +7**, against +10.28 cross-position | i.e. R1 is a third to a half position artefact |
+| P5 | `side-p` **3–12%** of asks; `recal` **< 1.5%**; `nuisance` ≪ `side-p` | a monotone map preserves within-decision order and can bite only through the mix |
+| P6 | certain-hit displacement **0** for `side-p`/`seat-p`/`recal` | structural; anything else is a bug |
+| P7 | at least half of Monet's own-locked asks are deliberate `containedPass` turn-passes | `containedPass: 1` is on the vector, so §3.8g R2's 33.2% may be partly a working policy |
+| P8 | B2 at (θ = 0.5, any) **0.10–0.30 sets a game** | against §3.8g's 0.39 for the whole conversion |
+| **P9** | **on the balance of P2–P4, the study returns "not the binding constraint"** | stated against the recommendation that opened row 14, so the study can be wrong out loud |
+
+**What may not be concluded, written now.** No claim about SESTINA's belief — column B is Monet's
+engine in a B chair. No A−B claim from cross-position tables alone. The hit rate of moved asks is
+printed and is **not** evidence of value. Nothing ships from this study.
+
+**Seeds.** These corpora are already spent as records. 8675309 / 271828 / 1618033 remain reserved by
+§6.5. Any v0.14 fit that follows draws fresh banks from `hashSeed("monet-v0.14-fit-3")` and
+`hashSeed("monet-v0.14-confirm-12")`, written here before the first fitting cell runs.
+
+**The candidates row 15 will choose between**, ranked by the evidence this study can deliver
+against cost and the prior from four dead ranker terms: **M3, the deduction fix** (arc-consistency
+over the at-least-one-of constraints, or exact conditioning on the small residual instance) — a
+correctness fix rather than a dose, the only candidate that can reach the `side-c` − `side-p` gap;
+**M1, a fitted monotone recalibration** of the own-side mass on the ask path, which carries §3.8h's
+warning that a belief-weighted closing form read **−0.472 and −2.167, losing six seeds of six**;
+**M2, `choiceKappa`**, already in the tree, off the vector, read at +0.37 to +0.47 inside the floor
+(§3.6c) and reopened here on an instrument thousands of times sharper and on the subpopulation
+where it should bite; **M4, `conceal`**; **M5, within-side resolution**, against §3.5c's 300–600×
+price; and **M-NULL, nothing on this axis — a first-class candidate.**
+
+
+#### Record — 2026-09-04
+
+**The premise of row 14 does not survive its own study. The belief about which side holds a missing
+card is CALIBRATED — reliability is 0.22% of its Brier score over 19 million labelled pairs on two
+disjoint twelve-seed corpora — and §3.8g R1's 21.4% against 11.1% is a base rate and a confidence
+distribution, not an error. Three falsifiers fire (F1, F3's second clause, F6), so by the rule as
+written the assignment axis CLOSES. Nothing ships. What the study found instead is a
+deduction defect, and it names the rung.** No cell was spent; every number below is read off
+records already on disk.
+
+**The instrument certifies itself three ways before a number is believed.** The `shipped` arm —
+the belief injected through the `boundedK` seam without a patch — reproduces `decide()` at
+**49,787 of 49,787** Monet decisions, so any later difference is the injected belief and nothing
+else. The hoist that shares one belief build between `--majority` and `--assign` leaves §3.8g's
+report **identical to the digit** on a re-run seed. And Stage 0's move rates reproduce the
+published counts exactly: `closing` w3 **8,287 asks, 1.38%** (§3.8h's 8,287 / 1.4%), `chase` h2
+**1,996** and h4 **7,219** (§3.8i's), `contest` **15.21%** (§3.8d's 15.2%). Tripwires on both
+corpora: the true holder outside `cands` **0 of 19,158,000** — the belief is sound and can only be
+miscalibrated, never wrong — tables that would not scale **0**, post-clinch decisions **0**.
+
+**B0, the pricer, FAILS its own retro-validation, and that is the first result.** Fitted on fifteen
+arm-points spanning +4.04 to −7.56: leave-one-out RMSE **3.71** against a 1.50 bar, sign right on
+**9 of 15** against a bar of 12, R² **0.069**. The pre-registered consequence binds — **this study
+reports asks and sets and refuses to convert either into points.** The reason is worth more than the
+pricer would have been: **the sign belongs to the mechanism, not to the move rate.** `contest`
+moved **15.21%** of Monet's asks for **+4.04**; `chase` h4 moved **5.05%** for **−7.56**. Within a
+family the relation is tight (chase R² 0.810, the favourable arms 0.903); across families it carries
+no information at all. "Asks moved" is a magnitude with no direction — which is also the
+retrospective explanation of §3.8g's tenfold over-statement, since it assumed a single conversion
+rate that does not exist.
+
+**R1, the belief.** Licensed population, at Monet's own decisions:
+
+> | corpus | pairs | mean q | realised y | bias q−y | Brier | reliability | resolution | uncertainty | REL/Brier |
+> |---|---|---|---|---|---|---|---|---|---|
+> | primary, `conf-base` × 12 | 9,503,599 | 0.4232 | 0.4246 | **−0.0014** | 0.2280 | 0.0005 | 0.0159 | 0.2443 | **0.0022** |
+> | replication, `conf-fix` × 12 | 9,475,021 | 0.4238 | 0.4259 | **−0.0020** | 0.2281 | 0.0006 | 0.0160 | 0.2445 | **0.0026** |
+
+The two disjoint twelves agree to **0.0006** on the bias and **0.0001** on reliability. **F1 fires
+by a factor of about fifty** on both, on all three of its conditions, and the sign of what little
+bias there is runs **negative** — Monet slightly *under*-states its own side, the opposite of the
+direction row 14 assumed. Where the curve does leave the diagonal it is under-confident at the top:
+[0.6, 0.7) reads 0.645 → 0.722 and [0.8, 0.9) 0.840 → 0.928, so §3.4a's decile bar of 0.05 is
+failed by one bin at 0.077 while its aggregate bar of 0.01 passes at 0.0014. The belief is honest
+and **not very informative**: resolution 0.0159 against an uncertainty of 0.2443. The loss, such as
+it is, is resolution and not calibration — the pre-registered prediction P3, the one flagged as
+least certain, and it decides the cheapest mechanism.
+
+**F6 fires by arithmetic, with nothing fitted.** Murphy gives Brier = REL − RES + UNC, so a perfect
+monotone recalibration removes at most REL: **0.22% of Brier**, against F6's bar of 15%. **No
+recalibration map, fitted on any corpus, can reach the bar.** M1 is dead twice over.
+
+**Why §3.8g R1 is not diagnostic, measured directly.** Recomputing its own statistic on this
+broader population reproduces its structure — P(q ≥ 0.5 | y = 0) is **11.48%** at Monet's decisions
+against **5.48%** at SESTINA's, a ratio of 2.1× where §3.8g read 1.9×. **But the identical gap is
+present on the cards the seat gets RIGHT: 26.71% against 15.78%, a ratio of 1.7×.** A
+miscalibration would be asymmetric — inflated false positives beside normal true positives. There
+is no asymmetry. Monet's belief is more confident at Monet's positions because those positions
+carry more of its own side outstanding: the base rate is **42.4%** against **39.6%**. §3.8g's
+clause (b), and row 14's premise with it, rested on a statistic that a perfectly calibrated
+forecaster reproduces.
+
+**B1, the reachability bracket** (one seed, 49,787 Monet ask decisions; reported in asks because
+Stage 0 licensed no conversion):
+
+> | arm | flips | % of Monet's asks | a game | the base ask was a sure miss | sure miss → live | column drift |
+> |---|---|---|---|---|---|---|
+> | `shipped` | **0** | 0.0% | 0.00 | — | 0 | 0 |
+> | `side-p` | 17,510 | **35.2%** | 14.59 | 73.5% | 12,281 | 0.017 |
+> | `side-c` | 19,464 | **39.1%** | 16.22 | 68.2% | 12,338 | 0.000 |
+> | `seat-p` | 24,558 | **49.3%** | 20.46 | 45.8% | 10,895 | 0.020 |
+
+**F2 does not fire**: 35–39% against a bar of 4.74% pre-registered, or 8.7% at the fitted
+favourable slope — clear by four to eight times either way. Perfect side knowledge reaches the
+policy at scale, and three flips in four displace an ask that was a **sure miss into the seat's own
+side**, which is exactly the channel §3.8i named. Connection was never the problem.
+
+**F3's second clause fires, and it relocates the question.** `seat-p` moves **49.3%** of asks
+against `side-p`'s **35.2%** — and `side-c`, the full side oracle *with* the certainties it creates,
+still only reaches 39.1%. **The ranker is markedly more sensitive to which SEAT holds a card than
+to which SIDE holds it.** Row 14 named the half of the belief the policy cares about less.
+
+**F3's first clause is not evaluable, and the reason is a finding in its own right.** An
+equal-magnitude, information-free null cannot be constructed: pinning cards to sides other than the
+truth violates the seats' slot counts, the instance becomes infeasible, and Sinkhorn cannot restore
+the margins. Measured column drift is **12.0** for a coin-flip side and **3.0** even for a
+count-preserving label shuffle, against **0.017** for `side-p` and **0.000** for `side-c`.
+**Feasibility is not separable from correctness here**, so the nuisance arm is reported and not
+used. An arm that reorders asks because it is incoherent would price the incoherence.
+
+**R2, where the error lives — and this is what the study found instead.** Bias · Brier · n:
+
+> | split | A (Monet) | B |
+> |---|---|---|
+> | **a licence for the set is on record at the TRUE holder — yes** | **−0.0851** · 0.1325 · 2.20M | **+0.1161** · 0.0984 · 2.57M |
+> | — no | +0.0129 · 0.2403 · 14.51M | −0.0203 · 0.2421 · 14.68M |
+> | \|cands\| = 2 / 3 / 4 / 5 | −0.0178 / −0.0258 / −0.0074 / +0.0030 | +0.0134 / +0.0120 / +0.0019 / −0.0015 |
+> | the true holder later asks into the set — no / yes | −0.0299 / +0.0146 | −0.0016 / +0.0008 |
+
+**The licence split is the largest effect in the study by an order of magnitude.** Where the ask log
+carries a licence for the card's true holder — 13% of the population — the belief becomes far more
+informative (Brier **0.1325** against an aggregate 0.2280) and far more biased (**−0.085** at A,
+**+0.116** at B, a twenty-point spread). The evidence is being read, and read with a systematic
+offset. The error also concentrates at **|cands| = 2–3**, precisely where the counting argument is
+near-exact and only a missed deduction can separate two seats. Both point the same way, and away
+from the mechanism row 14 assumed.
+
+**What was pre-registered and NOT run when this record was written.** Three readouts of §3.8j were
+not built for it: **R3, the synchronous six-seat control** (and with it F4 as written), **B1b, the
+declare budget**, and **B2, the misattributed-set ceiling** (and with it F5). R3 was verified
+*feasible* before the pre-registration — 1,706 Knowledge builds over 300 sampled positions, all
+scaled, zero throws — and it remains the cleanest way to separate position generation from
+inference. It was not needed to reach this record's conclusion: three falsifiers fire without it
+(F1, F3's second clause, F6), which is the rule's own threshold, and the question R3 exists to answer
+is answered more directly by the true-positive mirror above — the A/B gap is the same size on the
+cards the seat gets right as on the ones it gets wrong, which no amount of position control can
+explain away. B1b and B2 price a rung that F1 and F6 had already killed, so they were left off the
+critical path exactly as the staged plan allowed — **and were run the next day, at the owner's
+word, before row 16 was written: the addendum at the end of this section carries them, and F5 is
+read there.** R3 is still unrun. **If row 16 revisits the axis, R3 is the first thing to build.**
+
+**What is fixed by this record.** Nothing on Monet's vector. The instrument
+(`scripts/attribute.mjs --assign`, with `--assign-rerank`'s injection arms and the `boundedK` seam
+that needs no engine change), the pricer's failure, and the numbers above. **Decision row 15
+carries the reading: the assignment axis is closed on its calibration, and the candidate that
+survives is M3, the deduction fix** — arc-consistency over the at-least-one-of constraints, or exact
+conditioning on the small residual instance in `marginal.ts` — justified by the licence split and
+the |cands| = 2–3 concentration, and it is a **correctness fix rather than a dose**, so §6.3's
+floor does not gate it and no seeds are burned choosing a knob. M1 is dead (F1 and F6). M2 is not
+supported: the "true holder later asks" split moves the bias by 4.5 points against the licence
+split's twenty. Against all of it stands the honest prior of five consecutive measured negatives,
+and **M-NULL — §3.9's acceptance on v0.9's vector — remains a first-class candidate.**
+
+**Predictions, scored.** P0 **hit** (soundness 0 of 19.2M, `noTable` 0). P2 **missed** — I predicted
++0.005 to +0.03 and the answer is −0.0014, an order of magnitude smaller and the other sign.
+**P3 hit**, and it was the one I flagged as least certain. P5's `side-p` band of 3–12% **missed
+badly** at 35.2%. **P9 hit**: the study returns "not the binding constraint". The pilot disclosure
+stands — the `side-c` flip rate was seen on one seed before the rest was read, and no prediction was
+offered for it.
+
+**Scratch state, not committed:** `$SP/monet-v14/{stage0.sh,pricer.mjs,out/}` with the fifteen
+arm-point cells, `HOIST-BEFORE/AFTER.txt`, `out/{PRICER,stage1,stage2,assign-primary,assign-replication}.txt`;
+the probes `$SP/{cost,feas,sound,drift,mutcheck,pop,fidelity2,seam2}-v14.mjs`; the design panel's
+output at `$SP/v14-synthesis.md` and the measured ground facts at `$SP/v14-ground-facts.md`.
+
+#### Addendum — 2026-09-05: B1b and B2, run the day after the record
+
+**Why now.** The record above closed the axis on F1, F3 and F6 and left B1b and B2 unrun. The
+owner asked for both before row 16 was written, so they were built and run — on the records, no
+cell spent — and are reported here in full, including the half of B2 that fails its own validation.
+
+**The instrument, and its pins.** Two flags on `scripts/attribute.mjs`. `--locks-arm <arm>` sends
+one B1 arm's patched Knowledge through `planClaimFor` by the same `boundedK` seam — `planClaimFor`
+resolves a `{skill, style}` spec verbatim exactly as `decide` does, and `planClaim`'s joint reads
+`marginalFor(k)`, the WeakMap memo `attachMarginal` filled, which is the table patched in place;
+the instrument asserts that identity rather than assuming it. `--b2` counts the
+misattributed-set ceiling over `--majority`'s existing episode tracker, per `--assign-rerank` arm;
+`--b2-arm <knobs>` adds a `retro` arm — an arm whose abroad value is already measured, decided as
+a one-step counterfactual at the base's own decisions — and `--cf-knobs` pins that arm to its
+bridge records before it prices anything. Pins, before a number was read: `--locks-arm shipped`
+reproduces plain `--locks` **byte for byte** on `conf-fix-5682873`; the B2 patch leaves the
+`--majority` report identical; the `shipped` arm reads 0 flips and 0 episodes; `--b2-arm wHit=70`
+(v0.9's own value) flips **0 of 49,819** decisions; and the in-engine arms are the bridge arms —
+`closing` 0.5 reproduces `bot:monet-v12-w3`'s recorded play at **100.0%** on its own records and
+`chase` 4 reproduces `bot:monet-v13-h4`'s at **100.0%**.
+
+**B2's validation, which the pre-registration made mandatory, discards half of it.** The ceiling
+computed on the flip sets of four arms whose value is measured, in sets a game, against the bar of
++1 point = **0.067** sets (14.96 points a set). "Any" = at least one legal chance in the episode was
+hidden (own-side mass q ≥ θ on an opponent-held card of the set, the seat on turn holding a card of
+it); "only" = every legal chance in the episode was.
+
+> | flip set — the arm as a counterfactual at the base's decisions | measured | flips | (0.3, any) | (0.5, any) | (0.7, any) | (0.3, only) | **(0.5, only)** | (0.7, only) |
+> |---|---|---|---|---|---|---|---|---|
+> | v0.12 `closing` 0.5 on `conf-base` × 12 | **+0.583** | 1.8% | 0.486 ✗ | 0.168 ✗ | 0.017 | 0.341 ✗ | **0.031** | 0.001 |
+> | v0.13 `chase` 4 on `fit-base` × 3 | **−7.56** | 7.0% | 0.793 ✗ | 0.318 ✗ | 0.035 | 0.526 ✗ | **0.031** | 0.000 |
+> | (extra) v0.13 `chase` 2 | −1.08 | 2.1% | 0.269 ✗ | 0.086 ✗ | 0.006 | 0.174 ✗ | 0.010 | 0.000 |
+> | (extra) `closing` 0.5 on v0.13's three seeds | −0.306 | 1.8% | 0.472 ✗ | 0.168 ✗ | 0.015 | 0.332 ✗ | 0.036 | 0.002 |
+
+**The (θ = 0.3, any) cell — F5's first — would have promised +7 and +12 points to arms that
+delivered +0.58 and −7.56. It is discarded, and with it every "any" cell below θ = 0.7 and the
+(0.3, only) cell. The (θ = 0.5, only-chance) cell — F5's second — prices all four at ≤ +0.5 and
+survives, as does everything at θ = 0.7.** That a surviving cell reads the same 0.03 for +0.58 and
+for −7.56 is what a ceiling is: a bound on a channel, not a prediction for a mechanism, and the
+pre-registration said so ("an upper bound").
+
+**B2 on the B1 arms, read on the surviving cells only.** Both twelve-seed corpora, sets a game;
+the class prior printed in every header applies — §3.8g's 0.39 delivered 0.039. Monet's majority
+episodes run 6.69 a game, 3.30–3.32 of them at risk (taken 2.36, open 0.95), and in 0.44 a game
+every legal chance was hidden at θ = 0.5 before any flip is asked for.
+
+> | arm | flips, `conf-fix` / `conf-base` × 12 | **(0.5, only)** `conf-fix` | **(0.5, only)** `conf-base` | one seed | (0.7, only) | (0.7, any) | (0.5, any) — discarded | (0.3, any) — discarded |
+> |---|---|---|---|---|---|---|---|---|
+> | `shipped` | 0.0% / 0.0% | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+> | `side-p` | 35.5% / 35.6% | **0.334** | **0.328** | 0.318 | 0.013 / 0.015 | 0.234 / 0.238 | 1.553 / 1.563 | 2.552 / 2.565 |
+> | `seat-p` | 49.4% / 49.4% | **0.419** | **0.412** | 0.406 | 0.013 / 0.014 | 0.219 / 0.220 | 1.730 / 1.741 | 2.962 / 2.978 |
+> | `side-c` | 39.3% / 39.4% | **0.344** | **0.342** | 0.325 | 0.013 / 0.016 | 0.240 / 0.243 | 1.579 / 1.591 | 2.600 / 2.615 |
+
+(The one-seed B1 bracket of the record replicates on both twelves in passing: `side-p` 35.5 /
+35.6%, `seat-p` 49.4 / 49.4%, `side-c` 39.3 / 39.4% of Monet's 598,882 and 599,740 asks,
+`shipped` 0 on both. F3's second clause stands at twelve seeds.)
+
+**F5 does not fire**: the (θ = 0.5, only-chance) cell reads **0.334 / 0.328** for `side-p`,
+**0.419 / 0.412** for `seat-p` and **0.344 / 0.342** for `side-c` sets a game on the two twelves,
+against a bar of **0.10**. So the misattribution channel is real and bounded — under a *perfect*
+belief about a third of a set a game (0.33 with the side, 0.42 with the seat), +5 to +6 points at
+the exchange rate, is at stake in Monet's own majority episodes where every chance was hidden by
+the belief; with the tenfold class prior, about half a point. That is the whole room a belief
+mechanism has in the two-against-four bucket, and it sits inside the 47% of the residual §3.8g
+located there. It is the room for M3, the deduction fix, and not for a recalibration — F1 and F6
+stand — and even a deduction fix reaches only the part of it a better-resolved belief can see.
+
+**B1b, the declare budget: not near zero in sets, near zero in wins.** `--locks`' RULES/EV table,
+in sets of differential a game (right: 0 if A cashed the set anyway, +2 if the other side had got
+it, +1 if it stayed open at the clinch; wrong: −2 / 0 / −1), under each arm, per seed on the twelve
+replication seeds — Δ against `shipped` as mean ± SE over seeds, `shipped` being plain `--locks`:
+
+> | rule | `shipped` fires/g · right · EV | `side-p` EV · Δ | `seat-p` EV · Δ | `side-c` EV · Δ |
+> |---|---|---|---|---|
+> | certain plan (u = 0), any seat | 0.427 · 100.0% · 0.021 | 0.021 · +0.000 | 0.021 · +0.000 | **0.108 · +0.087 ± 0.003** (0.924/g) |
+> | any u ≥ 1, p ≥ 0.9 | 0.071 · 98.8% · 0.011 | **0.136 · +0.126 ± 0.003** (0.759/g at 99.8%) | 0.126 · +0.115 ± 0.003 | −0.012 · −0.023 ± 0.004 |
+> | any u ≥ 1, p ≥ 0.775 | 0.133 · 77.6% · −0.019 | 0.097 · +0.117 ± 0.004 | 0.144 · +0.163 ± 0.004 | −0.020 · −0.000 ± 0.004 |
+> | gated u ≥ 1, p ≥ 0.775 (the gate as shipped) | 0.019 · 79.7% · −0.001 | 0.002 · +0.002 ± 0.001 | 0.073 · +0.074 ± 0.002 | −0.029 · −0.028 ± 0.005 |
+> | by u: 0.9 on one guess, 0.7 on two, 0.6 on three or more | 0.110 · 91.3% · 0.008 | −0.011 · −0.019 ± 0.005 | **0.161 · +0.153 ± 0.003** (0.471/g at 97.2%) | −0.020 · −0.028 ± 0.004 |
+> | **the budget: the arm's best rule against `shipped`'s best (the certain plan), per seed** | 0.021 | **+0.115 ± 0.003** (ahead on 12 of 12) | **+0.140 ± 0.004** (12 of 12) | **+0.087 ± 0.003** (12 of 12) |
+
+The primary corpus (`conf-base` × 12, per seed the same way) replicates it: the budget **+0.115 ±
+0.004** for `side-p`, **+0.137 ± 0.004** for `seat-p`, **+0.089 ± 0.003** for `side-c`, ahead on 12
+of 12 each, `shipped`'s best 0.026; the open-set share of the arms' best rules 96% / 82% / 95%, the
+win-relevant units 54 / 300 / 39.
+
+**In the pre-registered currency the budget is not near zero: the best rule gains +0.09 to +0.14
+sets of differential a game under a perfect belief, at the +2.00 floor of 0.134.** §3.4b's and
+§3.6c's prediction fails in that currency, and the pre-registered consequence would read "v0.14 is a
+declare rung". **It is not, and the table's own columns say why** — a reading made after the
+numbers, on columns the table already carried. For `side-p`'s best rule (10,936 fires on the
+twelve seeds, 13.2 events earlier than A's own declare, 99.8% right) the accounting is 8,974 fires
+on sets A cashed anyway (8 wrong), **44** on sets the other side got (all right), and **1,918 on
+sets open at the clinch (1,906 right) — 96% of its EV**. `seat-p`'s best (6,787 fires, 97.2%
+right) is 4,438 / 361 (308 right) / 1,988 (1,928 right) — 80% from open sets; `side-c`'s certain
+plan (13,301 fires against `shipped`'s 6,151, 9.3 events earlier) is 11,772 / 29 / 1,500 — 96%.
+In `us54` a set open at the clinch sits in a decided game: nine sets, the clinch at five, so the
+losing side plus every open set is at most four, and a `+1` there never changes the winner of the
+game it was counted in — the `open at A = 4, a win if cashed` column is **0** on every rule and
+every arm because it cannot be otherwise. §3.8f read the same lever the same way ("what is left
+for a bar is the 14.2% of Monet's declarable sets open at the clinch"). What the accounting cannot
+see, in either direction, is tempo — a set cashed thirteen events earlier changes the rest of the
+game and the accounting holds it fixed. The win-relevant units — a set the other side got which the
+rule would have cashed first — are **44** for `side-p` and **29** for `side-c` in 14,400 games,
+0.002–0.003 a game, under a tenth of a point; and **308** for `seat-p` against 80 gifts of sets A
+would have cashed and 60 wrong calls on open ones, a net 0.03 a game, under half a point — all of
+it under an oracle. **The declare is not the rung.** §3.4b and §3.6c were right about wins and
+wrong about sets, and the oracle's sets are the ones §3.8f already priced at a quarter of a point.
+
+**What changes in the record above.** None of its conclusions. F5, now evaluable on its surviving
+cell, does not fire, so the falsifier count stays at three (F1, F3's second clause, F6): the axis is
+closed on calibration, and the channel's ceiling is measured instead of assumed. One more
+prediction is scored: **P8 missed** — it put B2 at (θ = 0.5, any) in 0.10–0.30 sets a game and the
+cell reads 1.55–1.74, five times the top of the band; that the validation then discarded the cell
+makes the miss moot for the reading, not for the score. R3 remains unrun. Row 16 was the owner's,
+and the owner took it.
+
+**Scratch state, not committed:** `$SP/monet-v14b/{run-b2.sh,run-b1b.sh,b1b-table.mjs,b1b-agg.mjs,out/}`
+— the pins (`b1b-plain/shipped`, `b2-majplain/shipped`, `b2-retro-ident`, `pin-w3`, `pin-h4`),
+the retro rows, the per-seed B1b outputs on both twelves, and the B2 arm runs.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -4477,7 +5030,9 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 11 | **After §3.8f's records: the declare's lever is not the bar.** Priced on v0.9's own records at the earliest window a rule fires, every bar and every guess-count-aware form is worth under 0.02 sets a game, because a set the other side gets was never a lock and a set Monet cashes anyway pays nothing for coming earlier. What the records found instead is a bridge translation: Monet's home compulsion (`MUST_DECLARE`) answered into the host's optional poll, the lowest seat guessing while a teammate is certain, at four sets — 17 won games handed over in 1,200 on the seed read. That is fixed in the bridge (MUSTFIX) and measured paired on twelve seeds; it is not a rung. **The next rung, on the corrected base:** SESTINA's 0.37 declarations a game at positions Monet's chain rates under 0.5 (right 84%, Monet's own plan right 81% there) are an inference gap — its belief is sharpened by an ask-choice prior and determinizations, Monet's chain is an under-confident product of conditionals (two guesses at p 0.3–0.5 are right 54%). The candidates are §3.6's choice prior on the plan's table and §3.8b's consensus at a calibrated bar, both measured small at home on v0.4c and never abroad on v0.9; the other candidate is the closing ask at four and five cards (row 10's second). | **TAKEN 2026-09-04** — the owner chose the records study first (§3.8g); row 12 carries its verdict. |
 | 12 | **After §3.8g's study: the two-against-four bucket is the closing ask.** On 14,400 corrected games, replicated on 28,800 old-bridge ones to a tenth of a point, SESTINA chases an opponent-held card of its own majority at 36.2% of the decisions where it can and Monet at 31.6% (SE 0.11), converts the majorities it chases 68.7% of the time to Monet's 59.8% (SE 0.26) and 6 events sooner, and Monet rates 21% of the missing cards as already its own (SESTINA's positions 11%) and chases those at half the rate. Where every missing card is known to sit with an opponent both policies chase only one decision in five, preferring another certain hit. The bound is 0.39 sets a game, +5.8 points at the exchange rate. **Recommendation: v0.12, the closing ask** — a `pickAsk` credit for an ask that closes the side's own four- or five-card majority, in two forms (weighted by the side's holding as the seat knows it; weighted also by the marginal's chance the card is not the side's own), fitted abroad on three fresh seeds by §3.8d's rule and confirmed on twelve at +2.00 over the corrected v0.9 (≥ 42.1%); the honest prior for a third ranker term is v0.10's, under the floor, against a bound three times a rung. Not recommended: a calibration correction to the marginal alone — the belief explains the chase's dullness but not the preference. | **ANSWERED 2026-09-04** — built as v0.12 (§3.8h) and measured at +0.583 paired, under the floor. The rung the study named is real and small; the belief form is measurably worse than useless. Row 13 carries what follows. |
 | 13 | **After v0.12: the closing credit is worth a quarter of a rung, and the gate is why — lift it, or change axis?** The credit does exactly what §3.8g asked and reads **+0.583 paired (SE 0.23, 9 of 12)** against a +5.8-point bound. It fires at 27.4% of ask decisions and moves 1.4% of the asks abroad, six firings in seven one card short of completing, buying a seven-point-worse hit on the asks it moves. Every marker moved as written by about a tenth of its gap. The reason the rung is a tenth of the bound is structural and was pre-registered as limit 1: the credit is gated below every certain hit, so it never reaches an **uncertain** chase, and uncertain chases are where SESTINA's 36.2%-against-31.6% lead actually sits. §3.8g does not license lifting the gate — it measured the one-in-five preference only where every missing card is *known* to be with an opponent, which is not those positions. **Recommendation: v0.13, the chase appetite** — a second, separately fitted appetite paying the same `lock` credit to uncertain chases, pre-registered as its own arm with its own dose ladder and with the never-chased episode share (Monet 83.5% ever chased against SESTINA 89.2%; the never-chased episodes are taken by the opponents 61.9% of the time) as the marker it must move. It is the one rung the study's numbers still point at, and it should be the **last ranker term tried**: three in a row have read between +0.5 and +1.1 against floors of +2.00, which is itself evidence that the ask ranker is close to spent and the remaining 4.4 points are somewhere else. Not recommended: refitting the belief form at a smaller dose — it lost on six seeds of six and the mechanism for why is measured. | **ANSWERED 2026-09-04** — built as v0.13 (§3.8i) on the owner's word and **closed on the fit**: every eligible dose loses, monotonically to −7.56, and the twelve confirmation seeds were never spent. The gate was not the story. The credit moved 2,000 to 7,200 asks and gave up an ask that hit 100.0% for one that hit 29.7–50.1%, yet the chase rate did not move — because a seat cannot tell a chase from a sure miss into its own majority. Row 14 carries what follows. |
-| 14 | **After v0.13: the ask ranker is finished, and the binding constraint is the inference — what is the next axis?** Four terms fitted on one vector: `contest` shipped at +4.04, then `exposure` +1.07, the declare bar priced at under 0.02 sets a game and not built, `closing` +0.583, and `chase` negative at **every** dose §6.3 permitted, monotonically to −7.56 (§3.8i). The last one is the informative one. It moved thousands of asks, gave up an ask that hit **100.0%** for one that hit 29.7–50.1%, and **did not move the chase rate at all** (31.5% → 31.8% against a +1.5 bar), because its own-locked asks rose while its counterfactual's fell: the asks a seat-known majority credit buys are §3.8g's sure misses into the side's own majority, not chases. That converges with §3.8g R1 from the other direction — Monet rates 21.4% of opponent-held missing cards as its own side's against 11.1% at SESTINA's positions. **The constraint is not how the ranker spends its belief; it is the belief.** Recommendation: **v0.14, the assignment**, on the one quantity every remaining marker runs through — which side holds a missing card. §3.8g named it as clause (b) and row 12 declined it while a ranker term was still untried; none is now. It is measurable without a rung: the calibration of `pAssignment`/the marginal on the opponent-held missing cards is already recorded on every bridge cell, and the study should be run on the records first (§3.8c's and §3.8g's shape) before any code, so the bound is priced before a dose is fitted. Not recommended: another ranker term, at any gate, in any form — four reads say the axis is spent. | **OPEN 2026-09-04** — the owner's call. |
+| 14 | **After v0.13: the ask ranker is finished, and the binding constraint is the inference — what is the next axis?** Four terms fitted on one vector: `contest` shipped at +4.04, then `exposure` +1.07, the declare bar priced at under 0.02 sets a game and not built, `closing` +0.583, and `chase` negative at **every** dose §6.3 permitted, monotonically to −7.56 (§3.8i). The last one is the informative one. It moved thousands of asks, gave up an ask that hit **100.0%** for one that hit 29.7–50.1%, and **did not move the chase rate at all** (31.5% → 31.8% against a +1.5 bar), because its own-locked asks rose while its counterfactual's fell: the asks a seat-known majority credit buys are §3.8g's sure misses into the side's own majority, not chases. That converges with §3.8g R1 from the other direction — Monet rates 21.4% of opponent-held missing cards as its own side's against 11.1% at SESTINA's positions. **The constraint is not how the ranker spends its belief; it is the belief.** Recommendation: **v0.14, the assignment**, on the one quantity every remaining marker runs through — which side holds a missing card. §3.8g named it as clause (b) and row 12 declined it while a ranker term was still untried; none is now. It is measurable without a rung: the calibration of `pAssignment`/the marginal on the opponent-held missing cards is already recorded on every bridge cell, and the study should be run on the records first (§3.8c's and §3.8g's shape) before any code, so the bound is priced before a dose is fitted. Not recommended: another ranker term, at any gate, in any form — four reads say the axis is spent. | **TAKEN 2026-09-04** — the owner chose it ("open the prs then go on v0.14"). §3.8j is pre-registered on the records before any code: the instrument, the bound as a bracket, seven falsifiers and the predictions. Row 15 carries the answer. |
+| 15 | **After §3.8j: is the assignment the binding constraint, and what does v0.14 build?** The study is pre-registered and its corpora are on disk; the reads and the falsifiers are written in §3.8j. The pilot already says the belief REACHES the policy at scale — a full side oracle changes Monet's chosen ask at **38.6%** of its decisions on one seed, eight times the 1.97-asks-a-game bar — so the cheap kill does not fire and the question is value, not connection. Candidates ranked in §3.8j: **M3** the deduction fix, **M1** a fitted recalibration (carrying §3.8h's −0.472 / −2.167 warning on belief-weighted forms), **M2** `choiceKappa` rescoped, **M4** `conceal`, **M5** within-side resolution, and **M-NULL**. Pre-registered prediction, against row 14's own premise: **the study returns "not the binding constraint".** | **ANSWERED 2026-09-04** — the axis is CLOSED on its calibration. Reliability is **0.22% of Brier** over 19M pairs on two disjoint twelves (bias −0.0014 / −0.0020, agreeing to 0.0006), so F1 fires ~50× and F6 fires by arithmetic: a perfect recalibration can remove at most 0.22%, against a 15% bar. §3.8g R1 is a base rate — its A/B gap is the same size on the cards the seat gets RIGHT (26.7% vs 15.8%) as on the ones it gets wrong (11.5% vs 5.5%). F3 relocates the question: `seat-p` moves 49.3% of asks against `side-p`'s 35.2%, so the ranker cares more about WHICH SEAT than WHICH SIDE. **Recommendation: M3, the deduction fix** — the licence split is the largest effect in the study (bias −0.085 at a Brier of 0.133 on 13% of the population, against an aggregate 0.228) and the error concentrates at \|cands\| = 2–3; it is a correctness fix, not a dose, so §6.3's floor does not gate it. M1 is dead twice over; M2 unsupported (4.5 points against the licence split's 20). **M-NULL stays first-class** on the prior of five measured negatives. Row 16 is the owner's call. |
+| 16 | **After B1b and B2: is the declare the rung, or the deduction — and what is v0.15?** The two readouts the record left unrun were run the next day (§3.8j's addendum). B2 discards half of itself on its own validation — the (θ = 0.3, any) cell would have promised +7 and +12 points to arms that delivered +0.58 and −7.56 — and on the surviving (θ = 0.5, only-chance) cell F5 does not fire: a perfect side belief has **0.33 sets a game** at stake in Monet's majority episodes where every chance was hidden (0.42 with the seat), +5 to +6 points at the exchange rate, half a point at the tenfold class prior. B1b's declare budget is **+0.09 to +0.14 sets of differential a game** under the oracles, at the floor — but 80–96% of it is sets open at the clinch, which in `us54` sit in decided games, and the win-relevant units are 0.002–0.03 a game. **Recommendation: v0.15 is M3, the deduction fix, studied on the records before any code** — the exact conditioning on the residual instance measured against the Sinkhorn table on the licence split and at \|cands\| = 2–3, and injected through the same seam so its flips sit inside B1's bracket, before `marginal.ts` is touched; the room is bounded above by B2's 0.33. Not recommended: the declare (B1b), a recalibration (F1, F6), another ranker term (rows 12–14). M-NULL stays first-class. | **TAKEN 2026-09-05** — the owner: run B1b and B2, then "we'll go with your recommendations". B1b's budget is at the floor in sets and under half a point in wins under an oracle, so the declare is not the rung. **v0.15 is M3, studied on the records first.** |
 
 ---
 
