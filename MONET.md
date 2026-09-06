@@ -37,7 +37,9 @@ at twelve (§0.3).
 | **Monet v0.3** (§3.3), same bridge, 2026-09-03 | **30.96%** | 1,200 | ±2.83 |
 | **Monet v0.4a** (§3.4a), same bridge, 2026-09-03 | **31.94%** | 1,200 | ±2.83 |
 | **Monet v0.4b** (§3.4b), same bridge, 2026-09-03 | **32.75%** | 1,200 | ±2.83 |
-| **to find** | **22.92 points** from the baseline, **17.25** from v0.4b | — | — |
+| **Monet v0.9** (§3.8d), same bridge, twelve seeds, 2026-09-04 | **38.92%** | 2,400 | ±2.00 |
+| **Monet v0.9**, the bridge's compulsion translated (§3.8f) — §3.8m's two twelves, 2026-09-06 | **40.11% / 41.31%** | 2,400 / 2,400 | ±2.00 |
+| **to find** | **22.92 points** from the baseline on its bridge; **8.69** from v0.9 on the translated one (§3.8m) | — | — |
 
 [measured, corrected] Six seeds, 1,950 of 7,200 games, `bot:pf2` vs the frozen v1.0 spec. Every
 seed of the six moved the same way under the bridge repair; mean delta +3.44, SD 0.48, min +2.67.
@@ -160,6 +162,20 @@ is exactly which capability it lacks, priced"* is a result of the same kind.
 > belief mechanism at 38.28% on the current ask policy, and each rung is measured before the next is
 > defined, with §3.5b's rows re-read at every gate. The project's recommendation — publish — stands on
 > the record beside the call.
+
+> **The owner's call, 2026-09-06.** §3.9's table was read on v0.9's vector (§3.8m): 41.31% and 40.11%,
+> v1.0 does not exist there, and the fork above stood in front of the owner as row 19. The owner took
+> **the first option — publish**: v0.9 stays what the site's table seats, the negative result is the
+> eleventh paper (`papers/monet.tex`, §3.8n), and the bridge is archived outside the public tree so every
+> number in this document can be re-read. And the owner set the direction from here in one sentence:
+> *"going forward, we should just pick whatever will improve the winning percentage of Monet."* This
+> document reads that as its rule for choosing rungs (§3.8n): the objective is the paired win rate
+> against SESTINA v1.0 on the translated bridge; a rung is chosen by its expected gain there and by
+> nothing else; and it ships when a pre-registered read on twelve fresh seeds, pinned in-engine, puts
+> its paired mean at least two standard errors above zero — a real point is a real improvement — with
+> the ±2.00 floor kept as the definition of a *rung*. **The physics is what §3.8m measured:** the
+> frontier is nine points away, the wall at v0.4 is unmoved, and no measured channel is priced at the
+> gap. The owner may tighten the rule on return.
 
 ---
 
@@ -5487,6 +5503,50 @@ same bytes as v0.16's), the arms `$SP/arm_v17` from `$SP/mkarm-v17.mjs` and
 `$SP/v17-patch-adapter.cjs`, and the second arm `$SP/arm_v17_indep/monet-v17-indep` with its
 `NOTES.md`.
 
+### 3.8n The publication — 2026-09-06: row 19 taken as (1), and the rule from here
+
+**Decision row 19, taken by the owner on 2026-09-06: (1).** Nothing on Monet's vector changes;
+`monetPolicy('v0.9')` stays what the lobby seats. What this rung ships is the record's public form:
+
+- **The paper.** `papers/monet.tex` — the eleventh in `papers/` and the second cross-engine result —
+  built by `npm run papers:build` into `public/papers/monet.pdf` (10 pages) and listed on `/papers`
+  beside the other ten. Every number in it is a number in this document, cited by section; it adds no
+  measurement. Its headline is §3.8m's table; its second finding is the panel's wall (+13 points on
+  v04, v05, v06 and SESTINA alike, none of the four beaten); its third is §3.8c's — the hit chance is
+  not the value of an ask.
+- **The copy.** The README's row for this document and its papers paragraph; the `/papers` page (the
+  entry, the counts, and the research topic *"do these styles survive contact with an independently
+  written bot?"* moved from open to answered — not at the frontier); the lab report's papers card; and
+  the lobby's Monet note, which had said "under development" since v0.1 and now says what v0.9 is. The
+  "about 96%" agreement figure stays: `tests/play/models.test.ts` measures it at 95.78% on v0.9.
+- **The bridge, archived.** The FishLab clone, the engine binaries, every arm (the second adapter
+  included), every records corpus and the Docker image — 42,165 files, 7.46 GB, and the image — copied
+  from the session scratchpad to the owner's bench directory outside the public tree, with a manifest,
+  the six md5 pins verified after the copy, and the scratchpad's layout kept so every `$SP/...` path
+  this document quotes resolves under that root. §9 stands: FishLab carries no licence file, and
+  nothing of it enters this repository.
+
+**The rule from here (§0.3, the owner's call of 2026-09-06).** The objective is the paired win rate
+against SESTINA v1.0 on the translated bridge. A rung is chosen by its expected gain there — the
+record's own priors and nothing else — and ships when a pre-registered read on twelve fresh seeds,
+pinned in-engine at 100% before it is read, puts its paired mean at least **two standard errors above
+zero** and ahead on a majority of seeds. The ±2.00 floor stays the definition of a *rung* in the
+ladder table; a term that ships under it is marked as such. Two guards against the winner's curse a
+looser bar invites: the confirmation seeds are always fresh (§6.5), and a stack of shipped terms is
+re-read **as a whole** against the last shipped vector before another term is fitted on it. Still not
+recommended: a belief change without the declare pin (§3.8l); a fresh ranker term fitted from scratch
+(four measured out, §3.8i); a v1.0 claim on any seed count under twelve (§3.9).
+
+**What runs next: decision row 20.** The record already holds two measured terms above two standard
+errors and under the floor on v0.9's vector, both off the shipped vector: the exposure charge on
+certain hits (`exposure` 0.6 + `exposureCertain`: +1.07 paired, SE 0.54, ahead on 8 of 12 — §3.8e,
+read on the old bridge, the pair standing) and the closing credit (`closing` 0.5: +0.58, SE 0.23,
+9 of 12 — §3.8h). Under the rule above they are the cheapest rung there is: **v0.18 reads the stack**
+— v0.9 + exposure, v0.9 + closing, v0.9 + both — paired against v0.9 on twelve fresh seeds, about one
+bridge hour, its pre-registration (§3.8o) written before a cell. Behind it, in order: the even-3
+bucket as a target (§3.8c R1, 40% of SESTINA's extra sets, never attacked) and the deeper search form
+(§3.8a, +0.60 at home at 1.7× the budget, never abroad).
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -5926,7 +5986,8 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 16 | **After B1b and B2: is the declare the rung, or the deduction — and what is v0.15?** The two readouts the record left unrun were run the next day (§3.8j's addendum). B2 discards half of itself on its own validation — the (θ = 0.3, any) cell would have promised +7 and +12 points to arms that delivered +0.58 and −7.56 — and on the surviving (θ = 0.5, only-chance) cell F5 does not fire: a perfect side belief has **0.33 sets a game** at stake in Monet's majority episodes where every chance was hidden (0.42 with the seat), +5 to +6 points at the exchange rate, half a point at the tenfold class prior. B1b's declare budget is **+0.09 to +0.14 sets of differential a game** under the oracles, at the floor — but 80–96% of it is sets open at the clinch, which in `us54` sit in decided games, and the win-relevant units are 0.002–0.03 a game. **Recommendation: v0.15 is M3, the deduction fix, studied on the records before any code** — the exact conditioning on the residual instance measured against the Sinkhorn table on the licence split and at \|cands\| = 2–3, and injected through the same seam so its flips sit inside B1's bracket, before `marginal.ts` is touched; the room is bounded above by B2's 0.33. Not recommended: the declare (B1b), a recalibration (F1, F6), another ranker term (rows 12–14). M-NULL stays first-class. | **TAKEN 2026-09-05** — the owner: run B1b and B2, then "we'll go with your recommendations". B1b's budget is at the floor in sets and under half a point in wins under an oracle, so the declare is not the rung. **v0.15 is M3, studied on the records first.** |
 | 17 | **After §3.8k: the deduction fix is dead — the model, not the inference, is the error. What is v0.16, if anything?** The exact posterior under `marginal.ts`'s own model is *worse* than the Sinkhorn table on 24 of 24 seeds (+0.19% Brier pooled, **+4.5% on the licence split**), moves 2.7% of asks symmetrically, and carries 0.003–0.005 sets a game on B2's surviving cell; K1 and K3 fire. The post-hoc diagnostic says why: a seat that has asked into a set holds **about 1.5** of its alive cards whether two or five are alive — both of two about half the time, where the model says 15% — so the players' choices carry a likelihood the constraints do not, and exact inference only sharpens the wrong prior. Six rungs have now read negative in a row (v0.10–v0.15), and the belief channel's ceiling is 0.33 sets a game under a *perfect* belief (§3.8j addendum). **Recommendation: M-NULL leads — §3.9's acceptance on v0.9's vector.** Before it is taken, one probe costs no cell and settles the last open question on this axis: **the licence likelihood** — `choiceKappa` with `choicePrior: 'once'`, the geometric-in-the-holding weight the code already carries, **calibrated on the records** to the measured holding (the crude arithmetic on the two-alive bucket wants (1 + κ) ≈ 6, against the κ = 1 v0.5 took abroad) and read through the same seam with the same falsifiers: K1's bar on S3 = yes, K2's on asks moved, B2's cell. If it cannot clear them the belief axis closes for good, and row 18 chooses between §3.9 and **the even-3 bucket** — §3.8c R1's largest single bucket, ~40% of SESTINA's extra sets a game, never attacked by any rung. Not recommended: any dose fitted abroad on the belief before that probe; any further inference change under this model; another ranker term. | **TAKEN 2026-09-05** — the owner: "lets go with your recommendation for row 17", with full authorization for the direction of v1.0 development from here ("just go ahead with the best path you think is"). **v0.16 is the licence-likelihood probe on the records, pre-registered first (§3.8l); M-NULL is taken if it fails.** |
 | 18 | **After §3.8l: the belief axis is closed — seven measured negatives (v0.10–v0.16), the last with the belief repaired where the error was and worth nothing in play. What does the ladder do with the residual?** The channels this document measured are out: the ask ranker (four terms, §3.8d–§3.8i), the assignment (§3.8j), the inference (§3.8k) and the likelihood (§3.8l); the search arm at the affordable budget was a no-op abroad (§3.8a); §0.2's POSITION is what is left, and it is not a knob. **Recommendation: M-NULL — §3.9's protocol executed on v0.9's vector in full, as the ladder's closing artefact (§3.8m).** Conditions 1–2 are already read twice on seed sets that share nothing — 40.11% on §3.8e's twelve (§3.8f) and 41.31% on §3.8l's twelve (SD 1.29) — and what remains is the panel against v0.2–v0.6 at home (3), the §6.2 table with the adapter's restated wire check and every fault counter by name (5), and a second, independently built arm on the same spec (6): one bridge run, nothing fitted, nothing shipped. The result is the number the owner's fork in §0.3 needs — ship v0.9 in the browser at about 40% and publish the negative result, or fund the lab-only search at twice the budget. The even-3 bucket (§3.8c R1, ~40% of SESTINA's extra sets, never attacked as a target) stays the leading alternative for a further rung, at the honest prior of a ranker term: under the floor. Not recommended: a repaired `hold` form abroad (bounded at +1.0 by B2's cell and read at about zero here); any belief change without §3.8l's declare pin; the search arm wider or deeper than the budget (§3.8a read −0.08 and +0.60 at home). | **TAKEN 2026-09-06 under the owner's standing authorization of 2026-09-05 ("just go ahead with the best path you think is") — v0.17 is the §3.9 read on v0.9's vector (§3.8m); nothing ships from it; the §0.3 fork stays the owner's, and the owner may reverse this row on return.** |
-| 19 | **After §3.8m: §3.9's table is on the record — Monet v1.0 does not exist at v0.9's vector (41.31% and 40.11% on two twelves; the panel's wall at v0.4 unmoved by thirteen points of ladder gains). What does the owner do with it?** The fork §0.3 wrote for this outcome, and only the owner can take: **(1)** ship v0.9 in the browser at about 40% against the frontier — the honest maximum of the belief programme, one rewrite, no latency — and publish the negative result with this document as the artefact; or **(2)** fund the lab-only search arm beyond the affordable budget (§3.8a: the pre-registered form a no-op at 96 ms an ask, the wider and deeper forms out on the cost rule at −0.08 and +0.60 at home), the one channel with a ceiling above the gap and no measured gain yet. Under (1) the even-3 bucket (§3.8c R1, ~40% of SESTINA's extra sets, never attacked as a target) remains the leading candidate for one more rung, at the honest prior of a ranker term. Not recommended: any belief change (§3.8l closed the axis); any further ask-ranker term (four measured out); a v1.0 claim on any seed count under twelve. | *open — the owner's fork (§0.3); nothing runs until it is taken* |
+| 19 | **After §3.8m: §3.9's table is on the record — Monet v1.0 does not exist at v0.9's vector (41.31% and 40.11% on two twelves; the panel's wall at v0.4 unmoved by thirteen points of ladder gains). What does the owner do with it?** The fork §0.3 wrote for this outcome, and only the owner can take: **(1)** ship v0.9 in the browser at about 40% against the frontier — the honest maximum of the belief programme, one rewrite, no latency — and publish the negative result with this document as the artefact; or **(2)** fund the lab-only search arm beyond the affordable budget (§3.8a: the pre-registered form a no-op at 96 ms an ask, the wider and deeper forms out on the cost rule at −0.08 and +0.60 at home), the one channel with a ceiling above the gap and no measured gain yet. Under (1) the even-3 bucket (§3.8c R1, ~40% of SESTINA's extra sets, never attacked as a target) remains the leading candidate for one more rung, at the honest prior of a ranker term. Not recommended: any belief change (§3.8l closed the axis); any further ask-ranker term (four measured out); a v1.0 claim on any seed count under twelve. | **TAKEN 2026-09-06 by the owner — (1): v0.9 stays what the lobby seats; the negative result is the eleventh paper (`papers/monet.tex`, §3.8n); the bridge archived outside the public tree. And the owner's direction from here, in one sentence — *"going forward, we should just pick whatever will improve the winning percentage of Monet"* — read into the rule of §3.8n.** |
+| 20 | **After row 19: under the rule of §3.8n — whatever the bridge measures as an improvement — what runs next?** The record holds two measured terms above two standard errors and under the floor on v0.9's vector, both off the shipped vector: the exposure charge on certain hits (§3.8e, +1.07, SE 0.54, 8 of 12) and the closing credit (§3.8h, +0.58, SE 0.23, 9 of 12). **Recommendation: v0.18 reads the stack** — v0.9 + exposure, v0.9 + closing, v0.9 + both — paired against v0.9 on twelve fresh seeds, pre-registered in §3.8o, about one bridge hour; the arm that clears the rule ships, the stack re-read as a whole. Behind it, in order: the even-3 bucket as a target (§3.8c R1, 40% of SESTINA's extra sets, never attacked) and the deeper search form (§3.8a, +0.60 at home at 1.7× the budget, never abroad). Not recommended: any belief change without the declare pin (§3.8l); a fresh ranker term fitted from scratch (§3.8i). | *open — the recommendation is v0.18, the stack read; taken with its pre-registration (§3.8o) under the owner's direction of 2026-09-06* |
 
 ---
 
