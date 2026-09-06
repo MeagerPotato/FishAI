@@ -459,6 +459,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.19** — the even-set race (2026-09-06) | **an instrument, no vector change** — §3.8c R1's bucket priced on v0.9's vector from the records on hand: the race (who asks into a 3–3 set first, who takes it), the targeting (each side's share of asks into even sets, actual and counterfactual) and the price with its two bounds (§3.8p) | a mechanism is built only at a reachable price ≥ 1.0 point — **pre-registered 2026-09-06, the runs to follow** | `--races` on `attribute.mjs`; the sums exact against the split table on every cell; the pin at 100.0% on every v0.9 cell; the home walk clean | S |
 | **v0.18** — the stack read (2026-09-06) | **the two measured terms under the floor, apart and together** — `exposure` 0.6 + `exposureCertain` (§3.8e, +1.07) and `closing` 0.5 (§3.8h, +0.58) on v0.9's vector, read against v0.9 on twelve fresh seeds under §3.8n's rule (§3.8o) | ships at ≥ 2 SE above zero and ahead on 7 of 12; the floor +2.00 reported beside it — **read 2026-09-06: NOTHING CLEARS. The base 40.70 (SD 1.49); `e` −0.15 (SD 2.31, SE 0.67, ahead on 7 of 12) — §3.8e's +1.07 does not replicate on the translated bridge, its markers intact and SESTINA's ask accuracy down by as much as Monet's; `c` +0.25 (SD 0.97, SE 0.28, 7 of 12) — the closing credit +0.42 pooled over twenty-four seeds (2.3 × SE), under the bar on its fresh twelve; `ec` +0.70 (SD 1.87, SE 0.54, 8 of 12), the interaction +0.60 on ±0.9. The identity cell IDENTICAL, four pins at 100.0%, the fourteen zero on every intact process file, §6.2's table complete on 49 of 49 after seven byte-identical replays of cells the bridge's kill window had left a file short. The rule's resolution at twelve seeds: 1.3 points for a loud term, 0.6 for a quiet one. Nothing ships; row 21 open** | the paired read; the identity pin first; the in-engine pin of every arm; §6.2's table on 48 cells | S |
 | **v0.17** — the §3.9 read (2026-09-06) | **§3.9's protocol on v0.9's vector** — the shipped bot under all six conditions, nothing fitted, nothing shipped (§3.8m) | ≥ 50.0% at twelve seeds — **read 2026-09-06: NOT MET. 41.31% on §3.8l's twelve (SD 1.29) and 40.11% on §3.8f's (SD 1.55); the panel monotone, v02 and v03 beaten on every seed (74.18 / 70.40), v04, v05 and v06 on none (47.62 / 46.81 / 44.72); declare accuracy ≥ 99.2% and the fourteen fault counters zero on every restated-adapter cell; §6.2's table clean, the per-process op counts equal to the engine's on 73 of 73 cells; the number reproduced to the hundredth on all twelve seeds by an independently built arm, the records identical on ten. Conditions 1 and 3 fail; 2, 4, 5 and 6 hold. Nothing ships; the §0.3 fork is the owner's (row 19)** | the pre-registered read of the six conditions; the panel on the same twelve seeds; a second adapter written from the documented protocol by an independent agent, compared game for game | M |
 | **v0.16** | **the licence likelihood, calibrated** — §3.8l: a seat that asked into a set holds about 1.5 of its alive cards whatever their number (§3.8k); three knob families calibrated on the records through §3.8k's seam and read through the same falsifiers; `licenceHold` at 1.5 selected, the per-cell `choiceKappa` families void (each adds hard zeros at true holders) | ≥ 43.31% (the base on §3.8l's twelve, 41.31%, + 2.00) — **read 2026-09-06: 40.58% against 41.31%, −0.74 paired (SD 1.58, SE 0.46), ahead on 4 of 12, inside the floor; behind 0.024 sets a game on 10 of 12 — the wrong declares double through the chain over the held table, a path the falsifiers never read; recorded, not shipped; the belief axis closes** | the records study first (fit on three seeds, 39 runs; held out on 21), then one paired read abroad on twelve fresh seeds | M |
@@ -5785,6 +5786,104 @@ recomputed from the intact files, so marked — `botlog-*.log`), `out/pin-{base,
 `out/home-{e,c,ec}.txt`, `$SP/arm_v18/monet-v18-{base,e,c,ec}`, `$SP/fishai-v18`,
 `$SP/mkarm-v18.mjs`, `$SP/seeds-v18.mjs`; copied to the bench beside the rest (§3.8n).
 
+### 3.8p Monet v0.19 — the even-set race: §3.8c R1's bucket priced on v0.9's vector before anything is built for it
+
+**Decision row 21, taken 2026-09-06 under the owner's direction of the same day, by §3.8n's rule
+and §3.8o's finding that the next rung has to be priced at a point or more before it is built.**
+An instrument rung: no bridge cell, no change under `lib/`, nothing ships. The question is what the
+even bucket — the 3–3 deals, §3.8c R1's largest pool — is worth on v0.9's vector against SESTINA,
+and whether any of it is reachable by a mechanism this document can name.
+
+#### Pre-registration — written 2026-09-06, before the instrument exists
+
+**The facts this rung starts from.**
+
+- §3.8c R1, on v0.4c (34.28%, twelve seeds): the even sets carried **0.43 of SESTINA's 1.09 extra
+  cashed sets a game (40%)** — a 3–3 deal won by SESTINA 58 to 42, A − B **−0.414** sets a game —
+  named the contested race and left unattacked. v0.9's contest credit (§3.8d) is an appetite for
+  asks into sets the opponents *dominate*, the B-majority bucket, not this one.
+- One v0.9 cell, §3.8o's pin at seed 9502823 (39.75%): even sets 2.92 a game, A cashed 1.15, B 1.37,
+  open 0.35 — A − B **−0.186**; the majorities +0.797 and −1.348; all −0.737.
+- §0.1's conversion, as §3.8j used it: about **15 points of win rate a set a game** (14.96).
+- The instrument: `scripts/attribute.mjs` walks every recorded game on the true deal and reproduces
+  Monet's play at 100.0% through `--cf v0.9` (§3.8l's pin). It reports the deal's split against the
+  set's fate; it does not report the *race* — who asked into the set first, what each side spent,
+  who took it — nor how each side's asks are spread over the split classes.
+
+**The instrument, to build: `--races` on `scripts/attribute.mjs`**, nothing under `lib/`. Per game
+and per set: the deal's split class (even 3 / A majority / B majority); the side whose ask first
+went into the set, its event index and whether it hit; asks, hits and misses by side into the set
+until it resolves; the outcome (A, B, or open at the clinch); contested (both sides asked) or not;
+the race length in events. Reported per class and per starter (A started / B started / resolved
+before any ask): sets a game, P(A takes) among the resolved with the open share beside it, asks
+and hits a set by side, the race length, the contested share. And the asks by class: of each
+side's asks, the share into each class and the hit rate there — by the deal's split and by the
+side's own holding at the time of the ask — and at each side's decisions the counterfactual's
+class beside the actual's, so the question *does Monet's picker open a 3–3 race as often as
+SESTINA does at SESTINA's positions?* has a number. **Checks:** the races' outcomes by class sum
+exactly to the split table's `A cashed + A gifted`, `B cashed + B gifted` and `open` on every cell;
+`--cf v0.9` agrees with the play at 100.0% of A's decisions on every v0.9 cell (the pin); a home
+game under `--validate` walks clean; the two class assignments (by the deal, by the holding) agree
+on every ask made before any hit into the set.
+
+**The corpora**, all on record, none new:
+
+> | corpus | cells | games | for |
+> |---|---|---|---|
+> | v0.18's base cells (§3.8o) | 12 | 14,400 | v0.9 against SESTINA on the fresh twelve — the read |
+> | v0.16's base cells (§3.8l) | 12 | 14,400 | v0.9 against SESTINA on §3.8l's twelve — the replication |
+> | §3.8c's SS cells | 12 | 14,400 | SESTINA against itself — its race between equals |
+> | v0.17's panel cells, v04 and v06 | 24 | 28,800 | v0.9 against the lineage it beats — the race when Monet is the stronger side |
+> | home, v0.9 against v0.9 | 1 | 2,400 | Monet's own mirror in our engine |
+
+**The readouts.** Write N for even sets a game; f_A, f_B for the shares of them whose first ask
+is Monet's and SESTINA's; p_A = P(Monet takes | Monet started), q_A = P(Monet takes | SESTINA
+started), and p_B, q_B the same for SESTINA — all among the resolved.
+
+- **R1, the bucket on v0.9's vector.** A − B in the even sets a game, mean and SE over the twelve
+  fresh cells, the majorities beside it, the replication beside that.
+- **R2, the starter.** f_A and f_B; P(the starter takes) by side; p_A, q_A, p_B, q_B; asks spent a
+  race by side; the race length; the uncontested share; the share resolved before any ask.
+- **R3, the targeting.** Each side's share of asks into even sets and its hit rate there; at
+  SESTINA's decisions, the counterfactual's even-set share beside SESTINA's own.
+- **R4, the price**, in points at 15 a set: **(i) the ceiling** — the even bucket's gap closed to
+  zero; **(ii) the priority bound** — N · f_B · (p_A − q_A): the sets Monet adds if it started the
+  even races SESTINA now starts and took them at its own starter's rate, a bound that treats
+  starting as the cause; **(iii) the conversion bound** — N · f_A · (p_B − p_A): if Monet took the
+  races it starts at SESTINA's starter rate. The reachable price is the larger of (ii) and (iii),
+  and the record names which.
+
+**The rule, fixed now.** A mechanism is built — as v0.20, pre-registered with its own home fit and
+bridge read under §3.8n — only if the reachable price is at least **1.0 point** (§3.8o's rule
+reads 1.3 on a loud term and 0.6 on a quiet one at twelve seeds), and only along the readout that
+carries it: **priority** (an ask-ranker credit for opening a 3–3 race the side is placed to win) if
+(ii) carries it, **the in-race ask** (what to ask once the race is on) if (iii) does. Under 1.0 on
+both, the even bucket joins the measured-out channels and row 22 says what is left. Nothing in
+this rung is a mechanism; nothing ships from it; the numbers are the deliverable.
+
+**Predictions, written before the instrument exists.**
+
+- **P1.** The even bucket on v0.9's vector: A − B between **−0.32 and −0.10** sets a game (SE over
+  seeds ≤ 0.03); the replication within 0.06 of it. v0.9 has recovered 0.1–0.3 of v0.4c's −0.414
+  through the priced ask.
+- **P2.** Starting matters, for both sides: P(the starter takes) **56–66%**, the two sides within 4
+  points of each other; SESTINA starts 50–56% of the even races.
+- **P3.** SESTINA's edge is split: p_B exceeds p_A by **2 to 10** points, and q_B exceeds q_A by 0 to 8.
+- **P4.** SESTINA spends a larger share of its asks on even sets than Monet, by **2 to 6** points; at
+  SESTINA's decisions the counterfactual chooses an even set less often than SESTINA did, by 2 to
+  6; hit rates on even-set asks 55–62% (Monet) and 58–66% (SESTINA).
+- **P5.** The ceiling 1.5–4.8 points; the priority bound **under 1.0**; the conversion bound **0.5–2.0**
+  — the rule's call is the conversion readout, and it is close.
+- **P6.** Against v04 and v06 the even bucket is Monet's (+0.05 to +0.40) and the starter effect is
+  the same size as against SESTINA (within 5 points); in SESTINA's mirror the same size again —
+  starting is a property of the game, not of SESTINA.
+- **P7.** The checks hold on every cell: the sums exact, the pin 100.0%, the home walk clean, the
+  two class assignments in agreement before any hit.
+
+**Cost** S — no bridge; about 60 attribution runs, under an hour six wide. **Scratch, not
+committed:** `$SP/monet-v19/{run-races.sh, report-races.mjs}` and the per-cell outputs
+`out/races-<corpus>-<seed>.txt`.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -6226,7 +6325,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 18 | **After §3.8l: the belief axis is closed — seven measured negatives (v0.10–v0.16), the last with the belief repaired where the error was and worth nothing in play. What does the ladder do with the residual?** The channels this document measured are out: the ask ranker (four terms, §3.8d–§3.8i), the assignment (§3.8j), the inference (§3.8k) and the likelihood (§3.8l); the search arm at the affordable budget was a no-op abroad (§3.8a); §0.2's POSITION is what is left, and it is not a knob. **Recommendation: M-NULL — §3.9's protocol executed on v0.9's vector in full, as the ladder's closing artefact (§3.8m).** Conditions 1–2 are already read twice on seed sets that share nothing — 40.11% on §3.8e's twelve (§3.8f) and 41.31% on §3.8l's twelve (SD 1.29) — and what remains is the panel against v0.2–v0.6 at home (3), the §6.2 table with the adapter's restated wire check and every fault counter by name (5), and a second, independently built arm on the same spec (6): one bridge run, nothing fitted, nothing shipped. The result is the number the owner's fork in §0.3 needs — ship v0.9 in the browser at about 40% and publish the negative result, or fund the lab-only search at twice the budget. The even-3 bucket (§3.8c R1, ~40% of SESTINA's extra sets, never attacked as a target) stays the leading alternative for a further rung, at the honest prior of a ranker term: under the floor. Not recommended: a repaired `hold` form abroad (bounded at +1.0 by B2's cell and read at about zero here); any belief change without §3.8l's declare pin; the search arm wider or deeper than the budget (§3.8a read −0.08 and +0.60 at home). | **TAKEN 2026-09-06 under the owner's standing authorization of 2026-09-05 ("just go ahead with the best path you think is") — v0.17 is the §3.9 read on v0.9's vector (§3.8m); nothing ships from it; the §0.3 fork stays the owner's, and the owner may reverse this row on return.** |
 | 19 | **After §3.8m: §3.9's table is on the record — Monet v1.0 does not exist at v0.9's vector (41.31% and 40.11% on two twelves; the panel's wall at v0.4 unmoved by thirteen points of ladder gains). What does the owner do with it?** The fork §0.3 wrote for this outcome, and only the owner can take: **(1)** ship v0.9 in the browser at about 40% against the frontier — the honest maximum of the belief programme, one rewrite, no latency — and publish the negative result with this document as the artefact; or **(2)** fund the lab-only search arm beyond the affordable budget (§3.8a: the pre-registered form a no-op at 96 ms an ask, the wider and deeper forms out on the cost rule at −0.08 and +0.60 at home), the one channel with a ceiling above the gap and no measured gain yet. Under (1) the even-3 bucket (§3.8c R1, ~40% of SESTINA's extra sets, never attacked as a target) remains the leading candidate for one more rung, at the honest prior of a ranker term. Not recommended: any belief change (§3.8l closed the axis); any further ask-ranker term (four measured out); a v1.0 claim on any seed count under twelve. | **TAKEN 2026-09-06 by the owner — (1): v0.9 stays what the lobby seats; the negative result is the eleventh paper (`papers/monet.tex`, §3.8n); the bridge archived outside the public tree. And the owner's direction from here, in one sentence — *"going forward, we should just pick whatever will improve the winning percentage of Monet"* — read into the rule of §3.8n.** |
 | 20 | **After row 19: under the rule of §3.8n — whatever the bridge measures as an improvement — what runs next?** The record holds two measured terms above two standard errors and under the floor on v0.9's vector, both off the shipped vector: the exposure charge on certain hits (§3.8e, +1.07, SE 0.54, 8 of 12) and the closing credit (§3.8h, +0.58, SE 0.23, 9 of 12). **Recommendation: v0.18 reads the stack** — v0.9 + exposure, v0.9 + closing, v0.9 + both — paired against v0.9 on twelve fresh seeds, pre-registered in §3.8o, about one bridge hour; the arm that clears the rule ships, the stack re-read as a whole. Behind it, in order: the even-3 bucket as a target (§3.8c R1, 40% of SESTINA's extra sets, never attacked) and the deeper search form (§3.8a, +0.60 at home at 1.7× the budget, never abroad). Not recommended: any belief change without the declare pin (§3.8l); a fresh ranker term fitted from scratch (§3.8i). | **TAKEN 2026-09-06 under the owner's direction of the same day ("just pick whatever will improve the winning percentage of Monet") — v0.18 reads the stack (§3.8o), pre-registered before a cell; the owner may reverse this row on return.** |
-| 21 | **After §3.8o: nothing clears — the exposure charge reads about zero on the translated bridge with its markers intact, the closing credit about +0.4 over twenty-four seeds and under the bar on its fresh twelve; at twelve seeds the rule resolves 1.3 points for a loud term and 0.6 for a quiet one, and nothing on record is priced at either. What runs next under the rule?** Four candidates, priced as far as the record can price them. **(a) Price the even-3 bucket before building for it** — §3.8c R1's largest pool (~40% of SESTINA's extra sets a game, a 3–3 deal won 58–42, never attacked by any rung), read from this rung's 58,800 recorded games with SESTINA's own asks in them: an instrument rung, no bridge time, no vector change, and a mechanism built only if the counterfactual prices at a point or more on the bridge. **(b) The search arm abroad** — §3.8a's forms were read at home only (+0.41 and +0.60 sets a pair, SE 0.3, against v0.4c, 100 pairs), and the cost rule that put them out is the browser's, not the bridge's; but at 96 ms an ask a twelve-seed read is about seventeen bridge hours an arm (thirty at the deeper form), the engine's stall limits are unchecked against it, and §3.8d's finding that the mirror does not price a term cuts both ways. **(c) A third fresh twelve on `closing` 0.5 alone** — fifteen minutes and about one chance in three of clearing 0.56 on a term worth +0.4; a second try at the same bar by the term that just failed it is the winner's curse the rule was written against, not recommended unless declared the last read and pooled with the two on record. **(d) Stop the ladder at the paper.** **Recommendation: (a), as v0.19.** Under the rule a rung is chosen by its expected gain on the bridge, and after ten measured zeros the expected gain of an unpriced mechanism is about zero: the price comes first. Then (b) only if (a) prices under a point; (c) never on its own. | *open — the recommendation is (a), the even-3 instrument; to be taken with its pre-registration under the owner's direction of 2026-09-06, the owner free to reverse* |
+| 21 | **After §3.8o: nothing clears — the exposure charge reads about zero on the translated bridge with its markers intact, the closing credit about +0.4 over twenty-four seeds and under the bar on its fresh twelve; at twelve seeds the rule resolves 1.3 points for a loud term and 0.6 for a quiet one, and nothing on record is priced at either. What runs next under the rule?** Four candidates, priced as far as the record can price them. **(a) Price the even-3 bucket before building for it** — §3.8c R1's largest pool (~40% of SESTINA's extra sets a game, a 3–3 deal won 58–42, never attacked by any rung), read from this rung's 58,800 recorded games with SESTINA's own asks in them: an instrument rung, no bridge time, no vector change, and a mechanism built only if the counterfactual prices at a point or more on the bridge. **(b) The search arm abroad** — §3.8a's forms were read at home only (+0.41 and +0.60 sets a pair, SE 0.3, against v0.4c, 100 pairs), and the cost rule that put them out is the browser's, not the bridge's; but at 96 ms an ask a twelve-seed read is about seventeen bridge hours an arm (thirty at the deeper form), the engine's stall limits are unchecked against it, and §3.8d's finding that the mirror does not price a term cuts both ways. **(c) A third fresh twelve on `closing` 0.5 alone** — fifteen minutes and about one chance in three of clearing 0.56 on a term worth +0.4; a second try at the same bar by the term that just failed it is the winner's curse the rule was written against, not recommended unless declared the last read and pooled with the two on record. **(d) Stop the ladder at the paper.** **Recommendation: (a), as v0.19.** Under the rule a rung is chosen by its expected gain on the bridge, and after ten measured zeros the expected gain of an unpriced mechanism is about zero: the price comes first. Then (b) only if (a) prices under a point; (c) never on its own. | **TAKEN 2026-09-06 under the owner's direction of the same day — (a): v0.19 prices the even bucket from the records (§3.8p), pre-registered before the instrument exists; the owner may reverse this row on return.** |
 
 ---
 
