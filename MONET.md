@@ -459,6 +459,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.20** — the four-of-six decision (2026-09-06) | **an instrument, no vector change** — at every ask decision of a side holding four (or two) of six in an opened, unresolved, even-by-the-deal set, what it did about the set — the chase, the take-back, a certain hit elsewhere, an uncertain ask elsewhere — Monet against SESTINA against the counterfactual at the same points; the outcome by the first choice (§3.8q) | a race-pace term is fitted (v0.20b) only if the counterfactual's choice differs from SESTINA's by ≥ 5 points at the lead or the trail, in the direction that converts more — **read 2026-09-06: THE PACE IS A CHOICE, AT THE LEAD. SESTINA asks into the race at 59.4% of its lead decisions; v0.9's picker at the same points would at 39.9% — Δ_lead +19.6 (SE 0.2), +19.2 on the replication twelve. The two agree on the certain chases and differ on the uncertain one, and SESTINA forgoes a legal certain hit at 12.6% of its lead decisions, a thing Monet's picker never does. Two-thirds of the gap (13.6 of 19.6) is uncertain chases where the counterfactual asks an uncertain ask elsewhere — no certain hit on the table, the population §3.8h's credit competes in and v0.9 ships nothing for; one-third (6.8) is the uncertain chase over a certain hit, §3.8i's population, closed. Quality is not the edge: Monet's chases hit 53.0% to SESTINA's 49.3% and both carry 22–24% sure misses. SESTINA's first lead decision is a chase 98.3% of the time and its lead converts 60.8% when it is; Monet's 49.5%, converting 47.9% when it is and 49.3% when it is not. At the trail SESTINA takes back LESS than the counterfactual (41.7% of its legal take-backs against 75.4%; Δ_trail −17.1) and asks uncertain elsewhere instead — against the direction R3 favours, so no trail term. v04 and v06 chase more than the counterfactual too (Δ +7.4, +17.8) and Monet's wall falls in that order. The rule calls v0.20b: the closing credit's four-of-six rung at its own dose, a home fit, twelve fresh seeds abroad (row 23)** | `--race42` on `attribute.mjs`; the races reconciled with `--races` on 61 of 61 cells; the pin at 100.0% on 49 of 49 v0.9 cells; the home walk clean, the counterfactual's class identical to the policy's at every decision of both sides | S |
 | **v0.19** — the even-set race (2026-09-06) | **an instrument, no vector change** — §3.8c R1's bucket priced on v0.9's vector from the records on hand: the race (who asks into a 3–3 set first, who takes it), the targeting (each side's share of asks into even sets, actual and counterfactual) and the price with its two bounds (§3.8p) | a mechanism is built only at a reachable price ≥ 1.0 point — **read 2026-09-06: the bucket is −0.190 sets a game (SE 0.012; the replication −0.196), 2.8 points; the race has two numbers — the opener's edge, +8 at any modern table (Monet's own mirror +8.9, SESTINA's +8.4, v04 and v06 ~0), and SESTINA's in-race edge +9.4 over Monet, which is not in who opens (Monet opens 64% of the races) and not in which set is asked into (34.8% against 35.3%; the counterfactual at SESTINA's decisions 35.6%) but at the 4–2 stage: the first side to four converts it at 56% between SESTINAs and 56% between Monets, at 49% for Monet against SESTINA and 61% for SESTINA against Monet; SESTINA asks into the race it opened every four events and resolves it in 26, Monet every six and a half in 36. The ceiling +2.8, the priority bound +1.1 (priced at zero by the v04 and v06 corpora), the conversion bound +2.6 — the price is reachable and the rule's call is the in-race play; row 22 names the step** | `--races` on `attribute.mjs`; the sums exact against the split table on 61 of 61 cells; the pin at 100.0% on 36 of 36 v0.9 cells; the home walk clean under `--validate` | S |
 | **v0.18** — the stack read (2026-09-06) | **the two measured terms under the floor, apart and together** — `exposure` 0.6 + `exposureCertain` (§3.8e, +1.07) and `closing` 0.5 (§3.8h, +0.58) on v0.9's vector, read against v0.9 on twelve fresh seeds under §3.8n's rule (§3.8o) | ships at ≥ 2 SE above zero and ahead on 7 of 12; the floor +2.00 reported beside it — **read 2026-09-06: NOTHING CLEARS. The base 40.70 (SD 1.49); `e` −0.15 (SD 2.31, SE 0.67, ahead on 7 of 12) — §3.8e's +1.07 does not replicate on the translated bridge, its markers intact and SESTINA's ask accuracy down by as much as Monet's; `c` +0.25 (SD 0.97, SE 0.28, 7 of 12) — the closing credit +0.42 pooled over twenty-four seeds (2.3 × SE), under the bar on its fresh twelve; `ec` +0.70 (SD 1.87, SE 0.54, 8 of 12), the interaction +0.60 on ±0.9. The identity cell IDENTICAL, four pins at 100.0%, the fourteen zero on every intact process file, §6.2's table complete on 49 of 49 after seven byte-identical replays of cells the bridge's kill window had left a file short. The rule's resolution at twelve seeds: 1.3 points for a loud term, 0.6 for a quiet one. Nothing ships; row 21 open** | the paired read; the identity pin first; the in-engine pin of every arm; §6.2's table on 48 cells | S |
 | **v0.17** — the §3.9 read (2026-09-06) | **§3.9's protocol on v0.9's vector** — the shipped bot under all six conditions, nothing fitted, nothing shipped (§3.8m) | ≥ 50.0% at twelve seeds — **read 2026-09-06: NOT MET. 41.31% on §3.8l's twelve (SD 1.29) and 40.11% on §3.8f's (SD 1.55); the panel monotone, v02 and v03 beaten on every seed (74.18 / 70.40), v04, v05 and v06 on none (47.62 / 46.81 / 44.72); declare accuracy ≥ 99.2% and the fourteen fault counters zero on every restated-adapter cell; §6.2's table clean, the per-process op counts equal to the engine's on 73 of 73 cells; the number reproduced to the hundredth on all twelve seeds by an independently built arm, the records identical on ten. Conditions 1 and 3 fail; 2, 4, 5 and 6 hold. Nothing ships; the §0.3 fork is the owner's (row 19)** | the pre-registered read of the six conditions; the panel on the same twelve seeds; a second adapter written from the documented protocol by an independent agent, compared game for game | M |
@@ -6028,6 +6029,243 @@ committed:** `$SP/monet-v19/{run-races.sh, run-races-posthoc.sh, report-races.mj
 `out-posthoc/` (`races-<corpus>-<cell>.{txt,json}`, 61 each), `report-races-prereg.txt`,
 `report-races-posthoc.txt`; copied to the bench beside the rest.
 
+### 3.8q Monet v0.20 — the four-of-six decision: is the pace of a race a choice the fast policy can make?
+
+**Decision row 22, taken 2026-09-06 under the owner's direction of the same day — (a).** §3.8p priced
+the even bucket at 2.8 points and put the loss at one stage: the first side to four of six converts
+its lead at 56% between equals, at 49% when it is Monet against SESTINA, at 61% when it is SESTINA
+against Monet, and the difference on the record is pace — SESTINA asks into the race it opened every
+four events, Monet every six and a half. This rung is the first step of the mechanism §3.8p's rule
+calls for: before a term is fitted, the records say whether the pace is a *choice* Monet's picker
+makes differently from SESTINA at the same positions, or whether the two make the same choices
+and SESTINA's simply hit more. An instrument rung: no bridge cell, nothing under `lib/`, nothing
+ships.
+
+#### Pre-registration — written 2026-09-06, before the instrument exists
+
+**The population.** A *lead decision* is an ask decision by a side that, at that moment, holds
+four of six in an opened, unresolved, even-by-the-deal set (by the true holding; the seat may not
+know it) — the *lead set* — with the other side holding the other two. A *trail decision* is the
+mirror: the side holds two of six in such a set. A decision can be both (a lead in one set, a trail
+in another); it is counted in both populations. Within the population the ask is classed by what
+it did about the set: **into the lead set** (a *chase*; certain or uncertain by the public record;
+hit or miss; a *sure miss* when the card asked for sat with the asker's own side), **a certain hit
+elsewhere** (the turn kept), or **an uncertain ask elsewhere**; for the trailer, **a take-back**
+(a certain ask into the set), **an uncertain ask into the set**, **elsewhere certain**, **elsewhere
+uncertain**. At every decision of the other side, and at Monet's own, the counterfactual
+(`--cf v0.9`) is classed the same way at the same point.
+
+**The instrument, to build: `--race42` on `scripts/attribute.mjs`**, beside `--races`, nothing under
+`lib/`. Per side: lead decisions a game and the class shares (chase certain / chase uncertain /
+elsewhere certain / elsewhere uncertain), the chase hit rate and sure-miss share, and the
+counterfactual's class shares at the same decisions; the same for trail decisions with the
+take-back in place of the chase. Per race (even, opened, first to four by side X): at X's **first**
+lead decision, whether X chased, and whether X converted; the number of lead decisions and chases
+until resolution; the same at the trailer's first trail decision (took back or not) and the outcome.
+**Checks:** the races counted here equal `--races`' first-to-four counts on every cell; every lead
+decision's lead set is at 4–2 by the tracked deal at the moment of the ask (asserted in the walk);
+`--cf v0.9` at 100.0% of A's decisions on every v0.9 cell; a home game under `--validate` walks
+clean.
+
+**The corpora**, the same as §3.8p's: v0.18's twelve base cells, v0.16's twelve, SESTINA's mirror,
+v04 and v06 from the panel, and the validated home mirror — 61 cells, 74,400 games, all on record.
+
+**The readouts.**
+
+- **R1, the choice.** At lead decisions, the chase share (any chase) for Monet and for SESTINA,
+  and the counterfactual's chase share at SESTINA's lead decisions beside SESTINA's own: the
+  *choice gap* Δ_lead = SESTINA's chase share − the counterfactual's at the same points. At trail
+  decisions the take-back share the same way: Δ_trail.
+- **R2, the quality.** The chase hit rate and sure-miss share, Monet against SESTINA; the
+  counterfactual's chase hit rate at SESTINA's lead decisions where both chased.
+- **R3, the outcome.** P(convert | chased at the first lead decision) against P(convert | did not),
+  per side and per corpus; the same for the trailer's first take-back.
+- **R4, the mirrors.** R1–R3 in SESTINA's mirror, Monet's mirror and against v04 and v06.
+
+**The rule, fixed now.** The pace is *a choice Monet's picker does not make* if **Δ_lead ≥ 5 points
+or Δ_trail ≥ 5 points** on both twelves against SESTINA, in the direction R3 says converts more.
+Then v0.20b — its own pre-registration, under §3.8n — fits a race-pace term in the ask ranker (a
+credit on the next ask into a lead set the side has just reached four in, or on the take-back at
+two, or both, whichever readout carries Δ) at home and reads it abroad on twelve fresh seeds,
+shipping only by §3.8n's bar. If both gaps are under 5 points — the counterfactual already chases
+and takes back as often as SESTINA at SESTINA's positions and the difference is in R2, the hit
+rate of the same choices — then the fast policy has no pace choice to make, the race is decided by
+what SESTINA knows at four of six, and row 23 says whether the search arm (row 22's (b)) or the
+belief is the next question; no term is fitted from this rung. Nothing here is a mechanism;
+nothing ships from it.
+
+**Predictions, written before the instrument exists.**
+
+- **P1.** SESTINA chases at 55–70% of its lead decisions; Monet at 40–55%; the counterfactual at
+  SESTINA's lead decisions chases 8–20 points less than SESTINA does: **Δ_lead 8–20**.
+- **P2.** SESTINA takes back at 60–80% of its trail decisions where a take-back is legal; Monet at
+  45–65%; **Δ_trail 5–15**.
+- **P3.** Monet's chases hit 3–8 points less than SESTINA's and carry 2–6% sure misses against
+  SESTINA's 0–2%.
+- **P4.** Chasing at the first lead decision converts more than not, by 5–15 points, for both
+  sides and on every corpus; the trailer's first take-back recovers more than not, by 10–25.
+- **P5.** In the mirrors Δ_lead and Δ_trail are within 3 points of zero (the counterfactual is the
+  policy itself, up to seat and tie-break); against v04 and v06 the choice gaps run the other way
+  (Monet chases more than v04 and v06, by 0–10).
+- **P6.** The checks hold on every cell.
+
+**Cost** S — no bridge; the 61 attribution runs again, under an hour six wide. **Scratch, not
+committed:** `$SP/monet-v20/{run-race42.sh, report-race42.mjs}` and `out/race42-<corpus>-<cell>.{txt,json}`.
+
+#### Record — 2026-09-06 (the runs the same day)
+
+**The runs.** `--race42` built beside `--races` on `scripts/attribute.mjs` (nothing under `lib/`), run
+over the 61 cells six wide in seven minutes: the 60 record cells (v0.18's twelve, v0.16's twelve,
+SESTINA's mirror, v04 and v06 from the panel) and the 2,400-game home mirror under `--validate`.
+**The checks, all clean:** the races counted here reconcile EXACTLY with `--races`' even
+first-to-four counts, both leaders, on 61 of 61 cells; `--cf v0.9` at 100.0% of A's decisions on
+49 of 49 v0.9 cells; the home walk clean; and at home the counterfactual's class equals the
+policy's own at every lead and trail decision of BOTH sides (Δ_lead and Δ_trail identically 0.0,
+the pin extended to the class). Scratch: `$SP/monet-v20/{run-race42.sh, report-race42.mjs,
+report-race42.txt}` and `out/`.
+
+**The table.** Six corpora; A / B, where A is v0.9 except in SESTINA's mirror; means over cells
+with the SE over cells where it is wider than a tenth. "The counterfactual" is v0.9's picker run at
+the same decision.
+
+*The lead — a side holding four of six in an opened, unresolved, even-by-the-deal set.*
+
+| readout | v0.18's twelve (v0.9 / SESTINA) | v0.16's twelve (replication) | SESTINA / SESTINA | v0.9 / v04 | v0.9 / v06 | home (v0.9 / v0.9) |
+|---|---|---|---|---|---|---|
+| lead decisions a game | 9.85 / 6.56 | 10.13 / 6.64 | 6.21 | 7.15 / 8.14 | 8.09 / 6.59 | 9.61 / 9.50 |
+| **R1** chase share (of which uncertain) | **34.7% (32.1) / 59.4% (53.7)** | 34.8 (32.2) / 59.7 (53.8) | 63.7 (57.9) | 47.6 (43.4) / 47.5 (43.2) | 40.6 (37.1) / 56.5 (52.1) | 38.3 (35.5) / 39.0 (36.1) |
+| R1 the counterfactual's chase share at B's decisions | 39.9% | 40.5 | 47.2 | 40.1 | 38.7 | 39.0 |
+| **R1 Δ_lead** (SE over cells) | **+19.6 (0.2)** | **+19.2 (0.1)** | +16.5 (0.2) | +7.4 (0.4) | +17.8 (0.2) | 0.0 |
+| R1 B elsewhere, certain / uncertain; the counterfactual at B's | 12.8 / 27.8; cf 24.1 / 36.0 | 12.7 / 27.5; cf 24.2 / 35.2 | 8.6 / 27.7; cf 12.5 / 40.4 | 15.0 / 37.5; cf 15.9 / 44.0 | 14.3 / 29.2; cf 21.5 / 39.8 | 17.6 / 43.4 |
+| R1 A elsewhere, certain / uncertain | 14.8 / 50.6 | 15.0 / 50.2 | — | 12.3 / 40.1 | 13.2 / 46.2 | 17.5 / 44.2 |
+| **R2** chase hit rate; sure-miss share | 53.0; 23.9 / 49.3; 21.9 | 52.6; 24.5 / 49.6; 21.7 | 47.5; 26.0 | 59.0; 23.1 / 48.8; 19.1 | 60.3; 21.7 / 50.1; 19.0 | 54.0; 21.0 / 52.5; 21.3 |
+| R2 where both chased at B's decisions: B's hit / the counterfactual's | 54.7 / 57.4 | 55.2 / 57.7 | 53.3 / 54.4 | 52.0 / 56.1 | 54.7 / 56.2 | 52.5 / 52.5 |
+| **R3** races led (first to four) a game | 1.64 / 1.15 | 1.69 / 1.17 | 1.42 | 1.67 / 1.13 | 1.78 / 1.05 | 1.47 / 1.39 |
+| R3 the first lead decision was a chase | **49.5% / 98.3%** | 50.2 / 98.6 | 98.3 | 54.2 / 95.0 | 47.4 / 99.1 | 56.5 / 63.1 |
+| R3 converted when it chased first / when it did not | **47.9 / 49.3; 60.8 / 53.4 (SE 4.0)** | 48.0 / 49.1; 61.0 / 52.4 (3.7) | 56.3 / 48.5 (2.2) | 51.7 / 52.2; 55.7 / 48.6 (1.4) | 50.7 / 50.4; 57.8 / 51.0 (5.5) | 53.5 / 55.6; 51.9 / 56.9 |
+| R3 lead decisions a race; chases a race | 5.87; 1.60 / 3.38; 2.07 | 5.87; 1.63 / 3.33; 2.06 | 3.25; 2.06 | 3.81; 1.59 / 4.50; 2.01 | 4.41; 1.47 / 3.41; 1.93 | 5.28; 1.76 / 5.20; 1.80 |
+
+*The trail — the side holding two of six in such a set.*
+
+| readout | v0.18's twelve (v0.9 / SESTINA) | v0.16's twelve | SESTINA / SESTINA | v0.9 / v04 | v0.9 / v06 | home |
+|---|---|---|---|---|---|---|
+| trail decisions a game; a take-back legal | 4.99; 35.4% / 8.72; 50.9% | 5.03; 35.7 / 8.97; 50.8 | 4.98; 41.1 | 6.57; 30.4 / 5.65; 55.4 | 5.12; 32.8 / 6.81; 59.4 | 7.90; 36.3 / 7.86; 38.7 |
+| **R1** take-back share: A; B; the counterfactual at B's; **Δ_trail** | 28.4; 21.2; 38.4; **−17.1 (0.2)** | 28.8; 21.3; 37.8; **−16.5 (0.2)** | 22.6; cf 31.0; −8.5 | 23.8; 40.3; 43.1; −2.8 | 27.4; 32.3; 47.0; −14.7 | 27.7; 29.1; 29.1; 0.0 |
+| R1 among legal take-backs, taken: A; B; the counterfactual at B's | **80.1; 41.7; 75.4** | 80.7; 41.9; 74.4 | 55.0; cf 75.6 | 78.3; 72.7; 77.8 | 83.4; 54.4; 79.1 | 76.4; 75.2; 75.2 |
+| R1 trail elsewhere, certain / uncertain: A; B; the counterfactual at B's | 9.6 / 58.8; 14.2 / 59.7; cf 19.1 / 40.0 | 9.6 / 58.5; 14.4 / 59.5; cf 19.3 / 40.3 | 7.6 / 62.0; cf 8.4 / 54.9 | 12.6 / 62.0; 14.1 / 39.8; cf 14.3 / 38.5 | 11.3 / 59.5; 13.7 / 49.6; cf 16.6 / 33.5 | 16.4 / 54.5; 16.6 / 52.6 |
+| **R3** the trailer's first decision took back (in A-led races, the trailer is B; in B-led, A) | 27.1 / 43.4 | 27.0 / 43.3 | 34.1 | 52.1 / 40.1 | 42.4 / 42.8 | 38.9 / 38.1 |
+| R3 recovered when it took back first / when not (A-led; B-led) | 53.1 / 43.7; 43.6 / 38.4 | 51.7 / 42.3; 43.8 / 38.3 | 49.2 / 42.4 | 49.6 / 48.0; 44.2 / 40.5 | 52.2 / 48.3; 44.0 / 39.4 | 43.9 / 39.9; 42.2 / 43.2 |
+
+**R1, the choice — the pace is a choice, at the lead.** At SESTINA's own lead decisions it asks
+into the race **59.4%** of the time; v0.9's picker, run at the same points with the same view,
+would ask into it **39.9%**: **Δ_lead = +19.6** (SE 0.2), **+19.2** on the replication twelve.
+The two policies agree on the certain chases (5.8% against 5.9%); the whole gap is in the
+uncertain chase, 53.6% against 33.9%. Where the counterfactual goes instead: a certain hit
+elsewhere 24.1% of the time against SESTINA's 12.8%, and an uncertain ask elsewhere 36.0%
+against 27.8%. So a certain hit is on the table at 30.1% of SESTINA's lead decisions and SESTINA
+takes one at 18.6% — **it forgoes a legal certain hit at 12.6% of its lead decisions** (11.5% net
+of the 1.1% where it takes a certain hit the counterfactual would not; 12.9% on the replication),
+a thing v0.9's picker never does (0.0% at every corpus: the `certaintyBonus` order is a rule, not a weight). At Monet's own lead
+decisions the chase share is 34.7% and the counterfactual's is the same by construction. The
+pattern is SESTINA's whole line: v04 chases 47.5% at its lead decisions against the
+counterfactual's 40.1% (Δ +7.4), v06 56.5% against 38.7% (Δ +17.8), SESTINA 59.4% against 39.9%;
+and Monet's wall against that line falls in the same order — 47.6%, 44.7%, 40.7%. Three policies
+make a correlation, not a mechanism; it is written down because it is the first ranker-level
+quantity on record that orders the panel.
+
+**R1 at the trail — a choice too, and the other way.** SESTINA takes back at **21.2%** of its trail
+decisions where v0.9's picker would at **38.4%**: **Δ_trail = −17.1**, −16.5 on the replication.
+Among the decisions where a take-back is legal SESTINA takes it **41.7%** of the time; Monet
+**80.1%**, and the counterfactual at SESTINA's positions 75.4%. What SESTINA does instead is ask an
+*uncertain* ask elsewhere: 59.7% of its trail decisions against the counterfactual's 40.0% —
+including, by the joint below, 14.4% where the counterfactual would take back and 5.9% where it
+would take a certain hit elsewhere. The take-back is a certain hit that publishes the trailer's
+holding in the race set; SESTINA declines more than half of them.
+
+**R2, the quality — not SESTINA's edge.** Monet's chases HIT MORE than SESTINA's: **53.0% against
+49.3%** (52.6 against 49.6 on the replication; 59.0 and 60.3 against v04 and v06, who hit 48.8 and
+50.1). Both sides' chases carry about the same share of sure misses — asks for a card that sat with
+the asker's own teammate — **23.9% for Monet, 21.9% for SESTINA**, 26.0% between SESTINAs, 21.0
+and 21.3 between Monets: a quarter of every policy's chases, ten times what P3 predicted, and not a
+Monet defect. Where SESTINA and the counterfactual both chase at the same decision, the
+counterfactual's card-and-target hits **57.4%** against SESTINA's 54.7% (57.7 against 55.2 on the
+replication): at the same points, Monet's picker chases *better* and chases *less*. The edge is in
+R1, not R2.
+
+**R3, the outcome — chasing first converts more for every policy but Monet's.** SESTINA's first
+lead decision is a chase **98.3%** of the time (98.6; 98.3 in its mirror; v04 95.0, v06 99.1); it
+converts the lead at **60.8%** when it chased first and 53.4% when it did not — a +7.4 that stands
+on 1.7% of its races (SE 4.0) and is replicated at +8.6 (SE 3.7), +7.8 between SESTINAs, +7.1 for
+v04 and +6.8 for v06. **Monet's first lead decision is a chase 49.5% of the time and converts at
+47.9% when it chased first and 49.3% when it did not** (48.0 / 49.1 on the replication; −0.5
+against v04, +0.3 against v06; −2.1 and −5.0 at home). Monet's races take 5.87 lead decisions and
+1.60 chases to resolve, SESTINA's 3.38 and 2.07: SESTINA chases and is done; Monet chases once in
+four decisions and wanders. The contrast for Monet is an observational one selected by its own
+picker — it chases first exactly when the chase is its best ask by hit chance and goes elsewhere
+when it is not, so the two populations differ in more than the choice — and it says nothing about
+what a term would buy; it says only that Monet's *existing* chases-first are not its better races.
+The take-back first recovers more than not for every trailer in every corpus (SESTINA +9.4 and
++9.4; Monet +5.2 and +5.5; between SESTINAs +6.8; +1.6 to +4.6 on the panel; +4.0 and −1.0 at
+home), under P4's 10–25.
+
+**R4, the mirrors.** At home the counterfactual reproduces the policy's class at every decision of
+both sides — Δ_lead and Δ_trail identically 0.0, sure-miss shares 21.0 and 21.3, first-chase 56.5
+and 63.1 (the seat asymmetry of `--home`'s seating). Between SESTINAs Δ_lead is +16.5 and Δ_trail
+−8.5 at SESTINA's positions against v0.9's picker: the same shape as against Monet, smaller at the
+trail. P5's second half was wrong: v04 and v06 chase MORE than the counterfactual at their
+positions, not less, and v06 chases 16 points more than Monet does at its own.
+
+**POST HOC — the joint of the two classes, added after the read** (`$SP/v20-patch-attribute-joint.cjs`;
+`out-joint/`, `report-joint.mjs`, `report-joint.txt`; the pre-registered counters unchanged, the
+checks re-verified EXACT on 61 of 61 and the home joint diagonal on both sides). The marginals above cannot say how much of SESTINA's chase
+surplus stands against a certain hit elsewhere and how much against an uncertain ask elsewhere;
+the 4 × 4 of (SESTINA's class, the counterfactual's class) at the same decision can. **At SESTINA's
+lead decisions, of Δ_lead's 19.6 points, 6.8 are uncertain chases where the counterfactual takes
+a certain hit elsewhere, 13.6 are uncertain chases where the counterfactual asks an uncertain ask
+elsewhere, and 0.8 run the other way** (the replication: 6.6, 13.5, 0.9; between SESTINAs 2.2, 15.0,
+0.7; v06 3.9, 14.9, 1.0; v04 0.2, 10.2, 3.1). **Two-thirds of the gap is in the population where no
+certain hit is on the table** — the population §3.8h's closing credit was built for and competes
+in, and where v0.9 ships no term at all; one-third is the uncertain chase over a certain hit, the
+gated population §3.8i measured at −1.08 to −7.56 across its whole eligible dose range. At the
+trail, of Δ_trail's −17.2, 14.4 points are SESTINA asking an uncertain ask elsewhere where the
+counterfactual would take back, 5.9 where it would take a certain hit elsewhere (the replication
+13.9 and 5.9; between SESTINAs 6.1 and 1.4; v06 12.6 and 4.1; v04 0.6 and 1.5). In games, the
+ungated lead gap is 13.6% of SESTINA's 6.56 lead decisions a game — **0.89 decisions a game where
+SESTINA chases and Monet's picker would ask an uncertain ask somewhere else.**
+
+**The predictions, scored.** **P1** two of three: SESTINA's chase share 59.4 / 59.7 in 55–70 and
+Δ_lead +19.6 / +19.2 in 8–20 (at its top); Monet's 34.7 / 34.8 under the predicted 40–55. **P2**
+missed, sign and all: SESTINA takes 41.7% of its legal take-backs (predicted 60–80), Monet 80.1%
+(predicted 45–65), Δ_trail −17.1 / −16.5 (predicted +5 to +15). **P3** missed on both counts:
+Monet's chases hit 3.7 / 3.0 points MORE, and both sides carry 22–24% sure misses against the
+predicted 2–6 and 0–2. **P4** half: chasing first converts +7 to +9 more for SESTINA, its mirror,
+v04 and v06, and 0 to −5 for Monet at every table; the take-back first recovers more everywhere,
+by +1.6 to +9.4 against the predicted 10–25. **P5** half: the home identity holds exactly (0.0,
+not "within 3"); v04 and v06 chase more than the counterfactual, not less. **P6** held on every
+cell.
+
+**The rule, applied.** Δ_lead is +19.6 and +19.2 on the two twelves — above 5 on both — and in
+the direction R3 says converts more for the policy whose choice it is: SESTINA converts 60.8%
+when it chases first and 53.4% when it does not, replicated. **The pace at the lead is a choice
+Monet's picker does not make.** Δ_trail is −17.1 and −16.5: SESTINA takes back LESS than the
+counterfactual, and R3 says the take-back first recovers MORE for every trailer, so the trail gap
+runs against the direction the rule requires and **no trail term is fitted**; Monet already takes
+80% of its legal take-backs. The rule therefore calls **v0.20b: a race-pace term at the lead,
+pre-registered on its own (§3.8r), fitted at home and read abroad on twelve fresh seeds, shipping
+by §3.8n's bar.** What the joint fixes about that term is written into row 23: the population that
+carries two-thirds of the gap is the ungated one, where §3.8h's credit already stands at the
+four-of-six rung at a quarter of a hit's value and moved a tenth of the gap; the gated third is
+§3.8i's and stays closed.
+
+**What this rung does not say.** It does not say that chasing more will convert more for Monet:
+Monet's own chases-first are not its better races, and the reason SESTINA's are — the pace
+itself, or something the pace stands in for in SESTINA's play after the miss — is not on this
+instrument. It does not say what the trailer's uncertain asks elsewhere buy SESTINA, and the
+trailer's side is the other half of every conversion number: Monet's lead against SESTINA
+converts at 49% where SESTINA's against Monet converts at 61% and either's at 56% against its own
+kind (§3.8p), and what the trailer does is in each of those. It does not
+price anything; §3.8p's bounds stand (+2.6 along the conversion, +2.8 the ceiling). Nothing ships.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -6470,7 +6708,8 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 19 | **After §3.8m: §3.9's table is on the record — Monet v1.0 does not exist at v0.9's vector (41.31% and 40.11% on two twelves; the panel's wall at v0.4 unmoved by thirteen points of ladder gains). What does the owner do with it?** The fork §0.3 wrote for this outcome, and only the owner can take: **(1)** ship v0.9 in the browser at about 40% against the frontier — the honest maximum of the belief programme, one rewrite, no latency — and publish the negative result with this document as the artefact; or **(2)** fund the lab-only search arm beyond the affordable budget (§3.8a: the pre-registered form a no-op at 96 ms an ask, the wider and deeper forms out on the cost rule at −0.08 and +0.60 at home), the one channel with a ceiling above the gap and no measured gain yet. Under (1) the even-3 bucket (§3.8c R1, ~40% of SESTINA's extra sets, never attacked as a target) remains the leading candidate for one more rung, at the honest prior of a ranker term. Not recommended: any belief change (§3.8l closed the axis); any further ask-ranker term (four measured out); a v1.0 claim on any seed count under twelve. | **TAKEN 2026-09-06 by the owner — (1): v0.9 stays what the lobby seats; the negative result is the eleventh paper (`papers/monet.tex`, §3.8n); the bridge archived outside the public tree. And the owner's direction from here, in one sentence — *"going forward, we should just pick whatever will improve the winning percentage of Monet"* — read into the rule of §3.8n.** |
 | 20 | **After row 19: under the rule of §3.8n — whatever the bridge measures as an improvement — what runs next?** The record holds two measured terms above two standard errors and under the floor on v0.9's vector, both off the shipped vector: the exposure charge on certain hits (§3.8e, +1.07, SE 0.54, 8 of 12) and the closing credit (§3.8h, +0.58, SE 0.23, 9 of 12). **Recommendation: v0.18 reads the stack** — v0.9 + exposure, v0.9 + closing, v0.9 + both — paired against v0.9 on twelve fresh seeds, pre-registered in §3.8o, about one bridge hour; the arm that clears the rule ships, the stack re-read as a whole. Behind it, in order: the even-3 bucket as a target (§3.8c R1, 40% of SESTINA's extra sets, never attacked) and the deeper search form (§3.8a, +0.60 at home at 1.7× the budget, never abroad). Not recommended: any belief change without the declare pin (§3.8l); a fresh ranker term fitted from scratch (§3.8i). | **TAKEN 2026-09-06 under the owner's direction of the same day ("just pick whatever will improve the winning percentage of Monet") — v0.18 reads the stack (§3.8o), pre-registered before a cell; the owner may reverse this row on return.** |
 | 21 | **After §3.8o: nothing clears — the exposure charge reads about zero on the translated bridge with its markers intact, the closing credit about +0.4 over twenty-four seeds and under the bar on its fresh twelve; at twelve seeds the rule resolves 1.3 points for a loud term and 0.6 for a quiet one, and nothing on record is priced at either. What runs next under the rule?** Four candidates, priced as far as the record can price them. **(a) Price the even-3 bucket before building for it** — §3.8c R1's largest pool (~40% of SESTINA's extra sets a game, a 3–3 deal won 58–42, never attacked by any rung), read from this rung's 58,800 recorded games with SESTINA's own asks in them: an instrument rung, no bridge time, no vector change, and a mechanism built only if the counterfactual prices at a point or more on the bridge. **(b) The search arm abroad** — §3.8a's forms were read at home only (+0.41 and +0.60 sets a pair, SE 0.3, against v0.4c, 100 pairs), and the cost rule that put them out is the browser's, not the bridge's; but at 96 ms an ask a twelve-seed read is about seventeen bridge hours an arm (thirty at the deeper form), the engine's stall limits are unchecked against it, and §3.8d's finding that the mirror does not price a term cuts both ways. **(c) A third fresh twelve on `closing` 0.5 alone** — fifteen minutes and about one chance in three of clearing 0.56 on a term worth +0.4; a second try at the same bar by the term that just failed it is the winner's curse the rule was written against, not recommended unless declared the last read and pooled with the two on record. **(d) Stop the ladder at the paper.** **Recommendation: (a), as v0.19.** Under the rule a rung is chosen by its expected gain on the bridge, and after ten measured zeros the expected gain of an unpriced mechanism is about zero: the price comes first. Then (b) only if (a) prices under a point; (c) never on its own. | **TAKEN 2026-09-06 under the owner's direction of the same day — (a): v0.19 prices the even bucket from the records (§3.8p), pre-registered before the instrument exists; the owner may reverse this row on return.** |
-| 22 | **After §3.8p: the even bucket is 2.8 points on v0.9's vector, the race is lost at the 4–2 stage — Monet reaches four first as often as anyone and converts the lead at 49% where SESTINA converts at 61% and either bot at 56% against its own kind; SESTINA asks into the race it opened every four events and resolves it in 26, Monet every six and a half in 36 — and the price along the in-race play is +2.6 by the conversion bound. §3.8p's rule says build v0.20 along the in-race ask. Along what, exactly?** The records do not yet say what the leader at 4–2 does differently, and the ladder has measured the fast policy's ask terms four times (§3.8d–§3.8i): the chase appetite at a majority reads negative (§3.8g, v0.13), the belief about the missing cards is calibrated (§3.8j), and a term fitted from scratch is not recommended (§3.8i). Two candidates carry the price. **(a) The 4–2 decision study, then the term** — at every ask decision of a side leading or trailing 4–2 in a contested set, on the 74,400 recorded games: what it asked (into the set, a certain hit elsewhere, an uncertain ask elsewhere), the hit, the take-back it allowed, and the race's outcome; Monet against SESTINA against the counterfactual at the same points. A day, no bridge. If SESTINA's edge at 4–2 is in a choice the fast policy can make — patience with the chase, the take-back taken, the turn kept — the term is named, fitted at home and read abroad under §3.8n as v0.20; a term that ships on `/play`. **(b) The search arm as the race player** — §3.8a's pre-registered form (D 8 · C 3 · S 24) is the one mechanism on record that plays a race as a race, read once at home at +0.41 sets a pair (SE 0.31, 100 pairs, against v0.4c) and never abroad; a 600-pair home re-read against v0.9 with `--races` on its records (does lookahead convert 4–2 leads?) costs about an hour, and a twelve-seed bridge read about seventeen bridge hours at 96 ms an ask, with the engine's stall limits checked on one cell first. It would improve the bridge number and not the browser's: a lab-only Monet, which the owner declined in row 19's fork and may decline again under the rule. **Recommendation: (a) as v0.20, with (b)'s home re-read as its second step if (a) names no term the fast policy can make.** Not recommended: opening more races (priced at zero by the v04 and v06 corpora, where Monet opens 70% and gains nothing), a targeting credit for even sets (no gap to close), or a chase credit (measured negative). | *open — the recommendation is (a); to be taken with its pre-registration under the owner's direction of 2026-09-06, the owner free to reverse* |
+| 22 | **After §3.8p: the even bucket is 2.8 points on v0.9's vector, the race is lost at the 4–2 stage — Monet reaches four first as often as anyone and converts the lead at 49% where SESTINA converts at 61% and either bot at 56% against its own kind; SESTINA asks into the race it opened every four events and resolves it in 26, Monet every six and a half in 36 — and the price along the in-race play is +2.6 by the conversion bound. §3.8p's rule says build v0.20 along the in-race ask. Along what, exactly?** The records do not yet say what the leader at 4–2 does differently, and the ladder has measured the fast policy's ask terms four times (§3.8d–§3.8i): the chase appetite at a majority reads negative (§3.8g, v0.13), the belief about the missing cards is calibrated (§3.8j), and a term fitted from scratch is not recommended (§3.8i). Two candidates carry the price. **(a) The 4–2 decision study, then the term** — at every ask decision of a side leading or trailing 4–2 in a contested set, on the 74,400 recorded games: what it asked (into the set, a certain hit elsewhere, an uncertain ask elsewhere), the hit, the take-back it allowed, and the race's outcome; Monet against SESTINA against the counterfactual at the same points. A day, no bridge. If SESTINA's edge at 4–2 is in a choice the fast policy can make — patience with the chase, the take-back taken, the turn kept — the term is named, fitted at home and read abroad under §3.8n as v0.20; a term that ships on `/play`. **(b) The search arm as the race player** — §3.8a's pre-registered form (D 8 · C 3 · S 24) is the one mechanism on record that plays a race as a race, read once at home at +0.41 sets a pair (SE 0.31, 100 pairs, against v0.4c) and never abroad; a 600-pair home re-read against v0.9 with `--races` on its records (does lookahead convert 4–2 leads?) costs about an hour, and a twelve-seed bridge read about seventeen bridge hours at 96 ms an ask, with the engine's stall limits checked on one cell first. It would improve the bridge number and not the browser's: a lab-only Monet, which the owner declined in row 19's fork and may decline again under the rule. **Recommendation: (a) as v0.20, with (b)'s home re-read as its second step if (a) names no term the fast policy can make.** Not recommended: opening more races (priced at zero by the v04 and v06 corpora, where Monet opens 70% and gains nothing), a targeting credit for even sets (no gap to close), or a chase credit (measured negative). | **TAKEN 2026-09-06 under the owner's direction of the same day — (a): v0.20 reads the four-of-six decision on the records (§3.8q), pre-registered before the instrument exists; the owner may reverse this row on return.** |
+| 23 | **After §3.8q: the pace is a choice at the lead — SESTINA asks into the race at 59% of its lead decisions where Monet's picker at the same points would at 40%, and two-thirds of that gap stands where no certain hit is on the table. What is v0.20b's term?** The joint fixes the population: 13.6 of the 19.6 points are uncertain chases the counterfactual trades for an uncertain ask elsewhere — the ungated population, where §3.8h's closing credit already prices the ask at the four-of-six rung (`lock` 0.5) at `closing` 0.5, a quarter of a hit's value at `p`, and moved a tenth of the gap (+0.58 on twelve seeds, +0.25 on twelve fresh ones); 6.8 points are the uncertain chase over a certain hit, §3.8i's population, measured −1.08 to −7.56 across its eligible doses and not reopened. v0.12's dose ladder moved the four rung and the five rung together (0.1 / 0.25 / 0.5 / 1.0 on three seeds: +0.22 / +0.89 / +0.97 / +0.72, the top two within noise) and never fitted the four rung on its own, and the five rung has nothing left to buy (every seat-known lock cashed, §3.8p). **(a) v0.20b = the closing credit's four-of-six rung at its own dose** — a Monet-only knob `closingFour` (byte identity absent; at `lock` 0.5 the credit is paid at `closingFour · wHit · p · 0.5` in place of `closing`'s dose, the five rung unchanged; the certain count; the gate exactly as §3.8h left it, no ungating): a home fit over doses in duplicate pairs against v0.9; the chosen dose's markers read on its own records through `--race42` (the chase share at lead decisions, the first-chase share, the sure-miss share — the term must move R1 and not R2); then twelve fresh seeds abroad under §3.8n. Its price is bounded by the 0.89 decisions a game in the population and §3.8p's +2.6 along the conversion. Its risk is §3.8g's: a credit on a set the seat KNOWS four of fires only where the seat can place four on its side, and the seat-known four is a minority of the true fours, so the term may fire too rarely to move the gap — which the home markers will show before a bridge cell is spent. **(b) The trailer's ask, first** — Δ_trail is −17 the other way: SESTINA declines 58% of its legal take-backs and asks uncertain elsewhere (14.4% of its trail decisions where the counterfactual would take back); what those asks buy is not on the instrument, and the trailer's side is the larger half of the even bucket. A records rung, no bridge, a day. **(c) The search arm** (row 22's (b)) as the race player, unchanged. **Recommendation: (a), with (b) as the next records rung if (a)'s home markers show the credit firing at under a fifth of Monet's lead decisions, or its abroad read is under the bar.** Not recommended: reopening §3.8i's gated chase (a third of the gap, measured negative at every dose); the belief count at the four rung (§3.8h: lost on every seed); a fresh momentum term keyed on the side's last hit (a term from scratch, §3.8n). | **TAKEN 2026-09-06 under the owner's direction of the same day — (a): v0.20b, pre-registered as §3.8r before any cell; the owner may reverse this row on return.** |
 
 ---
 
