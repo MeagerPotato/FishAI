@@ -105,7 +105,12 @@ const LOCKS_BOTH = process.argv.includes('--locks-both') // probe B's declarable
 // who took it - per split class and per starter; and each side's asks (and the counterfactual's)
 // by the class of the asked set, by the deal and by the holding at the time. Pure accounting on
 // the walk's own state; nothing under lib/ is touched.
-const RACES = process.argv.includes('--races')
+// MONET.md §3.8q: the four-of-six decision - at every ask decision of a side holding four (a lead)
+// or two (a trail) of six in an opened, unresolved, even-by-the-deal set, what the ask did about
+// the set, actual and counterfactual; per race, the leader's and the trailer's first such
+// decision against the outcome. Needs the race state, so it switches --races on.
+const RACE42 = process.argv.includes('--race42')
+const RACES = process.argv.includes('--races') || RACE42
 const CALIB_P = [0.1, 0.3, 0.5, 0.7, 0.9, 1] // bin lower bounds: [0.1,0.3) [0.3,0.5) [0.5,0.7) [0.7,0.9) [0.9,1) and p = 1
 // Declare rules priced on the records: a rule fires at the earliest window (before A's own declare of
 // the set) where some A seat's plan satisfies it. u = guessed cards; u = 0 is the certain plan, the
@@ -171,6 +176,15 @@ const newRaceAcc = () => {
   }
 }
 
+// §3.8q accumulators: lead and trail decisions per side (actual and counterfactual), and the races by
+// their leader (the side first to four): the first lead decision, the first trail decision, the outcome.
+const newRace42Acc = () => {
+  const D = () => ({ n: 0, chaseC: 0, chaseU: 0, chaseHit: 0, chaseSure: 0, elseC: 0, elseU: 0, cfN: 0, cfChaseC: 0, cfChaseU: 0, cfChaseHit: 0, cfElseC: 0, cfElseU: 0, both: 0, bothActHit: 0, bothCfHit: 0, joint: new Array(16).fill(0) })
+  const Tt = () => ({ n: 0, legal: 0, takeBack: 0, intoU: 0, elseC: 0, elseU: 0, cfN: 0, cfTakeBack: 0, cfIntoU: 0, cfElseC: 0, cfElseU: 0, legalTakeBack: 0, legalCfTakeBack: 0, joint: new Array(16).fill(0) })
+  const Rr = () => ({ n: 0, firstChased: 0, firstChasedConv: 0, firstNot: 0, firstNotConv: 0, noLead: 0, noLeadConv: 0, leadDec: 0, chases: 0, trailFirst: 0, trailTook: 0, trailTookRec: 0, trailNot: 0, trailNotRec: 0 })
+  return { lead: [D(), D()], trail: [Tt(), Tt()], byLeader: [Rr(), Rr()] }
+}
+
 function newAcc() {
   const askT = () => ({
     n: 0, hit: 0, certain: 0, certainHit: 0, unc: 0, uncHit: 0,
@@ -206,6 +220,7 @@ function newAcc() {
     split, asks: [askT(), askT()], decl: [declT(), declT()], locks, tempo: [tempoT(), tempoT()],
     fate: [fateT(), fateT()], miss: [missT(), missT()],
     races: RACES ? newRaceAcc() : null,
+    race42: RACE42 ? newRace42Acc() : null,
   }
 }
 
@@ -230,6 +245,66 @@ function walk(rec, cfPol, acc) {
   const race = {}
   const relClass = (own) => (own >= 4 ? 'own' : own === 3 ? 'even' : 'opp')
   const raceOf = (b) => (race[b] ||= { first: -1, firstAt: -1, firstHit: false, asks: [0, 0], hits: [0, 0], first4: -1, lockBy: -1, lockAt: -1, lockBroken: 0, takeBacks: [0, 0] })
+  // §3.8q: the opened, unresolved, even sets in which side T holds four (a lead) or two (a trail) right now
+  const race42Ctx = (T) => {
+    const lead = [], trail = []
+    for (const b of BOOKS) {
+      if (resolved[b] || split0[b] !== 3) continue
+      const R = race[b]
+      if (!R || R.first < 0) continue
+      const h = holdingOf(T, b)
+      if (h === 4) lead.push(b)
+      else if (h === 2) trail.push(b)
+    }
+    return lead.length || trail.length ? { lead, trail, actChase: false, actHit: false } : null
+  }
+  // a take-back is legal for the asking seat when it holds a card of the set and a card of the set sits publicly with the other side
+  const takeBackLegal = (T, seat, b) => {
+    if (!hands[seat].some((c) => bookOf(c) === b)) return false
+    for (const c of BOOK_CARDS.get(b)) { const at = publicAt.get(c); if (at !== undefined && side(at) !== T) return true }
+    return false
+  }
+  const race42Act = (T, seat, card, target, hit, ctx, isCf) => {
+    const rb = bookOf(card), cert = publicAt.get(card) === target
+    const A42 = acc.race42
+    if (ctx.lead.length) {
+      const L = A42.lead[T]
+      const chase = ctx.lead.includes(rb)
+      if (!isCf) {
+        L.n++
+        if (chase) { if (cert) L.chaseC++; else L.chaseU++; if (hit) L.chaseHit++; const x = seatOf.get(card); if (x !== undefined && side(x) === T) L.chaseSure++ } else if (cert) L.elseC++; else L.elseU++
+        ctx.actChase = chase; ctx.actHit = hit; ctx.actLead = chase ? (cert ? 0 : 1) : cert ? 2 : 3
+        for (const b of ctx.lead) { const R = race[b]; if (R.first4 === T) { R.leadDec = (R.leadDec || 0) + 1; if (rb === b) R.chases = (R.chases || 0) + 1; if (!R.firstLead) R.firstLead = { chased: rb === b } } }
+      } else {
+        L.cfN++
+        if (ctx.actLead !== undefined) L.joint[ctx.actLead * 4 + (chase ? (cert ? 0 : 1) : cert ? 2 : 3)]++
+        if (chase) { if (cert) L.cfChaseC++; else L.cfChaseU++; if (hit) L.cfChaseHit++; if (ctx.actChase) { L.both++; if (ctx.actHit) L.bothActHit++; if (hit) L.bothCfHit++ } } else if (cert) L.cfElseC++; else L.cfElseU++
+      }
+    }
+    if (ctx.trail.length) {
+      const Tr = A42.trail[T]
+      const into = ctx.trail.includes(rb)
+      const legal = ctx.trail.some((b) => takeBackLegal(T, seat, b))
+      if (!isCf) {
+        Tr.n++; if (legal) Tr.legal++; ctx.actTrail = into && cert ? 0 : into ? 1 : cert ? 2 : 3
+        if (into && cert) { Tr.takeBack++; if (legal) Tr.legalTakeBack++ } else if (into) Tr.intoU++; else if (cert) Tr.elseC++; else Tr.elseU++
+        for (const b of ctx.trail) { const R = race[b]; if (R.first4 >= 0 && R.first4 !== T && !R.firstTrail) R.firstTrail = { took: rb === b && cert } }
+      } else {
+        Tr.cfN++
+        if (ctx.actTrail !== undefined) Tr.joint[ctx.actTrail * 4 + (into && cert ? 0 : into ? 1 : cert ? 2 : 3)]++
+        if (into && cert) { Tr.cfTakeBack++; if (legal) Tr.legalCfTakeBack++ } else if (into) Tr.cfIntoU++; else if (cert) Tr.cfElseC++; else Tr.cfElseU++
+      }
+    }
+  }
+  const finishRace42 = (R, outcomeTeam) => {
+    if (R.first4 < 0) return
+    const X = R.first4, B = acc.race42.byLeader[X]
+    B.n++
+    const conv = outcomeTeam === X
+    if (R.firstLead) { if (R.firstLead.chased) { B.firstChased++; if (conv) B.firstChasedConv++ } else { B.firstNot++; if (conv) B.firstNotConv++ } } else { B.noLead++; if (conv) B.noLeadConv++ }
+    B.leadDec += R.leadDec || 0; B.chases += R.chases || 0
+    if (R.firstTrail) { B.trailFirst++; const rec = outcomeTeam === 1 - X; if (R.firstTrail.took) { B.trailTook++; if (rec) B.trailTookRec++ } else { B.trailNot++; if (rec) B.trailNotRec++ } }
+  }
   const finishRace = (b, outcomeTeam, i) => {
     const R = raceOf(b)
     const cls = split0[b] >= 4 ? 'amaj' : split0[b] === 3 ? 'even' : 'bmaj'
@@ -245,6 +320,7 @@ function walk(rec, cfPol, acc) {
     if (R.lockBy >= 0) { K.lockBy[R.lockBy]++; if (outcomeTeam === R.lockBy) { K.lockTook[R.lockBy]++; K.hold[R.lockBy] += i - R.lockAt; K.holdN[R.lockBy]++ } }
     K.lockBroken += R.lockBroken
     K.takeBacks[0] += R.takeBacks[0]; K.takeBacks[1] += R.takeBacks[1]
+    if (RACE42 && cls === 'even') finishRace42(R, outcomeTeam)
   }
   let lastAskTeam = -1
   let clinchAt = null
@@ -957,6 +1033,8 @@ function walk(rec, cfPol, acc) {
         if (noHitYet) { AK.preHit++; if (dc === hc) AK.preHitAgree++ }
         if (certain) R.takeBacks[T]++
       }
+      let ctx42 = null
+      if (RACE42) { ctx42 = race42Ctx(T); if (ctx42) race42Act(T, ev.asker, ev.card, ev.target, ev.hit, ctx42, false) }
       if (T !== lastAskTeam) { acc.tempo[T].runs++; lastAskTeam = T }
       if (pendingMiss) {
         if (pendingMiss.side === T) { const M = acc.miss[T]; M.oppAsks += pendingMiss.oppAsks; M.oppHits += pendingMiss.oppHits; if (pendingMiss.first) M.oppFirstCertain++; pendingMiss = null }
@@ -1030,6 +1108,7 @@ function walk(rec, cfPol, acc) {
             CK.deal[dc].n++; if (cfHit) CK.deal[dc].hit++
             CK.hold[hc].n++; if (cfHit) CK.hold[hc].hit++
           }
+          if (RACE42 && ctx42) race42Act(T, ev.asker, a.card, a.target, cfHit, ctx42, true)
         }
       }
       if (!ev.hit) {
@@ -1527,6 +1606,37 @@ function report(acc, head) {
       const K = RS.sets[cls][st]
       if (K.n === 0) continue
       console.log(`| ${cls} | ${st} | ${pct(K.first4[0], K.n)} / ${pct(K.first4[1], K.n)} / ${pct(K.first4None, K.n)} | ${pct(K.first4Took[0], K.first4[0])} / ${pct(K.first4Took[1], K.first4[1])} | ${pct(K.lockBy[0], K.n)} / ${pct(K.lockBy[1], K.n)} | ${pct(K.lockTook[0], K.lockBy[0])} / ${pct(K.lockTook[1], K.lockBy[1])} | ${f2(K.lockBroken / K.n)} | ${f2(K.hold[0] / Math.max(1, K.holdN[0]))} / ${f2(K.hold[1] / Math.max(1, K.holdN[1]))} | ${f2(K.takeBacks[0] / K.n)} / ${f2(K.takeBacks[1] / K.n)} |`)
+    }
+    console.log('')
+  }
+  if (acc.race42) {
+    const Q = acc.race42
+    const sgp = (x) => (Number.isFinite(x) ? (x >= 0 ? '+' : '') + (100 * x).toFixed(1) + '%' : '-')
+    console.log('-- MONET.md §3.8q (--race42): LEAD decisions - an ask decision by a side holding four of six in an opened, unresolved, even-by-the-deal set (by the tracked deal). The chase = the ask went into such a set. Actual, then the counterfactual at the same decisions --')
+    console.log('| side | lead decisions/g | chase: certain / uncertain | chase hit | chase sure-miss | elsewhere certain / uncertain | cf chase: c / u | cf elsewhere: c / u | Δ chase (actual − cf) | both chased: n, actual hit / cf hit |')
+    console.log('|---|---|---|---|---|---|---|---|---|---|')
+    for (const t of [0, 1]) {
+      const L = Q.lead[t]
+      const ch = (L.chaseC + L.chaseU) / Math.max(1, L.n), cfch = (L.cfChaseC + L.cfChaseU) / Math.max(1, L.cfN)
+      console.log(`| ${t === 0 ? 'A' : 'B'} | ${per(L.n, g)} | ${pct(L.chaseC, L.n)} / ${pct(L.chaseU, L.n)} | ${pct(L.chaseHit, L.chaseC + L.chaseU)} | ${pct(L.chaseSure, L.chaseC + L.chaseU)} | ${pct(L.elseC, L.n)} / ${pct(L.elseU, L.n)} | ${pct(L.cfChaseC, L.cfN)} / ${pct(L.cfChaseU, L.cfN)} | ${pct(L.cfElseC, L.cfN)} / ${pct(L.cfElseU, L.cfN)} | ${L.cfN ? sgp(ch - cfch) : '-'} | ${L.both}, ${pct(L.bothActHit, L.both)} / ${pct(L.bothCfHit, L.both)} |`)
+    }
+    console.log('')
+    console.log('-- §3.8q TRAIL decisions - the side holding two of six in such a set. The take-back = a certain ask into it; legal when the asking seat holds a card of the set and a card of it sits publicly with the other side --')
+    console.log('| side | trail decisions/g | take-back legal | take-back | into the set, uncertain | elsewhere certain / uncertain | cf take-back | cf into, uncertain | cf elsewhere: c / u | Δ take-back (actual − cf) | among legal: take-back actual / cf |')
+    console.log('|---|---|---|---|---|---|---|---|---|---|---|')
+    for (const t of [0, 1]) {
+      const T2 = Q.trail[t]
+      console.log(`| ${t === 0 ? 'A' : 'B'} | ${per(T2.n, g)} | ${pct(T2.legal, T2.n)} | ${pct(T2.takeBack, T2.n)} | ${pct(T2.intoU, T2.n)} | ${pct(T2.elseC, T2.n)} / ${pct(T2.elseU, T2.n)} | ${pct(T2.cfTakeBack, T2.cfN)} | ${pct(T2.cfIntoU, T2.cfN)} | ${pct(T2.cfElseC, T2.cfN)} / ${pct(T2.cfElseU, T2.cfN)} | ${T2.cfN ? sgp(T2.takeBack / T2.n - T2.cfTakeBack / T2.cfN) : '-'} | ${pct(T2.legalTakeBack, T2.legal)} / ${pct(T2.legalCfTakeBack, T2.legal)} |`)
+    }
+    console.log('')
+    console.log('-- §3.8q per race, by the first side to four (the leader): its first lead decision and the outcome; the trailer\'s first trail decision and the recovery --')
+    console.log('| leader | races | reconciled with --races | first lead decision: chased (converted) / not (converted) / none (converted) | lead decisions a race, chases a race | trailer\'s first: took back (recovered) / not (recovered) / none |')
+    console.log('|---|---|---|---|---|---|')
+    for (const t of [0, 1]) {
+      const B = Q.byLeader[t]
+      let f4 = 0
+      if (acc.races) for (const st of ['A', 'B', 'none']) f4 += acc.races.sets.even[st].first4[t]
+      console.log(`| ${t === 0 ? 'A' : 'B'} | ${B.n} | ${f4 === B.n ? 'EXACT' : 'MISMATCH ' + f4} | ${pct(B.firstChased, B.n)} (${pct(B.firstChasedConv, B.firstChased)}) / ${pct(B.firstNot, B.n)} (${pct(B.firstNotConv, B.firstNot)}) / ${pct(B.noLead, B.n)} (${pct(B.noLeadConv, B.noLead)}) | ${f2(B.leadDec / Math.max(1, B.n))}, ${f2(B.chases / Math.max(1, B.n))} | ${pct(B.trailTook, B.trailFirst)} (${pct(B.trailTookRec, B.trailTook)}) / ${pct(B.trailNot, B.trailFirst)} (${pct(B.trailNotRec, B.trailNot)}) / ${pct(B.n - B.trailFirst, B.n)} |`)
     }
     console.log('')
   }
