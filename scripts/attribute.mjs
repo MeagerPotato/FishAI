@@ -46,6 +46,9 @@ const PREFIX = argOf('--prefix', '')
 const PER_SEED = has('--per-seed')
 const VA = argOf('--a', 'v0.4c')
 const VB = argOf('--b', 'v0.4c')
+// §3.8r: style keys laid over the home arms' versions (the way --cf-knobs overlays the counterfactual)
+const A_KNOBS = argOf('--a-knobs', '')
+const B_KNOBS = argOf('--b-knobs', '')
 const CF = argOf('--cf', 'v0.4c')
 // --locks: the declare priced on the records (a plan per declarable set per A seat per window; ~15 s a cell)
 const LOCKS = process.argv.includes('--locks')
@@ -1651,10 +1654,10 @@ const t0 = Date.now()
 const acc = newAcc()
 let head
 if (HOME > 0) {
-  const polA = MON.monetPolicy(VA)
-  const polB = MON.monetPolicy(VB)
+  const polA = withKnobs(MON.monetPolicy(VA), A_KNOBS)
+  const polB = withKnobs(MON.monetPolicy(VB), B_KNOBS)
   for (let g = 0; g < HOME; g++) walk(playHome(`${LABEL}-${g}`, polA, polB), cfPol, acc)
-  head = `home, A=${VA} (team 0) vs B=${VB} (team 1), ${HOME} games (${LABEL}-*), cf=${CF}, ${((Date.now() - t0) / 1000).toFixed(1)}s`
+  head = `home, A=${VA}${A_KNOBS ? ' +' + A_KNOBS : ''} (team 0) vs B=${VB}${B_KNOBS ? ' +' + B_KNOBS : ''} (team 1), ${HOME} games (${LABEL}-*), cf=${CF}, ${((Date.now() - t0) / 1000).toFixed(1)}s`
 } else if (RECORDS) {
   let header = null
   const perFile = new Map()
