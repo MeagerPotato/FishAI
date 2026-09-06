@@ -443,6 +443,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.17** — the §3.9 read (2026-09-06) | **§3.9's protocol on v0.9's vector** — the shipped bot under all six conditions, nothing fitted, nothing shipped (§3.8m) | ≥ 50.0% at twelve seeds — **read 2026-09-06: NOT MET. 41.31% on §3.8l's twelve (SD 1.29) and 40.11% on §3.8f's (SD 1.55); the panel monotone, v02 and v03 beaten on every seed (74.18 / 70.40), v04, v05 and v06 on none (47.62 / 46.81 / 44.72); declare accuracy ≥ 99.2% and the fourteen fault counters zero on every restated-adapter cell; §6.2's table clean, the per-process op counts equal to the engine's on 73 of 73 cells; the number reproduced to the hundredth on all twelve seeds by an independently built arm, the records identical on ten. Conditions 1 and 3 fail; 2, 4, 5 and 6 hold. Nothing ships; the §0.3 fork is the owner's (row 19)** | the pre-registered read of the six conditions; the panel on the same twelve seeds; a second adapter written from the documented protocol by an independent agent, compared game for game | M |
 | **v0.16** | **the licence likelihood, calibrated** — §3.8l: a seat that asked into a set holds about 1.5 of its alive cards whatever their number (§3.8k); three knob families calibrated on the records through §3.8k's seam and read through the same falsifiers; `licenceHold` at 1.5 selected, the per-cell `choiceKappa` families void (each adds hard zeros at true holders) | ≥ 43.31% (the base on §3.8l's twelve, 41.31%, + 2.00) — **read 2026-09-06: 40.58% against 41.31%, −0.74 paired (SD 1.58, SE 0.46), ahead on 4 of 12, inside the floor; behind 0.024 sets a game on 10 of 12 — the wrong declares double through the chain over the held table, a path the falsifiers never read; recorded, not shipped; the belief axis closes** | the records study first (fit on three seeds, 39 runs; held out on 21), then one paired read abroad on twelve fresh seeds | M |
 | **v0.13** | **the chase appetite** — §8.3 row 13's rung and the last ask-ranker term to be tried: a second, separately fitted appetite paying §3.8h's `lock` credit to the UNCERTAIN chases §3.8h's gate refuses, flat in the hit chance with the scaled form as its control (`chase`, `chaseScaled`, §3.8i) | ≥ 42.11% (the corrected v0.9 + 2.00) on twelve fresh seeds, and a marker gate on the three fit seeds before those twelve are spent — **read 2026-09-04: CLOSED ON THE FIT, twelve seeds never spent. Every dose loses, monotonically: −1.08, −2.50, −5.17, −7.56 at `chase` 2.0/2.5/3.0/4.0 and −3.44 at the scaled control. On the asks it moved the base's preferred ask hit 100.0% against 29.7–50.1% taken; the chase rate did not move (31.5 → 31.8%, bar +1.5) because the asks it buys are sure misses into the side's own majority, not chases. Nothing ships** | fit abroad on three fresh seeds over seven arms; markers from the records through §3.8g's instrument, with bars and a ceiling | M |
 | **v0.12** | **the closing ask** — §3.8g's rung: a ranker credit for an ask that would bring a set the side already holds most of within reach, counted by certainty and by belief (`closing`, `closingBelief`, §3.8h) | ≥ 42.1% (the corrected v0.9 + 2.00) on twelve fresh seeds — **read 2026-09-04: 40.69% against the corrected v0.9's 40.11%, +0.58 paired (SD 0.79, SE 0.23), ahead on 9 of 12; every pre-registered marker moved as written and each by about a tenth of its gap; the belief form loses on every seed; nothing ships** | fit abroad on three fresh seeds, confirm on twelve; markers from the records through §3.8g's instrument | M |
@@ -5202,6 +5203,290 @@ cells, the 25 records, every botlog with its coverage line), the tree export `$S
 of `bae7b7b`, md5 16f52e16…), the arms `$SP/arm_v16` from `$SP/mkarm-v16.mjs` (the v0.11 MUSTFIX
 bot.mjs, md5 330328d9…, unchanged), and the draw `$SP/seeds-v16.mjs`.
 
+### 3.8m Monet v0.17 — the §3.9 read on v0.9's vector: the ladder's closing artefact, and nothing ships
+
+#### Pre-registration — written 2026-09-06, before any panel cell or second-arm cell was played
+
+**Opened by row 18**, taken under the owner's standing authorization of 2026-09-05. §3.8l closed the
+belief axis, the seventh measured negative in a row; the ask ranker (§3.8d–§3.8i), the assignment
+(§3.8j), the inference (§3.8k) and the likelihood (§3.8l) are measured out, and the search arm at
+the affordable budget was a no-op abroad (§3.8a). What the ladder owes now is not a mechanism but
+the number: **§3.9's six conditions, executed in full on v0.9's vector — the shipped bot — and
+reported whether met or not.** Nothing is fitted, nothing ships, no dose is read; the deliverable
+is the table the owner's fork in §0.3 needs (ship v0.9 in the browser at about 40% and publish the
+negative result, or fund the lab-only search at twice the budget). The version number is kept so
+the ladder's rows stay one per decision, as "the gate readout (was to be v0.5)" did.
+
+**Condition 1 and 2 — the win rate against SESTINA v1.0, every seed, the SD.** Already read twice,
+on seed sets that share nothing, both on the MUSTFIX bridge with the identity pin passed: **§3.8l's
+twelve** (41.31%, SD 1.29 across seeds, SE 0.37, every seed in §3.8l's record; 14,400 games) is the
+read, and **§3.8f's twelve** (40.11%) its replication. The bar is 50.0% at the paired floor:
+**not met, by about nine points, on both.** No new cell is spent on this condition — a third twelve
+would say nothing the floor does not already say, and §6.5 keeps its seeds.
+
+**Condition 3 — the panel.** `monet-v17-base` (v0.9's vector: `MONET_ARM` v0.4c with `contest` 0.6
+overlaid, MUSTFIX, on the export of `4658a51`, main after #34, whose `lib/` is byte-identical to
+`bae7b7b`'s) against the lineage in their engine — **`v02 v03 v04 v05 v06`**, the panel §6.4 names —
+on §3.8l's twelve seeds, 1,200 games a cell, **60 cells**, every cell recorded. Read as: **"beats"
+= the twelve-seed mean is above 50.0% by at least the floor (≥ 52.00), every seed reported**;
+**"monotone" = Monet's win rate is ordered v02 ≥ v03 ≥ v04 ≥ v05 ≥ v06 ≥ SESTINA**, ties inside the
+floor allowed. §6.4's inherited levels at v0.1 were 67.42 / 62.06 / 34.25 / 33.31 / 32.86% against
+27.83% at SESTINA.
+
+**Condition 4 — declare accuracy ≥ 98.0% and zero fault counters.** Declare accuracy per cell from
+the engine's line, on the twelve §3.8l base cells and the 60 panel cells. The fault counters are
+the adapter's **fourteen, by name** (`traceFallback`, `traceErrorBranch`, `askNotAsk`,
+`pollNotWindowMove`, `passNotPass`, `passNotCandidate`, `declareShapeBad`, `planMismatch`,
+`planMismatchP`, `booksDisagree`, `successHolderClash`, `viewInvariant`, `forcedOwnTeamOut`,
+`forcedNone`), summed over every process of every cell from the botlogs' `COVER` lines, **with the
+wire check restated** (§3.8l's disclosure): `planMismatch` / `planMismatchP` now compare the
+declaration that goes out — `decide()`'s own assignments and p — with the engine's own
+`planClaimFor(view, policy, book)`, the planner every declare branch of `decide()` runs; the old
+capacity-greedy restatement is kept as `planGreedyDiff` / `planGreedyDiffP`, information and not a
+fault. The restatement touches no play; the adapter's md5 is recorded in `$SP/monet-v17/ARM_MD5`
+beside the v0.11 arm's, and the identity pin of condition 5 proves the play unchanged. The engine's
+own lines — `limit hits`, `FATAL` — are read on every cell. §3.8l's twelve base cells were played by
+the previous adapter, whose stale counters fired on every cell; for them the fourteen are reported
+as they read, with the two stale ones so labelled.
+
+**Condition 5 — §6.2's controls, the mirror cell not among them.** (i) **Op coverage, expectations
+written now** from the twelve §3.8l base cells against SESTINA, per cell: `opAsk` 49,862–53,733 ·
+`opPoll` 337,151–364,791 · `opPass` 252–305 (**> 0, the tripwire**) · `passfixDeclines` 270–327 ·
+`mustfixDeclines` 344–490 · `opForced` 1,821–3,218 · `lastResort` 22–55 · `decisions`
+389,988–420,850 · `declaresEmitted` 10,203–11,587. Against the lineage the bands are expected to
+shift with the opponent's play; the expectation for every panel cell is **every op exercised and
+`opPass` > 0**, the totals reported, and `opAsk` / 1,200 cross-checked against the engine's asks a
+game. (ii) **Byte-exact null arm**: the restated adapter replays §3.8l's base cell at 6269924
+against SESTINA and must reproduce it — 40.75%, every engine line but `elapsed` — **before any
+panel cell is played**. (iii) **Cross-instrument pin**: condition 6's arm is the cross-instrument.
+(iv) **Paired deals**: every cell on §3.8l's twelve seeds at 200 deals × 6 rotations. (v) **Fault
+counters**: condition 4. (vi) **Calibration harness**: the twelve base cells' `calib` files (own
+asks realised ≈ 50,000–54,000 a cell, believed against realised per decile, the licensed and the
+uncertain subsets); expectation **aggregate |bias| < 0.01 and the worst decile |bias| < 0.10 on
+every cell**. (vii) **Completion**: every cell has a win-rate line. (viii) **Home regression**: not
+applicable — nothing ships; **the mirror cell is not run.**
+
+**Condition 6 — a second, independently built arm on the same spec.** An adapter written by an
+independent agent from FishLab's *documented* wire protocol alone (`docs/BOT_PACKAGE.md`,
+`docs/PLAY.md` — the documented protocol, permitted; no FishLab source read or copied; the present
+adapter never shown to its author, nor any `bot.mjs`), to the spec at `$SP/monet-v17/INDEP-SPEC.md`,
+written before the agent was started: `monetPolicy('v0.9')` from the same export at every decision
+through `decideExplained(view, policy, seed)`; the view rebuilt from the host's `state` and
+`history`; the decision seed `hashSeed(\`fishlab:${seat}:${sortedHand}:${eventCount}:${ordinal}\`)()`;
+MUSTFIX's two semantics (§3.8f: a compelled claim below certainty answered `none` in the optional
+poll; the forced endgame answered about the polled set — FishAI's own claim when it names that set,
+otherwise the capacity-greedy plan for it, which is what the present bridge sends there and is
+disclosed here as a choice of the instrument, not of the bot); the clinch left to the host. The
+arm plays SESTINA on §3.8l's twelve seeds, every cell recorded. **Reproduction = IDENTICAL to
+§3.8l's base cell on every seed** (every engine line but `elapsed`) — the seed rule makes that the
+expectation, not a hope; failing identity, each difference is located to a view or a request
+before the number is read, and the twelve-seed mean is reported paired against the base's with the
+floor. An agent that cannot finish is reported as such; a cell it cannot play is void, not a
+failure of condition 6.
+
+**Void, not negative.** A cell without a win-rate line; the identity pin not identical; a hello line
+not carrying its arm's label; any of the fourteen counters non-zero on a restated-adapter cell (now
+a real fault) — each voids the cell and is investigated before anything is read from it.
+
+**Predictions, before any cell.** P1 the panel: **v02 and v03 beaten** (≥ 70% and ≥ 65%); **v04, v05
+and v06 not beaten** — each between 44 and 50% (the inherited 33–34% plus the 13.5 points v0.9
+gained over v0.1 against SESTINA), so **condition 3 fails**, with the order monotone. P2 the second
+arm **IDENTICAL on 12 of 12**; if not, the discrepancy sits in the forced endgame or the declare
+window and the twelve-seed mean is within ±2.00 of 41.31. P3 calibration: aggregate |bias| < 0.01 on
+12 of 12, worst decile < 0.10. P4 declare accuracy ≥ 99.3% on every cell, the panel included. P5
+the fourteen counters **zero on every restated-adapter cell**; `planGreedyDiff` at 2–4% of declares.
+P6 the verdict: **conditions 1 and 3 not met, 2, 4, 5 and 6 met — Monet v1.0 does not exist at
+v0.9's vector, and the ladder's number is 41.31% on §3.8l's twelve and 40.11% on §3.8f's.**
+
+**What may not be concluded.** No mechanism, no dose, nothing about why the lineage reads as it
+does; nothing ships; the §0.3 fork is the owner's, and this record only puts the table in front of
+it.
+
+**Seeds.** §3.8l's twelve, replayed for pairing (spent seeds replayed, not sampled); 6269924
+replayed for the identity pin. No fresh draw.
+
+#### Record — 2026-09-06
+
+**Monet v1.0 does not exist at v0.9's vector, and §3.9's table now says so in full.** 41.31%
+against SESTINA v1.0 on §3.8l's twelve seeds and 40.11% on §3.8f's (conditions 1 and 2); the
+panel monotone, v02 and v03 beaten on every seed and v04, v05 and v06 beaten on none — 47.6 /
+46.8 / 44.7% — so condition 3 fails; declare accuracy above 99.2% and every one of the fourteen
+fault counters zero on every cell played by the restated adapter (4); §6.2's controls all passing,
+the per-process op counts equal to the engine's own on 73 of 73 cells (5); and the number
+reproduced to the hundredth on all twelve seeds — the records identical on ten — by a second
+adapter written from the protocol document alone (6). Nothing ships. The fork of §0.3 is the
+owner's, and row 19 puts it in front of the owner.
+
+**Condition 1 and 2 — not met, twice.** The two reads of v0.9's vector against SESTINA v1.0 on the
+MUSTFIX bridge, each twelve seeds × 200 deals × 6 rotations, every seed on record:
+
+> | read | seeds | mean | SD across seeds | SE | min – max | bar |
+> |---|---|---|---|---|---|---|
+> | §3.8l's twelve (the read) | 6269924 7549725 5242661 6002277 9277927 1700521 7863927 1836519 8279242 7472431 4385920 1411503 | **41.31%** | 1.29 | 0.37 | 39.42 – 43.00 | 50.0 — **not met by 8.7** |
+> | §3.8f's twelve (the replication) | 2344938 4334282 4920114 5682873 5690135 6007102 6848576 7140858 7951876 8516315 8816427 9677918 | **40.11%** | 1.55 | 0.45 | 37.25 – 42.33 | 50.0 — **not met by 9.9** |
+
+The two seed sets differ by 1.20 points with a standard error of 0.58 between them — two seeds'
+worth of the same bot, not two bots. Every one of the 24 seeds is under 44%.
+
+**Condition 3 — the panel: two of five beaten, the order monotone, and the wall where §6.4 put it.**
+`monet-v17-base` against `v02 v03 v04 v05 v06` in their engine on the twelve seeds, 60 cells,
+72,000 games, every cell recorded and every lane clean — `FATAL` 0 and `COVERAGE FAIL` 0 on all
+60, every hello line carrying the label, `limit hits 0%` everywhere:
+
+> | seed | v02 | v03 | v04 | v05 | v06 | SESTINA (§3.8l) |
+> |---|---|---|---|---|---|---|
+> | 6269924 | 74.33 | 70.58 | 44.75 | 48.08 | 45.08 | 40.75 |
+> | 7549725 | 73.17 | 69.50 | 47.67 | 43.58 | 43.83 | 39.58 |
+> | 5242661 | 71.75 | 71.83 | 46.92 | 45.92 | 42.67 | 39.42 |
+> | 6002277 | 75.92 | 69.92 | 49.33 | 48.00 | 44.50 | 42.83 |
+> | 9277927 | 73.83 | 69.42 | 48.75 | 47.67 | 43.75 | 41.00 |
+> | 1700521 | 73.58 | 72.33 | 47.08 | 47.17 | 45.25 | 40.83 |
+> | 7863927 | 73.83 | 70.17 | 47.33 | 46.50 | 43.92 | 42.17 |
+> | 1836519 | 74.17 | 70.33 | 48.25 | 47.83 | 46.58 | 41.42 |
+> | 8279242 | 75.42 | 71.92 | 43.83 | 47.83 | 43.67 | 42.42 |
+> | 7472431 | 75.67 | 69.25 | 47.83 | 44.67 | 46.42 | 42.58 |
+> | 4385920 | 74.50 | 70.17 | 49.83 | 47.42 | 47.17 | 39.75 |
+> | 1411503 | 74.00 | 69.33 | 49.83 | 47.00 | 43.83 | 43.00 |
+> | **mean** | **74.18** (SD 1.15) | **70.40** (SD 1.07) | **47.62** (SD 1.86) | **46.81** (SD 1.42) | **44.72** (SD 1.39) | **41.31** (SD 1.29) |
+> | seeds above 50% | 12 of 12 | 12 of 12 | 0 of 12 | 0 of 12 | 0 of 12 | 0 of 12 |
+> | sets a game, Monet − opponent | 5.41 − 3.59 | 5.22 − 3.78 | 4.44 − 4.56 | 4.40 − 4.60 | 4.32 − 4.69 | 4.19 − 4.81 |
+> | beaten at the floor (mean ≥ 52.00) | **yes** | **yes** | no | no | no | — |
+
+**v02 and v03 are beaten on every seed; v04, v05 and v06 on none.** The order is monotone —
+74.18 ≥ 70.40 ≥ 47.62 ≥ 46.81 ≥ 44.72 ≥ 41.31 — and the panel is what §6.4 said it was: the two
+rungs Monet clears, then a wall at v0.4, "the rung that carries the lineage's whole strength", with
+the frontier 6.3 points behind the wall. Against v0.1's inherited levels (67.42 / 62.06 / 34.25 /
+33.31 / 32.86 / 27.83%) the ladder gained +6.8 and +8.3 on the two it already beat and **+13.4 /
++13.5 / +11.9 / +13.5 on the four it does not** — the same thirteen points on each, which says the
+shipped gains (v0.4c's λ, v0.9's contest credit, the MUSTFIX) are worth the same against the wall
+as against the frontier and bought no ground on the wall itself. From v04 to SESTINA Monet loses
+0.1 to 0.6 sets a game. **Condition 3 is not met, on three of five.**
+
+**Condition 4 — declare accuracy and the fault counters.** Declare accuracy on the twelve §3.8l base
+cells: 99.51–99.79% (bar 98.0%); on the sixty panel cells **99.20–99.82%** (the minimum a v03
+cell) — every cell of the 73 read here above 99.2%. The fourteen fault counters,
+summed from the per-process cover files (§6.2: never from `bot.log` — and the botlogs did lose
+lines here: 33–36 `COVER` lines kept of 36 processes on every cell, so the botlog sums quoted in
+§3.8l's disclosure, 220–456 a cell, were undercounts of the 220–459 the files hold):
+
+> | cells | adapter | the fourteen | of which stale | `planGreedyDiff` / `planGreedyDiffP` (information) |
+> |---|---|---|---|---|
+> | §3.8l's twelve base cells | v0.11 MUSTFIX (md5 330328d9…) | twelve of fourteen **zero** on 12 of 12; `planMismatch` 220–459, `planMismatchP` 543–870 a cell | both — the greedy restatement against the joint chain | — |
+> | the identity cell 6269924 | restated (md5 c1fc7316…) | **all fourteen zero** | — | 360 / 723 — the same numbers the stale counters read on the same cell under the old adapter (360 / 723): the disclosure's equivalence, exact |
+> | the 60 panel cells | restated | **all fourteen zero on 60 of 60** | — | 186–782 a cell against v02, v03, v05 and v06; 8,151–18,226 against v04, where the count takes in the compelled claims MUSTFIX then declined (the check runs before the decline, and the wire check ran on every one of them and stayed at zero) |
+> | the second arm's twelve cells | independent (its own counters) | `viewFaults`, `fallbacks`, `errors`, `forcedNone` **zero** on every cell; `FATAL` 0 | — | — |
+
+The engine's own lines: `limit hits 0%` and no `FATAL` on every cell read here.
+
+**Condition 5 — §6.2's controls.** (i) **Op coverage.** The pre-registration's bands were summed
+from the botlogs; §6.2 says to sum the per-process files, and the difference is exactly the one
+§6.2 warned of (a process in 36 lost to the shared descriptor). The bands from the files, over the
+twelve base cells: `opAsk` **53,224–54,679** — equal to the engine's own count of A's asks on
+**13 of 13** cells (the identity cell included), the cross-check §6.2 asks for, exact; `opPoll`
+361,224–369,201; `opPass` **265–305, > 0 on every cell** (the tripwire); `passfixDeclines`
+278–327; `mustfixDeclines` 365–510; `opForced` 2,050–3,284; `lastResort` 22–55;
+`declaresEmitted` 10,709–11,856; `decisions` 417,540–426,846; `newGames` 3,600 = 1,200 games ×
+3 seats on every cell. The sixty panel cells, from the files: `opAsk` 52,761–61,376 — **equal to
+the engine's count of A's asks on 60 of 60**; `opPoll` 356,064–393,303; `opPass` **245–349, > 0
+on 60 of 60**; `passfixDeclines` 263–415; `opForced` 1,067–4,625; `lastResort` 11–82;
+`declaresEmitted` 11,039–13,544; `decisions` 412,219–456,173; `newGames` 3,600 on every cell;
+every op exercised on every cell. One band moves with the opponent and is worth a line:
+`mustfixDeclines` — the compelled, below-certainty claims MUSTFIX answers `none` in the optional
+poll — runs 368–1,035 a cell against v02, v03, v05 and v06 and **12,673–24,561 against v04**, ten
+to twenty a game: v04's games spend long stretches in the position where FishAI's rule set would
+compel Monet to declare and this host polls instead, and the forced endgame (`opForced`
+2,030–3,385, `lastResort` 27–58 against v04) settles those sets as §3.8f designed. Not a fault;
+a property of the pairing, recorded so the next reader of a v04 cell is not surprised by it.
+(ii) **Byte-exact null arm**: the restated
+adapter replayed 6269924 against SESTINA before any panel cell — **IDENTICAL** to §3.8l's base
+cell, every engine line but `elapsed` (40.75%, n = 1,200), and identical on every one of the
+adapter's own counters. (iii) **Cross-instrument pin**: condition 6. (iv) **Paired deals**: every
+cell on the twelve seeds at 200 × 6. (v) **Fault counters**: condition 4. (vi) **Calibration
+harness**, the twelve base cells' own asks (50,127–54,679 realised a cell), believed against
+realised: aggregate |bias| **0.0046–0.0096** (bar 0.01, **12 of 12**), worst decile |bias|
+**0.065–0.098** (bar 0.10, **12 of 12**); the licensed subset's bias +0.004 to +0.011 (its
+uncertain part +0.009 to +0.022), the [0.3, 0.5) deciles over-believed by 0.02–0.04 and the
+[0.6, 0.9) deciles under-believed by 0.02–0.10 on every one of the twelve — the same shape §3.3a
+first measured: the belief is a little too sure of its long shots and not sure enough of its good
+ones. (vii) **Completion**: every cell
+named here has a win-rate line. (viii) **Home regression**: not applicable, nothing ships; **the
+mirror cell was not run.**
+
+**Condition 6 — the second arm reproduces the number exactly.** The independent adapter
+(`$SP/arm_v17_indep/monet-v17-indep`: `bot.mjs` md5 4f524e71…, with `arm.mjs` and
+`translate.mjs`; its author read `docs/BOT_PACKAGE.md` and `docs/PLAY.md` and nothing else of
+FishLab's, never an adapter of this project's, and built the view directly from the host's `state`
+and `history` — checked at home against FishAI's own `seatView` on 87,575 views with 0 differences
+and 16,449 of 16,449 decisions in parity; its `NOTES.md` is beside it) played the twelve seeds
+against SESTINA, every cell recorded, `FATAL` 0 and its own `viewFaults`, `fallbacks` and `errors`
+0 on every cell:
+
+> | seed | base (§3.8l) | second arm | the record, game for game |
+> |---|---|---|---|
+> | 6269924 · 7549725 · 5242661 · 6002277 · 1700521 · 7863927 · 8279242 · 7472431 · 4385920 · 1411503 | 40.75 · 39.58 · 39.42 · 42.83 · 40.83 · 42.17 · 42.42 · 42.58 · 39.75 · 43.00 | the same, to the hundredth, on each | **IDENTICAL** — every engine line but `elapsed`, every event of every game |
+> | 9277927 | 41.00 | 41.00 | 2 games of 1,200 differ, at one event each; the win-rate and set lines identical, the ask-accuracy line off in the fourth decimal |
+> | 1836519 | 41.42 | 41.42 | 1 game of 1,200 differs, at one event; the win-rate and set lines identical, the out-of-turn line off by one declare |
+> | **pooled** | **41.31** | **41.31** | paired **+0.00** on 12 of 12 |
+
+**Where the three games differ**, located in the records (`locate-diff.mjs`, games keyed by deal
+and rotation): each at the same position — a seat has just declared its last cards, holds the turn
+with a pass pending, and the host polls the table. The first adapter's seat passes first and the
+next teammate polled declares the team's next certain set; the second arm's seat declares it itself
+before passing. Same set, same side, same hands in two of the three games, which are then identical
+to the end; in the third (deal 182, rotation 1 of 9277927) the pass goes to a different teammate
+and the trajectory diverges, to the same final score. The spec did not name that position: FishAI's
+own reducer closes the window for the duration of a pending pass (reduce.ts, §3.1 of the rules),
+and this host has no such phase — it polls — so both adapters answer a position FishAI's rules never
+reach, each author resolved it, and the two resolutions differ on 3 events in 28,800 games and on
+no result. **Condition 6 is met**: the number is reproduced seed for seed, and the one difference
+between two adapters written apart is located and is not a defect of either.
+
+**Verdict — §3.9's table.**
+
+> | condition | reads | met? |
+> |---|---|---|
+> | 1 · win rate ≥ 50.0% against SESTINA v1.0, 12 seeds × 200 deals, floor ±2.00 | **41.31%** on §3.8l's twelve, **40.11%** on §3.8f's | **no** — short by 8.7 and by 9.9 |
+> | 2 · every seed reported, the SD published | 24 seeds on record; SD 1.29 and 1.55 | yes |
+> | 3 · the panel monotone; v0.2 through v0.6 beaten | monotone; v02 74.18 and v03 70.40 beaten on every seed; v04 47.62, v05 46.81 and v06 44.72 beaten on none | **no** — three of five |
+> | 4 · declare accuracy ≥ 98.0%; zero fault counters | 99.20–99.82% on 73 cells; the fourteen zero on every restated-adapter cell (the two stale ones disclosed on the twelve base cells, re-read at zero on the identity cell) | yes |
+> | 5 · §6.2's controls, the mirror not among them | op counts equal to the engine's on 73 of 73, `opPass` > 0 everywhere; the null arm IDENTICAL; paired deals; calibration inside its bars on 12 of 12; every cell complete; no mirror | yes |
+> | 6 · reproduced by a second, independently built arm | the same win rate to the hundredth on 12 of 12 seeds (41.31 = 41.31); the records identical on 10 of 12; the 3 differing games located to one position the spec did not name, no result changed | yes |
+
+**Monet v1.0 does not exist at v0.9's vector.** The ladder's number for the shipped bot against
+SESTINA v1.0 is **41.31% on §3.8l's twelve seeds and 40.11% on §3.8f's**, reproduced to the
+hundredth on every seed by a second adapter written from the protocol document alone, with the panel's
+wall at v0.4 — 47.6% — unmoved by the thirteen points the ladder gained everywhere else. The belief
+programme's honest expectation (§0.3, "31–37%") was beaten by about five points, and the frontier is
+still nine away. Nothing ships from this record. The fork in §0.3 is the owner's, with this table in
+front of it: row 19.
+
+**Predictions, scored.** P1 **hit, in every part**: v02 74.18 (≥ 70), v03 70.40 (≥ 65), v04 47.62,
+v05 46.81 and v06 44.72 (each in 44–50), condition 3 failed, the order monotone. P2 **hit on the number and, in the letter, on 10 of 12**: identical records on ten seeds, the
+same win rate on all twelve; the discrepancy sat where the prediction put it — a declare-window
+position, the pending pass — and not in the forced endgame. P3
+**hit**: aggregate |bias| < 0.01 on 12 of 12, worst decile < 0.10 on 12 of 12. P4 **missed by a
+tenth of a point on one cell**: a v03 cell reads 99.20% against a predicted ≥ 99.3% everywhere;
+the other 72 cells clear it. P5 **hit on the counters** — the fourteen zero on every one of the 73
+restated-adapter cells — and **wide on the information counter**: `planGreedyDiff` runs 1.6–6.5%
+of declares against four of the five lineage bots, not 2–4%, and is not comparable against v04 at
+all. P6 **hit**: conditions 1 and 3 not met, 2, 4, 5 and 6 met. Six predictions, five hits and a
+miss by a tenth of a point; the one thing this read could not have predicted from the roadmap —
+that the panel's wall would stand at v04 with the same thirteen points gained on it as on the
+frontier — is the finding.
+
+**What is fixed by this record.** The table above; the restated wire check in the bridge adapter
+(scratch, `$SP/arm_v17/bot.mjs`, md5 c1fc7316…), which every arm from here carries; §6.2's
+op-coverage row is to be read from the per-process files and this record's bands; decision row 19.
+Nothing on Monet's vector. Nothing ships.
+
+**Scratch state, not committed:** `$SP/monet-v17/{common.sh, export-v17.sh, step0.sh,
+step-panel.sh, run-panel-lanes.sh, step-indep.sh, sum-cover.mjs, report-panel.mjs,
+report-indep.mjs, INDEP-SPEC.md, cell-*.txt, cover-*/, calib-*.txt, botlog-*.log, records/,
+step0.log, panel-*.log}`, the tree export `$SP/fishai-v17` (lib of `4658a51`, md5 16f52e16…, the
+same bytes as v0.16's), the arms `$SP/arm_v17` from `$SP/mkarm-v17.mjs` and
+`$SP/v17-patch-adapter.cjs`, and the second arm `$SP/arm_v17_indep/monet-v17-indep` with its
+`NOTES.md`.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -5641,6 +5926,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 16 | **After B1b and B2: is the declare the rung, or the deduction — and what is v0.15?** The two readouts the record left unrun were run the next day (§3.8j's addendum). B2 discards half of itself on its own validation — the (θ = 0.3, any) cell would have promised +7 and +12 points to arms that delivered +0.58 and −7.56 — and on the surviving (θ = 0.5, only-chance) cell F5 does not fire: a perfect side belief has **0.33 sets a game** at stake in Monet's majority episodes where every chance was hidden (0.42 with the seat), +5 to +6 points at the exchange rate, half a point at the tenfold class prior. B1b's declare budget is **+0.09 to +0.14 sets of differential a game** under the oracles, at the floor — but 80–96% of it is sets open at the clinch, which in `us54` sit in decided games, and the win-relevant units are 0.002–0.03 a game. **Recommendation: v0.15 is M3, the deduction fix, studied on the records before any code** — the exact conditioning on the residual instance measured against the Sinkhorn table on the licence split and at \|cands\| = 2–3, and injected through the same seam so its flips sit inside B1's bracket, before `marginal.ts` is touched; the room is bounded above by B2's 0.33. Not recommended: the declare (B1b), a recalibration (F1, F6), another ranker term (rows 12–14). M-NULL stays first-class. | **TAKEN 2026-09-05** — the owner: run B1b and B2, then "we'll go with your recommendations". B1b's budget is at the floor in sets and under half a point in wins under an oracle, so the declare is not the rung. **v0.15 is M3, studied on the records first.** |
 | 17 | **After §3.8k: the deduction fix is dead — the model, not the inference, is the error. What is v0.16, if anything?** The exact posterior under `marginal.ts`'s own model is *worse* than the Sinkhorn table on 24 of 24 seeds (+0.19% Brier pooled, **+4.5% on the licence split**), moves 2.7% of asks symmetrically, and carries 0.003–0.005 sets a game on B2's surviving cell; K1 and K3 fire. The post-hoc diagnostic says why: a seat that has asked into a set holds **about 1.5** of its alive cards whether two or five are alive — both of two about half the time, where the model says 15% — so the players' choices carry a likelihood the constraints do not, and exact inference only sharpens the wrong prior. Six rungs have now read negative in a row (v0.10–v0.15), and the belief channel's ceiling is 0.33 sets a game under a *perfect* belief (§3.8j addendum). **Recommendation: M-NULL leads — §3.9's acceptance on v0.9's vector.** Before it is taken, one probe costs no cell and settles the last open question on this axis: **the licence likelihood** — `choiceKappa` with `choicePrior: 'once'`, the geometric-in-the-holding weight the code already carries, **calibrated on the records** to the measured holding (the crude arithmetic on the two-alive bucket wants (1 + κ) ≈ 6, against the κ = 1 v0.5 took abroad) and read through the same seam with the same falsifiers: K1's bar on S3 = yes, K2's on asks moved, B2's cell. If it cannot clear them the belief axis closes for good, and row 18 chooses between §3.9 and **the even-3 bucket** — §3.8c R1's largest single bucket, ~40% of SESTINA's extra sets a game, never attacked by any rung. Not recommended: any dose fitted abroad on the belief before that probe; any further inference change under this model; another ranker term. | **TAKEN 2026-09-05** — the owner: "lets go with your recommendation for row 17", with full authorization for the direction of v1.0 development from here ("just go ahead with the best path you think is"). **v0.16 is the licence-likelihood probe on the records, pre-registered first (§3.8l); M-NULL is taken if it fails.** |
 | 18 | **After §3.8l: the belief axis is closed — seven measured negatives (v0.10–v0.16), the last with the belief repaired where the error was and worth nothing in play. What does the ladder do with the residual?** The channels this document measured are out: the ask ranker (four terms, §3.8d–§3.8i), the assignment (§3.8j), the inference (§3.8k) and the likelihood (§3.8l); the search arm at the affordable budget was a no-op abroad (§3.8a); §0.2's POSITION is what is left, and it is not a knob. **Recommendation: M-NULL — §3.9's protocol executed on v0.9's vector in full, as the ladder's closing artefact (§3.8m).** Conditions 1–2 are already read twice on seed sets that share nothing — 40.11% on §3.8e's twelve (§3.8f) and 41.31% on §3.8l's twelve (SD 1.29) — and what remains is the panel against v0.2–v0.6 at home (3), the §6.2 table with the adapter's restated wire check and every fault counter by name (5), and a second, independently built arm on the same spec (6): one bridge run, nothing fitted, nothing shipped. The result is the number the owner's fork in §0.3 needs — ship v0.9 in the browser at about 40% and publish the negative result, or fund the lab-only search at twice the budget. The even-3 bucket (§3.8c R1, ~40% of SESTINA's extra sets, never attacked as a target) stays the leading alternative for a further rung, at the honest prior of a ranker term: under the floor. Not recommended: a repaired `hold` form abroad (bounded at +1.0 by B2's cell and read at about zero here); any belief change without §3.8l's declare pin; the search arm wider or deeper than the budget (§3.8a read −0.08 and +0.60 at home). | **TAKEN 2026-09-06 under the owner's standing authorization of 2026-09-05 ("just go ahead with the best path you think is") — v0.17 is the §3.9 read on v0.9's vector (§3.8m); nothing ships from it; the §0.3 fork stays the owner's, and the owner may reverse this row on return.** |
+| 19 | **After §3.8m: §3.9's table is on the record — Monet v1.0 does not exist at v0.9's vector (41.31% and 40.11% on two twelves; the panel's wall at v0.4 unmoved by thirteen points of ladder gains). What does the owner do with it?** The fork §0.3 wrote for this outcome, and only the owner can take: **(1)** ship v0.9 in the browser at about 40% against the frontier — the honest maximum of the belief programme, one rewrite, no latency — and publish the negative result with this document as the artefact; or **(2)** fund the lab-only search arm beyond the affordable budget (§3.8a: the pre-registered form a no-op at 96 ms an ask, the wider and deeper forms out on the cost rule at −0.08 and +0.60 at home), the one channel with a ceiling above the gap and no measured gain yet. Under (1) the even-3 bucket (§3.8c R1, ~40% of SESTINA's extra sets, never attacked as a target) remains the leading candidate for one more rung, at the honest prior of a ranker term. Not recommended: any belief change (§3.8l closed the axis); any further ask-ranker term (four measured out); a v1.0 claim on any seed count under twelve. | *open — the owner's fork (§0.3); nothing runs until it is taken* |
 
 ---
 
