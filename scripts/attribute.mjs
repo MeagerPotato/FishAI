@@ -101,6 +101,11 @@ const withKnobs = (pol, spec) => (spec ? { ...pol, style: { ...pol.style, ...par
 // 0.01") transfers unchanged rather than needing a new one.
 const ASSIGN_DEC = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 const LOCKS_BOTH = process.argv.includes('--locks-both') // probe B's declarable sets from B's seats too (the reliability table only)
+// MONET.md §3.8p: the race for a set - which side's ask first went into it, what each side spent,
+// who took it - per split class and per starter; and each side's asks (and the counterfactual's)
+// by the class of the asked set, by the deal and by the holding at the time. Pure accounting on
+// the walk's own state; nothing under lib/ is touched.
+const RACES = process.argv.includes('--races')
 const CALIB_P = [0.1, 0.3, 0.5, 0.7, 0.9, 1] // bin lower bounds: [0.1,0.3) [0.3,0.5) [0.5,0.7) [0.7,0.9) [0.9,1) and p = 1
 // Declare rules priced on the records: a rule fires at the earliest window (before A's own declare of
 // the set) where some A seat's plan satisfies it. u = guessed cards; u = 0 is the certain plan, the
@@ -149,6 +154,23 @@ function playHome(label, polA, polB) {
 
 /* ---------------------------------------------------------- accumulators --- */
 
+// §3.8p: per split class (A's cards of the six by the deal: 4-6 / 3 / 0-2) and per starter (the side
+// whose ask first went into the set, or none before it resolved): the sets, their outcomes and what
+// each side spent; per side, the asks by the class of the asked set RELATIVE to the asker (own
+// majority / even / opponents' majority), by the deal and by the holding at the time of the ask; the
+// counterfactual's choice classed the same way at the same decisions.
+const newRaceAcc = () => {
+  const K = () => ({ n: 0, outA: 0, outB: 0, open: 0, asks: [0, 0], hits: [0, 0], started: 0, firstHit: 0, len: 0, lenN: 0, contested: 0,
+    // post hoc: the side first at four of six (and whether it took the set), the side that locked first, locks broken, the hold from the first lock to the declare by the locking side, take-backs by side
+    first4: [0, 0], first4Took: [0, 0], first4None: 0, lockBy: [0, 0], lockTook: [0, 0], lockBroken: 0, hold: [0, 0], holdN: [0, 0], takeBacks: [0, 0] })
+  const C = () => ({ own: { n: 0, hit: 0 }, even: { n: 0, hit: 0 }, opp: { n: 0, hit: 0 } })
+  return {
+    sets: Object.fromEntries(['amaj', 'even', 'bmaj'].map((c) => [c, { A: K(), B: K(), none: K() }])),
+    ask: [0, 1].map(() => ({ deal: C(), hold: C(), preHit: 0, preHitAgree: 0 })),
+    cf: [0, 1].map(() => ({ deal: C(), hold: C() })),
+  }
+}
+
 function newAcc() {
   const askT = () => ({
     n: 0, hit: 0, certain: 0, certainHit: 0, unc: 0, uncHit: 0,
@@ -183,6 +205,7 @@ function newAcc() {
     games: 0, wins: [0, 0], sets: [0, 0], open: 0, noClinch: 0, eventsToClinch: 0, badRecords: 0,
     split, asks: [askT(), askT()], decl: [declT(), declT()], locks, tempo: [tempoT(), tempoT()],
     fate: [fateT(), fateT()], miss: [missT(), missT()],
+    races: RACES ? newRaceAcc() : null,
   }
 }
 
@@ -203,6 +226,26 @@ function walk(rec, cfPol, acc) {
     acc.split[split0[b]].n++
   }
   const lock = {} // book -> { team, at } while the six sit in one team's hands, unresolved
+  // §3.8p: book -> the race so far; the class of a set relative to a side, by a holding count
+  const race = {}
+  const relClass = (own) => (own >= 4 ? 'own' : own === 3 ? 'even' : 'opp')
+  const raceOf = (b) => (race[b] ||= { first: -1, firstAt: -1, firstHit: false, asks: [0, 0], hits: [0, 0], first4: -1, lockBy: -1, lockAt: -1, lockBroken: 0, takeBacks: [0, 0] })
+  const finishRace = (b, outcomeTeam, i) => {
+    const R = raceOf(b)
+    const cls = split0[b] >= 4 ? 'amaj' : split0[b] === 3 ? 'even' : 'bmaj'
+    const K = acc.races.sets[cls][R.first === 0 ? 'A' : R.first === 1 ? 'B' : 'none']
+    K.n++
+    if (outcomeTeam === 0) K.outA++
+    else if (outcomeTeam === 1) K.outB++
+    else K.open++
+    K.asks[0] += R.asks[0]; K.asks[1] += R.asks[1]; K.hits[0] += R.hits[0]; K.hits[1] += R.hits[1]
+    if (R.first >= 0) { K.started++; if (R.firstHit) K.firstHit++; if (outcomeTeam >= 0) { K.lenN++; K.len += i - R.firstAt } }
+    if (R.asks[0] > 0 && R.asks[1] > 0) K.contested++
+    if (R.first4 >= 0) { K.first4[R.first4]++; if (outcomeTeam === R.first4) K.first4Took[R.first4]++ } else K.first4None++
+    if (R.lockBy >= 0) { K.lockBy[R.lockBy]++; if (outcomeTeam === R.lockBy) { K.lockTook[R.lockBy]++; K.hold[R.lockBy] += i - R.lockAt; K.holdN[R.lockBy]++ } }
+    K.lockBroken += R.lockBroken
+    K.takeBacks[0] += R.takeBacks[0]; K.takeBacks[1] += R.takeBacks[1]
+  }
   let lastAskTeam = -1
   let clinchAt = null
   const hitEntries = [] // every hit: { side, book, closes, takenBack, resolved }
@@ -236,6 +279,7 @@ function walk(rec, cfPol, acc) {
         if (!lock[b]) { lock[b] = { team: t, at: i }; acc.decl[t].locksFormed++ }
       } else if (lock[b]) {
         acc.decl[lock[b].team].locksBroken++
+        if (RACES && race[b]) race[b].lockBroken++
         delete lock[b]
       }
     }
@@ -897,6 +941,22 @@ function walk(rec, cfPol, acc) {
       if (sameTeamHolds(bookOf(ev.card)) === T) A.ownLocked++
       { const x = seatOf.get(ev.card); if (x !== undefined && side(x) !== T) A.oppHeld++ }
       { const h = A.holding[Math.min(5, Math.max(1, holdingOf(T, bookOf(ev.card))))]; h.n++; if (ev.hit) h.hit++ }
+      if (RACES) {
+        const rb = bookOf(ev.card)
+        const R = raceOf(rb)
+        const noHitYet = R.hits[0] + R.hits[1] === 0
+        if (R.first < 0) { R.first = T; R.firstAt = i; R.firstHit = ev.hit }
+        R.asks[T]++
+        if (ev.hit) R.hits[T]++
+        const dc = relClass(T === 0 ? split0[rb] : 6 - split0[rb])
+        const hc = relClass(holdingOf(T, rb))
+        const AK = acc.races.ask[T]
+        AK.deal[dc].n++; if (ev.hit) AK.deal[dc].hit++
+        AK.hold[hc].n++; if (ev.hit) AK.hold[hc].hit++
+        // before any hit into the set the holding IS the deal: the two classings must agree (a check)
+        if (noHitYet) { AK.preHit++; if (dc === hc) AK.preHitAgree++ }
+        if (certain) R.takeBacks[T]++
+      }
       if (T !== lastAskTeam) { acc.tempo[T].runs++; lastAskTeam = T }
       if (pendingMiss) {
         if (pendingMiss.side === T) { const M = acc.miss[T]; M.oppAsks += pendingMiss.oppAsks; M.oppHits += pendingMiss.oppHits; if (pendingMiss.first) M.oppFirstCertain++; pendingMiss = null }
@@ -962,6 +1022,14 @@ function walk(rec, cfPol, acc) {
           { const x = seatOf.get(a.card); if (x !== undefined && side(x) !== T) A.cfOppHeld++ }
           { const M = acc.miss[T]; const d = dangerOf(T, a.target); M.cfAsks++; M.cfDangerSum += d; if (d > 0) M.cfDangerAny++ }
           { const h = A.cfHolding[Math.min(5, Math.max(1, holdingOf(T, bookOf(a.card))))]; h.n++; if (cfHit) h.hit++ }
+          if (RACES) {
+            const cb = bookOf(a.card)
+            const CK = acc.races.cf[T]
+            const dc = relClass(T === 0 ? split0[cb] : 6 - split0[cb])
+            const hc = relClass(holdingOf(T, cb))
+            CK.deal[dc].n++; if (cfHit) CK.deal[dc].hit++
+            CK.hold[hc].n++; if (cfHit) CK.hold[hc].hit++
+          }
         }
       }
       if (!ev.hit) {
@@ -983,6 +1051,11 @@ function walk(rec, cfPol, acc) {
         acc.tempo[T].hits++
         updateLocks(i)
         if (lock[entry.book] && lock[entry.book].team === T && lock[entry.book].at === i) { entry.closes = true; acc.fate[T].closes++ }
+        if (RACES) {
+          const R = raceOf(entry.book)
+          if (R.first4 < 0 && holdingOf(T, entry.book) >= 4) R.first4 = T
+          if (R.lockBy < 0 && lock[entry.book] && lock[entry.book].at === i) { R.lockBy = lock[entry.book].team; R.lockAt = i }
+        }
       }
     } else if (ev.type === 'claim') {
       const T = side(ev.claimer)
@@ -1023,6 +1096,7 @@ function walk(rec, cfPol, acc) {
         publicAt.delete(c)
       }
       for (const e of hitEntries) if (!e.resolved && e.book === b) { e.resolved = true; const F = acc.fate[e.side]; if (e.takenBack) F.takenBack++; if (outcomeTeam === e.side) F.converted++; else F.lost++ }
+      if (RACES) finishRace(b, outcomeTeam, i)
       resolved[b] = { book: b, outcome: ev.outcome, claimer: ev.claimer, assignments: ev.assignments, actualHolders: ev.actualHolders }
       if (outcomeTeam >= 0) { awarded[outcomeTeam]++; acc.sets[outcomeTeam]++ }
       if (clinchAt === null && (awarded[0] >= CLINCH || awarded[1] >= CLINCH)) {
@@ -1043,6 +1117,7 @@ function walk(rec, cfPol, acc) {
   for (const b of BOOKS) {
     if (resolved[b]) continue
     acc.open++
+    if (RACES) finishRace(b, -1, clinchAt === null ? rec.events.length : clinchAt)
     const sp = acc.split[split0[b]]
     sp.open++
     if (lock[b] && LOCKS_WHY) console.error(`OPENLOCK ${rec.label} set ${b} team ${lock[b].team} score ${awarded[0]}-${awarded[1]} formed at ${lock[b].at} of ${rec.events.length}`)
@@ -1409,6 +1484,50 @@ function report(acc, head) {
     console.log('| side | episodes/game | legal chase decisions each | chases each | ever chased | chased: cashed / taken / open (events) | never chased: cashed / taken / open (events) |')
     console.log('|---|---|---|---|---|---|---|')
     for (const t of [0, 1]) { const E = acc.maj.ep[t]; const f = (K) => `${pct(K.cashed, K.n)} / ${pct(K.taken, K.n)} / ${pct(K.open, K.n)} (${f2(K.ev / Math.max(1, K.n))})`; console.log(`| ${t === 0 ? 'A' : 'B'} | ${per(E.n, g)} | ${f2(E.legalSum / Math.max(1, E.n))} | ${f2(E.chaseSum / Math.max(1, E.n))} | ${pct(E.chased.n, E.n)} | ${f(E.chased)} | ${f(E.not)} |`) }
+    console.log('')
+  }
+  if (acc.races) {
+    const RS = acc.races
+    const sg2 = (v) => (v >= 0 ? '+' : '') + v.toFixed(2)
+    const sg3 = (v) => (v >= 0 ? '+' : '') + v.toFixed(3)
+    console.log("-- MONET.md §3.8p, the race (--races): per set by the deal's split class (A's cards of six: A majority 4-6 / even 3 / B majority 0-2) and by the side whose ask first went into it --")
+    console.log('| class | starter | sets/g | P(A takes) of the resolved | open | asks a set A / B | hits a set A / B | first ask hit | race length (events, resolved) | contested |')
+    console.log('|---|---|---|---|---|---|---|---|---|---|')
+    for (const cls of ['even', 'amaj', 'bmaj']) for (const st of ['A', 'B', 'none']) {
+      const K = RS.sets[cls][st]
+      if (K.n === 0) continue
+      console.log(`| ${cls} | ${st} | ${per(K.n, g)} | ${pct(K.outA, K.outA + K.outB)} | ${pct(K.open, K.n)} | ${f2(K.asks[0] / K.n)} / ${f2(K.asks[1] / K.n)} | ${f2(K.hits[0] / K.n)} / ${f2(K.hits[1] / K.n)} | ${pct(K.firstHit, K.started)} | ${f2(K.len / Math.max(1, K.lenN))} | ${pct(K.contested, K.n)} |`)
+    }
+    const S3 = acc.split[3], E = RS.sets.even
+    const eA = E.A.outA + E.B.outA + E.none.outA, eB = E.A.outB + E.B.outB + E.none.outB, eO = E.A.open + E.B.open + E.none.open
+    const exact = eA === S3.aCashed + S3.aGifted && eB === S3.bCashed + S3.bGifted && eO === S3.open
+    console.log(`   check: even outcomes A ${eA} / B ${eB} / open ${eO} against the split table ${S3.aCashed + S3.aGifted} / ${S3.bCashed + S3.bGifted} / ${S3.open}: ${exact ? 'EXACT' : 'MISMATCH'}`)
+    const nEven = E.A.n + E.B.n + E.none.n
+    const fA = nEven ? E.A.n / nEven : 0, fB = nEven ? E.B.n / nEven : 0
+    const pA = E.A.outA / Math.max(1, E.A.outA + E.A.outB), qA = E.B.outA / Math.max(1, E.B.outA + E.B.outB)
+    const pB = E.B.outB / Math.max(1, E.B.outA + E.B.outB), qB = E.A.outB / Math.max(1, E.A.outA + E.A.outB)
+    const N = nEven / g, PTS = 14.96, gapEven = (eA - eB) / g
+    console.log(`   R2: even sets ${f2(N)} a game; A starts ${pct(E.A.n, nEven)}, B starts ${pct(E.B.n, nEven)}, resolved before any ask ${pct(E.none.n, nEven)}; p_A ${pct(E.A.outA, E.A.outA + E.A.outB)}, q_A ${pct(E.B.outA, E.B.outA + E.B.outB)}, p_B ${pct(E.B.outB, E.B.outA + E.B.outB)}, q_B ${pct(E.A.outB, E.A.outA + E.A.outB)}`)
+    console.log(`   R4 at ${PTS} points a set: even gap ${sg3(gapEven)} sets/g -> ceiling ${sg2(-gapEven * PTS)} pts; priority bound N·f_B·(p_A − q_A) = ${sg2(N * fB * (pA - qA) * PTS)} pts; conversion bound N·f_A·(p_B − p_A) = ${sg2(N * fA * (pB - pA) * PTS)} pts`)
+    console.log('')
+    console.log("-- §3.8p, the asks by the class of the asked set relative to the asker (own majority / even / opponents' majority): share of the side's asks and the hit rate there, by the deal and by the holding at the time; the counterfactual's choice at the same decisions --")
+    console.log('| side | by the deal: own | even | opp | by the holding: own | even | opp | cf by the deal: own | even | opp | cf by the holding: own | even | opp | pre-hit asks where deal = holding |')
+    console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|')
+    for (const t of [0, 1]) {
+      const AK = RS.ask[t], CK = RS.cf[t]
+      const tot = (C) => C.own.n + C.even.n + C.opp.n
+      const cell = (C, k) => `${pct(C[k].n, tot(C))} / ${pct(C[k].hit, C[k].n)}`
+      console.log(`| ${t === 0 ? 'A' : 'B'} | ${cell(AK.deal, 'own')} | ${cell(AK.deal, 'even')} | ${cell(AK.deal, 'opp')} | ${cell(AK.hold, 'own')} | ${cell(AK.hold, 'even')} | ${cell(AK.hold, 'opp')} | ${cell(CK.deal, 'own')} | ${cell(CK.deal, 'even')} | ${cell(CK.deal, 'opp')} | ${cell(CK.hold, 'own')} | ${cell(CK.hold, 'even')} | ${cell(CK.hold, 'opp')} | ${AK.preHitAgree} of ${AK.preHit} |`)
+    }
+    console.log('')
+    console.log('-- §3.8p, POST HOC (written after the pre-registered readouts were read): inside the race, per class and starter --')
+    console.log('| class | starter | first to four: A / B / none | took the set when first to four: A / B | first lock by A / B | that side took it: A / B | locks broken a set | hold, lock to declare (events) A / B | take-backs a set A / B |')
+    console.log('|---|---|---|---|---|---|---|---|---|')
+    for (const cls of ['even', 'amaj', 'bmaj']) for (const st of ['A', 'B']) {
+      const K = RS.sets[cls][st]
+      if (K.n === 0) continue
+      console.log(`| ${cls} | ${st} | ${pct(K.first4[0], K.n)} / ${pct(K.first4[1], K.n)} / ${pct(K.first4None, K.n)} | ${pct(K.first4Took[0], K.first4[0])} / ${pct(K.first4Took[1], K.first4[1])} | ${pct(K.lockBy[0], K.n)} / ${pct(K.lockBy[1], K.n)} | ${pct(K.lockTook[0], K.lockBy[0])} / ${pct(K.lockTook[1], K.lockBy[1])} | ${f2(K.lockBroken / K.n)} | ${f2(K.hold[0] / Math.max(1, K.holdN[0]))} / ${f2(K.hold[1] / Math.max(1, K.holdN[1]))} | ${f2(K.takeBacks[0] / K.n)} / ${f2(K.takeBacks[1] / K.n)} |`)
+    }
     console.log('')
   }
   return gap
