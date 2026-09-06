@@ -459,7 +459,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
-| **v0.19** — the even-set race (2026-09-06) | **an instrument, no vector change** — §3.8c R1's bucket priced on v0.9's vector from the records on hand: the race (who asks into a 3–3 set first, who takes it), the targeting (each side's share of asks into even sets, actual and counterfactual) and the price with its two bounds (§3.8p) | a mechanism is built only at a reachable price ≥ 1.0 point — **pre-registered 2026-09-06, the runs to follow** | `--races` on `attribute.mjs`; the sums exact against the split table on every cell; the pin at 100.0% on every v0.9 cell; the home walk clean | S |
+| **v0.19** — the even-set race (2026-09-06) | **an instrument, no vector change** — §3.8c R1's bucket priced on v0.9's vector from the records on hand: the race (who asks into a 3–3 set first, who takes it), the targeting (each side's share of asks into even sets, actual and counterfactual) and the price with its two bounds (§3.8p) | a mechanism is built only at a reachable price ≥ 1.0 point — **read 2026-09-06: the bucket is −0.190 sets a game (SE 0.012; the replication −0.196), 2.8 points; the race has two numbers — the opener's edge, +8 at any modern table (Monet's own mirror +8.9, SESTINA's +8.4, v04 and v06 ~0), and SESTINA's in-race edge +9.4 over Monet, which is not in who opens (Monet opens 64% of the races) and not in which set is asked into (34.8% against 35.3%; the counterfactual at SESTINA's decisions 35.6%) but at the 4–2 stage: the first side to four converts it at 56% between SESTINAs and 56% between Monets, at 49% for Monet against SESTINA and 61% for SESTINA against Monet; SESTINA asks into the race it opened every four events and resolves it in 26, Monet every six and a half in 36. The ceiling +2.8, the priority bound +1.1 (priced at zero by the v04 and v06 corpora), the conversion bound +2.6 — the price is reachable and the rule's call is the in-race play; row 22 names the step** | `--races` on `attribute.mjs`; the sums exact against the split table on 61 of 61 cells; the pin at 100.0% on 36 of 36 v0.9 cells; the home walk clean under `--validate` | S |
 | **v0.18** — the stack read (2026-09-06) | **the two measured terms under the floor, apart and together** — `exposure` 0.6 + `exposureCertain` (§3.8e, +1.07) and `closing` 0.5 (§3.8h, +0.58) on v0.9's vector, read against v0.9 on twelve fresh seeds under §3.8n's rule (§3.8o) | ships at ≥ 2 SE above zero and ahead on 7 of 12; the floor +2.00 reported beside it — **read 2026-09-06: NOTHING CLEARS. The base 40.70 (SD 1.49); `e` −0.15 (SD 2.31, SE 0.67, ahead on 7 of 12) — §3.8e's +1.07 does not replicate on the translated bridge, its markers intact and SESTINA's ask accuracy down by as much as Monet's; `c` +0.25 (SD 0.97, SE 0.28, 7 of 12) — the closing credit +0.42 pooled over twenty-four seeds (2.3 × SE), under the bar on its fresh twelve; `ec` +0.70 (SD 1.87, SE 0.54, 8 of 12), the interaction +0.60 on ±0.9. The identity cell IDENTICAL, four pins at 100.0%, the fourteen zero on every intact process file, §6.2's table complete on 49 of 49 after seven byte-identical replays of cells the bridge's kill window had left a file short. The rule's resolution at twelve seeds: 1.3 points for a loud term, 0.6 for a quiet one. Nothing ships; row 21 open** | the paired read; the identity pin first; the in-engine pin of every arm; §6.2's table on 48 cells | S |
 | **v0.17** — the §3.9 read (2026-09-06) | **§3.9's protocol on v0.9's vector** — the shipped bot under all six conditions, nothing fitted, nothing shipped (§3.8m) | ≥ 50.0% at twelve seeds — **read 2026-09-06: NOT MET. 41.31% on §3.8l's twelve (SD 1.29) and 40.11% on §3.8f's (SD 1.55); the panel monotone, v02 and v03 beaten on every seed (74.18 / 70.40), v04, v05 and v06 on none (47.62 / 46.81 / 44.72); declare accuracy ≥ 99.2% and the fourteen fault counters zero on every restated-adapter cell; §6.2's table clean, the per-process op counts equal to the engine's on 73 of 73 cells; the number reproduced to the hundredth on all twelve seeds by an independently built arm, the records identical on ten. Conditions 1 and 3 fail; 2, 4, 5 and 6 hold. Nothing ships; the §0.3 fork is the owner's (row 19)** | the pre-registered read of the six conditions; the panel on the same twelve seeds; a second adapter written from the documented protocol by an independent agent, compared game for game | M |
 | **v0.16** | **the licence likelihood, calibrated** — §3.8l: a seat that asked into a set holds about 1.5 of its alive cards whatever their number (§3.8k); three knob families calibrated on the records through §3.8k's seam and read through the same falsifiers; `licenceHold` at 1.5 selected, the per-cell `choiceKappa` families void (each adds hard zeros at true holders) | ≥ 43.31% (the base on §3.8l's twelve, 41.31%, + 2.00) — **read 2026-09-06: 40.58% against 41.31%, −0.74 paired (SD 1.58, SE 0.46), ahead on 4 of 12, inside the floor; behind 0.024 sets a game on 10 of 12 — the wrong declares double through the chain over the held table, a path the falsifiers never read; recorded, not shipped; the belief axis closes** | the records study first (fit on three seeds, 39 runs; held out on 21), then one paired read abroad on twelve fresh seeds | M |
@@ -5884,6 +5884,150 @@ this rung is a mechanism; nothing ships from it; the numbers are the deliverable
 committed:** `$SP/monet-v19/{run-races.sh, report-races.mjs}` and the per-cell outputs
 `out/races-<corpus>-<seed>.txt`.
 
+#### Record — 2026-09-06
+
+**The even bucket is worth 2.8 points on v0.9's vector, and the race is lost at one stage: the
+first side to four of six converts its lead at 56% between equals, at 49% when it is Monet against
+SESTINA, and at 61% when it is SESTINA against Monet.** The instrument ran as pre-registered on 61
+cells and 74,400 games — every even sum exact against the split table, the two classings in
+agreement on every pre-hit ask, the counterfactual at 100.0% of A's decisions on all 36 v0.9 cells
+against SESTINA and the panel, and the home walk clean under `--validate` — and read this:
+
+> | readout | v0.9 vs SESTINA, the fresh twelve | the replication (§3.8l's twelve) | SESTINA's mirror | v0.9 vs v04 | v0.9 vs v06 | v0.9's mirror at home |
+> |---|---|---|---|---|---|---|
+> | A win | 40.70% | 41.31% | 50.00% | 47.62% | 44.72% | 50.42% |
+> | R1 · A − B by bucket: A majority / **even** / B majority | +0.806 / **−0.190 (SE 0.012)** / −1.306 | +0.843 / **−0.196 (0.011)** / −1.298 | ±1.027 / **0** | +0.964 / **−0.015 (0.012)** / −1.193 | +0.883 / **−0.070 (0.017)** / −1.339 | +1.124 / **+0.033** / −1.066 |
+> | even sets a game; opened by A / by B / by nobody | 2.93; **63.7% / 34.0%** / 2.3% | 2.98; 63.0 / 34.8 / 2.2 | 3.06; 47.6 / 47.6 / 4.9 | 2.98; 69.6 / 26.8 / 3.6 | 2.98; 71.6 / 25.9 / 2.6 | 2.94; 56.8 / 41.4 / 1.8 |
+> | R2 · P(the opener takes the set) | 52.6% | 52.0% | 54.2% | 50.3% | 49.4% | 54.4% |
+> | R2 · p_A / q_A (Monet takes it: Monet opened / the other side opened) | **49.2% / 41.4%** | 48.6 / 42.3 | 54.2 / 45.8 | 49.9 / 48.7 | 48.7 / 48.6 | 54.3 / 45.4 |
+> | R2 · p_B / q_B (the other side takes it: it opened / Monet opened) | **58.6% / 50.8%** | 57.7 / 51.4 | 54.2 / 45.8 | 51.3 / 50.1 | 51.4 / 51.3 | 54.6 / 45.7 |
+> | the opener's edge s = p_A − q_A; the other side's in-race edge e = p_B − p_A | **s +7.8, e +9.4** | s +6.3, e +9.1 | s +8.4, e 0 | s +1.2, e +1.4 | s +0.1, e +2.7 | s +8.9, e +0.3 |
+> | R2 · asks a race, A / B: Monet opened; the other side opened | 5.47 / 4.81; 4.34 / 6.26 | 5.48 / 4.84; 4.40 / 6.21 | 6.36 / 3.91; 3.91 / 6.36 | 5.74 / 5.40; 3.87 / 5.53 | 5.59 / 5.07; 3.84 / 5.12 | 5.79 / 4.98; 4.91 / 5.72 |
+> | R2 · race length in events, Monet opened / the other opened; left open at the clinch, the same | 35.6 / 26.3; **12.3% / 5.4%** | 35.0 / 26.3; 12.6 / 5.7 | 25.4 / 25.4; 8.8 / 8.8 | 33.7 / 25.5; 9.7 / 8.5 | 33.5 / 22.7; 10.7 / 6.4 | 34.7 / 34.0; 8.0 / 10.2 |
+> | R3 · share of asks into even sets by the deal, A / B (hit there) | 34.8 / 35.3% (59.2 / 60.3%) | 35.7 / 36.2 (59.3 / 60.5) | 36.1 / 36.1 (54.2) | 33.6 / 34.5 (62.6 / 61.4) | 36.1 / 35.3 (61.0 / 62.9) | 36.0 / 35.9 (64.5 / 65.1) |
+> | R3 · at B's decisions, the counterfactual's even share by the deal / by the holding, against B's own | 35.6 / 26.9 against 35.3 / 24.0 | 36.4 / 27.0 against 36.2 / 24.1 | 36.5 / 27.1 against 36.1 / 24.2 | 36.2 / 25.6 against 34.5 / 22.3 | 36.9 / 27.2 against 35.3 / 22.7 | 35.9 / 24.7 against 35.9 / 24.7 |
+> | R4 · ceiling / priority bound / **conversion bound**, points at 14.96 a set | +2.84 (0.18) / +1.14 (0.07) / **+2.62 (0.13)** | +2.94 / +0.99 / **+2.56** | 0 / +1.82 / 0 | +0.22 / +0.15 / +0.42 | +1.04 / +0.01 / +0.86 | −0.49 / +1.63 / +0.06 |
+
+**R1 — the bucket.** −0.190 sets a game on the fresh twelve, −0.196 on the replication: **2.8 points**
+of the 9.3 between v0.9 and the frontier, a quarter of the set gap (0.69). v0.9 recovered 0.22 of
+v0.4c's −0.414 through the priced ask — the contest credit targets the sets the opponents dominate,
+and a game in which Monet steals more is a game in which its even races go better too. Against v04
+and v06 the bucket is not Monet's either: −0.015 and −0.070. Monet beats the lineage on the
+majorities (+0.96 and +0.88 against −1.19 and −1.34) and breaks even or worse in every contested
+race it has played; in its own mirror the bucket is +0.033, the seating's share.
+
+**R2 — the race has two numbers, and only one of them is SESTINA's.** By construction p_B = 1 − q_A
+and q_B = 1 − p_A, so the four rates are two: the **opener's edge** s = p_A − q_A, what a side gains
+by being the one whose ask went in first, and the **other side's in-race edge** e = p_B − p_A, how
+much more often it takes the races it opens than Monet takes the races Monet opens. Against SESTINA
+s is +7.8 (replication +6.3) and e is **+9.4** (+9.1). In the mirrors s is +8.4 (SESTINA's) and +8.9
+(Monet's) with e zero, as symmetry demands; against v04 and v06 s is +1.2 and +0.1 and e is +1.4
+and +2.7. So:
+
+- The opener's edge is a property of the table, not of SESTINA: about +8 wherever two modern bots
+  race — Monet against Monet as much as SESTINA against SESTINA — and nothing at all against the
+  v04 lineage, whose races go to whoever opened them exactly as often as to whoever did not. P6
+  predicted the same edge at every table; the lineage's tables have none.
+- Monet opens the most races of anyone: 64% against SESTINA, 70% against v04 and v06, 57% a side
+  in its own mirror. SESTINA opens the fewest: 34% against Monet and 47.6% a side in its own
+  mirror, with 4.9% of even sets resolved before either SESTINA asked into them. SESTINA is
+  selective about which 3–3 races it starts; Monet starts nearly all of them, and the v04 and v06
+  corpora price that at nothing — Monet opens 70% there and its races go 49.9 and 48.7.
+- Monet takes the races it opens at **49%** against every opponent (49.2, 48.6, 49.9, 48.7) and at
+  54.3 against itself. The opponent's rate on its own openings is where the opponents differ:
+  **SESTINA 58.6%, v04 51.3%, v06 51.4%**. The whole of SESTINA's even-bucket margin is in the races
+  it chooses to open and then prosecutes — 6.3 asks a race against Monet's 5.5 as opener, an ask
+  into the set every four events against Monet's every six and a half, 26 events to a resolution
+  against 36, and 5.4% of its openings left unresolved at the clinch against 12.3% of Monet's.
+
+**R3 — targeting is not the difference.** Every side at every table puts 34–36% of its asks into
+even sets by the deal, Monet no less than SESTINA (34.8 against 35.3), and at SESTINA's own
+decisions Monet's counterfactual would choose an even set as often as SESTINA did by the deal (35.6
+against 35.3) and *more* often by the holding at the time (26.9 against 24.0). What SESTINA prefers
+at those decisions is its own majorities — the sets it already holds most of — where Monet's
+picker would spread to the even and opponent-majority sets. The hit rate on even-set asks is 59.2%
+for Monet against 60.3% for SESTINA (60.9 against 63.7 by the holding): a point or three, not a
+race. The lever is not which set to ask into, and P4 missed on both shares.
+
+**R4 — the price.** The ceiling **2.8 points** (2.9 on the replication). The priority bound
+**+1.1** (+1.0) — what Monet would add by opening the 34% of races SESTINA opens and taking them at
+its own 49% — which the v04 and v06 corpora already price at zero. The conversion bound **+2.6**
+(+2.6) — what Monet would add by taking the races it opens at SESTINA's 58.6% instead of its
+49.2%. The conversion bound carries the price, at more than twice the rule's 1.0, and the rule's
+call is **the in-race play, not the opening**. The bound is a bound: it treats SESTINA's rate as
+attainable by a Monet that keeps its 64% opening share, and SESTINA's rate is earned partly by
+opening fewer races.
+
+**Post hoc — inside the race** (the second table of `--races`, designed after the readouts above
+were read and so labelled; the runs re-done into their own directory, every check holding again):
+
+> | corpus | opener | first to four: opener / the other / neither | converted the lead when first to four: Monet / the other side | first lock: Monet / the other | take-backs a race: Monet / the other |
+> |---|---|---|---|---|---|
+> | v0.9 vs SESTINA, the fresh twelve | Monet | 68.1% / 28.8% / 3.1% | **49.1% / 60.7%** | 42.9% / 44.8% | 1.21 / 1.34 |
+> | | SESTINA | 61.8 / 37.1 / 1.1 | **47.0 / 60.6** | 38.0 / 55.7 | 1.16 / 1.21 |
+> | the replication | Monet | 68.5 / 28.4 / 3.1 | 48.7 / 61.6 | 42.4 / 45.2 | 1.23 / 1.36 |
+> | | SESTINA | 60.8 / 38.3 / 0.9 | 48.0 / 60.2 | 38.8 / 54.8 | 1.17 / 1.22 |
+> | SESTINA's mirror | either | 68.5 / 29.1 / 2.4 | 55.9 / 56.5 | 49.5 / 40.0 | 0.92 / 0.98 |
+> | v0.9 vs v04 | Monet | 63.6 / 33.8 / 2.6 | 51.2 / 55.6 | 44.4 / 45.8 | 1.51 / 1.62 |
+> | | v04 | 53.9 / 44.0 / 2.0 | 54.7 / 54.8 | 44.1 / 47.6 | 1.00 / 1.03 |
+> | v0.9 vs v06 | Monet | 67.3 / 29.3 / 3.4 | 49.4 / 59.1 | 43.2 / 46.2 | 1.35 / 1.46 |
+> | | v06 | 54.7 / 44.1 / 1.2 | 55.3 / 55.7 | 45.2 / 48.3 | 0.95 / 1.00 |
+> | v0.9's mirror | either | 58.7 / 40.5 / 0.8 | 56.5 / 51.5 | 50.3 / 42.4 | 1.56 / 1.54 |
+
+Every lock is cashed (98.4–99.5% on every row, the hold from the lock to the declare 1.5–2.7
+events) and none is broken, which is the rules: a set that sits wholly in one team's hands cannot
+be asked out of it. So the race is decided before the lock, at **four of six**. The opener reaches
+four first about two thirds of the time at every table (68% against SESTINA, 68.5% in SESTINA's
+mirror, 64–67% against v04 and v06, 59% in Monet's). What differs between tables is what the lead
+is worth. Between equals the first side to four converts it at **56%** — 55.9 and 56.5 between
+SESTINAs, 56.5 and 55.8 between Monets. Monet against SESTINA converts its leads at **49.1% and
+47.0%**; SESTINA against Monet at **60.7% and 60.6%**. Since a lead is converted or recovered,
+those are two facts about the 4–2 stage: SESTINA recovers 51–53% of Monet's leads where a Monet
+defender recovers 44% of a Monet lead and a SESTINA defender 44% of a SESTINA lead, and SESTINA
+holds its own leads at 61% where either bot holds 56% against its own kind. Against v06 the shape
+holds on Monet's openings (49.4 against 59.1) and vanishes on v06's (55.3 against 55.7); against
+v04 it is small on both (51.2 against 55.6; 54.7 against 54.8). The
+first-lock line says the same thing from the lock's side: Monet, first to four on 68% of its
+openings, is first to the lock on 43% of them against SESTINA and on 50% against itself.
+
+The concrete difference on the record is **pace**: SESTINA asks into the race it opened every four
+events and resolves it in 26; Monet asks into its own every six and a half and takes 36, with the
+located cards taken back in between (1.34 take-backs a race by SESTINA on Monet's openings; 0.95 a
+race between SESTINAs, whose races end before the take-back). Whether the pace is a choice the fast
+policy can make — the next ask into the set at 4–2, the turn kept for it — or the product of
+SESTINA's lookahead knowing where the two missing cards sit, the records on hand do not say: the
+ladder's one attempt at the chase (§3.8g, v0.13) read negative because the seat could not tell
+which side held the missing cards, and §3.8j found that belief calibrated. That is the question
+row 22 puts.
+
+**Predictions, scored.** P1 **hit**: −0.190 in −0.32 to −0.10, SE 0.012, the replication 0.006
+away, 0.22 of v0.4c's bucket recovered. P2 **missed**: P(the opener takes) 52.6% against 56–66;
+SESTINA opens 34% against 50–56; and "the two sides within 4 points" was vacuous, the opener's edge
+being one number by construction. P3 **half**: p_B − p_A = 9.4 inside 2–10; q_B − q_A = 9.4 outside
+0–8 — and the prediction counted one quantity twice. P4 **missed on the shares, hit on the hits**:
+no 2–6 point targeting gap in either direction (34.8 / 35.3; the counterfactual 35.6); hit rates
+59.2 and 60.3 inside their bands. P5 **one of three**: the ceiling 2.84 inside 1.5–4.8; the priority
+bound 1.14 not under 1.0 (0.99 on the replication); the conversion bound 2.62 above 0.5–2.0 — the
+call went to the conversion readout as written, but "close" it was not. P6 **missed on both
+counts**: the even bucket is not Monet's against v04 and v06 (−0.015, −0.070) and the opener's edge
+there is 1.2 and 0.1 against 7.8. P7 **hit**: 61 of 61 sums exact, the classings in agreement, the
+pins at 100.0% on 36 of 36, the home walk clean. Two hits, two halves, three misses — every miss
+saying the same thing: the race is not about who opens it or which set is chosen.
+
+**The rule, applied.** The reachable price is the conversion bound, **+2.6 points** on both twelves,
+above 1.0: a mechanism is to be built as v0.20 along the in-race ask, and along nothing else —
+not the opening (priced at zero on two corpora), not the targeting (no gap), not the chase credit
+(measured negative). The stage is four of six in a contested set; the behaviour is pace; whether
+the fast policy has the choice is what v0.20's first step must price before its term is fitted
+(row 22).
+
+**What is fixed by this record.** Nothing on Monet's vector. `--races` on `scripts/attribute.mjs`
+— the race per set and the asks by class, with the even sums checked against the split table on
+every run, and the post-hoc table so labelled. The numbers above, on 74,400 games. **Scratch, not
+committed:** `$SP/monet-v19/{run-races.sh, run-races-posthoc.sh, report-races.mjs}`, `out/` and
+`out-posthoc/` (`races-<corpus>-<cell>.{txt,json}`, 61 each), `report-races-prereg.txt`,
+`report-races-posthoc.txt`; copied to the bench beside the rest.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -6326,6 +6470,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 19 | **After §3.8m: §3.9's table is on the record — Monet v1.0 does not exist at v0.9's vector (41.31% and 40.11% on two twelves; the panel's wall at v0.4 unmoved by thirteen points of ladder gains). What does the owner do with it?** The fork §0.3 wrote for this outcome, and only the owner can take: **(1)** ship v0.9 in the browser at about 40% against the frontier — the honest maximum of the belief programme, one rewrite, no latency — and publish the negative result with this document as the artefact; or **(2)** fund the lab-only search arm beyond the affordable budget (§3.8a: the pre-registered form a no-op at 96 ms an ask, the wider and deeper forms out on the cost rule at −0.08 and +0.60 at home), the one channel with a ceiling above the gap and no measured gain yet. Under (1) the even-3 bucket (§3.8c R1, ~40% of SESTINA's extra sets, never attacked as a target) remains the leading candidate for one more rung, at the honest prior of a ranker term. Not recommended: any belief change (§3.8l closed the axis); any further ask-ranker term (four measured out); a v1.0 claim on any seed count under twelve. | **TAKEN 2026-09-06 by the owner — (1): v0.9 stays what the lobby seats; the negative result is the eleventh paper (`papers/monet.tex`, §3.8n); the bridge archived outside the public tree. And the owner's direction from here, in one sentence — *"going forward, we should just pick whatever will improve the winning percentage of Monet"* — read into the rule of §3.8n.** |
 | 20 | **After row 19: under the rule of §3.8n — whatever the bridge measures as an improvement — what runs next?** The record holds two measured terms above two standard errors and under the floor on v0.9's vector, both off the shipped vector: the exposure charge on certain hits (§3.8e, +1.07, SE 0.54, 8 of 12) and the closing credit (§3.8h, +0.58, SE 0.23, 9 of 12). **Recommendation: v0.18 reads the stack** — v0.9 + exposure, v0.9 + closing, v0.9 + both — paired against v0.9 on twelve fresh seeds, pre-registered in §3.8o, about one bridge hour; the arm that clears the rule ships, the stack re-read as a whole. Behind it, in order: the even-3 bucket as a target (§3.8c R1, 40% of SESTINA's extra sets, never attacked) and the deeper search form (§3.8a, +0.60 at home at 1.7× the budget, never abroad). Not recommended: any belief change without the declare pin (§3.8l); a fresh ranker term fitted from scratch (§3.8i). | **TAKEN 2026-09-06 under the owner's direction of the same day ("just pick whatever will improve the winning percentage of Monet") — v0.18 reads the stack (§3.8o), pre-registered before a cell; the owner may reverse this row on return.** |
 | 21 | **After §3.8o: nothing clears — the exposure charge reads about zero on the translated bridge with its markers intact, the closing credit about +0.4 over twenty-four seeds and under the bar on its fresh twelve; at twelve seeds the rule resolves 1.3 points for a loud term and 0.6 for a quiet one, and nothing on record is priced at either. What runs next under the rule?** Four candidates, priced as far as the record can price them. **(a) Price the even-3 bucket before building for it** — §3.8c R1's largest pool (~40% of SESTINA's extra sets a game, a 3–3 deal won 58–42, never attacked by any rung), read from this rung's 58,800 recorded games with SESTINA's own asks in them: an instrument rung, no bridge time, no vector change, and a mechanism built only if the counterfactual prices at a point or more on the bridge. **(b) The search arm abroad** — §3.8a's forms were read at home only (+0.41 and +0.60 sets a pair, SE 0.3, against v0.4c, 100 pairs), and the cost rule that put them out is the browser's, not the bridge's; but at 96 ms an ask a twelve-seed read is about seventeen bridge hours an arm (thirty at the deeper form), the engine's stall limits are unchecked against it, and §3.8d's finding that the mirror does not price a term cuts both ways. **(c) A third fresh twelve on `closing` 0.5 alone** — fifteen minutes and about one chance in three of clearing 0.56 on a term worth +0.4; a second try at the same bar by the term that just failed it is the winner's curse the rule was written against, not recommended unless declared the last read and pooled with the two on record. **(d) Stop the ladder at the paper.** **Recommendation: (a), as v0.19.** Under the rule a rung is chosen by its expected gain on the bridge, and after ten measured zeros the expected gain of an unpriced mechanism is about zero: the price comes first. Then (b) only if (a) prices under a point; (c) never on its own. | **TAKEN 2026-09-06 under the owner's direction of the same day — (a): v0.19 prices the even bucket from the records (§3.8p), pre-registered before the instrument exists; the owner may reverse this row on return.** |
+| 22 | **After §3.8p: the even bucket is 2.8 points on v0.9's vector, the race is lost at the 4–2 stage — Monet reaches four first as often as anyone and converts the lead at 49% where SESTINA converts at 61% and either bot at 56% against its own kind; SESTINA asks into the race it opened every four events and resolves it in 26, Monet every six and a half in 36 — and the price along the in-race play is +2.6 by the conversion bound. §3.8p's rule says build v0.20 along the in-race ask. Along what, exactly?** The records do not yet say what the leader at 4–2 does differently, and the ladder has measured the fast policy's ask terms four times (§3.8d–§3.8i): the chase appetite at a majority reads negative (§3.8g, v0.13), the belief about the missing cards is calibrated (§3.8j), and a term fitted from scratch is not recommended (§3.8i). Two candidates carry the price. **(a) The 4–2 decision study, then the term** — at every ask decision of a side leading or trailing 4–2 in a contested set, on the 74,400 recorded games: what it asked (into the set, a certain hit elsewhere, an uncertain ask elsewhere), the hit, the take-back it allowed, and the race's outcome; Monet against SESTINA against the counterfactual at the same points. A day, no bridge. If SESTINA's edge at 4–2 is in a choice the fast policy can make — patience with the chase, the take-back taken, the turn kept — the term is named, fitted at home and read abroad under §3.8n as v0.20; a term that ships on `/play`. **(b) The search arm as the race player** — §3.8a's pre-registered form (D 8 · C 3 · S 24) is the one mechanism on record that plays a race as a race, read once at home at +0.41 sets a pair (SE 0.31, 100 pairs, against v0.4c) and never abroad; a 600-pair home re-read against v0.9 with `--races` on its records (does lookahead convert 4–2 leads?) costs about an hour, and a twelve-seed bridge read about seventeen bridge hours at 96 ms an ask, with the engine's stall limits checked on one cell first. It would improve the bridge number and not the browser's: a lab-only Monet, which the owner declined in row 19's fork and may decline again under the rule. **Recommendation: (a) as v0.20, with (b)'s home re-read as its second step if (a) names no term the fast policy can make.** Not recommended: opening more races (priced at zero by the v04 and v06 corpora, where Monet opens 70% and gains nothing), a targeting credit for even sets (no gap to close), or a chase credit (measured negative). | *open — the recommendation is (a); to be taken with its pre-registration under the owner's direction of 2026-09-06, the owner free to reverse* |
 
 ---
 
