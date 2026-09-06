@@ -459,6 +459,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.18** — the stack read (2026-09-06) | **the two measured terms under the floor, apart and together** — `exposure` 0.6 + `exposureCertain` (§3.8e, +1.07) and `closing` 0.5 (§3.8h, +0.58) on v0.9's vector, read against v0.9 on twelve fresh seeds under §3.8n's rule (§3.8o) | ships at ≥ 2 SE above zero and ahead on 7 of 12; the floor +2.00 reported beside it — **read 2026-09-06: NOTHING CLEARS. The base 40.70 (SD 1.49); `e` −0.15 (SD 2.31, SE 0.67, ahead on 7 of 12) — §3.8e's +1.07 does not replicate on the translated bridge, its markers intact and SESTINA's ask accuracy down by as much as Monet's; `c` +0.25 (SD 0.97, SE 0.28, 7 of 12) — the closing credit +0.42 pooled over twenty-four seeds (2.3 × SE), under the bar on its fresh twelve; `ec` +0.70 (SD 1.87, SE 0.54, 8 of 12), the interaction +0.60 on ±0.9. The identity cell IDENTICAL, four pins at 100.0%, the fourteen zero on every intact process file, §6.2's table complete on 49 of 49 after seven byte-identical replays of cells the bridge's kill window had left a file short. The rule's resolution at twelve seeds: 1.3 points for a loud term, 0.6 for a quiet one. Nothing ships; row 21 open** | the paired read; the identity pin first; the in-engine pin of every arm; §6.2's table on 48 cells | S |
 | **v0.17** — the §3.9 read (2026-09-06) | **§3.9's protocol on v0.9's vector** — the shipped bot under all six conditions, nothing fitted, nothing shipped (§3.8m) | ≥ 50.0% at twelve seeds — **read 2026-09-06: NOT MET. 41.31% on §3.8l's twelve (SD 1.29) and 40.11% on §3.8f's (SD 1.55); the panel monotone, v02 and v03 beaten on every seed (74.18 / 70.40), v04, v05 and v06 on none (47.62 / 46.81 / 44.72); declare accuracy ≥ 99.2% and the fourteen fault counters zero on every restated-adapter cell; §6.2's table clean, the per-process op counts equal to the engine's on 73 of 73 cells; the number reproduced to the hundredth on all twelve seeds by an independently built arm, the records identical on ten. Conditions 1 and 3 fail; 2, 4, 5 and 6 hold. Nothing ships; the §0.3 fork is the owner's (row 19)** | the pre-registered read of the six conditions; the panel on the same twelve seeds; a second adapter written from the documented protocol by an independent agent, compared game for game | M |
 | **v0.16** | **the licence likelihood, calibrated** — §3.8l: a seat that asked into a set holds about 1.5 of its alive cards whatever their number (§3.8k); three knob families calibrated on the records through §3.8k's seam and read through the same falsifiers; `licenceHold` at 1.5 selected, the per-cell `choiceKappa` families void (each adds hard zeros at true holders) | ≥ 43.31% (the base on §3.8l's twelve, 41.31%, + 2.00) — **read 2026-09-06: 40.58% against 41.31%, −0.74 paired (SD 1.58, SE 0.46), ahead on 4 of 12, inside the floor; behind 0.024 sets a game on 10 of 12 — the wrong declares double through the chain over the held table, a path the falsifiers never read; recorded, not shipped; the belief axis closes** | the records study first (fit on three seeds, 39 runs; held out on 21), then one paired read abroad on twelve fresh seeds | M |
 | **v0.13** | **the chase appetite** — §8.3 row 13's rung and the last ask-ranker term to be tried: a second, separately fitted appetite paying §3.8h's `lock` credit to the UNCERTAIN chases §3.8h's gate refuses, flat in the hit chance with the scaled form as its control (`chase`, `chaseScaled`, §3.8i) | ≥ 42.11% (the corrected v0.9 + 2.00) on twelve fresh seeds, and a marker gate on the three fit seeds before those twelve are spent — **read 2026-09-04: CLOSED ON THE FIT, twelve seeds never spent. Every dose loses, monotonically: −1.08, −2.50, −5.17, −7.56 at `chase` 2.0/2.5/3.0/4.0 and −3.44 at the scaled control. On the asks it moved the base's preferred ask hit 100.0% against 29.7–50.1% taken; the chase rate did not move (31.5 → 31.8%, bar +1.5) because the asks it buys are sure misses into the side's own majority, not chases. Nothing ships** | fit abroad on three fresh seeds over seven arms; markers from the records through §3.8g's instrument, with bars and a ceiling | M |
@@ -5547,6 +5548,243 @@ bridge hour, its pre-registration (§3.8o) written before a cell. Behind it, in 
 bucket as a target (§3.8c R1, 40% of SESTINA's extra sets, never attacked) and the deeper search form
 (§3.8a, +0.60 at home at 1.7× the budget, never abroad).
 
+### 3.8o Monet v0.18 — the stack read: the two measured terms under the floor, apart and together
+
+**Decision row 20, taken 2026-09-06 under the owner's direction of the same day — *"going forward,
+we should just pick whatever will improve the winning percentage of Monet"* — by the rule of
+§3.8n.** Not a new mechanism. Two terms already built, fitted and read on v0.9's vector, each under
+the ±2.00 floor and above two standard errors, read again on twelve fresh seeds against v0.9 — apart
+and together — with the arm that clears §3.8n's rule shipping as `monetPolicy('v0.18')`.
+
+#### Pre-registration — written 2026-09-06, before any cell
+
+**The facts this rung starts from.**
+
+- The exposure charge on certain hits (§3.8e, the u1 arm: `exposure` 0.6 + `exposureCertain`):
+  **+1.07** paired over v0.9 on twelve fresh seeds (SD 1.89, SE 0.54, t 1.96, ahead on 8 of 12),
+  read on the old bridge — the pair within the rung stands (§3.8f). Its markers there: ask accuracy
+  54.60% from 55.25%, declarations 4.11 a game from 4.08, lock hold 6.76 from 6.78.
+- The closing credit (§3.8h, the w3 arm: `closing` 0.5): **+0.583** paired over the corrected v0.9
+  on twelve fresh seeds (SD 0.79, SE 0.23, ahead on 9 of 12), on the translated bridge; every
+  pre-registered marker moved as written, each by about a tenth of its gap.
+- Neither has been read beside the other. Both act in `pickAsk` on the same candidates — the charge
+  prices what a hit gives away, the credit pays for an ask that brings a held set within reach —
+  and under `exposureCertain` the priced terms are ungated beside a legal certain hit while the
+  closing credit keeps its own certain-hit gate (§3.8h's tests). §0.1's rule, that terms promoting
+  the same asks do not add, is the prior for the joint arm.
+- §3.4a's oracle bound (38.28%) is on v0.4's ask policy and does not bind here; the bound the four
+  ranker terms were fitted against is §3.8c's counterfactual surplus at SESTINA's decisions, +6.8
+  points of hit chance, of which v0.9 took +4.04.
+
+**The arms**, every one v0.9's vector (`MONET_ARM` v0.4c + `contest` 0.6) plus the override, MUSTFIX,
+the restated adapter of §3.8m (md5 c1fc7316…, unchanged — the bridge does not move for this rung),
+on the v0.18 tree export (`5d49d1e`, lib md5 16f52e16…, the same bytes as v0.16's and v0.17's):
+
+> | arm | override beside `contest` 0.6 | for |
+> |---|---|---|
+> | base | — | the pair |
+> | e | `exposure` 0.6 + `exposureCertain` | §3.8e's u1, re-read on the translated bridge |
+> | c | `closing` 0.5 | §3.8h's w3, re-read on fresh seeds |
+> | ec | both | the stack |
+
+**The read.** Twelve fresh seeds by §6.5's rule from `monet-v0.18-confirm-12` (85 seeds spent or
+reserved before the draw, none drawn twice): **9502823 8047376 7423220 5202785 5458804 5543368
+8844324 4136509 6890891 5005191 8317657 7029023**. Every cell 200 deals × 6 rotations = 1,200 games
+against SESTINA v1.0, recorded; 48 cells, four containers wide (one per arm), about half an hour of
+bridge. Before a fresh seed is spent, the base arm replays seed 6269924 and must be IDENTICAL to
+§3.8l's base cell, every engine line but `elapsed` (§6.2's byte-exact null arm; the tree and the
+adapter are the ones §3.8m pinned). After the cells, every arm is pinned in-engine on its own
+records — `attribute.mjs --cf v0.9 --cf-knobs <the arm's override>` must agree with the play at
+100.0% of A's decisions on seed 9502823 (§3.8l's pin) — or the arm's number is not read.
+
+**The rule (§3.8n), fixed now.** An arm clears when its paired mean over the twelve seeds is at
+least two standard errors (over seeds) above zero **and** it is ahead on at least seven of the
+twelve. **The arm with the largest paired mean among those that clear ships as
+`monetPolicy('v0.18')`** — its deviation from v0.9 pinned in `tests/bots/monet.test.ts` with a
+forward bank emitted from the clean tree, the registry and the lobby following. If `ec` clears but
+a single term clears with a larger mean, the single term ships: each arm is a whole vector read
+against v0.9, so the stack is re-read as a whole by construction. If no arm clears, nothing ships
+and the record says what each term is worth on the translated bridge on fresh seeds. The ±2.00
+floor is reported beside the rule and decides the word: an arm that ships under it is a *term
+shipped under the floor*, not a rung. Home duplicate pairs — 600 on `home-a`, the shipped arm
+against v0.9 — are reported, not gating, as in §3.8d: the mirror does not price these terms. The
+lobby's honesty floor stands as `tests/play/models.test.ts` writes it: if the shipped arm's
+agreement with Bass v2.0 over the test's games falls under 95%, the sentence in `models.ts` is
+rewritten, not the threshold.
+
+**The markers**, from the engine's own lines as means over the twelve cells, arm against base: ask
+accuracy, declarations a game and their accuracy, forced declarations, lock hold, events a game,
+the calibration bias and worst decile. And §6.2's table on every cell: the fourteen fault counters
+from the per-process cover files zero; `opAsk` equal to the engine's count of A's asks; `opPass`
+> 0; every cell with a win-rate line.
+
+**Void rules.** The identity cell differing: nothing runs. A cell without a win-rate line: rerun
+once, then the seed is reported as missing and the arm read on eleven with the fact stated. A fault
+counter non-zero on an arm's cells: that arm is disqualified from shipping and its number reported
+with the fault. A pin under 100.0%: the arm's number is not read.
+
+**Predictions, written before any cell.**
+
+- **P1.** The base reads 39.5–42.5% on the fresh twelve (the two prior twelves: 41.31, SD 1.29;
+  40.11, SD 1.55), SD 1.0–1.9.
+- **P2.** `e`: +0.3 to +1.8 paired, ahead on 7 to 10 of 12; ask accuracy 0.4 to 0.9 points under
+  the base's; declarations a game up by 0.02 to 0.06.
+- **P3.** `c`: +0.2 to +1.0 paired, ahead on 7 to 10 of 12; ask accuracy within 0.3 of the base's.
+- **P4.** `ec`: +0.6 to +2.2 paired, ahead on 8 to 11 of 12; sub-additive — under `e` + `c` by 0.1
+  to 0.6.
+- **P5.** The rule: `e` and `ec` clear; `c` is the one in doubt (its +0.58 was 2.5 × SE on an SD of
+  0.79 that a fresh twelve need not repeat); the ship candidate is `ec`.
+- **P6.** §6.2's table clean on 48 of 48: the fourteen zero, `opAsk` equal to the engine's count,
+  `opPass` > 0; calibration aggregate |bias| < 0.01 and worst decile < 0.10 on every base cell.
+- **P7.** The identity cell IDENTICAL; every arm pinned at 100.0%.
+
+**Cost** S. **Scratch, not committed:** `$SP/monet-v18/{DOSES.json, common.sh, export-v18.sh,
+step0.sh, step-conf.sh, run-lanes.sh, report-v18.mjs, pin-arm.sh}`, `$SP/mkarm-v18.mjs`,
+`$SP/seeds-v18.mjs`, `$SP/arm_v18/monet-v18-{base,e,c,ec}`, `$SP/fishai-v18`.
+
+#### Record — 2026-09-06
+
+**Nothing clears the rule, and nothing ships.** The base — v0.9's vector, MUSTFIX, the restated
+adapter — read **40.70%** on the fresh twelve (SD 1.49, SE 0.43; the two prior twelves 41.31 and
+40.11). The three stack arms, paired against it seed by seed:
+
+> | arm | paired mean | SD over seeds | SE | × SE | ahead | the rule (≥ 2 SE and ≥ 7 of 12) | the floor (+2.00) |
+> |---|---|---|---|---|---|---|---|
+> | **e** — `exposure` 0.6 + `exposureCertain` | **−0.15** | 2.31 | 0.67 | −0.2 | 7 of 12 | **no** — the wrong sign | no |
+> | **c** — `closing` 0.5 | **+0.25** | 0.97 | 0.28 | 0.9 | 7 of 12 | **no** | no |
+> | **ec** — both | **+0.70** | 1.87 | 0.54 | 1.3 | 8 of 12 | **no** | no |
+
+> | seed | base | e | e − base | c | c − base | ec | ec − base |
+> |---|---|---|---|---|---|---|---|
+> | 9502823 | 39.75 | 41.17 | +1.42 | 41.25 | +1.50 | 41.75 | +2.00 |
+> | 8047376 | 40.83 | 39.75 | −1.08 | 42.08 | +1.25 | 40.33 | −0.50 |
+> | 7423220 | 43.67 | 39.92 | −3.75 | 42.67 | −1.00 | 40.92 | −2.75 |
+> | 5202785 | 40.83 | 40.92 | +0.08 | 42.08 | +1.25 | 43.00 | +2.17 |
+> | 5458804 | 41.00 | 43.50 | +2.50 | 41.08 | +0.08 | 43.92 | +2.92 |
+> | 5543368 | 39.83 | 37.92 | −1.92 | 39.08 | −0.75 | 39.50 | −0.33 |
+> | 8844324 | 39.50 | 41.33 | +1.83 | 39.75 | +0.25 | 41.83 | +2.33 |
+> | 4136509 | 37.50 | 40.50 | +3.00 | 39.33 | +1.83 | 39.17 | +1.67 |
+> | 6890891 | 41.58 | 40.83 | −0.75 | 41.08 | −0.50 | 43.00 | +1.42 |
+> | 5005191 | 41.17 | 36.92 | −4.25 | 40.75 | −0.42 | 38.75 | −2.42 |
+> | 8317657 | 41.67 | 42.42 | +0.75 | 41.75 | +0.08 | 43.50 | +1.83 |
+> | 7029023 | 41.08 | 41.42 | +0.33 | 40.50 | −0.58 | 41.17 | +0.08 |
+> | **mean** | **40.70** | **40.55** | **−0.15** | **40.95** | **+0.25** | **41.40** | **+0.70** |
+
+**The exposure charge does not replicate.** §3.8e read it at **+1.07** (SE 0.54, ahead on 8 of 12)
+on the old bridge, on the twelve of its own rung; on the translated bridge, on twelve seeds fresh
+to it, the same term on the same vector reads **−0.15** (SE 0.67). The two reads are 1.22 apart on
+a standard error of the difference of 0.86 — 1.4 SE — which is consistent with a term worth a few
+tenths read twice through noise, and consistent with the old read having been a high draw; the
+record cannot tell those apart and the rule does not need it to. Its markers moved exactly as
+§3.8e described them and as P2 predicted: ask accuracy **0.60 under** the base's (55.06 → 54.46),
+declarations up 0.018 a game, forced declarations down (0.112 → 0.094 a game), lock hold down
+(7.21 → 7.02 events). And the other side of the ledger is on the same lines: SESTINA's ask accuracy
+fell by **0.55** under the charge (57.19 → 56.64) — the term does take from the certain hit what it
+was built to take, and it costs Monet's own asks almost exactly as much. Net, nothing. That is
+§3.8c's finding a second time, on the other team: the hit chance an ask gives away is not the
+value of the ask any more than the hit chance it keeps.
+
+**The closing credit is what it was, and small.** §3.8h read it at **+0.583** (SD 0.79, SE 0.23,
+ahead on 9 of 12) on the translated bridge; here **+0.25** (SD 0.97, SE 0.28, ahead on 7 of 12).
+The two are 0.33 apart on a standard error of the difference of 0.36 — the same term read twice.
+Pooled at equal weight over the twenty-four seeds it is **+0.42 (SE 0.18, 2.3 × SE)**: a real few
+tenths, on the record as information and nothing else. The rule reads twelve *fresh* seeds so that
+a term is never shipped on the twelve that picked it, and on its fresh twelve the credit is under
+the bar (2 × 0.28 = 0.56). Its ask accuracy stayed within 0.13 of the base's, as P3 wrote; SESTINA's
+moved 0.22.
+
+**The stack is the sum of its parts, read through noise.** `ec` at +0.70 (SE 0.54) is ahead on 8 of
+12 and inside P4's band at its bottom edge; the interaction `ec − (e + c)` is **+0.60**, the sign
+opposite to P4's sub-additive prior, on an uncertainty of about ±0.9 (the three differences share
+the base cells, so the naive standard error is a guide, not a number). The read says nothing about
+the interaction and nothing new about the stack: with `e` at about zero on this bridge, `ec` is
+`c` plus noise, and it is under the bar by the same margin.
+
+**What twelve seeds can read, fixed by this rung.** The three paired standard deviations — 2.31,
+0.97, 1.87 — set the rule's resolution at twelve seeds: two standard errors is **1.33 points** for a
+term that moves as many asks as the exposure charge and **0.56** for one as quiet as the closing
+credit. A term worth half a point is unreadable at twelve seeds unless it is very consistent; to
+read +0.5 at two standard errors on an SD of 2.3 takes about 85 seeds — 100,000 games, seven bridge
+hours an arm. The consequence for row 21 is direct: under the rule the next rung has to be a
+mechanism priced at a point or more, not another sub-point ranker term, and pricing it comes
+before building it.
+
+**The markers**, means over the twelve cells (arm against base, from the engine's lines):
+
+> | marker | base | e | c | ec |
+> |---|---|---|---|---|
+> | sets a game, Monet − SESTINA | 4.164 − 4.836 | 4.172 − 4.828 | 4.182 − 4.818 | 4.192 − 4.808 |
+> | ask accuracy, Monet (SESTINA) | 55.06 (57.19) | 54.46 (56.64) | 54.93 (56.97) | 54.41 (56.50) |
+> | declarations a game, at accuracy | 4.016 at 99.68% | 4.034 at 99.69% | 4.040 at 99.67% | 4.054 at 99.68% |
+> | forced declarations a game, at accuracy | 0.112 at 54.8% | 0.094 at 52.6% | 0.108 at 53.0% | 0.089 at 53.6% |
+> | lock hold, events / cashed | 7.21 / 4.71 | 7.02 / 4.64 | 7.11 / 4.68 | 6.92 / 4.60 |
+> | events a game | 101.5 | 100.9 | 101.3 | 100.9 |
+> | calibration, aggregate bias / worst decile | +0.0065 / 0.090 | +0.0080 / 0.083 | +0.0066 / 0.092 | +0.0085 / 0.088 |
+
+The set gap narrows by 0.016, 0.036 and 0.056 sets a game under `e`, `c` and `ec` — a few
+hundredths, in the order of the win-rate differences, none of it at the floor. Declare accuracy
+stays at 99.67–99.69% on every arm (§3.9's bar 98.0).
+
+**Home duplicate pairs** (600 on `home-a`, the arm against v0.9; reported, not gating): `e` +0.042
+± 0.249 sets a pair at 49.50%; `c` +0.043 ± 0.194 at 50.58%; `ec` +0.093 ± 0.254 at 49.67%. About
+zero, all three, as §3.8d found for these terms: the mirror does not price them.
+
+**§6.2's table.** (i) **The identity cell.** The base arm at 6269924, before any fresh seed was
+spent: **IDENTICAL** to §3.8l's recorded cell on every engine line but `elapsed` (40.75%). (ii) **The
+in-engine pins.** Every arm on its own records at 9502823, `attribute.mjs --cf v0.9` with the arm's
+knobs overlaid: **100.0%** of A's decisions on all four (base, `e`, `c`, `ec`). (iii) **The cells.**
+48 of 48 with a win-rate line, 1,201 record lines each, exit 0 on every lane; `FATAL` 0 and
+`COVERAGE FAIL` 0 in every cell's bot log. (iv) **The fault counters.** The fourteen **zero on every
+one of the 1,754 intact per-process cover files**; `planGreedyDiff` 176–540 and `planGreedyDiffP`
+402–1,019 a cell, information as before. (v) **Op coverage.** `opAsk` equal to the engine's count of
+A's asks, exact, on **42 of 49** cells as harvested (the identity cell and 41 read cells); `opPass`
+224–304, above zero on every cell. On the other seven — base 4136509 and 6890891, `e` 8317657 and
+7029023, `c` 5543368, `ec` 8844324 and 6890891 — one seat process's file was missing or empty (two on
+`ec` 6890891): eight of 1,764 seat exits. The mechanism, read in the engine's bridge source: it
+closes a seat's stdin and allows it about 300 ms before a kill, and the adapter's close-out writes
+its stderr lines and then one file to the bind mount; four containers on one host pushed eight
+exits past the window. v0.16 and v0.17 saw none in 3,096 files with fewer containers running at
+once. On those seven cells the intact files' `opAsk` is short of the engine's by 1,269–1,678 for one
+seat (2,826 for the two), a seat's share (about 1,470 asks a cell), and the fourteen are zero on
+every intact file. **The control was then completed:** each of the seven cells was replayed under
+its own tag two containers wide, and a cell is byte-deterministic in its seed — all seven replays
+are **IDENTICAL** to the originals on every engine line but `elapsed`, with **36 of 36** files each,
+the fourteen zero and `opAsk` equal to the engine's count on all seven; the win rates read are the
+originals', unchanged, and the harvest defect is on the record with its fix (§6.2, below). (vi)
+**Calibration** on the base cells: aggregate bias +0.0037 to **+0.0110**, worst decile 0.053 to
+**0.114** — one cell over P6's bias bar (6890891) and four over its decile bar (9502823, 5458804,
+6890891, 7029023), where v0.16's twelve sat inside both on 12 of 12 (0.065–0.098) and its identity
+cell read 0.109. The decile is the belief's thinnest bin and a fresh twelve put four cells a
+hundredth over it; reported, not a control, and no arm's number turns on it.
+
+**Predictions, scored.** P1 **hit**: 40.70 (39.5–42.5), SD 1.49 (1.0–1.9). P2 **missed on the number,
+hit on the mechanism**: −0.15 against +0.3 to +1.8; ahead on 7 (7–10); ask accuracy 0.60 under
+(0.4–0.9); declarations +0.018 a game (0.02–0.06, a hair under). P3 **hit**: +0.25 (+0.2 to +1.0),
+ahead on 7 (7–10), ask accuracy within 0.13 (0.3). P4 **half**: +0.70 inside +0.6 to +2.2 at its
+edge and ahead on 8 (8–11), but super-additive by 0.60 where sub-additive by 0.1–0.6 was written.
+P5 **missed**: nothing clears, and the term "in doubt" is the one whose read held. P6 **missed as
+written**: the fourteen zero and `opPass` > 0 everywhere, but the per-process harvest complete on 41
+of 48 before the replay, and the calibration bars exceeded on one and four base cells. P7 **hit**:
+IDENTICAL; 100.0% on all four pins. Three hits, one half, three misses — the misses all in the
+direction of a term worth less than its prior.
+
+**What is fixed by this record.** Nothing on Monet's vector; `monetPolicy('v0.9')` stays what the
+lobby seats and the registry is unchanged. Two values on the translated bridge on fresh seeds: the
+exposure charge on certain hits at **about zero** (−0.15 ± 0.67) with its markers intact, and the
+closing credit at **about +0.4** (twenty-four seeds, 2.3 × SE) — under the rule's bar on its fresh
+twelve, under the floor by a factor of five. The rule's resolution at twelve seeds (1.3 points for a
+loud term, 0.6 for a quiet one). And a harvest defect in the per-process control with its fix, into
+§6.2's practice for every rung from here: **at most three containers at once**, and **a missing or
+empty cover file replays the cell** — byte-identical, under its own tag — before the cell is read.
+
+**Scratch state, not committed:** `$SP/monet-v18/{DOSES.json, common.sh, export-v18.sh, step0.sh,
+step-conf.sh, run-lanes.sh, report-v18.mjs, pin-arm.sh, sum-cover-v18.mjs, step-rerun.sh,
+run-rerun.sh}`, `report-v18.txt`, `cover-summary.txt`, the 48 read cells, the identity cell and the
+seven replays (`cell-*.txt`, `records/*.jsonl`, `cover-*/`, `calib-*.txt` — two of the latter
+recomputed from the intact files, so marked — `botlog-*.log`), `out/pin-{base,e,c,ec}-9502823.txt`,
+`out/home-{e,c,ec}.txt`, `$SP/arm_v18/monet-v18-{base,e,c,ec}`, `$SP/fishai-v18`,
+`$SP/mkarm-v18.mjs`, `$SP/seeds-v18.mjs`; copied to the bench beside the rest (§3.8n).
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -5987,7 +6225,8 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 17 | **After §3.8k: the deduction fix is dead — the model, not the inference, is the error. What is v0.16, if anything?** The exact posterior under `marginal.ts`'s own model is *worse* than the Sinkhorn table on 24 of 24 seeds (+0.19% Brier pooled, **+4.5% on the licence split**), moves 2.7% of asks symmetrically, and carries 0.003–0.005 sets a game on B2's surviving cell; K1 and K3 fire. The post-hoc diagnostic says why: a seat that has asked into a set holds **about 1.5** of its alive cards whether two or five are alive — both of two about half the time, where the model says 15% — so the players' choices carry a likelihood the constraints do not, and exact inference only sharpens the wrong prior. Six rungs have now read negative in a row (v0.10–v0.15), and the belief channel's ceiling is 0.33 sets a game under a *perfect* belief (§3.8j addendum). **Recommendation: M-NULL leads — §3.9's acceptance on v0.9's vector.** Before it is taken, one probe costs no cell and settles the last open question on this axis: **the licence likelihood** — `choiceKappa` with `choicePrior: 'once'`, the geometric-in-the-holding weight the code already carries, **calibrated on the records** to the measured holding (the crude arithmetic on the two-alive bucket wants (1 + κ) ≈ 6, against the κ = 1 v0.5 took abroad) and read through the same seam with the same falsifiers: K1's bar on S3 = yes, K2's on asks moved, B2's cell. If it cannot clear them the belief axis closes for good, and row 18 chooses between §3.9 and **the even-3 bucket** — §3.8c R1's largest single bucket, ~40% of SESTINA's extra sets a game, never attacked by any rung. Not recommended: any dose fitted abroad on the belief before that probe; any further inference change under this model; another ranker term. | **TAKEN 2026-09-05** — the owner: "lets go with your recommendation for row 17", with full authorization for the direction of v1.0 development from here ("just go ahead with the best path you think is"). **v0.16 is the licence-likelihood probe on the records, pre-registered first (§3.8l); M-NULL is taken if it fails.** |
 | 18 | **After §3.8l: the belief axis is closed — seven measured negatives (v0.10–v0.16), the last with the belief repaired where the error was and worth nothing in play. What does the ladder do with the residual?** The channels this document measured are out: the ask ranker (four terms, §3.8d–§3.8i), the assignment (§3.8j), the inference (§3.8k) and the likelihood (§3.8l); the search arm at the affordable budget was a no-op abroad (§3.8a); §0.2's POSITION is what is left, and it is not a knob. **Recommendation: M-NULL — §3.9's protocol executed on v0.9's vector in full, as the ladder's closing artefact (§3.8m).** Conditions 1–2 are already read twice on seed sets that share nothing — 40.11% on §3.8e's twelve (§3.8f) and 41.31% on §3.8l's twelve (SD 1.29) — and what remains is the panel against v0.2–v0.6 at home (3), the §6.2 table with the adapter's restated wire check and every fault counter by name (5), and a second, independently built arm on the same spec (6): one bridge run, nothing fitted, nothing shipped. The result is the number the owner's fork in §0.3 needs — ship v0.9 in the browser at about 40% and publish the negative result, or fund the lab-only search at twice the budget. The even-3 bucket (§3.8c R1, ~40% of SESTINA's extra sets, never attacked as a target) stays the leading alternative for a further rung, at the honest prior of a ranker term: under the floor. Not recommended: a repaired `hold` form abroad (bounded at +1.0 by B2's cell and read at about zero here); any belief change without §3.8l's declare pin; the search arm wider or deeper than the budget (§3.8a read −0.08 and +0.60 at home). | **TAKEN 2026-09-06 under the owner's standing authorization of 2026-09-05 ("just go ahead with the best path you think is") — v0.17 is the §3.9 read on v0.9's vector (§3.8m); nothing ships from it; the §0.3 fork stays the owner's, and the owner may reverse this row on return.** |
 | 19 | **After §3.8m: §3.9's table is on the record — Monet v1.0 does not exist at v0.9's vector (41.31% and 40.11% on two twelves; the panel's wall at v0.4 unmoved by thirteen points of ladder gains). What does the owner do with it?** The fork §0.3 wrote for this outcome, and only the owner can take: **(1)** ship v0.9 in the browser at about 40% against the frontier — the honest maximum of the belief programme, one rewrite, no latency — and publish the negative result with this document as the artefact; or **(2)** fund the lab-only search arm beyond the affordable budget (§3.8a: the pre-registered form a no-op at 96 ms an ask, the wider and deeper forms out on the cost rule at −0.08 and +0.60 at home), the one channel with a ceiling above the gap and no measured gain yet. Under (1) the even-3 bucket (§3.8c R1, ~40% of SESTINA's extra sets, never attacked as a target) remains the leading candidate for one more rung, at the honest prior of a ranker term. Not recommended: any belief change (§3.8l closed the axis); any further ask-ranker term (four measured out); a v1.0 claim on any seed count under twelve. | **TAKEN 2026-09-06 by the owner — (1): v0.9 stays what the lobby seats; the negative result is the eleventh paper (`papers/monet.tex`, §3.8n); the bridge archived outside the public tree. And the owner's direction from here, in one sentence — *"going forward, we should just pick whatever will improve the winning percentage of Monet"* — read into the rule of §3.8n.** |
-| 20 | **After row 19: under the rule of §3.8n — whatever the bridge measures as an improvement — what runs next?** The record holds two measured terms above two standard errors and under the floor on v0.9's vector, both off the shipped vector: the exposure charge on certain hits (§3.8e, +1.07, SE 0.54, 8 of 12) and the closing credit (§3.8h, +0.58, SE 0.23, 9 of 12). **Recommendation: v0.18 reads the stack** — v0.9 + exposure, v0.9 + closing, v0.9 + both — paired against v0.9 on twelve fresh seeds, pre-registered in §3.8o, about one bridge hour; the arm that clears the rule ships, the stack re-read as a whole. Behind it, in order: the even-3 bucket as a target (§3.8c R1, 40% of SESTINA's extra sets, never attacked) and the deeper search form (§3.8a, +0.60 at home at 1.7× the budget, never abroad). Not recommended: any belief change without the declare pin (§3.8l); a fresh ranker term fitted from scratch (§3.8i). | *open — the recommendation is v0.18, the stack read; taken with its pre-registration (§3.8o) under the owner's direction of 2026-09-06* |
+| 20 | **After row 19: under the rule of §3.8n — whatever the bridge measures as an improvement — what runs next?** The record holds two measured terms above two standard errors and under the floor on v0.9's vector, both off the shipped vector: the exposure charge on certain hits (§3.8e, +1.07, SE 0.54, 8 of 12) and the closing credit (§3.8h, +0.58, SE 0.23, 9 of 12). **Recommendation: v0.18 reads the stack** — v0.9 + exposure, v0.9 + closing, v0.9 + both — paired against v0.9 on twelve fresh seeds, pre-registered in §3.8o, about one bridge hour; the arm that clears the rule ships, the stack re-read as a whole. Behind it, in order: the even-3 bucket as a target (§3.8c R1, 40% of SESTINA's extra sets, never attacked) and the deeper search form (§3.8a, +0.60 at home at 1.7× the budget, never abroad). Not recommended: any belief change without the declare pin (§3.8l); a fresh ranker term fitted from scratch (§3.8i). | **TAKEN 2026-09-06 under the owner's direction of the same day ("just pick whatever will improve the winning percentage of Monet") — v0.18 reads the stack (§3.8o), pre-registered before a cell; the owner may reverse this row on return.** |
+| 21 | **After §3.8o: nothing clears — the exposure charge reads about zero on the translated bridge with its markers intact, the closing credit about +0.4 over twenty-four seeds and under the bar on its fresh twelve; at twelve seeds the rule resolves 1.3 points for a loud term and 0.6 for a quiet one, and nothing on record is priced at either. What runs next under the rule?** Four candidates, priced as far as the record can price them. **(a) Price the even-3 bucket before building for it** — §3.8c R1's largest pool (~40% of SESTINA's extra sets a game, a 3–3 deal won 58–42, never attacked by any rung), read from this rung's 58,800 recorded games with SESTINA's own asks in them: an instrument rung, no bridge time, no vector change, and a mechanism built only if the counterfactual prices at a point or more on the bridge. **(b) The search arm abroad** — §3.8a's forms were read at home only (+0.41 and +0.60 sets a pair, SE 0.3, against v0.4c, 100 pairs), and the cost rule that put them out is the browser's, not the bridge's; but at 96 ms an ask a twelve-seed read is about seventeen bridge hours an arm (thirty at the deeper form), the engine's stall limits are unchecked against it, and §3.8d's finding that the mirror does not price a term cuts both ways. **(c) A third fresh twelve on `closing` 0.5 alone** — fifteen minutes and about one chance in three of clearing 0.56 on a term worth +0.4; a second try at the same bar by the term that just failed it is the winner's curse the rule was written against, not recommended unless declared the last read and pooled with the two on record. **(d) Stop the ladder at the paper.** **Recommendation: (a), as v0.19.** Under the rule a rung is chosen by its expected gain on the bridge, and after ten measured zeros the expected gain of an unpriced mechanism is about zero: the price comes first. Then (b) only if (a) prices under a point; (c) never on its own. | *open — the recommendation is (a), the even-3 instrument; to be taken with its pre-registration under the owner's direction of 2026-09-06, the owner free to reverse* |
 
 ---
 
