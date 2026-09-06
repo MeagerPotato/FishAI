@@ -182,7 +182,7 @@ const newRaceAcc = () => {
 // §3.8q accumulators: lead and trail decisions per side (actual and counterfactual), and the races by
 // their leader (the side first to four): the first lead decision, the first trail decision, the outcome.
 const newRace42Acc = () => {
-  const D = () => ({ n: 0, chaseC: 0, chaseU: 0, chaseHit: 0, chaseSure: 0, elseC: 0, elseU: 0, cfN: 0, cfChaseC: 0, cfChaseU: 0, cfChaseHit: 0, cfElseC: 0, cfElseU: 0, both: 0, bothActHit: 0, bothCfHit: 0, joint: new Array(16).fill(0) })
+  const D = () => ({ n: 0, chaseC: 0, chaseU: 0, chaseHit: 0, chaseSure: 0, elseC: 0, elseU: 0, cfN: 0, cfChaseC: 0, cfChaseU: 0, cfChaseHit: 0, cfElseC: 0, cfElseU: 0, both: 0, bothActHit: 0, bothCfHit: 0, joint: new Array(16).fill(0), known: [0, 0, 0, 0, 0, 0], known4Cert: 0, known4NoCert: 0 })
   const Tt = () => ({ n: 0, legal: 0, takeBack: 0, intoU: 0, elseC: 0, elseU: 0, cfN: 0, cfTakeBack: 0, cfIntoU: 0, cfElseC: 0, cfElseU: 0, legalTakeBack: 0, legalCfTakeBack: 0, joint: new Array(16).fill(0) })
   const Rr = () => ({ n: 0, firstChased: 0, firstChasedConv: 0, firstNot: 0, firstNotConv: 0, noLead: 0, noLeadConv: 0, leadDec: 0, chases: 0, trailFirst: 0, trailTook: 0, trailTookRec: 0, trailNot: 0, trailNotRec: 0 })
   return { lead: [D(), D()], trail: [Tt(), Tt()], byLeader: [Rr(), Rr()] }
@@ -1110,6 +1110,20 @@ function walk(rec, cfPol, acc) {
             const hc = relClass(holdingOf(T, cb))
             CK.deal[dc].n++; if (cfHit) CK.deal[dc].hit++
             CK.hold[hc].n++; if (cfHit) CK.hold[hc].hit++
+          }
+          if (RACE42 && ctx42 && ctx42.lead.length) {
+            // §3.8r post hoc: the seat-known own-side count of each lead set at this decision, through the
+            // counterfactual's knowledge (its own hand carries a certain holder), and at four whether a
+            // certain hit was on the table by the public record (the counterfactual's pick certain)
+            const kk = ENG.buildKnowledge(view, OPTS)
+            const cfCert = publicAt.get(a.card) === a.target
+            const L4 = acc.race42.lead[T]
+            for (const lb of ctx42.lead) {
+              let known = 0
+              for (const c of BOOK_CARDS.get(lb)) { const h = BOTS.holderOf(kk, c); if (h !== null && side(h) === T) known++ }
+              L4.known[Math.min(5, known)]++
+              if (known === 4) { if (cfCert) L4.known4Cert++; else L4.known4NoCert++ }
+            }
           }
           if (RACE42 && ctx42) race42Act(T, ev.asker, a.card, a.target, cfHit, ctx42, true)
         }
