@@ -67,6 +67,13 @@ export interface Knowledge {
   choiceSeat?: number[]
   /** The prior's shape (`KnowledgeOptions.choicePrior`); absent = `'count'`. */
   choicePrior?: 'count' | 'once'
+  /**
+   * MONET.md §3.8l — the licence conditioning's target holding h (`KnowledgeOptions.licenceHold`):
+   * the marginal scales each surviving constraint so the licensed seat's expected count over the
+   * set's alive cards is min(h, alive). Present only when the option is > 0; absent = the one-shot
+   * "at least one" conditioning every table before v0.16 used.
+   */
+  licenceHold?: number
 }
 
 /** Options for buildKnowledge — used by the easy tier's degraded memory. */
@@ -101,6 +108,15 @@ export interface KnowledgeOptions {
    * only with `marginal` and `choiceKappa > 0`.
    */
   choiceAdapt?: number
+  /**
+   * MONET.md §3.8l — the licence conditioning CALIBRATED to a measured holding: h > 0 makes the
+   * marginal scale each surviving "holds at least one of these" constraint so the licensed seat's
+   * expected count over the set's alive cards is min(h, alive), as one more margin in the same
+   * proportional fitting. §3.8k measured the truth at about 1.5 whether two or five cards are
+   * alive, where the one-shot conditioning expects 1.14 rising to 1.52. Default 0: the table every
+   * version before v0.16 built, byte for byte. Read only when `marginal` is set.
+   */
+  licenceHold?: number
 }
 
 /**

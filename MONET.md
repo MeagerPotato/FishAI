@@ -443,6 +443,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.16** | **the licence likelihood, calibrated** — §3.8l: a seat that asked into a set holds about 1.5 of its alive cards whatever their number (§3.8k); three knob families calibrated on the records through §3.8k's seam and read through the same falsifiers; `licenceHold` at 1.5 selected, the per-cell `choiceKappa` families void (each adds hard zeros at true holders) | ≥ 43.31% (the base on §3.8l's twelve, 41.31%, + 2.00) — **read 2026-09-06: 40.58% against 41.31%, −0.74 paired (SD 1.58, SE 0.46), ahead on 4 of 12, inside the floor; behind 0.024 sets a game on 10 of 12 — the wrong declares double through the chain over the held table, a path the falsifiers never read; recorded, not shipped; the belief axis closes** | the records study first (fit on three seeds, 39 runs; held out on 21), then one paired read abroad on twelve fresh seeds | M |
 | **v0.13** | **the chase appetite** — §8.3 row 13's rung and the last ask-ranker term to be tried: a second, separately fitted appetite paying §3.8h's `lock` credit to the UNCERTAIN chases §3.8h's gate refuses, flat in the hit chance with the scaled form as its control (`chase`, `chaseScaled`, §3.8i) | ≥ 42.11% (the corrected v0.9 + 2.00) on twelve fresh seeds, and a marker gate on the three fit seeds before those twelve are spent — **read 2026-09-04: CLOSED ON THE FIT, twelve seeds never spent. Every dose loses, monotonically: −1.08, −2.50, −5.17, −7.56 at `chase` 2.0/2.5/3.0/4.0 and −3.44 at the scaled control. On the asks it moved the base's preferred ask hit 100.0% against 29.7–50.1% taken; the chase rate did not move (31.5 → 31.8%, bar +1.5) because the asks it buys are sure misses into the side's own majority, not chases. Nothing ships** | fit abroad on three fresh seeds over seven arms; markers from the records through §3.8g's instrument, with bars and a ceiling | M |
 | **v0.12** | **the closing ask** — §3.8g's rung: a ranker credit for an ask that would bring a set the side already holds most of within reach, counted by certainty and by belief (`closing`, `closingBelief`, §3.8h) | ≥ 42.1% (the corrected v0.9 + 2.00) on twelve fresh seeds — **read 2026-09-04: 40.69% against the corrected v0.9's 40.11%, +0.58 paired (SD 0.79, SE 0.23), ahead on 9 of 12; every pre-registered marker moved as written and each by about a tenth of its gap; the belief form loses on every seed; nothing ships** | fit abroad on three fresh seeds, confirm on twelve; markers from the records through §3.8g's instrument | M |
 | **v0.11** | **the declare priced on the records, and the compulsion translated** — the risk bar priced at a quarter of a point and not built; the bridge's MUSTFIX (§3.8f), the home compulsion no longer answered into the host's optional poll | the fix's paired value on §3.8e's twelve seeds against the recorded v0.9 cells; predicted +1.4 to +2.0 — **read 2026-09-04: +1.28 paired (SD 0.29, SE 0.08), ahead on 12 of 12; the corrected v0.9 reads 40.11%; every marker as written; not a rung, no policy ships, the bar not built** | the records first, one identity cell, twelve paired cells | S |
@@ -4868,6 +4869,339 @@ predicted, and the falsifiers it wrote caught that in an afternoon, on records, 
 before the pre-registration was committed), and the six diagnostic runs (`diag-*.txt`; the scratch
 copy of the instrument that produced them is byte-identical to the committed one).
 
+### 3.8l Monet v0.16 — the licence likelihood, calibrated on the records before any cell
+
+**The question, in one sentence.** §3.8k left one thing open on the belief axis — the model has no
+likelihood over the players' choices, and a seat that has asked into a set holds about 1.5 of its
+alive cards where the model expects 1.14 to 1.29 at two or three — so: does a likelihood
+*calibrated on the records to that holding* repair the licence split, move asks, and carry sets,
+read through the same seam with the same falsifiers §3.8k wrote, before any cell is spent?
+
+**Why this and not M-NULL directly.** Row 17's recommendation was M-NULL with this one probe
+before it, because the probe costs no cell and settles the axis either way: v0.5 measured the crude
+form of this likelihood (`choiceKappa` = 1, count form) as a *dose*, fitted at home and read abroad
+at +0.47 inside the floor, and never against the quantity it models. §3.8k's diagnostic gives that
+quantity a number. The owner took row 17 on 2026-09-05 with full authority for the direction of
+v1.0 development from here.
+
+#### The instrument — three knob families through one seam
+
+`attribute.mjs --alt-knobs <knobs> --assign-alt --assign-rerank shipped,alt,side-p`: the
+**alternative belief** is the `--cf` policy's own knowledge built with extra `KnowledgeOptions`,
+scored against the shipped table on the **same** pairs through §3.8k's machinery (Brier and Murphy,
+the S1 / S3 / S8 splits, the disagreement, the licence-holding readout with "alt expects" beside the
+truth), and played through the `boundedK` seam as the arm `alt` at **every** decision — pinned, at
+every decision, to the policy carrying the same knobs in its style through its own knowledge path
+(a disagreement voids the run). The alt table is Sinkhorn-cheap, so nothing is sampled. `shipped`
+must read 0 flips; `side-p` is the bracket; B2's cell is read for `alt`.
+
+The families, each a single knob on v0.9's vector:
+
+- **`once`** — §3.6a's `choiceKappa` κ with `choicePrior: 'once'`: the asker's cell for every
+  unknown card of the asked set weighted by (1 + κ) before the scaling. Grid κ ∈ {1, 2, 3, 5, 8}.
+- **`count`** — the same with `'count'`, (1 + κ)^min(asks, 3), v0.5's pre-registered shape. Grid
+  κ ∈ {1, 2, 3}.
+- **`hold`** — new in this rung, `licenceHold` = h: the licence conditioning **calibrated to a
+  holding**. After the one-shot "at least one" conditioning, each surviving constraint's cells are
+  scaled so the licensed seat's expected count over the set's alive cards is min(h, alive), as one
+  more margin in the same proportional fitting (eight rounds, each alternated with a full row and
+  column pass; a seat whose targets would claim more than 95% of its free slots has them cut back
+  pro rata). It is the direct form of what §3.8k measured — a holding flat in the alive count —
+  where a per-cell weight is geometric in it. Built as `StyleParams.licenceHold` /
+  `KnowledgeOptions.licenceHold`, read by `marginal.ts` only, **absent on every roster style and
+  every tier; absent or 0 is byte identity** (`tests/bots/licence-hold.test.ts`: identical tables
+  on 652 positions of three games; with h = 1.5 the rows still sum to 1 and the columns to the
+  seats' slots, and the licensed seats' gap to min(1.5, alive) falls from 0.285 to 0.084 a
+  constraint). Grid h ∈ {1.2, 1.35, 1.5, 1.65, 1.8}.
+
+**Pins, run before this was written, on fit seed `conf-base-1027753` at every 64th event index
+(516 decisions at A, 548 at B):** `alt` at κ = 0 and at h = 0 — **0 flips of 516, every Brier
+identical to the shipped table's to four decimals**; `alt` at κ = 5 (once) and at h = 1.5 — seam
+disagreements **0**, alt rows differing from the shipped rows **0**, alt marginal 0 at a true holder
+**0**, `shipped` **0 of 49,819**. The full test suite passes with the knob absent.
+
+**Disclosure, in §3.8g's manner — and larger than §3.8k's.** The κ = 5 pin's full report was
+displayed by a grep whose pattern carried an empty alternative, and was read, before this was
+written: on that one fit seed at every 64th decision, licensed/A Brier 0.2146 → 0.2113 (−1.5%),
+S3 = yes at A 0.1422 → **0.0851 (−40%)** with the bias −0.137 → −0.117, S3 = no at A 0.2338 →
+0.2480 (**+6%**), |cands| = 2 0.1719 → 0.1590, `alt` flips 58 of 516 (11.2%), and the holding
+readout 1.140 → 1.358 at two alive cards (truth 1.545) but 1.513 → **2.151** at five (truth
+1.617). Two things follow and are stated as such. The `hold` family was designed *after* that read:
+the per-cell weight over-shoots exactly where the truth is flat, which is why a target on the
+holding itself was built. And the predictions below for the `once` family are informed by one fit
+seed; the held-out read is not — the fit seeds are the fit seeds, and nothing outside them has been
+seen with any knob set.
+
+#### Fit and read, fixed now
+
+**Fit** on the three primary seeds §3.8k's post-hoc diagnostic already read — **1027753, 1717986,
+2495762** — over the thirteen arms above (39 runs, no cell). **Selection rule:** the arm with the
+lowest pooled Brier on the **licensed population at A** over the three fit seeds — a proper score
+over the whole population, so an arm cannot buy the licence split by wrecking the rest; ties within
+0.0001 go to the arm with fewer flips. The S3 = yes Brier, the S3 = no Brier and the holding readout
+are reported beside it and do not choose. **Read** the chosen arm on the **nine held-out primary
+seeds and the twelve replication seeds** (`conf-fix` ×12; the three of them whose Sinkhorn and exact
+holdings the diagnostic read have seen no knob), with `shipped` and `side-p` beside it and B2's
+cell.
+
+#### The falsifiers (on the held-out twenty-one; the bars carried from §3.8k)
+
+| | fires when | and then |
+|---|---|---|
+| **L1** the licence split is not repaired | Brier(alt*) is not below Brier(Sinkhorn) by **≥ 5%** on S3 = yes at A, on both corpora | the likelihood does not reach the error §3.8k located: the belief axis closes |
+| **L2** nothing moves | `flips(alt*)` < **2%** of Monet's asks | an honest belief the ranker does not act on |
+| **L3** the sets are not there | B2 (θ = 0.5, only-chance) < **0.05** sets a game for `alt*` | the channel is closed to this belief, as it was to the exact one |
+| **L4** the fit bought the split with the rest | the pooled licensed Brier at A is not below the shipped one on both corpora | a likelihood that is wrong elsewhere |
+
+**Void rather than negative:** a seam disagreement; alt rows differing from the shipped rows; the
+κ = 0 or h = 0 control flipping an ask or moving a Brier; the two corpora disagreeing on L1's sign.
+
+**Any of L1–L4 closes the belief axis for good**, and row 18 chooses between §3.9's acceptance on
+v0.9's vector and the even-3 bucket. **If none fires, the rung goes abroad:** the chosen arm as a
+bridge arm — `MONET_OVERRIDE` carrying the knob on v0.9's vector with MUSTFIX, built and pinned the
+way §3.8j's addendum pinned v0.12's and v0.13's arms to their bridge arms (the in-engine `alt`
+must reproduce the bridge arm's own play at 100.0% on one recorded cell before its cells are
+read) — against the corrected v0.9 base on twelve fresh seeds, paired, at §6.3's floor: **it ships
+at ≥ +2.00**, and inside the floor it is recorded and not shipped. A calibrated likelihood is a
+correctness fix, and §3.8k said the floor is reported for one even so; after six measured
+negatives it is *gated* on it.
+
+**Seeds.** The abroad twelve, drawn now under the label §3.8k reserved, by §6.5's rule (85 seeds
+excluded — every seed spent, read or reserved so far — `$SP/seeds-v16.mjs`), from
+`hashSeed("monet-v0.15-confirm-12")`: **6269924 7549725 5242661 6002277 9277927 1700521 7863927
+1836519 8279242 7472431 4385920 1411503**. No fit cell abroad: the fit is on the records.
+
+#### Predictions, written before the fit is read
+
+| # | prediction | why |
+|---|---|---|
+| Q1 | the fit picks the **`hold`** family, h in **1.35–1.65** | the truth is flat at ~1.5 and a target on the holding is the direct form; the per-cell weight over-shoots at four and five alive cards on the disclosed seed |
+| Q2 | S3 = yes at A: Brier **−25% to −45%** on both corpora, bias −0.088 → within **±0.03** | the disclosed κ = 5 read −40% with the bias still −0.117; a holding target should take more of the bias |
+| Q3 | S3 = no at A: Brier not worse by more than **+1.5%** | the disclosed κ = 5 read +6%; the holding target moves less mass off the unlicensed cards |
+| Q4 | pooled licensed Brier at A: **−1.5% to −3.5%** on both corpora, better on **≥ 20 of 21** seeds | 13% of the population improving by a third |
+| Q5 | `flips(alt*)` **8–15%** of Monet's asks | the disclosed 11.2% at κ = 5; between `exact`'s 2.7% and `side-p`'s 35% |
+| Q6 | B2 (0.5, only) for `alt*`: **0.03–0.10** sets a game — **L3 is the likeliest to fire** | `side-p` reads 0.33 with a perfect side belief; this is a partial one |
+| Q7 | the holding readout under `alt*`: 1.40–1.55 at two alive cards and at five | the target is the measured holding |
+| Q8 | abroad, if reached: **+0.5 to +2.0** paired, inside the floor | six measured negatives, and B2's ceiling of ~+5 for a perfect belief |
+
+**What may not be concluded.** Nothing about a shippable form until the abroad cell — a records
+study prices a belief, not a bot. No points from the records: the pricer failed (§3.8j Stage 0).
+Nothing about the search or the position channel (§3.8a, §0.2), which no belief study reads.
+
+#### Amendment — 2026-09-05, before any fit number was read
+
+The first launch of the fit died on its own soundness pin at every family: "the alt marginal is 0
+at the true holder", within the first sixty games of each fit seed. The h = 0 identity arm — the
+shipped table itself — dies at the same event of the same game. **The zeros are the shipped
+Sinkhorn table's own.** Where they come from, measured on 2,075 positions of three self-play games
+(v0.9 both sides, `$SP/monet-v16/zero-diag.mjs`): 727 candidate cells (0.26% of 277,564, in 8.0%
+of positions) are exactly 0 in the shipped table; every one of them sits at a seat carrying a
+surviving licence constraint, and 670 of the 727 at a seat whose conditioned cells sum to at least
+its free slots — `marginal.ts` step 3's repair, "the other cards at t give up what A gained", with
+`need[t] − sumAfter ≤ 0`, so they give up everything. In self-play none of the 727 was at the true
+holder; on the bridge records one is, early in each fit seed. So the pin as written — "alt marginal
+0 at a true holder must be 0" — was a pin on the shipped table's defect, not on the knob, and the
+pin runs at every 64th decision were too sparse to meet it. **Changed now, before the fit:** under
+`--assign-alt` a zero at the true holder is counted, not fatal, and the shipped table's own zeros
+at the true holder are counted beside it; **the pin is that the knob adds no zero — alt's count may
+not exceed the shipped table's — and the seam and row pins stay fatal.** The families, the grid, the
+selection rule, the falsifiers and the predictions are unchanged. The defect itself — a hard zero on
+a feasible cell, which no belief should carry — is a shipped-table correction and is **not** taken
+inside this rung: it is named for the next pre-registration, with its rate on the records reported
+by this one.
+
+#### Record — 2026-09-06
+
+**The calibrated licence is real on the records and loses abroad: 40.58% against the base's 41.31%
+on twelve fresh seeds, −0.74 paired (SE 0.46, ahead on 4 of 12), inside the floor — recorded and
+not shipped, as pre-registered. The loss is located. In sets the arm is behind on 10 of 12 seeds by
+0.024 a game (3.6 × SE); its wrong declares double, 0.0125 → 0.0239 a game (worse on 12 of 12,
+7 × SE), while its ask accuracy does not move. The declare places a set's open cards by the chain
+over the same table (§3.4b), and that path was never among the falsifiers: on the same windows the
+held table prices one-guess plans above 0.9 nineteen times as often, and they come right 43% of the
+time against the shipped table's 70%. The belief axis closes — seven measured negatives in a row,
+this one with the belief repaired where §3.8k located the error.**
+
+**The fit, on the three fit seeds (3,600 games, 39 runs, no cell).** Every arm of the two per-cell
+families — `once` at κ 1, 2, 3, 5, 8 and `count` at κ 1, 2, 3 — **fails the amended pin**: the
+knob adds hard zeros at true holders, 4 / 12 / 38 / 119 / 315 for `once` and 55 / 423 / 1,088 for
+`count`, against the shipped table's **one** (in 2495762, game 10 — the amendment's "early in each
+fit seed" was wrong about that: the other two early deaths were the per-cell families' own zeros).
+The mechanism is the amendment's, compounded: a prior that inflates the licensed seat's cells makes
+the one-shot repair's `g = 0` branch fire more often, and every zero it leaves is on a feasible cell.
+**So the form v0.5 shipped abroad at κ = 1 carried, on these records, four hard zeros at true
+holders that the flat prior did not** — small, but a correctness defect no dose can be read
+through, and the families are void here as pre-registered. The `hold` family adds none (1 = 1 on
+every arm) and is the selection:
+
+> | arm | licensed/A Brier, Sinkhorn → alt (per seed) | S3 = yes at A: bias, Brier → bias, Brier | S3 = no at A | \|cands\| = 2 | flips | B2 (0.5, only) | holding own/2: truth · Sinkhorn · alt | own/5 |
+> |---|---|---|---|---|---|---|---|---|
+> | `hold 1.2` | 0.2278 → 0.2295 (+0.72%, worse on 3 of 3) | −0.085, 0.132 → −0.089, 0.156 (**+17.7%**) | −0.5% | +5.6% | 5.56% | 0.064 | 1.485 · 1.147 · 1.180 | 1.458 · 1.522 · 1.208 |
+> | `hold 1.35` | 0.2278 → 0.2281 (+0.12%, 3 of 3 worse) | → −0.089, 0.131 (−1.2%) | +0.3% | +2.5% | 4.69% | 0.063 | 1.315 | 1.352 |
+> | **`hold 1.5`** | **0.2278 → 0.2276 (−0.12% ± 0.03, better on 3 of 3)** | → −0.088, **0.110 (−16.7%)** | +1.2% | +0.3% | **5.53%** | **0.068** | **1.445** | **1.493** |
+> | `hold 1.65` | 0.2278 → 0.2277 (−0.06%, 3 of 3) | → −0.087, 0.094 (−29.4%) | +2.2% | −1.0% | 6.95% | 0.076 | 1.569 | 1.630 |
+> | `hold 1.8` | 0.2278 → 0.2285 (+0.29%, 0 of 3) | → −0.085, 0.080 (−39.5%) | +3.4% | −1.5% | 8.66% | 0.092 | 1.693 | 1.762 |
+
+**`hold 1.5` is chosen by the rule** — the lowest pooled licensed-population Brier at A — and the
+table already says what the held-out read will be about: the calibrated conditioning puts the
+licensed seat's expected holding where the truth is (1.445 against 1.485 at two alive cards, 1.493
+against 1.458 at five — the flatness §3.8k measured, reproduced by one knob), the licence split's
+Brier falls by a sixth, **and the pooled Brier moves by a tenth of a percent**, because what the
+licensed cards gain the unlicensed cards on the same seat lose (S3 = no +1.2%). The bias on the
+licence split does not move (−0.085 → −0.088): mass shifted toward the licensed seat raises q where
+y = 1 and lowers it where y = 0, and the two cancel in the mean while the Brier falls. For the
+per-cell families beside it, void as they are, the same shape at a larger dose: `once 5` reads
+−44% on the split and **+0.60% pooled** — the more the licence split is repaired, the worse the rest.
+
+**The held-out read — nine primary and twelve replication seeds, 25,200 games, no cell.** Tripwires:
+seam disagreements **0**, alt rows differing **0**, `shipped` **0 flips**, the true holder outside
+`cands` **0**, and the knob adds no zero — alt's zeros at true holders **11 = 11** and **6 = 6**, the
+shipped table's own (about one in a thousand games). The two corpora agree on the sign of every
+readout.
+
+> | readout | primary (9 seeds) | replication (12 seeds) | falsifier |
+> |---|---|---|---|
+> | licensed/A Brier, Sinkhorn → alt | 0.2280 → **0.2276** (**−0.17%** ± 0.02, better on **9 of 9**) | 0.2280 → **0.2276** (**−0.18%** ± 0.02, **12 of 12**) | L4 does not fire |
+> | licensed/B · unlicensed/A | −0.06% · −0.25% | −0.13% · −0.23% | |
+> | S3 = yes at A: bias, Brier → bias, Brier | −0.085, 0.1325 → −0.088, **0.1103 (−16.8%)** | −0.086, 0.1326 → −0.088, **0.1109 (−16.4%)** | **L1 does not fire** (bar 5%) |
+> | S3 = no at A | +1.2% | +1.2% | |
+> | \|cands\| = 2 at A | +0.3% | +0.1% | |
+> | `alt` flips, of Monet's asks | **5.48%** ± 0.04 (sure miss → live 3,800; live → sure miss 2,532; certain displaced 4) | **5.52%** ± 0.04 (5,110; 3,458; 3) | L2 does not fire (bar 2%) |
+> | B2 (θ 0.5, only-chance), `alt` vs `side-p` | **0.065** ± 0.003 vs 0.331 | **0.067** ± 0.002 vs 0.334 | L3 does not fire (bar 0.05) |
+> | holding at the licensed seat, own side, 2 alive: truth · Sinkhorn · alt | 1.497 · 1.148 · **1.446** | 1.501 · 1.147 · **1.446** | |
+> | 5 alive | 1.473 · 1.524 · **1.493** | 1.499 · 1.529 · **1.494** | |
+
+**None of L1–L4 fires**, on either corpus, so the rung goes abroad as pre-registered. What the
+held-out read says about the size of the thing before a cell is spent: the licence split — 13% of
+the pairs — is a sixth better; everything else on the same seats is 1.2% worse; the net is **a
+seventh of a percent of Brier**, on every one of 21 seeds. The knob moves **one ask in eighteen**,
+more of them from a sure miss to a live ask than the reverse (3,800 : 2,532), and B2's surviving
+cell holds **0.065 sets a game** for it against 0.33 for a perfect side belief — a fifth of the
+channel's ceiling, +1.0 point at the exchange rate and inside the floor before it is measured. So
+the abroad read is a test of the exchange rate and of the floor, not of the belief: the belief
+does what it was calibrated to do.
+
+**Abroad — the pre-registered read, 2026-09-06.** `hold 1.5` as a bridge arm (`monet-v16-hold15`:
+the MUSTFIX adapter with `licenceHold: 1.5` overlaid on v0.9's vector, bot.mjs md5 330328d9…
+unchanged, the tree export of `bae7b7b`) against the base on §3.8l's twelve seeds, 1,200 games a
+cell, 28,800 games, three lanes. Pins first: the base on the v0.16 export reproduces §3.8f's
+recorded cell at 5682873 to the game (41.8333%, IDENTICAL); the arm's play on its own recorded
+cell (6269924) is reproduced by `--cf v0.9 --cf-knobs licenceHold=1.5` at **100.0%** of A's
+decisions; every lane's hello line carries the label and the override; n = 1,200 on all 24 cells;
+FATAL 0; declare accuracy ≥ 99.4% on every cell.
+
+> | seed | base | `hold 1.5` | arm − base |
+> |---|---|---|---|
+> | 6269924 | 40.75 | 41.83 | +1.08 |
+> | 7549725 | 39.58 | 40.25 | +0.67 |
+> | 5242661 | 39.42 | 39.75 | +0.33 |
+> | 6002277 | 42.83 | 42.75 | −0.08 |
+> | 9277927 | 41.00 | 41.08 | +0.08 |
+> | 1700521 | 40.83 | 40.00 | −0.83 |
+> | 7863927 | 42.17 | 37.75 | −4.42 |
+> | 1836519 | 41.42 | 38.25 | −3.17 |
+> | 8279242 | 42.42 | 41.67 | −0.75 |
+> | 7472431 | 42.58 | 42.08 | −0.50 |
+> | 4385920 | 39.75 | 39.58 | −0.17 |
+> | 1411503 | 43.00 | 41.92 | −1.08 |
+> | **pooled (12 seeds)** | **41.31** (SD 1.29) | **40.58** (SD 1.58) | **−0.74** (SD 1.58, SE 0.46, −1.61 × SE; ahead on 4 of 12) — **inside the floor** |
+> | sets a game, Monet | 4.186 | 4.163 | **−0.024** (SE 0.0065, −3.6 × SE; ahead on 2 of 12) |
+> | wrong declares a game (accuracy) | 0.0125 (99.69%) | 0.0239 (99.41%) | **+0.0114** (SE 0.0016, +7.1 × SE; worse on 12 of 12) |
+> | forced declares a game, right | 0.101 at 53.0% | 0.095 at 49.1% | |
+> | ask accuracy, Monet / SESTINA | 55.16% / 57.17% | 55.27% / 57.32% | unchanged |
+> | declares a game · events a game | 4.048 · 101.4 | 4.048 · 101.4 | unchanged |
+
+**Where the sets go.** A wrong declare hands the set to the other side. The extra wrong declares
+are 0.011 sets a game of Monet's own, the forced declares at the clinch (right 49.1% from 53.0%)
+another 0.004, and the rest — 0.009 ± 0.007 — is not separately located and not distinguishable
+from zero: the hit rate, the asks a game and the tempo do not move. **The read for the calibrated
+belief on the ask path is about zero, inside its own error, and the loss abroad is the declare.**
+
+**The mechanism, on the records, on the same windows.** Under `pAssignment: 'joint'` the speculative
+declare (`evClaim`, decide.ts) places a set's open cards by `joint.ts`'s chain over the marginal,
+most certain first, and fires when the chain's product clears the declare bar — the same table the
+ask ranker reads, through a path §3.8l's falsifiers did not. The declare pricer (`--locks`, §3.8e's
+instrument) was run through the counterfactual planner over every declare window of the *base*
+records, once with the shipped table and once with `--cf-knobs licenceHold=1.5` — the same
+windows, the same truth, two seeds:
+
+> | plans by guessed cards and the plan's p | shipped table: probes / right | held table, same windows | shipped | held |
+> |---|---|---|---|---|
+> | | *seed 6269924* | | *seed 7863927* | |
+> | 1 card, p ∈ [0.9, 1) | 30 / 70.0% | **568 / 43.0%** | 8 / 100% | **424 / 30.7%** |
+> | 1 card, p ∈ [0.7, 0.9) | 1,240 / 50.8% | 1,505 / 43.2% | 981 / 39.8% | 1,247 / 39.1% |
+> | 2 cards, p ∈ [0.9, 1) | 65 / 100% | **352 / 58.2%** | 35 / 100% | **497 / 66.4%** |
+> | 2 cards, p ∈ [0.7, 0.9) | 193 / 92.7% | 328 / 70.1% | 173 / 83.8% | 392 / 68.9% |
+> | 3+ cards, p ∈ [0.9, 1) | 17 / 100% | 70 / 65.7% | 19 / 100% | 58 / 67.2% |
+
+And on the arm's own record (6269924) A's speculative declares priced in [0.775, 1) number 32 and
+come right 56.3% of the time, against the base record's 8 at 75.0%. **The held table is
+over-confident exactly where the declare gate selects.** The hold rule raises the licensed seat's
+cells in the set it asked into, and the column pass keeps that seat's total at its hand size, so
+its other cards give up mass to the other candidates evenly — right in expectation, which is what
+the pooled Brier measures (−0.17%; the |cands| = 2 split +0.3%), and wrong at the maximum, which is
+what a declare is: the gate takes the highest-p plan over every set at every window, and the cells
+the rule moved most are the ones it picks. A Brier over all pairs cannot see a selected population.
+§3.8k's falsifiers (K1–K3) and §3.8l's (L1–L4) both read the ask path's pairs. **The pin any belief
+change must carry from here is the declare's: the plan's reliability through the counterfactual
+planner on the same windows, alt against shipped, by guessed cards and p bin — within the shipped
+table's on every bin at p ≥ 0.7, or the arm does not go abroad.**
+
+**A disclosure from the botlogs, found while reading this cell's coverage.** The bridge adapter's
+`planMismatch` and `planMismatchP` counters — §6.2 lists the first among the fault counters that
+must read zero — have read non-zero on every cell whose botlog is kept: 171 of 171, v0.10 through
+this rung, the attribution runs included; here 220–456 and 424–861 a cell against ~11,000 declares
+emitted. They are the adapter's own restatement of the declare's card placement by the
+capacity-greedy rule, compared with `decide()`'s; since v0.4b placed the open cards by the chain
+over the marginal (`pAssignment: 'joint'`) the two cannot agree wherever the chain and the greedy
+rule differ, and the warnings say exactly that (`local 2 vs decide 4`, both teammates; `local
+p = 0.3 vs trace p = 0.311`), most of them at the game-end forced declares. **The other twelve fault
+counters read zero on every kept botlog**, and the engine's own limit and fault lines are clean.
+So the counter is a stale instrument, not a bot fault — but the records from v0.10 on did not say
+it had fired, and v0.13's rule ("trips any fault counter is disqualified") was written as if it
+could not. Fixed for the next arm: the wire check restated through the engine's own `planClaimFor`,
+the greedy comparison kept as information and not as a fault; and every record from here reports
+the fourteen counters by name.
+
+**Verdict.** As pre-registered: inside the floor, recorded and not shipped. `licenceHold` stays in
+`lib/` as a measured knob, absent from every registry version (byte identity when absent,
+`tests/bots/licence-hold.test.ts`, 652 positions). The roadmap does not recommend a repaired form
+abroad — the declare could read the plain table while the asks read the held one — because the
+ask path's own value is already read: the residual after the declares is 0.009 ± 0.007 sets a game,
+B2's surviving cell holds 0.065 sets for it, +1.0 at the exchange rate, inside the floor before it
+is measured, and a seventh cell for a belief whose read is about zero is the artefact §3.8j warned
+against. **The belief axis is closed**: the model was wrong where §3.8k said (the licence carries a
+holding the constraints do not), the repair is real on the records (a sixth off the split's Brier,
+the holding at the truth), and it is worth nothing in play. What is left of the residual against
+SESTINA is not this belief. Row 18 says what the ladder does with that.
+
+**Predictions, scored.** Q1 **hit**: the fit picks `hold` at 1.5. Q2 **missed**: the licence split
+improves by a sixth, not by a quarter to a half, and the bias there does not move at all (−0.088
+against a predicted ±0.03) — the shift raises q where y = 1 and lowers it where y = 0, which is a
+Brier gain and a bias wash. Q3 **hit**: S3 = no worsens by 1.2%, under the 1.5% bar. Q4 **missed
+on the size by an order of magnitude** — −0.17% against −1.5 to −3.5% — and hit on the sign and on
+the count (21 of 21 against a predicted 20). Q5 **missed**: 5.5% of asks, under the 8–15% band.
+Q6 **hit** on the number (0.065–0.067 in 0.03–0.10) and wrong on the call: L3 was named the
+likeliest to fire and cleared its bar by 0.015. Q7 **hit**: 1.446 and 1.493 at two and five alive
+cards, in 1.40–1.55. Q8 **missed on the sign**: −0.74, not +0.5 to +2.0, inside the floor as
+written. The direction was right seven times in eight on the records and wrong abroad, and the size
+was over-predicted every time it was predicted: the calibrated licence is a real, small thing on the
+records and a loss in play, through a path no prediction named.
+
+**What is fixed by this record.** The knob and its test; `attribute.mjs --alt-knobs` /
+`--assign-alt` and the `unsoundShipped` counter; the declare pin above, for any future belief
+change; the fault-counter disclosure and the restated wire check for the next arm; row 18 and the
+ladder row. Nothing on Monet's vector.
+
+**Scratch state, not committed:** the records study `$SP/monet-v16/{run-v16-fit.sh, run-v16-held.sh,
+v16-agg.mjs, fit-agg.txt, held-agg.txt, hold-diag.mjs, zero-diag.mjs, out/}` (39 fit and 21 held-out
+outputs, the identity and tripwire pins, `out/locks-*` the declare pricer on the base and arm
+records); the bridge run `$SP/monet-v16/{DOSES.json, common.sh, export-v16.sh, step0.sh, step2.sh,
+run-conf-lanes.sh, pin-arm.sh, report-v16.mjs, records/, cell-*.txt, calib-*, botlog-*}` (the 24
+cells, the 25 records, every botlog with its coverage line), the tree export `$SP/fishai-v16` (lib
+of `bae7b7b`, md5 16f52e16…), the arms `$SP/arm_v16` from `$SP/mkarm-v16.mjs` (the v0.11 MUSTFIX
+bot.mjs, md5 330328d9…, unchanged), and the draw `$SP/seeds-v16.mjs`.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -5306,6 +5640,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 15 | **After §3.8j: is the assignment the binding constraint, and what does v0.14 build?** The study is pre-registered and its corpora are on disk; the reads and the falsifiers are written in §3.8j. The pilot already says the belief REACHES the policy at scale — a full side oracle changes Monet's chosen ask at **38.6%** of its decisions on one seed, eight times the 1.97-asks-a-game bar — so the cheap kill does not fire and the question is value, not connection. Candidates ranked in §3.8j: **M3** the deduction fix, **M1** a fitted recalibration (carrying §3.8h's −0.472 / −2.167 warning on belief-weighted forms), **M2** `choiceKappa` rescoped, **M4** `conceal`, **M5** within-side resolution, and **M-NULL**. Pre-registered prediction, against row 14's own premise: **the study returns "not the binding constraint".** | **ANSWERED 2026-09-04** — the axis is CLOSED on its calibration. Reliability is **0.22% of Brier** over 19M pairs on two disjoint twelves (bias −0.0014 / −0.0020, agreeing to 0.0006), so F1 fires ~50× and F6 fires by arithmetic: a perfect recalibration can remove at most 0.22%, against a 15% bar. §3.8g R1 is a base rate — its A/B gap is the same size on the cards the seat gets RIGHT (26.7% vs 15.8%) as on the ones it gets wrong (11.5% vs 5.5%). F3 relocates the question: `seat-p` moves 49.3% of asks against `side-p`'s 35.2%, so the ranker cares more about WHICH SEAT than WHICH SIDE. **Recommendation: M3, the deduction fix** — the licence split is the largest effect in the study (bias −0.085 at a Brier of 0.133 on 13% of the population, against an aggregate 0.228) and the error concentrates at \|cands\| = 2–3; it is a correctness fix, not a dose, so §6.3's floor does not gate it. M1 is dead twice over; M2 unsupported (4.5 points against the licence split's 20). **M-NULL stays first-class** on the prior of five measured negatives. Row 16 is the owner's call. |
 | 16 | **After B1b and B2: is the declare the rung, or the deduction — and what is v0.15?** The two readouts the record left unrun were run the next day (§3.8j's addendum). B2 discards half of itself on its own validation — the (θ = 0.3, any) cell would have promised +7 and +12 points to arms that delivered +0.58 and −7.56 — and on the surviving (θ = 0.5, only-chance) cell F5 does not fire: a perfect side belief has **0.33 sets a game** at stake in Monet's majority episodes where every chance was hidden (0.42 with the seat), +5 to +6 points at the exchange rate, half a point at the tenfold class prior. B1b's declare budget is **+0.09 to +0.14 sets of differential a game** under the oracles, at the floor — but 80–96% of it is sets open at the clinch, which in `us54` sit in decided games, and the win-relevant units are 0.002–0.03 a game. **Recommendation: v0.15 is M3, the deduction fix, studied on the records before any code** — the exact conditioning on the residual instance measured against the Sinkhorn table on the licence split and at \|cands\| = 2–3, and injected through the same seam so its flips sit inside B1's bracket, before `marginal.ts` is touched; the room is bounded above by B2's 0.33. Not recommended: the declare (B1b), a recalibration (F1, F6), another ranker term (rows 12–14). M-NULL stays first-class. | **TAKEN 2026-09-05** — the owner: run B1b and B2, then "we'll go with your recommendations". B1b's budget is at the floor in sets and under half a point in wins under an oracle, so the declare is not the rung. **v0.15 is M3, studied on the records first.** |
 | 17 | **After §3.8k: the deduction fix is dead — the model, not the inference, is the error. What is v0.16, if anything?** The exact posterior under `marginal.ts`'s own model is *worse* than the Sinkhorn table on 24 of 24 seeds (+0.19% Brier pooled, **+4.5% on the licence split**), moves 2.7% of asks symmetrically, and carries 0.003–0.005 sets a game on B2's surviving cell; K1 and K3 fire. The post-hoc diagnostic says why: a seat that has asked into a set holds **about 1.5** of its alive cards whether two or five are alive — both of two about half the time, where the model says 15% — so the players' choices carry a likelihood the constraints do not, and exact inference only sharpens the wrong prior. Six rungs have now read negative in a row (v0.10–v0.15), and the belief channel's ceiling is 0.33 sets a game under a *perfect* belief (§3.8j addendum). **Recommendation: M-NULL leads — §3.9's acceptance on v0.9's vector.** Before it is taken, one probe costs no cell and settles the last open question on this axis: **the licence likelihood** — `choiceKappa` with `choicePrior: 'once'`, the geometric-in-the-holding weight the code already carries, **calibrated on the records** to the measured holding (the crude arithmetic on the two-alive bucket wants (1 + κ) ≈ 6, against the κ = 1 v0.5 took abroad) and read through the same seam with the same falsifiers: K1's bar on S3 = yes, K2's on asks moved, B2's cell. If it cannot clear them the belief axis closes for good, and row 18 chooses between §3.9 and **the even-3 bucket** — §3.8c R1's largest single bucket, ~40% of SESTINA's extra sets a game, never attacked by any rung. Not recommended: any dose fitted abroad on the belief before that probe; any further inference change under this model; another ranker term. | **TAKEN 2026-09-05** — the owner: "lets go with your recommendation for row 17", with full authorization for the direction of v1.0 development from here ("just go ahead with the best path you think is"). **v0.16 is the licence-likelihood probe on the records, pre-registered first (§3.8l); M-NULL is taken if it fails.** |
+| 18 | **After §3.8l: the belief axis is closed — seven measured negatives (v0.10–v0.16), the last with the belief repaired where the error was and worth nothing in play. What does the ladder do with the residual?** The channels this document measured are out: the ask ranker (four terms, §3.8d–§3.8i), the assignment (§3.8j), the inference (§3.8k) and the likelihood (§3.8l); the search arm at the affordable budget was a no-op abroad (§3.8a); §0.2's POSITION is what is left, and it is not a knob. **Recommendation: M-NULL — §3.9's protocol executed on v0.9's vector in full, as the ladder's closing artefact (§3.8m).** Conditions 1–2 are already read twice on seed sets that share nothing — 40.11% on §3.8e's twelve (§3.8f) and 41.31% on §3.8l's twelve (SD 1.29) — and what remains is the panel against v0.2–v0.6 at home (3), the §6.2 table with the adapter's restated wire check and every fault counter by name (5), and a second, independently built arm on the same spec (6): one bridge run, nothing fitted, nothing shipped. The result is the number the owner's fork in §0.3 needs — ship v0.9 in the browser at about 40% and publish the negative result, or fund the lab-only search at twice the budget. The even-3 bucket (§3.8c R1, ~40% of SESTINA's extra sets, never attacked as a target) stays the leading alternative for a further rung, at the honest prior of a ranker term: under the floor. Not recommended: a repaired `hold` form abroad (bounded at +1.0 by B2's cell and read at about zero here); any belief change without §3.8l's declare pin; the search arm wider or deeper than the budget (§3.8a read −0.08 and +0.60 at home). | **TAKEN 2026-09-06 under the owner's standing authorization of 2026-09-05 ("just go ahead with the best path you think is") — v0.17 is the §3.9 read on v0.9's vector (§3.8m); nothing ships from it; the §0.3 fork stays the owner's, and the owner may reverse this row on return.** |
 
 ---
 
