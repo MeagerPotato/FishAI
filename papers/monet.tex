@@ -1,0 +1,530 @@
+\documentclass[11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{microtype}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
+
+\hypersetup{pdftitle={Toward the Frontier},pdfauthor={Allen Hsieh}}
+
+\captionsetup{font=small, labelfont=bf}
+
+% Float packing: let tables share pages with more text instead of drifting.
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.6}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.8}
+\setcounter{totalnumber}{4}
+\setcounter{topnumber}{3}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\usff}{\code{us54}}
+\newcommand{\monet}{MONET.md}
+
+\title{Toward the Frontier: Seventeen Measured Rungs\\ Against a Frontier Canadian Fish Agent,\\ and the Wall Where They Stopped}
+\author{Allen Hsieh\\[2pt] {\small FishAI project}}
+\date{September 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+The FishAI project's previous cross-engine paper \cite{frontier} measured its agent at $27.08\%$
+against SESTINA v1.0, the frontier bot of the FishLab project \cite{fishlab}, played inside their
+C++ engine. This paper reports what a new agent line built to beat that number --- Monet, seventeen
+rungs from v0.1 to the acceptance read --- actually bought, under a protocol written before the
+first rung ran: every rung's acceptance test written before it and, from the sixth rung, its
+predictions too; every number quoted per seed against a paired floor; and version 1.0 defined by an
+acceptance test and nothing else. \textbf{Monet v1.0
+does not exist at the shipped vector.} The shipped bot reads $41.31\%$ on twelve seeds and
+$40.11\%$ on twelve others ($14{,}400$ games each), against a bar of $50.0\%$; it beats their v0.2
+and v0.3 on every seed and loses to their v0.4, v0.5 and v0.6 on every seed; and a second adapter,
+written by an independent agent from FishLab's two protocol documents alone, reproduces the win rate
+to the hundredth on twelve of twelve seeds and the game records byte for byte on ten. Three
+mechanisms shipped on the way: a calibrated per-card marginal with a joint chain over it and a
+licence term at low weight, a credit in the ask ranker for asks a hit-maximiser never plays, and a
+translation of the rule set's declare compulsion that the bridge had been answering wrongly.
+Ten other rungs were measured and shipped nothing, each inside its floor; the belief axis
+closed on records studies rather than cells; the ask ranker closed on four fitted terms. The
+finding the read could not have predicted is where the gains went: against their v0.4, v0.5,
+v0.6 and SESTINA alike the ladder gained the same thirteen points, and none of the four is beaten
+--- the wall at v0.4 stands where the first paper placed it. An attribution study locates the
+frontier's margin --- $40\%$ of its extra sets in evenly dealt half-suits, $31\%$ in steals from
+Monet's majorities --- and finds that at SESTINA's own decisions Monet's pick would hit $62.5\%$
+against SESTINA's $55.7\%$: the hit chance is not the value of an ask. We report the ladder, the
+table, the instrument and its two disclosed defects, and the negative result as the deliverable.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+A laboratory that publishes a loss owes its readers the attempt. The first cross-engine measurement
+of this project \cite{frontier} placed FishAI's agent between FishLab's v0.3 and v0.4 --- a release
+four versions before search existed in that lineage --- and left ${\sim}16$ of the $22.92$ points to
+even unattributed. The roadmap that followed \cite{monet} opened a new agent line, Monet, whose
+stated goal is one sentence: \emph{Monet v1.0 beats SESTINA v1.0.} It then did something this
+project had not done before at that scale: it wrote the acceptance test for v1.0 before the first
+rung ran (six conditions, \S\ref{sec:table}), it wrote a prediction for every rung before that
+rung's cells were played, and it recorded every rung whether or not anything shipped from it.
+Seventeen rungs later the acceptance test has been executed in full on the shipped bot, and this
+paper is its report.
+
+The result is negative and the paper says so in the first line. The interest is in three other
+things. First, \emph{what the fourteen points that were bought are made of} --- three shipped
+mechanisms, one of which is not a policy change at all but a correction to how the bridge
+translates a rule the two engines state differently. Second, \emph{why ten further rungs
+bought nothing}, which is the record of a belief programme measured to its end: the inference was
+studied on full-information records rather than cells, and every route into the belief that the
+records could price was priced at zero or below. Third, \emph{where the ladder's gains went}.
+Against FishLab's non-searching v0.4, v0.5 and v0.6 and against SESTINA the ladder gained the same
+thirteen points, which says the shipped gains are worth the same against every opponent above the
+wall and bought no ground on the wall itself. The frontier's margin is elsewhere, and the
+attribution study of \S\ref{sec:sets} says where.
+
+Everything in this paper is a number in \monet{} \cite{monet}, cited by section; the paper adds no
+measurement of its own. FishLab's repository carries no licence file, and nothing of theirs is
+reproduced here: their engine's game output is data, their documented guest-bot protocol is
+implemented, and their measured findings are cited as theirs.
+
+\section{The instrument}
+\label{sec:instrument}
+
+\paragraph{The bridge.} FishAI's decision function is registered as a guest bot in FishLab's C++
+engine over their JSON-line protocol, as in \cite{frontier}. A cell is $200$ deals $\times$ $6$
+seat rotations $= 1{,}200$ games on one seed; a read is twelve seeds, $14{,}400$ games, quoted as a
+mean over seeds with its standard deviation and the paired standard error, against a paired floor of
+$\pm 2.00$ points that the roadmap fixed before any rung (\monet{} \S6.3). Every cell of the ladder
+is on the record with its seed, and every seed reported.
+
+\paragraph{The controls.} The mirror cell is not one of them --- a policy against itself on
+duplicate deals is forced to $50\%$ before a card is dealt, which \cite{frontier} learned at the cost
+of a published wrong number. What is mandatory instead (\monet{} \S6.2): a per-process count of
+every protocol op, cross-checked against the engine's own count of the guest's asks; a byte-exact
+null arm, the mechanism switched off, reproducing a known cell line for line before any new seed is
+spent; paired deals throughout; fault counters read by name; a calibration harness on every cell;
+and a completion check, because cells have died silently on handshake timeouts. From v0.14 every arm
+is also pinned \emph{in-engine}: the recorded play is replayed through the policy at home and must
+agree with the bridge at $100.0\%$ of the arm's decisions before its number is read.
+
+\paragraph{The rule set, translated.} \usff{} compels a cardless turn-holder to declare
+\cite{rules}; FishLab's engine offers it an optional poll instead, and its own ladder resolves what
+a guest declines. The bridge of \cite{frontier} answered the compulsion into the optional poll, and
+the roadmap's records study of the declare (\monet{} \S3.8f) found that every such answer below
+certainty spent a set to avoid a move that costs nothing. The translation --- a compelled claim whose
+plan is not certain is answered \emph{none}, and the host's ladder takes it --- is worth $+1.28$
+points paired on twelve seeds (SD $0.29$, SE $0.08$, ahead on all twelve). It is not a policy change
+and it is not credited to any rung; it is the bridge reading the rules correctly. Numbers measured
+before it and after it are on different bridges, and this paper never subtracts one from the other.
+
+\paragraph{The records.} FishLab's engine keeps no game trace. A counters-only fork of their
+\code{match} binary, extended with one flag, appends the deal and the event trace of each game as a
+line of JSON after the game ends --- ground truth read after the fact, changing no branch a policy
+can see, and controlled by requiring its whole cell output to equal the unmodified fork's on the
+same cell (identical, at seed 90210). A loader at home reconstructs every seat's view from the deal
+and the public log, checks every event against the engine's own hand counts and every declare
+against its half-suit awards, and replays the policy at every ask decision of both sides: the
+counterfactual agrees with the bridge play at $100.0\%$ of Monet's $102{,}000$ asks on the study's
+records, and at $100\%$ on both sides of a mirror cell in their engine. That agreement is what
+turns the records into an instrument: the same policy can be asked what it would have done at the
+\emph{opponent's} decisions, scored on the true deal.
+
+\paragraph{The second arm.} Condition 6 of the acceptance test requires the result to be
+reproduced by an independently built adapter on the same specification. An agent that had never
+seen this project's adapter was given FishLab's \code{BOT\_PACKAGE.md} and \code{PLAY.md} and a
+one-page specification --- the policy, the decision-seed rule, the compulsion translation --- and
+built one. Checked at home it agreed with the engine's own view constructor on $87{,}575$ views with
+zero differences and on $16{,}449$ of $16{,}449$ decisions. Abroad it reproduces the first adapter's
+win rate to the hundredth on all twelve seeds and its game records byte for byte on ten; the three
+games in $28{,}800$ that differ are located in \S\ref{sec:table}.
+
+\section{The ladder}
+\label{sec:ladder}
+
+Table~\ref{tab:ladder} is the whole record, one row a rung, every number abroad against SESTINA
+v1.0 unless marked home. Three rungs shipped; the rest were measured and shipped nothing.
+
+\begin{table}[t]
+\centering\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{The Monet ladder against SESTINA v1.0. \emph{Paired} is the arm minus its base over the
+same seeds, with the standard error over seeds; \emph{ahead} counts seeds. The floor is $\pm 2.00$
+on twelve seeds, $\pm 2.83$ on six. Bridge: \emph{c} is the corrected bridge of \cite{frontier};
+\emph{m} is that bridge with the compulsion translated (\S\ref{sec:instrument}). A number on one
+bridge is never subtracted from a number on another. Sources: \monet{} \S3.3--\S3.8m.}
+\label{tab:ladder}
+\begin{tabular}{@{}l p{0.46\textwidth} r r l c@{}}
+\toprule
+rung & what it built & read & paired (SE) & ahead & bridge \\
+\midrule
+v0.1 & the fork: Bass v2.0's Punter at \code{hard}, instrumented & 27.08\% & --- & 6 seeds & c \\
+v0.3 & licence conditioning of the hit probability, $\lambda=0.60$ & 30.96\% & +3.88 & 6 seeds & c \\
+v0.4a & \code{pCardAt}, the calibrated per-card marginal (its own effect) & 31.94\% & +4.74 & 6 of 6 & c \\
+v0.4b & the joint chain over the marginal for the declare & 32.75\% & +0.81 & --- & c \\
+v0.4c & $\lambda$ back on the joint at $0.3$, against $0.6$ (24 seeds) & 35.12\% & +1.19 (0.30) & 19 of 24 & c \\
+gate & the \S3.5b panel on v0.4b, six seeds: the rule's third row & 32.75\% & --- & --- & c \\
+v0.5 & opponent reading: ask-choice inference into the prior, $\kappa=1$ & 34.92\% & +0.47 (0.59) & 7 of 12 & c \\
+v0.6 & communication: asks chosen to reveal; the handoff (flat or behind at home) & home & --- & --- & home \\
+v0.7 & the search arm, 96 ms an ask, lock-only leaf & 35.05\% & +0.14 (0.67) & 7 of 12 & c \\
+v0.8 & the determinized declare & 35.15\% & +0.08 (0.08) & --- & c \\
+study & the attribution study, \S\ref{sec:sets}, twelve seeds & 34.28\% & --- & --- & c \\
+\textbf{v0.9} & \textbf{the contest credit on the ask ranker's miss branch, $0.6$} & \textbf{38.92\%} & \textbf{+4.04 (0.47)} & \textbf{12 of 12} & c \\
+v0.10 & the exposure charge on hits the opponents can take back & 39.90\% & +1.07 (0.54) & 8 of 12 & c \\
+v0.11 & the declare priced on records; the compulsion translated (the bridge, not the policy) & 40.11\% & +1.28 (0.08) & 12 of 12 & c$\to$m \\
+v0.12 & the closing ask: a credit for bringing a held set within reach & 40.69\% & +0.58 (0.23) & 9 of 12 & m \\
+v0.13 & the chase appetite: every dose loses on the fit & fit & $-1.08$ to $-7.56$ & none & m \\
+v0.14 & the assignment, a records study: the axis closed on calibration, the channel's ceiling 0.33 sets a game & records & --- & --- & m \\
+v0.15 & the deduction fix, on records: exact inference reads worse & records & --- & --- & m \\
+v0.16 & the licence likelihood, calibrated on records & 40.58\% & $-0.74$ (0.46) & 4 of 12 & m \\
+\textbf{v0.17} & \textbf{the acceptance read on v0.9's vector, against a bar of 50.0} & \textbf{41.31\%} & --- & \textbf{0 of 24} & m \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{What shipped.} The belief: a calibrated marginal over the unseen cards
+(\code{pModel: 'marginal'}), a chain that places a set's open cards jointly over it when a declare is
+planned (\code{pAssignment: 'joint'}), and a licence term that conditions the hit probability on
+what a seat's own asks have revealed, at a weight the 24-seed cell decided (\code{licenceLambda}
+$0.3$; $0.6$ read $+1.88$ over v0.4b on 22 of 24 seeds, and the pre-registered $0.3$-against-$0.6$
+confirmation read $+1.19$, SE $0.30$, 19 of 24). Then the ask: a credit on the miss branch of the
+ask ranker (\code{contest: 0.6}) for asks into sets the opponents hold most of --- the asks a
+hit-maximiser never plays --- which is the one rung after v0.4c to clear the floor abroad,
+$+4.04$ paired on twelve pre-registered seeds and ahead on every one. Then the bridge's translation
+of the compulsion. Everything else on the vector is v0.1's Punter at \code{hard}.
+
+\paragraph{What was measured and did not ship.} Opponent reading through the prior ($+0.47$),
+communication (flat at home, never abroad), search at the affordable budget ($+0.14$ abroad; the
+correct posterior does not make a 100 ms search pay in either leaf), the determinized declare
+($+0.08$), the exposure charge ($+1.07$, two standard errors above zero and two under the floor:
+real, and half a rung), the closing ask ($+0.58$, the same shape), the chase appetite (negative at
+every dose, closed on the fit without spending the confirmation seeds), and the calibrated licence
+likelihood ($-0.74$). Two more rungs were studies on the records that reached a verdict without a
+cell (\S\ref{sec:belief}). Each of the ten is on the record with the prediction written before it
+and the prediction's score after.
+
+\paragraph{The rule that did the work.} A rung ships if its paired main effect clears $+2.00$ on
+twelve fresh seeds; inside the floor with its marker moved, it is recorded and not shipped. Four
+ranker terms were fitted in sequence on the same vector against a measured bound of $+5.8$ points
+(the counterfactual surplus of \S\ref{sec:sets}); the first took $+4.04$ of it, the next three
+$+1.07$, $+0.58$ and less than zero. The roadmap's own reading is that the ask ranker was finished
+by v0.13 and that the last term was the informative one: it went looking for the missing chases,
+found that a seat cannot identify them from its view, and paid a hundred points a decision to learn
+it (\monet{} \S3.8i).
+
+\section{The acceptance test}
+\label{sec:table}
+
+Monet v1.0 exists when, and only when (\monet{} \S3.9): (1) its win rate against SESTINA v1.0 is at
+least $50.0\%$ pooled over twelve seeds of $200$ deals at the $\pm 2.00$ floor --- never on three
+seeds, never on one cell; (2) every seed is reported and the SD across them published; (3) the panel
+is monotone and Monet beats FishLab's v0.2 through v0.6 as well, because a bot that beats SESTINA and
+loses to v0.5 has been fitted, not built; (4) declare accuracy is at least $98.0\%$ and every fault
+counter zero; (5) every control of \S\ref{sec:instrument} passes, the mirror not among them; (6) the
+result is reproduced by a second, independently built arm. The read was pre-registered on
+2026-09-06 with six predictions and executed the same day (\monet{} \S3.8m).
+
+\begin{table}[t]
+\centering\small
+\caption{The acceptance table, read on v0.9's vector. Sources: \monet{} \S3.8m.}
+\label{tab:accept}
+\begin{tabular}{@{}p{0.34\textwidth}p{0.50\textwidth}l@{}}
+\toprule
+condition & reads & met \\
+\midrule
+1 $\cdot$ $\geq 50.0\%$ vs SESTINA v1.0, 12 seeds & $41.31\%$ on one twelve (SD $1.29$, range $39.42$--$43.00$); $40.11\%$ on another (SD $1.55$, range $37.25$--$42.33$) & \textbf{no}, by 8.7 and 9.9 \\
+2 $\cdot$ every seed reported, SD published & 24 seeds on record & yes \\
+3 $\cdot$ the panel monotone, v0.2--v0.6 beaten & monotone; v02 $74.18$ and v03 $70.40$ beaten on every seed; v04 $47.62$, v05 $46.81$, v06 $44.72$ beaten on none & \textbf{no}, three of five \\
+4 $\cdot$ declare accuracy $\geq 98\%$; counters zero & $99.20$--$99.82\%$ on 73 cells; the fourteen counters zero on every cell of the restated adapter & yes \\
+5 $\cdot$ the controls & the per-process ask count equal to the engine's on 73 of 73 cells; the null arm identical; calibration inside its bars on 12 of 12; every cell complete & yes \\
+6 $\cdot$ a second, independent arm & the same win rate to the hundredth on 12 of 12; records identical on 10 of 12; 3 games of $28{,}800$ differ at one located position, no result changed & yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Conditions 1 and 2.} Two reads of the same vector on seed sets that share nothing:
+$41.31\%$ and $40.11\%$, $1.20$ points apart with a standard error of $0.58$ between them --- two
+seeds' worth of the same bot, not two bots. Every one of the twenty-four seeds is under $44\%$.
+
+\paragraph{Condition 3: the panel, and the wall.} Sixty cells, $72{,}000$ games, on the same
+twelve seeds as the read (Table~\ref{tab:panel}). The order is monotone and the panel is what the
+roadmap said it would be from its first panel at v0.4b: two rungs Monet clears, then a wall at
+their v0.4 --- \emph{``the rung that carries the lineage's whole strength''} \cite{monet} --- with
+the frontier six points behind the wall. The number the read could not have predicted is in the last
+row. Against v0.1's inherited levels the ladder gained $+6.8$ and $+8.3$ against the two lineage bots
+it already beat, and $+13.4$, $+13.5$, $+11.9$ and $+13.5$ against v0.4, v0.5, v0.6 and SESTINA:
+the same thirteen points on each of the four it does not beat. The shipped gains --- the licence
+weight, the contest credit, the compulsion translated --- are worth the same against the wall as
+against the frontier, and bought no ground on the wall itself. From v0.4 to SESTINA Monet loses
+between $0.1$ and $0.6$ sets a game.
+
+\begin{table}[t]
+\centering\small
+\caption{The panel on the read's twelve seeds: Monet v0.9 against FishLab's lineage in their engine.
+Means over seeds; the inherited row is Monet v0.1's level on the corrected bridge, from
+\cite{frontier} and \monet{} \S6.4, and the gain is a difference of levels across the bridge
+translation, quoted as the roadmap quotes it and not as a paired contrast. Source: \monet{} \S3.8m.}
+\label{tab:panel}
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+ & v02 & v03 & v04 & v05 & v06 & SESTINA \\
+\midrule
+Monet v0.9, mean & 74.18 & 70.40 & 47.62 & 46.81 & 44.72 & 41.31 \\
+SD over seeds & 1.15 & 1.07 & 1.86 & 1.42 & 1.39 & 1.29 \\
+seeds above 50\% & 12 of 12 & 12 of 12 & 0 of 12 & 0 of 12 & 0 of 12 & 0 of 12 \\
+sets a game, Monet $-$ opponent & $5.41-3.59$ & $5.22-3.78$ & $4.44-4.56$ & $4.40-4.60$ & $4.32-4.69$ & $4.19-4.81$ \\
+Monet v0.1, inherited & 67.42 & 62.06 & 34.25 & 33.31 & 32.86 & 27.83 \\
+the ladder's gain & +6.8 & +8.3 & +13.4 & +13.5 & +11.9 & +13.5 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Condition 4.} Declare accuracy on the 73 cells of the read runs $99.20$--$99.82\%$
+against a bar of $98.0\%$; the parity with the frontier that \cite{frontier} found still holds.
+The fourteen fault counters are zero on every cell played by the adapter as restated for this read
+(\S\ref{sec:method}), and the engine's own \code{limit hits} line reads $0\%$ everywhere.
+
+\paragraph{Condition 5.} The per-process count of the guest's asks equals the engine's own count
+of them on 73 of 73 cells --- the cross-check the controls ask for, exact --- and the pass op is
+exercised on every cell, which is the tripwire that would have caught the defect of \cite{frontier}
+in an hour. The null arm, replayed on the identity seed before any new cell, reproduced the base
+cell line for line. Calibration, the guest's own asks believed against realised: aggregate bias
+$0.0046$--$0.0096$ against a bar of $0.01$ on twelve of twelve cells, worst decile $0.065$--$0.098$
+against $0.10$ on twelve of twelve --- with the same shape the roadmap first measured at v0.3, the
+belief a little too sure of its long shots and not sure enough of its good ones.
+
+\paragraph{Condition 6, and the three games.} The independent adapter's twelve cells match the
+first adapter's win rate on every seed and its records byte for byte on ten. On the other two, three
+games of $28{,}800$ differ, each at one event, and each at the same position: a seat has just
+declared its last cards, holds the turn with a pass pending, and the host polls the table. The first
+adapter's cardless seat passes and the next teammate polled declares the team's next certain set;
+the second arm's seat declares it itself before passing. Same set, same side, same final score.
+\usff{}'s own reducer closes the declare window for the duration of a pending pass \cite{rules}, so
+this is a position FishAI's rules never reach and the specification did not name; the two authors
+resolved it differently, and the two resolutions differ on three events in $28{,}800$ games and on
+no result. The condition is met, and the position is now specified.
+
+\section{Where the sets go}
+\label{sec:sets}
+
+Before v0.9 the roadmap ran a study rather than a rung (\monet{} \S3.8c): full-information records of
+Monet v0.4c against SESTINA on twelve seeds, split four ways by one instrument, with the next rung
+to be chosen by a rule written before the tables were read. Monet won $34.28\%$ of those games and
+$3.22$ sets a game to SESTINA's $4.25$, a gap of $1.033$ sets (SE $0.021$).
+
+\paragraph{By the deal.} Split each half-suit by how many of its six cards Monet's side was dealt,
+the set gap is $+0.608$ a game on Monet's majorities (four to six cards), $-0.414$ on the evenly
+dealt threes, and $-1.227$ on SESTINA's majorities. Of SESTINA's $1.09$ extra \emph{cashed} sets a
+game, the even half-suits carry $0.43$ ($40\%$; a $3$--$3$ deal is won by SESTINA 58 to 42),
+SESTINA's steals from Monet's majorities $0.34$ ($31\%$), and its better conversion of its own
+majorities $0.31$ ($29\%$). Gifts --- sets handed over by a wrong declare --- run the other way and
+are small. At the clinch Monet holds $0.30$ sets a game locked and uncashed to SESTINA's $0.10$, and
+holds a lock $7.84$ events to SESTINA's $4.34$: the game ends while Monet is still collecting, which
+is the proof-latency finding of \cite{frontier} again, now bounded at about $0.2$ sets a game.
+
+\paragraph{The counterfactual, and the third case.} At every ask decision of SESTINA the records
+were replayed through Monet's policy, from SESTINA's hand and the public log, and scored on the true
+deal beside the ask SESTINA actually made. The study's pre-registration named three cases and the
+tables returned the third, decisively: Monet's pick would hit $62.5\%$ where SESTINA's asks hit
+$55.7\%$ --- a surplus of $6.81$ points, SE $0.08$ over twelve seeds, the same on every seed and in
+every holding bucket, and present in SESTINA's own mirror ($54.7$ against $49.4$). SESTINA agrees
+with Monet's pick $42.8\%$ of the time, and where the two differ SESTINA's ask hits $41.1\%$ to the
+pick's $53.0\%$. SESTINA leaves a quarter of the available hit chance on the table at every decision
+and wins two games in three. \textbf{The hit chance is not the value of an ask.} What SESTINA's asks
+buy shows in the same tables: its positions are richer --- the same Monet policy hits $52.4\%$ at
+Monet's own positions and $62.5\%$ at SESTINA's --- and they get richer as the game goes, where
+Monet's are flat. A hit publishes a card's location to the whole table and a miss publishes a
+licence; SESTINA prices both, and Monet's ranker priced neither.
+
+\paragraph{What v0.9 bought, and what it paid.} The contest credit moves $15.2\%$ of Monet's asks,
+at the decisions where the greedy pick is poorest: there v0.4c's pick would hit $22.4\%$ and the
+priced ask hits $24.4\%$ --- not worse asks, but asks placed elsewhere, into sets where Monet holds
+one to three cards and away from the five-card closing asks that on a miss hand the turn over with
+the set exposed. Monet keeps the turn longer ($41.7$ asks a game from $39.2$), the even half-suits
+go to Monet $46.1\%$ of the time from $42.0\%$, its four-card majorities convert $62.1\%$ from
+$57.2\%$, and the lock hold falls from $7.90$ events to $5.93$ because the run that formed the lock
+is still going. It also pays what the study said a hit costs, and more: its hits are taken back
+$43.4\%$ of the time from $41.0\%$, and its misses are made at more dangerous targets. Two of the
+five markers the pre-registration wrote came in as written; the mechanism that won was the contest,
+not the take-back the study had pointed at, and the record says so. FishLab's own finding about
+SESTINA --- that ask accuracy is anti-correlated with strength near the optimum \cite{fishlab} ---
+is confirmed in kind: Monet's accuracy \emph{rose} under the credit, because the decisions it changed
+were the poorest ones.
+
+\section{Why the belief axis closed}
+\label{sec:belief}
+
+The ladder's last three rungs, v0.14 to v0.16, were about the belief --- what Monet thinks each
+seat holds --- and the first two of them never needed a cell. With the records of \S\ref{sec:sets}
+and a seam that runs the real
+policy on an injected belief with nothing in the engine touched, a candidate belief can be scored
+against the true deal at every decision Monet made, and a change that does not move the belief where
+the belief is wrong is dead before it plays a game.
+
+\paragraph{The assignment (v0.14).} Is the side assignment --- which team holds a missing card ---
+the binding constraint? Studied on two twelve-seed corpora of records (\monet{}
+\S3.8j): the assignment is calibrated, the exact pricer that must first reproduce known answers
+fails to, and the ceiling of the whole channel under a \emph{perfect} belief is $0.33$ sets a game,
+half a point of win rate at the class prior. The axis closed on its calibration, and the candidate
+that survived was a correctness fix to the deduction.
+
+\paragraph{The deduction (v0.15).} The fix was studied before any code: exact conditioning on the
+model's own constraints, in place of the approximation the engine ships. It reads \emph{worse} on the
+records --- the pooled Brier score rises rather than falls --- and the pre-registration was wrong
+about the direction of nearly everything it predicted (\monet{} \S3.8k). The model, not the
+inference, is the error: a seat that has asked into a set holds about $1.5$ of its alive cards
+whatever their number, and the model's licence carries no such likelihood.
+
+\paragraph{The licence likelihood (v0.16).} So the likelihood was calibrated on the records --- three
+knob families through the same seam, fit on three seeds and held out on twenty-one --- and the one
+that survived its falsifiers repaired the belief exactly where v0.15 had located the error. Abroad it
+lost: $40.58\%$ against the base's $41.31\%$, $-0.74$ paired, inside the floor, behind on sets on
+ten of twelve seeds with its wrong declares doubled ($0.0125$ to $0.0239$ a game, worse on every
+seed, seven standard errors). The loss is located and it is a lesson about instruments rather than
+beliefs. The declare places a set's open cards by a chain over the same table, and that path was
+never among the falsifiers, which all read pooled calibration; on the same declare windows the
+repaired table prices one-guess plans above $0.9$ nineteen times as often as the shipped one, and
+they come right $43\%$ of the time against the shipped table's $70\%$. \textbf{A pooled Brier score
+cannot see a selected population.} The declare gate selects exactly the cells where a table is
+over-confident, and no belief change on this ladder may now ship without the plan's reliability
+read through the planner itself on the same windows.
+
+\paragraph{The count.} Seven consecutive measured negatives, v0.10 through v0.16, the last with the
+belief repaired where the error was and worth nothing in play, closed the axis (\monet{} \S3.8l). An
+oracle arm that shares its team's true hands and cashes every lock the instant it exists bounded
+every belief mechanism at $38.28\%$ on the v0.4-era ask policy (\monet{} \S3.4a); v0.9 reads above
+it because the ask policy changed, not because the bound was wrong.
+
+\section{Method notes}
+\label{sec:method}
+
+\paragraph{Pre-registration, scored.} Every rung's section in \cite{monet} carries a
+pre-registration written before its cells and a record that scores the predictions after. The scores
+are reported whether or not they flatter the rung: v0.9's mechanism was not the one its markers
+pointed at (two of five as written); v0.15's pre-registration missed on the sign of its headline;
+v0.17's six predictions hit five and missed the sixth by a tenth of a point on one cell. The
+acceptance read predicted that its own condition 6 would be met on the number and might differ in
+the letter at a declare-window position, and it did, at a pending pass.
+
+\paragraph{A stale instrument, disclosed.} The bridge adapter carries a cross-check that restates
+each declare's card placement locally and counts a mismatch with the engine's own. It had restated
+by the capacity-greedy rule since v0.1, and the engine has placed cards by the joint chain since
+v0.4b, so the counter read non-zero on every kept log from v0.10 on --- $220$ to $459$ a cell against
+about $11{,}000$ declares --- and was read as noise. It was a stale instrument, not a bot fault; the
+wire always carried the engine's own placement. For the acceptance read the check was restated
+through the engine's planner, the greedy comparison kept as information, and the restated adapter
+replayed the identity cell byte-identical to the original: on that cell the information counter
+reads $360$ and $723$, exactly the stale counts. The disclosure is in the record, and every record
+from here reports the fourteen counters by name.
+
+\paragraph{Where the counts come from.} The op counts are summed from per-process files, never from
+the shared log, which loses about one process in thirty-six; the read's own pre-registration had
+quoted bands from the log and its record restates them from the files, where the ask count equals the
+engine's on every cell. The controls of \cite{frontier} were written from exactly this failure.
+
+\paragraph{Cost.} Monet's policy decides an ask in about $0.14$ ms and a six-seat game in about
+$82$ ms at home. The search arm at its pre-registered form costs $96$ ms an ask decision against a
+budget of $100$; its wider form twice the budget and its deeper form $1.7$ times, and both were out on
+the cost rule whatever they read ($-0.08$ and $+0.60$ sets a pair at home, SE about $0.34$).
+
+\section{What is left}
+\label{sec:left}
+
+\paragraph{The residual is position.} The decomposition of \cite{frontier} --- Monet picks better
+moves than the frontier at matched positions ($+5.49$) and arrives at worse ones ($-10.38$) --- was
+measured on the defective bridge and has not been re-recorded, and the roadmap labels it a
+hypothesis. Everything this ladder measured is consistent with it. The belief is calibrated and
+repairing it buys nothing; the ask ranker is finished at four terms; a hit-maximising policy at the
+frontier's own decisions would out-hit the frontier by seven points and the frontier wins anyway.
+What the frontier buys with its asks is a richer position three moves later, and that is not a
+knob on a one-step ranker.
+
+\paragraph{Search at the affordable budget is a null.} The one channel with a ceiling above the
+gap is lookahead, and at $100$ ms an ask the correct posterior does not make it pay ($+0.14$ abroad).
+At that horizon the set differential almost never moves --- nine candidate means in ten read exactly
+zero --- and a locked set counted as a set does not change what the ranker's own alternatives are
+worth. What a search that pays would need is a leaf that prices what an ask publishes, which is the
+same object \S\ref{sec:sets} found the frontier pricing and the ranker not.
+
+\paragraph{The even half-suits.} $40\%$ of the frontier's margin sits in the $3$--$3$ deals, which
+v0.9 moved from $42.0\%$ to $46.1\%$ and no rung has attacked as a target. It remains the leading
+candidate for a rung, at the prior of a ranker term, which on this record is under the floor.
+
+\paragraph{The decision.} The roadmap wrote the fork for this outcome before the first rung: ship the
+fast policy in the browser at its honest maximum and publish the negative result, or fund a lab-only
+search arm beyond the affordable budget. The owner took the first on 2026-09-06: v0.9 is what the
+site's table seats, this paper is the artefact, and the direction from here is that a rung is chosen
+by what it is measured to add to the number, with the same protocol --- pre-registered, paired,
+floored, reproduced --- deciding what that is.
+
+\section{Threats to validity}
+\label{sec:threats}
+
+\emph{One opponent.} The target is one frozen specification of one project's bot; nothing here is a
+claim about Canadian Fish in general, and the panel exists to show that the gains are not a fit to
+that one opponent --- they are the same size against four. \emph{One rule set.} Every number is
+conditional on \usff{} as translated into a host that plays nine half-suits to the end where \usff{}
+clinches at five; every figure here is read over the pre-clinch record, and the host's
+\code{win-condition} warnings on every cell are the expected consequence of that difference.
+\emph{Two bridges.} The compulsion translation moved every Monet number by about $+1.3$ points;
+Table~\ref{tab:ladder} labels each row's bridge and the paper subtracts across the seam nowhere
+except in the panel's inherited row, which the roadmap quotes as a difference of levels.
+\emph{The second arm is a second adapter, not a second engine.} Condition 6 reproduces the bridge,
+which is what it was written to do; the engine is FishLab's on both sides. \emph{The position
+decomposition is on the defective bridge} and is a hypothesis, labelled as one. \emph{Statistical
+resolution.} Twelve seeds resolve $\pm 2.00$ paired; two of the rungs that shipped nothing read
+between one and two points with standard errors of a quarter to half a point, which is a real effect
+under the floor, and the record says so rather than rounding either way.
+
+\section*{Data and code}
+
+The engine, the policy, the records instrument (\code{scripts/attribute.mjs}), the tests that pin
+every shipped vector and its forward bank, and \monet{} with every cell of the ladder are in the
+FishAI repository. The bridge --- FishLab's engine built from source, the recording fork, the arms and
+the game records --- is outside it, because FishLab's repository carries no licence file; it is
+archived by the owner outside the public tree and every number here can be re-read from it.
+
+\begin{thebibliography}{9}
+\footnotesize
+
+\bibitem{monet}
+FishAI project. MONET.md --- the roadmap from Monet v0.1 to v1.0. Repository document, 2026.
+\S0 the target and the fork; \S3.3--\S3.4 the belief rungs; \S3.5b the gate; \S3.8a the search
+arm; \S3.8c the attribution study; \S3.8d v0.9; \S3.8e--\S3.8i the ranker rungs and the bridge
+translation; \S3.8j--\S3.8l the belief studies and the declare pin; \S3.8m the acceptance read;
+\S3.9 the definition of v1.0; \S6.2 the controls; \S8.3 the decisions.
+
+\bibitem{frontier}
+A.~Hsieh. Against the frontier: a cross-engine measurement and the bridge defect that nearly buried
+it. FishAI project, 2026. The $27.08\%$ baseline, the mirror-cell lesson, the oracle ceiling and the
+position decomposition this paper inherits.
+
+\bibitem{fishlab}
+\code{dylann4500}. FishLab --- a Canadian Fish engine, bot family and evaluation lab. GitHub
+repository, \url{https://github.com/dylann4500/FishLab}. The C++ engine and its identity controls,
+the SESTINA v1.0 frozen specification, the v0.2--v0.6 lineage, the guest-bot package protocol
+(\code{docs/BOT\_PACKAGE.md}, \code{docs/PLAY.md}), and the finding on ask accuracy near the optimum.
+The repository carries no licence file; nothing from it is reproduced here, and its measured
+findings are cited as theirs.
+
+\bibitem{loses}
+FishAI project. WHY-FISHAI-LOSES.md --- the account of the cross-play deficit. Repository document,
+2026. The proof-latency channel and the lineage placement the ladder started from.
+
+\bibitem{rules}
+FishAI project. RULES\_US54.md --- the ``US student'' 54-card variant. Repository rules
+specification with derived consequences and test vectors, 2026. \S3.1 the pending pass, \S3.2 the
+declare compulsion, \S4 running out of cards.
+
+\bibitem{v20}
+A.~Hsieh. FishAI v2.0: the three-sided ask. FishAI project, 2026. The Bass v2.0 policy Monet v0.1
+forked, and the defusal term every roster style carries.
+
+\end{thebibliography}
+
+\end{document}

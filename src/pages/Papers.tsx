@@ -1,5 +1,5 @@
 /**
- * `/papers` — the ten papers, and the questions the project has actually put to a measurement.
+ * `/papers` — the eleven papers, and the questions the project has actually put to a measurement.
  *
  * Everything on this page is a pointer at something the reader can open: a PDF built from the
  * committed `.tex` by `npm run papers:build`, the LaTeX source on GitHub, and the lab page that
@@ -17,14 +17,16 @@
  *
  * ## Negative results are findings here
  *
- * Seven of the nine headline results are negative or refutations, and they are printed in the
+ * Nine of the eleven headline results are negative or refutations, and they are printed in the
  * same voice as the positive ones — no hedging verb, no "unfortunately", no framing as an
  * ablation of a success. That is the series' whole method: the contained book is a proved theorem
  * worth nothing, the declare axis is a knob that was never reached, adaptation over this roster is
  * worth less than nothing, the avoidance rule the owner asked for loses to not having it, the
- * inference he worried about is one the engine structurally cannot make, and two of this
- * project's own published nulls turn out to be non-measurements rather than zeros. A page that
- * softened those would be misreporting the project.
+ * inference the owner worried about is one the engine structurally cannot make, two of this
+ * project's own published nulls turn out to be non-measurements rather than zeros, a match against
+ * another project's frontier agent is lost at 27.08%, and seventeen measured rungs built to beat
+ * that agent stop at 41.31% with the acceptance test failed. A page that softened those would be
+ * misreporting the project.
  *
  * Two of the nine now carry addenda rather than corrections — v0.5 and v1.5 were both re-measured
  * after the engine gained a defusal term every roster style carries. Where an addendum weakens a
@@ -61,7 +63,7 @@ import { LabContents, type LabSection } from '../lab/ui/LabContents.tsx'
 import { LabShell, withCase } from '../lab/ui/LabShell.tsx'
 
 /**
- * This page is a long index — nine entries and then the topics — so it carries the same
+ * This page is a long index — eleven entries and then the topics — so it carries the same
  * contents rail the long lab pages do.
  * Every id below exists on a `<Section>` further down; the component asserts nothing, so a
  * renamed section would silently break the jump — keep the two in step.
@@ -69,7 +71,7 @@ import { LabShell, withCase } from '../lab/ui/LabShell.tsx'
 const CONTENTS: readonly LabSection[] = [
   { id: 'how-to-read', label: 'How to read this page', note: 'what each entry carries' },
   { id: 'series', label: 'The series', note: 'v0.5, v1.0, v1.5, v2.0' },
-  { id: 'results', label: 'Focused results', note: 'five caveats, measured' },
+  { id: 'results', label: 'Focused results', note: 'seven caveats, measured' },
   { id: 'topics', label: 'Research topics', note: 'answered and open' },
   { id: 'sources', label: 'Sources' },
 ]
@@ -338,6 +340,26 @@ const PAPERS: Paper[] = [
       pathLabel: 'github.com/…/WHY-FISHAI-LOSES.md',
     },
   },
+  {
+    slug: 'monet',
+    serial: '11',
+    kind: 'Cross-engine result',
+    title: 'Toward the Frontier: Seventeen Measured Rungs Against a Frontier Canadian Fish Agent, and the Wall Where They Stopped',
+    question:
+      'A new agent line was built one measured rung at a time to beat the frontier agent the last paper lost to. Did it?',
+    finding:
+      'No. After seventeen rungs the shipped bot wins 41.31% against SESTINA v1.0 on twelve seeds and 40.11% on twelve others, against an acceptance bar of 50%; it beats their v0.2 and v0.3 on every seed and loses to their v0.4, v0.5 and v0.6 on every seed; and a second adapter written from the protocol documents alone reproduces the number to the hundredth on 12 of 12 seeds. Three mechanisms shipped — a calibrated marginal with a joint chain and a licence term, a credit for the asks a hit-maximiser never plays (+4.04 paired, ahead on 12 of 12), and a corrected translation of the declare compulsion (+1.28) — and ten more rungs were measured inside their floors and shipped nothing. The ladder gained the same thirteen points against v0.4, v0.5, v0.6 and SESTINA alike, and none of the four is beaten: the wall stands where the first paper put it.',
+    abstract:
+      'An attribution study on full-information records locates the frontier’s margin — 40% of its extra sets in evenly dealt half-suits, 31% in steals from Monet’s majorities — and finds that at SESTINA’s own decisions Monet’s pick would hit 62.5% against SESTINA’s 55.7%: the hit chance is not the value of an ask. The belief axis closed on records studies rather than cells, the last of them a calibrated likelihood that repaired the belief where the error was and lost abroad through the declare’s chain — a pooled Brier score cannot see a selected population. We report the ladder, the acceptance table, the instrument and its two disclosed defects, and the negative result as the deliverable.',
+    method:
+      'The same bridge as the frontier paper — FishAI’s policy as a guest bot in FishLab’s C++ engine — with every rung pre-registered before its cells, read on twelve seeds of 200 deals against a paired floor of ±2.00, and the acceptance read executed in full: 73 cells, the panel against their lineage on the same seeds, per-process op counts equal to the engine’s own on every cell, and a second adapter built by an independent agent from FishLab’s two protocol documents alone. Nothing of theirs is copied; their game output is data and their findings are cited as theirs.',
+    evidence: {
+      href: 'https://github.com/MeagerPotato/FishAI/blob/main/MONET.md',
+      label: 'The roadmap — every rung, every seed, and the acceptance table',
+      external: true,
+      pathLabel: 'github.com/…/MONET.md',
+    },
+  },
 ]
 
 /* ---- topics -------------------------------------------------------------------------------- */
@@ -401,6 +423,13 @@ const ANSWERED: Topic[] = [
       'Partly — twice chance at one game. 22.0% top-1 against an 11.1% floor at end of game, and only 16.1–21.7% at the 40–80 event horizons the engine actually acts on. Four styles read at or near chance; the Ghost reads best, at 41.4% on the regenerated artifact. The limit is how few decisions a style reveals, not the model.',
     source: '/lab/adaptive#classifier · observability',
   },
+  {
+    status: 'answered',
+    question: 'Do these styles survive contact with an independently written bot?',
+    answer:
+      'Not at the frontier. Bass v2.0 wins 27.08% against SESTINA v1.0 inside that project’s own engine, and the Monet line built on it reaches 41.31% after seventeen measured rungs — beating their v0.2 and v0.3 on every seed, losing to their v0.4, v0.5 and v0.6 on every seed, and reproduced to the hundredth by an independently written adapter. The conventions transferred; the deficit is position, not belief.',
+    source: 'MONET.md §3.8m · the Monet ladder',
+  },
 ]
 
 const OPEN: Topic[] = [
@@ -424,13 +453,6 @@ const OPEN: Topic[] = [
     answer:
       'The SPRT re-tuning protocol has never been run, so every result — the dominance verdict and both negative results included — is about the style as specified, not the best version of that style that exists. A re-tuned roster could push declare bars below 0.775 and bring the inert axis back to life.',
     source: 'STYLES.md §3.1.1 · v0.5 threats',
-  },
-  {
-    status: 'open',
-    question: 'Do these styles survive contact with an independently written bot?',
-    answer:
-      'Unknown. Cross-play against a foreign agent and the holdout roster are both specified and neither has been run; the artifact’s cross-play block is empty. Conventions formed in self-play need not transfer, which is the standard warning this design accepts.',
-    source: 'v0.5 §threats · BOT_LAB.md',
   },
   {
     status: 'open',
@@ -588,21 +610,22 @@ export function Papers() {
       current="/papers"
       docTitle="Research papers"
       which={which}
-      stamp="ten papers · built from papers/*.tex"
+      stamp="eleven papers · built from papers/*.tex"
     >
       {/* ---- hero ------------------------------------------------------------------------- */}
       <Section noRule noMarks>
         <MaskedLines
           level="h1"
-          lines={['Ten papers,', 'one question each,', 'and *eight of the answers are no*.']}
+          lines={['Eleven papers,', 'one question each,', 'and *nine of the answers are no*.']}
         />
         <div className={s.split} style={{ marginTop: 'var(--fa-sp-head)' }}>
           <Reveal as="p" className={s.prose}>
             FishAI is a bot that plays Canadian Fish and a laboratory that measures it. The
             papers below are what the laboratory has written down: four system papers tracing
             the engine from v0.5 to v2.0, five focused results that take one load-bearing caveat
-            each and measure it to the end, and one cross-engine match played inside another
-            project&rsquo;s engine against their frontier agent. Every one is built from a
+            each and measure it to the end, and two cross-engine results: a match played inside
+            another project&rsquo;s engine against their frontier agent, and the seventeen-rung
+            ladder built to beat it. Every one is built from a
             committed LaTeX source, and every number in them is a field of an artifact this site
             renders. The four system papers are titled <em>FishAI vX</em> because that
             is what the agent line was called when they were published; the line has since been
@@ -611,13 +634,14 @@ export function Papers() {
           </Reveal>
           <Reveal as="div" className={s.stack}>
             <p className={s.prose}>
-              Eight of the ten headlines are <strong>negative results</strong>, and they are the
+              Nine of the eleven headlines are <strong>negative results</strong>, and they are the
               point rather than an embarrassment. A proved theorem measured at zero; a knob that
               was wired and swept and never reached; an adaptive agent that provably becomes the
               static one and then bills you for the trip; a rule the owner asked for that lost,
               and won only inverted; a match against another project&rsquo;s frontier agent lost
-              at 27.08% — those are findings, and the series reports them in the same voice as
-              the two wins.
+              at 27.08%; seventeen measured rungs built to beat that agent, stopping at 41.31% with
+              the acceptance test failed — those are findings, and the series reports them in the
+              same voice as the two wins.
             </p>
             <div className={buttonRow}>
               <Button href="#topics" variant="line">
@@ -701,8 +725,8 @@ export function Papers() {
       {/* ---- the focused results ---------------------------------------------------------- */}
       <Section id="results" badge="Focused results">
         <SectionHead
-          lines={['Six caveats,', 'taken seriously enough', 'to get *their own papers*.']}
-          sub="Five of these began as a footnote in a larger paper and turned out to carry more weight than the thing they qualified: an absorbing resource worth nothing, a parameter that was never consulted, the exact ceiling on reading a player from a public log, what a miss actually licenses you to conclude, and what the instrument behind every null in this project could resolve. The sixth is the caveat underneath all of them — everything here was measured against ourselves — and it answers that by going and playing somebody else’s frontier agent."
+          lines={['Seven caveats,', 'taken seriously enough', 'to get *their own papers*.']}
+          sub="Five of these began as a footnote in a larger paper and turned out to carry more weight than the thing they qualified: an absorbing resource worth nothing, a parameter that was never consulted, the exact ceiling on reading a player from a public log, what a miss actually licenses you to conclude, and what the instrument behind every null in this project could resolve. The sixth is the caveat underneath all of them — everything here was measured against ourselves — and it answers that by going and playing somebody else’s frontier agent. The seventh is what building toward that agent for seventeen rungs bought: fourteen points, and the wall where they stopped."
         />
         <div className={p.papers}>
           {PAPERS.filter((paper) => !paper.kind.startsWith('System')).map((paper) => (
@@ -822,7 +846,7 @@ export function Papers() {
               role: 'github.com/MeagerPotato/FishAI',
               body:
                 'The engine, the simulators, the committed artifacts, and the LaTeX source of ' +
-                'all ten papers under papers/. MIT licensed.',
+                'all eleven papers under papers/. MIT licensed.',
             },
           ]}
         />

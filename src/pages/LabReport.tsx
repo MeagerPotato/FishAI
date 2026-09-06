@@ -409,10 +409,10 @@ export function LabReport() {
               title: 'The papers',
               role: '/papers',
               body:
-                'Ten write-ups with abstracts, PDFs and LaTeX sources — the tournament, the ' +
+                'Eleven write-ups with abstracts, PDFs and LaTeX sources — the tournament, the ' +
                 'adaptive result, the memory ladder, the concession paper, the five focused ' +
-                'findings the caveats on this page became, and the cross-engine match against ' +
-                'another project’s frontier agent.',
+                'findings the caveats on this page became, the cross-engine match against ' +
+                'another project’s frontier agent, and the seventeen-rung ladder built to beat it.',
               href: '/papers',
             },
           ]}
