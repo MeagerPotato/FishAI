@@ -459,6 +459,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.25** — the trailer's ask, a records read (2026-09-07) | **row 29's (b): the take-back against the ask elsewhere** — at every trail decision (§3.8q: a side holding two of six in an opened, unresolved, even set) whether a take-back is legal, the trailer's picture (`cert6`), the action (the take-back / an uncertain ask into the set / a certain or uncertain ask elsewhere / no card held), what the ask elsewhere bought (its hit, the set it went into and that set's outcome), and the trail set's recovery — Monet's and SESTINA's side of the fs and base corpora and the home mirror (§3.8x); no `lib/` change | a trail term is built as v0.26 only if, on fs, SESTINA's recovery after declining a legal take-back is within 5 points of its recovery after taking it AND the ask elsewhere it takes instead hits ≥ 50% and its set is taken ≥ 50%; else the trailer's story is closed — pre-registered 2026-09-07, the instrument to follow | every walk pinned in-engine at 100.0%; races EXACT; the first trail decisions reconciled EXACT with §3.8q; every certainly-placed card asserted against the live hands; the home mirror under `--validate` with the start rotating | S |
 | **v0.24** — the placement value, a records read (2026-09-07) | **row 28's (n): what an ask buys the team's later decisions** — at every lead decision (§3.8q) the asking seat's certain count of the lead set's six cards (`cert6`) and whether a certain hit is on the table, and at the side's next decision on the set the change, by the action taken (chase hit / chase miss / ask elsewhere); the intervening asks into the set by each side; the conversion by the picture at the leader's first lead decision — Monet's and SESTINA's side of the fs and base corpora and the home mirror (§3.8w); no `lib/` change | a placement credit (row 28's (o)) is built as v0.25 only if, on fs, Monet's side, the chase places ≥ 0.5 certain cards more than an ask elsewhere AND the conversion at `cert6` ≥ 4 exceeds that at `cert6` ≤ 2 by ≥ 10 points; else the placement story is closed — **read 2026-09-07: THE STORY IS CLOSED. The chase places: Δ`cert6` +0.535 after a chase against −0.017 after an ask elsewhere, +0.553 (SE 0.004) for Monet on fs (SESTINA +0.538) — the first condition met. The picture does not convert: Monet converts 53.4% of the races it leads from `cert6` ≥ 4 against 51.9% from ≤ 2, +1.5 points (SE 1.6); SESTINA +8.0 (0.9); a seat that can place three converts worst of all — the second condition missed, no credit built. SESTINA converts more at every level of the picture (61.9 / 54.9 / 68.8 against 51.9 / 41.3 / 51.9), so its edge is in the race's play, not in what it knows when the lead begins; a chase miss is answered by a take-back hit 61% of the time; where a chase is legal Monet chases 36%, SESTINA 72%. Q1 three of four, Q2 one of four, Q3 at the edges, Q4 held (25 walks pinned at 100.0%, EXACT, no assertion). Row 29 takes the trailer's ask, v0.25** | every walk pinned in-engine at 100.0%; races EXACT; every certainly-placed card asserted against the live hands; the home mirror under `--validate` with the start rotating | S |
 | **v0.23** — the appetite re-fit on the shipped vector (2026-09-07) | **row 27's (d): the three appetite doses that ship together — `contest` 0.6 (fit on v0.4c's vector, §3.8d), `closing` 0.5 (on v0.9's, §3.8h), `closingFour` 2 (on v0.9's, §3.8r) — were each fit with the other two absent; one-knob moves from the shipped point at home** — `contest` 0.4 / 0.8 / 1.0, `closing` 0.25 / 0.75 / 1.0, `closingFour` 1 / 3, 2,400 duplicate pairs each against the shipped stack, two controls at zero first; the combined move in a second round if two knobs are eligible; the primary and secondary abroad on twelve fresh seeds against v0.20c's vector (§3.8v); no change to `lib/` | eligible at home at ≥ +2 SE with the sure-miss share within 3 points; the primary ships by §3.8n's bar against v0.20c's vector on the twelve (±2.00 still the rung; the registry change a PR for the owner, stacked on #41); the secondary reported, unable to ship — **read 2026-09-07: THE RUNG STOPS AT HOME. No one-knob move is eligible: `contest` 0.4 −0.53 a pair (7.3 SE below zero), 0.8 −0.13 (2.5 SE), 1.0 −0.13 (2.1 SE); `closing` 0.25 +0.03 (1.7 SE), 0.75 −0.01, 1.0 +0.00; `closingFour` 1 −0.05, 3 −0.04; both controls at zero exact. The shipped point is a local optimum at home along every axis — `contest` sharply (it opens the even races: 13 points fewer at 0.4), `closing` flat (its dose decides 0.2% of the asks), `closingFour` slightly down on both sides of 2. Nothing abroad; the vector unchanged. Post hoc the markers exposed the home harness's first-mover bias — team A took the first turn in every `--home` game, and identical policies read 56% / 42% of the race starts — fixed by rotating the start (`--home-start`); §3.8u's starter line corrected (the three rung opened 10–13 points fewer races than the stack, not parity); no paired number on the ladder is touched. Q1's local-optimum claim held, four of eight dose ranges; Q2–Q4 not reached beyond the md5. Row 28 takes the placement value, v0.24** | the tree's lib md5 equal to v0.22's, making §3.8u's identity cell this rung's (else replayed); every cell pinned in-engine at 100.0%; races EXACT; the fourteen counters zero; ≤ 3 containers, a short cell replayed | S |
 | **v0.22** — the rung below the four: `closingThree` (2026-09-07) | **row 26's (e): the closing credit's dose where the hit would leave two cards of the set outside the side's certain hands** — the ask that makes a seat-known four, §3.8p's decisive stage, 18% of Monet's asks by §3.8t — `closingThree · wHit · p · 0.25` on the same ungated arm as the four and five rungs, never above a certain hit; a home ladder over doses 1, 2, 4, 8 on the shipped vector (the control at zero first), the primary and secondary abroad on twelve fresh seeds against v0.20c's vector (§3.8u) | eligible at home at ≥ +2 SE with the sure-miss share within 3 points; the primary ships by §3.8n's bar against v0.20c's vector on the twelve (±2.00 still the rung; the registry change a PR for the owner, stacked on #41); the secondary reported, unable to ship — **read 2026-09-07: THE RUNG STOPS AT HOME. Against the shipped stack in 2,400 duplicate pairs the three rung reads −0.16 a pair at dose 1 (2.4 SE below zero), −0.21 at 2, −0.28 at 4, −0.46 at 8 — a loss at every dose, growing with it; the control at zero exact; no arm eligible, nothing abroad, the knob stays off the vector. The markers, post hoc on doses 1 and 2: the credit moves 4–5% of Monet's asks and makes its first lead decision a chase 8–9 points more often, the side opens fewer of the even races (43.7% against the stack's 54.1% once §3.8v corrected the home harness's first-mover bias; 48.4% against 49.2% as first read), the chases bought hit two points less. The identity cell on the v0.22 tree IDENTICAL. Q1 missed outright, Q2 one of five, Q3 and Q4 not reached. The closing family is read at every rung: the five pays, the four pays at its own dose, the three costs. Row 27 takes the appetite re-fit, v0.23** | the identity cell IDENTICAL (§3.8l's); every cell pinned in-engine at 100.0%; races EXACT; the fourteen counters zero; ≤ 3 containers, a short cell replayed; the knob byte identity absent or 0 on every path, pinned by its tests | M |
@@ -7373,6 +7374,83 @@ play after the lead begins, and the instrument put a number on the play's hinge:
 answered by a take-back hit three times in five. The trailer's take-back — taken by Monet at 80%
 of its legal chances and declined by SESTINA at 58% (§3.8q) — is the half of the race the ladder
 has named and not read since row 23. Row 29 takes it.
+
+### 3.8x Monet v0.25 — the trailer's ask: the take-back against the ask elsewhere, a records read
+
+**Decision row 29, taken 2026-09-07 under the owner's direction of 2026-09-06 — (b).** The race
+for an even set is decided at four of six (§3.8p); the leader's side has been read twice — the
+pace is a choice (§3.8q), the four rung pays (§3.8r, §3.8s), the rung below it costs (§3.8u), the
+chase places half a certain card and the picture does not convert (§3.8w) — and every read has
+left the same fact standing: SESTINA converts its leads at 61% and Monet at 49%, at every level of
+what the leader knows. The trailer's side has been read once, in passing: at a trail decision with
+a take-back legal, Monet takes it 80% of the time and SESTINA 42%, asking uncertain elsewhere
+instead (§3.8q); and §3.8w put the leader's exposure on the same hinge — a chase miss is answered
+by a take-back hit three times in five. The take-back is a certain hit that returns the race to
+three-all. Declining it is either SESTINA's loss or its edge, and the records can say which: what
+the ask elsewhere buys, and whether the set is recovered as often without the take-back as with
+it. This rung reads that, on both sides of the same corpora, before any term is named. It changes
+no code in `lib/` — the instrument on `scripts/attribute.mjs` grows a trail side — and ships
+nothing.
+
+#### Pre-registration — written 2026-09-07, before the instrument exists and before any walk
+
+**The instrument.** `scripts/attribute.mjs --trail` (implies `--race42`; needs `--cf` for the
+trailer's picture, as `--placement` does). At every **trail decision** — §3.8q's: an ask decision
+by a side holding two of six in an opened, unresolved, even-by-the-deal set b — and for each such
+set: whether the asking seat **holds a card of b** and whether a **take-back is legal** (§3.8q's
+definition: it holds a card of b and a card of b sits publicly with the other side); the trailer's
+picture, **`cert6`** as §3.8w defines it; and the **action**: the *take-back* (a certain ask into
+b), an *uncertain ask into b*, a *certain ask elsewhere*, an *uncertain ask elsewhere*, or *could
+not* (no card of b held). For every ask elsewhere: its **hit** (the turn kept), the set it went
+into and that set's **outcome for the side** by the end of the game (taken / lost / open), and
+whether that set was one the side led (a chase in another race) or held a majority of. For every
+trail decision: the trail set's **outcome for the trailer** — *recovered* (the trailer took it),
+lost, or open. The first trail decision of each race is reconciled with §3.8q's per-race counts
+(took back / not, recovered) EXACT; every certainly-placed card is asserted against the live
+hands; every walk pinned in-engine at 100.0%.
+
+**The corpora.** As §3.8w: `fs` (conf-fs × 12, `--cf v0.9 --cf-knobs closing=0.5,closingFour=2`),
+`base` (conf-base × 12, `--cf v0.9`), and the home mirror (2,400 games of the stack against itself,
+the start rotating, `--validate`). Monet is A; SESTINA is B abroad, the stack is B at home.
+**Readouts, per corpus and side:**
+
+- **R1 — the trail decisions by action:** n and share, the trailer's `cert6`, and the recovery rate
+  of the trail set after each action.
+- **R2 — the legal take-back, taken against declined:** among the trail decisions where a
+  take-back was legal — the share taken; the recovery after taking against after declining; and
+  for the declined, what the ask elsewhere bought: its hit rate, the share into a set the side led
+  or held a majority of, and that set's outcome for the side.
+- **R3 — SESTINA beside Monet:** R1 and R2 on the other side of the same corpora; the two bots'
+  recoveries after the same action at the same picture.
+
+**The rule for what follows, fixed now.** A trail term — the take-back priced by what the ask
+elsewhere buys, so that Monet declines some of the take-backs it now takes — is built as v0.26
+**only if, on `fs`, both hold for SESTINA:** (a) its recovery of the trail set after declining a
+legal take-back is within **5 points** of its recovery after taking it; and (b) the ask elsewhere
+it takes instead hits at **≥ 50%** and the set it went into is taken by SESTINA at **≥ 50%**. If
+either fails, the decline is SESTINA's loss and not its edge, the trailer's story is closed, and
+row 30 turns elsewhere. If both hold, the term is named from R2's shape and fitted at home in
+duplicate pairs before any cell abroad.
+
+**Predictions, written before the instrument exists.**
+
+- **Q1 (R2, `fs`)** Monet: a take-back legal at 38–44% of its trail decisions, taken 78–82%;
+  recovery 46–52% after taking, 36–46% after declining. SESTINA: taken 40–46%; recovery 54–62%
+  after taking, 46–56% after declining — within 10 points, not within 5 (odds two in five that (a)
+  holds).
+- **Q2 (R2, the ask elsewhere)** SESTINA's declined take-backs buy an ask that hits 55–65% and goes
+  into a set it leads or holds a majority of 55–70% of the time, taken by SESTINA 50–60%; Monet's
+  declined ones (a fifth of its legal chances) hit 45–55% and their sets are taken 45–55%.
+- **Q3 (R1)** The trailer's `cert6` at a take-back is a card higher than at an ask elsewhere
+  (the public card that makes the take-back legal); recovery after an uncertain ask into the set
+  is the lowest of the actions for both bots.
+- **Q4 (checks)** Every walk pinned at 100.0%; races EXACT; the first trail decisions reconciled
+  EXACT with §3.8q; no assertion on 28,800 games and the mirror.
+
+**What ships.** Nothing: the instrument and the record merge on self-verification; the vector is
+untouched. **Cost** S — the instrument, twenty-five walks five wide, the report, the record.
+**Scratch, not committed:** `$SP/monet-v25/` (`run-trail.sh`, `out/`, `report-trail.mjs`,
+`smoke-trail.txt`), `$SP/v25-{prereg,record}.md`.
 
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
