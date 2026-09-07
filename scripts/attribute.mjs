@@ -121,7 +121,14 @@ const LOCKS_BOTH = process.argv.includes('--locks-both') // probe B's declarable
 // the set, actual and counterfactual; per race, the leader's and the trailer's first such
 // decision against the outcome. Needs the race state, so it switches --races on.
 const LIC = process.argv.includes('--licences') // MONET.md 3.8t: the rules-certain count at lead sets and at the asked set (implies --race42; needs --cf)
-const RACE42 = process.argv.includes('--race42') || LIC
+// MONET.md 3.8w: the placement value - at the leader's decisions on an even set it holds four or five of,
+// the asking seat's certain count of the set's six cards (cert6) and whether a certain hit into it is on
+// the table; the change to the side's NEXT decision on the set, credited to the action at the earlier
+// LEAD decision (chase hit / chase miss / elsewhere / could not chase); the asks into the set in between
+// by side; the leader's first picture against the race's outcome. Every placement is asserted against the
+// live hands (implies --race42; needs --cf, whose knowledge build is the asking seat's picture).
+const PLACE = process.argv.includes('--placement')
+const RACE42 = process.argv.includes('--race42') || LIC || PLACE
 const RACES = process.argv.includes('--races') || RACE42
 const CALIB_P = [0.1, 0.3, 0.5, 0.7, 0.9, 1] // bin lower bounds: [0.1,0.3) [0.3,0.5) [0.5,0.7) [0.7,0.9) [0.9,1) and p = 1
 // Declare rules priced on the records: a rule fires at the earliest window (before A's own declare of
@@ -197,6 +204,13 @@ const newRace42Acc = () => {
   return { lead: [D(), D()], trail: [Tt(), Tt()], byLeader: [Rr(), Rr()] }
 }
 
+// §3.8w accumulators: per side, the picture at lead decisions, the transitions from a lead decision to the
+// side's next decision on the set by the action taken there, and the leader's first picture against the outcome
+const newPlaceAcc = () => {
+  const X = () => ({ n: 0, dCert: 0, certHitNext: 0, ownAsks: 0, ownHits: 0, oppAsks: 0, oppHits: 0, events: 0 })
+  return [0, 1].map(() => ({ leadN: 0, stateAtLead: [0, 0, 0, 0, 0, 0, 0], trans: { chaseHit: X(), chaseMiss: X(), elsewhere: X(), couldNot: X() }, first: { n: 0, cert: [0, 1, 2, 3, 4, 5, 6].map(() => ({ n: 0, conv: 0 })), certHit: { n: 0, conv: 0 }, noCertHit: { n: 0, conv: 0 } } }))
+}
+
 function newAcc() {
   const askT = () => ({
     n: 0, hit: 0, certain: 0, certainHit: 0, unc: 0, uncHit: 0,
@@ -233,6 +247,7 @@ function newAcc() {
     fate: [fateT(), fateT()], miss: [missT(), missT()],
     races: RACES ? newRaceAcc() : null,
     race42: RACE42 ? newRace42Acc() : null,
+    place: PLACE ? newPlaceAcc() : null,
   }
 }
 
@@ -269,6 +284,18 @@ function walk(rec, cfPol, acc) {
       else if (h === 2) trail.push(b)
     }
     return lead.length || trail.length ? { lead, trail, actChase: false, actHit: false } : null
+  }
+  // §3.8w: the opened, unresolved, even sets in which side T holds four or five right now - the leader's decisions on the set
+  const placeSetsOf = (T) => {
+    const out = []
+    for (const b of BOOKS) {
+      if (resolved[b] || split0[b] !== 3) continue
+      const R = race[b]
+      if (!R || R.first < 0) continue
+      const h = holdingOf(T, b)
+      if (h === 4 || h === 5) out.push(b)
+    }
+    return out
   }
   // a take-back is legal for the asking seat when it holds a card of the set and a card of the set sits publicly with the other side
   const takeBackLegal = (T, seat, b) => {
@@ -315,6 +342,12 @@ function walk(rec, cfPol, acc) {
     const conv = outcomeTeam === X
     if (R.firstLead) { if (R.firstLead.chased) { B.firstChased++; if (conv) B.firstChasedConv++ } else { B.firstNot++; if (conv) B.firstNotConv++ } } else { B.noLead++; if (conv) B.noLeadConv++ }
     B.leadDec += R.leadDec || 0; B.chases += R.chases || 0
+    if (R.placeFirst && acc.place) {
+      const F = acc.place[X].first
+      F.n++
+      const c = F.cert[Math.min(6, R.placeFirst.cert6)]; c.n++; if (conv) c.conv++
+      const h = R.placeFirst.certHit ? F.certHit : F.noCertHit; h.n++; if (conv) h.conv++
+    }
     if (R.firstTrail) { B.trailFirst++; const rec = outcomeTeam === 1 - X; if (R.firstTrail.took) { B.trailTook++; if (rec) B.trailTookRec++ } else { B.trailNot++; if (rec) B.trailNotRec++ } }
   }
   const finishRace = (b, outcomeTeam, i) => {
@@ -1047,6 +1080,7 @@ function walk(rec, cfPol, acc) {
       }
       let ctx42 = null
       if (RACE42) { ctx42 = race42Ctx(T); if (ctx42) race42Act(T, ev.asker, ev.card, ev.target, ev.hit, ctx42, false) }
+      const placeSets = PLACE ? placeSetsOf(T) : []
       if (T !== lastAskTeam) { acc.tempo[T].runs++; lastAskTeam = T }
       if (pendingMiss) {
         if (pendingMiss.side === T) { const M = acc.miss[T]; M.oppAsks += pendingMiss.oppAsks; M.oppHits += pendingMiss.oppHits; if (pendingMiss.first) M.oppFirstCertain++; pendingMiss = null }
@@ -1120,7 +1154,7 @@ function walk(rec, cfPol, acc) {
             CK.deal[dc].n++; if (cfHit) CK.deal[dc].hit++
             CK.hold[hc].n++; if (cfHit) CK.hold[hc].hit++
           }
-          if ((RACE42 && ctx42 && ctx42.lead.length) || LIC) {
+          if ((RACE42 && ctx42 && ctx42.lead.length) || LIC || (PLACE && placeSets.length)) {
             // §3.8r post hoc: the seat-known own-side count of each lead set at this decision, through the
             // counterfactual's knowledge (its own hand carries a certain holder), and at four whether a
             // certain hit was on the table by the public record (the counterfactual's pick certain)
@@ -1187,6 +1221,38 @@ function walk(rec, cfPol, acc) {
                 R2.n++
                 const o0 = BOOK_CARDS.get(b).length - 1 - x.known
                 for (const [v, o] of [[0, o0], [1, o0 - x.L], [2, o0 - x.S], [3, o0 - x.B], [4, o0 - x.Lsh]]) R2.out[v][Math.max(0, Math.min(3, o))]++
+              }
+            }
+            if (PLACE && placeSets.length) {
+              // §3.8w: the leader's picture of each set it holds four or five of, through the asking seat's knowledge,
+              // every placement checked against the live hands; the transition from the side's previous LEAD
+              // decision on the set, credited to the action actually taken there; the leader's first picture kept
+              const P = acc.place[T]
+              const holds = new Set(hands[ev.asker].map((c) => bookOf(c)))
+              for (const b of placeSets) {
+                const R = raceOf(b)
+                const hold = holdingOf(T, b)
+                let cert6 = 0, certHit = false
+                for (const c of BOOK_CARDS.get(b)) {
+                  const h = BOTS.holderOf(kk, c)
+                  if (h === null) continue
+                  if (seatOf.get(c) !== h) throw new Error(`${rec.label}:${i}: the placement puts ${c} at seat ${h}, the live hand has it at ${seatOf.get(c)}`)
+                  cert6++
+                  if (holds.has(b) && side(h) !== T) certHit = true
+                }
+                const action = bookOf(ev.card) === b ? (ev.hit ? 'chaseHit' : 'chaseMiss') : holds.has(b) ? 'elsewhere' : 'couldNot'
+                const prev = (R.place ||= [null, null])[T]
+                if (prev && prev.lead) {
+                  const X = P.trans[prev.action]
+                  X.n++; X.dCert += cert6 - prev.cert6; if (certHit) X.certHitNext++; X.events += i - prev.i
+                  for (let j = prev.i + 1; j < i; j++) {
+                    const e = rec.events[j]
+                    if (e.type !== 'ask' || bookOf(e.card) !== b) continue
+                    if (side(e.asker) === T) { X.ownAsks++; if (e.hit) X.ownHits++ } else { X.oppAsks++; if (e.hit) X.oppHits++ }
+                  }
+                }
+                R.place[T] = { i, cert6, lead: hold === 4, action }
+                if (hold === 4) { P.leadN++; P.stateAtLead[cert6]++; if (R.first4 === T && !R.placeFirst) R.placeFirst = { cert6, certHit } }
               }
             }
           }
@@ -1722,6 +1788,35 @@ function report(acc, head) {
     }
     console.log('')
   }
+  if (acc.place) {
+    console.log('-- MONET.md §3.8w (--placement): the leader\'s decisions on an even set it holds four or five of - the asking seat\'s certain count of the set\'s six cards (cert6) and whether a certain hit into it is on the table; the change to the side\'s NEXT decision on the set, credited to the action at a LEAD (four-of-six) decision: chase hit / chase miss / elsewhere (a chase was legal) / could not chase (the seat held no card of the set); the asks into the set in between, by side --')
+    console.log('| side | lead decisions | cert6 at lead: 1 / 2 / 3 / 4 / 5 / 6 | action | transitions | Δcert6 | certHit at the next | own asks (hits) between | opp asks (hits) between | events between |')
+    console.log('|---|---|---|---|---|---|---|---|---|---|')
+    const sg = (x, d = 3) => (Number.isFinite(x) ? (x >= 0 ? '+' : '') + x.toFixed(d) : '-')
+    for (const t of [0, 1]) {
+      const P = acc.place[t]
+      const dist = [1, 2, 3, 4, 5, 6].map((k) => pct(P.stateAtLead[k], P.leadN)).join(' / ')
+      for (const [k, name] of [['chaseHit', 'chase hit'], ['chaseMiss', 'chase miss'], ['elsewhere', 'elsewhere'], ['couldNot', 'could not chase']]) {
+        const X = P.trans[k]
+        console.log(`| ${t === 0 ? 'A' : 'B'} | ${P.leadN} | ${dist} | ${name} | ${X.n} | ${X.n ? sg(X.dCert / X.n) : '-'} | ${pct(X.certHitNext, X.n)} | ${X.n ? (X.ownAsks / X.n).toFixed(2) : '-'} (${X.n ? (X.ownHits / X.n).toFixed(2) : '-'}) | ${X.n ? (X.oppAsks / X.n).toFixed(2) : '-'} (${X.n ? (X.oppHits / X.n).toFixed(2) : '-'}) | ${X.n ? (X.events / X.n).toFixed(1) : '-'} |`)
+      }
+      const C = P.trans.chaseHit, M = P.trans.chaseMiss, E = P.trans.elsewhere
+      const pooled = C.n + M.n ? (C.dCert + M.dCert) / (C.n + M.n) : NaN
+      const els = E.n ? E.dCert / E.n : NaN
+      console.log(`   headline ${t === 0 ? 'A' : 'B'}: Δcert6 after a chase (hit and miss pooled) ${sg(pooled)} against ${sg(els)} after an ask elsewhere: ${sg(pooled - els)} (the bar +0.5)`)
+    }
+    console.log('-- §3.8w R3, the worth: the leader\'s FIRST lead decision on the set - its certain count of the six (bucketed) and whether a certain hit was on the table - against the race\'s outcome (converted = the leader took the set); reconciled with §3.8q\'s races by leader less those with no lead decision --')
+    console.log('| side | races with a lead decision | reconciled | cert6 <= 2: n (converted) | 3 | 4 | >= 5 | certHit: n (converted) | no certHit |')
+    console.log('|---|---|---|---|---|---|---|---|---|')
+    for (const t of [0, 1]) {
+      const F = acc.place[t].first, B = acc.race42.byLeader[t]
+      const bk = (ks) => { let n = 0, c = 0; for (const k of ks) { n += F.cert[k].n; c += F.cert[k].conv } return `${n} (${pct(c, n)})` }
+      console.log(`| ${t === 0 ? 'A' : 'B'} | ${F.n} | ${F.n === B.n - B.noLead ? 'EXACT' : 'MISMATCH ' + (B.n - B.noLead)} | ${bk([0, 1, 2])} | ${bk([3])} | ${bk([4])} | ${bk([5, 6])} | ${F.certHit.n} (${pct(F.certHit.conv, F.certHit.n)}) | ${F.noCertHit.n} (${pct(F.noCertHit.conv, F.noCertHit.n)}) |`)
+      const lo = F.cert[0].n + F.cert[1].n + F.cert[2].n, loC = F.cert[0].conv + F.cert[1].conv + F.cert[2].conv, hi = F.cert[4].n + F.cert[5].n + F.cert[6].n, hiC = F.cert[4].conv + F.cert[5].conv + F.cert[6].conv
+      console.log(`   worth ${t === 0 ? 'A' : 'B'}: converted at cert6 >= 4 ${pct(hiC, hi)} (n ${hi}) against cert6 <= 2 ${pct(loC, lo)} (n ${lo}): ${hi && lo ? sg(100 * hiC / hi - 100 * loC / lo, 1) + ' points' : '-'} (the bar +10)`)
+    }
+    console.log('')
+  }
   if (acc.lic) {
     console.log('-- §3.8t the rules-certain count, five ways (certain / + live licences by the rules / + side-certain cards / + both / + the shipped licence lookup): lead sets at four, the ungated reach per lead decision, and the asks taken whose set stands at one or no card outstanding after the hit --')
     console.log('| side | lead sets | at four | ungated reach per lead decision | asks | outstanding <= 1 after the hit |')
@@ -1739,6 +1834,7 @@ function report(acc, head) {
 /* ------------------------------------------------------------------ main --- */
 
 const cfPol = CF && CF !== 'none' ? withKnobs(MON.monetPolicy(CF), CF_KNOBS) : null
+if (PLACE && !cfPol) throw new Error('--placement needs --cf: the asking seat\'s picture is the counterfactual\'s knowledge build')
 const b2ArmPol = B2_ARM && cfPol ? withKnobs(cfPol, B2_ARM) : null
 const t0 = Date.now()
 const acc = newAcc()
