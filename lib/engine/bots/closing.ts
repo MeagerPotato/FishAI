@@ -50,6 +50,14 @@
  *    named by the certain picture even under `closingBelief`, whose lock factor still applies.
  *    Absent or 0 is byte identity: with `closing` set the credit is v0.12's exactly, and without
  *    it there is no credit. `closingFour` without `closing` pays the four rung and nothing else.
+ *  - **`closingThree`** — MONET.md §3.8u: the rung below the four, at its own dose. Where the seat's
+ *    CERTAIN picture of the set has exactly two cards outstanding after the hit — the horizon's
+ *    worth, where `lock` is 0 and v0.12 pays nothing; a seat-known three of six under `us54`, the
+ *    ask that would make a seat-known four, §3.8p's decisive stage — the credit is
+ *    `closingThree · wHit · p · 0.25`, the halving continued, when that knob is present and
+ *    positive. §3.8t measured the rung's population at 18% of Monet's asks, more than the four and
+ *    five rungs together. Named by the certain picture under `closingBelief` too, with the constant
+ *    factor. Absent or 0 is byte identity on every path.
  *
  * ## What it may not do
  *
@@ -79,9 +87,9 @@ import { askHitProbability, holderOf } from './knowledge.ts'
 import type { StyleParams } from './style.ts'
 import type { Knowledge, RankedAsk, SeatView } from './types.ts'
 
-/** Is the closing credit live for this style — `closing` or `closingFour` positive? Read once per decision. */
+/** Is the closing credit live for this style — `closing`, `closingFour` or `closingThree` positive? Read once per decision. */
 export function closingActive(style: StyleParams): boolean {
-  return (style.closing ?? 0) > 0 || (style.closingFour ?? 0) > 0
+  return (style.closing ?? 0) > 0 || (style.closingFour ?? 0) > 0 || (style.closingThree ?? 0) > 0
 }
 
 /** Does the closing credit count open cards by belief rather than by certainty? Inert without a live credit. */
@@ -138,7 +146,8 @@ export function closingPicture(view: SeatView, k: Knowledge, card: Card, belief:
  * within reach of a set it already holds most of. Zero when the knob is absent or 0, for a set
  * already resolved, for an ask a teammate's certain holding makes a sure miss, for `p` at 0, and
  * whenever the hit would still leave the horizon's worth of the set outside the side's hands —
- * which under `us54` means the credit fires only at a seat-known holding of four or five of six.
+ * which under `us54` means the credit fires only at a seat-known holding of four or five of six —
+ * or three, with `closingThree` (§3.8u), where the lock would be 0 and the factor is the constant 0.25.
  * The dose is `closingFour` at exactly one card outstanding by the certain count when that knob is
  * present and positive (§3.8r), and `closing` otherwise; a rung whose dose is absent pays nothing.
  *
@@ -149,7 +158,8 @@ export function closingPicture(view: SeatView, k: Knowledge, card: Card, belief:
 export function closingCredit(view: SeatView, k: Knowledge, style: StyleParams, ask: RankedAsk, p: number): number {
   const appetite = style.closing ?? 0
   const four = style.closingFour ?? 0
-  if (!(appetite > 0) && !(four > 0)) return 0
+  const three = style.closingThree ?? 0
+  if (!(appetite > 0) && !(four > 0) && !(three > 0)) return 0
   if (!(p > 0)) return 0
   const book = cardBook(ask.card)
   if (view.books[book]) return 0
@@ -162,6 +172,11 @@ export function closingCredit(view: SeatView, k: Knowledge, style: StyleParams, 
   if (horizon <= 0) return 0
   const belief = style.closingBelief === true
   const picture = closingPicture(view, k, ask.card, belief)
+  // §3.8u: the rung below the four — exactly the horizon's worth outstanding after the hit by the
+  // CERTAIN picture (two under `us54`), where the lock below is 0 and v0.12 pays nothing — pays
+  // `closingThree · wHit · p · 0.25`, the halving continued, when that knob is present and positive.
+  // Named by the certain picture whatever form the lock takes; absent, the line is not reached.
+  if (three > 0 && picture.outstanding === horizon) return three * style.wHit * p * 0.25
   // The rung is named by the CERTAIN picture: one card outstanding after the hit is the four rung
   // (§3.8r), whatever form the lock factor below takes. `dose === appetite` whenever `closingFour`
   // is absent, so the arithmetic is bit for bit v0.12's there.
