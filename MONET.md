@@ -459,6 +459,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.22** — the rung below the four: `closingThree` (2026-09-07) | **row 26's (e): the closing credit's dose where the hit would leave two cards of the set outside the side's certain hands** — the ask that makes a seat-known four, §3.8p's decisive stage, 18% of Monet's asks by §3.8t — `closingThree · wHit · p · 0.25` on the same ungated arm as the four and five rungs, never above a certain hit; a home ladder over doses 1, 2, 4, 8 on the shipped vector (the control at zero first), the primary and secondary abroad on twelve fresh seeds against v0.20c's vector (§3.8u) | eligible at home at ≥ +2 SE with the sure-miss share within 3 points; the primary ships by §3.8n's bar against v0.20c's vector on the twelve (±2.00 still the rung; the registry change a PR for the owner, stacked on #41); the secondary reported, unable to ship — pre-registered 2026-09-07, the knob to follow | the identity cell IDENTICAL (§3.8l's); every cell pinned in-engine at 100.0%; races EXACT; the fourteen counters zero; ≤ 3 containers, a short cell replayed; the knob byte identity absent or 0 on every path, pinned by its tests | M |
 | **v0.21** — the rules-certain count, a records read (2026-09-07) | **row 25's (a): how much of the four rung's reach do two rules facts recover** — a teammate's licence live by the rules (an ask into the set, no hit taken from that seat in it since) and a side-certain card (every candidate holder on the side) counted in the seat's picture of a set — read on §3.8s's own records of the shipped vector, its base, §3.8r's twelve and the home mirror, every claim asserted against the live hands as the walk goes (§3.8t) | the reach at four with licences counted ≥ 1.5 × the certain reach on the shipped vector's records → v0.21b, the knob, at row 26; under → the rung stops and row 26 goes to row 25's (b) — **read 2026-09-07: THE RUNG STOPS. On the shipped vector's records the licence lifts the four rung's reach from 11.5% to 15.1% of Monet's lead sets (× 1.32; 12.9% of the seat-known-three sets), side-certain cards add a tenth of a point, the two together × 1.33 — under the bar on every corpus (× 1.31 on the base, × 1.30 on §3.8r's twelve, × 1.12 at home); SESTINA's 24.3% → 27.7%. The credit's population at the asks taken grows from 20.2% to 22.1%. The shipped licence lookup over-counts: it puts the side over its own holding at 5% of the lead sets, so a knob could not have read it. §3.8r's count replicated to the tenth (12.1% / 24.8%); no assertion fired on 43,200 games and the mirror. Q1 three of five, Q2 half, Q3 missed, Q4 half, Q5 held. Row 26 leaves (b) and takes the rung below the four: `closingThree`, v0.22** | the instrument's assertions on every decision of 43,200 games and the home mirror; the base corpora replicate §3.8r's 12.1% within 2 points; no bridge cell; nothing under `lib/` | S |
 | **v0.20c** — the bridge read of the four rung (2026-09-06) | **v0.20b's two best home arms abroad, the marker bar dropped and the reason stated** — `closing` 0.5 + `closingFour` 2 (the primary; +0.30 a pair at 4.9 × SE at home) and `closingFour` 2 (the secondary; +0.17 at 2.8 × SE) against the base on the twelve fresh seeds drawn for §3.8r and unread (§3.8s) | the primary ships by §3.8n's bar (≥ 2 SE above zero, ahead on a majority of the twelve; ±2.00 still the rung; the registry change waiting for the owner); the secondary reported, unable to ship from this rung — **read 2026-09-07: THE PRIMARY CLEARS THE BAR, THE FIRST TERM ON THE LADDER TO DO SO. `closing` 0.5 + `closingFour` 2: 41.25% against the base's 40.31%, +0.94 paired (SD 1.49, SE 0.43, 2.18 × SE), ahead on 8 of 12 with one tie — under the ±2.00 floor and marked as such. The secondary `closingFour` 2: +0.34 (SE 0.42, 0.81 × SE), ahead on 8, does not clear; the stack beats it by +0.60 on the same seeds at 6 × SE paired. Every cell pinned in-engine at 100.0% (36 of 36), the counters zero, the cover files complete after one IDENTICAL replay, calibration over its bars by a hundredth on a third of the cells as on the base. The credit moves 3.0% of Monet's asks abroad and the race markers by their smallest units (chase share at lead decisions +0.5, first-chase +1.6, the lead converted +0.4); the margin +0.046 sets a game, the locks cashed 0.2 events sooner. Q1 six of seven, Q2 half, Q3 held. The registry PR is opened for the owner; row 25 names the next rung** | the identity cell IDENTICAL (§3.8r); every cell of every arm pinned in-engine at 100.0%; the fourteen counters zero; ≤ 3 containers, the short cell replayed; the markers abroad through `--race42` | M |
 | **v0.20b** — the race-pace term (2026-09-06) | **the closing credit's four-of-six rung at its own dose** — `closingFour`, a Monet-only knob: at a seat-known four of six the credit is `closingFour · wHit · p · 0.5` in place of `closing`'s dose, the five rung and §3.8h's gate untouched; the population §3.8q put two-thirds of SESTINA's chase surplus in (§3.8r) | a home fit over `closingFour` 1 / 2 / 4 / 8 and the stack with `closing` 0.5 (2,400 duplicate pairs each; eligibility = no home loss at 95%, the chase share at lead decisions up ≥ 5 points, the sure-miss share within 5); the primary and a secondary abroad on twelve fresh seeds; ships by §3.8n's bar — **read 2026-09-06: STOPPED AT HOME BY ITS OWN BAR. The home pairs are the strongest on the ladder — `closingFour` 1 +0.150 a pair (2.7 × SE, +1.1 points), 2 +0.172 (2.8 × SE, +1.3), 4 +0.075, 8 −0.101, and the stack `closing` 0.5 + `closingFour` 2 +0.301 (4.9 × SE, +2.3 points), the first home cell on the ladder to clear two standard errors — with the chases it buys hitting more, not less, and the sure-miss share unmoved. But the chase share at lead decisions moved 0.5–3.1 points against the pre-registered 5, because the seat can place four of the set on its side at only 12% of Monet's lead sets against SESTINA (25% of SESTINA's own): the four rung reaches 10.7% of Monet's lead decisions, and no dose can move the share five points. The rule stands: nothing goes abroad from this rung; the twelve fresh seeds are unspent; row 24 re-registers the bridge read as v0.20c with the bar corrected (§3.8s). Q1 one of four, Q2 one of four, Q3 missed; the identity cell IDENTICAL** | the identity cell IDENTICAL at 6269924; the knob's six tests; typecheck, lint, 1,084 tests; the markers through `--race42` at home; the post-hoc reach count | M |
@@ -6811,6 +6812,109 @@ because a licensed teammate is the exception at a seat-known three: the usual mi
 nobody has asked about, and only a belief can count it — §3.8h's belief form, which lost on every
 seed. §3.8t's default sent row 26 to row 25's (b); row 26 departs from it, with the reason stated
 there, and takes the rung below the four instead.
+
+### 3.8u Monet v0.22 — the rung below the four: `closingThree`, the closing credit's dose at a seat-known three
+
+**Decision row 26, taken 2026-09-07 under the owner's direction of 2026-09-06 — (e).** §3.8p put
+the even-set race's decision at four of six: the first side to four converts its lead 56% of the
+time between equals, 49% for Monet against SESTINA and 61% the other way. §3.8q read the pace as a
+choice — SESTINA asks into the race at 60% of its lead decisions, Monet at 35% — and §3.8r and
+§3.8s priced the ask that makes a seat-known five (the four rung) at its own dose: +0.94 with the
+five rung beside it, the first term to clear the ladder's bar. §3.8t then measured the four rung's
+reach as the public record makes it — 15% of Monet's lead sets with every rules fact counted — and
+put the population of the rung below it, the ask whose hit would leave two cards of the set
+outside the side's certain hands, at **18% of Monet's asks**, more than the four and five rungs
+together. This rung prices that ask: the one that makes a seat-known four, the stage §3.8p named,
+on the same ungated arm as the two rungs that read positive (§3.8i's chase credit, which lost, sat
+on the gated arm). A home ladder over doses on the shipped vector fixes the dose; twelve fresh
+seeds under §3.8n read it. It changes `lib/` — one knob, off by default — and may change the
+shipped vector if it clears the bar, which is the owner's call at review.
+
+#### Pre-registration — written 2026-09-07, before the knob exists and before any cell
+
+**The term.** A Monet-only style knob **`closingThree`** (a number ≥ 0; absent on every roster style
+and every tier). In `closingCredit`, where the seat's **certain** picture of the asked set has
+exactly the horizon's worth of cards outstanding after the hit — two under `us54`, where the lock
+is 0 and v0.12's credit pays nothing; a seat-known three of six — the credit is
+**`closingThree · wHit · p · 0.25`**, the halving continued (1 at the five rung, 0.5 at the four,
+0.25 here). The rung is named by the certain picture whatever form the lock takes (under
+`closingBelief` too, with the constant factor). Everything else is §3.8h's and §3.8r's, untouched:
+the four rung's dose is `closingFour`'s, the five rung's `closing`'s; the credit pays nothing for a
+sure miss into the side's own majority, for a resolved set, or at `p` 0; and it is **gated below
+every legal certain hit with no ungating switch**. **Byte identity:** `closingThree` absent, or 0,
+leaves every decision where it was on every path — with the shipped stack (`closing` 0.5 +
+`closingFour` 2) it is that stack exactly, and alone it is the base. Tests pin identity with the
+base and with the stack, the rung (fires only at a seat-known three; exactly the credit; the four
+and five rungs on the full stack pay what the shipped stack pays), the gate at a hot dose with the
+priced switch live, liveness and determinism, the validator, and absence from every roster style
+and tier.
+
+**The arithmetic, so the doses mean something.** An uncertain ask at `p` stands at about
+`wHit · p` with `wHit` 70. At the three rung `closingThree` 1 adds `17.5 · p` (a quarter premium on
+the ask's own hit value), 2 adds `35 · p` (half), 4 adds `70 · p` (doubles it — the four rung's
+premium at the shipped dose: a chase at `p` 0.35 beats an ask elsewhere at `p` 0.65), 8 adds
+`140 · p`.
+
+**The fit, at home, on the shipped vector.** `scripts/duplicate-pairs.mjs --a v0.9 --a-override
+'{"closing":0.5,"closingFour":2,"closingThree":D}' --b v0.9 --b-override
+'{"closing":0.5,"closingFour":2}' --bank home-a --pairs 2400` for **D ∈ {1, 2, 4, 8}** — four arms,
+4,800 games each, the paired set-difference with the cell's own SD (§6.3). The vector is spelled by
+overrides on both sides because v0.20c enters the registry only when the owner merges #41; the
+harness's control — the same override on both arms — must print `0.0000 +/- 0.0000` and is run
+first. The markers, from `scripts/attribute.mjs --home 2400 --a v0.9 --a-knobs
+closing=0.5,closingFour=2,closingThree=D --b v0.9 --b-knobs closing=0.5,closingFour=2 --cf v0.9
+--cf-knobs closing=0.5,closingFour=2 --races --race42` on the primary and the secondary: the credit
+moved (the counterfactual stack disagrees exactly where the knob moved), A's first-to-four share of
+the even sets (`--races`: the side that starts the race), A's chase share at lead decisions,
+first-chase share, chase hit rate, sure-miss share and lead conversion beside B's.
+
+**Eligibility and the choice, fixed now.** An arm is *eligible* for the bridge if (i) its home
+paired mean is at least +2 SE (a gain at 95% at home) and (ii) its sure-miss share at home is
+within 3 points of the shipped stack's — the credit must not buy sure misses (§3.8i's failure). No
+reach bar this time: §3.8t measured the reach. **The primary arm** is the eligible arm with the
+best home paired mean; a tie within one SE goes to the larger dose. **The secondary arm** is the
+next-best eligible dose, read on the same twelve and reported beside the primary; it cannot ship
+from this rung. If no arm is eligible the rung stops at home and row 27 says so; nothing goes
+abroad.
+
+**The bridge read.** Twelve fresh seeds under the label `"monet-v0.22-confirm-12"` by §6.5's rule
+(`$SP/seeds-v22.mjs`, spent set = v0.20b's plus its twelve), written into this section before a
+cell is played: **5594240 8792627 4733371 4311448 9252632 9599680 2641105 2254076 5393671 6482925 6734115 4029127**. The tree: the v0.22
+commit's `lib/` exported by `git archive` to `$SP/fishai-v22` and mounted read-only, its commit
+and lib md5 recorded, the preamble refusing any other. The arms: the unchanged adapter (`bot.mjs`
+md5 c1fc7316…), `MONET_ARM` v0.4c, `MONET_MUSTFIX` 1, `MONET_OVERRIDE` carrying `contest` 0.6 +
+`closing` 0.5 + `closingFour` 2 (the base: v0.20c's vector) plus `closingThree` D for the arms.
+**Pins before a number is read:** the identity cell — the v0.9-vector arm (no closing knobs) at
+6269924 diffed against §3.8l's recorded cell, every engine line but `elapsed`, IDENTICAL (the tree
+has moved; the knobs absent are byte identity); the in-engine pin of **every** cell — `--cf v0.9
+--cf-knobs <the arm's knobs>` at 100.0% of A's decisions; the races reconciled EXACT; the fourteen
+fault counters zero; 36 cover files a cell, a short cell replayed IDENTICAL before it is read; at
+most three containers at once. **The ship rule is §3.8n's, paired against v0.20c's vector on the
+twelve:** the primary ships if its paired mean is at least two standard errors above zero and it is
+ahead on a majority of the twelve; ±2.00 stays the rung and a term under it is marked as such; the
+registry change (v0.22 = v0.20c plus `closingThree` D) is a PR for the owner, stacked on #41 — if
+#41 is declined, this read still stands on v0.20c's vector and the record says what a re-base
+would need.
+
+**Predictions, written before the knob exists.**
+
+- **Q1 (home)** `closingThree` 1 and 2 read positive, at least +0.10 a pair; the ladder turns down
+  by 8 (8 below 2); the best arm +0.15 to +0.40 a pair; the primary is 2 or 4.
+- **Q2 (markers at the primary)** The credit moves 6–12% of A's asks (the four rung moved 3.8% at
+  home at its dose, and this rung's population is larger by half before the dose's reach); A's
+  first-to-four share of the even sets rises 2–6 points; the chase share at lead decisions +3 to
+  +8; the sure-miss share within 3; the chase hit rate not lower by more than 2 points.
+- **Q3 (abroad)** The primary +0.3 to +1.0 paired against v0.20c's vector, SD 1.3–1.8, ahead on 7–9
+  of 12; the bar cleared with odds one in three; the secondary in the same direction.
+- **Q4** The checks hold: identity IDENTICAL, every cell pinned at 100.0%, races EXACT, counters
+  zero, cover files complete.
+
+**What ships.** The knob, off by default, and the record merge on self-verification; the shipped
+vector changes only by the owner's merge of a registry PR. **Cost** M — the knob and its tests,
+the control and four home arms (about forty minutes), the markers, 36 cells three wide (about
+twenty minutes), the walks, the record. **Scratch, not committed:** `$SP/monet-v22/` (`DOSES.json`,
+`run-home.sh`, `home/`, `run-lanes.sh`, `run-race42-v22.sh`, `report-v22.mjs`, `records/`,
+`out/`), `$SP/v22-{prereg,record}.md`.
 
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
