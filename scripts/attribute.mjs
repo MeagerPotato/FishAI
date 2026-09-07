@@ -1171,14 +1171,14 @@ function walk(rec, cfPol, acc) {
               }
             }
             if (LIC) {
-              // §3.8t R2: the asked set's cards outstanding after the hit, at the ask actually taken, by variant
+              // §3.8t R2: the asked set's cards outstanding after the hit (0, 1, 2, 3 or more), at the ask actually taken, by variant
               const b = bookOf(ev.card)
               if (!resolved[b]) {
                 const x = sideCount(b, ev.asker)
-                const R2 = (acc.lic ??= [0, 1].map(() => ({ n: 0, out: [0, 1, 2, 3, 4].map(() => [0, 0, 0]) })))[T]
+                const R2 = (acc.lic ??= [0, 1].map(() => ({ n: 0, out: [0, 1, 2, 3, 4].map(() => [0, 0, 0, 0]) })))[T]
                 R2.n++
                 const o0 = BOOK_CARDS.get(b).length - 1 - x.known
-                for (const [v, o] of [[0, o0], [1, o0 - x.L], [2, o0 - x.S], [3, o0 - x.B], [4, o0 - x.Lsh]]) R2.out[v][Math.max(0, Math.min(2, o))]++
+                for (const [v, o] of [[0, o0], [1, o0 - x.L], [2, o0 - x.S], [3, o0 - x.B], [4, o0 - x.Lsh]]) R2.out[v][Math.max(0, Math.min(3, o))]++
               }
             }
           }
