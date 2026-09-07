@@ -112,7 +112,8 @@ const LOCKS_BOTH = process.argv.includes('--locks-both') // probe B's declarable
 // or two (a trail) of six in an opened, unresolved, even-by-the-deal set, what the ask did about
 // the set, actual and counterfactual; per race, the leader's and the trailer's first such
 // decision against the outcome. Needs the race state, so it switches --races on.
-const RACE42 = process.argv.includes('--race42')
+const LIC = process.argv.includes('--licences') // MONET.md 3.8t: the rules-certain count at lead sets and at the asked set (implies --race42; needs --cf)
+const RACE42 = process.argv.includes('--race42') || LIC
 const RACES = process.argv.includes('--races') || RACE42
 const CALIB_P = [0.1, 0.3, 0.5, 0.7, 0.9, 1] // bin lower bounds: [0.1,0.3) [0.3,0.5) [0.5,0.7) [0.7,0.9) [0.9,1) and p = 1
 // Declare rules priced on the records: a rule fires at the earliest window (before A's own declare of
@@ -182,7 +183,7 @@ const newRaceAcc = () => {
 // §3.8q accumulators: lead and trail decisions per side (actual and counterfactual), and the races by
 // their leader (the side first to four): the first lead decision, the first trail decision, the outcome.
 const newRace42Acc = () => {
-  const D = () => ({ n: 0, chaseC: 0, chaseU: 0, chaseHit: 0, chaseSure: 0, elseC: 0, elseU: 0, cfN: 0, cfChaseC: 0, cfChaseU: 0, cfChaseHit: 0, cfElseC: 0, cfElseU: 0, both: 0, bothActHit: 0, bothCfHit: 0, joint: new Array(16).fill(0), known: [0, 0, 0, 0, 0, 0], known4Cert: 0, known4NoCert: 0 })
+  const D = () => ({ n: 0, chaseC: 0, chaseU: 0, chaseHit: 0, chaseSure: 0, elseC: 0, elseU: 0, cfN: 0, cfChaseC: 0, cfChaseU: 0, cfChaseHit: 0, cfElseC: 0, cfElseU: 0, both: 0, bothActHit: 0, bothCfHit: 0, joint: new Array(16).fill(0), known: [0, 0, 0, 0, 0, 0], known4Cert: 0, known4NoCert: 0, licK: new Array(36).fill(0), licS: new Array(36).fill(0), licB: new Array(36).fill(0), licSh: new Array(36).fill(0), licFour: new Array(10).fill(0) })
   const Tt = () => ({ n: 0, legal: 0, takeBack: 0, intoU: 0, elseC: 0, elseU: 0, cfN: 0, cfTakeBack: 0, cfIntoU: 0, cfElseC: 0, cfElseU: 0, legalTakeBack: 0, legalCfTakeBack: 0, joint: new Array(16).fill(0) })
   const Rr = () => ({ n: 0, firstChased: 0, firstChasedConv: 0, firstNot: 0, firstNotConv: 0, noLead: 0, noLeadConv: 0, leadDec: 0, chases: 0, trailFirst: 0, trailTook: 0, trailTookRec: 0, trailNot: 0, trailNotRec: 0 })
   return { lead: [D(), D()], trail: [Tt(), Tt()], byLeader: [Rr(), Rr()] }
@@ -1111,18 +1112,74 @@ function walk(rec, cfPol, acc) {
             CK.deal[dc].n++; if (cfHit) CK.deal[dc].hit++
             CK.hold[hc].n++; if (cfHit) CK.hold[hc].hit++
           }
-          if (RACE42 && ctx42 && ctx42.lead.length) {
+          if ((RACE42 && ctx42 && ctx42.lead.length) || LIC) {
             // §3.8r post hoc: the seat-known own-side count of each lead set at this decision, through the
             // counterfactual's knowledge (its own hand carries a certain holder), and at four whether a
             // certain hit was on the table by the public record (the counterfactual's pick certain)
             const kk = ENG.buildKnowledge(view, OPTS)
             const cfCert = publicAt.get(a.card) === a.target
-            const L4 = acc.race42.lead[T]
-            for (const lb of ctx42.lead) {
-              let known = 0
-              for (const c of BOOK_CARDS.get(lb)) { const h = BOTS.holderOf(kk, c); if (h !== null && side(h) === T) known++ }
-              L4.known[Math.min(5, known)]++
-              if (known === 4) { if (cfCert) L4.known4Cert++; else L4.known4NoCert++ }
+            // §3.8t: the side's holding of set b as the RULES make it certain to seat s: the placed cards
+            // (holderOf on the side), the teammates whose licence in b is live by the rules (an ask into b,
+            // and no hit taken from that seat in b since) with no member placed at them, the cards whose
+            // every candidate holder is on the side, and the shipped lookup's licences beside the rules
+            // ones. Every claim is checked against the live hands: a wrong count aborts the walk.
+            const sideCount = (b, s) => {
+              let known = 0, S = 0, L = 0, Lsh = 0
+              const cards = BOOK_CARDS.get(b)
+              for (const c of cards) {
+                const h = BOTS.holderOf(kk, c)
+                if (h !== null) { if (side(h) === T) known++; continue }
+                const cand = kk.cands[c] ?? []
+                if (cand.length > 0 && cand.every((x) => side(x) === T)) {
+                  S++
+                  const at = seatOf.get(c)
+                  if (at === undefined || side(at) !== T) throw new Error(`${rec.label}:${i}: side-certain card ${c} is not on side ${T}`)
+                }
+              }
+              for (let t = 0; t < 6; t++) {
+                if (t === s || side(t) !== T) continue
+                if (cards.some((c) => BOTS.holderOf(kk, c) === t)) continue // discharged: a member is placed at t
+                let lastAsk = -1, lastHit = -1
+                for (let j = 0; j < i; j++) {
+                  const e = rec.events[j]
+                  if (e.type !== 'ask') continue
+                  if (e.asker === t && bookOf(e.card) === b) lastAsk = j
+                  else if (e.hit && e.target === t && bookOf(e.card) === b) lastHit = j
+                }
+                if (lastAsk >= 0 && lastHit < lastAsk) {
+                  L++
+                  if (!hands[t].some((c) => bookOf(c) === b)) throw new Error(`${rec.label}:${i}: seat ${t} counted licensed in ${b} holds no card of it`)
+                }
+                if (BOTS.seatLicences(view, kk, t).has(b)) Lsh++
+              }
+              return { known, L, S, Lsh, B: Math.max(L, S) }
+            }
+            if (RACE42 && ctx42 && ctx42.lead.length) {
+              const L4 = acc.race42.lead[T]
+              for (const lb of ctx42.lead) {
+                let known = 0
+                for (const c of BOOK_CARDS.get(lb)) { const h = BOTS.holderOf(kk, c); if (h !== null && side(h) === T) known++ }
+                L4.known[Math.min(5, known)]++
+                if (known === 4) { if (cfCert) L4.known4Cert++; else L4.known4NoCert++ }
+                if (LIC) {
+                  const x = sideCount(lb, ev.asker)
+                  if (x.known !== known) throw new Error(`${rec.label}:${i}: the two certain counts differ (${x.known} vs ${known})`)
+                  const kL = Math.min(5, known + x.L), kS = Math.min(5, known + x.S), kB = Math.min(5, known + x.B), kSh = Math.min(5, known + x.Lsh)
+                  L4.licK[known * 6 + kL]++; L4.licS[known * 6 + kS]++; L4.licB[known * 6 + kB]++; L4.licSh[known * 6 + kSh]++
+                  for (const [v, four] of [[0, known], [1, kL], [2, kS], [3, kB], [4, kSh]]) if (four === 4) L4.licFour[v * 2 + (cfCert ? 0 : 1)]++
+                }
+              }
+            }
+            if (LIC) {
+              // §3.8t R2: the asked set's cards outstanding after the hit, at the ask actually taken, by variant
+              const b = bookOf(ev.card)
+              if (!resolved[b]) {
+                const x = sideCount(b, ev.asker)
+                const R2 = (acc.lic ??= [0, 1].map(() => ({ n: 0, out: [0, 1, 2, 3, 4].map(() => [0, 0, 0]) })))[T]
+                R2.n++
+                const o0 = BOOK_CARDS.get(b).length - 1 - x.known
+                for (const [v, o] of [[0, o0], [1, o0 - x.L], [2, o0 - x.S], [3, o0 - x.B], [4, o0 - x.Lsh]]) R2.out[v][Math.max(0, Math.min(2, o))]++
+              }
             }
           }
           if (RACE42 && ctx42) race42Act(T, ev.asker, a.card, a.target, cfHit, ctx42, true)
@@ -1654,6 +1711,17 @@ function report(acc, head) {
       let f4 = 0
       if (acc.races) for (const st of ['A', 'B', 'none']) f4 += acc.races.sets.even[st].first4[t]
       console.log(`| ${t === 0 ? 'A' : 'B'} | ${B.n} | ${f4 === B.n ? 'EXACT' : 'MISMATCH ' + f4} | ${pct(B.firstChased, B.n)} (${pct(B.firstChasedConv, B.firstChased)}) / ${pct(B.firstNot, B.n)} (${pct(B.firstNotConv, B.firstNot)}) / ${pct(B.noLead, B.n)} (${pct(B.noLeadConv, B.noLead)}) | ${f2(B.leadDec / Math.max(1, B.n))}, ${f2(B.chases / Math.max(1, B.n))} | ${pct(B.trailTook, B.trailFirst)} (${pct(B.trailTookRec, B.trailTook)}) / ${pct(B.trailNot, B.trailFirst)} (${pct(B.trailNotRec, B.trailNot)}) / ${pct(B.n - B.trailFirst, B.n)} |`)
+    }
+    console.log('')
+  }
+  if (acc.lic) {
+    console.log('-- §3.8t the rules-certain count, five ways (certain / + live licences by the rules / + side-certain cards / + both / + the shipped licence lookup): lead sets at four, the ungated reach per lead decision, and the asks taken whose set stands at one or no card outstanding after the hit --')
+    console.log('| side | lead sets | at four | ungated reach per lead decision | asks | outstanding <= 1 after the hit |')
+    console.log('|---|---|---|---|---|---|')
+    for (const t of [0, 1]) {
+      const L4 = acc.race42.lead[t], S = L4.known.reduce((u, v) => u + v, 0), R2 = acc.lic[t]
+      const V = [0, 1, 2, 3, 4]
+      console.log(`| ${t === 0 ? 'A' : 'B'} | ${S} | ${V.map((v) => pct(L4.licFour[v * 2] + L4.licFour[v * 2 + 1], S)).join(' / ')} | ${V.map((v) => pct(L4.licFour[v * 2 + 1], L4.n)).join(' / ')} | ${R2.n} | ${V.map((v) => pct(R2.out[v][0] + R2.out[v][1], R2.n)).join(' / ')} |`)
     }
     console.log('')
   }
