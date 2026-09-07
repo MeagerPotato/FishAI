@@ -459,6 +459,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.27** — the joint re-fit (2026-09-07) | **row 31's (j): the shipped doses moved two at a time — the one-at-a-time surface (§3.8v, §3.8y) is flat within a point on every axis but `contest`, and the one interaction measured is positive (§3.8r: the two closing rungs together +0.301 against +0.043 + 0.172 apart)** — `closing` 1 + `closingFour` 3, `closing` 0.25 + `closingFour` 1, `contest` 0.8 + `closingFour` 3, `contest` 0.5 + `closing` 1, 2,400 duplicate pairs each against the shipped stack at home, the control at zero first; the markers on every eligible arm; the primary abroad on twelve fresh seeds against v0.20c's vector (§3.8z); no change to `lib/` | eligible at home at ≥ +2 SE with the sure-miss share within 3 points; the primary ships by §3.8n's bar against v0.20c's vector on the twelve (±2.00 still the rung; the registry change a PR for the owner, stacked on #41); the secondary reported, unable to ship; if no arm is eligible the family is closed at its shipped point on every axis and on the diagonals read — **read 2026-09-07: NO ARM IS ELIGIBLE; THE FAMILY IS CLOSED AT ITS SHIPPED POINT. `closing` 1 + `closingFour` 3 −0.033 ± 0.077 a pair (SD 1.93), `closing` 0.25 + `closingFour` 1 −0.041 ± 0.097 (2.42), `contest` 0.8 + `closingFour` 3 −0.128 ± 0.111 (2.77; BEHIND at 2.3 SE), `contest` 0.5 + `closing` 1 −0.103 ± 0.098 (2.44; BEHIND at 2.1 SE); the control 0.0000; every joint read within one SE of the sum of its parts (§3.8v): the surface is additive from the shipped point, and §3.8r's interaction was the credit's arrival on a vector without it, not a slope. The markers on the first: the move changes one ask in ninety and takes a chase hitting 16% over the stack's ask that would hit 50%; the chase share +0.3. v0.20c is the family's optimum (PR #41). Q1 four of four ranges, no arm eligible as the likelier side; Q2 two of four; Q3 and Q4 not reached. Row 32 hands the direction to the owner: (s) the search arm on the shipped vector or (t) a clinch-aware ask** | the control at zero; nothing exported, nothing abroad; the twelve seeds unspent | S |
 | **v0.26** — the five rung's dose above one (2026-09-07) | **row 30's (f): the closing credit at five of six, `closing`, whose shipped 0.5 pays half of what the four rung's `closingFour` 2 pays and whose §3.8v ladder (0.25 / 0.75 / 1.0) never left the region where a certain hit elsewhere outranks the completing ask** — `closing` 2 / 3 / 4 / 6 with `closingFour` 2 and `contest` 0.6 held, 2,400 duplicate pairs each against the shipped stack at home, the control at zero first; the markers (the move's disagreement with the stack, the sure-miss share, the chase share and hit rate, the five-rung share of the asks) on every eligible arm; the primary abroad on twelve fresh seeds against v0.20c's vector (§3.8y); no change to `lib/` | eligible at home at ≥ +2 SE with the sure-miss share within 3 points; the primary ships by §3.8n's bar against v0.20c's vector on the twelve (±2.00 still the rung; the registry change a PR for the owner, stacked on #41); the secondary reported, unable to ship — **read 2026-09-07: NO ARM IS ELIGIBLE; THE RUNG STOPS AT HOME. `closing` 2 / 3 / 4 / 6 read −0.007 / −0.013 / −0.012 / −0.018 sets a pair (± 0.040–0.045 at 95%; SD 1.00–1.13), every one within one SE of zero; the control 0.0000. The markers say why: the dose changes one ask in three hundred at 2 and at 6 alike (99.7% agreement with the stack), and where it does it takes a completing ask hitting 42–44% over the stack's ask that would hit 67–69%; the five-rung share of the asks rises a quarter of a point (8.4 → 8.7%); the sure-miss share, the chase share and hit rate and the starter share unmoved. The completing ask is almost always a certain hit already first, or an uncertain one `gambleBonus` and `closing` 0.5 already put first; the dose above one reaches only the residue, a poor bet. The closing family is now read at every rung and every dose and the shipped point is its optimum one axis at a time. Q1 two of four ranges, no arm eligible as the likelier side; Q2 four of six (the disagreement share and the five-rung lift an order smaller than predicted); Q3 not reached; Q4 the lib md5 equal to v0.22's. Row 31 takes the joint re-fit, v0.27** | the tree's lib md5 equal to v0.22's (d30542fb…; §3.8u's identity cell this rung's); the control at zero; the six arm packages built and none played; no cell abroad | S |
 | **v0.25** — the trailer's ask, a records read (2026-09-07) | **row 29's (b): the take-back against the ask elsewhere** — at every trail decision (§3.8q: a side holding two of six in an opened, unresolved, even set) whether a take-back is legal, the trailer's picture (`cert6`), the action (the take-back / an uncertain ask into the set / a certain or uncertain ask elsewhere / no card held), what the ask elsewhere bought (its hit, the set it went into and that set's outcome), and the trail set's recovery — Monet's and SESTINA's side of the fs and base corpora and the home mirror (§3.8x); no `lib/` change | a trail term is built as v0.26 only if, on fs, SESTINA's recovery after declining a legal take-back is within 5 points of its recovery after taking it AND the ask elsewhere it takes instead hits ≥ 50% and its set is taken ≥ 50%; else the trailer's story is closed — **read 2026-09-07: THE STORY IS CLOSED. (a) fails: SESTINA recovers 57.5% of its trail sets after taking a legal take-back and 44.9% after declining one, −12.6 points (SE 0.5) against a bar of 5; (b) holds: the ask elsewhere hits 57.7% and its set is taken 60.5% (67.9% and 71.2% on the asks that went elsewhere). No trail term is built. The split says why without reopening it: 11.0 of the 12.6 points are the set left open at the clinch and 1.6 the set lost — SESTINA declines into the sets it holds most of, in the games it is about to finish — and a take-back costs no tempo (a hit keeps the turn), so Monet, taking 78.6% of its legal take-backs against SESTINA's 39.1%, leaves one only for a certain hit elsewhere (its asks elsewhere at a trail decision hit 100.0%) and recovers the set as often either way (+2.0, SE 1.0). Both bots recover best by the uncertain ask into the trail set from a picture of four placed (67.0% / 70.4%), taken at 3–4% of trail sets. Q1 two of seven, Q2 three of six, Q3 missed both ways, Q4 held (25 walks pinned at 100.0%, EXACT, no assertion). Row 30 turns to the five rung's dose above one, v0.26** | every walk pinned in-engine at 100.0%; races EXACT; the trail decisions and take-backs reconciled EXACT with §3.8q; every certainly-placed card asserted against the live hands; the home mirror under `--validate` with the start rotating | S |
 | **v0.24** — the placement value, a records read (2026-09-07) | **row 28's (n): what an ask buys the team's later decisions** — at every lead decision (§3.8q) the asking seat's certain count of the lead set's six cards (`cert6`) and whether a certain hit is on the table, and at the side's next decision on the set the change, by the action taken (chase hit / chase miss / ask elsewhere); the intervening asks into the set by each side; the conversion by the picture at the leader's first lead decision — Monet's and SESTINA's side of the fs and base corpora and the home mirror (§3.8w); no `lib/` change | a placement credit (row 28's (o)) is built as v0.25 only if, on fs, Monet's side, the chase places ≥ 0.5 certain cards more than an ask elsewhere AND the conversion at `cert6` ≥ 4 exceeds that at `cert6` ≤ 2 by ≥ 10 points; else the placement story is closed — **read 2026-09-07: THE STORY IS CLOSED. The chase places: Δ`cert6` +0.535 after a chase against −0.017 after an ask elsewhere, +0.553 (SE 0.004) for Monet on fs (SESTINA +0.538) — the first condition met. The picture does not convert: Monet converts 53.4% of the races it leads from `cert6` ≥ 4 against 51.9% from ≤ 2, +1.5 points (SE 1.6); SESTINA +8.0 (0.9); a seat that can place three converts worst of all — the second condition missed, no credit built. SESTINA converts more at every level of the picture (61.9 / 54.9 / 68.8 against 51.9 / 41.3 / 51.9), so its edge is in the race's play, not in what it knows when the lead begins; a chase miss is answered by a take-back hit 61% of the time; where a chase is legal Monet chases 36%, SESTINA 72%. Q1 three of four, Q2 one of four, Q3 at the edges, Q4 held (25 walks pinned at 100.0%, EXACT, no assertion). Row 29 takes the trailer's ask, v0.25** | every walk pinned in-engine at 100.0%; races EXACT; every certainly-placed card asserted against the live hands; the home mirror under `--validate` with the start rotating | S |
@@ -7724,6 +7725,161 @@ Monet's 49–52%, §3.8w) is not a dose of this credit away. Row 31 closes the f
 diagonals, the one thing the one-at-a-time ladders have not read, and names the search for the
 owner.
 
+### 3.8z Monet v0.27 — the joint re-fit: the shipped doses moved two at a time, the family closed on its diagonals
+
+**Decision row 31, taken 2026-09-07 under the owner's direction of 2026-09-06 — (j).** §3.8v
+moved each shipped dose alone and found the shipped point a local optimum on every axis; §3.8y
+pushed the five rung's dose to six and found it inert. One interaction has been measured: on
+v0.9's vector the two closing rungs together read +0.301 a pair against +0.043 + 0.172 apart
+(§3.8r), more than the sum, so the surface is not additive and a one-at-a-time ladder can miss a
+diagonal. This rung reads four joint moves from the shipped point at home, in duplicate pairs
+against the shipped stack, and takes the best eligible move abroad under §3.8n. It changes no
+code — `lib/` is untouched — and may change the shipped vector if a move clears the bar, which is
+the owner's call at review. It is the family's last dose rung: with it the closing credit and the
+contest credit are read on every axis and on the diagonals the measured interaction points at.
+
+#### Pre-registration — written 2026-09-07, before any pair
+
+**The arms.** The shipped stack S is v0.9 with `closing` 0.5 + `closingFour` 2 (`contest` 0.6 from
+the registry). Four two-knob moves from S: **`closing` 1 + `closingFour` 3** (up — both closing
+rungs up, the direction the measured interaction favours), **`closing` 0.25 + `closingFour` 1**
+(down — both rungs down), **`contest` 0.8 + `closingFour` 3** (c08f3 — more appetite for the
+probable miss into a contested set with more chase credit), **`contest` 0.5 + `closing` 1** (c05k1
+— a shade less contest with the five rung doubled). Every dose but `contest` 0.5 is one the
+one-at-a-time ladders have read alone (§3.8v: `contest` 0.4 / 0.8 / 1.0, `closing` 0.25 / 0.75 /
+1.0, `closingFour` 1 / 3; `contest` 0.5 is the midpoint of 0.4 and the shipped 0.6). No new knob,
+no new mechanism.
+
+**The fit, at home.** As §3.8y: `scripts/duplicate-pairs.mjs --a v0.9 --a-override <the move> --b
+v0.9 --b-override <S> --bank home-a --pairs 2400` an arm — 4,800 games, the paired set-difference
+with the cell's own SD (§6.3), four arms at once; the control first, 400 pairs, S against S with
+every dose spelled on both sides, required to print `0.0000 +/- 0.0000`. The markers on every
+eligible arm: `scripts/attribute.mjs --home 2400 --home-start rotate --a v0.9 --a-knobs <the
+move> --b v0.9 --b-knobs contest=0.6,closing=0.5,closingFour=2 --cf v0.9 --cf-knobs
+contest=0.6,closing=0.5,closingFour=2 --races --race42 --licences` — the move's disagreement with
+S at A's asks and what the two asks would hit, the sure-miss share, the chase share and hit rate
+at lead decisions, the starter share of the even sets, the four- and five-rung shares of the asks,
+beside B's.
+
+**Eligibility and the choice, fixed now.** An arm is *eligible* for the bridge if (i) its home
+paired mean is at least +2 SE and (ii) its sure-miss share at home is within 3 points of S's. **The
+primary** is the eligible arm with the best home paired mean; a tie within one SE goes to the
+smaller move (the sum of the doses' distances from the shipped point in the ladders' steps). **The
+secondary** is the next-best eligible arm. If no arm is eligible the rung stops at home, row 32
+says so, and the family is closed at its shipped point on every axis and on the diagonals read.
+
+**The bridge read.** Twelve fresh seeds under the label `"monet-v0.27-confirm-12"` by §6.5's rule
+(`$SP/seeds-v27.mjs`, spent set = v0.26's plus its twelve, drawn and never played), written here
+before a cell is played: **7196521 6332651 7026896 1518145 9339794 3395719 8076725 4914504 7254379 7472654 5631502 5124898**.
+The tree: this commit's `lib/` exported by `git archive` to `$SP/fishai-v27` and mounted
+read-only, its commit and lib md5 recorded — **the lib md5 must equal v0.22's
+(d30542fb95df1f9834d6e4f1825ffc23), since this rung changes no code; that equality makes §3.8u's
+identity cell this rung's, and if it does not hold the identity cell is replayed before a number is
+read.** The arms as §3.8y's: the unchanged adapter (`bot.mjs` md5 c1fc7316…), `MONET_ARM` v0.4c,
+`MONET_MUSTFIX` 1, `MONET_OVERRIDE` carrying the three doses (the base: v0.20c's vector; the
+primary and the secondary: the moved pair). **Pins before a number is read:** the in-engine pin of
+every cell (`--cf v0.9 --cf-knobs <the arm's three doses>` at 100.0% of A's decisions); the races
+reconciled EXACT; the fourteen fault counters zero; 36 cover files a cell, a short cell replayed
+IDENTICAL before it is read; at most three containers at once. **The ship rule is §3.8n's, paired
+against v0.20c's vector on the twelve:** the primary ships if its paired mean is at least two
+standard errors above zero and it is ahead on a majority of the twelve; ±2.00 stays the rung and a
+term under it is marked as such; the registry change (v0.27 = v0.20c with the moved pair) is a PR
+for the owner, stacked on #41 — if #41 is declined, this read still stands on v0.20c's vector and
+the record says what a re-base would need. The secondary is reported beside the primary and cannot
+ship from this rung.
+
+**Predictions, written before any pair.**
+
+- **Q1 (home)** up −0.05 to +0.15 a pair (the interaction's direction; SD 2.0–2.6); down −0.20 to
+  0.00 (SD 2.0–2.6); c08f3 −0.30 to −0.05 (`contest` 0.8 alone read −0.135 and `closingFour` 3
+  alone −0.036; SD 2.8–3.4); c05k1 −0.25 to +0.05 (SD 2.0–2.8). Odds one in four that any arm is
+  eligible; if one is, it is up and reads +0.08 to +0.20.
+- **Q2 (markers at the primary, or at up if none is eligible)** The move disagrees with S at 3–7%
+  of A's asks; the sure-miss share within 3 points; the chase share at lead decisions up 2–5 points
+  for up and down 2–5 for down; the starter share of the even sets within 2 points of the rotating
+  control's 48.6%.
+- **Q3 (abroad)** The primary +0.0 to +0.5 paired against v0.20c's vector, SD 1.3–1.8, ahead on
+  6–8 of 12; the bar cleared with odds one in five; the secondary in the same direction.
+- **Q4** The checks hold: the lib md5 equal to v0.22's, every cell pinned at 100.0%, races EXACT,
+  counters zero, cover files complete.
+
+**What ships.** Nothing but the record merges on self-verification; the shipped vector changes only
+by the owner's merge of a registry PR. **Cost** S — the control and four home arms (about a quarter
+of an hour), the markers, 36 cells three wide (about twenty minutes) if an arm is eligible, the
+walks, the record. **Scratch, not committed:** `$SP/monet-v27/` (`SEEDS`, `DOSES.json`,
+`run-home.sh`, `home/`, `report-home.mjs`, `run-markers.sh`, `report-markers.mjs`, and the bridge
+scripts if an arm goes abroad), `$SP/v27-{prereg,record}.md`.
+
+#### Record — 2026-09-07 (the pre-registration committed 04:03Z, the control and the four arms 04:03Z to 04:15Z, the markers 04:15Z to 04:21Z, read at once)
+
+**The runs.** The pre-registration committed (48ff2a0); at home the control first, 400 pairs,
+**`0.0000 +/- 0.0000`**; then the four joint moves against the shipped stack in 2,400 duplicate
+pairs each, four at once, ten minutes; then the markers on `up`, the arm the pre-registration
+named for the case that none is eligible, 2,400 rotating-start games against the stack. No tree
+was exported and no arm built: no cell went abroad, and the twelve drawn under
+`"monet-v0.27-confirm-12"` join the spent set unspent. Scratch: `$SP/monet-v27/{DOSES.json,
+run-home.sh, home/, report-home.mjs, report-home.txt, run-markers.sh, report-markers.mjs,
+report-markers.txt}`.
+
+**R1 — the home ladder** (as §3.8v's table; a positive number favours the move; §3.8v's
+one-at-a-time reads of the parts beside each, and their sum).
+
+| arm | the move from the shipped point | paired set-diff a pair ± 1.96 SE (SD) | in points of win rate ± SE | verdict at 95% | the parts alone (§3.8v) → their sum | eligible |
+|---|---|---|---|---|---|---|
+| control | the stack against itself, 400 pairs | **0.0000 ± 0.0000** (0.00) | 0 | — | — | — |
+| up | `closing` 1 + `closingFour` 3 | **−0.033 ± 0.077** (1.93) | −0.24 ± 0.30 | inside | +0.002, −0.036 → −0.034 | no |
+| down | `closing` 0.25 + `closingFour` 1 | **−0.041 ± 0.097** (2.42) | −0.31 ± 0.37 | inside | +0.026, −0.051 → −0.025 | no |
+| c08f3 | `contest` 0.8 + `closingFour` 3 | **−0.128 ± 0.111** (2.77) | −0.96 ± 0.42 | BEHIND, 2.3 × SE | −0.135, −0.036 → −0.171 | no |
+| c05k1 | `contest` 0.5 + `closing` 1 | **−0.103 ± 0.098** (2.44) | −0.77 ± 0.37 | BEHIND, 2.1 × SE | `contest` 0.5 unread alone (0.4: −0.526); +0.002 | no |
+
+**No joint move is eligible: the two closing-rung diagonals are flat, the two `contest` diagonals
+lose at two SE, and every joint read is within one SE of the sum of its parts.** The surface is
+additive at these steps from the shipped point. The interaction §3.8r measured on v0.9's vector —
+the two closing rungs worth more together than apart, +0.301 against +0.043 + 0.172 — was the
+credit's arrival on a vector that had none of it, not a slope the shipped point can still climb.
+**The family is closed at its shipped point on every axis and on the diagonals read.**
+
+**R2 — the markers on `up`** (2,400 games, the start rotating, the stack the counterfactual).
+
+| readout | `closing` 1 + `closingFour` 3: A / B |
+|---|---|
+| the move disagrees with the stack at A's asks (n; the stack's ask would hit / the move's hit) | **1.1%** (1,132; 50.0% / **16.4%**) |
+| asks a game; hit | 43.0; 58.4% / 43.3; 58.7% |
+| own-locked asks (sure misses) | 8.2% / 8.0% |
+| lead decisions a game | 8.90 / 9.06 |
+| chase share at lead decisions; chase hit rate | 41.1%; 52.2% / 40.8%; 52.4% |
+| the five-rung share of the asks | 8.6% / 8.6% |
+| even sets: the race starter; the starter's conversion | 48.7%; 53.8% / 48.7%; 55.0% |
+| A's win rate of the walk's 2,400 games | 48.5% |
+
+The joint move changes one ask in ninety, and where it does it takes a chase that hits 16% over
+the stack's ask that would have hit 50%: at `closingFour` 3 the four rung's credit is `1.5 · wHit
+· p`, and a chase outranks a coin-flip ask elsewhere from p above a fifth. The chase share at lead
+decisions rises a third of a point, not the 2–5 predicted — the extra credit buys few chases, and
+poor ones.
+
+**Predictions, scored.** **Q1** four of four ranges (up −0.033 in −0.05 to +0.15; down −0.041 in
+−0.20 to 0.00; c08f3 −0.128 in −0.30 to −0.05; c05k1 −0.103 in −0.25 to +0.05); the SDs two of
+four (down 2.42 and c05k1 2.44 inside; up 1.93 and c08f3 2.77 a hair under); no arm eligible, the
+three-in-four side of the odds. **Q2** two of four — the sure-miss share within 3 and the starter
+share within 2 of the rotating control's; the disagreement share 1.1% against 3–7% and the chase
+share +0.3 against +2 to +5. **Q3** not reached. **Q4** not reached (nothing was exported; nothing
+went abroad).
+
+**The rule, applied.** No arm is eligible at home; **the rung stops, nothing goes abroad, and the
+family is closed at its shipped point on every axis and on the diagonals read** — the record
+merges on self-verification, the vector is unchanged. **What the ladder now says, in one place.**
+The priced ask (§3.8d) and the closing credit (§3.8h, §3.8r) are the two terms on the shipped
+vector; their doses have been read alone (§3.8v, §3.8y), together (here) and at the rung below
+(§3.8u): `contest` peaks at 0.6 and loses on either side, the four rung pays at 2 and not more, the
+five rung is inert from 0.25 to 6, the three rung costs at every dose, and the diagonals are the
+sums of their parts. **v0.20c — `closing` 0.5 + `closingFour` 2 on v0.9's vector, +0.94 at 2.18 SE
+on twelve fresh seeds (§3.8s), registry PR #41 — is the family's optimum and the ladder's shipped
+point.** What the records say SESTINA has that no dose buys is the conversion of the leads it
+takes (61% against 49–52%, §3.8w), which the picture (§3.8w), the pace dose (§3.8r–§3.8v), the
+trailer's take-back (§3.8x) and the completing ask (§3.8y) do not explain. Row 32 hands the
+direction to the owner.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -8176,6 +8332,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 29 | **After §3.8w: the chase places half a certain card and the certain picture does not convert the race — SESTINA converts more than Monet at every level of it — and a chase miss is answered by a take-back hit three times in five. The placement story is closed by its rule. Where is SESTINA's edge in the race's play?** The instrument has now read the leader's side twice (§3.8q, §3.8w) and the trailer's side once, in passing: SESTINA declines 58% of its legal take-backs and asks uncertain elsewhere, Monet takes 80% of its own (§3.8q), and the take-back is the hinge the leader's chase turns on. **(b) The trailer's ask** — row 23's, named at every row since and never read: `--placement` extended to trail decisions (a side holding two of six in an opened, unresolved, even set): the action (the take-back, an uncertain ask into the set, a certain or uncertain ask elsewhere, no card of the set held), the trailer's picture, what the ask elsewhere bought (its hit, the set it went into, whether the turn was kept), the leader's next decision on the set after each action, and the recovery — Monet's and SESTINA's side of fs and base and the mirror. A records rung, no `lib/` change, no bridge, an hour. If SESTINA's declined take-backs recover more than Monet's taken ones at the same picture, or buy a set elsewhere, a term is named — the take-back priced by what it costs the side's turn — and fitted at home under §3.8n as v0.26. **(o) A placement credit** — closed by §3.8w's rule (+1.5 points against a bar of 10). **(q) The contest credit's form** — the family's load-bearing term (§3.8v), its `(1 − p)` factor and domination condition unread; a mechanism rung without a records read behind it, after (b). **(w) A chase credit keyed on the take-back risk** — the miss's cost is the licence handed over; a term from scratch until (b) has read what the trailer does with it. **Recommendation: (b) now; (q) and (w) only with a read behind them; not (o).** **TAKEN 2026-09-07 under the owner's direction of 2026-09-06 — (b), pre-registered as §3.8x before any walk; the owner may reverse this row on return.** | **TAKEN — (b): v0.25 = the trailer's ask, §3.8x** |
 | 30 | **After §3.8x: the trailer's story is closed by its rule — SESTINA's declined take-backs recover 12.6 points less, and the split says the decline marks the games it is about to finish rather than a set it gives up; a take-back costs no tempo and Monet takes it. The race has now been read from both sides and the reads agree: SESTINA's edge is the in-race conversion of the leads it takes (§3.8p's +2.6 bound, §3.8q, §3.8w), and the closing credit at the four rung is the one term that has bought any of it (§3.8s). Where does the next rung go?** **(f) The five rung's dose above one** — the closing credit pays `dose · wHit · p · lock` (closing.ts); at the four rung `lock` is 0.5 and the shipped `closingFour` 2 pays `wHit · p`, at the five rung `lock` is 1 and the shipped `closing` 0.5 pays half that — the ask that would complete a set the side holds five of is credited half of what the ask that makes a four is, beside the base ranker's own `gambleBonus` on the completing ask — and §3.8v's ladder (0.25, 0.75, 1.0) read flat, the credit deciding one ask in five hundred at 0.25: the dose never left the region where a certain hit elsewhere outranks the completing ask. `closing` 2, 3 and 4 with `closingFour` 2 held, on the shipped stack at home in 2,400 duplicate pairs each after the control; markers: the share of Monet's asks each move changes and what those asks hit against what the stack's would have, the five-rung population (7.2% of Monet's asks by §3.8t); an arm ≥ 2 SE ahead at home goes to twelve fresh seeds abroad under §3.8n as v0.26. No new code: a dose on a knob that ships. **(q) The contest credit's form** — the `(1 − p)` factor and the domination condition (`oppMass/6 · ambiguous/6`) unread; but its value is the race it opens (§3.8v), Monet already opens 64% of the even races against SESTINA and takes them at 49% (§3.8p), and the corpora price more openings at nothing: after (f), if at all. **(w) A chase credit keyed on the take-back risk** — closed by this read as motivated: the take-back is a certain hit that keeps the turn, taken and given back for free, and the chase miss's cost is the turn, which `p` already carries. **(j) The joint re-fit of the shipped doses** — §3.8v's one-at-a-time surface is flat within a point on every axis but `contest`; a joint move is cheap and its prior is low; after (f). **(b′) The trailer's story re-read on the set lost rather than recovered, or with the clinch's winner** — not taken: a measure chosen after the read, on a story its rule closed; the fact is recorded in §3.8x for a later row that wants it. **Recommendation: (f) now, at home first; (j) and (q) after it; not (w), not (b′).** **TAKEN 2026-09-07 under the owner's direction of 2026-09-06 — (f), to be pre-registered as §3.8y before any pair; the owner may reverse this row on return.** | **TAKEN — (f): v0.26 = the five rung's dose above one, §3.8y** |
 | 31 | **After §3.8y: the five rung's dose is inert from 0.25 to 6 — the dose changes one ask in three hundred and loses where it changes one — and the closing family is read at every rung and every dose: the three rung costs (§3.8u), the four rung pays at 2 and not more (§3.8r, §3.8v), the five rung buys nothing (§3.8v, §3.8y). The shipped point is the family's optimum one axis at a time. What is left?** **(j) The joint re-fit** — the one-at-a-time surface (§3.8v, §3.8y) is flat within a point on every axis but `contest`, and the one interaction measured is positive (§3.8r: the two closing rungs together +0.301 against +0.043 + 0.172 apart); four joint moves from the shipped point at home, 2,400 duplicate pairs each after the control — `closing` 1 + `closingFour` 3 (both rungs up), `closing` 0.25 + `closingFour` 1 (both down), `contest` 0.8 + `closingFour` 3, `contest` 0.5 + `closing` 1 — an eligible arm abroad under §3.8n; a quarter of an hour at home; no code. The family closed on its diagonals, or a move found; prior low. **(q) The contest credit's form** — unread, a mechanism rung; but the race it opens is priced at nothing abroad (§3.8p) and its neighbours lose at home (§3.8v): after (j), if at all. **(s) The search arm on the shipped vector** — SESTINA runs a determinized search (twelve deals, depth twelve, four candidates) where Monet ranks one ply with priced terms; §3.8a's search arm on v0.4c's vector was a no-op at home at 96 ms an ask against a budget of 100, and the ranker it searched over has since gained the contest and closing terms that carry the ladder; the conversion gap no dose buys (61% against 49–52%, §3.8w) may be lookahead's. Cost M–L (the budget first, then a fit at home, then the bridge); for the owner's decision on return. **(x) A new records read** — none proposed: the race has been read from both sides (§3.8p–§3.8x) and every read ends at the same wall. **Recommendation: (j) now, closing the family; (s) for the owner; (q) after; not (x).** **TAKEN 2026-09-07 under the owner's direction of 2026-09-06 — (j), to be pre-registered as §3.8z before any pair; the owner may reverse this row on return.** | **TAKEN — (j): v0.27 = the joint re-fit, §3.8z** |
+| 32 | **After §3.8z: the family is closed at its shipped point on every axis and on the diagonals — the joint moves are the sums of their parts, the closing diagonals flat and the `contest` diagonals losing at two SE. Since §3.8n's rule (2026-09-06) the ladder has read five rungs on the race and fit three dose ladders; one term cleared the bar (v0.20c, PR #41) and nothing since. What is left costs M–L and has no read behind it. Where does the ladder go?** **(s) The search arm on the shipped vector** — `lib/engine/search/` (§3.8a: D determinizations from the marginal, the fast ranker's top C asks, S-step rollouts, the pick overridden only when the lower bound clears zero; knobs `det`, `cand`, `steps`, `z`; `scripts/bench-decide.mjs` for the cost) re-fit with the rollout policy the shipped stack rather than v0.4c's. SESTINA searches (twelve deals, depth twelve, four candidates) where Monet ranks one ply, and the lead conversion no dose buys (61% against 49–52%, §3.8w) is the kind of thing lookahead sees — a chase now against the take-back and the re-take that follow it. §3.8a's form was a no-op at home on v0.4c's vector at 96 ms an ask; on the shipped vector unread. Cost M–L: the budget first (the stack's rollout is dearer than v0.4c's), then duplicate pairs at home (a slow arm, hours a ladder), then the bridge at its per-move limit. **(t) A clinch-aware ask** — Monet leaves 12.3% of the races it opens unresolved at the clinch against SESTINA's 5.4% (§3.8p), and 14–17% of SESTINA's trail sets are open at the clinch (§3.8x): Monet's leads left on the table when the game ends. A term that weighs the ask by the score — the fifth set that ends the game, the opponents' fifth that must be denied — has not been on the ladder since §3.3c read the declare's urgency at a quarter of a point on v0.3's vector; a mechanism rung of cost M, with a records read in front of it (the state of every side's leads at the clinch, by the winner; S). **(q) The contest credit's form** — after (s) or (t), if at all. **(u) Another axis on the shipped vector** — the belief (closed, §3.8l), communication (§3.7, flat), the determinized declare (§3.8b, +0.08): each read on an earlier vector; a re-read is a records rung of cost S each, with low priors. **Recommendation: the owner's call between (s) and (t), each pre-registered before any code; (t)'s records read first if (t); not (q), not (u) yet.** **FOR THE OWNER 2026-09-07 — no rung is opened under the direction of 2026-09-06: every remaining candidate is a mechanism of cost M–L without a read behind it, and the ladder's state is reviewable as it stands (v0.20c the family's optimum, PR #41 pending). The owner may open (s) or (t) or another direction on return.** | **FOR THE OWNER — (s) or (t); the ladder paused at v0.27 with the family closed** |
 
 ---
 
