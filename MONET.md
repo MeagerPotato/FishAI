@@ -459,6 +459,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.24** — the placement value, a records read (2026-09-07) | **row 28's (n): what an ask buys the team's later decisions** — at every lead decision (§3.8q) the asking seat's certain count of the lead set's six cards (`cert6`) and whether a certain hit is on the table, and at the side's next decision on the set the change, by the action taken (chase hit / chase miss / ask elsewhere); the intervening asks into the set by each side; the conversion by the picture at the leader's first lead decision — Monet's and SESTINA's side of the fs and base corpora and the home mirror (§3.8w); no `lib/` change | a placement credit (row 28's (o)) is built as v0.25 only if, on fs, Monet's side, the chase places ≥ 0.5 certain cards more than an ask elsewhere AND the conversion at `cert6` ≥ 4 exceeds that at `cert6` ≤ 2 by ≥ 10 points; else the placement story is closed — **read 2026-09-07: THE STORY IS CLOSED. The chase places: Δ`cert6` +0.535 after a chase against −0.017 after an ask elsewhere, +0.553 (SE 0.004) for Monet on fs (SESTINA +0.538) — the first condition met. The picture does not convert: Monet converts 53.4% of the races it leads from `cert6` ≥ 4 against 51.9% from ≤ 2, +1.5 points (SE 1.6); SESTINA +8.0 (0.9); a seat that can place three converts worst of all — the second condition missed, no credit built. SESTINA converts more at every level of the picture (61.9 / 54.9 / 68.8 against 51.9 / 41.3 / 51.9), so its edge is in the race's play, not in what it knows when the lead begins; a chase miss is answered by a take-back hit 61% of the time; where a chase is legal Monet chases 36%, SESTINA 72%. Q1 three of four, Q2 one of four, Q3 at the edges, Q4 held (25 walks pinned at 100.0%, EXACT, no assertion). Row 29 takes the trailer's ask, v0.25** | every walk pinned in-engine at 100.0%; races EXACT; every certainly-placed card asserted against the live hands; the home mirror under `--validate` with the start rotating | S |
 | **v0.23** — the appetite re-fit on the shipped vector (2026-09-07) | **row 27's (d): the three appetite doses that ship together — `contest` 0.6 (fit on v0.4c's vector, §3.8d), `closing` 0.5 (on v0.9's, §3.8h), `closingFour` 2 (on v0.9's, §3.8r) — were each fit with the other two absent; one-knob moves from the shipped point at home** — `contest` 0.4 / 0.8 / 1.0, `closing` 0.25 / 0.75 / 1.0, `closingFour` 1 / 3, 2,400 duplicate pairs each against the shipped stack, two controls at zero first; the combined move in a second round if two knobs are eligible; the primary and secondary abroad on twelve fresh seeds against v0.20c's vector (§3.8v); no change to `lib/` | eligible at home at ≥ +2 SE with the sure-miss share within 3 points; the primary ships by §3.8n's bar against v0.20c's vector on the twelve (±2.00 still the rung; the registry change a PR for the owner, stacked on #41); the secondary reported, unable to ship — **read 2026-09-07: THE RUNG STOPS AT HOME. No one-knob move is eligible: `contest` 0.4 −0.53 a pair (7.3 SE below zero), 0.8 −0.13 (2.5 SE), 1.0 −0.13 (2.1 SE); `closing` 0.25 +0.03 (1.7 SE), 0.75 −0.01, 1.0 +0.00; `closingFour` 1 −0.05, 3 −0.04; both controls at zero exact. The shipped point is a local optimum at home along every axis — `contest` sharply (it opens the even races: 13 points fewer at 0.4), `closing` flat (its dose decides 0.2% of the asks), `closingFour` slightly down on both sides of 2. Nothing abroad; the vector unchanged. Post hoc the markers exposed the home harness's first-mover bias — team A took the first turn in every `--home` game, and identical policies read 56% / 42% of the race starts — fixed by rotating the start (`--home-start`); §3.8u's starter line corrected (the three rung opened 10–13 points fewer races than the stack, not parity); no paired number on the ladder is touched. Q1's local-optimum claim held, four of eight dose ranges; Q2–Q4 not reached beyond the md5. Row 28 takes the placement value, v0.24** | the tree's lib md5 equal to v0.22's, making §3.8u's identity cell this rung's (else replayed); every cell pinned in-engine at 100.0%; races EXACT; the fourteen counters zero; ≤ 3 containers, a short cell replayed | S |
 | **v0.22** — the rung below the four: `closingThree` (2026-09-07) | **row 26's (e): the closing credit's dose where the hit would leave two cards of the set outside the side's certain hands** — the ask that makes a seat-known four, §3.8p's decisive stage, 18% of Monet's asks by §3.8t — `closingThree · wHit · p · 0.25` on the same ungated arm as the four and five rungs, never above a certain hit; a home ladder over doses 1, 2, 4, 8 on the shipped vector (the control at zero first), the primary and secondary abroad on twelve fresh seeds against v0.20c's vector (§3.8u) | eligible at home at ≥ +2 SE with the sure-miss share within 3 points; the primary ships by §3.8n's bar against v0.20c's vector on the twelve (±2.00 still the rung; the registry change a PR for the owner, stacked on #41); the secondary reported, unable to ship — **read 2026-09-07: THE RUNG STOPS AT HOME. Against the shipped stack in 2,400 duplicate pairs the three rung reads −0.16 a pair at dose 1 (2.4 SE below zero), −0.21 at 2, −0.28 at 4, −0.46 at 8 — a loss at every dose, growing with it; the control at zero exact; no arm eligible, nothing abroad, the knob stays off the vector. The markers, post hoc on doses 1 and 2: the credit moves 4–5% of Monet's asks and makes its first lead decision a chase 8–9 points more often, the side opens fewer of the even races (43.7% against the stack's 54.1% once §3.8v corrected the home harness's first-mover bias; 48.4% against 49.2% as first read), the chases bought hit two points less. The identity cell on the v0.22 tree IDENTICAL. Q1 missed outright, Q2 one of five, Q3 and Q4 not reached. The closing family is read at every rung: the five pays, the four pays at its own dose, the three costs. Row 27 takes the appetite re-fit, v0.23** | the identity cell IDENTICAL (§3.8l's); every cell pinned in-engine at 100.0%; races EXACT; the fourteen counters zero; ≤ 3 containers, a short cell replayed; the knob byte identity absent or 0 on every path, pinned by its tests | M |
 | **v0.21** — the rules-certain count, a records read (2026-09-07) | **row 25's (a): how much of the four rung's reach do two rules facts recover** — a teammate's licence live by the rules (an ask into the set, no hit taken from that seat in it since) and a side-certain card (every candidate holder on the side) counted in the seat's picture of a set — read on §3.8s's own records of the shipped vector, its base, §3.8r's twelve and the home mirror, every claim asserted against the live hands as the walk goes (§3.8t) | the reach at four with licences counted ≥ 1.5 × the certain reach on the shipped vector's records → v0.21b, the knob, at row 26; under → the rung stops and row 26 goes to row 25's (b) — **read 2026-09-07: THE RUNG STOPS. On the shipped vector's records the licence lifts the four rung's reach from 11.5% to 15.1% of Monet's lead sets (× 1.32; 12.9% of the seat-known-three sets), side-certain cards add a tenth of a point, the two together × 1.33 — under the bar on every corpus (× 1.31 on the base, × 1.30 on §3.8r's twelve, × 1.12 at home); SESTINA's 24.3% → 27.7%. The credit's population at the asks taken grows from 20.2% to 22.1%. The shipped licence lookup over-counts: it puts the side over its own holding at 5% of the lead sets, so a knob could not have read it. §3.8r's count replicated to the tenth (12.1% / 24.8%); no assertion fired on 43,200 games and the mirror. Q1 three of five, Q2 half, Q3 missed, Q4 half, Q5 held. Row 26 leaves (b) and takes the rung below the four: `closingThree`, v0.22** | the instrument's assertions on every decision of 43,200 games and the home mirror; the base corpora replicate §3.8r's 12.1% within 2 points; no bridge cell; nothing under `lib/` | S |
@@ -7202,6 +7203,177 @@ opens is where its value lives. Row 28 takes the placement value, the records re
 what an ask buys the team's later decisions — the reason SESTINA's chases pay where Monet's did not
 — before anything is built on it.
 
+### 3.8w Monet v0.24 — the placement value: what an ask buys the team's later decisions, a records read
+
+**Decision row 28, taken 2026-09-07 under the owner's direction of 2026-09-06 — (n).** The race
+for an even set is decided at four of six (§3.8p): the first side to four converts 56% between
+equals, Monet 49% against SESTINA, SESTINA 61% the other way. SESTINA asks into the race at 60% of
+its lead decisions, Monet at 35% (§3.8q); the credit that copied the pace flat in the hit chance
+lost every dose (§3.8i), the credit priced at the four rung paid +0.94 (§3.8r, §3.8s), the rung
+below it cost at every dose (§3.8u), and the doses ship at a local optimum (§3.8v). What is left
+unmeasured is the reason SESTINA's pace pays where Monet's copy did not: its seats can certainly
+place four of a lead set twice as often as Monet's (24.8% against 12.1% of lead sets, §3.8r,
+§3.8t), and every ask — hit or miss — places cards and licences for the team. This rung measures
+that placement and its worth before anything is built on it: at a lead decision, what does the ask
+into the race buy the side's next decision on the set that an ask elsewhere does not, and does the
+side's certain picture of the set convert the race? It changes no code in `lib/` — an instrument
+on `scripts/attribute.mjs` — and ships nothing.
+
+#### Pre-registration — written 2026-09-07, before the instrument exists and before any walk
+
+**The instrument.** `scripts/attribute.mjs --placement` (implies `--race42`; needs `--cf`, whose
+knowledge build gives the asking seat's certain picture, as §3.8t's `--licences` does). At every
+**lead decision** — §3.8q's: an ask decision by a side holding four of six in an opened,
+unresolved, even-by-the-deal set — and for each such set b, through the asking seat's knowledge:
+**`cert6`**, the number of b's six cards whose holder the seat can place with certainty (its own
+hand counts, so 1 ≤ `cert6` ≤ 6); **`certHit`**, whether a certain hit into b is on the table for
+the asking seat (it holds a card of b and can place a card of b at an opponent); and the
+**action**: a *chase hit* (the ask went into b and hit), a *chase miss*, or *elsewhere*. At the
+side's **next decision on the set** — its next ask decision, by any of its seats, while it still
+holds four or five of b and b is unresolved — the same picture again, and the **transition** is
+credited to the action at the earlier decision: Δ`cert6`, and `certHit` at the next decision. In
+between, the **intervening asks into b** by each side (asks and hits). At the leader's **first**
+lead decision on b (§3.8q's leader, the side first to four) the picture is kept with the race's
+outcome. Every certainly-placed card is asserted against the live hands (a wrong placement aborts
+the walk), the races are reconciled EXACT with `--races`, and every walk is pinned in-engine at
+100.0% as before.
+
+**The corpora.** `fs` — v0.20c's own records (`monet-v20b/records`, conf-fs × 12, the twelve of
+§3.8s; `--cf v0.9 --cf-knobs closing=0.5,closingFour=2`), the operative corpus; `base` —
+conf-base × 12 of the same seeds (`--cf v0.9`); and the **home mirror** — 2,400 games of the
+shipped stack against itself under `--home 2400 --validate`, with the start rotating (§3.8v R3).
+Monet is side A; SESTINA is side B abroad, the stack is B at home. **Readouts, per corpus and
+side:**
+
+- **R1 — the placement.** For the transitions, by the action at the lead decision: n, the mean
+  Δ`cert6`, the share with `certHit` at the next decision, the mean number of decisions between.
+  The headline: Δ`cert6` after a chase (hit and miss pooled as they occur) minus Δ`cert6` after an
+  ask elsewhere.
+- **R2 — the attribution.** The intervening asks into b by the side and by the other side (asks,
+  hits), by the action — who places the cards the next decision sees, and whether the other side
+  takes back after a miss.
+- **R3 — the worth.** At the leader's first lead decision: the distribution of `cert6` (bucketed
+  ≤ 2 / 3 / 4 / ≥ 5) and of `certHit`, and the conversion rate in each bucket.
+- **R4 — SESTINA beside Monet.** R1–R3 on the other side of the same corpora: the pace's placement
+  and worth for the bot that converts at 61%.
+
+**The rule for what follows, fixed now.** A placement credit (row 28's (o)) is built as v0.25
+**only if both hold on `fs`, Monet's side:** (i) the chase places — Δ`cert6` after a chase exceeds
+Δ`cert6` after an ask elsewhere by at least **0.5** certain cards; and (ii) the placement converts
+— the conversion at `cert6` ≥ 4 exceeds the conversion at `cert6` ≤ 2 by at least **10 points**,
+each bucket with n ≥ 300. If either fails the placement story is closed and row 29 turns elsewhere
+(the contest credit's form, or another records read).
+
+**Predictions, written before the instrument exists.**
+
+- **Q1 (R1, Monet on `fs`)** Δ`cert6` after a chase hit +0.8 to +1.3 (the hit itself and what the
+  public record adds), after a chase miss +0.2 to +0.5 (the elimination), after an ask elsewhere
+  −0.1 to +0.2 (only the other side's asks touch the set, and they can take a card away); the
+  headline difference between +0.4 and +0.8, clearing 0.5 with odds three in five.
+- **Q2 (R3)** Monet on `fs` converts 60–70% of the races it leads from `cert6` ≥ 4 and 40–50% from
+  `cert6` ≤ 2; SESTINA converts more in every bucket and reaches its first lead decision at
+  `cert6` ≥ 4 in 35–50% of its races against Monet's 20–30%.
+- **Q3 (R2)** After a chase miss the other side asks into the set 1.0–1.5 times before the side's
+  next decision on it, with 0.4–0.6 hits (the take-back); after an ask elsewhere 0.5–0.9 times.
+- **Q4 (checks)** Every walk pinned at 100.0%; races EXACT on every cell; no placement assertion
+  fires on 28,800 games abroad and the mirror; the mirror under `--validate`.
+
+**What ships.** Nothing: the instrument and the record merge on self-verification; the vector is
+untouched. **Cost** S — the instrument, twenty-five walks five wide (about fifteen minutes), the
+report, the record. **Scratch, not committed:** `$SP/monet-v24/` (`run-place.sh`, `out/`,
+`report-place.mjs`, `smoke-place.txt`), `$SP/v24-{prereg,record}.md`.
+
+#### Record — 2026-09-07 (the instrument built 02:40Z, the walks 02:44Z to 02:50Z, read at once)
+
+**The runs.** The pre-registration committed (154af1e), then the instrument (`--placement`, commit
+a2c3615; a 40-game home smoke under `--validate` first), then the twenty-five walks five wide in
+six minutes: `fs` (`monet-v20b/records` conf-fs × 12, `--cf v0.9 --cf-knobs
+closing=0.5,closingFour=2`), `base` (conf-base × 12, `--cf v0.9`), and the home mirror (2,400
+games of the stack against itself, the start rotating, `--validate`). **Every walk pinned at
+100.0% of A's decisions (and B's at home); every cell EXACT on the races and on this instrument's
+own reconciliation with §3.8q's races by leader; no placement assertion fired on 28,800 games
+abroad and the mirror.** Scratch: `$SP/monet-v24/{run-place.sh, out/, report-place.mjs,
+report-place.txt, smoke-place.txt}`.
+
+**R1 — the placement** (the transition from a lead decision to the side's next decision on the
+set, Δ`cert6` credited to the action taken at the lead decision; `fs`, Monet = A, SESTINA = B; the
+SE over the twelve cells).
+
+| side | lead decisions a game | `cert6` at the lead decision 1 / 2 / 3 / 4 / 5 / 6 | action | transitions (share) | Δ`cert6` | a certain hit at the next |
+|---|---|---|---|---|---|---|
+| Monet | 11.08 | 13.1 / 47.5 / 26.2 / 9.7 / 2.0 / 1.5% | chase hit | 26,099 (17.4%) | **+0.690** (0.003) | 12.8% |
+| | | | chase miss | 17,824 (11.9%) | **+0.309** (0.008) | 24.4% |
+| | | | elsewhere, a chase legal | 78,147 (52.2%) | **−0.017** (0.002) | 1.2% |
+| | | | could not chase | 27,713 (18.5%) | +0.338 (0.004) | 1.6% |
+| SESTINA | 6.99 | 7.4 / 34.9 / 29.6 / 22.3 / 2.7 / 3.1% | chase hit | 27,945 (30.0%) | **+0.720** (0.003) | 13.7% |
+| | | | chase miss | 23,849 (25.6%) | **+0.274** (0.010) | 18.6% |
+| | | | elsewhere, a chase legal | 20,443 (21.9%) | **−0.023** (0.002) | 1.9% |
+| | | | could not chase | 21,036 (22.6%) | +0.309 (0.005) | 2.1% |
+
+**The headline: Δ`cert6` after a chase (hit and miss pooled) +0.535 against −0.017 after an ask
+elsewhere — +0.553 (SE 0.004) for Monet on `fs`; the bar of +0.5 is met.** SESTINA +0.538
+(0.005); on `base` +0.561 / +0.542; at home +0.474 / +0.498 (under the bar, on the mirror the rule
+did not name). A chase places about half a certain card that an ask elsewhere does not, and the
+ask elsewhere places nothing for the set — the leader's picture of it moves only when the other
+side asks into it. The pace restated on this instrument: **where a chase is legal Monet chases 36%
+of the time and SESTINA 72%** (29.3 against 52.2 of Monet's lead decisions, 55.6 against 21.9 of
+SESTINA's), and Monet sits at the lead for 11.1 decisions a game against SESTINA's 7.0.
+
+**R2 — the attribution** (the asks into the set between the two decisions, per transition; `fs`).
+
+| side | after | own asks (hits) | the other side's asks (hits) | events between |
+|---|---|---|---|---|
+| Monet | a chase hit | 0.00 | 0.00 | 1.0 (the same seat decides again at once) |
+| Monet | a chase miss | 0.61 (0.61) | **0.97 (0.61)** | 4.7 |
+| Monet | an ask elsewhere | 0.15 (0.15) | 0.27 (0.15) | 2.6 |
+| SESTINA | a chase miss | 0.56 (0.56) | **0.84 (0.56)** | 4.6 |
+| SESTINA | an ask elsewhere | 0.12 (0.12) | 0.17 (0.12) | 2.2 |
+
+**A chase miss is answered by a take-back hit 61% of the time** (0.61 hits in 0.97 asks by the
+other side before the leader's next decision on the set; 56% against SESTINA's misses): the miss
+hands the trailer the licence — the chaser certainly holds a card of the set — and the trailer
+cashes it. The own asks between (0.61 after a miss, every one a hit) are the leader's re-entry from
+three after that take-back. After an ask elsewhere the set is left alone (0.27 asks by the other
+side).
+
+**R3 — the worth** (the leader's first lead decision on the set: its picture against the race's
+outcome; `fs`).
+
+| side | races with a lead decision | first picture `cert6` ≤ 2 / 3 / 4 / ≥ 5 | converted at ≤ 2 | 3 | 4 | ≥ 5 | ≥ 4 − ≤ 2 |
+|---|---|---|---|---|---|---|---|
+| Monet | 23,638 (EXACT) | 65.2 / 27.4 / 7.2 / 0.2% | **51.9%** (15,417) | 41.3% (6,476) | 51.9% (1,691) | 100.0% (54) | **+1.5 points** (SE 1.6) |
+| SESTINA | 17,312 (EXACT) | 64.8 / 28.8 / 6.1 / 0.3% | **61.9%** (11,221) | 54.9% (4,988) | 68.8% (1,057) | 95.7% (46) | **+8.0 points** (SE 0.9) |
+
+On `base` +2.9 the other way for Monet (SE 1.2), +5.0 for SESTINA (1.4); at home +4.1 and +2.0 for
+the two stacks. **The bar of +10 is not met; the picture at the first lead decision does not
+convert the race.** Two things stand out. The picture is a poor predictor for either bot — a
+seat that can place three converts worse than one that can place two (41.3 against 51.9; 54.9
+against 61.9), because `cert6` 3 is mostly a seat holding three of the set itself with the fourth
+unplaced, not a seat that has learnt anything — and a certain hit at the first lead decision is
+one race in three hundred. And **SESTINA converts more than Monet at every level of the picture:
+61.9 against 51.9 at ≤ 2, 54.9 against 41.3 at 3, 68.8 against 51.9 at 4.** Its edge is not in
+what it knows when the lead begins; it is in the race's play after it.
+
+**Predictions, scored.** **Q1** three of four: a chase miss +0.31 (predicted +0.2 to +0.5), an ask
+elsewhere −0.02 (−0.1 to +0.2), the headline +0.55 (+0.4 to +0.8, clearing 0.5) — a chase hit
++0.69 against +0.8 to +1.3, below the range (the next decision is often a teammate's, whose
+picture is its own). **Q2** one of four: SESTINA converts more in every bucket; Monet converts 53%
+from `cert6` ≥ 4 against a predicted 60–70 and 52% from ≤ 2 against 40–50; the first lead
+decision comes at `cert6` ≥ 4 in 6.4% of SESTINA's races and 7.4% of Monet's against a predicted
+35–50 and 20–30 — the prediction took §3.8t's share of lead decisions (28% of SESTINA's, 13% of
+Monet's, reproduced here) for the share of first lead decisions, which come before the picture
+forms. **Q3** at the edges: after a chase miss the other side asks 0.97 times (1.0–1.5) with 0.61
+hits (0.4–0.6); after an ask elsewhere 0.27 (0.5–0.9). **Q4** held throughout.
+
+**The rule, applied.** Condition (i) holds and condition (ii) does not; **the placement story is
+closed and no placement credit is built** — the instrument and the record merge on
+self-verification; the vector is untouched. **What the read says:** the chase buys half a certain
+card and the certain picture is not what converts the race. SESTINA's edge lives in the race's
+play after the lead begins, and the instrument put a number on the play's hinge: a chase miss is
+answered by a take-back hit three times in five. The trailer's take-back — taken by Monet at 80%
+of its legal chances and declined by SESTINA at 58% (§3.8q) — is the half of the race the ladder
+has named and not read since row 23. Row 29 takes it.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -7651,6 +7823,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 26 | **After §3.8t: the rules recover a third of the four rung's missing reach, not half — the licence lifts it from 11.5% to 15.1% of Monet's lead sets, side-certain cards nothing — and the rung stops by its own rule. The four rung's reach is what the public record makes it; what is the next lever on the race?** §3.8t's default was row 25's (b), the trailer's ask, a records read; §3.8q's R3 already found the take-back first recovers more for every trailer, so (b) is a likely null and buys no win rate. **(b) The trailer's ask** — kept as the next records instrument. **(d) The appetite re-fit on the shipped vector** — `contest`, `closing`, `closingFour` jointly at home in duplicate pairs (the doses were each fit on an earlier vector), the best arm abroad under §3.8n: a hygiene rung with an unknown prior. **(e) The rung below the four — `closingThree`** — the closing credit's dose where the hit would leave exactly two cards of the set outside the side's certain hands: the ask that makes a seat-known four, which is §3.8p's decisive stage (the first side to four converts its lead 56% between equals, 61% for SESTINA against Monet) and the stage SESTINA reaches by chasing at 60% of its lead decisions to Monet's 35%. Its population is large where the four rung's is small: the seat can place three of the set at 26% of Monet's lead sets (29% with licences) against 12% for four, and §3.8t's R2 puts the asks whose set would stand at two outstanding after the hit at a share the record states. Mechanically continuous with the two rungs that read positive (§3.8h's five and four rungs, §3.8r's four at its own dose) and on the same ungated arm, never above a certain hit; §3.8i's chase credit, which lost, sat on the gated arm. A home ladder over doses fixes the dose; twelve fresh seeds under §3.8n read it. **TAKEN 2026-09-07 under the owner's direction of 2026-09-06 — (e), pre-registered as §3.8u before any cell; a deviation from §3.8t's default, stated as such: (b) reads records and (e) is the only one of the three that can move the win rate at the stage §3.8p named. The owner may reverse this row on return.** | **TAKEN — (e): v0.22 = `closingThree`, §3.8u** |
 | 27 | **After §3.8u: the rung below the four loses at home at every dose, and more the larger the dose — the closing credit's value lives within two cards of the claim, not three. The closing family is now read at every rung: the five rung pays, the four rung pays at its own dose, the three rung costs. What next?** **(b) The trailer's ask** — row 25's, still a records instrument, still a likely null after §3.8q's R3. **(d) The appetite re-fit on the shipped vector** — `contest` (0.6, fit on v0.4c's vector at §3.8d), `closing` (0.5, on v0.9's at §3.8h) and `closingFour` (2, on v0.9's at §3.8r) have each been fit on a vector other than the one they ship on together; a home ladder of one-knob moves against the shipped stack — `contest` 0.4 / 0.8 / 1.0, `closing` 0.25 / 0.75 / 1.0, `closingFour` 1 / 3 — in duplicate pairs, the best arm abroad on twelve fresh seeds under §3.8n if it is eligible at home. No new mechanism; an hour at home; it closes the family with its doses fit where they ship. **(n) The placement value** — SESTINA's seats can certainly place four of a lead set twice as often as Monet's (24% against 12%, §3.8r, §3.8t) because SESTINA asks into its majorities more, and every ask places a card or a licence for the team; a records read of what a chase buys the teammates' later decisions — the seat-known count at the side's next decisions after a chase against after an ask elsewhere — the mechanism that would make the pace worth its hit probability, if it is. **Recommendation: (d) first, (n) as the next records rung; not (b), and not a belief count.** **TAKEN 2026-09-07 under the owner's direction of 2026-09-06 — (d), pre-registered as §3.8v before any cell; the owner may reverse this row on return.** | **TAKEN — (d): v0.23 = the appetite re-fit, §3.8v** |
 | 28 | **After §3.8v: the shipped point is a local optimum at home along every axis — `contest` sharply (−0.53 a pair at 0.4, −0.13 at 0.8 and 1.0), `closing` flat (the five rung's dose moves a handful of games between 0.25 and 1.0), `closingFour` slightly down on both sides of 2 — and no one-knob move is eligible; the appetite family is fit where it ships. The closing family is read at every rung and dose; the belief axis is closed (§3.8l); four ranker rungs read sub-floor (§3.8g). What is left is the reason SESTINA's chases pay where Monet's do not: its seats can certainly place four of a lead set twice as often (24% against 12%, §3.8r, §3.8t), and the chase credit that copied the pace without the placement lost (§3.8i). What next?** **(n) The placement value** — a records read: at every ask of Monet's and SESTINA's, what the ask buys the team's later decisions — the side's certain count of the asked set at its next decisions after a chase against after an ask elsewhere, the teammates' certain hits made available, and the licences left — on the fs corpus, the base corpus and SESTINA's side of both; the mechanism that would make the pace worth its hit probability, measured before anything is built on it. No `lib/` change; an hour of walks. **(o) A team-information credit built blind** — an ask credited by the cards it places for the teammates, fit at home; §3.8i's failure was exactly a credit built on a story before the story was measured. **(p) The closing dose re-fit abroad** — the home read says the five rung's dose moves too few games to matter anywhere. **(q) The contest credit's shape** — the dose is sharply peaked, so the term is worth a lot and its form (the `(1 − p)` factor, the domination condition) is unread; a mechanism rung without a records read behind it. **Recommendation: (n) now, and (o) only if (n) finds the placement; not (p), and (q) after (n).** **TAKEN 2026-09-07 under the owner's direction of 2026-09-06 — (n), pre-registered as §3.8w before any walk; the owner may reverse this row on return.** | **TAKEN — (n): v0.24 = the placement value, §3.8w** |
+| 29 | **After §3.8w: the chase places half a certain card and the certain picture does not convert the race — SESTINA converts more than Monet at every level of it — and a chase miss is answered by a take-back hit three times in five. The placement story is closed by its rule. Where is SESTINA's edge in the race's play?** The instrument has now read the leader's side twice (§3.8q, §3.8w) and the trailer's side once, in passing: SESTINA declines 58% of its legal take-backs and asks uncertain elsewhere, Monet takes 80% of its own (§3.8q), and the take-back is the hinge the leader's chase turns on. **(b) The trailer's ask** — row 23's, named at every row since and never read: `--placement` extended to trail decisions (a side holding two of six in an opened, unresolved, even set): the action (the take-back, an uncertain ask into the set, a certain or uncertain ask elsewhere, no card of the set held), the trailer's picture, what the ask elsewhere bought (its hit, the set it went into, whether the turn was kept), the leader's next decision on the set after each action, and the recovery — Monet's and SESTINA's side of fs and base and the mirror. A records rung, no `lib/` change, no bridge, an hour. If SESTINA's declined take-backs recover more than Monet's taken ones at the same picture, or buy a set elsewhere, a term is named — the take-back priced by what it costs the side's turn — and fitted at home under §3.8n as v0.26. **(o) A placement credit** — closed by §3.8w's rule (+1.5 points against a bar of 10). **(q) The contest credit's form** — the family's load-bearing term (§3.8v), its `(1 − p)` factor and domination condition unread; a mechanism rung without a records read behind it, after (b). **(w) A chase credit keyed on the take-back risk** — the miss's cost is the licence handed over; a term from scratch until (b) has read what the trailer does with it. **Recommendation: (b) now; (q) and (w) only with a read behind them; not (o).** **TAKEN 2026-09-07 under the owner's direction of 2026-09-06 — (b), pre-registered as §3.8x before any walk; the owner may reverse this row on return.** | **TAKEN — (b): v0.25 = the trailer's ask, §3.8x** |
 
 ---
 
