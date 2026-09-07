@@ -387,6 +387,17 @@ export interface StyleParams extends AskWeights {
    */
   closingFour?: number
   /**
+   * MONET.md §3.8u — the closing credit's rung BELOW the four, at its own dose: where the seat's
+   * certain picture of the asked set has exactly two cards outstanding after the hit (the horizon's
+   * worth, where `lock` is 0 and `closing` pays nothing — a seat-known three of six under `us54`, the
+   * ask that would make a seat-known four, §3.8p's decisive stage) the credit is
+   * `closingThree · wHit · p · 0.25`. §3.8t put the rung's population at 18% of Monet's asks against
+   * the four rung's 13% and the five rung's 7%. The four and five rungs and §3.8h's gate are
+   * untouched. Absent or 0 is byte identity on every path. Absent on every roster style and every
+   * tier.
+   */
+  closingThree?: number
+  /**
    * MONET.md §3.8h — the closing credit counted by BELIEF rather than by certainty: a card of the
    * set nobody can place counts against the side only by the chance an opponent holds it, so the
    * credit is pointwise larger over a larger population. The gap between the two forms is §3.8g's
@@ -855,6 +866,8 @@ export function validateStyle(style: StyleParams): string[] {
   if (closingBelief !== undefined && typeof closingBelief !== 'boolean') bad.push(`closingBelief ${String(closingBelief)} is not a boolean`)
   const closingFour = style.closingFour
   if (closingFour !== undefined && !(typeof closingFour === 'number' && Number.isFinite(closingFour) && closingFour >= 0)) bad.push(`closingFour ${String(closingFour)} is not a number >= 0`)
+  const closingThree = style.closingThree
+  if (closingThree !== undefined && !(typeof closingThree === 'number' && Number.isFinite(closingThree) && closingThree >= 0)) bad.push(`closingThree ${String(closingThree)} is not a number >= 0`)
   // The `>= 0` refusal is load-bearing rather than decoration: a NEGATIVE `chase` is a penalty on
   // closing asks, a different mechanism wearing this one's name, and a dose sweep must not be able
   // to wander into it.
