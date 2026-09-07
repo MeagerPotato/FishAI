@@ -41,6 +41,14 @@ function argOf(flag, dflt) {
 const has = (flag) => process.argv.includes(flag)
 
 const HOME = Number(argOf('--home', 0))
+// §3.8v: the starting seat of the home games. 'rotate' (the default since 2026-09-07) gives game g the
+// seat g % 6, so each team takes the first turn in half the games; '0' is the harness before that date,
+// where team A's seat 0 took the first turn in EVERY game - with identical policies on both sides A
+// started 56% of the even-set races and won 51-52% of the games (the first mover's advantage), which
+// biased every A-versus-B rate a --home walk printed. The duplicate-pairs harness swaps the sides
+// within a pair and is immune; the records walks do not play games and are untouched.
+const HOME_START = argOf('--home-start', 'rotate')
+if (HOME_START !== 'rotate' && HOME_START !== '0') throw new Error('--home-start must be rotate or 0')
 const RECORDS = argOf('--records', null)
 const PREFIX = argOf('--prefix', '')
 const PER_SEED = has('--per-seed')
@@ -139,8 +147,8 @@ const bookOf = (c) => CARDS.cardBook(c)
 
 /* ------------------------------------------------------------------ home --- */
 
-function playHome(label, polA, polB) {
-  let s = newGame(label, us54Config, 0)
+function playHome(label, polA, polB, startSeat = 0) {
+  let s = newGame(label, us54Config, startSeat)
   const hands0 = s.hands.map((h) => [...h])
   const askMeta = new Map() // event index -> { moveIndex, seed, hands } at the live decision
   let n = 0
@@ -158,7 +166,7 @@ function playHome(label, polA, polB) {
     }
     s = r.state
   }
-  return { label, teamA: 0, hands0, events: s.log, askMeta }
+  return { label, teamA: 0, hands0, events: s.log, askMeta, startSeat }
 }
 
 /* ---------------------------------------------------------- accumulators --- */
@@ -1738,8 +1746,8 @@ let head
 if (HOME > 0) {
   const polA = withKnobs(MON.monetPolicy(VA), A_KNOBS)
   const polB = withKnobs(MON.monetPolicy(VB), B_KNOBS)
-  for (let g = 0; g < HOME; g++) walk(playHome(`${LABEL}-${g}`, polA, polB), cfPol, acc)
-  head = `home, A=${VA}${A_KNOBS ? ' +' + A_KNOBS : ''} (team 0) vs B=${VB}${B_KNOBS ? ' +' + B_KNOBS : ''} (team 1), ${HOME} games (${LABEL}-*), cf=${CF}, ${((Date.now() - t0) / 1000).toFixed(1)}s`
+  for (let g = 0; g < HOME; g++) walk(playHome(`${LABEL}-${g}`, polA, polB, HOME_START === 'rotate' ? g % 6 : 0), cfPol, acc)
+  head = `home, A=${VA}${A_KNOBS ? ' +' + A_KNOBS : ''} (team 0) vs B=${VB}${B_KNOBS ? ' +' + B_KNOBS : ''} (team 1), ${HOME} games (${LABEL}-*), start ${HOME_START === 'rotate' ? 'rotating (g % 6)' : 'seat 0 (team A first, the pre-3.8v harness)'}, cf=${CF}, ${((Date.now() - t0) / 1000).toFixed(1)}s`
 } else if (RECORDS) {
   let header = null
   const perFile = new Map()
@@ -1777,7 +1785,7 @@ if (HOME > 0) {
   }
   head = `bridge records ${RECORDS}: ${acc.games} games, A=${header ? header.specA : '?'} (side A) vs B=${header ? header.specB : '?'}, cf=${CF}, ${((Date.now() - t0) / 1000).toFixed(1)}s`
 } else {
-  console.error('usage: node scripts/attribute.mjs (--home N [--a v] [--b v] | --records DIR) [--cf v] [--label l] [--validate] [--json f]')
+  console.error('usage: node scripts/attribute.mjs (--home N [--a v] [--b v] [--home-start rotate|0] | --records DIR) [--cf v] [--label l] [--validate] [--json f]')
   process.exit(2)
 }
 const gap = report(acc, head)
