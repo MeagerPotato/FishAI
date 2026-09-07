@@ -102,6 +102,7 @@ const MONET_V04A: PolicySpec = monetPolicy('v0.4a')
 const MONET_V04B: PolicySpec = monetPolicy('v0.4b')
 const MONET_V04C: PolicySpec = monetPolicy('v0.4c')
 const MONET_V09: PolicySpec = monetPolicy('v0.9')
+const MONET_V020C: PolicySpec = monetPolicy('v0.20c')
 
 /**
  * The live roster arm, in both spellings — written out, never read from the registry.
@@ -160,6 +161,32 @@ describe('the Monet version registry names each version and resolves it to that 
     expect(pair.style.licenceLambda).toBe(0.6)
     expect(STYLE_ROSTER.punter.licenceLambda).toBeUndefined()
     expect(Object.isFrozen(pair.style)).toBe(true)
+  })
+
+  it('v0.20c is v0.9 plus the closing credit at its two rungs, on its own vector — and differs from v0.9 in NOTHING else', () => {
+    const pair = asPair(MONET_V020C, "MONET_VERSIONS['v0.20c']")
+    expect(pair.skill).toBe(SKILL_PRESETS.hard)
+    expect(styleDiffKeys(pair.style, (MONET_V09 as BotPolicy).style)).toEqual(['closing', 'closingFour'])
+    // closing 0.5 by 3.8h's home fit (+0.58 abroad at 3.8h, +0.25 at 3.8o, alone); closingFour 2 by
+    // 3.8r's home ladder over 1, 2, 4, 8 (the stack with closing 0.5 +0.30 a pair at 4.9 SE); the
+    // stack read abroad on twelve fresh seeds (3.8s): +0.94 paired against v0.9, SD 1.49, SE 0.43,
+    // 2.18 SE, ahead on 8 of 12 with one tie - the first term to ship by 3.8n's rule, under the
+    // ±2.00 floor and marked as such. closingFour 2 alone read +0.34 (0.81 SE) and did not ship.
+    expect(pair.style.closing).toBe(0.5)
+    expect(pair.style.closingFour).toBe(2)
+    // the belief form lost on every seed (3.8h), the chase credit closed (3.8i), the exposure charge
+    // read about zero on the bridge (3.8o): none of the three is on the vector
+    expect(pair.style.closingBelief).toBeUndefined()
+    expect(pair.style.chase).toBeUndefined()
+    expect(pair.style.exposure).toBeUndefined()
+    expect(pair.style.contest).toBe(0.6)
+    expect(pair.style.licenceLambda).toBe(0.3)
+    expect(pair.style.pAssignment).toBe('joint')
+    expect(pair.style.pModel).toBe('marginal')
+    // both closing knobs are absent on the roster (style.ts): Monet-only, byte identity when absent
+    expect(STYLE_ROSTER.punter.closing).toBeUndefined()
+    expect(STYLE_ROSTER.punter.closingFour).toBeUndefined()
+    expect(styleDiffKeys(pair.style, STYLE_ROSTER.punter)).toEqual(['closing', 'closingFour', 'contest', 'licenceLambda', 'pAssignment', 'pModel'])
   })
 
   it('v0.9 is v0.4c plus the contest credit, on its own vector — and differs from v0.4c in NOTHING else', () => {
@@ -252,7 +279,7 @@ describe('the Monet version registry names each version and resolves it to that 
 
   it('MONET_VERSION_IDS lists every shipped version, in order, and nothing else', () => {
     expect([...MONET_VERSION_IDS]).toEqual(Object.keys(MONET_VERSIONS))
-    expect([...MONET_VERSION_IDS]).toEqual(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9'])
+    expect([...MONET_VERSION_IDS]).toEqual(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9', 'v0.20c'])
     expect(MONET_VERSION_IDS.every((v) => isMonetVersion(v))).toBe(true)
   })
 
