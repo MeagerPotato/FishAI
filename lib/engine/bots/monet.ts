@@ -86,7 +86,7 @@ import type { PolicySpec } from './bounded.ts'
  * that have actually shipped appear here, so the union is also the honest answer to "what can be
  * measured today".
  */
-export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a' | 'v0.4b' | 'v0.4c' | 'v0.9'
+export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a' | 'v0.4b' | 'v0.4c' | 'v0.9' | 'v0.20c'
 
 /**
  * Version id -> the policy that version plays, ready for `decide(view, policy, seed)`.
@@ -130,6 +130,19 @@ export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a' | 'v0.4b' | 'v0.4c
  *   the floor abroad: +4.04 paired against v0.4c on twelve fresh seeds against SESTINA v1.0
  *   (SD 1.63, SE 0.47), ahead on all twelve, 38.9% against 34.9%. The `exposure` knob measured
  *   +3.31 on the fit seeds and stays off the vector: the pre-registered rule picked one arm.
+ * - `v0.20c` is v0.9 plus `closing: 0.5` and `closingFour: 2` (MONET.md §3.8h, §3.8r, §3.8s): the
+ *   closing credit (`closing.ts`) on the hit branch of the ask ranker — for an ask that would bring
+ *   a set within certain reach of the side already holding most of it, `dose · wHit · p · lock`,
+ *   the seat's holding counted as it knows it — at `closing`'s dose where the hit would leave
+ *   nothing of the set outside the side's hands (a seat-known five) and `closingFour`'s where it
+ *   would leave one card (a seat-known four). Never above a certain hit. The first term on the
+ *   ladder to ship by the rule of 2026-09-06 (§3.8n: two standard errors above zero on twelve
+ *   fresh seeds, ahead on a majority) and the first under the ±2.00 floor, marked as such:
+ *   +0.94 paired against v0.9 on twelve fresh seeds against SESTINA v1.0 (SD 1.49, SE 0.43,
+ *   2.18 × SE), ahead on 8 of 12 with one tie, 41.25% against 40.31%. `closingFour` 2 alone read
+ *   +0.34 (0.81 × SE) and did not ship; the stack beats it by +0.60 on the same seeds at 6 × SE.
+ *   The credit moves 3.0% of Monet's asks abroad. §3.9's verdict is unmoved: v1.0 does not exist
+ *   at this vector either. Shipped by the owner's merge of the registry PR, not by the record.
  *
  * No entry pins the *code* the knobs run through — see the header. Naming v0.1 here buys back
  * v0.1's SPEC on a v0.2 tree; it does not buy back v0.1's games.
@@ -160,6 +173,10 @@ export const MONET_VERSIONS: Readonly<Record<MonetVersion, PolicySpec>> = Object
     skill: SKILL_PRESETS.hard,
     style: Object.freeze({ ...STYLE_ROSTER.punter, pModel: 'marginal', pAssignment: 'joint', licenceLambda: 0.3, contest: 0.6 }),
   }),
+  'v0.20c': Object.freeze({
+    skill: SKILL_PRESETS.hard,
+    style: Object.freeze({ ...STYLE_ROSTER.punter, pModel: 'marginal', pAssignment: 'joint', licenceLambda: 0.3, contest: 0.6, closing: 0.5, closingFour: 2 }),
+  }),
 })
 
 /**
@@ -167,7 +184,7 @@ export const MONET_VERSIONS: Readonly<Record<MonetVersion, PolicySpec>> = Object
  * ("Monet beats v0.2 through v0.6 as well"). Ordered, because a version list that is only a key set
  * cannot express "the one before this".
  */
-export const MONET_VERSION_IDS: readonly MonetVersion[] = Object.freeze(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9'] as const)
+export const MONET_VERSION_IDS: readonly MonetVersion[] = Object.freeze(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9', 'v0.20c'] as const)
 
 /**
  * Is `id` a version this repo can play? For callers holding a string rather than a `MonetVersion` —
