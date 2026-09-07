@@ -375,6 +375,18 @@ export interface StyleParams extends AskWeights {
    */
   closing?: number
   /**
+   * MONET.md §3.8r — the closing credit's FOUR-OF-SIX rung at its own dose: where the seat's certain
+   * picture of the asked set has exactly one card outstanding after the hit (`lock` 0.5, a
+   * seat-known four of six under `us54`) the credit is `closingFour · wHit · p · 0.5` in place of
+   * `closing`'s dose; the five rung stays at `closing`'s, and §3.8h's gate is untouched. §3.8q put
+   * two-thirds of SESTINA's chase surplus at decisions where no certain hit is on the table — the
+   * population this rung competes in — and v0.12's dose ladder had moved both rungs together.
+   * Absent or 0 is byte identity (with `closing` set, v0.12's credit exactly; without it, no
+   * credit); present without `closing` it pays the four rung alone. Absent on every roster style
+   * and every tier.
+   */
+  closingFour?: number
+  /**
    * MONET.md §3.8h — the closing credit counted by BELIEF rather than by certainty: a card of the
    * set nobody can place counts against the side only by the chance an opponent holds it, so the
    * credit is pointwise larger over a larger population. The gap between the two forms is §3.8g's
@@ -841,6 +853,8 @@ export function validateStyle(style: StyleParams): string[] {
   if (closing !== undefined && !(typeof closing === 'number' && Number.isFinite(closing) && closing >= 0)) bad.push(`closing ${String(closing)} is not a number >= 0`)
   const closingBelief = style.closingBelief
   if (closingBelief !== undefined && typeof closingBelief !== 'boolean') bad.push(`closingBelief ${String(closingBelief)} is not a boolean`)
+  const closingFour = style.closingFour
+  if (closingFour !== undefined && !(typeof closingFour === 'number' && Number.isFinite(closingFour) && closingFour >= 0)) bad.push(`closingFour ${String(closingFour)} is not a number >= 0`)
   // The `>= 0` refusal is load-bearing rather than decoration: a NEGATIVE `chase` is a penalty on
   // closing asks, a different mechanism wearing this one's name, and a dose sweep must not be able
   // to wander into it.

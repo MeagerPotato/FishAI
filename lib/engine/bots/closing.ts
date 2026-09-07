@@ -40,7 +40,16 @@
  *    Monet's marginal rates 21.4% of the opponent-held missing cards as sitting on its own side
  *    (the same inference at SESTINA's positions reads 11.1%), so the belief form will over-credit
  *    the sets that are not in fact near closing. Which trade is worth more is a question for the
- *    fit, not for this file. Inert without a live `closing`.
+ *    fit, not for this file. Inert without a live `closing` or `closingFour`.
+ *  - **`closingFour`** — MONET.md §3.8r: the four rung's dose on its own. §3.8q put two-thirds of
+ *    SESTINA's chase surplus at decisions where no certain hit is on the table — this credit's
+ *    population — and v0.12's ladder had moved both rungs together. Where the seat's CERTAIN
+ *    picture of the set has exactly one card outstanding after the hit (`lock` 0.5, a seat-known
+ *    four of six under `us54`) the dose is `closingFour` when it is present and positive, and
+ *    `closing` otherwise; the five rung (none outstanding) is always `closing`'s. The rung is
+ *    named by the certain picture even under `closingBelief`, whose lock factor still applies.
+ *    Absent or 0 is byte identity: with `closing` set the credit is v0.12's exactly, and without
+ *    it there is no credit. `closingFour` without `closing` pays the four rung and nothing else.
  *
  * ## What it may not do
  *
@@ -70,14 +79,14 @@ import { askHitProbability, holderOf } from './knowledge.ts'
 import type { StyleParams } from './style.ts'
 import type { Knowledge, RankedAsk, SeatView } from './types.ts'
 
-/** Is the closing credit live for this style? Read once per decision. */
+/** Is the closing credit live for this style — `closing` or `closingFour` positive? Read once per decision. */
 export function closingActive(style: StyleParams): boolean {
-  return (style.closing ?? 0) > 0
+  return (style.closing ?? 0) > 0 || (style.closingFour ?? 0) > 0
 }
 
-/** Does the closing credit count open cards by belief rather than by certainty? Inert without `closing`. */
+/** Does the closing credit count open cards by belief rather than by certainty? Inert without a live credit. */
 export function closingBelief(style: StyleParams): boolean {
-  return (style.closing ?? 0) > 0 && style.closingBelief === true
+  return closingActive(style) && style.closingBelief === true
 }
 
 /** What a hit would leave outstanding in the asked card's set, by certainty and by belief. */
@@ -130,6 +139,8 @@ export function closingPicture(view: SeatView, k: Knowledge, card: Card, belief:
  * already resolved, for an ask a teammate's certain holding makes a sure miss, for `p` at 0, and
  * whenever the hit would still leave the horizon's worth of the set outside the side's hands —
  * which under `us54` means the credit fires only at a seat-known holding of four or five of six.
+ * The dose is `closingFour` at exactly one card outstanding by the certain count when that knob is
+ * present and positive (§3.8r), and `closing` otherwise; a rung whose dose is absent pays nothing.
  *
  * `lock` is `1 − outstanding / horizon` with `horizon` the number of cards a bare majority may be
  * missing (2 of 6), so it is 1, 0.5 or nothing. The `!(lock > 0)` test also disposes of a NaN,
@@ -137,7 +148,8 @@ export function closingPicture(view: SeatView, k: Knowledge, card: Card, belief:
  */
 export function closingCredit(view: SeatView, k: Knowledge, style: StyleParams, ask: RankedAsk, p: number): number {
   const appetite = style.closing ?? 0
-  if (!(appetite > 0)) return 0
+  const four = style.closingFour ?? 0
+  if (!(appetite > 0) && !(four > 0)) return 0
   if (!(p > 0)) return 0
   const book = cardBook(ask.card)
   if (view.books[book]) return 0
@@ -150,10 +162,15 @@ export function closingCredit(view: SeatView, k: Knowledge, style: StyleParams, 
   if (horizon <= 0) return 0
   const belief = style.closingBelief === true
   const picture = closingPicture(view, k, ask.card, belief)
+  // The rung is named by the CERTAIN picture: one card outstanding after the hit is the four rung
+  // (§3.8r), whatever form the lock factor below takes. `dose === appetite` whenever `closingFour`
+  // is absent, so the arithmetic is bit for bit v0.12's there.
+  const dose = four > 0 && picture.outstanding === 1 ? four : appetite
+  if (!(dose > 0)) return 0
   const outstanding = belief ? picture.outstandingSoft : picture.outstanding
   const lock = 1 - outstanding / horizon
   if (!(lock > 0)) return 0
-  return appetite * style.wHit * p * Math.min(1, lock)
+  return dose * style.wHit * p * Math.min(1, lock)
 }
 
 export type { Seat }
