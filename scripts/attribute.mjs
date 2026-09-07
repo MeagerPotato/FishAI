@@ -128,7 +128,14 @@ const LIC = process.argv.includes('--licences') // MONET.md 3.8t: the rules-cert
 // by side; the leader's first picture against the race's outcome. Every placement is asserted against the
 // live hands (implies --race42; needs --cf, whose knowledge build is the asking seat's picture).
 const PLACE = process.argv.includes('--placement')
-const RACE42 = process.argv.includes('--race42') || LIC || PLACE
+// MONET.md 3.8x: the trailer's ask - at every trail decision (a side holding two of six in an opened,
+// unresolved, even set) and for each such set: whether the seat holds a card of it and whether a take-back
+// is legal, the trailer's cert6, the action (the take-back / an uncertain ask into the set / a certain or
+// uncertain ask elsewhere / could not), and, resolved when the sets resolve, the trail set's outcome for
+// the trailer and - for an ask elsewhere - its hit, the class of the set it went into and that set's outcome
+// for the side. Reconciled with 3.8q's trail counts (implies --race42; needs --cf).
+const TRAIL = process.argv.includes('--trail')
+const RACE42 = process.argv.includes('--race42') || LIC || PLACE || TRAIL
 const RACES = process.argv.includes('--races') || RACE42
 const CALIB_P = [0.1, 0.3, 0.5, 0.7, 0.9, 1] // bin lower bounds: [0.1,0.3) [0.3,0.5) [0.5,0.7) [0.7,0.9) [0.9,1) and p = 1
 // Declare rules priced on the records: a rule fires at the earliest window (before A's own declare of
@@ -211,6 +218,13 @@ const newPlaceAcc = () => {
   return [0, 1].map(() => ({ leadN: 0, stateAtLead: [0, 0, 0, 0, 0, 0, 0], trans: { chaseHit: X(), chaseMiss: X(), elsewhere: X(), couldNot: X() }, first: { n: 0, cert: [0, 1, 2, 3, 4, 5, 6].map(() => ({ n: 0, conv: 0 })), certHit: { n: 0, conv: 0 }, noCertHit: { n: 0, conv: 0 } } }))
 }
 
+// §3.8x accumulators: per side, the trail decisions by action and, among those with a legal take-back, taken
+// against declined; each bucket carries the picture, the trail set's outcome, and what the ask elsewhere bought
+const newTrailAcc = () => {
+  const X = () => ({ n: 0, cert6: 0, rec: 0, lost: 0, open: 0, hit: 0, b2Lead: 0, b2Maj: 0, b2Taken: 0, b2Lost: 0, b2Open: 0 })
+  return [0, 1].map(() => ({ dec: 0, n: 0, byAction: { takeBack: X(), intoU: X(), elseC: X(), elseU: X(), couldNot: X() }, legal: { taken: X(), declined: X() } }))
+}
+
 function newAcc() {
   const askT = () => ({
     n: 0, hit: 0, certain: 0, certainHit: 0, unc: 0, uncHit: 0,
@@ -248,6 +262,7 @@ function newAcc() {
     races: RACES ? newRaceAcc() : null,
     race42: RACE42 ? newRace42Acc() : null,
     place: PLACE ? newPlaceAcc() : null,
+    trail: TRAIL ? newTrailAcc() : null,
   }
 }
 
@@ -270,6 +285,8 @@ function walk(rec, cfPol, acc) {
   const lock = {} // book -> { team, at } while the six sit in one team's hands, unresolved
   // §3.8p: book -> the race so far; the class of a set relative to a side, by a holding count
   const race = {}
+  // §3.8x: the trail decisions waiting for their set's outcome (the recovery) and for the outcome of the set an ask elsewhere went into
+  const trailPend = {}, trailPend2 = {}
   const relClass = (own) => (own >= 4 ? 'own' : own === 3 ? 'even' : 'opp')
   const raceOf = (b) => (race[b] ||= { first: -1, firstAt: -1, firstHit: false, asks: [0, 0], hits: [0, 0], first4: -1, lockBy: -1, lockAt: -1, lockBroken: 0, takeBacks: [0, 0] })
   // §3.8q: the opened, unresolved, even sets in which side T holds four (a lead) or two (a trail) right now
@@ -352,6 +369,11 @@ function walk(rec, cfPol, acc) {
   }
   const finishRace = (b, outcomeTeam, i) => {
     const R = raceOf(b)
+    if (acc.trail) {
+      for (const e of trailPend[b] || []) for (const X of e.targets) { if (outcomeTeam === e.T) X.rec++; else if (outcomeTeam === 1 - e.T) X.lost++; else X.open++ }
+      for (const e of trailPend2[b] || []) for (const X of e.targets) { if (outcomeTeam === e.T) X.b2Taken++; else if (outcomeTeam === 1 - e.T) X.b2Lost++; else X.b2Open++ }
+      delete trailPend[b]; delete trailPend2[b]
+    }
     const cls = split0[b] >= 4 ? 'amaj' : split0[b] === 3 ? 'even' : 'bmaj'
     const K = acc.races.sets[cls][R.first === 0 ? 'A' : R.first === 1 ? 'B' : 'none']
     K.n++
@@ -1154,7 +1176,7 @@ function walk(rec, cfPol, acc) {
             CK.deal[dc].n++; if (cfHit) CK.deal[dc].hit++
             CK.hold[hc].n++; if (cfHit) CK.hold[hc].hit++
           }
-          if ((RACE42 && ctx42 && ctx42.lead.length) || LIC || (PLACE && placeSets.length)) {
+          if ((RACE42 && ctx42 && ctx42.lead.length) || LIC || (PLACE && placeSets.length) || (TRAIL && ctx42 && ctx42.trail.length)) {
             // §3.8r post hoc: the seat-known own-side count of each lead set at this decision, through the
             // counterfactual's knowledge (its own hand carries a certain holder), and at four whether a
             // certain hit was on the table by the public record (the counterfactual's pick certain)
@@ -1253,6 +1275,37 @@ function walk(rec, cfPol, acc) {
                 }
                 R.place[T] = { i, cert6, lead: hold === 4, action }
                 if (hold === 4) { P.leadN++; P.stateAtLead[cert6]++; if (R.first4 === T && !R.placeFirst) R.placeFirst = { cert6, certHit } }
+              }
+            }
+            if (TRAIL && ctx42 && ctx42.trail.length) {
+              // §3.8x: the trailer's decision on each set it holds two of - the action by §3.8q's definitions (a
+              // take-back is a certain ask into the set by the public record; legal when the seat holds a card of
+              // it and a card of it sits publicly with the other side), the picture through the seat's knowledge
+              // (checked against the live hands), the outcomes filled in when the sets resolve
+              const Tr = acc.trail[T]
+              Tr.dec++
+              const holdsB = new Set(hands[ev.asker].map((c) => bookOf(c)))
+              const certAsk = publicAt.get(ev.card) === ev.target
+              const rb = bookOf(ev.card)
+              for (const b of ctx42.trail) {
+                const holds = holdsB.has(b)
+                const legal = takeBackLegal(T, ev.asker, b)
+                let cert6 = 0
+                for (const c of BOOK_CARDS.get(b)) {
+                  const h = BOTS.holderOf(kk, c)
+                  if (h === null) continue
+                  if (seatOf.get(c) !== h) throw new Error(`${rec.label}:${i}: the trail picture puts ${c} at seat ${h}, the live hand has it at ${seatOf.get(c)}`)
+                  cert6++
+                }
+                const into = rb === b
+                const action = !holds ? 'couldNot' : into ? (certAsk ? 'takeBack' : 'intoU') : certAsk ? 'elseC' : 'elseU'
+                if (action === 'takeBack' && !legal) throw new Error(`${rec.label}:${i}: a take-back where none was legal`)
+                const targets = [Tr.byAction[action]]
+                if (legal) targets.push(action === 'takeBack' ? Tr.legal.taken : Tr.legal.declined)
+                for (const X of targets) { X.n++; X.cert6 += cert6; if (!into && ev.hit) X.hit++; if (!into && ctx42.lead.includes(rb)) X.b2Lead++; if (!into && holdingOf(T, rb) >= 4) X.b2Maj++ }
+                Tr.n++
+                ;(trailPend[b] ||= []).push({ T, targets })
+                if (!into) (trailPend2[rb] ||= []).push({ T, targets })
               }
             }
           }
@@ -1817,6 +1870,27 @@ function report(acc, head) {
     }
     console.log('')
   }
+  if (acc.trail) {
+    console.log('-- MONET.md §3.8x (--trail): the trailer\'s decisions on an even set it holds two of (the other side four) - the action taken, the trailer\'s picture (cert6), the trail set\'s outcome for the trailer (recovered / lost / open) and, for an ask elsewhere, what it bought: its hit, the share into a set the side led (an even race) or held four or more of, and that set\'s outcome for the side; reconciled with §3.8q\'s trail decisions and take-backs --')
+    console.log('| side | trail decisions (sets) | reconciled | action | n | share | cert6 | recovered / lost / open | elsewhere: hit | into a led set / a majority | that set taken / lost / open |')
+    console.log('|---|---|---|---|---|---|---|---|---|---|---|')
+    const row = (side, head, recon, name, X) => console.log(`| ${side} | ${head} | ${recon} | ${name} | ${X.n} | ${pct(X.n, head.split(' ')[0].replace(/[^0-9]/g, '') === '' ? 0 : Number(head.split(' ')[0]))} | ${X.n ? (X.cert6 / X.n).toFixed(2) : '-'} | ${pct(X.rec, X.n)} / ${pct(X.lost, X.n)} / ${pct(X.open, X.n)} | ${X.n ? pct(X.hit, X.n) : '-'} | ${pct(X.b2Lead, X.n)} / ${pct(X.b2Maj, X.n)} | ${pct(X.b2Taken, X.n)} / ${pct(X.b2Lost, X.n)} / ${pct(X.b2Open, X.n)} |`)
+    for (const t of [0, 1]) {
+      const Tr = acc.trail[t], Q2 = acc.race42.trail[t], side = t === 0 ? 'A' : 'B'
+      const recon = Tr.dec === Q2.n && Tr.byAction.takeBack.n === Q2.takeBack ? 'EXACT' : `MISMATCH (${Q2.n}, ${Q2.takeBack})`
+      const head = `${Tr.n} (${Tr.dec} decisions)`
+      for (const [k, name] of [['takeBack', 'the take-back'], ['intoU', 'uncertain into the set'], ['elseC', 'certain elsewhere'], ['elseU', 'uncertain elsewhere'], ['couldNot', 'could not (no card of the set)']]) row(side, head, recon, name, Tr.byAction[k])
+    }
+    console.log('-- §3.8x R2, the legal take-back: among the trail decisions where a take-back was legal, taken against declined --')
+    console.log('| side | legal | taken: n (share) | cert6 | recovered / lost / open | declined: n | cert6 | recovered / lost / open | the ask elsewhere: hit | into a led set / a majority | that set taken / lost / open |')
+    console.log('|---|---|---|---|---|---|---|---|---|---|---|')
+    for (const t of [0, 1]) {
+      const L = acc.trail[t].legal, n = L.taken.n + L.declined.n, side = t === 0 ? 'A' : 'B', D = L.declined, K = L.taken
+      console.log(`| ${side} | ${n} | ${K.n} (${pct(K.n, n)}) | ${K.n ? (K.cert6 / K.n).toFixed(2) : '-'} | ${pct(K.rec, K.n)} / ${pct(K.lost, K.n)} / ${pct(K.open, K.n)} | ${D.n} | ${D.n ? (D.cert6 / D.n).toFixed(2) : '-'} | ${pct(D.rec, D.n)} / ${pct(D.lost, D.n)} / ${pct(D.open, D.n)} | ${pct(D.hit, D.n)} | ${pct(D.b2Lead, D.n)} / ${pct(D.b2Maj, D.n)} | ${pct(D.b2Taken, D.n)} / ${pct(D.b2Lost, D.n)} / ${pct(D.b2Open, D.n)} |`)
+      console.log(`   R2 ${side}: recovery after declining ${pct(D.rec, D.n)} against after taking ${pct(K.rec, K.n)} (${K.n && D.n ? ((100 * D.rec / D.n - 100 * K.rec / K.n) >= 0 ? '+' : '') + (100 * D.rec / D.n - 100 * K.rec / K.n).toFixed(1) : '-'} points; the bar within 5); the ask elsewhere hits ${pct(D.hit, D.n)} and its set is taken ${pct(D.b2Taken, D.n)} (the bars 50 and 50)`)
+    }
+    console.log('')
+  }
   if (acc.lic) {
     console.log('-- §3.8t the rules-certain count, five ways (certain / + live licences by the rules / + side-certain cards / + both / + the shipped licence lookup): lead sets at four, the ungated reach per lead decision, and the asks taken whose set stands at one or no card outstanding after the hit --')
     console.log('| side | lead sets | at four | ungated reach per lead decision | asks | outstanding <= 1 after the hit |')
@@ -1835,6 +1909,7 @@ function report(acc, head) {
 
 const cfPol = CF && CF !== 'none' ? withKnobs(MON.monetPolicy(CF), CF_KNOBS) : null
 if (PLACE && !cfPol) throw new Error('--placement needs --cf: the asking seat\'s picture is the counterfactual\'s knowledge build')
+if (TRAIL && !cfPol) throw new Error('--trail needs --cf: the trailer\'s picture is the counterfactual\'s knowledge build')
 const b2ArmPol = B2_ARM && cfPol ? withKnobs(cfPol, B2_ARM) : null
 const t0 = Date.now()
 const acc = newAcc()
