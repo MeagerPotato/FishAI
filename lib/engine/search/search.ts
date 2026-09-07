@@ -5,7 +5,9 @@
  * ## What it does
  *
  * At an ask decision the fast policy (`decideExplained`) supplies its pick and its ranking. The top
- * C asks are the candidates, the pick among them. D determinizations of the unseen cards are drawn
+ * C asks are the candidates, the pick among them (`candMode` `'top'`), or — MONET.md 3.8aa — the pick
+ * and the best-ranked ask into each other half-suit the seat can ask into, up to C (`'sets'`: every
+ * set the seat could chase or take back is on the table once). D determinizations of the unseen cards are drawn
  * from the viewer's posterior (`determinize.ts`), and on each one every candidate is played and the
  * game rolled out for S further actions with the fast policy at every seat — the same rollout seed
  * for every candidate on a deal, so the comparison is paired — and scored by the viewer's team's
@@ -35,7 +37,7 @@ import { reduce } from '../reduce.ts'
 import { hashSeed, mulberry32 } from '../rng.ts'
 import { seatView } from '../views.ts'
 import { decide, decideExplained } from '../bots/decide.ts'
-import { buildKnowledge } from '../bots/knowledge.ts'
+import { buildKnowledge, rankAsksWith } from '../bots/knowledge.ts'
 import { resolvePolicy } from '../bots/style.ts'
 import type { PolicySpec } from '../bots/bounded.ts'
 import type { KnowledgeOptions, SeatView } from '../bots/types.ts'
@@ -61,9 +63,16 @@ export interface SearchParams {
   leafLock: number
   /** The leaf evaluator's weight per card in hand at the horizon, ours minus theirs. 0 is the pre-registered form. */
   leafCard: number
+  /**
+   * The candidate generator (MONET.md 3.8aa). `'top'`: the fast ranker's top C asks, the pick among
+   * them — 3.8a's form and the default. `'sets'`: the pick, then the best-ranked ask into each other
+   * half-suit, in the ranking's order, up to C — so the chase-or-take-back choice at a lead or a
+   * trail is searched even where the ranker's top C all sit in one set.
+   */
+  candMode: 'top' | 'sets'
 }
 
-export const SEARCH_DEFAULTS: SearchParams = Object.freeze({ det: 8, cand: 3, steps: 24, z: 1, guard: 'lcb', leafLock: 0, leafCard: 0 })
+export const SEARCH_DEFAULTS: SearchParams = Object.freeze({ det: 8, cand: 3, steps: 24, z: 1, guard: 'lcb', leafLock: 0, leafCard: 0, candMode: 'top' })
 
 export interface SearchInfo {
   /** Whether a search ran at all (an ask decision with at least two candidates and one deal). */
@@ -79,6 +88,8 @@ export interface SearchInfo {
   se: number
   /** Per-candidate mean advantage over the pick, in candidate order (the pick's own row is 0). */
   means: number[]
+  /** The candidates searched, in candidate order, the pick first (empty when nothing was searched). */
+  cands: readonly { target: Seat; card: Card }[]
 }
 
 export interface SearchDecision {
@@ -86,7 +97,7 @@ export interface SearchDecision {
   info: SearchInfo
 }
 
-const NONE: SearchInfo = Object.freeze({ searched: false, candidates: 0, deals: 0, failedDraws: 0, played: 'pick', advantage: 0, se: 0, means: [] })
+const NONE: SearchInfo = Object.freeze({ searched: false, candidates: 0, deals: 0, failedDraws: 0, played: 'pick', advantage: 0, se: 0, means: [], cands: [] })
 
 /** A game state with the viewer's public view and a full deal of hands. */
 export function stateFromView(view: SeatView, hands: readonly (readonly Card[])[]): GameState {
@@ -183,16 +194,30 @@ export function decideSearch(view: SeatView, spec: PolicySpec, seed: number, par
   const seat = view.seat
   const team = seatTeam(seat)
 
-  // The candidates: the pick first, then the ranking's top C less the pick.
+  const k = buildKnowledge(view, knowledgeOptionsOf(spec))
+  // The candidates: the pick first, then ('top') the ranking's top C less the pick, or ('sets') the
+  // best-ranked ask into each half-suit the pick is not in, in the ranking's order, up to C. The
+  // trace's ranking is the fast policy's top five; 'sets' needs the whole ranking, and asks the
+  // ranker itself on the same knowledge (the ranking the stack's ask path used, in full).
   const cands: { target: Seat; card: Card }[] = [{ target: pick.target, card: pick.card }]
-  for (const r of ex.trace.ranked ?? []) {
-    if (cands.length >= params.cand) break
-    if (cands.some((c) => c.target === r.target && c.card === r.card)) continue
-    cands.push({ target: r.target, card: r.card })
+  if (params.candMode === 'sets') {
+    const books = new Set<string>([cardBook(pick.card)])
+    for (const r of rankAsksWith(view, k, resolvePolicy(spec).style)) {
+      if (cands.length >= params.cand) break
+      const b = cardBook(r.card)
+      if (books.has(b)) continue
+      books.add(b)
+      cands.push({ target: r.target, card: r.card })
+    }
+  } else {
+    for (const r of ex.trace.ranked ?? []) {
+      if (cands.length >= params.cand) break
+      if (cands.some((c) => c.target === r.target && c.card === r.card)) continue
+      cands.push({ target: r.target, card: r.card })
+    }
   }
   if (cands.length < 2) return { action: pick, info: NONE }
 
-  const k = buildKnowledge(view, knowledgeOptionsOf(spec))
   const rng = mulberry32(seed)
   const values: number[][] = cands.map(() => [])
   let deals = 0
@@ -233,7 +258,7 @@ export function decideSearch(view: SeatView, spec: PolicySpec, seed: number, par
   }
   let best = 0
   for (let i = 1; i < cands.length; i++) if (means[i] > means[best]) best = i
-  const info: SearchInfo = { searched: true, candidates: cands.length, deals, failedDraws: failed, played: 'pick', advantage: 0, se: 0, means }
+  const info: SearchInfo = { searched: true, candidates: cands.length, deals, failedDraws: failed, played: 'pick', advantage: 0, se: 0, means, cands }
   if (best === 0) return { action: pick, info }
   const clears = params.guard === 'none' ? means[best] > 0 : means[best] - params.z * ses[best] > 0
   if (!clears) return { action: pick, info: { ...info, advantage: means[best], se: ses[best] } }

@@ -2,7 +2,10 @@
  * bench-decide.mjs — the cost of a decision, for MONET.md §3.4a item 6 (≤ 1.4 ms per decision,
  * ≤ 0.9 s per six-seat game) and §0.2's cost line (Monet at ~0.14 ms per decision, ~82 ms per game).
  *
- *     node scripts/bench-decide.mjs --version v0.4a [--games 24] [--warmup 4] [--search '{"det":8,"cand":3,"steps":24}']
+ *     node scripts/bench-decide.mjs --version v0.4a [--override '{"closing":0.5,...}'] [--games 24] [--warmup 4] [--search '{"det":8,"cand":3,"steps":24}']
+ *
+ * `--override` (MONET.md 3.8aa) lays style keys over the named version's vector, as duplicate-pairs.mjs's
+ * withOverride does, so the shipped stack can be costed before it is a version.
  *
  * `--search` (MONET.md 3.8a) times the search arm over the version instead - `decideSearch` with
  * the given parameters (missing keys take SEARCH_DEFAULTS) - which is the cost-first test's

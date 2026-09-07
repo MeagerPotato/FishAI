@@ -459,6 +459,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.28** — the search re-scoped, compute unconstrained (2026-09-07) | **row 33's (s), under the owner's direction of 2026-09-07 ("I don't care about any cost of compute")**: §3.8a's arm with the shipped stack as its rollout policy and the lock-only leaf, the deals scaled 8 → 512 with §3.8a's marker read at every rung and pooled twenty processes wide, a second candidate generator (`candMode` `'sets'`: the pick and one ask per other half-suit), duplicate pairs at home at D 32 and at the largest D the marker justifies, the bridge on twelve fresh seeds at the eligible cell with the wall clock reported and not gated (§3.8aa) | the yield must grow with the deals or the leaf is the limit (v0.29, the learned leaf); ships by §3.8n's bar against v0.20c's vector on the twelve; the registry change a PR for the owner, stacked on #41 | XL |
 | **v0.27** — the joint re-fit (2026-09-07) | **row 31's (j): the shipped doses moved two at a time — the one-at-a-time surface (§3.8v, §3.8y) is flat within a point on every axis but `contest`, and the one interaction measured is positive (§3.8r: the two closing rungs together +0.301 against +0.043 + 0.172 apart)** — `closing` 1 + `closingFour` 3, `closing` 0.25 + `closingFour` 1, `contest` 0.8 + `closingFour` 3, `contest` 0.5 + `closing` 1, 2,400 duplicate pairs each against the shipped stack at home, the control at zero first; the markers on every eligible arm; the primary abroad on twelve fresh seeds against v0.20c's vector (§3.8z); no change to `lib/` | eligible at home at ≥ +2 SE with the sure-miss share within 3 points; the primary ships by §3.8n's bar against v0.20c's vector on the twelve (±2.00 still the rung; the registry change a PR for the owner, stacked on #41); the secondary reported, unable to ship; if no arm is eligible the family is closed at its shipped point on every axis and on the diagonals read — **read 2026-09-07: NO ARM IS ELIGIBLE; THE FAMILY IS CLOSED AT ITS SHIPPED POINT. `closing` 1 + `closingFour` 3 −0.033 ± 0.077 a pair (SD 1.93), `closing` 0.25 + `closingFour` 1 −0.041 ± 0.097 (2.42), `contest` 0.8 + `closingFour` 3 −0.128 ± 0.111 (2.77; BEHIND at 2.3 SE), `contest` 0.5 + `closing` 1 −0.103 ± 0.098 (2.44; BEHIND at 2.1 SE); the control 0.0000; every joint read within one SE of the sum of its parts (§3.8v): the surface is additive from the shipped point, and §3.8r's interaction was the credit's arrival on a vector without it, not a slope. The markers on the first: the move changes one ask in ninety and takes a chase hitting 16% over the stack's ask that would hit 50%; the chase share +0.3. v0.20c is the family's optimum (PR #41). Q1 four of four ranges, no arm eligible as the likelier side; Q2 two of four; Q3 and Q4 not reached. Row 32 hands the direction to the owner: (s) the search arm on the shipped vector or (t) a clinch-aware ask** | the control at zero; nothing exported, nothing abroad; the twelve seeds unspent | S |
 | **v0.26** — the five rung's dose above one (2026-09-07) | **row 30's (f): the closing credit at five of six, `closing`, whose shipped 0.5 pays half of what the four rung's `closingFour` 2 pays and whose §3.8v ladder (0.25 / 0.75 / 1.0) never left the region where a certain hit elsewhere outranks the completing ask** — `closing` 2 / 3 / 4 / 6 with `closingFour` 2 and `contest` 0.6 held, 2,400 duplicate pairs each against the shipped stack at home, the control at zero first; the markers (the move's disagreement with the stack, the sure-miss share, the chase share and hit rate, the five-rung share of the asks) on every eligible arm; the primary abroad on twelve fresh seeds against v0.20c's vector (§3.8y); no change to `lib/` | eligible at home at ≥ +2 SE with the sure-miss share within 3 points; the primary ships by §3.8n's bar against v0.20c's vector on the twelve (±2.00 still the rung; the registry change a PR for the owner, stacked on #41); the secondary reported, unable to ship — **read 2026-09-07: NO ARM IS ELIGIBLE; THE RUNG STOPS AT HOME. `closing` 2 / 3 / 4 / 6 read −0.007 / −0.013 / −0.012 / −0.018 sets a pair (± 0.040–0.045 at 95%; SD 1.00–1.13), every one within one SE of zero; the control 0.0000. The markers say why: the dose changes one ask in three hundred at 2 and at 6 alike (99.7% agreement with the stack), and where it does it takes a completing ask hitting 42–44% over the stack's ask that would hit 67–69%; the five-rung share of the asks rises a quarter of a point (8.4 → 8.7%); the sure-miss share, the chase share and hit rate and the starter share unmoved. The completing ask is almost always a certain hit already first, or an uncertain one `gambleBonus` and `closing` 0.5 already put first; the dose above one reaches only the residue, a poor bet. The closing family is now read at every rung and every dose and the shipped point is its optimum one axis at a time. Q1 two of four ranges, no arm eligible as the likelier side; Q2 four of six (the disagreement share and the five-rung lift an order smaller than predicted); Q3 not reached; Q4 the lib md5 equal to v0.22's. Row 31 takes the joint re-fit, v0.27** | the tree's lib md5 equal to v0.22's (d30542fb…; §3.8u's identity cell this rung's); the control at zero; the six arm packages built and none played; no cell abroad | S |
 | **v0.25** — the trailer's ask, a records read (2026-09-07) | **row 29's (b): the take-back against the ask elsewhere** — at every trail decision (§3.8q: a side holding two of six in an opened, unresolved, even set) whether a take-back is legal, the trailer's picture (`cert6`), the action (the take-back / an uncertain ask into the set / a certain or uncertain ask elsewhere / no card held), what the ask elsewhere bought (its hit, the set it went into and that set's outcome), and the trail set's recovery — Monet's and SESTINA's side of the fs and base corpora and the home mirror (§3.8x); no `lib/` change | a trail term is built as v0.26 only if, on fs, SESTINA's recovery after declining a legal take-back is within 5 points of its recovery after taking it AND the ask elsewhere it takes instead hits ≥ 50% and its set is taken ≥ 50%; else the trailer's story is closed — **read 2026-09-07: THE STORY IS CLOSED. (a) fails: SESTINA recovers 57.5% of its trail sets after taking a legal take-back and 44.9% after declining one, −12.6 points (SE 0.5) against a bar of 5; (b) holds: the ask elsewhere hits 57.7% and its set is taken 60.5% (67.9% and 71.2% on the asks that went elsewhere). No trail term is built. The split says why without reopening it: 11.0 of the 12.6 points are the set left open at the clinch and 1.6 the set lost — SESTINA declines into the sets it holds most of, in the games it is about to finish — and a take-back costs no tempo (a hit keeps the turn), so Monet, taking 78.6% of its legal take-backs against SESTINA's 39.1%, leaves one only for a certain hit elsewhere (its asks elsewhere at a trail decision hit 100.0%) and recovers the set as often either way (+2.0, SE 1.0). Both bots recover best by the uncertain ask into the trail set from a picture of four placed (67.0% / 70.4%), taken at 3–4% of trail sets. Q1 two of seven, Q2 three of six, Q3 missed both ways, Q4 held (25 walks pinned at 100.0%, EXACT, no assertion). Row 30 turns to the five rung's dose above one, v0.26** | every walk pinned in-engine at 100.0%; races EXACT; the trail decisions and take-backs reconciled EXACT with §3.8q; every certainly-placed card asserted against the live hands; the home mirror under `--validate` with the start rotating | S |
@@ -7880,6 +7881,162 @@ takes (61% against 49–52%, §3.8w), which the picture (§3.8w), the pace dose 
 trailer's take-back (§3.8x) and the completing ask (§3.8y) do not explain. Row 32 hands the
 direction to the owner.
 
+### 3.8aa Monet v0.28 — the search re-scoped: compute unconstrained, the marker read against the deals
+
+**Decision row 33, taken 2026-09-07 under the owner's direction of the same day.** The owner's
+message, in full: *"what's next? Know that I don't care about any cost of compute, the only thing
+I care about is to develop the greatest fish playing game engine ever."* Two things change with
+it. §3.8a's cost rule — 100 ms an ask, the budget that rejected every wider or deeper form before
+its win rate was read — is lifted: cost is reported beside every cell and gates nothing. And row
+32's (s) is taken: the search arm on the shipped vector, which is the one lever on the record
+whose failure was measured as a *budget* failure and not a mechanism failure. §3.8a's marker said
+what the search lacked at eight deals: a per-decision signal a twentieth of its noise, "of the
+order of 350 deals" to resolve it, and "a different candidate generator". This rung buys the
+deals, adds the generator, and reads the marker at each rung of deals before a pair is played.
+
+**What the record says the search is for.** SESTINA searches (twelve deals, four candidates,
+depth twelve) where Monet ranks one ply, and what SESTINA has that no dose buys is the conversion
+of the leads it takes — 61% against 49–52% (§3.8w), a chase now against the take-back and the
+re-take that follow it. That is a lookahead's kind of thing. The closing/contest family is closed
+at its optimum on every axis and diagonal (§3.8v, §3.8y, §3.8z); the ranker's surface has no
+term left that a dose can buy. The search is the next term.
+
+#### Pre-registration — written 2026-09-07, before any probe game is read
+
+**The arm.** §3.8a's mechanism unchanged: D determinizations from the marginal (§3.4a's table,
+`sampleDeal`), each candidate played on each deal and rolled out S actions with the fast policy at
+every seat, paired by the rollout seed, the best mean playing only if `mean − z · SE > 0`. What is
+fixed for this rung: **the rollout policy and the searching seat's policy are the shipped stack S**
+(v0.9 with `closing` 0.5 + `closingFour` 2, `contest` 0.6 from the registry — spelled by
+`--override` / `MONET_OVERRIDE` everywhere, since v0.20c is PR #41's and not a version); **the
+lock-only leaf** (`leafLock` 1, `leafCard` 0 — *a locked set is a set*, §3.8a's post-hoc form,
+pre-registered here as the form; no other leaf is read); **the LCB guard at z 1**; **S 24**. The
+one new mechanism is a second candidate generator, the knob **`candMode`** in `SearchParams`:
+`'top'` is §3.8a's list — the pick, then the ranker's top C less the pick — and the default, so
+every existing caller is unchanged; **`'sets'`** is the pick, then the best-ranked ask into each
+other half-suit the seat can ask into, in the ranking's order, up to C — every set the seat could
+chase or take back is on the table once, so the lead's chase-or-take-back choice is searched even
+where the ranker's top C all sit in one set. C is **4** for `'top'` (SESTINA's number) and **9**
+for `'sets'` (one per half-suit at most). `SearchInfo` carries the searched list (`cands`), and the
+instruments take `--override` (`scripts/probe-search.mjs`, `scripts/bench-decide.mjs`, composed as
+`duplicate-pairs.mjs`'s `withOverride`). `/play` is untouched, the bots directory is untouched,
+and `tests/bots/search.test.ts` pins `'sets'` (the pick first, one legal ask per half-suit, the
+list reported) and the default.
+
+**M1 — cost, read before this text (an instrument check, not a read of the arm).** On the bench
+machine (AMD Ryzen 9 9900X, Node v24.19.0, one process), `scripts/bench-decide.mjs --version v0.9
+--override <S> --search …`, the lock-only leaf, S 24:
+
+| form | ms a searched ask | s a mirror game |
+|---|---|---|
+| D 8 · C 3 (§3.8a's size) | 96 | 8.7 |
+| D 32 · C 4 | 586 | 43 |
+| D 128 · C 4 | 2,192 | 205 |
+
+Linear in D · C · S at about 0.15 ms a rollout step; D 512 · C 4 is read in M2 and costed there
+(expected 8.8 s an ask, 14 minutes a mirror game). `'sets'` costs its candidate count, 1.2–1.5× of
+`'top'` at the same D.
+
+**M2 — the marker against the deals, the rung's primary read at home.** `scripts/probe-search.mjs
+--version v0.9 --override <S> --search <form>`: mirror games with the search at every seat, and
+every searched decision scored by a paired rollout of the pick and of what was played from the
+*true* state (§3.8a's marker). Six cells, every one the lock-only leaf, z 1, S 24, run twenty
+processes wide under disjoint labels (`v28-<cell>-<k>`, the label seeding the games) and pooled
+by decisions (`$SP/monet-v28/pool-probe.mjs`; means weighted by n, the SE from the cells' own SDs):
+
+| cell | candidates | D | games |
+|---|---|---|---|
+| t8 | `'top'`, C 4 | 8 | 100 |
+| t32 | `'top'`, C 4 | 32 | 100 |
+| t128 | `'top'`, C 4 | 128 | 80 |
+| t512 | `'top'`, C 4 | 512 | 40 |
+| s32 | `'sets'`, C 9 | 32 | 100 |
+| s128 | `'sets'`, C 9 | 128 | 80 |
+
+Read per cell: the played share of searched decisions; **the marker** (the true paired advantage
+of the played candidate over the pick, per played decision); **the yield** — the marker times the
+played share, the true gain per *searched* decision, which is the number a game feels and the
+statistic that orders the cells; the best-mean candidate's true advantage on every searched
+decision and the held-back set's; the true hit rates of pick and played; and the split by whether
+the pick was a certain hit (its p 1 in the ranking) — where the search leaves a certain hit for a
+chase, the decision §3.8w and §3.8x say SESTINA makes and Monet does not.
+
+**M3 — duplicate pairs at home, the number itself.** `scripts/duplicate-pairs.mjs --a v0.9
+--a-override <S> --a-search <form> --b v0.9 --b-override <S>`, 2,400 pairs a cell in twenty banks
+(`v28-<k>`, 120 pairs each, pooled by pairs with the cells' own SDs, §6.3), the control first (S
+against S, no search, 400 pairs, required to print `0.0000 +/- 0.0000`). **Which cells, fixed
+now:** the first block is t32 and s32 (both, at once); the second block is the mode with the
+better M2 yield at D 128 (a tie within one SE goes to `'top'`) at **the largest D in {128, 512}
+whose M2 yield exceeds the next-smaller D's by at least one SE — if neither does, the second block
+is not played and D 32 is the rung's size.** Eligibility for the bridge: the home paired mean at
+least +2 SE above zero, and the cell's true hit rate of what played (M2) within 5 points of the
+pick's. The primary is the eligible cell with the best home paired mean; a tie within one SE goes
+to the cheaper cell.
+
+**M4 — the bridge, the ship rule.** Twelve fresh seeds under the label `"monet-v0.28-confirm-12"`
+by §6.5's rule (`$SP/seeds-v28.mjs`; the spent set v0.27's plus its twelve, drawn and never
+played), written here before a cell is played: **9530470 8775043 5318699 2942726 6746805 8325339
+8220040 4027070 8085724 3978858 8632114 1600170**. The tree: this rung's `lib/` exported by `git
+archive` to `$SP/fishai-v28`, mounted read-only, its commit and lib md5 recorded — the md5 differs
+from v0.22's because `search.ts` changed, so **the identity cell at 90210 is replayed and must read
+IDENTICAL to §3.8u's before a number is read** (the fast policy is untouched by this rung; a
+difference is a defect, not a finding). The arms: the unchanged adapter (`bot.mjs` md5 c1fc7316…,
+`MONET_SEARCH` → `decideSearch` at every ask, the missing `candMode` key taking the default),
+`MONET_ARM` v0.4c, `MONET_MUSTFIX` 1, `MONET_OVERRIDE` the three doses on both sides, the primary
+carrying its `MONET_SEARCH`. **Pins before a number is read:** the in-engine pin at 100.0% of A's
+decisions (`--cf v0.9 --cf-knobs contest=0.6,closing=0.5,closingFour=2` on the base; on the arm
+the pin is the adapter's own counter of searched asks against its asks, 100.0%), the races
+reconciled EXACT, the fourteen fault counters zero, 36 cover files a cell, a short cell replayed
+IDENTICAL. The bridge's recorded limit (nine search containers ran a bot out of memory, §3.8a) is
+met by capping every bot's heap (`--max-old-space-size` 1024 on the arm's node command) and
+running at most six containers at once; the wall clock is reported beside the cell — at D 32 the
+primary is of the order of 100 CPU-hours (14,400 games × 43 asks × 0.59 s) and at D 128 four
+times that, which under the owner's direction is run and not argued with. **The ship rule is
+§3.8n's, paired against v0.20c's vector on the twelve:** the primary ships if its paired mean is
+at least two standard errors above zero and it is ahead on a majority of the twelve; ±2.00 stays
+the rung and a term under it is marked as such; the registry change is a PR for the owner,
+stacked on #41 (the search arm becomes a version's `search` field, or stays an adapter-level arm —
+the owner's call at review, since it is the first term that would put a search on `/play`'s cost
+line).
+
+**Predictions, written before any probe game.**
+
+- **Q1 (cost)** as M1; D 512 · C 4 at 8–10 s an ask; `'sets'` 1.2–1.5× `'top'` at the same D.
+- **Q2 (M2)** t8: the marker +0.02 to +0.06 (§3.8a's +0.043 on v0.4c's vector), 12–17% of
+  searched decisions played, the yield +0.003 to +0.010 a searched decision. **The rung's
+  question is whether the yield grows with D:** t128's yield at least twice t8's and t32's above
+  t8's by one SE (odds 60%); the alternative — the yield flat within one SE from 32 to 512 — means
+  the marginal's deals and the rollout leaf cap the search, not the deal count (odds 40%), and
+  the rung's finding is that the leaf must change (v0.29 below). The played share rises with D
+  (t128 20–35%); the held-back set's true advantage is ≤ 0 at every D (the guard holds back the
+  right things, as at §3.8a); the best-mean candidate's true advantage over *all* searched
+  decisions turns positive by D 128. **s32 against t32 and s128 against t128:** the yield at least
+  equal, and the played decisions more often at a certain pick (10–25% of `'sets'`' played
+  against under 10% of `'top'`'s — the take-back left for a chase); the true hit rate of what
+  played 2–6 points under the pick's in every cell (§3.8a traded two to five).
+- **Q3 (M3)** t32 +0.05 to +0.25 a pair (0.4–1.9 points of win rate), SD 2.4–3.2; s32 within
+  0.10 of t32; the second block, if played, +0.10 to +0.40 (0.75–3.0 points). Eligible (≥ +2 SE,
+  ≥ +0.12 at 2,400 pairs): odds 50% for a D 32 cell, 65% for the second block.
+- **Q4 (M4)** the primary +0.5 to +2.0 points on the twelve, paired; clears §3.8n's bar with
+  odds 45%; the arm's wall clock at the bridge within 1.5× of M1's projection.
+
+**What follows this rung, under the direction (the plan the owner asked for).** Whatever v0.28
+reads, the search is now the line's mechanism and the fast policy its rollout and its candidate
+generator. **v0.29 — a learned leaf**: a value function fitted on self-play of S (the public state
+and the viewer's belief features → the expected set differential at the end), replacing the
+rollout at the horizon; a leaf of microseconds makes thousands of deals an ask affordable where a
+rollout makes hundreds, and takes the rollout policy's noise out of the leaf — §3.8a's "a leaf
+that is not a rollout". **v0.30 — expert iteration**: the search's choices as the targets the fast
+ranker is re-fitted to, then the search over the better ranker, repeated while §3.9's number
+moves. **The belief sampler** after that: a joint sampler carrying the licence and the choice
+likelihoods (§3.8g–§3.8l closed the *marginal* belief axis; the search's deals are its consumer,
+and a determinization is where a joint matters). §3.9's acceptance test is run at every step that
+ships; ±2.00 stays the rung. Every read is pre-registered as this one is; the owner may stop,
+reverse or redirect any of it.
+
+The files: `$SP/monet-v28/{run-probe.sh, pool-probe.mjs, run-pairs.sh, pool-pairs.mjs, seeds.txt}`,
+`$SP/seeds-v28.mjs`, `$SP/v28-{prereg,record}.md`.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -8333,6 +8490,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 30 | **After §3.8x: the trailer's story is closed by its rule — SESTINA's declined take-backs recover 12.6 points less, and the split says the decline marks the games it is about to finish rather than a set it gives up; a take-back costs no tempo and Monet takes it. The race has now been read from both sides and the reads agree: SESTINA's edge is the in-race conversion of the leads it takes (§3.8p's +2.6 bound, §3.8q, §3.8w), and the closing credit at the four rung is the one term that has bought any of it (§3.8s). Where does the next rung go?** **(f) The five rung's dose above one** — the closing credit pays `dose · wHit · p · lock` (closing.ts); at the four rung `lock` is 0.5 and the shipped `closingFour` 2 pays `wHit · p`, at the five rung `lock` is 1 and the shipped `closing` 0.5 pays half that — the ask that would complete a set the side holds five of is credited half of what the ask that makes a four is, beside the base ranker's own `gambleBonus` on the completing ask — and §3.8v's ladder (0.25, 0.75, 1.0) read flat, the credit deciding one ask in five hundred at 0.25: the dose never left the region where a certain hit elsewhere outranks the completing ask. `closing` 2, 3 and 4 with `closingFour` 2 held, on the shipped stack at home in 2,400 duplicate pairs each after the control; markers: the share of Monet's asks each move changes and what those asks hit against what the stack's would have, the five-rung population (7.2% of Monet's asks by §3.8t); an arm ≥ 2 SE ahead at home goes to twelve fresh seeds abroad under §3.8n as v0.26. No new code: a dose on a knob that ships. **(q) The contest credit's form** — the `(1 − p)` factor and the domination condition (`oppMass/6 · ambiguous/6`) unread; but its value is the race it opens (§3.8v), Monet already opens 64% of the even races against SESTINA and takes them at 49% (§3.8p), and the corpora price more openings at nothing: after (f), if at all. **(w) A chase credit keyed on the take-back risk** — closed by this read as motivated: the take-back is a certain hit that keeps the turn, taken and given back for free, and the chase miss's cost is the turn, which `p` already carries. **(j) The joint re-fit of the shipped doses** — §3.8v's one-at-a-time surface is flat within a point on every axis but `contest`; a joint move is cheap and its prior is low; after (f). **(b′) The trailer's story re-read on the set lost rather than recovered, or with the clinch's winner** — not taken: a measure chosen after the read, on a story its rule closed; the fact is recorded in §3.8x for a later row that wants it. **Recommendation: (f) now, at home first; (j) and (q) after it; not (w), not (b′).** **TAKEN 2026-09-07 under the owner's direction of 2026-09-06 — (f), to be pre-registered as §3.8y before any pair; the owner may reverse this row on return.** | **TAKEN — (f): v0.26 = the five rung's dose above one, §3.8y** |
 | 31 | **After §3.8y: the five rung's dose is inert from 0.25 to 6 — the dose changes one ask in three hundred and loses where it changes one — and the closing family is read at every rung and every dose: the three rung costs (§3.8u), the four rung pays at 2 and not more (§3.8r, §3.8v), the five rung buys nothing (§3.8v, §3.8y). The shipped point is the family's optimum one axis at a time. What is left?** **(j) The joint re-fit** — the one-at-a-time surface (§3.8v, §3.8y) is flat within a point on every axis but `contest`, and the one interaction measured is positive (§3.8r: the two closing rungs together +0.301 against +0.043 + 0.172 apart); four joint moves from the shipped point at home, 2,400 duplicate pairs each after the control — `closing` 1 + `closingFour` 3 (both rungs up), `closing` 0.25 + `closingFour` 1 (both down), `contest` 0.8 + `closingFour` 3, `contest` 0.5 + `closing` 1 — an eligible arm abroad under §3.8n; a quarter of an hour at home; no code. The family closed on its diagonals, or a move found; prior low. **(q) The contest credit's form** — unread, a mechanism rung; but the race it opens is priced at nothing abroad (§3.8p) and its neighbours lose at home (§3.8v): after (j), if at all. **(s) The search arm on the shipped vector** — SESTINA runs a determinized search (twelve deals, depth twelve, four candidates) where Monet ranks one ply with priced terms; §3.8a's search arm on v0.4c's vector was a no-op at home at 96 ms an ask against a budget of 100, and the ranker it searched over has since gained the contest and closing terms that carry the ladder; the conversion gap no dose buys (61% against 49–52%, §3.8w) may be lookahead's. Cost M–L (the budget first, then a fit at home, then the bridge); for the owner's decision on return. **(x) A new records read** — none proposed: the race has been read from both sides (§3.8p–§3.8x) and every read ends at the same wall. **Recommendation: (j) now, closing the family; (s) for the owner; (q) after; not (x).** **TAKEN 2026-09-07 under the owner's direction of 2026-09-06 — (j), to be pre-registered as §3.8z before any pair; the owner may reverse this row on return.** | **TAKEN — (j): v0.27 = the joint re-fit, §3.8z** |
 | 32 | **After §3.8z: the family is closed at its shipped point on every axis and on the diagonals — the joint moves are the sums of their parts, the closing diagonals flat and the `contest` diagonals losing at two SE. Since §3.8n's rule (2026-09-06) the ladder has read five rungs on the race and fit three dose ladders; one term cleared the bar (v0.20c, PR #41) and nothing since. What is left costs M–L and has no read behind it. Where does the ladder go?** **(s) The search arm on the shipped vector** — `lib/engine/search/` (§3.8a: D determinizations from the marginal, the fast ranker's top C asks, S-step rollouts, the pick overridden only when the lower bound clears zero; knobs `det`, `cand`, `steps`, `z`; `scripts/bench-decide.mjs` for the cost) re-fit with the rollout policy the shipped stack rather than v0.4c's. SESTINA searches (twelve deals, depth twelve, four candidates) where Monet ranks one ply, and the lead conversion no dose buys (61% against 49–52%, §3.8w) is the kind of thing lookahead sees — a chase now against the take-back and the re-take that follow it. §3.8a's form was a no-op at home on v0.4c's vector at 96 ms an ask; on the shipped vector unread. Cost M–L: the budget first (the stack's rollout is dearer than v0.4c's), then duplicate pairs at home (a slow arm, hours a ladder), then the bridge at its per-move limit. **(t) A clinch-aware ask** — Monet leaves 12.3% of the races it opens unresolved at the clinch against SESTINA's 5.4% (§3.8p), and 14–17% of SESTINA's trail sets are open at the clinch (§3.8x): Monet's leads left on the table when the game ends. A term that weighs the ask by the score — the fifth set that ends the game, the opponents' fifth that must be denied — has not been on the ladder since §3.3c read the declare's urgency at a quarter of a point on v0.3's vector; a mechanism rung of cost M, with a records read in front of it (the state of every side's leads at the clinch, by the winner; S). **(q) The contest credit's form** — after (s) or (t), if at all. **(u) Another axis on the shipped vector** — the belief (closed, §3.8l), communication (§3.7, flat), the determinized declare (§3.8b, +0.08): each read on an earlier vector; a re-read is a records rung of cost S each, with low priors. **Recommendation: the owner's call between (s) and (t), each pre-registered before any code; (t)'s records read first if (t); not (q), not (u) yet.** **FOR THE OWNER 2026-09-07 — no rung is opened under the direction of 2026-09-06: every remaining candidate is a mechanism of cost M–L without a read behind it, and the ladder's state is reviewable as it stands (v0.20c the family's optimum, PR #41 pending). The owner may open (s) or (t) or another direction on return.** | **FOR THE OWNER — (s) or (t); the ladder paused at v0.27 with the family closed** |
+| 33 | **After §3.8z and the owner's direction of 2026-09-07 — *"what's next? Know that I don't care about any cost of compute, the only thing I care about is to develop the greatest fish playing game engine ever."* What runs, and in what order?** **TAKEN — (s), re-scoped (§3.8aa, v0.28):** the search arm on the shipped vector with §3.8a's cost rule lifted — the deals scaled until the marker stops growing, a candidate generator that puts every half-suit on the table, the lock-only leaf, duplicate pairs at home and the bridge on twelve fresh seeds at whatever wall clock the eligible cell costs. The order after it, written as the plan the owner asked for: **v0.29 a learned leaf** (a value function on self-play of the stack, in place of the rollout — the leaf §3.8a said the search needed), **v0.30 expert iteration** (the search's choices as the ranker's targets, repeated while §3.9's number moves), then **a joint belief sampler** for the determinizations; §3.9's test at every step that ships, ±2.00 the rung, every read pre-registered. Not taken: (t) the clinch-aware ask (a one-ply term; the search sees the clinch through its rollouts, so (t) is subsumed if the search pays and is read on its own only if it does not), (q) and (u). The full-strength bridge read is of the order of 100–400 CPU-hours on a 12-CPU Docker VM (a day to three) — a larger box would cut the wall clock and is the owner's call; the ladder runs on this one meanwhile. | **TAKEN (s) re-scoped — the owner may reverse at review** |
 
 ---
 

@@ -9,12 +9,15 @@
  * it searches, and where it leaves the pick the played candidate's paired advantage clears its
  * guard; (4) a guard no candidate can clear (a huge z) always plays the pick, and the unguarded
  * control plays the best mean whenever it is positive; (5) determinism: the same inputs give the
- * same action and the same numbers. Whether search is *worth* its cost is the fit's question and
+ * same action and the same numbers; (6) MONET.md 3.8aa's `candMode`: `'sets'` puts the pick and one
+ * ask per other half-suit on the table, every candidate legal and the list reported in `info.cands`,
+ * and `'top'` (the default) is 3.8a's list. Whether search is *worth* its cost is the fit's question and
  * belongs in MONET.md.
  */
 import { describe, expect, it } from 'vitest'
 import { decide, hashSeed, legalActionsSummary, newGame, reduce, seatView, us54Config } from '../../lib/engine/index.ts'
 import type { Card, Seat, SeatView } from '../../lib/engine/index.ts'
+import { cardBook } from '../../lib/engine/cards.ts'
 import { legalAsksFromView } from '../../lib/engine/helpers.ts'
 import { mulberry32 } from '../../lib/engine/rng.ts'
 import { buildKnowledge } from '../../lib/engine/bots/knowledge.ts'
@@ -26,7 +29,7 @@ import { canonicalAction } from './action-digest.ts'
 
 const BASE = monetPolicy('v0.4c') as BotPolicy
 const OPTS = { logWindow: BASE.skill.logWindow, useConstraints: BASE.skill.useConstraints, marginal: BASE.style.pModel === 'marginal' }
-const SMALL: SearchParams = { det: 4, cand: 3, steps: 12, z: 1, guard: 'lcb', leafLock: 0, leafCard: 0 }
+const SMALL: SearchParams = { det: 4, cand: 3, steps: 12, z: 1, guard: 'lcb', leafLock: 0, leafCard: 0, candMode: 'top' }
 
 type State = ReturnType<typeof newGame>
 interface Pos {
@@ -174,5 +177,36 @@ describe('the search arm', () => {
     }
     expect(positive).toBeGreaterThan(0)
     expect(SEARCH_DEFAULTS.guard).toBe('lcb')
+  })
+
+  it("'sets' puts the pick and one legal ask per other half-suit on the table; 'top' is the default and 3.8a's list", () => {
+    let searched = 0
+    let wider = 0
+    for (const { view } of [...positions('search-sets-a', 7), ...positions('search-sets-b', 7)]) {
+      if (view.declareWindow || view.phase !== 'playing') continue
+      const s = hashSeed(`sets:${view.moveIndex}`)()
+      const pick = decide(view, BASE, s)
+      if (pick.type !== 'ask') continue
+      const sets = decideSearch(view, BASE, s, { ...SMALL, cand: 9, candMode: 'sets' })
+      if (!sets.info.searched) continue
+      searched++
+      const c = sets.info.cands
+      expect(c.length).toBe(sets.info.candidates)
+      expect(c.length).toBe(sets.info.means.length)
+      expect(c[0]).toEqual({ target: pick.target, card: pick.card })
+      const books = c.map((x) => cardBook(x.card))
+      expect(new Set(books).size).toBe(books.length)
+      const legal = legalAsksFromView(view)
+      for (const x of c) expect(legal.some((a) => a.target === x.target && a.card === x.card)).toBe(true)
+      if (c.length > 3) wider++
+      expect(sets.action.type).toBe('ask')
+      const top = decideSearch(view, BASE, s, SMALL)
+      expect(top.info.cands.length).toBeLessThanOrEqual(SMALL.cand)
+      expect(top.info.cands[0]).toEqual({ target: pick.target, card: pick.card })
+      for (const x of top.info.cands) expect(legal.some((a) => a.target === x.target && a.card === x.card)).toBe(true)
+    }
+    expect(searched).toBeGreaterThan(10)
+    expect(wider).toBeGreaterThan(0)
+    expect(SEARCH_DEFAULTS.candMode).toBe('top')
   })
 })
