@@ -2,7 +2,13 @@
  * bench-decide.mjs — the cost of a decision, for MONET.md §3.4a item 6 (≤ 1.4 ms per decision,
  * ≤ 0.9 s per six-seat game) and §0.2's cost line (Monet at ~0.14 ms per decision, ~82 ms per game).
  *
- *     node scripts/bench-decide.mjs --version v0.4a [--games 24] [--warmup 4] [--search '{"det":8,"cand":3,"steps":24}']
+ *     node scripts/bench-decide.mjs --version v0.4a [--override '{"closing":0.5,...}'] [--games 24] [--warmup 4] [--search '{"det":8,"cand":3,"steps":24}']
+ *         [--leaf-model models/leaf.json] [--ask-model models/ask.json]
+ *
+ * `--override` (MONET.md 3.8aa) lays style keys over the named version's vector, as duplicate-pairs.mjs's
+ * withOverride does, so the shipped stack can be costed before it is a version. `--ask-model` (MONET.md 3.8ac)
+ * registers the file as an ask model (imitation.ts) under its basename and lays `askModel` over the style, so
+ * the imitation policy's cost is read on the same games.
  *
  * `--search` (MONET.md 3.8a) times the search arm over the version instead - `decideSearch` with
  * the given parameters (missing keys take SEARCH_DEFAULTS) - which is the cost-first test's
@@ -15,7 +21,8 @@
  * disjoint from every fitting bank (MONET.md §6.5). Wall-clock: quote the machine beside the number.
  */
 import { pathToFileURL, fileURLToPath } from 'node:url'
-import { dirname, join, resolve } from 'node:path'
+import { basename, dirname, join, resolve } from 'node:path'
+import fs from 'node:fs'
 import { performance } from 'node:perf_hooks'
 import os from 'node:os'
 
@@ -33,13 +40,25 @@ const VERSION = argOf('--version', '')
 const SEARCH_ARG = argOf('--search', '') ? JSON.parse(argOf('--search', '')) : null
 const SEARCH = SEARCH_ARG ? await import(pathToFileURL(join(ROOT, 'lib/engine/search/index.ts')).href) : null
 const PARAMS = SEARCH_ARG ? { ...SEARCH.SEARCH_DEFAULTS, ...SEARCH_ARG } : null
+// MONET.md 3.8ab: --leaf-model <file> registers a value model under the file's basename and names it as the leaf
+const LEAF = argOf('--leaf-model', '')
+if (LEAF) {
+  if (!PARAMS) throw new Error('--leaf-model needs --search')
+  SEARCH.registerValueModel(basename(LEAF), JSON.parse(fs.readFileSync(LEAF, 'utf8')))
+  PARAMS.leafNet = basename(LEAF)
+}
 if (!isMonetVersion(VERSION)) {
   console.error(`--version must name a Monet version (${MONET_VERSION_IDS.join(', ')}); got ${JSON.stringify(VERSION)}`)
   process.exit(2)
 }
 const GAMES = Number(argOf('--games', 24))
 const WARMUP = Number(argOf('--warmup', 4))
-const POLICY = monetPolicy(VERSION)
+// MONET.md 3.8aa: --override lays style keys over the version's vector; 3.8ac: --ask-model <file> registers an ask model under the file's basename and names it as `askModel`
+const ASK = argOf('--ask-model', '')
+if (ASK) BOTS.registerAskModel(basename(ASK), JSON.parse(fs.readFileSync(ASK, 'utf8')))
+const OVER = { ...(argOf('--override', '') ? JSON.parse(argOf('--override', '')) : {}), ...(ASK ? { askModel: basename(ASK) } : {}) }
+const BASE = monetPolicy(VERSION)
+const POLICY = Object.keys(OVER).length > 0 ? Object.freeze({ skill: BASE.skill, style: Object.freeze({ ...BASE.style, ...OVER }) }) : BASE
 
 function playTimed(seed, sink) {
   let s = newGame(seed, us54Config, 0)

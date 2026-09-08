@@ -638,6 +638,7 @@ if (EMIT_BANK) {
   const cmd =
     `node scripts/byte-identity.mjs --version ${VERSION}` +
     (emitFromWt ? ' --emit-tree wt' : ` --ref ${REF}`) +
+    ` --bank-seeds ${BANK_SEEDS}` +
     ` --emit-bank ${EMIT_BANK}`
   const L = []
   L.push('/**')
