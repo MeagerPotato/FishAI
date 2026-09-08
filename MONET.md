@@ -8882,7 +8882,7 @@ rung inside two days of wall clock after M4.
 measured at two widths and two data sizes. If F2 gains less than a point of margin over C, the features
 are the limit and the next term is v0.32's declare clone or the representation — not a third fit.
 
-#### The clone's disagreements, read before the fits — 2026-09-08 10:15Z (`scripts/probe-clone-errors.mjs`)
+#### The clone's disagreements, read before the fits — 2026-09-08 09:58Z (`scripts/probe-clone-errors.mjs`)
 
 Written before a row of M1 is extracted, so the fits are read against it. The instrument rebuilds the
 stack's ranking and features at SESTINA's ask decisions on twelve held-out files (14,400 games; a 2%
