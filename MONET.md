@@ -9006,7 +9006,7 @@ F2's question alone. The secondary read, `probe-clone-errors` on the same twelve
 The same picture as C's, four tenths of a point up on the seat: on the decisions where the two differ,
 F1's ask would have hit 45.0% against SESTINA's 41.3% — the fit is, if anything, the more immediate
 player. What is left for v0.31 is F2; what is left for the seat is §3.8af (F3, the same recipe as F1 at
-the second feature set, on F1's core from 21:40Z — its first start at 21:33Z died in the fitter's loader,
+the second feature set, on F1's core from 21:35Z — its first start at 21:33Z died in the fitter's loader,
 which read each file in one call and Node refuses a file over 2 GiB; the largest group at 51 columns is
 2.18 GB; the loader now reads in slices, and the smoke fit's standardisation is byte for byte the old
 loader's — read against these numbers: eligible at holdout top-1 ≥ 57.56% with the half-suit-and-seat
