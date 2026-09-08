@@ -18,7 +18,8 @@
  * disjoint from every fitting bank (MONET.md §6.5). Wall-clock: quote the machine beside the number.
  */
 import { pathToFileURL, fileURLToPath } from 'node:url'
-import { dirname, join, resolve } from 'node:path'
+import { basename, dirname, join, resolve } from 'node:path'
+import fs from 'node:fs'
 import { performance } from 'node:perf_hooks'
 import os from 'node:os'
 
@@ -36,6 +37,13 @@ const VERSION = argOf('--version', '')
 const SEARCH_ARG = argOf('--search', '') ? JSON.parse(argOf('--search', '')) : null
 const SEARCH = SEARCH_ARG ? await import(pathToFileURL(join(ROOT, 'lib/engine/search/index.ts')).href) : null
 const PARAMS = SEARCH_ARG ? { ...SEARCH.SEARCH_DEFAULTS, ...SEARCH_ARG } : null
+// MONET.md 3.8ab: --leaf-model <file> registers a value model under the file's basename and names it as the leaf
+const LEAF = argOf('--leaf-model', '')
+if (LEAF) {
+  if (!PARAMS) throw new Error('--leaf-model needs --search')
+  SEARCH.registerValueModel(basename(LEAF), JSON.parse(fs.readFileSync(LEAF, 'utf8')))
+  PARAMS.leafNet = basename(LEAF)
+}
 if (!isMonetVersion(VERSION)) {
   console.error(`--version must name a Monet version (${MONET_VERSION_IDS.join(', ')}); got ${JSON.stringify(VERSION)}`)
   process.exit(2)

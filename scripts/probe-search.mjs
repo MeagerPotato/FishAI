@@ -1,7 +1,7 @@
 /**
  * probe-search.mjs - MONET.md 3.8a's home marker for the search arm, read against the truth.
  *
- *   node scripts/probe-search.mjs [--games 40] [--version v0.4c] [--override '{"closing":0.5,...}'] [--label probe] [--search '{"det":8,...}']
+ *   node scripts/probe-search.mjs [--games 40] [--version v0.4c] [--override '{"closing":0.5,...}'] [--label probe] [--search '{"det":8,...}'] [--leaf-model models/x.json]
  *
  * `--override` (MONET.md 3.8aa) lays style keys over the named version's vector, composed as
  * duplicate-pairs.mjs's withOverride does, so the shipped stack can be probed before it is a version.
@@ -18,6 +18,8 @@
  * where the search leaves a certain hit for a chase - and reads the candidate list from the arm.
  */
 import { pathToFileURL } from 'node:url'
+import { basename } from 'node:path'
+import fs from 'node:fs'
 const ENG = await import(pathToFileURL(process.cwd() + '/lib/engine/index.ts').href)
 const MON = await import(pathToFileURL(process.cwd() + '/lib/engine/bots/monet.ts').href)
 const S = await import(pathToFileURL(process.cwd() + '/lib/engine/search/index.ts').href)
@@ -31,6 +33,12 @@ const GAMES = Number(argOf('--games', 40))
 const VERSION = argOf('--version', 'v0.4c')
 const LABEL = argOf('--label', 'probe')
 const params = { ...S.SEARCH_DEFAULTS, ...JSON.parse(argOf('--search', '{}')) }
+// MONET.md 3.8ab: --leaf-model <file> registers a value model under the file's basename and names it as the leaf
+const LEAF = argOf('--leaf-model', '')
+if (LEAF) {
+  S.registerValueModel(basename(LEAF), JSON.parse(fs.readFileSync(LEAF, 'utf8')))
+  params.leafNet = basename(LEAF)
+}
 const OVER = argOf('--override', '') ? JSON.parse(argOf('--override', '')) : null
 const pol0 = MON.monetPolicy(VERSION)
 const pol = OVER ? Object.freeze({ skill: pol0.skill, style: Object.freeze({ ...pol0.style, ...OVER }) }) : pol0

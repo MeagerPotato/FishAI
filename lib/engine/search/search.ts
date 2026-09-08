@@ -24,6 +24,14 @@
  * bridge adapter by name. Not a change to any window decision — those are the fast policy's.
  * Deterministic for a given (view, spec, seed, params).
  *
+ * ## The leaf
+ *
+ * At the horizon a rollout is scored by `leafValue` — the set differential plus the locked sets
+ * (§3.8a's amendment) — or, MONET.md 3.8ab, by a learned value model (`leafNet`, the name of a
+ * model registered with `registerValueModel`): the model's estimate of the FINAL set differential
+ * from the full-information state at the horizon, `value.ts`. With `steps` 0 and a model the
+ * search is a one-ply expectation over the deals: the ask, its outcome on the deal, the model.
+ *
  * ## Cost
  *
  * D · C rollouts of S `decide` calls each: at the defaults (8 · 3 · 24 = 576 calls) about 80 ms
@@ -40,8 +48,10 @@ import { decide, decideExplained } from '../bots/decide.ts'
 import { buildKnowledge, rankAsksWith } from '../bots/knowledge.ts'
 import { resolvePolicy } from '../bots/style.ts'
 import type { PolicySpec } from '../bots/bounded.ts'
-import type { KnowledgeOptions, SeatView } from '../bots/types.ts'
+import type { Knowledge, KnowledgeOptions, SeatView } from '../bots/types.ts'
 import { sampleDeal } from './determinize.ts'
+import { compileValueModel, valueOf } from './value.ts'
+import type { CompiledValueModel, ValueModel } from './value.ts'
 
 export interface SearchParams {
   /** Determinizations per decision (D). 0 disables the search: the fast policy's pick plays. */
@@ -70,9 +80,28 @@ export interface SearchParams {
    * trail is searched even where the ranker's top C all sit in one set.
    */
   candMode: 'top' | 'sets'
+  /**
+   * MONET.md 3.8ab — the learned leaf: the name of a value model registered with
+   * `registerValueModel`, evaluated at the rollout's horizon in place of `leafValue` (`leafLock`
+   * and `leafCard` are then unread). Absent: the lock-only leaf, byte for byte.
+   */
+  leafNet?: string
 }
 
 export const SEARCH_DEFAULTS: SearchParams = Object.freeze({ det: 8, cand: 3, steps: 24, z: 1, guard: 'lcb', leafLock: 0, leafCard: 0, candMode: 'top' })
+
+const MODELS = new Map<string, CompiledValueModel>()
+
+/** Register a value model under a name `SearchParams.leafNet` can refer to (compiled once here). */
+export function registerValueModel(name: string, model: ValueModel): void {
+  MODELS.set(name, compileValueModel(model))
+}
+
+export function valueModelOf(name: string): CompiledValueModel {
+  const m = MODELS.get(name)
+  if (!m) throw new Error(`no value model registered as ${JSON.stringify(name)}`)
+  return m
+}
 
 export interface SearchInfo {
   /** Whether a search ran at all (an ask decision with at least two candidates and one deal). */
@@ -152,8 +181,11 @@ export function leafValue(s: GameState, team: 0 | 1, leafLock: number, leafCard:
   return v
 }
 
-/** Roll a state forward `steps` actions under `spec` at every seat; the leaf value for `team` at the end. */
-export function rollout(start: GameState, spec: PolicySpec, key: string, steps: number, team: 0 | 1, leafLock = 0, leafCard = 0): number {
+/**
+ * Roll a state forward `steps` actions under `spec` at every seat; the leaf value for `team` at the
+ * end — `leafValue` with the weights, or the learned model's estimate when `leaf` is given.
+ */
+export function rollout(start: GameState, spec: PolicySpec, key: string, steps: number, team: 0 | 1, leafLock = 0, leafCard = 0, leaf?: CompiledValueModel): number {
   let s = start
   let n = 0
   while (s.phase !== 'finished' && n < steps) {
@@ -164,7 +196,7 @@ export function rollout(start: GameState, spec: PolicySpec, key: string, steps: 
     s = r.state
     n++
   }
-  return leafValue(s, team, leafLock, leafCard)
+  return leaf ? valueOf(leaf, s, team) : leafValue(s, team, leafLock, leafCard)
 }
 
 function knowledgeOptionsOf(spec: PolicySpec): KnowledgeOptions {
@@ -180,25 +212,25 @@ function knowledgeOptionsOf(spec: PolicySpec): KnowledgeOptions {
   }
 }
 
+/** The fast policy's pick at an ask decision and the search's candidate list over it (the pick first), with the knowledge both were built on. */
+export interface CandidateAsks {
+  pick: GameAction
+  cands: { target: Seat; card: Card }[]
+  k: Knowledge
+}
+
 /**
- * The search arm's decision. Everything but an ask decision with at least two candidates is the
- * fast policy's own decision, unchanged.
+ * The candidates the search would put on the table at `view` (MONET.md 3.8a, 3.8aa): the pick first,
+ * then ('top') the ranking's top C less the pick, or ('sets') the best-ranked ask into each half-suit
+ * the pick is not in, in the ranking's order, up to C. Null when the decision is not an ask. The
+ * trace's ranking is the fast policy's top five; 'sets' needs the whole ranking, and asks the ranker
+ * itself on the same knowledge (the ranking the stack's ask path used, in full).
  */
-export function decideSearch(view: SeatView, spec: PolicySpec, seed: number, params: SearchParams = SEARCH_DEFAULTS): SearchDecision {
-  if (view.phase !== 'playing' || view.declareWindow || params.det <= 0 || params.cand < 2) {
-    return { action: decide(view, spec, seed), info: NONE }
-  }
+export function candidateAsks(view: SeatView, spec: PolicySpec, seed: number, params: SearchParams): CandidateAsks | null {
   const ex = decideExplained(view, spec, seed)
   const pick = ex.action
-  if (pick.type !== 'ask') return { action: pick, info: NONE }
-  const seat = view.seat
-  const team = seatTeam(seat)
-
+  if (pick.type !== 'ask') return null
   const k = buildKnowledge(view, knowledgeOptionsOf(spec))
-  // The candidates: the pick first, then ('top') the ranking's top C less the pick, or ('sets') the
-  // best-ranked ask into each half-suit the pick is not in, in the ranking's order, up to C. The
-  // trace's ranking is the fast policy's top five; 'sets' needs the whole ranking, and asks the
-  // ranker itself on the same knowledge (the ranking the stack's ask path used, in full).
   const cands: { target: Seat; card: Card }[] = [{ target: pick.target, card: pick.card }]
   if (params.candMode === 'sets') {
     const books = new Set<string>([cardBook(pick.card)])
@@ -216,6 +248,24 @@ export function decideSearch(view: SeatView, spec: PolicySpec, seed: number, par
       cands.push({ target: r.target, card: r.card })
     }
   }
+  return { pick, cands, k }
+}
+
+/**
+ * The search arm's decision. Everything but an ask decision with at least two candidates is the
+ * fast policy's own decision, unchanged.
+ */
+export function decideSearch(view: SeatView, spec: PolicySpec, seed: number, params: SearchParams = SEARCH_DEFAULTS): SearchDecision {
+  if (view.phase !== 'playing' || view.declareWindow || params.det <= 0 || params.cand < 2) {
+    return { action: decide(view, spec, seed), info: NONE }
+  }
+  const ca = candidateAsks(view, spec, seed, params)
+  if (ca === null) return { action: decide(view, spec, seed), info: NONE }
+  const { pick, cands, k } = ca
+  if (pick.type !== 'ask') return { action: pick, info: NONE }
+  const seat = view.seat
+  const team = seatTeam(seat)
+  const leaf = params.leafNet ? valueModelOf(params.leafNet) : undefined
   if (cands.length < 2) return { action: pick, info: NONE }
 
   const rng = mulberry32(seed)
@@ -235,7 +285,7 @@ export function decideSearch(view: SeatView, spec: PolicySpec, seed: number, par
       const r = reduce(base, { type: 'ask', seat, target: cands[i].target, card: cands[i].card })
       // A candidate the sampled deal makes illegal cannot happen (legality is public), but the
       // engine is the authority: a refused ask scores as the pick's deal, i.e. no advantage.
-      values[i].push(r.ok ? rollout(r.state, spec, key, params.steps, team, params.leafLock, params.leafCard) : Number.NaN)
+      values[i].push(r.ok ? rollout(r.state, spec, key, params.steps, team, params.leafLock, params.leafCard, leaf) : Number.NaN)
     }
   }
   if (deals === 0) return { action: pick, info: { ...NONE, candidates: cands.length, failedDraws: failed } }

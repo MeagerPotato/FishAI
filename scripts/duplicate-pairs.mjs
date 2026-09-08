@@ -4,6 +4,12 @@
  *
  *     node scripts/duplicate-pairs.mjs --a v0.3 --b v0.2 [--pairs 800] [--bank home-a]
  *         [--a-override '{"defuse":0}'] [--b-override '{...}'] [--a-search '{"det":8,"cand":3,"steps":24,"z":1,"guard":"lcb"}'] [--b-search '{...}']
+ *         [--a-search-prob 0.2] [--b-search-prob 0.2]
+ *
+ * `--a-search-prob` / `--b-search-prob` (MONET.md 3.8aa) make the search sparse: a decision is searched
+ * only when a uniform drawn from the decision's own seed is below p (default 1, every decision), the
+ * fast policy playing otherwise - the search's moves read one at a time in a game the fast policy
+ * otherwise plays, against the dense form that reads them in combination.
  *
  * `--a-search` / `--b-search` (MONET.md 3.8a) make that arm the search arm over its policy: every
  * ask decision goes through `decideSearch` with the given parameters (missing keys take
@@ -34,7 +40,8 @@
  * number quoted from this script.
  */
 import { pathToFileURL, fileURLToPath } from 'node:url'
-import { dirname, join, resolve } from 'node:path'
+import { basename, dirname, join, resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const ENG = await import(pathToFileURL(join(ROOT, 'lib/engine/index.ts')).href)
@@ -63,13 +70,37 @@ const SEARCH_B = argOf('--b-search', '') ? JSON.parse(argOf('--b-search', '')) :
 const SEARCH = SEARCH_A || SEARCH_B ? await import(pathToFileURL(join(ROOT, 'lib/engine/search/index.ts')).href) : null
 const PARAMS_A = SEARCH_A ? { ...SEARCH.SEARCH_DEFAULTS, ...SEARCH_A } : null
 const PARAMS_B = SEARCH_B ? { ...SEARCH.SEARCH_DEFAULTS, ...SEARCH_B } : null
+// MONET.md 3.8ab: --a-leaf-model / --b-leaf-model <file> register a value model under the file's basename and name it as that side's leaf
+for (const [flag, params] of [['--a-leaf-model', PARAMS_A], ['--b-leaf-model', PARAMS_B]]) {
+  const file = argOf(flag, '')
+  if (!file) continue
+  if (!params) throw new Error(`${flag} needs the side's --search`)
+  SEARCH.registerValueModel(basename(file), JSON.parse(readFileSync(file, 'utf8')))
+  params.leafNet = basename(file)
+}
+const PROB_A = Number(argOf('--a-search-prob', 1))
+const PROB_B = Number(argOf('--b-search-prob', 1))
 const withOverride = (pol, over) =>
   over ? Object.freeze({ skill: pol.skill, style: Object.freeze({ ...pol.style, ...over }) }) : pol
 const POL_A = withOverride(monetPolicy(A), OVER_A)
 const POL_B = withOverride(monetPolicy(B), OVER_B)
-const LABEL_A = `${A}${OVER_A ? ' ' + JSON.stringify(OVER_A) : ''}${PARAMS_A ? ' search ' + JSON.stringify(PARAMS_A) : ''}`
-const LABEL_B = `${B}${OVER_B ? ' ' + JSON.stringify(OVER_B) : ''}${PARAMS_B ? ' search ' + JSON.stringify(PARAMS_B) : ''}`
-const act = (view, pol, params, seed) => (params ? SEARCH.decideSearch(view, pol, seed, params).action : decide(view, pol, seed))
+const LABEL_A = `${A}${OVER_A ? ' ' + JSON.stringify(OVER_A) : ''}${PARAMS_A ? ' search ' + JSON.stringify(PARAMS_A) + (PROB_A < 1 ? ` prob ${PROB_A}` : '') : ''}`
+const LABEL_B = `${B}${OVER_B ? ' ' + JSON.stringify(OVER_B) : ''}${PARAMS_B ? ' search ' + JSON.stringify(PARAMS_B) + (PROB_B < 1 ? ` prob ${PROB_B}` : '') : ''}`
+// a sparse search: searched when the decision's own seed says so (a uniform below prob), else the pick
+const sparse = (seed, prob) => prob >= 1 || (hashSeed(`${seed}:sparse`)() >>> 0) / 4294967296 < prob
+// each side's searched and changed decisions over the run (MONET.md 3.8ab: the paired set-diff per changed decision)
+const COUNT = { A: { searched: 0, changed: 0 }, B: { searched: 0, changed: 0 } }
+const act = (view, pol, params, seed, prob, side) => {
+  if (params && sparse(seed, prob)) {
+    const d = SEARCH.decideSearch(view, pol, seed, params)
+    if (d.info.searched) {
+      side.searched++
+      if (d.info.played === 'candidate') side.changed++
+    }
+    return d.action
+  }
+  return decide(view, pol, seed)
+}
 
 /** One game: team `teamA` plays arm A, the other team arm B. Returns [setsA, setsB]. */
 function play(seed, teamA) {
@@ -80,7 +111,7 @@ function play(seed, teamA) {
     const { seat } = legalActionsSummary(s)
     const view = seatView(s, seat)
     const isA = seatTeam(seat) === teamA
-    const r = reduce(s, act(view, isA ? POL_A : POL_B, isA ? PARAMS_A : PARAMS_B, hashSeed(`${seed}:${s.moveIndex}`)()))
+    const r = reduce(s, act(view, isA ? POL_A : POL_B, isA ? PARAMS_A : PARAMS_B, hashSeed(`${seed}:${s.moveIndex}`)(), isA ? PROB_A : PROB_B, isA ? COUNT.A : COUNT.B))
     if (!r.ok) return null
     s = r.state
   }
@@ -119,3 +150,8 @@ console.log(`sets            ${setsA} vs ${setsB}  (per game ${(setsA / (2 * pai
 console.log(`win rate (A)    ${((100 * winsA) / (2 * pairs)).toFixed(2)}%`)
 console.log(`paired set-diff ${mean.toFixed(4)} +/- ${(1.96 * se).toFixed(4)}   (SD ${sd.toFixed(4)} sets/pair, this cell's own; SE ${se.toFixed(4)})`)
 console.log(`verdict         ${Math.abs(mean) > 1.96 * se ? (mean > 0 ? `${A} AHEAD` : `${A} BEHIND`) + ' at 95%' : 'inside the interval: unresolved at this N'}`)
+for (const [name, params, c] of [['A', PARAMS_A, COUNT.A], ['B', PARAMS_B, COUNT.B]]) {
+  if (!params || pairs === 0) continue
+  const perPair = c.changed / pairs
+  console.log(`searched (${name})    ${c.searched} (${(c.searched / pairs).toFixed(2)} a pair); changed ${c.changed} (${perPair.toFixed(2)} a pair, ${((100 * c.changed) / Math.max(1, c.searched)).toFixed(1)}% of searched); paired set-diff per changed decision ${perPair > 0 ? ((name === 'A' ? mean : -mean) / perPair).toFixed(4) : 'n/a'} (SE ${perPair > 0 ? (se / perPair).toFixed(4) : 'n/a'})`)
+}
