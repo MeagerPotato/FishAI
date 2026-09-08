@@ -8881,10 +8881,31 @@ majority of the twelve banks.**
 **M3 — at the bridge (only if M2 is eligible).** Twelve fresh seeds by §6.5's rule under
 `"monet-v0.31-confirm-12"` (the spent set v0.30's plus its twelve), drawn and written in the record
 before a cell is played. **Drawn 2026-09-08 18:20Z (`$SP/seeds-v31.mjs`; the spent set §3.8ac's plus v0.29's
-twelve, reserved, and v0.30's twelve): 2084753 3014474 6756708 8119149 3333333 8366602 6841788 1616231 7621259 1307763 6562295 5339521.** C plays them from about 18:25Z on
-the v0.30 tree export (one container, the machine otherwise idle while the fits run; its identity cell
-IDENTICAL on record) so that a candidate's M3, if one is reached, pairs against cells already on file;
-the twelve are spent by that read whatever M1 and M2 say. **C — v0.30's vector — on the twelve first, then C2**, each through
+twelve, reserved, and v0.30's twelve): 2084753 3014474 6756708 8119149 3333333 8366602 6841788 1616231 7621259 1307763 6562295 5339521.** **C — arm `clone2`, the hello label `ask=2138c38e` on every cell — played them 18:32Z to 18:38Z on the
+v0.30 tree export (one container, the machine otherwise idle under the fits; the identity cell IDENTICAL
+on record; 36 cover files a cell, FATAL 0): 47.40% (SD 1.98, SE 0.57) — the same read as its 48.01% on
+§3.8ac's twelve.** The single-64 net (arm `clone`, `ask=6ae34c26`; +6.67 points on the first twelve
+against C's +7.24) was played on them first by mistake, 18:21Z to 18:29Z, and is kept as a second read
+of the same question: 47.94% (SD 1.75), +0.53 ± 1.41 paired over C (+0.74 SE, ahead on 7 of 12) — the two nets
+are the same abroad at this sample, as on the first twelve. A fast arm plays a cell in about 40 seconds on
+an idle machine (32 games a second on twelve threads; 7.4 under §3.8ac's load). A candidate's M3 pairs
+against C's cells on file; the twelve are spent by these reads whatever M1 and M2 say.
+
+| seed | C (`clone2`, `ask=2138c38e`) | the single-64 net (`clone`, `ask=6ae34c26`) | paired |
+|---|---|---|---|
+| 2084753 | 45.42% | 45.58% | +0.17 |
+| 3014474 | 49.25% | 49.92% | +0.67 |
+| 6756708 | 51.67% | 47.42% | −4.25 |
+| 8119149 | 47.83% | 48.25% | +0.42 |
+| 3333333 | 48.67% | 47.17% | −1.50 |
+| 8366602 | 45.08% | 49.25% | +4.17 |
+| 6841788 | 46.50% | 50.25% | +3.75 |
+| 1616231 | 44.67% | 46.33% | +1.67 |
+| 7621259 | 47.42% | 46.50% | −0.92 |
+| 1307763 | 46.75% | 46.25% | −0.50 |
+| 6562295 | 47.00% | 50.83% | +3.83 |
+| 5339521 | 48.58% | 47.50% | −1.08 |
+| **twelve** | **47.40% (SD 1.98, SE 0.57)** | **47.94% (SD 1.75)** | **+0.53 (SD 2.50, SE 0.72), +0.74 SE, ahead on 7 of 12** | **C — v0.30's vector — on the twelve first, then C2**, each through
 `MONET_ASK_MODEL` with its md5 prefix in the hello label; the pins as §3.8ac's M3. **The ship rule is
 §3.8n's, paired against v0.30's vector on the twelve: at least two standard errors above zero and
 ahead on a majority; ±2.00 stays the rung.** The registry change a PR for the owner — v0.31 = v0.30's
