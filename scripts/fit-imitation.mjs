@@ -40,6 +40,22 @@ if (FILES.length === 0 || !OUT) {
 }
 
 // ---- load: rows [id, chosen, features...], decisions [id, file, game, ev, asks, chosen, ours, hit, holdout, seat]
+/** A Float32 file read in 1 GiB slices straight into its array: readFileSync refuses a file over 2 GiB, and a group at the second feature set is larger. */
+function readF32(f) {
+  const size = fs.statSync(f).size
+  if (size % 4 !== 0) throw new Error(`${f}: ${size} bytes is not a Float32 file`)
+  const out = new Float32Array(size / 4)
+  const view = Buffer.from(out.buffer)
+  const fd = fs.openSync(f, 'r')
+  let off = 0
+  while (off < size) {
+    const n = fs.readSync(fd, view, off, Math.min(1 << 30, size - off), off)
+    if (n <= 0) throw new Error(`${f}: short read at ${off}`)
+    off += n
+  }
+  fs.closeSync(fd)
+  return out
+}
 // the feature set is the data's (gen-imitation-data's --features; 1 unless the header says 2), the width this build gives it
 let NF = 0, SET = 1
 let COLS = 0, DCOLS = 0
@@ -51,8 +67,8 @@ for (const f of FILES) {
   if (NF === 0) { NF = h.features; SET = set }
   else if (h.features !== NF || set !== SET) throw new Error(`${f}: ${h.features} features of set ${set}, the first file has ${NF} of set ${SET}`)
   COLS = h.cols; DCOLS = h.dcols
-  const rb = fs.readFileSync(f); rowParts.push(new Float32Array(rb.buffer, rb.byteOffset, rb.byteLength / 4))
-  const db = fs.readFileSync(`${f}.dec`); decParts.push(new Float32Array(db.buffer, db.byteOffset, db.byteLength / 4))
+  rowParts.push(readF32(f))
+  decParts.push(readF32(`${f}.dec`))
 }
 // decisions are contiguous in the row files; rebuild the offsets file by file
 const dec = [] // { part, start, n, chosen, ours, holdout } - the rows stay in their files' arrays (no copy: the data may exceed one array)
