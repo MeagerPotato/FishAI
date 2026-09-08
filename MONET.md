@@ -8880,7 +8880,11 @@ majority of the twelve banks.**
 
 **M3 — at the bridge (only if M2 is eligible).** Twelve fresh seeds by §6.5's rule under
 `"monet-v0.31-confirm-12"` (the spent set v0.30's plus its twelve), drawn and written in the record
-before a cell is played. **C — v0.30's vector — on the twelve first, then C2**, each through
+before a cell is played. **Drawn 2026-09-08 18:20Z (`$SP/seeds-v31.mjs`; the spent set §3.8ac's plus v0.29's
+twelve, reserved, and v0.30's twelve): 2084753 3014474 6756708 8119149 3333333 8366602 6841788 1616231 7621259 1307763 6562295 5339521.** C plays them from about 18:25Z on
+the v0.30 tree export (one container, the machine otherwise idle while the fits run; its identity cell
+IDENTICAL on record) so that a candidate's M3, if one is reached, pairs against cells already on file;
+the twelve are spent by that read whatever M1 and M2 say. **C — v0.30's vector — on the twelve first, then C2**, each through
 `MONET_ASK_MODEL` with its md5 prefix in the hello label; the pins as §3.8ac's M3. **The ship rule is
 §3.8n's, paired against v0.30's vector on the twelve: at least two standard errors above zero and
 ahead on a majority; ±2.00 stays the rung.** The registry change a PR for the owner — v0.31 = v0.30's
