@@ -47,7 +47,10 @@ const marginal = style.pModel === 'marginal'
 const KOPTS = { logWindow: skill.logWindow, useConstraints: skill.useConstraints, marginal, choiceKappa: marginal ? style.choiceKappa : undefined, choiceAdapt: marginal ? style.choiceAdapt : undefined, choicePrior: marginal ? style.choicePrior : undefined }
 BOTS.registerAskModel('probe-clone', JSON.parse(fs.readFileSync(MODEL, 'utf8')))
 const M = BOTS.askModelOf('probe-clone')
-const F = Object.fromEntries(BOTS.ASK_FEATURES.map((n, i) => [n, i]))
+// the model's width names its feature set (imitation.ts); the rows and the names follow it
+const SET = BOTS.askFeatureSetOf(M)
+const NAMES = BOTS.askFeatureNames(SET)
+const F = Object.fromEntries(NAMES.map((n, i) => [n, i]))
 const uniform = (key) => (hashSeed(key)() >>> 0) / 4294967296
 
 let files = []
@@ -68,6 +71,10 @@ const S = {
   ourAgree: 0,
   // the same half-suit at the same seat, another card: the card's index within the half-suit (the engine's order)
   cardLowerS: 0, cardHigherS: 0, cardSameP: 0, sLowestLegal: 0, sLowestN: 0, mLowestLegal: 0, sHighestLegal: 0, randomLowest: 0, sSamePAll: 0,
+  // what SESTINA's choice has that the clone's does not: the mean of (SESTINA's row - the clone's row) per feature, by class
+  featScale: { n: 0, sum: new Float64Array(NAMES.length), sq: new Float64Array(NAMES.length) },
+  diffSeat: { n: 0, sum: new Float64Array(NAMES.length) },
+  diffBookF: { n: 0, sum: new Float64Array(NAMES.length) },
 }
 const t0 = Date.now()
 let games = 0
@@ -82,7 +89,7 @@ for (let fi = 0; fi < useFiles.length; fi++) {
       const ranked = BOTS.rankAsksWith(view, k, style)
       const cs = ranked.findIndex((r) => r.target === ev.target && r.card === ev.card)
       if (cs < 0) return
-      const feats = BOTS.askFeatureRows(view, k, ranked)
+      const feats = BOTS.askFeatureRows(view, k, ranked, SET)
       const scores = BOTS.scoreAsks(M, view, k, ranked)
       const mAsk = BOTS.chooseAskByModel(M, view, k, ranked)
       const cm = ranked.findIndex((r) => r.target === mAsk.target && r.card === mAsk.card)
@@ -91,6 +98,7 @@ for (let fi = 0; fi < useFiles.length; fi++) {
       const hitM = holder(ranked[cm].card) === ranked[cm].target
       const agree = cm === cs
       S.n++
+      for (const row of feats) { S.featScale.n++; for (let q = 0; q < row.length; q++) { S.featScale.sum[q] += row[q]; S.featScale.sq[q] += row[q] * row[q] } }
       if (agree) S.agree++
       const bookS = CARDS.cardBook(ranked[cs].card), bookM = CARDS.cardBook(ranked[cm].card)
       if (!agree) {
@@ -101,8 +109,8 @@ for (let fi = 0; fi < useFiles.length; fi++) {
           if (iS < iM) S.cardLowerS++; else S.cardHigherS++
           if (Math.abs(feats[cs][F.p] - feats[cm][F.p]) < 1e-9) S.cardSameP++
         }
-        else if (bookS === bookM) S.sameBookDiffTarget++
-        else S.diffBook++
+        else if (bookS === bookM) { S.sameBookDiffTarget++; S.diffSeat.n++; for (let q = 0; q < feats[cs].length; q++) S.diffSeat.sum[q] += feats[cs][q] - feats[cm][q] }
+        else { S.diffBook++; S.diffBookF.n++; for (let q = 0; q < feats[cs].length; q++) S.diffBookF.sum[q] += feats[cs][q] - feats[cm][q] }
         if (hitS) S.disHitS++
         if (hitM) S.disHitM++
         S.disPS += feats[cs][F.p]; S.disPM += feats[cm][F.p]
@@ -166,5 +174,15 @@ out.push(`when SESTINA declines a certain hit (${d.n}): its ask hits ${pct(d.hit
 out.push(`agreement by progress: early ${pct(S.byProgress[0].agree, S.byProgress[0].n)} (${S.byProgress[0].n}), mid ${pct(S.byProgress[1].agree, S.byProgress[1].n)} (${S.byProgress[1].n}), late ${pct(S.byProgress[2].agree, S.byProgress[2].n)} (${S.byProgress[2].n})`)
 out.push(`agreement by hand size: 1-3 ${pct(S.byHand[0].agree, S.byHand[0].n)} (${S.byHand[0].n}), 4-6 ${pct(S.byHand[1].agree, S.byHand[1].n)} (${S.byHand[1].n}), 7+ ${pct(S.byHand[2].agree, S.byHand[2].n)} (${S.byHand[2].n})`)
 out.push(`agreement by legal asks: <=20 ${pct(S.byLegal[0].agree, S.byLegal[0].n)} (${S.byLegal[0].n}), 21-45 ${pct(S.byLegal[1].agree, S.byLegal[1].n)} (${S.byLegal[1].n}), 46-80 ${pct(S.byLegal[2].agree, S.byLegal[2].n)} (${S.byLegal[2].n}), 81+ ${pct(S.byLegal[3].agree, S.byLegal[3].n)} (${S.byLegal[3].n})`)
+{
+  const n = S.featScale.n
+  const sd = Array.from(S.featScale.sum, (v, q) => Math.sqrt(Math.max(1e-12, S.featScale.sq[q] / n - (v / n) ** 2)))
+  const top = (acc, label) => {
+    const rows = NAMES.map((name, q) => ({ name, d: acc.sum[q] / Math.max(1, acc.n), z: acc.sum[q] / Math.max(1, acc.n) / sd[q] })).filter((r) => Number.isFinite(r.z)).sort((a, b) => Math.abs(b.z) - Math.abs(a.z)).slice(0, 12)
+    out.push(`${label} (${acc.n}): SESTINA's row minus the clone's, in feature SDs: ` + rows.map((r) => `${r.name} ${r.z >= 0 ? '+' : ''}${r.z.toFixed(2)} (${r.d >= 0 ? '+' : ''}${r.d.toFixed(3)})`).join(', '))
+  }
+  top(S.diffSeat, 'the same half-suit, another seat')
+  top(S.diffBookF, 'another half-suit')
+}
 console.log(out.join('\n'))
-if (OUT) fs.writeFileSync(OUT, JSON.stringify({ files: useFiles.length, games, model: MODEL, stats: S }, null, 1))
+if (OUT) fs.writeFileSync(OUT, JSON.stringify({ files: useFiles.length, games, model: MODEL, stats: S }, (k, v) => (ArrayBuffer.isView(v) ? Array.from(v) : v), 1))

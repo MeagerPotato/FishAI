@@ -29,7 +29,8 @@ const text = fs.readFileSync(MODEL, 'utf8')
 const model = JSON.parse(text)
 const md5 = createHash('md5').update(text).digest('hex')
 // the engine must accept it before it is written as data
-BOTS.compileNet(model, BOTS.ASK_FEATURE_COUNT, 1)
+const SET = model.features === BOTS.ASK_FEATURE_COUNT_2 ? 2 : 1
+BOTS.compileNet(model, BOTS.askFeatureCount(SET), 1)
 const meta = model.meta ?? {}
 const num = (v) => (typeof v === 'number' ? Number(v.toPrecision(9)) : v)
 const layers = model.layers.map((l) => `    Object.freeze({ w: Object.freeze([${l.w.map(num).join(', ')}]), b: Object.freeze([${l.b.map(num).join(', ')}]) })`).join(',\n')
@@ -39,7 +40,7 @@ const out = `/**
  *
  * MONET.md §3.8ac — the SESTINA clone: an ask model (lib/engine/bots/imitation.ts) fitted on SESTINA v1.0's
  * own ask decisions from the bridge records (their engine's output — data, not code), a conditional logit
- * over the ${BOTS.ASK_FEATURE_COUNT} per-ask features of \`ASK_FEATURES\`, ${meta.model === 'mlp' ? `an MLP of ${JSON.stringify(meta.hidden)} ReLU units` : 'a linear scorer'}.
+ * over the ${model.features} per-ask features of \`ASK_FEATURES${SET === 2 ? '_2' : ''}\`, ${meta.model === 'mlp' ? `an MLP of ${JSON.stringify(meta.hidden)} ReLU units` : 'a linear scorer'}.
  * Provenance: ${meta.decisions ?? '?'} decisions (${meta.train ?? '?'} training, ${meta.holdout ?? '?'} held out by record file), ${meta.epochs ?? '?'} epochs
  * (epoch ${meta.kept ?? '?'} kept, the best holdout log-likelihood), seed ${meta.seed ?? '?'}; holdout top-1 agreement with SESTINA's
  * choice ${meta.holdoutTop1 !== undefined ? (100 * meta.holdoutTop1).toFixed(2) + '%' : '?'} (top-3 ${meta.holdoutTop3 !== undefined ? (100 * meta.holdoutTop3).toFixed(2) + '%' : '?'}, NLL ${meta.holdoutNll !== undefined ? meta.holdoutNll.toFixed(4) : '?'}) against the ranker's top
