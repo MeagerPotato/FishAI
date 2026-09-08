@@ -459,6 +459,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.32** — the declare clone, read and not built (2026-09-08) | **row 38's, by the standing rule**: the reader of the records' declare events (`scripts/probe-declares.mjs`) read before a feature was written — per completed half-suit SESTINA declares as we do (1.20 cards placed by belief a declare against our 1.24, right 97.8% against 97.5%; declared at once 78% against 75%); the gap is the count of completed half-suits, which the asks make: +16% over v0.20c's vector, +6% over v0.30's (§3.8ae) | a records read: no cell played, nothing to ship; the instrument committed | S |
 | **v0.31** — the clone re-fitted (2026-09-08) | **row 37's, by the standing rule**: the same ask clone, its 33 features, fitted wider (128·128), longer (24 epochs) and on two and a half times the data with the 2026-09-08 cells added; nothing in the engine changes — a new data module and a registry entry (§3.8ad); the declare clone (v0.32) pre-registered when its reader exists, expert iteration after M4's read | a fit must beat C's margin over the stack's own decision by half a point on the same holdout (M1); C2 against C at home ≥ +2 SE and a majority of banks (M2); ships by §3.8n's bar against v0.30's vector on twelve fresh seeds (M3); the registry change a PR for the owner; the fits start when M4 releases the machine, the rung inside two days after | M |
 | **v0.30** — the SESTINA clone (2026-09-08) | **row 35's, under the owner's direction of 2026-09-08 ("learning from sestina's play is essential … we should be learning to beat sestina")**: an ask policy fitted on SESTINA's own ask decisions from the bridge records — 33 features per legal ask over the stack's own ranking, a conditional logit, the argmax the policy (`lib/engine/bots/imitation.ts`, `StyleParams.askModel`, `gen-imitation-data.mjs`, `fit-imitation.mjs`) — read as a player (M2 at home, M3 abroad) and as the search's opponent model in the rollouts of §3.8aa's t32 form (`SearchParams.oppAskModel`; M4 abroad, the one-variable comparison to t32's own bridge read of −1.61 points; §3.8ac) | the clone must predict SESTINA's choice at least 5 points better than the stack itself does on held-out games (M1); a player cell must read ≥ +2 SE at home before it goes abroad (M2); ships by §3.8n's bar against v0.20c's vector on twelve fresh seeds (M3, M4); the registry change a PR for the owner, stacked on #41; the whole rung inside two days of wall clock — **read 2026-09-08: M1 every fit eligible (C, the 64·64 net, predicts SESTINA's choice on 56.32% of held-out decisions; the stack's own choice 43.65%, the ranker's top 38.94%); M2 the MLP-64 clone +1.056 ± 0.145 a pair at home (+7.89 points, 14.2 SE, twelve of twelve banks), C +0.954 ± 0.146 (+7.13 points, 12.8 SE, twelve of twelve); M3 C +7.24 ± 0.63 points against SESTINA v1.0 on the twelve fresh seeds (48.0% against the base's 40.8%, 11.5 SE, every seed ahead; the MLP-64 clone +6.67 ± 0.61) — §3.8n's bar cleared, the registry PR #49 for the owner (row 36); M4 running** | L |
 | **v0.29** — the learned leaf (2026-09-08) | **row 34's, under the direction — the plan §3.8aa wrote**: a value function over the full-information state (118 features: the score, the cards and, per half-suit, who holds them and which seats have located them, from the engine's own knowledge walk) fitted on 48,000 self-play games of the shipped stack to the FINAL set differential (`lib/engine/search/value.ts`, `gen-value-data.mjs`, `fit-value.mjs`), evaluated at the search's horizon in place of the lock count (`leafNet`), with S 0 a one-ply expectation over the deals; read by duplicate pairs at home (S 0 at D 128 and 512, and s128's form with the leaf swapped), the marker re-read at the game's end, the bridge on twelve fresh seeds at the eligible cell (§3.8ab) | the fit must beat the static lock count as a predictor of the end (M1), a cell must read ≥ +2 SE at home (M2); ships by §3.8n's bar against v0.20c's vector on the twelve; the registry change a PR for the owner, stacked on #41 — **read 2026-09-08: M1 every fit eligible (the 128·128 net R² 0.302 against the static lock count's 0.209); M2 the dense n128 eligible at the bar's edge — +0.161 ± 0.144 (2.2 SE, eight of twelve banks, +1.2 points), the sparse forms +0.022 and +0.002, the linear leaf in the game −0.978 ± 0.172 (exploited by the search that optimises against it); n512 and n24 deferred, and n128's bridge read deferred behind v0.30's cells, under the owner's wall-clock direction; nothing shipped — the leaf buys little, the opponent model is the piece (§3.8ac)** | XL |
@@ -8881,6 +8882,55 @@ rung inside two days of wall clock after M4.
 measured at two widths and two data sizes. If F2 gains less than a point of margin over C, the features
 are the limit and the next term is v0.32's declare clone or the representation — not a third fit.
 
+### 3.8ae Monet v0.32 — the declare clone, read off the records and not built
+
+**Decision row 38, taken 2026-09-08 by the standing rule.** §3.8ad named SESTINA's declare policy as the
+other half of its edge and made a reader of the records' declare events the instrument its
+pre-registration waited on. The reader exists — `scripts/probe-declares.mjs` — and its first read closes
+the rung before a feature is written: **per completed half-suit, SESTINA declares as we do.**
+
+#### The read — 2026-09-08 10:20Z, the instrument's first run (a records read; no cell played)
+
+What the probe reads, with no engine view built: for every declare in a record, the true deal tracked and
+what a hit had published — of the half-suit's six cards, how many the claimer held (*own*), how many a
+hit had publicly placed at the seat it named (*public*), how many it placed by belief (*guessed*, and how
+many of those were right); whether the six were on its team (a declare of an incomplete half-suit is
+wrong by construction: a *gamble*); and the delay since the half-suit completed, in events and in the
+team's own asks (asks it chose over declaring). A half-suit complete on one team cannot be asked into by
+the other — no card of it is on that side — so waiting costs nothing but tempo, and the probe's count
+of complete half-suits broken by a hit is zero everywhere, as it must be.
+
+| records | side | declares a game | right | forced | gambles | own / public / guessed a declare | guess accuracy | declared at once | five or more own asks first | complete half-suits (a game) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| the archive — 367 files, 429,726 games, every Monet from v0.9 on | SESTINA | 4.906 | 97.97% | 0.57% | 1.11% | 2.56 / 2.25 / 1.20 | 97.76% | 77.9% | 11.9% | 2,084,581 (4.85) |
+| | ours | 4.094 | 98.27% | 1.93% | 0.02% | 2.70 / 2.07 / 1.24 | 97.46% | 75.1% | 16.9% | 1,759,215 (4.09) |
+| 2026-09-08, the base (v0.20c's vector) — 12 cells, 14,400 games | SESTINA | 4.865 | 97.89% | 0.52% | 1.17% | 2.53 / 2.27 / 1.21 | 97.67% | 77.9% | 11.9% | 69,238 (4.81) |
+| | ours | 4.135 | 98.66% | 2.15% | 0.00% | 2.70 / 2.08 / 1.22 | 98.08% | 75.8% | 16.0% | 59,541 (4.13) |
+| 2026-09-08, C (v0.30's vector) — 12 cells, 14,400 games | SESTINA | 4.658 | 97.48% | 0.60% | 1.57% | 2.65 / 2.11 / 1.24 | 97.35% | 78.8% | 11.2% | 66,026 (4.59) |
+| | ours | 4.342 | 99.35% | 0.85% | 0.00% | 2.72 / 2.05 / 1.23 | 99.05% | 76.9% | 13.3% | 62,519 (4.34) |
+
+**What it says.** Per declare the two policies are the same policy to the second decimal: 1.20 cards
+placed by belief against our 1.24, right 97.8% against 97.5% (99.1% under v0.30's vector — our belief
+places a guessed card better than SESTINA's does); declared at once 78% against 75–77%. SESTINA's one
+difference is 1.1% of its declares on half-suits its team does not hold, every one wrong — a gamble
+that costs it a set each time and that we never make — and 0.6% forced declares against our 1.9%
+(fewer of its players run out of cards holding an unfinished half-suit). **The whole of the gap is in
+the count: SESTINA's team completes 4.81 half-suits a game to v0.20c's 4.13 (+16%), and 4.59 to v0.30's
+4.34 (+6% — the clone closed two thirds of it).** A half-suit is completed by asks; a declare only
+cashes it, and both sides cash it the same way. There is no declare policy to clone.
+
+**What it does not say.** The probe reads the declare as an event, not the decision not to declare: a
+player who could declare and asks instead is counted in the delay (the 22% not declared at once, the
+11–17% five asks or more later), and there the sides differ a little — ours waits longer. Waiting costs
+nothing in the count (the half-suit cannot be broken) and something in tempo only where the game ends
+first; it is inside one declare in a hundred.
+
+**The decision.** v0.32 is not built. The rung after v0.31 is the ask policy's representation — the
+clone's 33 features are the limit at 56% agreement, and the count of completed half-suits is where
+SESTINA's remaining 6% is — unless M4 says the search with the right opponent model is worth its cost,
+and §3.8a's rule (100 ms an ask) still stands over that line. The instrument stays: the probe reads any
+record directory in about a minute (`--records <dir>[,<dir>] [--max-files N] [--out summary.json]`).
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -9339,6 +9389,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 35 | **After §3.8ab's sparse reads (n128p02 +0.022 ± 0.132, n512p02 +0.002 ± 0.133 a pair — the learned leaf's searched moves worth nothing in sets, one at a time; l512 −0.978 ± 0.172 — a static fitted evaluation exploited by the search that optimises against it) and §3.8aa's first block (t32 +0.248 ± 0.144 at home, eligible, where its bridge read was −1.61 points: the search helps against the opponent it models and hurts against the one it does not), under the owner's direction of 2026-09-08 — *"learning from sestina's play is essential to improving … we should be learning to beat sestina if possible … I don't want this to be running for weeks"* — what is v0.30?** **TAKEN — the SESTINA clone (§3.8ac):** its ask policy fitted on its own decisions from the bridge records (about 25 million of them on file), read as a player at home and abroad, and as the opponent model in the t32 form's rollouts abroad — the one-variable comparison to t32's own bridge read; the whole rung inside two days of wall clock. **Deferred by the same direction:** §3.8ab's n24 (13 h) and dense n512 (4–5 h), played only if the machine has the time after this rung's cells. |
 | 36 | **v0.30 clears §3.8n's bar against SESTINA itself — +7.24 ± 0.63 points of win rate on twelve fresh seeds, 48.0% against v0.20c's 40.8%, every seed ahead (§3.8ac). Does it ship?** | **FOR THE OWNER** — the shipped vector changes, which the authorization of 2026-09-05 keeps for the owner: PR #49 (`claude/monet-v0.30-ship`, stacked on #41) carries the registry entry (v0.20c's vector plus `askModel: 'sestina-clone'`), the clone as data, its forward bank and pin, and the /play note re-measured. Merged, 48.0% becomes the shipped number; left open, v0.20c stays shipped and v0.30 stays on the record. M4's read (the clone at the opponents' seats of the t32 form's rollouts) lands about 02:00Z on 2026-09-09 and does not change this row's question. |
 | 37 | **After v0.30 clears — what is v0.31?** | **TAKEN — the clone re-fitted (§3.8ad)**, by the standing rule: the read scaled with the clone's agreement with SESTINA (49.9% bought +0.500 a pair at home, 55.8% +1.056; abroad +6.67 and +7.24 points), v0.30's fit was a 2% sample at twelve epochs with its loss still falling, and a re-fit is the cheapest rung on the table — wider, longer, two and a half times the data, the engine untouched, the ship the owner's as before. **The declare clone (v0.32)** is pre-registered when its reader of the records' declare events exists; **expert iteration** waits for M4's read. |
+| 38 | **After §3.8ad named the declare clone as v0.32 — is there a declare policy to clone?** | **TAKEN — no: v0.32 is read off the records and not built (§3.8ae).** Per completed half-suit the two declare policies are the same to the second decimal; SESTINA's edge is the count of completed half-suits (+16% over v0.20c's vector, +6% over v0.30's), which the asks make. The rung after v0.31 is the ask clone's representation, unless M4's read says the search with the right opponent model is worth its cost under §3.8a's 100 ms rule. |
 
 ---
 
