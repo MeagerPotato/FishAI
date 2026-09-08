@@ -460,7 +460,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
 | **v0.30** — the SESTINA clone (2026-09-08) | **row 35's, under the owner's direction of 2026-09-08 ("learning from sestina's play is essential … we should be learning to beat sestina")**: an ask policy fitted on SESTINA's own ask decisions from the bridge records — 33 features per legal ask over the stack's own ranking, a conditional logit, the argmax the policy (`lib/engine/bots/imitation.ts`, `StyleParams.askModel`, `gen-imitation-data.mjs`, `fit-imitation.mjs`) — read as a player (M2 at home, M3 abroad) and as the search's opponent model in the rollouts of §3.8aa's t32 form (`SearchParams.oppAskModel`; M4 abroad, the one-variable comparison to t32's own bridge read of −1.61 points; §3.8ac) | the clone must predict SESTINA's choice at least 5 points better than the stack itself does on held-out games (M1); a player cell must read ≥ +2 SE at home before it goes abroad (M2); ships by §3.8n's bar against v0.20c's vector on twelve fresh seeds (M3, M4); the registry change a PR for the owner, stacked on #41; the whole rung inside two days of wall clock | L |
-| **v0.29** — the learned leaf (2026-09-08) | **row 34's, under the direction — the plan §3.8aa wrote**: a value function over the full-information state (118 features: the score, the cards and, per half-suit, who holds them and which seats have located them, from the engine's own knowledge walk) fitted on 48,000 self-play games of the shipped stack to the FINAL set differential (`lib/engine/search/value.ts`, `gen-value-data.mjs`, `fit-value.mjs`), evaluated at the search's horizon in place of the lock count (`leafNet`), with S 0 a one-ply expectation over the deals; read by duplicate pairs at home (S 0 at D 128 and 512, and s128's form with the leaf swapped), the marker re-read at the game's end, the bridge on twelve fresh seeds at the eligible cell (§3.8ab) | the fit must beat the static lock count as a predictor of the end (M1), a cell must read ≥ +2 SE at home (M2); ships by §3.8n's bar against v0.20c's vector on the twelve; the registry change a PR for the owner, stacked on #41 | XL |
+| **v0.29** — the learned leaf (2026-09-08) | **row 34's, under the direction — the plan §3.8aa wrote**: a value function over the full-information state (118 features: the score, the cards and, per half-suit, who holds them and which seats have located them, from the engine's own knowledge walk) fitted on 48,000 self-play games of the shipped stack to the FINAL set differential (`lib/engine/search/value.ts`, `gen-value-data.mjs`, `fit-value.mjs`), evaluated at the search's horizon in place of the lock count (`leafNet`), with S 0 a one-ply expectation over the deals; read by duplicate pairs at home (S 0 at D 128 and 512, and s128's form with the leaf swapped), the marker re-read at the game's end, the bridge on twelve fresh seeds at the eligible cell (§3.8ab) | the fit must beat the static lock count as a predictor of the end (M1), a cell must read ≥ +2 SE at home (M2); ships by §3.8n's bar against v0.20c's vector on the twelve; the registry change a PR for the owner, stacked on #41 — **read 2026-09-08: M1 every fit eligible (the 128·128 net R² 0.302 against the static lock count's 0.209); M2 nothing eligible — the dense n128 +0.150 ± 0.204 (1.4 SE, three of six banks), the sparse forms +0.022 and +0.002, the linear leaf in the game −0.978 ± 0.172 (exploited by the search that optimises against it); n512 and n24 deferred under the owner's wall-clock direction; nothing went abroad, nothing shipped — the leaf is not the piece, the opponent model is (§3.8ac)** | XL |
 | **v0.28** — the search re-scoped, compute unconstrained (2026-09-07) | **row 33's (s), under the owner's direction of 2026-09-07 ("I don't care about any cost of compute")**: §3.8a's arm with the shipped stack as its rollout policy and the lock-only leaf, the deals scaled 8 → 512 with §3.8a's marker read at every rung and pooled twenty processes wide, a second candidate generator (`candMode` `'sets'`: the pick and one ask per other half-suit), duplicate pairs at home at D 32 and at the largest D the marker justifies, the bridge on twelve fresh seeds at the eligible cell with the wall clock reported and not gated (§3.8aa) | the yield must grow with the deals or the leaf is the limit (v0.29, the learned leaf); ships by §3.8n's bar against v0.20c's vector on the twelve; the registry change a PR for the owner, stacked on #41 | XL |
 | **v0.27** — the joint re-fit (2026-09-07) | **row 31's (j): the shipped doses moved two at a time — the one-at-a-time surface (§3.8v, §3.8y) is flat within a point on every axis but `contest`, and the one interaction measured is positive (§3.8r: the two closing rungs together +0.301 against +0.043 + 0.172 apart)** — `closing` 1 + `closingFour` 3, `closing` 0.25 + `closingFour` 1, `contest` 0.8 + `closingFour` 3, `contest` 0.5 + `closing` 1, 2,400 duplicate pairs each against the shipped stack at home, the control at zero first; the markers on every eligible arm; the primary abroad on twelve fresh seeds against v0.20c's vector (§3.8z); no change to `lib/` | eligible at home at ≥ +2 SE with the sure-miss share within 3 points; the primary ships by §3.8n's bar against v0.20c's vector on the twelve (±2.00 still the rung; the registry change a PR for the owner, stacked on #41); the secondary reported, unable to ship; if no arm is eligible the family is closed at its shipped point on every axis and on the diagonals read — **read 2026-09-07: NO ARM IS ELIGIBLE; THE FAMILY IS CLOSED AT ITS SHIPPED POINT. `closing` 1 + `closingFour` 3 −0.033 ± 0.077 a pair (SD 1.93), `closing` 0.25 + `closingFour` 1 −0.041 ± 0.097 (2.42), `contest` 0.8 + `closingFour` 3 −0.128 ± 0.111 (2.77; BEHIND at 2.3 SE), `contest` 0.5 + `closing` 1 −0.103 ± 0.098 (2.44; BEHIND at 2.1 SE); the control 0.0000; every joint read within one SE of the sum of its parts (§3.8v): the surface is additive from the shipped point, and §3.8r's interaction was the credit's arrival on a vector without it, not a slope. The markers on the first: the move changes one ask in ninety and takes a chase hitting 16% over the stack's ask that would hit 50%; the chase share +0.3. v0.20c is the family's optimum (PR #41). Q1 four of four ranges, no arm eligible as the likelier side; Q2 two of four; Q3 and Q4 not reached. Row 32 hands the direction to the owner: (s) the search arm on the shipped vector or (t) a clinch-aware ask** | the control at zero; nothing exported, nothing abroad; the twelve seeds unspent | S |
 | **v0.26** — the five rung's dose above one (2026-09-07) | **row 30's (f): the closing credit at five of six, `closing`, whose shipped 0.5 pays half of what the four rung's `closingFour` 2 pays and whose §3.8v ladder (0.25 / 0.75 / 1.0) never left the region where a certain hit elsewhere outranks the completing ask** — `closing` 2 / 3 / 4 / 6 with `closingFour` 2 and `contest` 0.6 held, 2,400 duplicate pairs each against the shipped stack at home, the control at zero first; the markers (the move's disagreement with the stack, the sure-miss share, the chase share and hit rate, the five-rung share of the asks) on every eligible arm; the primary abroad on twelve fresh seeds against v0.20c's vector (§3.8y); no change to `lib/` | eligible at home at ≥ +2 SE with the sure-miss share within 3 points; the primary ships by §3.8n's bar against v0.20c's vector on the twelve (±2.00 still the rung; the registry change a PR for the owner, stacked on #41); the secondary reported, unable to ship — **read 2026-09-07: NO ARM IS ELIGIBLE; THE RUNG STOPS AT HOME. `closing` 2 / 3 / 4 / 6 read −0.007 / −0.013 / −0.012 / −0.018 sets a pair (± 0.040–0.045 at 95%; SD 1.00–1.13), every one within one SE of zero; the control 0.0000. The markers say why: the dose changes one ask in three hundred at 2 and at 6 alike (99.7% agreement with the stack), and where it does it takes a completing ask hitting 42–44% over the stack's ask that would hit 67–69%; the five-rung share of the asks rises a quarter of a point (8.4 → 8.7%); the sure-miss share, the chase share and hit rate and the starter share unmoved. The completing ask is almost always a certain hit already first, or an uncertain one `gambleBonus` and `closing` 0.5 already put first; the dose above one reaches only the residue, a poor bet. The closing family is now read at every rung and every dose and the shipped point is its optimum one axis at a time. Q1 two of four ranges, no arm eligible as the likelier side; Q2 four of six (the disagreement share and the five-rung lift an order smaller than predicted); Q3 not reached; Q4 the lib md5 equal to v0.22's. Row 31 takes the joint re-fit, v0.27** | the tree's lib md5 equal to v0.22's (d30542fb…; §3.8u's identity cell this rung's); the control at zero; the six arm packages built and none played; no cell abroad | S |
@@ -8200,6 +8200,92 @@ one is; the owner may stop, reverse or redirect any of it.
 
 The files: `$SP/monet-v29/{run-data.sh, run-pairs.sh, pool-pairs.mjs, SEEDS}`, `$SP/seeds-v29.mjs`,
 `$SP/v29-{prereg,record}.md`.
+
+#### Record — M0 and M1, 2026-09-08 (the cost and the fit; M2 onward follow)
+
+**M0 — cost**, as written above (S 0 · D 128: 110 ms an ask; S 0 · D 512: 494 ms), plus S 12 · D 128
+at 2,006 ms an ask read under full contention (twenty-seven processes on twenty-four threads — the
+same form alone would read about 1.2 s); the S 12 cell was not in the grid and this number is for
+the record only.
+
+**M1 — the fit.** `run-data.sh`: 48,000 games in 1,250 s a process (eight processes), 4.27 million
+ask decisions, 397,000 explored (9.3%), **2,134,344 rows**, the holdout 427,248 rows (9,600 games).
+`run-fit.sh`, three fits, the holdout's mean squared error against the baselines
+(`fit-{lin,mlp64,mlp128}.log`, `models/v29-*.json`):
+
+| predictor of the final set differential | holdout MSE | R² | on the 427,248 rows with `lock24` |
+|---|---|---|---|
+| the constant (the train mean) | 6.811 | 0 | 6.811 |
+| the score differential, calibrated (0.965 x) | 5.086 | 0.253 | — |
+| **`lock0` — the static lock-only leaf, calibrated (0.814 x)** | **5.389** | **0.209** | 5.389 |
+| `lock24` — the 24-step lock-only rollout from the true state, calibrated (0.835 x) | — | — | 5.093 (R² 0.252) |
+| **linear leaf (ridge)** | **4.877** | **0.284** | 4.877 (0.284) |
+| **mlp 64·64 (kept epoch 6 of 30)** | **4.755** | **0.302** | 4.755 (0.302) |
+| **mlp 128·128 (kept epoch 4 of 30)** | **4.752** | **0.302** | 4.752 (0.302) |
+
+The SD of the final differential from a mid-game ask-decision state is 2.61 sets; the score alone
+explains a quarter of its variance and the best leaf here three tenths — most of a game is still
+to be played from most of its states, and no static evaluation will read much more than that.
+What the table says about §3.8a's leaf is the finding: **the lock count is worse than the score
+alone as a predictor of the end (R² 0.209 against 0.253), and the 24-step rollout in the leaf's
+units is no better than the current score (0.252 against 0.253).** "A locked set is a set" was the
+amendment that made the search read ahead on its marker, and it is false at the states a game is
+actually in: a half-suit wholly in one team's hands at an ask decision is one that team could not
+prove at the last window — the holders cannot learn more about it by asking (the opponents hold
+none, so every ask into it misses and gives the turn away), so it sits unprovable until someone
+declares it on inference or guesses it at the endgame, and under `us54` a wrong declare is the
+opponents' set. Calibrated, the lock is worth 0.81 of the differential it sits in and less than
+nothing on top of the score. The search of §3.8aa optimised, precisely, a count with no
+information about the end beyond the score it already had. **Both nets and the linear fit are
+eligible** (below `lock0` calibrated's 5.389, and below `lock24`'s 5.093 on the rows that carry
+it); V is the 128·128 net by the rule (the lowest holdout MSE, by a margin that is noise against
+the 64·64's), L the linear fit. Antisymmetry: V(team 0) + V(team 1) on one state has an RMS of
+0.27 (linear), 0.34 (64·64) — a tenth of the SD, not enforced and not needed. The linear fit's
+largest standardised weights, for what the leaf learned: the score +1.36; **cards in hand −0.54**
+(at a given score, holding more cards than the other side is worse — they are what the other
+side asks for); the resolved count −0.43; **their sets' `theirsBestKnown` −0.16 to −0.41 across
+the slots** (a half-suit their best-informed seat can nearly prove is the term the leaf fears
+most); their spread −0.17 to −0.22; our `ours` and `oursBestKnown` in the top slots +0.17 to
++0.30; the turn +0.16. Q1 as written: the constant 6.81 (predicted 4.5–5.5 — the SD is larger
+than §3.8aa's pairs suggested, since a pair's differential is two games' worth and correlated
+within a deal); `lock0` 0.209 (predicted 0.28–0.40 — lower, and the finding above); `lock24` above
+`lock0` by 0.043 (predicted 0.03–0.08, yes); the linear leaf above `lock0` by 0.075 (yes) and
+level with `lock24` (above it by 0.032 — yes, at 40% odds); the 64·64 above the linear by 0.018
+(predicted ≥ 0.02 at 65% — just under) and above `lock24` (yes); the 128·128 within 0.01 of the
+64·64 (yes: the data, not the width, is the limit).
+
+**M2 — duplicate pairs at home, the leaf in the game (read 2026-09-08 04:50–08:00Z; `$SP/monet-v29/pairs-pooled.md`).**
+The control (S against S, two banks of 200) printed `0.0000 +/- 0.0000`. The cells, every one S 0
+(a one-ply expectation over the deals) with V = the 128·128 net unless marked, `'sets'` C 9, z 1, the
+LCB guard, twelve processes:
+
+| cell | leaf | form | banks; pairs | paired set-diff a pair ± 1.96 SE (SD) | points | × SE | banks ahead | changed a pair (of searched) | per changed decision (SE) |
+|---|---|---|---|---|---|---|---|---|---|
+| n128p02 (sparse) | V | D 128, a fifth of the decisions | 12; 2,400 | **+0.022 ± 0.132** (3.29) | +0.16 | 0.3 | 6 of 12 | 4.74 (30.0%) | +0.005 (0.0142) |
+| n512p02 (sparse) | V | D 512, a fifth | 12; 2,400 | **+0.002 ± 0.133** (3.33) | +0.01 | 0.0 | 5 of 12 | 5.31 (33.6%) | +0.000 (0.0128) |
+| **n128** (dense) | V | D 128 | 6; 1,200 | **+0.150 ± 0.204** (3.60) | +1.12 ± 0.78 | 1.4 | 3 of 6 | 28.14 (36.1%) | +0.005 (0.0037) |
+| l512 (dense) | L (linear) | D 512 | 8; 1,600 | **−0.978 ± 0.172** (3.51) | −7.31 ± 0.66 | −11.2 | 0 of 8 | 18.02 (23.2%) | −0.054 (0.0049) |
+| n512 (dense) | V | D 512 | — | deferred under the owner's wall-clock direction of 2026-09-08 (4–5 h) | | | | | |
+| n24 | V | S 24, D 128 | — | deferred under the same direction (13 h) | | | | | |
+
+**Nothing is eligible.** The dense n128 — six banks rather than the twelve pre-registered, the other six
+and the two deferred cells given up to v0.30 under the direction — reads +0.150 ± 0.204, 1.4 SE, three of six
+banks ahead: not the +2 SE and the majority the rule asks, and its per-changed-decision reading (+0.005,
+SE 0.004) is the sparse forms' (+0.005, +0.000): a searched move under the learned leaf is worth about
+nothing in sets, dense or sparse, D 128 or D 512 — §3.8aa's finding again with a fitted leaf in place
+of the count. **The linear leaf in the game is the rung's sharpest read: −0.978 ± 0.172, every bank
+behind, −0.054 a changed decision.** A static evaluation fitted by least squares on states the fast
+policy reached is exploited by a search that optimises against it — the fit's correlations are not the
+game's causes (its `cardDiff` term at −0.54 penalises the hit that took a card; its `resolved` −0.43
+rewards leaving sets open), and a one-ply search finds every seam. The 128·128 net, fitted on the same
+data, is not exploited the same way (n128 +0.150, not −0.978): the seams are narrower, but nothing in
+it converts either. Q2 predicted n128 −0.10 to +0.20 (✓ at +0.150), n512 above n128 (not read), the
+sparse forms within 0.10 of zero (✓), at least one cell eligible at 35% (✗). M3 (the marker re-read) and
+M4 (the bridge) are not reached. **What the rung says:** the leaf is not the piece. Under the direction
+of 2026-09-08 the line moves to the opponent model (§3.8ac): §3.8aa's block 1 read t32 — the rollout
+search with the shipped stack at every seat of its rollouts — **+0.248 ± 0.144 at home, eligible, where
+its bridge read was −1.61 points**, and a search that helps against the opponent it models and hurts
+against the one it does not is missing its opponent model, not its leaf.
 
 ### 3.8ac Monet v0.30 — the SESTINA clone: an ask policy fitted on SESTINA's own play, as a player and as the search's opponent model
 
