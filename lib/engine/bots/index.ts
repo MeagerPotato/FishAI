@@ -51,8 +51,8 @@ export {
   valueContainedPass,
 } from './contained.ts'
 export { decide, decideExplained, planClaimFor } from './decide.ts'
-export { ASK_FEATURES, ASK_FEATURE_COUNT, askFeatureRows, askModelOf, chooseAskByModel, registerAskModel, scoreAsks } from './imitation.ts'
-export type { AskModel } from './imitation.ts'
+export { ASK_FEATURES, ASK_FEATURE_COUNT, ASK_FEATURES_2, ASK_FEATURE_COUNT_2, INDEP_KAPPA, askFeatureCount, askFeatureNames, askFeatureRows, askFeatureSetOf, askModelOf, chooseAskByModel, registerAskModel, scoreAsks } from './imitation.ts'
+export type { AskFeatureSet, AskModel } from './imitation.ts'
 export { compileNet, forwardNet } from './net.ts'
 export type { CompiledNet, DenseModel } from './net.ts'
 export type { ClaimPlan, DecisionTrace, ExplainedDecision } from './decide.ts'

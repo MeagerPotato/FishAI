@@ -40,12 +40,16 @@ if (FILES.length === 0 || !OUT) {
 }
 
 // ---- load: rows [id, chosen, features...], decisions [id, file, game, ev, asks, chosen, ours, hit, holdout, seat]
-const NF = BOTS.ASK_FEATURE_COUNT
+// the feature set is the data's (gen-imitation-data's --features; 1 unless the header says 2), the width this build gives it
+let NF = 0, SET = 1
 let COLS = 0, DCOLS = 0
 const rowParts = [], decParts = []
 for (const f of FILES) {
   const h = JSON.parse(fs.readFileSync(`${f}.json`, 'utf8'))
-  if (h.features !== NF) throw new Error(`${f}: ${h.features} features, this build has ${NF}`)
+  const set = h.featureSet ?? 1
+  if (BOTS.askFeatureCount(set) !== h.features) throw new Error(`${f}: ${h.features} features of set ${set}, this build has ${BOTS.askFeatureCount(set)}`)
+  if (NF === 0) { NF = h.features; SET = set }
+  else if (h.features !== NF || set !== SET) throw new Error(`${f}: ${h.features} features of set ${set}, the first file has ${NF} of set ${SET}`)
   COLS = h.cols; DCOLS = h.dcols
   const rb = fs.readFileSync(f); rowParts.push(new Float32Array(rb.buffer, rb.byteOffset, rb.byteLength / 4))
   const db = fs.readFileSync(`${f}.dec`); decParts.push(new Float32Array(db.buffer, db.byteOffset, db.byteLength / 4))
@@ -221,11 +225,11 @@ for (let l = 0; l < NL; l++) { W[l].set(best.W[l]); B[l].set(best.B[l]) }
 const eT = evaluate(train), eH = evaluate(hold)
 console.log(`kept epoch ${best.epoch}: train ${fmt(eT)}; holdout ${fmt(eH)}; against the ranker's top ${(100 * bH.top1).toFixed(2)}% and the stack's ${(100 * bH.ours).toFixed(2)}% on the holdout`)
 if (MODEL === 'linear') {
-  const names = [...BOTS.ASK_FEATURES]
+  const names = [...BOTS.askFeatureNames(SET)]
   const top = Array.from({ length: NF }, (_, j) => [names[j], W[0][j]]).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
   console.log('standardised weights: ' + top.map(([n, v]) => `${n} ${v >= 0 ? '+' : ''}${v.toFixed(3)}`).join(', '))
 }
-const model = { features: NF, mean: Array.from(mean), std: Array.from(std), layers: W.map((w, l) => ({ w: Array.from(w), b: Array.from(B[l]) })), meta: { model: MODEL, hidden: MODEL === 'mlp' ? HIDDEN : [], epochs: EPOCHS, kept: best.epoch, lr: LR, l2: L2, seed: SEED, files: FILES, decisions: useDec.length, train: train.length, trainFrac: TRAIN_FRAC, holdout: hold.length, holdoutNll: eH.nll, holdoutTop1: eH.top1, holdoutTop3: eH.top3, baselineRankerTop1: bH.top1, baselineStackTop1: bH.ours } }
+const model = { features: NF, mean: Array.from(mean), std: Array.from(std), layers: W.map((w, l) => ({ w: Array.from(w), b: Array.from(B[l]) })), meta: { featureSet: SET, model: MODEL, hidden: MODEL === 'mlp' ? HIDDEN : [], epochs: EPOCHS, kept: best.epoch, lr: LR, l2: L2, seed: SEED, files: FILES, decisions: useDec.length, train: train.length, trainFrac: TRAIN_FRAC, holdout: hold.length, holdoutNll: eH.nll, holdoutTop1: eH.top1, holdoutTop3: eH.top3, baselineRankerTop1: bH.top1, baselineStackTop1: bH.ours } }
 // the engine's own forward pass must agree with the fitter's on a few holdout decisions
 const compiled = BOTS.compileNet(model, NF, 1)
 {

@@ -47,7 +47,10 @@ const marginal = style.pModel === 'marginal'
 const KOPTS = { logWindow: skill.logWindow, useConstraints: skill.useConstraints, marginal, choiceKappa: marginal ? style.choiceKappa : undefined, choiceAdapt: marginal ? style.choiceAdapt : undefined, choicePrior: marginal ? style.choicePrior : undefined }
 BOTS.registerAskModel('probe-clone', JSON.parse(fs.readFileSync(MODEL, 'utf8')))
 const M = BOTS.askModelOf('probe-clone')
-const F = Object.fromEntries(BOTS.ASK_FEATURES.map((n, i) => [n, i]))
+// the model's width names its feature set (imitation.ts); the rows and the names follow it
+const SET = BOTS.askFeatureSetOf(M)
+const NAMES = BOTS.askFeatureNames(SET)
+const F = Object.fromEntries(NAMES.map((n, i) => [n, i]))
 const uniform = (key) => (hashSeed(key)() >>> 0) / 4294967296
 
 let files = []
@@ -69,9 +72,9 @@ const S = {
   // the same half-suit at the same seat, another card: the card's index within the half-suit (the engine's order)
   cardLowerS: 0, cardHigherS: 0, cardSameP: 0, sLowestLegal: 0, sLowestN: 0, mLowestLegal: 0, sHighestLegal: 0, randomLowest: 0, sSamePAll: 0,
   // what SESTINA's choice has that the clone's does not: the mean of (SESTINA's row - the clone's row) per feature, by class
-  featScale: { n: 0, sum: new Float64Array(BOTS.ASK_FEATURE_COUNT), sq: new Float64Array(BOTS.ASK_FEATURE_COUNT) },
-  diffSeat: { n: 0, sum: new Float64Array(BOTS.ASK_FEATURE_COUNT) },
-  diffBookF: { n: 0, sum: new Float64Array(BOTS.ASK_FEATURE_COUNT) },
+  featScale: { n: 0, sum: new Float64Array(NAMES.length), sq: new Float64Array(NAMES.length) },
+  diffSeat: { n: 0, sum: new Float64Array(NAMES.length) },
+  diffBookF: { n: 0, sum: new Float64Array(NAMES.length) },
 }
 const t0 = Date.now()
 let games = 0
@@ -86,7 +89,7 @@ for (let fi = 0; fi < useFiles.length; fi++) {
       const ranked = BOTS.rankAsksWith(view, k, style)
       const cs = ranked.findIndex((r) => r.target === ev.target && r.card === ev.card)
       if (cs < 0) return
-      const feats = BOTS.askFeatureRows(view, k, ranked)
+      const feats = BOTS.askFeatureRows(view, k, ranked, SET)
       const scores = BOTS.scoreAsks(M, view, k, ranked)
       const mAsk = BOTS.chooseAskByModel(M, view, k, ranked)
       const cm = ranked.findIndex((r) => r.target === mAsk.target && r.card === mAsk.card)
@@ -175,7 +178,7 @@ out.push(`agreement by legal asks: <=20 ${pct(S.byLegal[0].agree, S.byLegal[0].n
   const n = S.featScale.n
   const sd = Array.from(S.featScale.sum, (v, q) => Math.sqrt(Math.max(1e-12, S.featScale.sq[q] / n - (v / n) ** 2)))
   const top = (acc, label) => {
-    const rows = BOTS.ASK_FEATURES.map((name, q) => ({ name, d: acc.sum[q] / Math.max(1, acc.n), z: acc.sum[q] / Math.max(1, acc.n) / sd[q] })).filter((r) => Number.isFinite(r.z)).sort((a, b) => Math.abs(b.z) - Math.abs(a.z)).slice(0, 12)
+    const rows = NAMES.map((name, q) => ({ name, d: acc.sum[q] / Math.max(1, acc.n), z: acc.sum[q] / Math.max(1, acc.n) / sd[q] })).filter((r) => Number.isFinite(r.z)).sort((a, b) => Math.abs(b.z) - Math.abs(a.z)).slice(0, 12)
     out.push(`${label} (${acc.n}): SESTINA's row minus the clone's, in feature SDs: ` + rows.map((r) => `${r.name} ${r.z >= 0 ? '+' : ''}${r.z.toFixed(2)} (${r.d >= 0 ? '+' : ''}${r.d.toFixed(3)})`).join(', '))
   }
   top(S.diffSeat, 'the same half-suit, another seat')
