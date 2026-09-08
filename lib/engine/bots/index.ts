@@ -51,6 +51,10 @@ export {
   valueContainedPass,
 } from './contained.ts'
 export { decide, decideExplained, planClaimFor } from './decide.ts'
+export { ASK_FEATURES, ASK_FEATURE_COUNT, askFeatureRows, askModelOf, chooseAskByModel, registerAskModel, scoreAsks } from './imitation.ts'
+export type { AskModel } from './imitation.ts'
+export { compileNet, forwardNet } from './net.ts'
+export type { CompiledNet, DenseModel } from './net.ts'
 export type { ClaimPlan, DecisionTrace, ExplainedDecision } from './decide.ts'
 // --- Bass v1.0: observation, classification, adaptive selection ----------------------------
 export { FEATURE_KEYS, featureVector, observeSeats, replayCounts, replayedCounts } from './observe.ts'

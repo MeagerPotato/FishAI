@@ -4,7 +4,12 @@
  *
  *     node scripts/duplicate-pairs.mjs --a v0.3 --b v0.2 [--pairs 800] [--bank home-a]
  *         [--a-override '{"defuse":0}'] [--b-override '{...}'] [--a-search '{"det":8,"cand":3,"steps":24,"z":1,"guard":"lcb"}'] [--b-search '{...}']
- *         [--a-search-prob 0.2] [--b-search-prob 0.2]
+ *         [--a-search-prob 0.2] [--b-search-prob 0.2] [--a-leaf-model models/leaf.json] [--b-leaf-model ...]
+ *         [--a-ask-model models/ask.json] [--b-ask-model ...]
+ *
+ * `--a-ask-model` / `--b-ask-model` (MONET.md 3.8ac) register the file as an ask model (imitation.ts) under
+ * its basename and lay `askModel` over that side's style, so its `pickAsk` plays the model's argmax over
+ * the ranker's legal asks; `--a-leaf-model` / `--b-leaf-model` (3.8ab) do the same for the search's leaf.
  *
  * `--a-search-prob` / `--b-search-prob` (MONET.md 3.8aa) make the search sparse: a decision is searched
  * only when a uniform drawn from the decision's own seed is below p (default 1, every decision), the
@@ -47,7 +52,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const ENG = await import(pathToFileURL(join(ROOT, 'lib/engine/index.ts')).href)
 const BOTS = await import(pathToFileURL(join(ROOT, 'lib/engine/bots/index.ts')).href)
 const { newGame, reduce, seatView, us54Config, legalActionsSummary, hashSeed, seatTeam } = ENG
-const { monetPolicy, isMonetVersion, MONET_VERSION_IDS, decide } = BOTS
+const { monetPolicy, isMonetVersion, MONET_VERSION_IDS, decide, registerAskModel } = BOTS
 
 const argOf = (flag, dflt) => {
   const i = process.argv.indexOf(flag)
@@ -63,8 +68,16 @@ for (const v of [A, B]) {
 }
 const PAIRS = Number(argOf('--pairs', 800))
 const BANK = argOf('--bank', 'home-a')
-const OVER_A = argOf('--a-override', '') ? JSON.parse(argOf('--a-override', '')) : null
-const OVER_B = argOf('--b-override', '') ? JSON.parse(argOf('--b-override', '')) : null
+// MONET.md 3.8ac: --a-ask-model / --b-ask-model <file> register an ask model under the file's basename and lay `askModel` over that side's override
+const overrideOf = (overFlag, modelFlag) => {
+  const over = argOf(overFlag, '') ? JSON.parse(argOf(overFlag, '')) : null
+  const file = argOf(modelFlag, '')
+  if (!file) return over
+  registerAskModel(basename(file), JSON.parse(readFileSync(file, 'utf8')))
+  return { ...(over ?? {}), askModel: basename(file) }
+}
+const OVER_A = overrideOf('--a-override', '--a-ask-model')
+const OVER_B = overrideOf('--b-override', '--b-ask-model')
 const SEARCH_A = argOf('--a-search', '') ? JSON.parse(argOf('--a-search', '')) : null
 const SEARCH_B = argOf('--b-search', '') ? JSON.parse(argOf('--b-search', '')) : null
 const SEARCH = SEARCH_A || SEARCH_B ? await import(pathToFileURL(join(ROOT, 'lib/engine/search/index.ts')).href) : null

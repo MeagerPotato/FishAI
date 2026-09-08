@@ -52,6 +52,7 @@ import type { Knowledge, KnowledgeOptions, SeatView } from '../bots/types.ts'
 import { sampleDeal } from './determinize.ts'
 import { compileValueModel, valueOf } from './value.ts'
 import type { CompiledValueModel, ValueModel } from './value.ts'
+import { askModelOf } from '../bots/imitation.ts'
 
 export interface SearchParams {
   /** Determinizations per decision (D). 0 disables the search: the fast policy's pick plays. */
@@ -86,6 +87,13 @@ export interface SearchParams {
    * and `leafCard` are then unread). Absent: the lock-only leaf, byte for byte.
    */
   leafNet?: string
+  /**
+   * MONET.md 3.8ac — the opponent model: the name of an ask model registered with `registerAskModel`
+   * (bots/imitation.ts). Present, the rollouts play the spec with `askModel` laid over its style at the
+   * OPPONENTS' seats — their asks are the model's argmax (the SESTINA clone), everything else the
+   * spec's — and the spec itself at ours. Absent: the spec at every seat, byte for byte.
+   */
+  oppAskModel?: string
 }
 
 export const SEARCH_DEFAULTS: SearchParams = Object.freeze({ det: 8, cand: 3, steps: 24, z: 1, guard: 'lcb', leafLock: 0, leafCard: 0, candMode: 'top' })
@@ -185,18 +193,25 @@ export function leafValue(s: GameState, team: 0 | 1, leafLock: number, leafCard:
  * Roll a state forward `steps` actions under `spec` at every seat; the leaf value for `team` at the
  * end — `leafValue` with the weights, or the learned model's estimate when `leaf` is given.
  */
-export function rollout(start: GameState, spec: PolicySpec, key: string, steps: number, team: 0 | 1, leafLock = 0, leafCard = 0, leaf?: CompiledValueModel): number {
+export function rollout(start: GameState, spec: PolicySpec, key: string, steps: number, team: 0 | 1, leafLock = 0, leafCard = 0, leaf?: CompiledValueModel, oppSpec?: PolicySpec): number {
   let s = start
   let n = 0
   while (s.phase !== 'finished' && n < steps) {
     const { seat } = legalActionsSummary(s)
-    const a = decide(seatView(s, seat), spec, hashSeed(`${key}:${s.moveIndex}`)())
+    const a = decide(seatView(s, seat), oppSpec !== undefined && seatTeam(seat) !== team ? oppSpec : spec, hashSeed(`${key}:${s.moveIndex}`)())
     const r = reduce(s, a)
     if (!r.ok) break
     s = r.state
     n++
   }
   return leaf ? valueOf(leaf, s, team) : leafValue(s, team, leafLock, leafCard)
+}
+
+/** MONET.md 3.8ac: the spec with the named ask model laid over its style — the rollout policy at the opponents' seats. */
+export function opponentSpec(spec: PolicySpec, askModel: string): PolicySpec {
+  askModelOf(askModel) // registered, or a clear error before the first rollout
+  const { skill, style } = resolvePolicy(spec)
+  return Object.freeze({ skill, style: Object.freeze({ ...style, askModel }) })
 }
 
 function knowledgeOptionsOf(spec: PolicySpec): KnowledgeOptions {
@@ -266,6 +281,7 @@ export function decideSearch(view: SeatView, spec: PolicySpec, seed: number, par
   const seat = view.seat
   const team = seatTeam(seat)
   const leaf = params.leafNet ? valueModelOf(params.leafNet) : undefined
+  const oppSpec = params.oppAskModel ? opponentSpec(spec, params.oppAskModel) : undefined
   if (cands.length < 2) return { action: pick, info: NONE }
 
   const rng = mulberry32(seed)
@@ -285,7 +301,7 @@ export function decideSearch(view: SeatView, spec: PolicySpec, seed: number, par
       const r = reduce(base, { type: 'ask', seat, target: cands[i].target, card: cands[i].card })
       // A candidate the sampled deal makes illegal cannot happen (legality is public), but the
       // engine is the authority: a refused ask scores as the pick's deal, i.e. no advantage.
-      values[i].push(r.ok ? rollout(r.state, spec, key, params.steps, team, params.leafLock, params.leafCard, leaf) : Number.NaN)
+      values[i].push(r.ok ? rollout(r.state, spec, key, params.steps, team, params.leafLock, params.leafCard, leaf, oppSpec) : Number.NaN)
     }
   }
   if (deals === 0) return { action: pick, info: { ...NONE, candidates: cands.length, failedDraws: failed } }

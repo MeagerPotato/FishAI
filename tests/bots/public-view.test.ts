@@ -291,6 +291,15 @@ describe('public-view-only proof', () => {
       // MONET.md 3.8h: './closing.ts' reads the certain holders and, under `closingBelief`, the same
       // `askHitProbability` the ranker scores with - public knowledge, and it never reads a hand.
       './closing.ts',
+      // MONET.md 3.8ac: './imitation.ts' describes the ranker's list of legal asks — the hit probability,
+      // the rank, the half-suit's state and the ask history — from the SeatView, the prebuilt Knowledge,
+      // the RankedAsk list and the PUBLIC log (`view.log`), and scores each row with a fitted model; the
+      // only hand it reads is the viewer's own (`view.hand`). It imports only '../types.ts', '../cards.ts',
+      // './types.ts' and './net.ts' — every one on this list — so no engine state is reachable from it.
+      // './net.ts' is the model arithmetic (a standardisation and dense layers over a Float64Array): it
+      // imports nothing at all.
+      './imitation.ts',
+      './net.ts',
       // MONET.md 3.8i: './chase.ts' is the other arm of 3.8h's gate. It reads the certain holders
       // through './knowledge.ts' and the majority walk through './closing.ts' - a strict subset of
       // what './closing.ts' already reads, and it never reads a hand.
@@ -320,7 +329,9 @@ describe('public-view-only proof', () => {
           `${f}: imports a GameState-consuming identifier in "${clause}"`,
         ).toBe(false)
       }
-      expect(imports).toBeGreaterThan(0)
+      // Every file imports something the list admits - or (net.ts, MONET.md 3.8ac) nothing at all, the
+      // strongest form of the proof; a file the regex found no import in must hold no `from '` either.
+      expect(imports > 0 || !/\bfrom\s+'/.test(src), `${f}: no import matched the regex`).toBe(true)
       // No dynamic imports or requires sneaking state in.
       expect(src.includes('import(')).toBe(false)
       expect(src.includes('require(')).toBe(false)

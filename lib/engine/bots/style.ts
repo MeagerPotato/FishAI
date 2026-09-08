@@ -387,6 +387,13 @@ export interface StyleParams extends AskWeights {
    */
   closingFour?: number
   /**
+   * MONET.md §3.8ac — the imitation ask policy: the name of an ask model registered with
+   * `registerAskModel` (imitation.ts). Present, `pickAsk` returns the model's argmax over the
+   * ranker's list of legal asks in place of its own choice; absent, byte identity. Absent on every
+   * roster style and every tier; a lab knob reached by `--a-override` and `MONET_OVERRIDE`.
+   */
+  askModel?: string
+  /**
    * MONET.md §3.8u — the closing credit's rung BELOW the four, at its own dose: where the seat's
    * certain picture of the asked set has exactly two cards outstanding after the hit (the horizon's
    * worth, where `lock` is 0 and `closing` pays nothing — a seat-known three of six under `us54`, the
@@ -866,6 +873,8 @@ export function validateStyle(style: StyleParams): string[] {
   if (closingBelief !== undefined && typeof closingBelief !== 'boolean') bad.push(`closingBelief ${String(closingBelief)} is not a boolean`)
   const closingFour = style.closingFour
   if (closingFour !== undefined && !(typeof closingFour === 'number' && Number.isFinite(closingFour) && closingFour >= 0)) bad.push(`closingFour ${String(closingFour)} is not a number >= 0`)
+  const askModel = style.askModel
+  if (askModel !== undefined && !(typeof askModel === 'string' && askModel.length > 0)) bad.push(`askModel ${String(askModel)} is not a non-empty string`)
   const closingThree = style.closingThree
   if (closingThree !== undefined && !(typeof closingThree === 'number' && Number.isFinite(closingThree) && closingThree >= 0)) bad.push(`closingThree ${String(closingThree)} is not a number >= 0`)
   // The `>= 0` refusal is load-bearing rather than decoration: a NEGATIVE `chase` is a penalty on

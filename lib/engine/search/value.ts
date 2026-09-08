@@ -32,6 +32,8 @@ import { allBooks, bookCards, seatTeam, teamSeats } from '../cards.ts'
 import { seatView } from '../views.ts'
 import { buildKnowledge, publicKnowledge } from '../bots/knowledge.ts'
 import type { Knowledge, KnowledgeOptions } from '../bots/types.ts'
+import { compileNet, forwardNet } from '../bots/net.ts'
+import type { CompiledNet, DenseModel } from '../bots/net.ts'
 
 export const GLOBAL_FEATURES = [
   /** Our sets minus theirs. */
@@ -227,65 +229,21 @@ export function valueFeatures(s: GameState, team: Team, tk?: TableKnowledge, opt
   return x
 }
 
-/** A fitted model as JSON: the standardisation and the dense layers, ReLU between them, none after the last. */
-export interface ValueModel {
-  /** `VALUE_FEATURE_COUNT` at fitting time; a mismatch is refused. */
-  features: number
-  mean: number[]
-  std: number[]
-  /** Row-major `w` of `out × in` and `b` of `out`; the last layer has one output. */
-  layers: { w: number[]; b: number[] }[]
-  /** Free-form provenance (the data, the fit, the holdout error). */
-  meta?: Record<string, unknown>
-}
-
-export interface CompiledValueModel {
-  features: number
-  mean: Float64Array
-  invStd: Float64Array
-  layers: { w: Float64Array; b: Float64Array; out: number; inp: number }[]
-  /** Scratch buffers for the forward pass, one per layer's output. */
-  buf: Float64Array[]
-}
+/** A fitted model as JSON (bots/net.ts): the standardisation and the dense layers, ReLU between them, none after the last. */
+export type ValueModel = DenseModel
+export type CompiledValueModel = CompiledNet
 
 export function compileValueModel(m: ValueModel): CompiledValueModel {
-  if (m.features !== VALUE_FEATURE_COUNT) throw new Error(`value model has ${m.features} features; this build has ${VALUE_FEATURE_COUNT}`)
-  if (m.mean.length !== m.features || m.std.length !== m.features) throw new Error('value model: standardisation length')
-  let inp = m.features
-  const layers = m.layers.map((l) => {
-    const out = l.b.length
-    if (l.w.length !== out * inp) throw new Error(`value model: layer of ${out}×${inp} has ${l.w.length} weights`)
-    const layer = { w: Float64Array.from(l.w), b: Float64Array.from(l.b), out, inp }
-    inp = out
-    return layer
-  })
-  if (layers.length === 0 || layers[layers.length - 1].out !== 1) throw new Error('value model: the last layer must have one output')
-  return {
-    features: m.features,
-    mean: Float64Array.from(m.mean),
-    invStd: Float64Array.from(m.std, (v) => (v > 0 ? 1 / v : 0)),
-    layers,
-    buf: layers.map((l) => new Float64Array(l.out)),
+  try {
+    return compileNet(m, VALUE_FEATURE_COUNT, 1)
+  } catch (e) {
+    throw new Error(`value model: ${(e as Error).message}`, { cause: e })
   }
 }
 
 /** The model's estimate on a feature vector. */
 export function valueOfFeatures(m: CompiledValueModel, x: Float64Array): number {
-  let cur: Float64Array = new Float64Array(m.features)
-  for (let i = 0; i < m.features; i++) cur[i] = (x[i] - m.mean[i]) * m.invStd[i]
-  for (let li = 0; li < m.layers.length; li++) {
-    const l = m.layers[li]
-    const out = m.buf[li]
-    const last = li === m.layers.length - 1
-    for (let o = 0; o < l.out; o++) {
-      let acc = l.b[o]
-      const base = o * l.inp
-      for (let i = 0; i < l.inp; i++) acc += l.w[base + i] * cur[i]
-      out[o] = last || acc > 0 ? acc : 0
-    }
-    cur = out
-  }
-  return cur[0]
+  return forwardNet(m, x)
 }
 
 /** The model's estimate of the final set differential for `team` at `s`; a finished game's differential exactly. */

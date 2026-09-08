@@ -108,6 +108,7 @@ import {
   unaskableBooks,
 } from './knowledge.ts'
 import { marginalFor } from './marginal.ts'
+import { askModelOf, chooseAskByModel } from './imitation.ts'
 import { assignJointly } from './joint.ts'
 import { planContainedPass } from './contained.ts'
 import type { ContainedPassPlan, PassValuation } from './contained.ts'
@@ -1118,6 +1119,13 @@ function leaky(k: Knowledge, view: SeatView, book: BookId, style: StyleParams): 
  */
 function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: ActivePolicy, t?: Sink): RankedAsk {
   const { skill, style } = pol
+  // MONET.md §3.8ac — the imitation ask policy: the model chooses among the ranker's legal asks and
+  // every term below is bypassed. Absent (every roster style, every tier, every version), byte identity.
+  if (style.askModel !== undefined) {
+    const chosen = chooseAskByModel(askModelOf(style.askModel), view, k, ranked)
+    if (t) t.notes.push(`The ask model ${style.askModel} chose ${pc(chosen.card)} at seat ${chosen.target} over the ranker's ${pc(ranked[0].card)} at seat ${ranked[0].target}.`)
+    return chosen
+  }
   interface Scored {
     r: RankedAsk
     refined: number
