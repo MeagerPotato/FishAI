@@ -10,10 +10,10 @@
 export interface DenseModel {
   /** The input width the model was fitted at; a mismatch is refused. */
   features: number
-  mean: number[]
-  std: number[]
+  mean: readonly number[]
+  std: readonly number[]
   /** Row-major `w` of `out × in` and `b` of `out`; the last layer's width is the model's output. */
-  layers: { w: number[]; b: number[] }[]
+  layers: readonly { w: readonly number[]; b: readonly number[] }[]
   /** Free-form provenance (the data, the fit, the holdout error). */
   meta?: Record<string, unknown>
 }
