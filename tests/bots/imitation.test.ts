@@ -16,11 +16,14 @@ import { cardBook, seatTeam } from '../../lib/engine/cards.ts'
 import { SEARCH_DEFAULTS, decideSearch, opponentSpec, rollout } from '../../lib/engine/search/index.ts'
 import { buildKnowledge, rankAsksWith } from '../../lib/engine/bots/knowledge.ts'
 import { resolvePolicy, validateStyle } from '../../lib/engine/bots/style.ts'
+import type { BotPolicy } from '../../lib/engine/bots/style.ts'
 import { monetPolicy } from '../../lib/engine/bots/monet.ts'
 import { ASK_FEATURES, ASK_FEATURE_COUNT, askFeatureRows, askModelOf, chooseAskByModel, registerAskModel } from '../../lib/engine/bots/imitation.ts'
 import type { AskModel } from '../../lib/engine/bots/imitation.ts'
 
 const POL = monetPolicy('v0.9')
+// the registry's entries are pairs; PolicySpec is the union with the adaptive names, and a pair's fields are read off the narrowed type
+const POLB = POL as BotPolicy
 const { skill, style } = resolvePolicy(POL)
 const OPTS = { logWindow: skill.logWindow, useConstraints: skill.useConstraints, marginal: style.pModel === 'marginal', choiceKappa: style.choiceKappa, choiceAdapt: style.choiceAdapt, choicePrior: style.choicePrior }
 const F = (n: (typeof ASK_FEATURES)[number]) => ASK_FEATURES.indexOf(n)
@@ -95,7 +98,7 @@ describe('the ask model', () => {
 
   it("through `askModel` in the style, decide() plays the model's choice, legal, where the stack would not; without it the stack is untouched", () => {
     registerAskModel('imit-last', linear({ rankInv: -1 }))
-    const withModel = Object.freeze({ skill: POL.skill, style: Object.freeze({ ...POL.style, askModel: 'imit-last' }) })
+    const withModel = Object.freeze({ skill: POLB.skill, style: Object.freeze({ ...POLB.style, askModel: 'imit-last' }) })
     let differs = 0
     let asksSeen = 0
     for (const { view } of askPositions('imit-decide', 6)) {
@@ -118,9 +121,9 @@ describe('the ask model', () => {
   })
 
   it('is validated as a non-empty string', () => {
-    expect(validateStyle({ ...POL.style, askModel: 'x' } as never)).toEqual([])
-    expect(validateStyle({ ...POL.style, askModel: '' } as never).some((m) => m.includes('askModel'))).toBe(true)
-    expect(validateStyle({ ...POL.style, askModel: 3 } as never).some((m) => m.includes('askModel'))).toBe(true)
+    expect(validateStyle({ ...POLB.style, askModel: 'x' } as never)).toEqual([])
+    expect(validateStyle({ ...POLB.style, askModel: '' } as never).some((m) => m.includes('askModel'))).toBe(true)
+    expect(validateStyle({ ...POLB.style, askModel: 3 } as never).some((m) => m.includes('askModel'))).toBe(true)
   })
 })
 

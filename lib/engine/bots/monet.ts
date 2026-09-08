@@ -80,13 +80,20 @@
 import { STYLE_ROSTER } from './roster.ts'
 import { SKILL_PRESETS } from './style.ts'
 import type { PolicySpec } from './bounded.ts'
+import { registerAskModel } from './imitation.ts'
+import { SESTINA_CLONE } from './data/sestina-clone.ts'
+
+// MONET.md §3.8ac — the SESTINA clone is registered when this module loads, so `monetPolicy('v0.30')` plays
+// wherever a version is named without any caller knowing a model exists; the name is the one v0.30's
+// vector carries (`askModel: 'sestina-clone'`), and nothing else on the registry names a model.
+registerAskModel('sestina-clone', SESTINA_CLONE)
 
 /**
  * The Monet versions that exist *in this repo*. MONET.md §3 plans v0.1 through v1.0; only the ones
  * that have actually shipped appear here, so the union is also the honest answer to "what can be
  * measured today".
  */
-export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a' | 'v0.4b' | 'v0.4c' | 'v0.9' | 'v0.20c'
+export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a' | 'v0.4b' | 'v0.4c' | 'v0.9' | 'v0.20c' | 'v0.30'
 
 /**
  * Version id -> the policy that version plays, ready for `decide(view, policy, seed)`.
@@ -143,6 +150,21 @@ export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a' | 'v0.4b' | 'v0.4c
  *   +0.34 (0.81 × SE) and did not ship; the stack beats it by +0.60 on the same seeds at 6 × SE.
  *   The credit moves 3.0% of Monet's asks abroad. §3.9's verdict is unmoved: v1.0 does not exist
  *   at this vector either. Shipped by the owner's merge of the registry PR, not by the record.
+ * - `v0.30` is v0.20c plus `askModel: 'sestina-clone'` (MONET.md §3.8ac, the SESTINA clone): at an
+ *   ask decision the stack's ranker still scores every legal ask, and a fitted model of SESTINA
+ *   v1.0's own ask choices — a conditional logit over 33 features of each legal ask (the hit
+ *   probability, the rank, the half-suit's state, the ask history off the public log), an MLP of
+ *   64·64 units fitted on 410,000 of its decisions from the bridge records, agreeing with its
+ *   choice on 56.3% of held-out decisions where the stack's own choice agrees on 43.7% — picks
+ *   among them (`imitation.ts`; the weights `data/sestina-clone.ts`, registered above at load).
+ *   Every other term is v0.20c's: the belief, the declares, the concessions, the reveal. The
+ *   largest read on the ladder: +7.13 points of win rate at home against v0.20c's vector (2,400
+ *   duplicate pairs, 12.8 × SE, twelve of twelve banks) and +7.24 ± 0.63 points (48.0% against
+ *   the base's 40.8%, 11.5 × SE, twelve of twelve seeds) abroad against SESTINA v1.0
+ *   on twelve fresh seeds. What the fit says SESTINA does: it keeps asking into the half-suit it
+ *   or its partner asked into before, at the target it asked last, from the smaller hands, and it
+ *   takes a certain hit for its probability and no more. Shipped by the owner's merge of the
+ *   registry PR, not by the record.
  *
  * No entry pins the *code* the knobs run through — see the header. Naming v0.1 here buys back
  * v0.1's SPEC on a v0.2 tree; it does not buy back v0.1's games.
@@ -177,6 +199,10 @@ export const MONET_VERSIONS: Readonly<Record<MonetVersion, PolicySpec>> = Object
     skill: SKILL_PRESETS.hard,
     style: Object.freeze({ ...STYLE_ROSTER.punter, pModel: 'marginal', pAssignment: 'joint', licenceLambda: 0.3, contest: 0.6, closing: 0.5, closingFour: 2 }),
   }),
+  'v0.30': Object.freeze({
+    skill: SKILL_PRESETS.hard,
+    style: Object.freeze({ ...STYLE_ROSTER.punter, pModel: 'marginal', pAssignment: 'joint', licenceLambda: 0.3, contest: 0.6, closing: 0.5, closingFour: 2, askModel: 'sestina-clone' }),
+  }),
 })
 
 /**
@@ -184,7 +210,7 @@ export const MONET_VERSIONS: Readonly<Record<MonetVersion, PolicySpec>> = Object
  * ("Monet beats v0.2 through v0.6 as well"). Ordered, because a version list that is only a key set
  * cannot express "the one before this".
  */
-export const MONET_VERSION_IDS: readonly MonetVersion[] = Object.freeze(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9', 'v0.20c'] as const)
+export const MONET_VERSION_IDS: readonly MonetVersion[] = Object.freeze(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9', 'v0.20c', 'v0.30'] as const)
 
 /**
  * Is `id` a version this repo can play? For callers holding a string rather than a `MonetVersion` —

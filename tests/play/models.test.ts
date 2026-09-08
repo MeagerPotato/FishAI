@@ -153,10 +153,13 @@ describe('the two entries are different bots, and nearly the same one', () => {
     // converges on Punter), 98.07% at v0.3, whose licence conditioning moves a share of the
     // licensed asks (MONET.md §3.3a), 96.86% at v0.4a, whose marginal reorders more of them
     // (§3.4a), 95.78% at v0.9, whose contest credit moves the likely-miss asks (§3.8d), 95.91% at
-    // v0.20c, whose closing credit moves three asks in a hundred (§3.8s). The copy says "about 96%"; the floor here is the honesty
-    // bar for that sentence, not a target — a Monet that agreed with Bass on fewer than 95% of
+    // v0.20c, whose closing credit moves three asks in a hundred (§3.8s), 91.33% at v0.30, whose
+    // SESTINA clone chooses the ask at every ask decision in place of the ranker's own choice
+    // (§3.8ac) — the largest single move on this measurement, as it is the largest read on the
+    // ladder. The copy says "about 91%"; the floor here is the honesty
+    // bar for that sentence, not a target — a Monet that agreed with Bass on fewer than 90% of
     // decisions would need different copy, and one that agreed on all of them would be Bass.
-    expect(agree).toBeGreaterThan(95)
+    expect(agree).toBeGreaterThan(90)
     expect(agree).toBeLessThan(100)
   })
 })
