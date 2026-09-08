@@ -459,7 +459,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
-| **v0.30** — the SESTINA clone (2026-09-08) | **row 35's, under the owner's direction of 2026-09-08 ("learning from sestina's play is essential … we should be learning to beat sestina")**: an ask policy fitted on SESTINA's own ask decisions from the bridge records — 33 features per legal ask over the stack's own ranking, a conditional logit, the argmax the policy (`lib/engine/bots/imitation.ts`, `StyleParams.askModel`, `gen-imitation-data.mjs`, `fit-imitation.mjs`) — read as a player (M2 at home, M3 abroad) and as the search's opponent model in the rollouts of §3.8aa's t32 form (`SearchParams.oppAskModel`; M4 abroad, the one-variable comparison to t32's own bridge read of −1.61 points; §3.8ac) | the clone must predict SESTINA's choice at least 5 points better than the stack itself does on held-out games (M1); a player cell must read ≥ +2 SE at home before it goes abroad (M2); ships by §3.8n's bar against v0.20c's vector on twelve fresh seeds (M3, M4); the registry change a PR for the owner, stacked on #41; the whole rung inside two days of wall clock | L |
+| **v0.30** — the SESTINA clone (2026-09-08) | **row 35's, under the owner's direction of 2026-09-08 ("learning from sestina's play is essential … we should be learning to beat sestina")**: an ask policy fitted on SESTINA's own ask decisions from the bridge records — 33 features per legal ask over the stack's own ranking, a conditional logit, the argmax the policy (`lib/engine/bots/imitation.ts`, `StyleParams.askModel`, `gen-imitation-data.mjs`, `fit-imitation.mjs`) — read as a player (M2 at home, M3 abroad) and as the search's opponent model in the rollouts of §3.8aa's t32 form (`SearchParams.oppAskModel`; M4 abroad, the one-variable comparison to t32's own bridge read of −1.61 points; §3.8ac) | the clone must predict SESTINA's choice at least 5 points better than the stack itself does on held-out games (M1); a player cell must read ≥ +2 SE at home before it goes abroad (M2); ships by §3.8n's bar against v0.20c's vector on twelve fresh seeds (M3, M4); the registry change a PR for the owner, stacked on #41; the whole rung inside two days of wall clock — **read 2026-09-08: M1 every fit eligible (C, the 64·64 net, predicts SESTINA's choice on 56.32% of held-out decisions; the stack's own choice 43.65%, the ranker's top 38.94%); M2 the MLP-64 clone +1.056 ± 0.145 a pair at home (+7.89 points, 14.2 SE, twelve of twelve banks), C +0.954 ± 0.146 (+7.13 points, 12.8 SE, twelve of twelve); M3 C +7.24 ± 0.63 points against SESTINA v1.0 on the twelve fresh seeds (48.0% against the base's 40.8%, 11.5 SE, every seed ahead; the MLP-64 clone +6.67 ± 0.61) — §3.8n's bar cleared, the registry PR #49 for the owner (row 36); M4 running** | L |
 | **v0.29** — the learned leaf (2026-09-08) | **row 34's, under the direction — the plan §3.8aa wrote**: a value function over the full-information state (118 features: the score, the cards and, per half-suit, who holds them and which seats have located them, from the engine's own knowledge walk) fitted on 48,000 self-play games of the shipped stack to the FINAL set differential (`lib/engine/search/value.ts`, `gen-value-data.mjs`, `fit-value.mjs`), evaluated at the search's horizon in place of the lock count (`leafNet`), with S 0 a one-ply expectation over the deals; read by duplicate pairs at home (S 0 at D 128 and 512, and s128's form with the leaf swapped), the marker re-read at the game's end, the bridge on twelve fresh seeds at the eligible cell (§3.8ab) | the fit must beat the static lock count as a predictor of the end (M1), a cell must read ≥ +2 SE at home (M2); ships by §3.8n's bar against v0.20c's vector on the twelve; the registry change a PR for the owner, stacked on #41 — **read 2026-09-08: M1 every fit eligible (the 128·128 net R² 0.302 against the static lock count's 0.209); M2 the dense n128 eligible at the bar's edge — +0.161 ± 0.144 (2.2 SE, eight of twelve banks, +1.2 points), the sparse forms +0.022 and +0.002, the linear leaf in the game −0.978 ± 0.172 (exploited by the search that optimises against it); n512 and n24 deferred, and n128's bridge read deferred behind v0.30's cells, under the owner's wall-clock direction; nothing shipped — the leaf buys little, the opponent model is the piece (§3.8ac)** | XL |
 | **v0.28** — the search re-scoped, compute unconstrained (2026-09-07) | **row 33's (s), under the owner's direction of 2026-09-07 ("I don't care about any cost of compute")**: §3.8a's arm with the shipped stack as its rollout policy and the lock-only leaf, the deals scaled 8 → 512 with §3.8a's marker read at every rung and pooled twenty processes wide, a second candidate generator (`candMode` `'sets'`: the pick and one ask per other half-suit), duplicate pairs at home at D 32 and at the largest D the marker justifies, the bridge on twelve fresh seeds at the eligible cell with the wall clock reported and not gated (§3.8aa) | the yield must grow with the deals or the leaf is the limit (v0.29, the learned leaf); ships by §3.8n's bar against v0.20c's vector on the twelve; the registry change a PR for the owner, stacked on #41 — **read 2026-09-07/08: M1 the cost as predicted; M2 the marker grows with the deals for `'sets'` (s128 +0.082 a searched decision, the grid's best) and caps at 32 for `'top'`; M3 s128 −0.333 ± 0.144 a pair at home (−4.5 SE, 3 of 16 banks) — the marker is not the objective, the leaf's units are not the game's; the sparse form −0.040 ± 0.127 (a searched move alone worth about nothing by the game's end); t32 +0.248 ± 0.144 (+3.4 SE, 9 of 10 banks — eligible at home) and −1.61 ± 0.77 abroad (−2.1 SE, 4 of 12 seeds) — the rollouts' model of the opponents is S, and abroad it is wrong; s32 two of ten banks, −0.077 ± 0.319, the rest queued; nothing ships — the leaf is the limit (§3.8ab), the opponent model the piece (§3.8ac)** | XL |
 | **v0.27** — the joint re-fit (2026-09-07) | **row 31's (j): the shipped doses moved two at a time — the one-at-a-time surface (§3.8v, §3.8y) is flat within a point on every axis but `contest`, and the one interaction measured is positive (§3.8r: the two closing rungs together +0.301 against +0.043 + 0.172 apart)** — `closing` 1 + `closingFour` 3, `closing` 0.25 + `closingFour` 1, `contest` 0.8 + `closingFour` 3, `contest` 0.5 + `closing` 1, 2,400 duplicate pairs each against the shipped stack at home, the control at zero first; the markers on every eligible arm; the primary abroad on twelve fresh seeds against v0.20c's vector (§3.8z); no change to `lib/` | eligible at home at ≥ +2 SE with the sure-miss share within 3 points; the primary ships by §3.8n's bar against v0.20c's vector on the twelve (±2.00 still the rung; the registry change a PR for the owner, stacked on #41); the secondary reported, unable to ship; if no arm is eligible the family is closed at its shipped point on every axis and on the diagonals read — **read 2026-09-07: NO ARM IS ELIGIBLE; THE FAMILY IS CLOSED AT ITS SHIPPED POINT. `closing` 1 + `closingFour` 3 −0.033 ± 0.077 a pair (SD 1.93), `closing` 0.25 + `closingFour` 1 −0.041 ± 0.097 (2.42), `contest` 0.8 + `closingFour` 3 −0.128 ± 0.111 (2.77; BEHIND at 2.3 SE), `contest` 0.5 + `closing` 1 −0.103 ± 0.098 (2.44; BEHIND at 2.1 SE); the control 0.0000; every joint read within one SE of the sum of its parts (§3.8v): the surface is additive from the shipped point, and §3.8r's interaction was the credit's arrival on a vector without it, not a slope. The markers on the first: the move changes one ask in ninety and takes a chase hitting 16% over the stack's ask that would hit 50%; the chase share +0.3. v0.20c is the family's optimum (PR #41). Q1 four of four ranges, no arm eligible as the likelier side; Q2 two of four; Q3 and Q4 not reached. Row 32 hands the direction to the owner: (s) the search arm on the shipped vector or (t) a clinch-aware ask** | the control at zero; nothing exported, nothing abroad; the twelve seeds unspent | S |
@@ -8676,6 +8676,136 @@ may stop, reverse or redirect any of it.
 The files: `$SP/monet-v30/{run-data.sh, run-fit.sh, run-pairs.sh, pool-pairs.mjs, SEEDS, ARM_MD5}`,
 `$SP/seeds-v30.mjs`, `$SP/arm_v30/bot.mjs`, `$SP/v30-{prereg,record}.md`.
 
+#### Record — M1 to M3, 2026-09-08 (the fit, the pairs at home, the bridge; M4 running)
+
+**M1 — the fit (read 2026-09-08 07:47–08:30Z).** The extraction, six processes, 85 s of wall clock:
+**367 record files** (75 skipped — their arm B was not SESTINA: the v0.17 panel cells against `v02`, the
+attribution cells), **438,126 games, 20,516,416 SESTINA ask decisions, 409,994 kept (the 2% sample),
+19,060,662 rows** (2.6 GB); the holdout every fifth file, 84,222 decisions. On the holdout **the stack's own
+decision is SESTINA's on 43.65%, the ranker's top ask on 38.94%, the top three hold it on 66.07%**;
+SESTINA's kept asks hit 56.85%. The fits (their logs and models outside the repo; C is committed as data on the ship branch,
+`lib/engine/bots/data/sestina-clone.ts`, source md5 `2138c38e…`):
+
+| fit | holdout top-1 | top-3 | NLL | kept epoch | wall clock | eligible (≥ 48.65%) |
+|---|---|---|---|---|---|---|
+| the ranker's top (no model) | 38.94% | 66.07% | — | — | — | — |
+| the stack's own decision | 43.65% | — | — | — | — | the baseline |
+| **linear** | **49.92%** | 81.24% | 1.3414 | 10 of 12 | 42 s | **yes (+6.27)** |
+| **mlp 64** | **55.78%** | 85.50% | 1.0761 | 11 of 12 | 16 min | **yes (+12.13)** |
+| **mlp 64·64 = C** | **56.32%** | 86.28% | 1.0508 | 12 of 12 | 55 min | **yes (+12.67)** |
+| mlp 64 on half the training decisions (the learning curve) | 55.32% | 85.31% | 1.0900 | 10 of 12 | 10 min | (−0.46 against the whole: the data is not the limit at this width) |
+
+Every fit is eligible; **C is the 64·64 net** (the highest holdout top-1; its NLL was still falling at
+epoch 12, so a longer fit would gain a little more).
+
+The linear clone's standardised weights, in order of size: `bookAskedByMe` +2.27, `knownMiss` −1.94,
+`p` +1.36, `targetHand` −1.11, `bookAskedByMate` +1.04, `scoreRel` +0.88, `bookAskedByThem` +0.66,
+`lastTargetSame` +0.41, `targetAskedMe` +0.40, `bookAsks` +0.25, `bookIsMyMax` −0.23,
+`targetKnownOfBook` −0.23, `narrowing` −0.18, `certain` −0.18, `ownHeld` −0.17, `unknownOfBook` −0.16,
+`cardAskedBefore` −0.16, `candCount` −0.15, `ownHeldRank` +0.15, `gamble` +0.14, `theirsKnown` +0.12,
+`rankInv` +0.11, `progress` +0.09; the global terms (the score, the resolved count, the hand size, the
+asks, the seats in) at zero — they are constant across a decision's rows and a conditional logit cannot
+read them, as it should not. **Read as a policy: SESTINA asks into the half-suit it (or its partner)
+asked into before, at the target it asked last, from the smaller hands; it weighs the hit probability
+about as the ranker does and it takes a certain hit for its probability and no more.** Q1: the linear
+clone inside 49–53% (predicted 80%) ✓; the MLP 64 at 55.78% inside 55–59% ✓; the 64·64 within 1.5
+points of the 64 ✓ (+0.54); the learning curve within 1 point ✓ (−0.46); at least one fit eligible ✓.
+
+**M2 — the clone as a player, at home (read 2026-09-08 07:52Z).** The control first: S against S, two
+banks of 200, **`0.0000 +/- 0.0000`** ✓. Then — as an exploratory cell ahead of the carried clone, the
+linear fit being eligible and the cell costing two minutes — **the linear clone inside S's stack against
+S: +0.500 ± 0.144 a pair (SD 3.59; 2,400 pairs in twelve banks of 200), +3.73 ± 0.55 points of win
+rate, +6.8 SE, twelve of twelve banks ahead** (+0.760 +0.210 +0.580 +0.640 +0.725 +0.115 +0.395 +0.465
++0.450 +0.475 +0.710 +0.470). **Eligible for M3, and the largest paired home read on the ladder.** Q2
+predicted −0.40 to +0.15 (70%) and eligibility at 20%: **wrong on both** — SESTINA's ask choices, as a
+linear scorer of the stack's own features approximates them, beat the stack's own choices inside the
+stack's own belief and declare policy. The cost (`bench-decide`, 24 mirror games each, this machine
+under load): the clone's ask decision 0.30 ms mean against S's 0.48 (the model is 33 multiplies per
+legal ask; the difference is noise); the decision mean 0.37 ms against 0.39; both PASS §3.4a's budget.
+**The MLP-64 clone (read 08:08Z): +1.056 ± 0.145 a pair (SD 3.63; 2,400 pairs, twelve banks), +7.89
+± 0.55 points of win rate, +14.2 SE, twelve of twelve banks ahead** (+0.765 +1.005 +0.980 +1.360 +1.650
++1.165 +0.525 +1.075 +0.725 +1.515 +0.690 +1.215). The better the clone predicts SESTINA, the better it
+plays inside the stack: 49.9% agreement buys +0.500 a pair, 55.8% buys +1.056. **C, the 64·64 net
+(read 08:45Z): +0.954 ± 0.146 a pair (SD 3.66), +7.13 ± 0.56 points, 12.8 SE, twelve of twelve banks
+ahead** (+1.055 +0.885 +1.265 +1.295 +0.900 +1.260 +0.745 +1.010 +0.550 +0.525 +1.170 +0.785) — level
+with the MLP 64's +1.056 within the two cells' SEs (the two nets agree with SESTINA within half a point
+of each other, and with each other far more often than either does with the stack). Both are eligible
+for M3.
+
+**M3 — the clone as a player, at the bridge (read 2026-09-08 08:04–08:41Z).** The tree export of
+b1664fe (lib md5 `25e75723707de07b89d25cf54a78f319`); the identity cell — v0.9's vector on this tree at
+6269924 — **IDENTICAL** to §3.8l's recorded base cell, every line but `elapsed` (the fast policy is
+untouched). The base (v0.20c's vector, `monet-v30-base`) on the twelve seeds first, one container, 33
+minutes; then the MLP-64 clone (`monet-v30-clone`, the model file inside the package, the hello label
+carrying `ask=6ae34c26`, 30 of 32 hello lines whole and every whole one carrying it), one container, 37
+minutes; 36 cover files a cell, the fault counters zero, no FATAL line, no COVERAGE FAIL line, the
+calibration bias +0.011 on the base's first cell as on every base cell since §3.8m.
+
+| seed | base | the MLP-64 clone | paired |
+|---|---|---|---|
+| 1485985 | 42.92% | 46.75% | +3.83 |
+| 2632525 | 39.08% | 47.17% | +8.08 |
+| 3494862 | 38.92% | 45.17% | +6.25 |
+| 9948698 | 41.50% | 48.58% | +7.08 |
+| 3131149 | 41.75% | 46.92% | +5.17 |
+| 2398534 | 41.58% | 48.83% | +7.25 |
+| 5193753 | 39.50% | 49.33% | +9.83 |
+| 5103273 | 39.25% | 48.08% | +8.83 |
+| 2487047 | 42.42% | 45.67% | +3.25 |
+| 8924909 | 40.42% | 49.33% | +8.92 |
+| 6177040 | 39.33% | 46.33% | +7.00 |
+| 8235295 | 42.58% | 47.17% | +4.58 |
+| **twelve** | **40.77% (SD 1.51)** | **47.44%** | **+6.67 (SD 2.11, SE 0.61), 10.97 SE, ahead on 12 of 12** |
+
+**The clone clears §3.8n's bar against SESTINA itself: +6.67 ± 0.61 points of win rate, eleven standard
+errors, every seed ahead — the first rung since v0.20c to clear it, and by seven times v0.20c’s +0.94.** The
+base's 40.77% is v0.20c's 40.6% again (§3.8s's twelve read 40.61%; the seeds are fresh). Q3 predicted
+35%. At home the same clone read +7.89 points against S; against SESTINA it reads +6.67: what it learned
+from SESTINA's play transfers to play against SESTINA nearly whole. **The ship rule is met; the registry
+change is the owner's** (§3.8n: a PR stacked on #41 — v0.30 = v0.20c's vector with `askModel:
+'sestina-clone'`, the fitted model committed as data). 
+
+**C — the 64·64 clone (`monet-v30-clone2`, the model `clone-2138c38e.json` inside the package; read
+08:46–08:59Z, one container, thirteen minutes):** 352 whole hello lines, every one carrying `ask=2138c38e`;
+36 cover files a cell, `planMismatch` 0 on all 432, no FATAL line, no COVERAGE FAIL line.
+
+| seed | base | C | paired |
+|---|---|---|---|
+| 1485985 | 42.92% | 47.50% | +4.58 |
+| 2632525 | 39.08% | 48.08% | +9.00 |
+| 3494862 | 38.92% | 47.33% | +8.42 |
+| 9948698 | 41.50% | 46.67% | +5.17 |
+| 3131149 | 41.75% | 48.50% | +6.75 |
+| 2398534 | 41.58% | 48.42% | +6.83 |
+| 5193753 | 39.50% | 49.33% | +9.83 |
+| 5103273 | 39.25% | 50.25% | +11.00 |
+| 2487047 | 42.42% | 48.67% | +6.25 |
+| 8924909 | 40.42% | 47.00% | +6.58 |
+| 6177040 | 39.33% | 48.00% | +8.67 |
+| 8235295 | 42.58% | 46.42% | +3.83 |
+| **twelve** | **40.77%** | **48.01%** | **+7.24 (SD 2.18, SE 0.63), 11.52 SE, ahead on 12 of 12** |
+
+**C clears the bar as well: +7.24 ± 0.63 points, eleven and a half standard errors, every seed ahead —
+48.0% against SESTINA v1.0, the highest twelve-seed read the line has made** (the rungs before it peaked at
+v0.20c's 41.25%). Against the MLP-64 clone on the same seeds C reads +0.57 ± 0.49 a seed (seven seeds
+ahead, one level, four behind): the two nets are level abroad as they were at home, and C is the carried
+candidate as pre-registered (the highest holdout top-1). Q3 predicted 35% to clear; both clones cleared, by
+ten standard errors and more. **The registry change is the owner's** (§3.8n): v0.30 = v0.20c's vector with
+`askModel: 'sestina-clone'`, C committed as data (`lib/engine/bots/data/sestina-clone.ts`, source md5
+`2138c38e…`, written by `scripts/gen-ask-model-module.mjs`), on the ship branch as a PR stacked on #41.
+
+**M4 — the clone as the search's opponent model, at the bridge (running since 09:01Z: two lanes of six
+seeds, `monet-v30-t32opp-l1` and `-l2`, §3.8aa's t32 form with C at the opponents' seats of its rollouts,
+`MONET_OPP_ASK_MODEL` = `2138c38e`).** Its read — paired against the base on the same twelve seeds, and
+against t32's own bridge read of −1.61 ± 0.77 (§3.8aa) as the one-variable comparison — is amended here
+when it lands, about 02:00Z on 2026-09-09.
+
+**The ship (row 36).** v0.30 = v0.20c's vector plus `askModel: 'sestina-clone'` — C committed as data,
+registered when `monet.ts` loads, its forward bank (36 games, 26,510 decisions from the clean tree) and
+its pin; the /play note re-measured at 91.33% agreement with Bass v2.0 (§3.8s's 95.91%: the clone
+chooses the ask wherever the stack leaves the choice to its ranker). PR #49, `claude/monet-v0.30-ship`,
+stacked on #41 — for the owner.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -9132,6 +9262,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 33 | **After §3.8z and the owner's direction of 2026-09-07 — *"what's next? Know that I don't care about any cost of compute, the only thing I care about is to develop the greatest fish playing game engine ever."* What runs, and in what order?** **TAKEN — (s), re-scoped (§3.8aa, v0.28):** the search arm on the shipped vector with §3.8a's cost rule lifted — the deals scaled until the marker stops growing, a candidate generator that puts every half-suit on the table, the lock-only leaf, duplicate pairs at home and the bridge on twelve fresh seeds at whatever wall clock the eligible cell costs. The order after it, written as the plan the owner asked for: **v0.29 a learned leaf** (a value function on self-play of the stack, in place of the rollout — the leaf §3.8a said the search needed), **v0.30 expert iteration** (the search's choices as the ranker's targets, repeated while §3.9's number moves), then **a joint belief sampler** for the determinizations; §3.9's test at every step that ships, ±2.00 the rung, every read pre-registered. Not taken: (t) the clinch-aware ask (a one-ply term; the search sees the clinch through its rollouts, so (t) is subsumed if the search pays and is read on its own only if it does not), (q) and (u). The full-strength bridge read is of the order of 100–400 CPU-hours on a 12-CPU Docker VM (a day to three) — a larger box would cut the wall clock and is the owner's call; the ladder runs on this one meanwhile. | **TAKEN (s) re-scoped — the owner may reverse at review** |
 | 34 | **After §3.8aa's home read (s128 −0.333 ± 0.144 a pair where its marker read +0.082; the sparse form −0.040 ± 0.127: a searched move worth about nothing in sets by the game's end, alone or together) — what is v0.29?** **TAKEN — the learned leaf (§3.8ab), the plan §3.8aa wrote:** a value fitted on self-play outcomes in place of the lock count at the horizon, the search then a one-ply expectation over the deals at S 0 or the same rollouts with a better leaf at S 24; read in the game (pairs) and not by the marker, the marker re-read at the game's end as a diagnostic. Not taken: (a) the search's form grid (S, z, C, D 256 for `'sets'`) — the form is not the loss, the leaf is; (b) racing the candidates (an efficiency change; worth having once a leaf pays); (c) the joint sampler — the belief caps the `'top'` search (§3.8aa M2), but the leaf is the larger term and the sampler's consumer must work first. §3.8aa's first block (t32 and s32 at home) is read under §3.8aa's rules and can only add a D 32 lock-leaf cell abroad beside this rung. | **TAKEN — the owner may reverse at review** |
 | 35 | **After §3.8ab's sparse reads (n128p02 +0.022 ± 0.132, n512p02 +0.002 ± 0.133 a pair — the learned leaf's searched moves worth nothing in sets, one at a time; l512 −0.978 ± 0.172 — a static fitted evaluation exploited by the search that optimises against it) and §3.8aa's first block (t32 +0.248 ± 0.144 at home, eligible, where its bridge read was −1.61 points: the search helps against the opponent it models and hurts against the one it does not), under the owner's direction of 2026-09-08 — *"learning from sestina's play is essential to improving … we should be learning to beat sestina if possible … I don't want this to be running for weeks"* — what is v0.30?** **TAKEN — the SESTINA clone (§3.8ac):** its ask policy fitted on its own decisions from the bridge records (about 25 million of them on file), read as a player at home and abroad, and as the opponent model in the t32 form's rollouts abroad — the one-variable comparison to t32's own bridge read; the whole rung inside two days of wall clock. **Deferred by the same direction:** §3.8ab's n24 (13 h) and dense n512 (4–5 h), played only if the machine has the time after this rung's cells. |
+| 36 | **v0.30 clears §3.8n's bar against SESTINA itself — +7.24 ± 0.63 points of win rate on twelve fresh seeds, 48.0% against v0.20c's 40.8%, every seed ahead (§3.8ac). Does it ship?** | **FOR THE OWNER** — the shipped vector changes, which the authorization of 2026-09-05 keeps for the owner: PR #49 (`claude/monet-v0.30-ship`, stacked on #41) carries the registry entry (v0.20c's vector plus `askModel: 'sestina-clone'`), the clone as data, its forward bank and pin, and the /play note re-measured. Merged, 48.0% becomes the shipped number; left open, v0.20c stays shipped and v0.30 stays on the record. M4's read (the clone at the opponents' seats of the t32 form's rollouts) lands about 02:00Z on 2026-09-09 and does not change this row's question. |
 
 ---
 
