@@ -93,6 +93,7 @@ import { MONET_V04B_BANK } from './data/monet-v04b-bank.ts'
 import { MONET_V04C_BANK } from './data/monet-v04c-bank.ts'
 import { MONET_V09_BANK } from './data/monet-v09-bank.ts'
 import { MONET_V020C_BANK } from './data/monet-v020c-bank.ts'
+import { MONET_V030_BANK } from './data/monet-v030-bank.ts'
 import { ASK_FEATURE_COUNT, askModelOf } from '../../lib/engine/bots/imitation.ts'
 import { ask, gs, mkView } from './util.ts'
 
@@ -918,6 +919,75 @@ describe('Monet v0.20c replays its forward bank: every action of whole us54 game
     // runtime check: both fixtures are `as const`, so `MONET_V09_BANK`'s digests and this bank's
     // are disjoint literal unions, and `tsc` rejects a membership test between them (TS2345) the
     // way it rejects `a.digest === b.digest` for v0.1 and v0.2 below.
+  })
+})
+
+/* ----------------------------------------- 4g. v0.30's forward bank, replayed --- */
+
+const forwardF = { games: 0, decisions: 0, digestsChecked: 0 }
+
+/** `playForward` for v0.30 (MONET.md 3.8ac): same derivation, the v0.30 arm asked, the v0.30 bank compared. */
+function playForwardF(row: (typeof MONET_V030_BANK.games)[number]): void {
+  const { table, seed: gameSeed } = row
+  const policy = STYLE_ROSTER[table as keyof typeof STYLE_ROSTER]
+  let s = newGame(gameSeed, us54Config, row.startSeat as Seat)
+  const digest = new ActionDigest()
+  let steps = 0
+  while (s.phase !== 'finished') {
+    if (steps >= 5000) throw new Error(`${table}/${gameSeed}: hit the 5000-step cap`)
+    const { seat } = legalActionsSummary(s)
+    const view = seatView(s, seat)
+    const moveSeed = hashSeed(`${gameSeed}:${s.moveIndex}`)()
+    digest.push(canonicalAction(decide(view, MONET_V030, moveSeed)))
+    forwardF.decisions++
+    const r = reduce(s, decide(view, policy, moveSeed))
+    if (!r.ok) throw new Error(`${table}/${gameSeed} step ${steps}: ${r.error.code}`)
+    s = r.state
+    steps++
+  }
+  expect(digest.count, `${table}/${gameSeed}: decision count vs the v0.30 bank`).toBe(row.decisions)
+  expect(
+    digest.hex(),
+    `${table}/${gameSeed}: action digest vs ${MONET_V030_BANK.revision.slice(0, 12)}`,
+  ).toBe(row.digest)
+  forwardF.digestsChecked++
+  forwardF.games++
+}
+
+describe('Monet v0.30 replays its forward bank: every action of whole us54 games, as accepted', () => {
+  for (const id of STYLE_IDS) {
+    const rows = MONET_V030_BANK.games.filter((g) => g.table === id)
+    it(`${id} table: ${rows.length} us54 games, every digest as recorded`, () => {
+      expect(rows.length).toBe(SEEDS_PER_STYLE)
+      for (const row of rows) playForwardF(row)
+    }, 120_000)
+  }
+
+  it("covered the whole roster over the bank's 26,510 decisions", () => {
+    expect(forwardF.games).toBe(STYLE_IDS.length * SEEDS_PER_STYLE)
+    expect(forwardF.games).toBe(MONET_V030_BANK.games.length)
+    expect(forwardF.decisions).toBe(MONET_V030_BANK.totalDecisions)
+    expect(forwardF.decisions).toBe(26_510)
+    expect(forwardF.digestsChecked).toBe(MONET_V030_BANK.games.length)
+  })
+
+  it('the v0.30 bank says what it is: a forward baseline from a clean tree this repo can name', () => {
+    expect(MONET_V030_BANK.revision).toMatch(/^[0-9a-f]{40}$/)
+    expect(MONET_V030_BANK.tree).toBe('wt')
+    expect(MONET_V030_BANK.dirty).toBe(false)
+    expect(MONET_V030_BANK.arm).toBe('monetPolicy("v0.30")')
+    expect(MONET_V030_BANK.totalDecisions).toBe(
+      MONET_V030_BANK.games.reduce((n, g) => n + g.decisions, 0),
+    )
+    expect(new Set(MONET_V030_BANK.games.map((g) => g.digest)).size).toBe(
+      MONET_V030_BANK.games.length,
+    )
+    // v0.30's games are not v0.20c's: the SESTINA clone chooses the ask wherever the stack leaves
+    // the choice to its ranker, and one moved ask re-deals every position after it. That the two
+    // banks share no digest needs no runtime check: both fixtures are `as const`, so
+    // `MONET_V020C_BANK`'s digests and this bank's are disjoint literal unions, and `tsc` rejects
+    // a membership test between them (TS2345) the way it rejects `a.digest === b.digest` for v0.1
+    // and v0.2 below.
   })
 })
 
