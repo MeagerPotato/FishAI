@@ -459,6 +459,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.39** — where the sets go: the set-level attribution of v0.33's vector against SESTINA, read from v0.38's cells (2026-09-09) | **row 47's, by the standing rule and §3.8ak's record**: every mechanism line reads the same result and two players at parity (50.46% ± 0.66 over twenty-four seeds) have no map; `scripts/probe-set-attribution.mjs` (an instrument, nothing in the engine) replays v0.38's twenty-four cells — 14,400 games of v0.33's vector against SESTINA and 14,400 with the claim knob — and ledgers every set: the deal's split, the ask race (hits and misses into the set by side, the last pull), the end (certain / speculative / gift / forced / after the finish) by side, and the public threat at the knob's speculative claims and at the sets the stack deferred; a read, no bar; the build after it is the largest asymmetry (§3.8al) | **pre-registered 20:33Z 2026-09-09; the run about fifteen minutes on records on file** | S |
 | **v0.38** — the holder clone in the claim path: the belief where it was read to matter (2026-09-09) | **row 46's, by the standing rule and §3.8aj's read**: two claim knobs, off on everything shipped — `claimBelief: 'holder'` (new: under `pAssignment: 'joint'` the set's open cards placed by H1 most certain first under the free slots, the plan's p the product of its beliefs, SESTINA's own independent form) and `claimOwnership: 'priced'` (§3.4b item 2: the structural gate dropped — the gate alone refuses 1,518 of the 1,551 speculative claims SESTINA makes with at most two open cards, so the holder knob alone is inert at home) — at the bars 0.9, 0.95 and 0.98 over v0.33's vector (§3.8ak); eligible for M2 at ≥ +2 SE and a majority of banks against C3 at home (M1), ships by §3.8n's bar against v0.33's vector on twelve fresh seeds (M2); the ship the owner's; nothing shipped reads either knob | **M1 read 19:29Z 2026-09-09: the 0.98 dose +0.165 ± 0.076 a pair over v0.33's vector at home (4.3 SE, 11 of 12 banks, +1.23 points), 0.95 +0.136 (3.1 SE), 0.9 −0.032 — eligible, 0.98 carried (the doses run were 0.9, 0.95 and 0.98; 0.775 was dropped on the pre-read). M2 read 19:51Z 2026-09-09 at the bridge on twelve fresh seeds: +0.28 ± 0.50 points over v0.33's vector (1.12 SE, ahead on 8 of 12; c3 49.87%, the knob 50.15%) — not eligible; the rung stops at M2 and ships nothing. Against SESTINA the knob claims speculatively 0.51 a game at 82.5% right (93.5% at home) and its arm's declare accuracy 97.96% sits below §3.9's 98.0; the sampled deals separate its claims 88 to 80 and cannot pay; the belief line closes at the claim — row 47 is the map of where the sets go (§3.8ak's record)** | S |
 | **v0.37** — the decisions the clone does not cover, read by replaying the records through the engine (2026-09-09) | **row 44's, by the standing rule and §3.8ai's close**: every record game replayed through `reduce` (the window's declines inferred, the option moved by hand where this engine compels a declare, the replay stopped at this engine's finish), and at every window offer, claim and pass SESTINA's action against the stack's `decide()` at the same view — the validation at our own seats; at SESTINA's speculative claims three beliefs in its assignment with the outcome (the marginal, the holder clone H1, the determinizer); the read over the twelve holdout files at a 25% sample; **row 45 = F5, the third feature set with H1, only if SESTINA's speculative claims are ≥ 0.25 a game and ≥ 80% right, the marginal below 0.6 on ≥ 60% of them, and H1 ≥ 0.8 on at least half of the right ones at ≥ 85% right**; nothing shipped, no dose (§3.8aj) | **read 09:58Z 2026-09-09 (3,439 games of the twelve files replayed, 12 minutes): SESTINA claims with cards it cannot place 0.53 times a game, 84.1% right; the stack would decline every one and its marginal is below 0.6 on 78% of them; the holder clone is at 0.8 or above on 71% of the right ones and 93.9% right there — all three bars hold, row 45 = F5 opens (the extraction started 10:00Z, the fit after F4); passes agree 86.8%, no certain set SESTINA deferred was lost; the validation 99.97% on the v0.30 group** | S |
 | **v0.36** — the search with the clone as its policy: t32 with the clone at every seat (2026-09-09) | **row 43's, by the standing rule and §3.8ah's "after this rung"**: §3.8aa's t32 form (D 32, C 4, S 24, the lock-only leaf, the LCB guard) laid over v0.33's vector with `oppAskModel` the same clone — the pick, our seats' rollouts and the opponents' rollouts all the clone, so the rollouts play what every seat at the table plays (the one variable against §3.8ac's M4: our seats' rollout policy); cost read first (631 ms an ask, 44 s a mirror game); M2 = duplicate pairs at home, A = the search over v0.33's vector against B = v0.33's vector, twelve banks of 200, eligible at ≥ +2 SE and a majority; M3 = the bridge on twelve fresh seeds against v0.33's vector by §3.8n's bar; nothing in the engine changes; the ship the owner's (§3.8ai) | **M2 read 09:25Z 2026-09-09: the search over v0.33's vector against v0.33's vector −0.170 ± 0.154 a pair (−1.26 ± 0.59 points, −2.2 SE, 3 of 12 banks ahead); it changes the clone's pick 23% of the time and each change costs 0.009 sets (2.2 SE) — not eligible, behind its own policy with every seat modelled right; the rung stops at M2 and the search line with it (the deals and the horizon, not the models); nothing ships** | L |
@@ -10124,6 +10125,107 @@ the data at the first set (§3.8ad), the second set's fit holds 11 GB of rows in
 not fit beside what the machine runs (31 GB, half of it in use), and the fitter would have to stream its
 rows from disk before the axis could be read at all; it stays on the bench with that cost written down.
 
+### 3.8al Monet v0.39 — where the sets go: the set-level attribution of v0.33's vector against SESTINA, read from v0.38's cells
+
+**Decision row 47, taken 2026-09-09 by the standing rule** (§3.8n: *"just pick whatever will improve the
+winning percentage of Monet"*) **and by §3.8ak's record.** Every mechanism line now reads the same result
+against v0.33's vector: the ask clone at its feature ceiling (F4 +0.02, F5 −0.16, §3.8ag and §3.8ah), the
+search with the clone as its policy (v0.36, −1.26 points at home, §3.8ai), the belief at the ask (v0.35,
++0.99 of the 2.0 required, §3.8ah) and the belief at the claim (v0.38, +0.28 ± 0.50 at the bridge, §3.8ak).
+Two players at parity — v0.33's vector reads 50.46% ± 0.66 over the twenty-four seeds it has played — and
+the record has no map of where the nine sets of a game go between them. This rung is the map, read from
+records already on file: v0.38's twenty-four cells, 14,400 games of v0.33's vector against SESTINA (the c3
+cells) and 14,400 with the claim knob (the k98 cells), replayed through the engine as §3.8ah's probe replays
+them. Nothing is built into the engine, nothing ships, and the build after this rung is the largest
+asymmetry the map shows.
+
+**What the counters already say** (the c3 cells, a game): v0.33's vector declares 4.38 sets at 99.73%
+right, SESTINA 4.56 at 97.77%; §3.8ak's calibration read puts SESTINA's speculative claims at 0.47 a game
+at 78% right and ours at 0.05 at 72%. Arithmetic on those: SESTINA wins about 0.37 sets a game by
+speculative claims to our 0.04, gives back 0.10 a game in wrong declarations to our 0.01, and declares
+about 0.24 fewer sets a game certain than we do (4.09 to 4.33) — the sums 4.47 to 4.47. So the first-order
+map is in the counters: **SESTINA's edge is the speculative claim, ours the certain declaration and its
+gifts, and they cancel.** What the counters cannot say, and the read is for, is the second order: where
+the certain sets come from — the deal's split and the ask race that resolves it — whether that race is
+symmetric at equal splits, and the *value* of a speculative claim by the public threat to the set, the one
+term §3.8ak's record left open.
+
+**The read** (`scripts/probe-set-attribution.mjs`, new — an instrument in `scripts/`, nothing in the engine;
+§3.8ah's replay with a ledger per set). For every set of every game:
+
+- *the deal*: the split of its six cards between the sides (6–0, 5–1, 4–2, 3–3) and which side holds the
+  majority;
+- *the race*: each side's asks into the set — hits (a card pulled across) and misses — and the side that
+  made the last pull;
+- *the end*: the side awarded the set and the mechanism — **certain** (declared by the winner with every
+  card placed by the claimer's own knowledge), **speculative** (declared with one or more cards unplaced,
+  right), **gift** (declared wrong by the other side), **forced** (the record's forced declaration) and
+  **after the finish** (declared after this engine's end, a team at five sets, where the claimer's
+  knowledge is not replayed; those sets do not move the winner);
+
+and the tallies: sets a game by mechanism and side; the winner by the deal's split and by whether it held
+the majority; the asks into contested sets by side, and the last pull against the winner; and the
+**public threat** at a speculative claim — an opponent holds a card of the set (the true hand, the
+omniscient form) or is believed to by the claimer at 0.5 or above (the in-play form), and that opponent's
+own knowledge, built from its seat's view, places a card of the set on our side, so it can ask for one on
+its next turn. On the k98 records the threat is read at the knob's own speculative claims with their
+outcome; on the c3 records the same knob is played at every offer as §3.8ak's counterfactual, and its first
+would-be claim of each set where the stack declined is read by threat class against the set's eventual end
+(the same team later, the other team later). Every file, every game (sample 1), the two arms in parallel at
+BelowNormal.
+
+**Eligibility.** None to clear — a read. Its product is the tables and the decision they make: if the
+threat class separates the deferred sets' losses (Q3), the next rung is the threat-gated claim over
+v0.33's vector (v0.40: M1 at home, then the bridge by §3.8n's bar); if the race is asymmetric at equal
+splits (Q2), the next rung is the ask race; if neither, the record says so and the search for an edge moves
+off the mechanisms measured.
+
+**Wall clock.** The instrument and this section about ninety minutes; the run about fifteen minutes (the
+calibration probes replayed 7,000 games each in thirteen; this replay draws no deals); the record inside the
+hour after. Docker stays down: the records are on file.
+
+#### Pre-registration — written 2026-09-09 20:33Z, before the instrument runs
+
+**Predictions.**
+- **Q1 (the mechanisms).** On the c3 records our side wins 0.20 to 0.30 more sets a game than SESTINA by
+  certain declaration, SESTINA 0.28 to 0.38 more by speculative claims, and gifts run 0.07 to 0.11 a game
+  our way — the counters' arithmetic reproduced by the ledger (75%).
+- **Q2 (the race).** At equal splits the sides win the contested sets equally: at 3–3 each side's share is
+  within ±3 points of 50 (60%); the majority side wins the 4–2 sets 60 to 75% and the 5–1 sets 75 to 90% of
+  the time, the same for both sides within ±4 points (60%). The last pull is the winner's in 90% or more of
+  the certain sets (70%).
+- **Q3 (the threat).** On the k98 records the knob's claims under threat are right within 3 points of its
+  claims without (60%); on the c3 records the sets the knob would have claimed and the stack deferred are
+  lost later **40 to 60%** of the time under threat and **under 20%** without (65%). If both hold, the
+  threat gate keeps the knob's claims where they pay and drops them where patience pays, and v0.40 is that
+  knob.
+- **Q4.** Every wall clock within 1.5× of its projection (60%).
+
+**Addendum, written 2026-09-09 20:38Z, before the run — what a speculative claim is worth, and what the
+home pairs measured.** A speculative claim asserts that all six cards of the set are on the claimer's side.
+Where that is true the opponents hold none of the half-suit and cannot ask into it: the set can only come
+home, and waiting costs nothing but tempo. Where it is false the claim is a gift, and waiting keeps the race
+for the card alive. So under a play-out — the bridge engine awards every set — a speculative claim is never
+worth more than waiting, less what it gives away, plus whatever taking the cards out of play is worth in
+tempo. At home the pairs are read by the paired set difference at this engine's finish (a team at five
+sets), which counts the sets declared by then: a knob that declares sooner raises that difference without
+winning more games. §3.8ak's M1 banks say exactly this: the 0.98 dose read +0.165 sets a pair (4.3 SE) with
+**3.844 sets a game declared against 3.761**, and its **win rate over the same 4,800 games was 50.44%** —
+within a standard error of even — while the anchor (the 0.95 dose over S against S) read 61.5% of the games
+on +1.615 sets a pair, the set difference and the win rate agreeing where the effect is real. **The home
+gain of §3.8ak was tempo; the bridge's +0.28 ± 0.50 is the knob's worth; and the paired set difference at
+home is not a read of a claim-timing knob — its win rate is.** This turns Q3 on its head: the `known` threat
+at a claim is, by construction, the claim being wrong, so Q3's first half should read close to no claims
+under threat, and the deferrals should read the set later its own at about the rate the claim would be right
+now (within 5 points, 60%) — the threat gate vacuous for a knob that claims only what it believes is
+entirely its own. What the map should show instead is where SESTINA's extra held sets come from — the ask
+game, Q1 and Q2 — and how much of them SESTINA gives back by gambling. Written before the instrument runs,
+so that the read cannot be bent to it.
+
+**After this rung.** Q3 holds: v0.40 — a threat gate on the claim planner (a knob nothing shipped reads)
+over the k98 knob, pairs at home then the bridge, the ship the owner's. Q3 fails and Q2 shows an asymmetry:
+the ask race is the next read. Both fail: the map is the record, and the term after is chosen off it.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -10591,6 +10693,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 44 | **After the search line's close — the decisions the ask clone does not cover: does SESTINA declare, decline and hand on differently, and does the stack's belief see what it sees?** | **TAKEN — v0.37 (§3.8aj)**, by the standing rule and §3.8ai's close: a records read, not a cell — every game replayed through this engine and every window offer, claim and pass compared with the stack's own decision at the same view. The smoke (45 games) read SESTINA claiming with unplaced cards at 12% of its claims, 87% right, where the stack would decline every one and its marginal says 0.3 to 0.5 — and the holder clone (§3.8ah's H1) at 0.8 or above on 13 of them, all 13 right. The twelve-file read decides (bars in §3.8aj) whether the belief line reopens with the third feature set (row 45); nothing shipped, no dose. **Read 09:58Z 2026-09-09: all three bars hold — SESTINA's speculative claims 0.53 a game and 84.1% right; the marginal below 0.6 on 78% of them; H1 at 0.8 or above on 71% of the right ones, 93.9% right there (the marginal reaches 0.9 on 148 of them, H1 on 887). The holder clone carries what the marginal lacks where sets are claimed; §3.8ah's M0 measured the wrong average. Row 45 opens.** |
 | 45 | **The belief line reopened by row 44's read — the ask clone at the third feature set?** | **TAKEN — F5, §3.8ah's M1 exactly** (the extraction at `--features 3` with H1 as `sestina-holder-1`, the 5% sample under salt 31, F3's recipe — mlp 64·64, 24 epochs, seed 1; eligible for M2 at holdout top-1 ≥ 59.51% with the half-suit-and-seat agreement ≥ 85.61%; then C5 against C3 at home at ≥ +2 SE and a majority, then the bridge against v0.33's vector by §3.8n's bar; the ship the owner's, stacked on #60), by row 44's read: the holder clone is right where SESTINA declares and the marginal is not, and the seat class was the belief's to reach. The extraction started 10:00Z 2026-09-09 beside F4; the fit waits for F4's exit (about 15:15Z), about five hours; `duplicate-pairs.mjs` takes `--a-holder-model` for the pairs (this PR); the bridge adapter's holder support is built only if M2 passes. **Read 18:20Z 2026-09-09: not eligible — F5 58.35% against F3's 58.51% (−0.16 of the +1.0 required; the record had grown by 24 files, and the probe reads −0.16 like for like), the seat 85.45% against 85.61%; the holder's four features carry nothing the ask clone can use — the same 58.5% at the second set, the wider net and the third set; the rung STOPS at M1 and ships nothing. The belief's worth is at the claim: row 46.** |
 | 46 | **After F4 and F5 stop at the ask — the belief where it was read to matter: the holder clone in the claim path?** | **TAKEN — v0.38 (§3.8ak)**, by the standing rule and §3.8aj's read: the ask clone is measured at two widths and two feature sets and reads 58.5% at all of them (the same result), while the holder clone reads 93.9% right where SESTINA declares speculatively and the marginal sits below 0.6. The rung: a claim knob, `claimBelief: 'holder'` — the joint planner's open cards placed by H1's belief, most certain first under the seats' free slots, and the plan's p their product (SESTINA's own independent form; §3.8aj's probe measured exactly this quantity) — the bar unchanged at 0.775 and a second dose at 0.9; behind a knob nothing shipped reads; pairs at home over v0.33's vector (C3 with the knob against C3, the control first, ≥ +2 SE and a majority), then the bridge by §3.8n's bar, the adapter's holder support built only then; the ship the owner's, stacked on #60. Pre-registered in §3.8ak before the pairs. **Read 19:51Z 2026-09-09: M1 the 0.98 dose +0.165 ± 0.076 a pair at home (4.3 SE, 11 of 12 banks) — eligible (the doses run were 0.9, 0.95 and 0.98; 0.775 dropped on the pre-read); M2 at the bridge +0.28 ± 0.50 points over v0.33's vector (1.12 SE, 8 of 12) — NOT eligible; the rung STOPS at M2; nothing ships. The belief line closes at the claim: the knob claims at SESTINA's rate and above its accuracy (0.51 a game at 82.5% against SESTINA) for a quarter of a point, and neither the marginal, H1 nor the sampled deals separate its right claims from its wrong ones. The term after is the map of where the sets go — row 47.** |
+| 47 | **After v0.38 stops at the claim — where do the nine sets of a game go between two players at parity?** | **TAKEN — v0.39 (§3.8al)**, by the standing rule and §3.8ak's record: the ask clone (F4, F5), the search (v0.36), the belief at the ask (v0.35) and at the claim (v0.38) all read the same result against v0.33's vector, which reads 50.46% ± 0.66 over twenty-four seeds; the counters say SESTINA's edge is the speculative claim (+0.33 sets a game), ours the certain declaration (+0.24) and its gifts (+0.09), and that they cancel; the read is the second order — the deal's split and the race behind the certain sets, and the value of a speculative claim by the public threat — from v0.38's 14,400 + 14,400 games on file, an instrument in `scripts/` and nothing in the engine; nothing ships; the build after is the largest asymmetry. Pre-registered in §3.8al before the run. |
 
 ---
 
