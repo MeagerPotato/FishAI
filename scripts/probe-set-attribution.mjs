@@ -71,6 +71,7 @@ const WRONG = ['certainWrong', 'wrong', 'forcedWrong', 'afterFinishWrong']
 const pair = () => ({ n: 0, right: 0 })
 const cf = () => ({ n: 0, rightNow: 0, laterOwn: 0, laterLost: 0, never: 0 })
 const dom = () => ({ n: 0, certain: 0, specRight: 0, specWrong: 0, minorityWon: 0, other: 0 })
+const ld = () => ({ n: 0, converted: 0 })
 /** A tally for one side (the arm, or SESTINA). */
 function side() {
   return {
@@ -90,6 +91,11 @@ function side() {
     gambles: { oppAsks0: pair(), oppAsks1: pair(), ownAsks0: pair(), ownAsks1: pair(), oppHeld: [0, 0, 0] },
     // 3.8am: the sets this side held 5-1 or 4-2 at the deal, by whether the other side ever asked into them, by their end
     dominated: { minorityAsks0: dom(), minorityAsks1: dom() },
+    // 3.8an (row 49): the leads this side took - the first to four of six in a 3-3 set, before the finish - by its first
+    // ask decision after (a chase into the set, elsewhere, none before the set resolved), with the conversion
+    leads: { all: ld(), chase: ld(), elsewhere: ld(), none: ld() },
+    // 3.8an: every ask decision this side made while leading a 3-3 set at four to two (3.8q's R1 population): chases
+    leadDecisions: { n: 0, chase: 0 },
   }
 }
 const T = { arm: side(), sestina: side() }
@@ -144,7 +150,7 @@ function replay(rec) {
   const sideIndex = (team) => (team !== rec.teamA ? 1 : 0) // 0 the arm, 1 SESTINA
   // the ledger: one entry a set
   const sets = {}
-  for (const b of BOOKS) sets[b] = { split: [0, 0], held: [0, 0], hits: [0, 0], misses: [0, 0], lastPull: -1, end: null }
+  for (const b of BOOKS) sets[b] = { split: [0, 0], held: [0, 0], hits: [0, 0], misses: [0, 0], lastPull: -1, end: null, lead: { team: -1, pending: false, first: null } }
   rec.hands0.forEach((h, x) => { for (const c of h) sets[CARDS.cardBook(c)].split[seatTeam(x)]++ })
   for (const b of BOOKS) { sets[b].held[0] = sets[b].split[0]; sets[b].held[1] = sets[b].split[1] }
   const deferred = []
@@ -209,7 +215,11 @@ function replay(rec) {
       if (ev.type === 'ask') { // the race is ledgered from the record itself, after the finish too
         const L = sets[CARDS.cardBook(ev.card)]
         const t = seatTeam(ev.asker)
+        // 3.8an: this ask is the leading side's first decision after taking a lead in any set still open
+        for (const b of BOOKS) { const K = sets[b].lead; if (K.pending && K.team === t && !sets[b].end) { K.pending = false; K.first = CARDS.cardBook(ev.card) === b ? 'chase' : 'elsewhere' } }
+        if (s.phase !== 'finished') for (const b of BOOKS) { const Lb = sets[b]; if (Lb.lead.team === t && !Lb.end && Lb.held[t] === 4 && Lb.held[1 - t] === 2) { const D = sideOfTeam(t).leadDecisions; D.n++; if (CARDS.cardBook(ev.card) === b) D.chase++ } }
         if (ev.hit) { L.hits[t]++; L.lastPull = t; L.held[t]++; L.held[1 - t]-- } else L.misses[t]++
+        if (ev.hit && s.phase !== 'finished' && !L.end && L.split[0] === 3 && L.split[1] === 3 && L.lead.team < 0 && L.held[t] === 4) { L.lead.team = t; L.lead.pending = true }
       }
       // this engine ends the game once a team holds five sets (the win is decided); the recording engine plays on
       if (s.phase === 'finished') {
@@ -281,6 +291,11 @@ function replay(rec) {
     else {
       W.won.gift++
       C.wrong[cls === 'certain' ? 'certainWrong' : cls === 'speculative' ? 'wrong' : cls === 'forced' ? 'forcedWrong' : 'afterFinishWrong']++
+    }
+    if (L.lead.team >= 0) { // 3.8an
+      const S = sideOfTeam(L.lead.team)
+      const conv = winner === L.lead.team
+      for (const F of [S.leads.all, S.leads[L.lead.first ?? 'none']]) { F.n++; if (conv) F.converted++ }
     }
     const split = Math.min(L.split[0], L.split[1])
     const SP = SPLIT[split]
@@ -373,6 +388,9 @@ for (const [name, S] of [['the arm (ours)', T.arm], ['SESTINA', T.sestina]]) {
   console.log(`the race in contested sets: asks into them ${per(r.asks)} a game at ${pct(r.hits, r.asks)} hit; into sets it won ${r.intoWon.asks} at ${pct(r.intoWon.hits, r.intoWon.asks)}, into sets it lost ${r.intoLost.asks} at ${pct(r.intoLost.hits, r.intoLost.asks)}; certain sets won in contested splits ${S.certainContested}: the last pull its own ${pct(S.lastPullOwn, S.certainContested)}, no pull of its own ${pct(S.certainNoPull, S.certainContested)}`)
   const tc = S.threatClaims
   console.log(`the public threat at its speculative claims — known (the true hand): under threat ${tc.known.yes.n} right ${pct(tc.known.yes.right, tc.known.yes.n)}, not ${tc.known.no.n} right ${pct(tc.known.no.right, tc.known.no.n)}; public (believed at 0.5+): under threat ${tc.public.yes.n} right ${pct(tc.public.yes.right, tc.public.yes.n)}, not ${tc.public.no.n} right ${pct(tc.public.no.right, tc.public.no.n)}`)
+  const ldr = S.leads
+  console.log(`3.8an: leads taken (the first to four of six in a 3-3 set) ${ldr.all.n} (${per(ldr.all.n)} a game), converted ${pct(ldr.all.converted, ldr.all.n)}; at the first lead decision a chase ${ldr.chase.n} (${pct(ldr.chase.n, ldr.all.n)} of the leads) converting ${pct(ldr.chase.converted, ldr.chase.n)}, elsewhere ${ldr.elsewhere.n} (${pct(ldr.elsewhere.n, ldr.all.n)}) converting ${pct(ldr.elsewhere.converted, ldr.elsewhere.n)}, no decision ${ldr.none.n} converting ${pct(ldr.none.converted, ldr.none.n)}`)
+  console.log(`  every lead decision (at four to two in a 3-3 set it leads): ${S.leadDecisions.n} (${per(S.leadDecisions.n)} a game), a chase ${pct(S.leadDecisions.chase, S.leadDecisions.n)}`)
   const g = S.gambles
   console.log(`3.8am: its speculative claims by the other side's asks into the set before the claim — none ${g.oppAsks0.n} right ${pct(g.oppAsks0.right, g.oppAsks0.n)}, some ${g.oppAsks1.n} right ${pct(g.oppAsks1.right, g.oppAsks1.n)}; by its own asks — none ${g.ownAsks0.n} right ${pct(g.ownAsks0.right, g.ownAsks0.n)}, some ${g.ownAsks1.n} right ${pct(g.ownAsks1.right, g.ownAsks1.n)}; the other side's cards in the set at the claim 0 / 1 / 2+: ${g.oppHeld.join(' / ')}`)
   for (const [name, D] of [['the other side never asked into it', S.dominated.minorityAsks0], ['the other side asked into it', S.dominated.minorityAsks1]]) console.log(`  the sets it held 5-1 or 4-2 at the deal, ${name}: ${D.n} (${per(D.n)} a game): declared certain ${pct(D.certain, D.n)}, gambled right ${pct(D.specRight, D.n)}, gambled wrong (a gift) ${pct(D.specWrong, D.n)}, the other side won it ${pct(D.minorityWon, D.n)}, other ${pct(D.other, D.n)}`)
