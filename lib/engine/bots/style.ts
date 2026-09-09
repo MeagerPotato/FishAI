@@ -277,6 +277,20 @@ export interface StyleParams extends AskWeights {
    */
   pAssignment?: 'greedy' | 'joint'
   /**
+   * MONET.md §3.8ak — whose belief places a claim's open cards under `pAssignment: 'joint'`.
+   * `'marginal'` (and absent) is `joint.ts`'s chain over the marginal, byte for byte; `'holder'` hands
+   * the open cards to the holder clone named by `claimHolderModel` (`claimbelief.ts`): most certain
+   * first under the seats' free slots, the plan's probability the product of its beliefs — SESTINA's
+   * own independent form, and the quantity §3.8aj's replay measured at its speculative claims. Inert
+   * without `pAssignment: 'joint'`. Absent on every roster style and every tier; nothing shipped reads it.
+   */
+  claimBelief?: 'marginal' | 'holder'
+  /**
+   * MONET.md §3.8ak — the registered holder model (`registerHolderModel`) that `claimBelief: 'holder'`
+   * reads; required with it, meaningless without.
+   */
+  claimHolderModel?: string
+  /**
    * MONET.md §3.6a — the ask-choice prior's strength κ (≥ 0). Each ask a seat makes into a
    * half-suit multiplies the marginal's prior weight of that half-suit's unknown cards at that seat
    * by `1 + κ` before scaling, saturating at three asks (`KnowledgeOptions.choiceKappa`; the shape
@@ -834,6 +848,10 @@ export function validateStyle(style: StyleParams): string[] {
   if (pModel !== undefined && pModel !== 'slot' && pModel !== 'marginal') bad.push(`pModel ${String(pModel)} is not 'slot' or 'marginal'`)
   const pAssignment = style.pAssignment
   if (pAssignment !== undefined && pAssignment !== 'greedy' && pAssignment !== 'joint') bad.push(`pAssignment ${String(pAssignment)} is not 'greedy' or 'joint'`)
+  // MONET.md §3.8ak: the claim belief is a closed choice too, and the holder clone needs a name to read.
+  const claimBelief = style.claimBelief
+  if (claimBelief !== undefined && claimBelief !== 'marginal' && claimBelief !== 'holder') bad.push(`claimBelief ${String(claimBelief)} is not 'marginal' or 'holder'`)
+  if (claimBelief === 'holder' && !(typeof style.claimHolderModel === 'string' && style.claimHolderModel.length > 0)) bad.push("claimBelief 'holder' needs claimHolderModel, a registered holder model's name")
   const defusePolicy = style.defusePolicy
   if (defusePolicy !== undefined && defusePolicy !== 'scalar' && defusePolicy !== 'state') bad.push(`defusePolicy ${String(defusePolicy)} is not 'scalar' or 'state'`)
   const defuseState = style.defuseState

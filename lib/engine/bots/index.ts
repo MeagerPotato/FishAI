@@ -92,6 +92,7 @@ export { LICENCE_MIN_Z, licenceConditionedHitProbability, licenceNormaliser, mod
 export { MARGINAL_ROUNDS, MARGINAL_TOLERANCE, attachMarginal, computeMarginalTable, marginalFor, marginalHitProbability } from './marginal.ts'
 export type { MarginalTable } from './marginal.ts'
 export { assignJointly } from './joint.ts'
+export { assignByHolder, holderContextFor } from './claimbelief.ts'
 export type { JointAssignment, JointStep } from './joint.ts'
 // `PolicySpec` is re-exported from bounded.ts, where adaptive.ts's widened union gains
 // `BoundedSpec` — the acyclic arrangement documented in both file headers. Everything
