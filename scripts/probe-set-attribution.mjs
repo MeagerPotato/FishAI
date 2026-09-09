@@ -141,6 +141,7 @@ function replay(rec) {
   for (const b of BOOKS) sets[b] = { split: [0, 0], hits: [0, 0], misses: [0, 0], lastPull: -1, end: null }
   rec.hands0.forEach((h, x) => { for (const c of h) sets[CARDS.cardBook(c)].split[seatTeam(x)]++ })
   const deferred = []
+  const pendingThreat = [] // the threat read at this side's speculative claims, written when the replay completes
   const knobSeen = new Set()
   let n = 0
   const step = (action) => {
@@ -241,12 +242,7 @@ function replay(rec) {
       const cls = ev.forced ? 'forced' : u === 0 ? 'certain' : 'speculative'
       if (u > 0 && !ev.forced) {
         const fl = threatFlags(s, ev.book, team, k)
-        const S = sideOfTeam(team)
-        for (const [name, on] of [['known', fl.known], ['public', fl.pub]]) {
-          const P = S.threatClaims[name][on ? 'yes' : 'no']
-          P.n++
-          if (right) P.right++
-        }
+        pendingThreat.push({ team, known: fl.known, pub: fl.pub, right })
       }
       endSet(ev, cls, u)
       step({ type: 'claim', seat: ev.claimer, book: ev.book, assignments: ev.assignments })
@@ -299,6 +295,14 @@ function replay(rec) {
         if (L.lastPull === winner) W.lastPullOwn++
         if (L.hits[winner] === 0) W.certainNoPull++
       }
+    }
+  }
+  for (const t of pendingThreat) {
+    const S = sideOfTeam(t.team)
+    for (const [name, on] of [['known', t.known], ['public', t.pub]]) {
+      const P = S.threatClaims[name][on ? 'yes' : 'no']
+      P.n++
+      if (t.right) P.right++
     }
   }
   for (const d of deferred) {
