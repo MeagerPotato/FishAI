@@ -84,7 +84,8 @@ const useFiles = MAXF > 0 ? holdoutFiles.slice(0, MAXF) : holdoutFiles
 /** A tally for one side (SESTINA, or our arm). */
 function side() {
   return {
-    offers: 0, ourClaimAtDecline: 0, ourClaimAtDeclineCertain: 0, deferredSameWindow: 0, deferredLaterOwn: 0, deferredLaterLost: 0, deferredNever: 0,
+    offers: 0, ourClaimAtDecline: 0, ourClaimAtDeclineCertain: 0,
+    deferredCertain: { sameWindow: 0, laterOwn: 0, laterLost: 0, never: 0 }, deferredSpeculative: { sameWindow: 0, laterOwn: 0, laterLost: 0, never: 0 },
     claims: 0, claimsRight: 0, claimsForced: 0, claimsOnTurn: 0, claimsByUncertain: [0, 0, 0, 0, 0, 0, 0], claimsRightByUncertain: [0, 0, 0, 0, 0, 0, 0],
     // the stack's own belief in the claimer's assignment (the product of its marginals over the cards the claimer could
     // not place; 1 when every card is placed), by decile, with the outcome: the calibration of the other side's gambles
@@ -153,8 +154,9 @@ function replay(rec) {
       S.offers++
       if (ours.type === 'claim') {
         S.ourClaimAtDecline++
-        if (certainForTeam(k, ours.book, team)) S.ourClaimAtDeclineCertain++
-        deferred.push({ seat, book: ours.book, evIndex, team })
+        const certain = certainForTeam(k, ours.book, team)
+        if (certain) S.ourClaimAtDeclineCertain++
+        deferred.push({ seat, book: ours.book, evIndex, team, certain })
       }
       return
     }
@@ -232,20 +234,24 @@ function replay(rec) {
     }
   }
   let evIndex = -1
-  for (let i = 0; i < rec.events.length; i++) {
-    const ev = rec.events[i]
-    // the reader's own bookkeeping events (game_started, player_out, ...) are not actions: the engine emits its own
-    if (ev.type !== 'ask' && ev.type !== 'claim' && ev.type !== 'pass') continue
-    // this engine ends the game once a team holds five sets (the win is decided); the recording engine plays on
-    if (s.phase === 'finished') { G.eventsAfterFinish++; continue }
-    evIndex = i
-    try {
-      replayOne(ev)
-    } catch (e) {
-      const err = new Error(e.message)
-      err.ctx = `${rec.label} ${e.message} @${i}/${rec.events.length} ${JSON.stringify(ev).slice(0, 160)} | phase=${s.phase} turn=${s.turn} window=${JSON.stringify(s.declareWindow)} counts=${s.hands.map((h) => h.length).join(',')} books=${Object.keys(s.books).length} | next=${JSON.stringify(rec.events[i + 1] ?? null).slice(0, 160)}`
-      throw err
+  try {
+    for (let i = 0; i < rec.events.length; i++) {
+      const ev = rec.events[i]
+      // the reader's own bookkeeping events (game_started, player_out, ...) are not actions: the engine emits its own
+      if (ev.type !== 'ask' && ev.type !== 'claim' && ev.type !== 'pass') continue
+      // this engine ends the game once a team holds five sets (the win is decided); the recording engine plays on
+      if (s.phase === 'finished') { G.eventsAfterFinish++; continue }
+      evIndex = i
+      try {
+        replayOne(ev)
+      } catch (e) {
+        const err = new Error(e.message)
+        err.ctx = `${rec.label} ${e.message} @${i}/${rec.events.length} ${JSON.stringify(ev).slice(0, 160)} | phase=${s.phase} turn=${s.turn} window=${JSON.stringify(s.declareWindow)} counts=${s.hands.map((h) => h.length).join(',')} books=${Object.keys(s.books).length} | next=${JSON.stringify(rec.events[i + 1] ?? null).slice(0, 160)}`
+        throw err
+      }
     }
+  } finally {
+    resolveDeferred()
   }
   function replayOne(ev) {
     if (ev.type === 'ask') {
@@ -279,20 +285,24 @@ function replay(rec) {
     } else throw new Error(`event:${ev.type}`)
     G.events++
   }
-  // deferrals resolved by the record itself: who declared the set in the end (the record plays every set out). A claim
-  // of that set by a teammate at this very window (the event the offers led up to) is the recording engine's offer
-  // order, not a deferral, and is counted apart.
-  for (const d of deferred) {
-    const S = d.team !== rec.teamA ? T.sestina : T.arm
-    const atWindow = rec.events[d.evIndex]
-    if (atWindow && atWindow.type === 'claim' && atWindow.book === d.book && seatTeam(atWindow.claimer) === d.team) { S.deferredSameWindow++; continue }
-    const later = rec.events.slice(d.evIndex + 1).find((e) => e.type === 'claim' && e.book === d.book)
-    if (!later) S.deferredNever++
-    else if (later.outcome === `team${d.team}`) S.deferredLaterOwn++
-    else S.deferredLaterLost++
-  }
   if (s.phase !== 'finished') return 'notFinished'
   return null
+  // deferrals resolved by the record itself (also for a game set aside part-way): who declared the set in the end (the
+  // record plays every set out). A claim of that set by a teammate at this very window (the event the offers led up
+  // to) is the recording engine's offer order, not a deferral, and is counted apart; a certain set and a speculative
+  // one (the stack's own gamble at p >= its threshold) are counted apart.
+  function resolveDeferred() {
+    for (const d of deferred) {
+      const S = d.team !== rec.teamA ? T.sestina : T.arm
+      const R = d.certain ? S.deferredCertain : S.deferredSpeculative
+      const atWindow = rec.events[d.evIndex]
+      if (atWindow && atWindow.type === 'claim' && atWindow.book === d.book && seatTeam(atWindow.claimer) === d.team) { R.sameWindow++; continue }
+      const later = rec.events.slice(d.evIndex + 1).find((e) => e.type === 'claim' && e.book === d.book)
+      if (!later) R.never++
+      else if (later.outcome === `team${d.team}`) R.laterOwn++
+      else R.laterLost++
+    }
+  }
 }
 
 const DEBUG = Number(argOf('--debug', 0))
@@ -317,7 +327,11 @@ console.log(`probe-side-decisions: ${useFiles.length} holdout files of ${files.l
 console.log(`set aside: ${JSON.stringify(G.setAside)}; actions after this engine's finish (a team at five sets) ${G.eventsAfterFinish}; option moved by hand in compelled windows ${G.compelledMoves}`)
 for (const [name, S] of [['SESTINA', T.sestina], ['arm A (ours, its own version: the validation)', T.arm]]) {
   console.log(`--- ${name} ---`)
-  console.log(`window offers declined ${S.offers}; the stack would claim at ${S.ourClaimAtDecline} (${pct(S.ourClaimAtDecline, S.offers)}), ${S.ourClaimAtDeclineCertain} of them certain sets; of those, claimed by a teammate at that same window ${S.deferredSameWindow} (the recording engine's offer order), later by the same team ${S.deferredLaterOwn}, later by the other team ${S.deferredLaterLost}, never ${S.deferredNever}`)
+  const dc = S.deferredCertain
+  const ds = S.deferredSpeculative
+  console.log(`window offers declined ${S.offers}; the stack would claim at ${S.ourClaimAtDecline} (${pct(S.ourClaimAtDecline, S.offers)}), ${S.ourClaimAtDeclineCertain} of them certain sets`)
+  console.log(`  the certain ones: claimed by a teammate at that same window ${dc.sameWindow} (the recording engine's offer order), later by the same team ${dc.laterOwn}, later by the other team ${dc.laterLost}, never ${dc.never}`)
+  console.log(`  the speculative ones (the stack's own gamble): claimed by a teammate at that same window ${ds.sameWindow}, later by the same team ${ds.laterOwn}, later by the other team ${ds.laterLost}, never ${ds.never}`)
   console.log(`the stack's belief in the claimer's assignment where cards were unplaced, by decile 0..9 (claims: right): ${S.beliefDecile.map(([a, b]) => `${a}:${b}`).join(' ')}`)
   if (HOLDER) console.log(`the holder clone's belief in the same assignments, by decile 0..9 (claims: right): ${S.holderDecile.map(([a, b]) => `${a}:${b}`).join(' ')}`)
   const fb = S.forcedBy
