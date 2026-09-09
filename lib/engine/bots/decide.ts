@@ -110,6 +110,8 @@ import {
 import { marginalFor } from './marginal.ts'
 import { askModelOf, chooseAskByModel } from './imitation.ts'
 import { assignJointly } from './joint.ts'
+import { assignByHolder } from './claimbelief.ts'
+import { holderModelOf } from './holder.ts'
 import { planContainedPass } from './contained.ts'
 import type { ContainedPassPlan, PassValuation } from './contained.ts'
 import { defusalActive, defusalAppetite, defusalBonus, logLicences } from './defuse.ts'
@@ -487,7 +489,15 @@ function planClaim(view: SeatView, k: Knowledge, book: BookId, style?: StylePara
   // at 0 (a card certainly with an opponent, or with no teammate to name) stays at 0: the chain
   // has nothing to add to an impossible claim. An open card the table does not carry (none, on a
   // consistent view) keeps its greedy placement and its greedy factor.
-  if (joint && p > 0 && uncertain.length > 0) {
+  if (joint && p > 0 && uncertain.length > 0 && style?.claimBelief === 'holder') {
+    // MONET.md §3.8ak: the open cards handed to the holder clone instead of the chain — most certain
+    // first under the seats' free slots, the plan's probability the product of its beliefs
+    // (`claimbelief.ts`). The greedy pass's zero (a card certainly with an opponent, or with no
+    // teammate to name) stays a zero, as under the chain.
+    const hb = assignByHolder(k, view, holderModelOf(style.claimHolderModel ?? ''), uncertain, mates)
+    for (const c of uncertain) assignments[c] = hb.assignments[c] ?? me
+    p = hb.p
+  } else if (joint && p > 0 && uncertain.length > 0) {
     const table = marginalFor(k)
     if (table) {
       const inTable = uncertain.filter((c) => table.index.has(c))
@@ -904,7 +914,7 @@ function evClaim(
     )
     t.notes.push(`Holders: ${assignmentNote(view, best)}.`)
     t.notes.push(
-      `Guessed: ${best.uncertain.map(pc).join(', ')} — ${style.pAssignment === 'joint' ? 'placed by the chain over the marginal, most certain first (MONET.md §3.4b)' : 'assigned to the teammate with the most unidentified cards'}; ${style.claimOwnership === 'priced' ? 'a candidate may be an opponent, and p carries that share' : 'every candidate is a teammate'}.`,
+      `Guessed: ${best.uncertain.map(pc).join(', ')} — ${style.pAssignment === 'joint' ? (style.claimBelief === 'holder' ? 'placed by the holder clone, most certain first, p the product of its beliefs (MONET.md §3.8ak)' : 'placed by the chain over the marginal, most certain first (MONET.md §3.4b)') : 'assigned to the teammate with the most unidentified cards'}; ${style.claimOwnership === 'priced' ? 'a candidate may be an opponent, and p carries that share' : 'every candidate is a teammate'}.`,
     )
     if (foreign) t.notes.push('A foreign declare: this hand holds no card of the set, so the whole plan is public inference.')
   }

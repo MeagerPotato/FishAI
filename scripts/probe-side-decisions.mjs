@@ -53,6 +53,8 @@ const HOLD = Number(argOf('--holdout-mod', 5))
 const MAXF = Number(argOf('--max-files', 0))
 const ARMV = argOf('--arm-version', '')
 const OUT = argOf('--out', '')
+// MONET.md 3.8ak: a knob laid over the stack, played at every window offer as a counterfactual (--knob '<json>')
+const KNOB = argOf('--knob', '') ? JSON.parse(argOf('--knob', '')) : null
 const SPEC_B = argOf('--spec-b', 'v07:r12=25,rtie=1,pool=-1,oppfloor=-1,force=1000000,askfloor=-1,stall=12,s1=1,det=12,cand=4,kappa=2.5,rbelief=indep,depth=12,maxq=26')
 if (DIRS.length === 0) {
   console.error('--records is required')
@@ -60,6 +62,7 @@ if (DIRS.length === 0) {
 }
 const pol0 = MON.monetPolicy(VERSION)
 const POL = OVER ? Object.freeze({ skill: pol0.skill, style: Object.freeze({ ...pol0.style, ...OVER }) }) : pol0
+const KNOB_POL = KNOB ? Object.freeze({ skill: POL.skill, style: Object.freeze({ ...POL.style, ...KNOB }) }) : null
 const { skill, style } = BOTS.resolvePolicy(POL)
 const marginal = style.pModel === 'marginal'
 const KOPTS = { logWindow: skill.logWindow, useConstraints: skill.useConstraints, marginal, choiceKappa: marginal ? style.choiceKappa : undefined, choiceAdapt: marginal ? style.choiceAdapt : undefined, choicePrior: marginal ? style.choicePrior : undefined }
@@ -95,6 +98,14 @@ function side() {
     forcedBy: { forced: [0, 0], likely: [0, 0], gamble: [0, 0], none: [0, 0] },
     // the holder clone's belief in the same assignments (--holder-model), by decile, with the outcome
     holderDecile: Array.from({ length: 10 }, () => [0, 0]),
+    // MONET.md 3.8ak (row 46): what the holder clone in the claim path would do at the claimer's speculative claims -
+    // the stack's structural gate (every open card's candidates on the claimer's team, at most two open), then the
+    // knob's own plan (the belief most certain first under the free slots, p the product), whether it is the
+    // claimer's, and its own outcome against the true holders by bar ([claims, right, unscored])
+    knob: { gatePass: 0, gateFail: 0, tooMany: 0, planSame: 0, at9: [0, 0, 0], at775: [0, 0, 0], below: [0, 0, 0] },
+    // 3.8ak: the knob (--knob) played at every offer of this side - its speculative claims (cards it could not place),
+    // right against the true hands at that moment, the claimer's own claim reproduced, and its certain claims
+    knobPlay: { offers: 0, spec: 0, right: 0, sameAsClaimer: 0, cert: 0, first: 0, firstRight: 0 },
     ourAtClaim: { sameBookSameAssign: 0, sameBookOtherAssign: 0, otherBook: 0, decline: 0 },
     ourAtClaimRight: { sameBookSameAssign: 0, sameBookOtherAssign: 0, otherBook: 0, decline: 0 },
     claimAge: [], // events since the claimed set became certain to the claimer (by its own knowledge), -1 if never certain
@@ -132,6 +143,7 @@ function replay(rec) {
   const certainAt = Array.from({ length: 6 }, () => ({}))
   // deferrals: {seat, book, at} where our stack would have claimed and the seat declined
   const deferred = []
+  const knobSeen = new Set() // 3.8ak: (team, set) the knob has already claimed in this game
   let n = 0
   const step = (action) => {
     const r = reduce(s, action)
@@ -150,6 +162,23 @@ function replay(rec) {
     }
     const ours = ENG.decide(view, polOf(seat), hashSeed(`${rec.label}:side:${n}:${seat}`)())
     const S = sideOf(seat)
+    if (KNOB_POL) {
+      const a = ENG.decide(view, KNOB_POL, hashSeed(`${rec.label}:knob:${n}:${seat}`)())
+      S.knobPlay.offers++
+      if (a.type === 'claim') {
+        const cards = CARDS.bookCards(a.book, us54Config)
+        let u = 0
+        for (const c of cards) if (k.holders[c] === undefined) u++
+        if (u > 0) {
+          S.knobPlay.spec++
+          const rightNow = cards.every((c) => s.hands[a.assignments[c]].includes(c))
+          if (rightNow) S.knobPlay.right++
+          const key = `${team}:${a.book}`
+          if (!knobSeen.has(key)) { knobSeen.add(key); S.knobPlay.first++; if (rightNow) S.knobPlay.firstRight++ }
+          if (actual !== 'decline' && actual.book === a.book && cards.every((c) => actual.assignments[c] === a.assignments[c])) S.knobPlay.sameAsClaimer++
+        } else S.knobPlay.cert++
+      }
+    }
     if (actual === 'decline') {
       S.offers++
       if (ours.type === 'claim') {
@@ -180,6 +209,29 @@ function replay(rec) {
         const dh = Math.min(9, Math.floor(ph * 10))
         S.holderDecile[dh][0]++
         if (right) S.holderDecile[dh][1]++
+        // the knob (3.8ak): the gate, then the knob's own plan, scored against the true holders where the record has them
+        const open = CARDS.bookCards(ev.book, us54Config).filter((c) => k.holders[c] === undefined)
+        if (open.length > 2) S.knob.tooMany++
+        else if (!open.every((c) => (k.cands[c] ?? []).length > 0 && (k.cands[c] ?? []).every((x) => seatTeam(x) === team))) S.knob.gateFail++
+        else {
+          S.knob.gatePass++
+          const mates = [team, team + 2, team + 4]
+          const bel = new Map(open.map((c) => [c, BOTS.holderBelief(HOLDER, ctx, k, view, c)]))
+          const cap = [...k.unknownSlots]
+          const pending = new Set(open)
+          const assign = {}
+          let pk = 1
+          while (pending.size > 0) {
+            let bc = null, bs = -1, bp = -1
+            for (const c of pending) for (const x of mates) { const v = cap[x] > 0 ? bel.get(c)[x] : 0; if (v > bp) { bp = v; bc = c; bs = x } }
+            if (!(bp > 0)) { pk = 0; for (const c of pending) assign[c] = mates[0]; break }
+            assign[bc] = bs; pk *= bp; cap[bs]--; pending.delete(bc)
+          }
+          if (open.every((c) => assign[c] === ev.assignments[c])) S.knob.planSame++
+          const b = pk >= 0.9 ? 'at9' : pk >= 0.775 ? 'at775' : 'below'
+          S.knob[b][0]++
+          if (open.every((c) => ev.actualHolders[c] !== undefined)) { if (open.every((c) => assign[c] === ev.actualHolders[c])) S.knob[b][1]++ } else S.knob[b][2]++
+        }
       }
       // is the assignment forced by what the claimer could know? deals consistent with the stack's knowledge
       const rng = RNG.mulberry32(hashSeed(`${rec.label}:deals:${n}`)() >>> 0)
@@ -334,6 +386,8 @@ for (const [name, S] of [['SESTINA', T.sestina], ['arm A (ours, its own version:
   console.log(`  the speculative ones (the stack's own gamble): claimed by a teammate at that same window ${ds.sameWindow}, later by the same team ${ds.laterOwn}, later by the other team ${ds.laterLost}, never ${ds.never}`)
   console.log(`the stack's belief in the claimer's assignment where cards were unplaced, by decile 0..9 (claims: right): ${S.beliefDecile.map(([a, b]) => `${a}:${b}`).join(' ')}`)
   if (HOLDER) console.log(`the holder clone's belief in the same assignments, by decile 0..9 (claims: right): ${S.holderDecile.map(([a, b]) => `${a}:${b}`).join(' ')}`)
+  if (KNOB_POL) console.log(`the knob ${JSON.stringify(KNOB)} played at every offer of this side: speculative claims ${S.knobPlay.spec} (${(S.knobPlay.spec / Math.max(1, G.replayed)).toFixed(3)} a game), right ${S.knobPlay.right} (${(100 * S.knobPlay.right / Math.max(1, S.knobPlay.spec)).toFixed(1)}%), of them the claimer's own claim ${S.knobPlay.sameAsClaimer}; once per set at its first such offer ${S.knobPlay.first} (${(S.knobPlay.first / Math.max(1, G.replayed)).toFixed(3)} a game), right there ${S.knobPlay.firstRight} (${(100 * S.knobPlay.firstRight / Math.max(1, S.knobPlay.first)).toFixed(1)}%); certain claims ${S.knobPlay.cert} of ${S.knobPlay.offers} offers`)
+  if (HOLDER) console.log(`the holder clone in the claim path (3.8ak) at those claims: the gate passes ${S.knob.gatePass}, fails ${S.knob.gateFail} (a candidate on the other team), more than two open ${S.knob.tooMany}; of the passes the knob's plan is the claimer's ${S.knob.planSame}; by the knob's own p (claims:right:unscored) 0.9+ ${S.knob.at9.join(':')}, 0.775 to 0.9 ${S.knob.at775.join(':')}, below ${S.knob.below.join(':')}`)
   const fb = S.forcedBy
   console.log(`those assignments against deals consistent with the stack's knowledge (${DEALS} drawn a claim): forced ${fb.forced[0]} (right ${fb.forced[1]}), likely ${fb.likely[0]} (right ${fb.likely[1]}), a gamble ${fb.gamble[0]} (right ${fb.gamble[1]}), no deal drawn ${fb.none[0]} (right ${fb.none[1]})`)
   console.log(`claims ${S.claims}: right ${pct(S.claimsRight, S.claims)}, forced ${S.claimsForced}, on the claimer's own turn ${pct(S.claimsOnTurn, S.claims)}; by cards the claimer could not place 0..6: ${S.claimsByUncertain.join(' ')} (right: ${S.claimsRightByUncertain.join(' ')})`)
