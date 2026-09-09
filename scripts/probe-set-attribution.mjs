@@ -12,12 +12,16 @@
  *
  *     node scripts/probe-set-attribution.mjs --records <dir>[,<dir>...] [--version v0.9] [--override <json>]
  *          [--knob <json>] [--holder-model <fit.json>] [--holder-name holder] [--sample 1] [--sample-salt s]
- *          [--max-files N] [--debug N] [--out summary.json]
+ *          [--max-files N] [--debug N] [--ceiling 1] [--out summary.json]
  *
  * `--version`/`--override` is the stack whose knowledge options rebuild every seat's knowledge (the arm's own vector);
  * `--knob` lays a style over it and plays it at every window offer of the arm's seats as a one-step counterfactual
  * (3.8ak's form); `--holder-model` registers a holder-model JSON under `--holder-name` (default 'holder') so a knob
  * may name it as `claimHolderModel`. Sides: the arm is the team `rec.teamA` played; SESTINA the other.
+ * `--ceiling 1` (3.8ao, row 50) scores, at every ask replayed through this engine, the ask the record chose against
+ * the ranker's own top, the greedy ask by the marginal's p and the oracle (some legal ask hits) by the true hands at
+ * that moment, with the chosen p by decile and the greedy-minus-chosen p by margin; both sides, the arm's stack
+ * rebuilding the knowledge and the ranker's list at either view.
  */
 import { pathToFileURL, fileURLToPath } from 'node:url'
 import { dirname, join, resolve } from 'node:path'
@@ -46,6 +50,7 @@ const SALT = argOf('--sample-salt', '')
 const MAXF = Number(argOf('--max-files', 0))
 const OUT = argOf('--out', '')
 const DEBUG = Number(argOf('--debug', 0))
+const CEIL = Number(argOf('--ceiling', 0))
 if (DIRS.length === 0) {
   console.error('--records is required')
   process.exit(2)
@@ -96,6 +101,19 @@ function side() {
     leads: { all: ld(), chase: ld(), elsewhere: ld(), none: ld() },
     // 3.8an: every ask decision this side made while leading a 3-3 set at four to two (3.8q's R1 population): chases
     leadDecisions: { n: 0, chase: 0 },
+    // 3.8ao (row 50): at every ask this side made (replayed through this engine), the ask chosen against the ranker's
+    // top, the greedy ask by p and the oracle, by the true hands; the chosen p by decile; greedy minus chosen p by margin
+    ceiling: ceil(),
+  }
+}
+function ceil() {
+  const mb = () => ({ n: 0, chosenHit: 0, greedyHit: 0 })
+  return {
+    n: 0, unranked: 0, chosenHit: 0, topHit: 0, greedyHit: 0, oracle: 0, chosenIsTop: 0, chosenIsGreedy: 0, sumChosenP: 0, sumGreedyP: 0,
+    certainAvail: 0, certainTaken: 0,
+    deciles: Array.from({ length: 10 }, () => ({ n: 0, sumP: 0, hits: 0 })),
+    // greedy p minus the chosen p: equal (the chosen ask is a greedy ask), (0, .1], (.1, .3], (.3, .6], above .6
+    margin: { eq: mb(), lt10: mb(), lt30: mb(), lt60: mb(), gt60: mb() },
   }
 }
 const T = { arm: side(), sestina: side() }
@@ -238,6 +256,39 @@ function replay(rec) {
   } finally {
     // nothing: a game set aside leaves no tally (the ledger is written only when the replay completes)
   }
+  // 3.8ao: the ask's ceiling - the record's ask against the ranker's top, the greedy ask by p and the oracle, by the truth
+  function ceilingAt(ev) {
+    const view = seatView(s, ev.asker)
+    const k = BOTS.buildKnowledge(view, KOPTS)
+    const ranked = BOTS.rankAsksWith(view, k, style)
+    const C = sideOfTeam(seatTeam(ev.asker)).ceiling
+    if (ranked.length === 0) { C.unranked++; return }
+    const truth = (r) => s.hands[r.target].includes(r.card)
+    let chosen = null
+    let greedy = ranked[0]
+    for (const r of ranked) {
+      if (r.target === ev.target && r.card === ev.card) chosen = r
+      if (r.p > greedy.p) greedy = r
+    }
+    if (!chosen) { C.unranked++; return }
+    const top = ranked[0]
+    C.n++
+    if (ev.hit) C.chosenHit++
+    if (truth(top)) C.topHit++
+    const greedyHit = truth(greedy)
+    if (greedyHit) C.greedyHit++
+    if (ranked.some(truth)) C.oracle++
+    if (top === chosen) C.chosenIsTop++
+    if (greedy.p <= chosen.p + 1e-9) C.chosenIsGreedy++
+    C.sumChosenP += chosen.p
+    C.sumGreedyP += greedy.p
+    if (ranked.some((r) => r.p >= 0.99)) { C.certainAvail++; if (chosen.p >= 0.99) C.certainTaken++ }
+    const D = C.deciles[Math.min(9, Math.floor(chosen.p * 10))]
+    D.n++; D.sumP += chosen.p; if (ev.hit) D.hits++
+    const m = greedy.p - chosen.p
+    const B = m <= 1e-9 ? C.margin.eq : m <= 0.1 ? C.margin.lt10 : m <= 0.3 ? C.margin.lt30 : m <= 0.6 ? C.margin.lt60 : C.margin.gt60
+    B.n++; if (ev.hit) B.chosenHit++; if (greedyHit) B.greedyHit++
+  }
   function replayOne(ev, i) {
     if (ev.type === 'ask') {
       if (s.phase !== 'playing') throw new Error(`askPhase:${s.phase}`)
@@ -245,6 +296,7 @@ function replay(rec) {
       if (s.turn !== ev.asker) throw new Error('turnMismatch')
       const before = s.hands[ev.target].includes(ev.card)
       if (before !== ev.hit) throw new Error('hitMismatch')
+      if (CEIL) ceilingAt(ev)
       step({ type: 'ask', seat: ev.asker, target: ev.target, card: ev.card })
     } else if (ev.type === 'claim') {
       if (s.phase !== 'playing') throw new Error(`claimPhase:${s.phase}`)
@@ -391,6 +443,13 @@ for (const [name, S] of [['the arm (ours)', T.arm], ['SESTINA', T.sestina]]) {
   const ldr = S.leads
   console.log(`3.8an: leads taken (the first to four of six in a 3-3 set) ${ldr.all.n} (${per(ldr.all.n)} a game), converted ${pct(ldr.all.converted, ldr.all.n)}; at the first lead decision a chase ${ldr.chase.n} (${pct(ldr.chase.n, ldr.all.n)} of the leads) converting ${pct(ldr.chase.converted, ldr.chase.n)}, elsewhere ${ldr.elsewhere.n} (${pct(ldr.elsewhere.n, ldr.all.n)}) converting ${pct(ldr.elsewhere.converted, ldr.elsewhere.n)}, no decision ${ldr.none.n} converting ${pct(ldr.none.converted, ldr.none.n)}`)
   console.log(`  every lead decision (at four to two in a 3-3 set it leads): ${S.leadDecisions.n} (${per(S.leadDecisions.n)} a game), a chase ${pct(S.leadDecisions.chase, S.leadDecisions.n)}`)
+  if (CEIL) {
+    const C = S.ceiling
+    const mean = (a) => (C.n > 0 ? ((100 * a) / C.n).toFixed(1) + '%' : '-')
+    console.log(`3.8ao: at its ${C.n} asks replayed (${per(C.n)} a game; ${C.unranked} not on the ranker's list): the ask chosen hit ${pct(C.chosenHit, C.n)}, the ranker's top ${pct(C.topHit, C.n)}, the greedy ask by p ${pct(C.greedyHit, C.n)}, the oracle (some legal ask hits) ${pct(C.oracle, C.n)}; the chosen ask was the ranker's top ${pct(C.chosenIsTop, C.n)} and a greedy ask ${pct(C.chosenIsGreedy, C.n)}; mean p of the chosen ${mean(C.sumChosenP)}, of the greedy ${mean(C.sumGreedyP)}; a certain ask (p >= 0.99) on the table ${pct(C.certainAvail, C.n)}, taken when there ${pct(C.certainTaken, C.certainAvail)}`)
+    console.log(`  the chosen ask's p by decile (n, mean p, hit): ${C.deciles.map((D, i) => `${(i / 10).toFixed(1)}-${((i + 1) / 10).toFixed(1)}: ${D.n} ${D.n > 0 ? ((100 * D.sumP) / D.n).toFixed(1) + '%' : '-'} ${pct(D.hits, D.n)}`).join('; ')}`)
+    console.log(`  greedy p minus chosen p (n, the chosen hit, the greedy hit): ${Object.entries(C.margin).map(([key, B]) => `${key}: ${B.n} ${pct(B.chosenHit, B.n)} ${pct(B.greedyHit, B.n)}`).join('; ')}`)
+  }
   const g = S.gambles
   console.log(`3.8am: its speculative claims by the other side's asks into the set before the claim — none ${g.oppAsks0.n} right ${pct(g.oppAsks0.right, g.oppAsks0.n)}, some ${g.oppAsks1.n} right ${pct(g.oppAsks1.right, g.oppAsks1.n)}; by its own asks — none ${g.ownAsks0.n} right ${pct(g.ownAsks0.right, g.ownAsks0.n)}, some ${g.ownAsks1.n} right ${pct(g.ownAsks1.right, g.ownAsks1.n)}; the other side's cards in the set at the claim 0 / 1 / 2+: ${g.oppHeld.join(' / ')}`)
   for (const [name, D] of [['the other side never asked into it', S.dominated.minorityAsks0], ['the other side asked into it', S.dominated.minorityAsks1]]) console.log(`  the sets it held 5-1 or 4-2 at the deal, ${name}: ${D.n} (${per(D.n)} a game): declared certain ${pct(D.certain, D.n)}, gambled right ${pct(D.specRight, D.n)}, gambled wrong (a gift) ${pct(D.specWrong, D.n)}, the other side won it ${pct(D.minorityWon, D.n)}, other ${pct(D.other, D.n)}`)
