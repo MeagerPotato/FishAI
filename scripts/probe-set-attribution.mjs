@@ -31,6 +31,11 @@
  * it (its top, some hit in the top 2 / 3 / 5 / all), best-of-top-k by p as the identity check against greedy, and
  * where the record's own ask sits in that ranking. `--skip-files N` drops the first N files so a map may be fitted
  * on one half of the records and read on the other. Every ask's p is binned into `pbins` for that fit.
+ * 3.8aq (row 52) stage G, also under `--clone`: the three candidate sets `decideSearch` could be offered at an ask,
+ * each seeded with the clone's pick and filled to k = 3, 4, 5 — from the ranker's order capped at its top five
+ * (`cands.today`, exactly what `candidateAsks` builds), from the clone's own ranking (`cands.clone`), and from the
+ * two alternately (`cands.mixed`) — by how often each holds an ask that would have hit, with the overlap between
+ * the ranker's fill and the clone's. The gate on whether the candidate fill is worth an engine change at all.
  */
 import { pathToFileURL, fileURLToPath } from 'node:url'
 import { dirname, join, resolve } from 'node:path'
@@ -133,6 +138,8 @@ function side() {
     ceiling: ceil(),
   }
 }
+// 3.8aq: a tally over the candidate depths 3, 4 and 5
+function kd() { return { k3: 0, k4: 0, k5: 0 } }
 // 3.8ap: a tally over the shortlist depths 1, 2, 3, 5 and the whole list
 function kk() { return { k1: 0, k2: 0, k3: 0, k5: 0, all: 0 } }
 function ceil() {
@@ -152,6 +159,8 @@ function ceil() {
     calClaims: { n: 0, cross775: { up: 0, down: 0 }, cross50: { up: 0, down: 0 } },
     // 3.8ap R2: the clone's own ranking of the legal asks, and where the asks that would have hit sit in it
     short: { n: 0, topHit: 0, recordIsTop: 0, someHit: kk(), bestByP: kk(), recordRank: kk() },
+    // 3.8aq G: the candidate sets the search could be offered, at k = 3, 4, 5, by whether one of them would have hit
+    cands: { n: 0, today: kd(), clone: kd(), mixed: kd(), shared: kd(), sizeToday: kd() },
     // greedy p minus the chosen p: equal (the chosen ask is a greedy ask), (0, .1], (.1, .3], (.3, .6], above .6
     margin: { eq: mb(), lt10: mb(), lt30: mb(), lt60: mb(), gt60: mb() },
   }
@@ -377,6 +386,38 @@ function replay(rec) {
         if (truth(ranked[bp])) H.bestByP[key]++
         if (recAt >= 0 && recAt < kd) H.recordRank[key]++
       }
+      // 3.8aq G: the pick is the clone's top; the ranker's order is `ranked` itself, capped at the five
+      // `t.ranked = ranked.slice(0, 5)` puts in the trace `candidateAsks` fills from.
+      const D = C.cands
+      D.n++
+      const pick = order[0]
+      const rankFill = ranked.map((r, idx) => idx).slice(0, 5)
+      const cloneFill = order
+      const fill = (src, kd) => {
+        const out = [pick]
+        for (const idx of src) { if (out.length >= kd) break; if (!out.includes(idx)) out.push(idx) }
+        return out
+      }
+      const mix = (kd) => {
+        const out = [pick]
+        for (let j = 0; j < Math.max(rankFill.length, cloneFill.length) && out.length < kd; j++) {
+          for (const src of [rankFill, cloneFill]) {
+            const idx = src[j]
+            if (idx !== undefined && !out.includes(idx) && out.length < kd) out.push(idx)
+          }
+        }
+        return out
+      }
+      for (const [key, kd] of [["k3", 3], ["k4", 4], ["k5", 5]]) {
+        const A = fill(rankFill, kd)
+        const Bc = fill(cloneFill, kd)
+        const Cm = mix(kd)
+        if (A.some((idx) => truth(ranked[idx]))) D.today[key]++
+        if (Bc.some((idx) => truth(ranked[idx]))) D.clone[key]++
+        if (Cm.some((idx) => truth(ranked[idx]))) D.mixed[key]++
+        D.shared[key] += A.filter((idx) => Bc.includes(idx)).length
+        D.sizeToday[key] += A.length
+      }
     }
   }
   function replayOne(ev, i) {
@@ -572,6 +613,10 @@ for (const [name, S] of [['the arm (ours)', T.arm], ['SESTINA', T.sestina]]) {
       console.log(`  some hitting ask within the clone's top k: ${row(H.someHit)}`)
       console.log(`  best-of-top-k by the marginal's p: ${row(H.bestByP)}`)
       console.log(`  the record's own ask within the clone's top k: ${row(H.recordRank)}`)
+      const D = C.cands
+      const krow = (T, d) => ['k3', 'k4', 'k5'].map((key) => `${key.slice(1)}: ${d ? (T[key] / Math.max(1, D.n)).toFixed(2) : pct(T[key], D.n)}`).join('; ')
+      console.log(`3.8aq G: at ${D.n} decisions, a candidate set holding an ask that would have hit — the ranker's fill (today's) ${krow(D.today)}; the clone's fill ${krow(D.clone)}; the two mixed ${krow(D.mixed)}`)
+      console.log(`  entries the two fills share, of the set's own size (both seeded with the clone's pick): shared ${krow(D.shared, 1)} of ${krow(D.sizeToday, 1)}`)
     }
     console.log(`  greedy p minus chosen p (n, the chosen hit, the greedy hit): ${Object.entries(C.margin).map(([key, B]) => `${key}: ${B.n} ${pct(B.chosenHit, B.n)} ${pct(B.greedyHit, B.n)}`).join('; ')}`)
   }
