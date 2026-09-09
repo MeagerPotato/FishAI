@@ -459,6 +459,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.37** — the decisions the clone does not cover, read by replaying the records through the engine (2026-09-09) | **row 44's, by the standing rule and §3.8ai's close**: every record game replayed through `reduce` (the window's declines inferred, the option moved by hand where this engine compels a declare, the replay stopped at this engine's finish), and at every window offer, claim and pass SESTINA's action against the stack's `decide()` at the same view — the validation at our own seats; at SESTINA's speculative claims three beliefs in its assignment with the outcome (the marginal, the holder clone H1, the determinizer); the read over the twelve holdout files at a 25% sample; **row 45 = F5, the third feature set with H1, only if SESTINA's speculative claims are ≥ 0.25 a game and ≥ 80% right, the marginal below 0.6 on ≥ 60% of them, and H1 ≥ 0.8 on at least half of the right ones at ≥ 85% right**; nothing shipped, no dose (§3.8aj) | **pre-registered 09:45Z 2026-09-09; the read on the commit, 10 to 20 minutes beside F4** | S |
 | **v0.36** — the search with the clone as its policy: t32 with the clone at every seat (2026-09-09) | **row 43's, by the standing rule and §3.8ah's "after this rung"**: §3.8aa's t32 form (D 32, C 4, S 24, the lock-only leaf, the LCB guard) laid over v0.33's vector with `oppAskModel` the same clone — the pick, our seats' rollouts and the opponents' rollouts all the clone, so the rollouts play what every seat at the table plays (the one variable against §3.8ac's M4: our seats' rollout policy); cost read first (631 ms an ask, 44 s a mirror game); M2 = duplicate pairs at home, A = the search over v0.33's vector against B = v0.33's vector, twelve banks of 200, eligible at ≥ +2 SE and a majority; M3 = the bridge on twelve fresh seeds against v0.33's vector by §3.8n's bar; nothing in the engine changes; the ship the owner's (§3.8ai) | **M2 read 09:25Z 2026-09-09: the search over v0.33's vector against v0.33's vector −0.170 ± 0.154 a pair (−1.26 ± 0.59 points, −2.2 SE, 3 of 12 banks ahead); it changes the clone's pick 23% of the time and each change costs 0.009 sets (2.2 SE) — not eligible, behind its own policy with every seat modelled right; the rung stops at M2 and the search line with it (the deals and the horizon, not the models); nothing ships** | L |
 | **v0.35** — the holder clone: the belief fitted on the records' deals (2026-09-09) | **row 42's, by the standing rule and §3.8af's and §3.8ag's "after this rung"**: at every card the viewer cannot place, a conditional logit over its candidate seats — twenty features off the view, the knowledge and the log, the true holder the label (H1, `lib/engine/bots/holder.ts`) — and its belief the ask clone's third feature set (F5 = F3's recipe with the set the one variable); eligible for M1 at H1's holdout accuracy ≥ the marginal's + 2.0 with the NLL below (M0), for M2 at F5's top-1 ≥ F3's + 1.0 with the seat not below (M1), C5 against C3 at home ≥ +2 SE and a majority (M2), ships by §3.8n's bar against v0.33's vector on twelve fresh seeds (M3); the registry change a PR for the owner; nothing shipped reads the instrument (§3.8ah) | **M0 read 05:30Z 2026-09-09: H1 holds the card 33.18% on the holdout against the marginal's 32.19% — +0.99 of the 2.0 required, the NLL below (1.4231 against 1.4542) — not eligible; the rung stops at M0 and ships nothing. The κ prior, SESTINA's own belief form, 31.32%: on placing cards no public belief is more than a point from the marginal, and the seat class is SESTINA's search (row 43)** | M |
 | **v0.34** — the wider net at the second width (2026-09-09) | **row 41's, by the standing rule and §3.8af's "after this rung"**: F4 = `mlp` 128·128 on the second feature set, F3's recipe with the width the one variable — the 2 × 2 of features × width completed (§3.8ag); eligible for M2 at holdout top-1 ≥ F3's + 0.5 with the half-suit-and-seat agreement not below (M1), C4 against C3 at home ≥ +2 SE and a majority of banks (M2), ships by §3.8n's bar against v0.33's vector on twelve fresh seeds (M3); the registry change a PR for the owner; nothing in the engine changes | **F4 starts when F2 releases the machine (the chain script waited on `fit f2 exit`; started 03:12Z 2026-09-09 at BelowNormal priority) and lands about 13:15Z** | M |
@@ -9630,6 +9631,102 @@ term after (row 44): the decisions the clone does not cover** — the declare, t
 turn, the window — measured against SESTINA's on the records before anything is fitted, by an
 instrument on the record branch and a pre-registration before a row is read.
 
+### 3.8aj Monet v0.37 — the decisions the clone does not cover: the declare, the window, the handoff, read against SESTINA's by replaying the records through the engine
+
+**Decision row 44, taken under the standing rule and §3.8ai's close.** The ask clone covers the ask;
+SESTINA also declares (in the window, on its turn, or compelled), declines, and hands the turn on. The
+bridge records carry every one of those events with the deal (kind 0 ask, 1 declare with its
+assignment, 2 pass, 3 forced declare), so the question "does SESTINA decide these differently, and
+does the stack's belief see what it sees?" is a records read, not a cell. This rung is that read —
+an instrument and a pre-registered reading of it — and it names what the belief line's next term is
+if the reading says there is one.
+
+**The instrument** (`scripts/probe-side-decisions.mjs`, on `main` before the read). Every record game
+is **replayed through this engine** (`reduce`, RULES_US54): an ask closes the window with six
+declines and is applied as the record says; a declare by seat X is reached by declining from the
+seat holding the option up to X, then X's claim with the record's assignment; a pass is the
+turn-holder's `pass` in `awaitPass`. The engine is the authority at every step — the turn-holder at
+each ask, the hit, the claim's outcome, the phase must be what the record says, or the game is set
+aside and counted. Two places where the recording engine's rules and ours part are handled and
+counted: this engine ends a game once a team holds five sets (the win decided), so the record's
+actions after that point are not replayed (counted as "after the finish"); and where the turn-holder
+has no legal ask this engine compels the seat holding the option to declare (§3.2), while the
+recording engine let the option travel to the seat that declared — the option is then moved by hand
+and no offer is read in that window. At every decision point so reached — each window offer, each
+claim, each pass — the seat's actual action is compared with `decide()` at that seat's own view: at
+SESTINA's seats **the shipped stack's counterfactual** (S — v0.9 with `contest` 0.6, `closing` 0.5,
+`closingFour` 2; the ask model is not read on these paths); at our seats **the validation** — the
+same stack against the arm's own recorded claims and passes, exact on the records whose arm played S.
+At every claim with cards the claimer could not place (by the stack's knowledge from that seat), three
+beliefs in the claimer's assignment are read with the outcome: **the marginal's** (the product of
+`askHitProbability` over the unplaced cards), **the holder clone's** (§3.8ah's H1, the product of
+`holderBelief` over the same cards), and **the determinizer's** (the share of 64 deals drawn by
+`sampleDeal` from the stack's knowledge that carry the assignment: forced at every deal, likely at
+0.6 to 1, a gamble below 0.6).
+
+**The smoke, disclosed.** One holdout file of the v0.30 records, 45 games (a 5% sample), 4,184
+actions replayed, nothing set aside; 401 actions after this engine's finish (9.6%), 38 compelled
+moves. The validation: the stack reproduced its own 151 claims (the set and the assignment, 100%)
+and its 3 passes; its 39 "would claim" at a decline were all sets a teammate claimed at that same
+window — the recording engine's offer order, no deferral. SESTINA: 189 claims, right 98.41%, 26% on
+its own turn; **23 with cards it could not place (12.2%), 20 of them right (87%)** — the stack would
+decline at every one of the 23 (`declareThreshold` 0.775 refuses them). The marginal's belief in
+those assignments: 14 of the 23 at 0.3 to 0.5, 13 of the 14 right; the determinizer: 22 of 23 a
+gamble (19 right). **The holder clone: 17 of the 23 at 0.6 or above, 17 of 17 right; 13 at 0.8 or
+above, 13 right; the three wrong claims at 0.1 to 0.3 and 0.5.** The holder clone was added to the
+instrument after that reading, and §3.8ah's M0 bar (+2.0 of top-1 over every unplaced card of every
+decision) is not what this reads: a belief can be a point better on average and decisive in the
+late, constrained positions where sets are claimed. Whether that holds at twelve files is this
+rung's read; the smoke's numbers are not it.
+
+#### Pre-registration — written 2026-09-09 09:45Z, before the read
+
+**The read.** `scripts/probe-side-decisions.mjs` over the same twelve holdout files as §3.8ad's,
+§3.8af's and §3.8ag's probes (the first twelve holdout files of the seven record groups in order,
+every fifth file), **a 25% sample of games under salt 37**, S at SESTINA's seats and at ours, H1
+(`v35-h1.json`, md5 68a63b39) beside, 64 deals a claim; and the same over the v0.30 group alone
+(its arm played S: the exact validation). Reported: the games replayed and set aside, the actions
+after the finish and the compelled moves; per side the window offers and the stack's "would claim"
+at them, split into the recording engine's offer order, later declared by the same team, by the
+other team, never; the claims, their accuracy, the forced and on-turn shares, the split by unplaced
+cards, the stack's action at SESTINA's claims (same set and assignment, same set another assignment,
+another set, would decline), the steps from certainty to the claim; the three beliefs' deciles with
+outcomes at the speculative claims; the passes and the stack's agreement.
+
+**What the read decides — row 45.** The belief line reopens with the holder clone as the third
+feature set (F5, §3.8ah's M1 exactly: the extraction at `--features 3` with H1, F3's recipe, eligible
+for M2 at holdout top-1 ≥ 59.51% with the half-suit-and-seat agreement ≥ 85.61%; then C5 against C3
+at home, then the bridge, as §3.8ah wrote them) **if all three hold over the twelve files**:
+(a) SESTINA's speculative claims (one or more cards unplaced by the stack's knowledge) are at least
+0.25 a game and at least 80% right; (b) the marginal's belief in at least 60% of them is below 0.6
+(the stack would decline them); (c) the holder clone's belief is calibrated where it is confident —
+among those claims at H1 ≥ 0.8, at least 85% right, and those are at least half of SESTINA's right
+speculative claims. Otherwise the belief line stays closed as §3.8ah left it, and the side decisions
+are recorded as read. The validation must reproduce at least 99% of the stack's own claims on the
+v0.30 group, or the replay is not trusted and the read is repaired before it is used. No dose, no
+engine change, nothing shipped in this rung: the claim policy's knobs (`declareThreshold`,
+`declareMaxUncertain`, `pAssignment`) are not touched here — in a game the recording engine plays to
+its end, an early speculative claim gains no set that patience would not, and a wrong one gives one
+away; what the read is for is whether the belief carries what SESTINA's carries.
+
+**Predictions, written before the read.**
+- **Q1.** SESTINA's speculative claims 0.4 to 0.7 a game (60% within), right 80 to 90% (60%); (a)
+  holds: 75%.
+- **Q2.** The marginal below 0.6 on 70 to 90% of them (60%); (b) holds: 70%.
+- **Q3.** H1 ≥ 0.8 on 50 to 70% of SESTINA's right speculative claims (55%), right ≥ 85% there
+  (65%); (c) holds: 55%. All three: 45%.
+- **Q4.** The stack hands the turn to the same teammate as SESTINA at ≥ 95% of passes (70%); the
+  stack's "would claim" at SESTINA's declines that are true deferrals (later declared, not the same
+  window) below 0.05 a game (70%); SESTINA's declare accuracy 97.5 to 99% (65%), the stack's own ≥
+  99.5% (75%).
+- **Q5.** The validation ≥ 99% on the v0.30 group (80%); games set aside ≤ 2% (70%).
+- **Q6.** The read within 30 minutes of wall clock (70%).
+
+**Wall clock.** About 3,600 games replayed at about 0.1 s each with the holder beside: 10 to 20
+minutes on one core beside F4. If row 45 opens: the third-set extraction (about 20 minutes, three
+processes) at once, F5 after F4 releases the machine (about 15:15Z; about 5 hours), the probe and
+the pairs after, the bridge the day after if reached.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -10094,6 +10191,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 41 | **After v0.33 clears — what is v0.34?** | **TAKEN — the wider net at the second width (§3.8ag)**, by the standing rule and §3.8af's own "after this rung" (F3 gained 1.95 points of agreement for the features; §3.8ad's F2 has since read the width at the first set at +0.46, 57.02% against F1's 56.56%, and passes §3.8ad's margin bar at 13.29): F4 = `mlp` 128·128 on §3.8af's rows, F3's recipe with the width the one variable, the 2 × 2 of features × width completed. Eligible for M2 at +0.5 of holdout top-1 over F3 with the seat not below; C4 against C3 at home, then the bridge against v0.33's vector on twelve fresh seeds; the ship the owner's, stacked on #60. One core for a night, run while §3.8ad's C2 goes through M2 and M3. |
 | 42 | **After v0.31's stop at the width and v0.34 in flight — the term after the width: the belief itself?** | **TAKEN — the holder clone (§3.8ah)**, by the standing rule and §3.8af's and §3.8ag's "after this rung": F2 read the width as the card class alone (+0.46 of agreement, the seat untouched, the sets unmoved), so the seat class is reached by the belief or not at all; the records carry the deal, so the belief is fitted, not modelled — one row per candidate seat of every unplaced card, the true holder the label, the same conditional logit as the ask clone's — and handed to the ask clone as a third feature set. Eligible at +2.0 of holder accuracy over the marginal (M0), +1.0 of ask agreement over F3 with the seat not below (M1), +2 SE over C3 at home (M2); the bridge against v0.33's vector; the ship the owner's, stacked on #60. Runs beside and after F4, inside a day. **Read 05:30Z 2026-09-09: M0 not eligible — H1 +0.99 over the marginal (33.18% against 32.19%) of the 2.0 required, the NLL below; the train and holdout NLL equal and flat from the fourth epoch, so capacity is not the limit; the rung STOPS at M0 and ships nothing. The next term is §3.8ah's "after this rung" — the search with the clone as its policy — row 43.** |
 | 43 | **After v0.35's stop at the belief — the seat class is SESTINA's search: the search with the clone as its policy?** | **TAKEN — v0.36 (§3.8ai)**, by the standing rule and §3.8ah's "after this rung": no public belief places the card more than a point from the marginal, so the seat is the search's; the record's searches lost abroad with the seats' policies modelled as S (−1.61) and with the clone at the opponents' seats only (−1.33), each time the model named as wrong by construction. The last one-variable step: t32 over v0.33's vector with the clone at every seat of the rollouts. Cost first (631 ms an ask, lifted budget, gates nothing), then pairs at home (≥ +2 SE and a majority), then the bridge by §3.8n's bar; nothing in the engine changes; the ship the owner's, stacked on #60. Not eligible at home: the search line stops as the record has it — the deals and the horizon, not the models. **Read 09:25Z 2026-09-09: M2 −0.170 ± 0.154 a pair (−2.2 SE, 3 of 12 banks) — BEHIND its own policy at home with every seat modelled right; the rung STOPS at M2 and the search line with it; nothing ships. The term after is the decisions the clone does not cover — row 44.** |
+| 44 | **After the search line's close — the decisions the ask clone does not cover: does SESTINA declare, decline and hand on differently, and does the stack's belief see what it sees?** | **TAKEN — v0.37 (§3.8aj)**, by the standing rule and §3.8ai's close: a records read, not a cell — every game replayed through this engine and every window offer, claim and pass compared with the stack's own decision at the same view. The smoke (45 games) read SESTINA claiming with unplaced cards at 12% of its claims, 87% right, where the stack would decline every one and its marginal says 0.3 to 0.5 — and the holder clone (§3.8ah's H1) at 0.8 or above on 13 of them, all 13 right. The twelve-file read decides (bars in §3.8aj) whether the belief line reopens with the third feature set (row 45); nothing shipped, no dose. |
 
 ---
 
