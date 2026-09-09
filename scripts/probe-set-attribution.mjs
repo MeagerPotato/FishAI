@@ -112,6 +112,11 @@ function ceil() {
     n: 0, unranked: 0, chosenHit: 0, topHit: 0, greedyHit: 0, oracle: 0, chosenIsTop: 0, chosenIsGreedy: 0, sumChosenP: 0, sumGreedyP: 0,
     certainAvail: 0, certainTaken: 0,
     deciles: Array.from({ length: 10 }, () => ({ n: 0, sumP: 0, hits: 0 })),
+    // the control: every legal ask on the ranker's list at this side's decisions, by its p, against the truth
+    decilesAll: Array.from({ length: 10 }, () => ({ n: 0, sumP: 0, hits: 0 })),
+    // the 0.5-0.9 band over every legal ask, by the card's candidate count (2, 3, 4, 5 or more) and by whether p is
+    // the uniform 1/n (the count alone) or the marginal's own scaled answer
+    band: Object.fromEntries([2, 3, 4, 5].map((c) => [c, { unif: { n: 0, sumP: 0, hits: 0 }, scaled: { n: 0, sumP: 0, hits: 0 } }])),
     // greedy p minus the chosen p: equal (the chosen ask is a greedy ask), (0, .1], (.1, .3], (.3, .6], above .6
     margin: { eq: mb(), lt10: mb(), lt30: mb(), lt60: mb(), gt60: mb() },
   }
@@ -285,6 +290,15 @@ function replay(rec) {
     if (ranked.some((r) => r.p >= 0.99)) { C.certainAvail++; if (chosen.p >= 0.99) C.certainTaken++ }
     const D = C.deciles[Math.min(9, Math.floor(chosen.p * 10))]
     D.n++; D.sumP += chosen.p; if (ev.hit) D.hits++
+    for (const r of ranked) {
+      const A = C.decilesAll[Math.min(9, Math.floor(r.p * 10))]; A.n++; A.sumP += r.p; if (truth(r)) A.hits++
+      if (r.p >= 0.5 && r.p < 0.9) {
+        const nc = (k.cands[r.card] ?? []).length
+        const B = C.band[Math.min(5, Math.max(2, nc))]
+        const U = nc > 0 && Math.abs(r.p - 1 / nc) < 1e-9 ? B.unif : B.scaled
+        U.n++; U.sumP += r.p; if (truth(r)) U.hits++
+      }
+    }
     const m = greedy.p - chosen.p
     const B = m <= 1e-9 ? C.margin.eq : m <= 0.1 ? C.margin.lt10 : m <= 0.3 ? C.margin.lt30 : m <= 0.6 ? C.margin.lt60 : C.margin.gt60
     B.n++; if (ev.hit) B.chosenHit++; if (greedyHit) B.greedyHit++
@@ -448,6 +462,8 @@ for (const [name, S] of [['the arm (ours)', T.arm], ['SESTINA', T.sestina]]) {
     const mean = (a) => (C.n > 0 ? ((100 * a) / C.n).toFixed(1) + '%' : '-')
     console.log(`3.8ao: at its ${C.n} asks replayed (${per(C.n)} a game; ${C.unranked} not on the ranker's list): the ask chosen hit ${pct(C.chosenHit, C.n)}, the ranker's top ${pct(C.topHit, C.n)}, the greedy ask by p ${pct(C.greedyHit, C.n)}, the oracle (some legal ask hits) ${pct(C.oracle, C.n)}; the chosen ask was the ranker's top ${pct(C.chosenIsTop, C.n)} and a greedy ask ${pct(C.chosenIsGreedy, C.n)}; mean p of the chosen ${mean(C.sumChosenP)}, of the greedy ${mean(C.sumGreedyP)}; a certain ask (p >= 0.99) on the table ${pct(C.certainAvail, C.n)}, taken when there ${pct(C.certainTaken, C.certainAvail)}`)
     console.log(`  the chosen ask's p by decile (n, mean p, hit): ${C.deciles.map((D, i) => `${(i / 10).toFixed(1)}-${((i + 1) / 10).toFixed(1)}: ${D.n} ${D.n > 0 ? ((100 * D.sumP) / D.n).toFixed(1) + '%' : '-'} ${pct(D.hits, D.n)}`).join('; ')}`)
+    console.log(`  every legal ask's p by decile (n, mean p, hit): ${C.decilesAll.map((D, i) => `${(i / 10).toFixed(1)}-${((i + 1) / 10).toFixed(1)}: ${D.n} ${D.n > 0 ? ((100 * D.sumP) / D.n).toFixed(1) + '%' : '-'} ${pct(D.hits, D.n)}`).join('; ')}`)
+    console.log(`  the 0.5-0.9 band over every legal ask, by the card's candidates (n, mean p, hit): ${[2, 3, 4, 5].map((c) => { const B = C.band[c]; const one = (U) => `${U.n} ${U.n > 0 ? ((100 * U.sumP) / U.n).toFixed(1) + '%' : '-'} ${pct(U.hits, U.n)}`; return `${c}${c === 5 ? '+' : ''} uniform ${one(B.unif)} / scaled ${one(B.scaled)}` }).join('; ')}`)
     console.log(`  greedy p minus chosen p (n, the chosen hit, the greedy hit): ${Object.entries(C.margin).map(([key, B]) => `${key}: ${B.n} ${pct(B.chosenHit, B.n)} ${pct(B.greedyHit, B.n)}`).join('; ')}`)
   }
   const g = S.gambles

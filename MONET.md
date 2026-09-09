@@ -459,7 +459,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
-| **v0.42** — the belief's ceiling at our own decisions: the chosen ask, the greedy ask and the oracle (2026-09-09) | **row 50's, by the standing rule and §3.8an's close**: every mechanism line closed and the two players equivalent; the term under them read at last — at every ask of v0.33's vector on v0.38's records, the immediate hit of the ask chosen (the clone's), of the ranker's top, of the greedy ask by the marginal's p and of the oracle, the chosen p against its hit by decile, and the mirror at SESTINA's seats; `scripts/probe-set-attribution.mjs` extended, nothing in the engine; a read, no bar; it decides between a greedy-override knob (the clone leaves immediate hits on the table) and the choice-likelihood belief (the belief is the ceiling) (§3.8ao) | **pre-registered 22:01Z 2026-09-09; the runs about two minutes a record set** | S |
+| **v0.42** — the belief's ceiling at our own decisions: the chosen ask, the greedy ask and the oracle (2026-09-09) | **row 50's, by the standing rule and §3.8an's close**: every mechanism line closed and the two players equivalent; the term under them read at last — at every ask of v0.33's vector on v0.38's records, the immediate hit of the ask chosen (the clone's), of the ranker's top, of the greedy ask by the marginal's p and of the oracle, the chosen p against its hit by decile, and the mirror at SESTINA's seats; `scripts/probe-set-attribution.mjs` extended, nothing in the engine; a read, no bar; it decides between a greedy-override knob (the clone leaves immediate hits on the table) and the choice-likelihood belief (the belief is the ceiling) (§3.8ao) | **READ 22:25Z 2026-09-09 — greedy − chosen +5.8 on both sides (the ranker's top is the greedy player and it lost by 3.64); the belief UNDER-confident by 4–9 points wherever its scaling concentrates mass above the uniform 1/n, exact where it only counts and exact at the top; the greedy override benched, the scaling repair is row 51** | S |
 | **v0.41** — the lead conversion under the clone: does SESTINA still convert its leads better? (2026-09-09) | **row 49's, by the standing rule and §3.8am's close**: §3.8q's lead — the first side to four of six in a 3–3 set — re-read with v0.33's vector at the table: `scripts/probe-set-attribution.mjs` extended to note the first side to four, its first ask decision after (a chase into the set, elsewhere, none) and whether it won the set, by side, on v0.38's records; before the clone SESTINA chased first 59.5% to Monet's 39.9% and converted 60.8% to about 48%; a read, no bar; if the conversion gap stands at 8 or more the build after is the closing family re-read by the pairs' win rate, if it has closed the sequel is elsewhere (§3.8an) | **read 21:50Z 2026-09-09 (32 s a record set): the gap has closed — leads taken 1.38 / 1.41 a game, converted 61.1% / 60.9%, the chase share over lead decisions 64.2% / 64.9% (Δ_lead +0.7 against +19.6 before the clone, §3.8q), chasing first converting 5 to 7 points more on both sides; the sequel is not the lead chase; the half point of hit rate wins no more sets at any split and reads the claim timing — v0.33's vector and SESTINA are equivalent players at every measured mechanism; the term after is the belief's ceiling at our own decisions (the greedy ask by p against the chosen against the oracle), row 50** | S |
 | **v0.40** — the bait: SESTINA's gambles, and what our asks into a set tell it (2026-09-09) | **row 48's, by the standing rule and §3.8al's map**: the one asymmetry the map found that is a choice of SESTINA's — 0.094 wrong speculative claims a game handed to us — read against what our side had done in the set: `scripts/probe-set-attribution.mjs` extended with the true holdings and each side's asks into the set so far; at every speculative claim, the other side's cards in the set and its asks before the claim, with the outcome; every set held 5–1 or 4–2 at the deal, its end by whether the minority ever asked into it; both sides read alike, on v0.38's 28,000 games; a read, no bar; the build after is a silence on the ask behind a knob if the gambles concentrate where we were silent (§3.8am) | **read 21:40Z 2026-09-09 (31 s a record set): 56% of SESTINA's speculative claims are in sets we never asked into and they are wrong there at the same rate as anywhere (21.7 against 19.8%); on the sets it dominates, silence draws a gift 4.3% of the time against 0.6% but forfeits the race the minority wins 35% of the time by asking — silence worth −0.65 sets a game; SESTINA's gambles are its own (6.5% of them misassign a set it holds entirely); the bait line closes; the term after is the lead conversion under the clone (§3.8w's 61 against 35–56 before it), row 49** | S |
 | **v0.39** — where the sets go: the set-level attribution of v0.33's vector against SESTINA, read from v0.38's cells (2026-09-09) | **row 47's, by the standing rule and §3.8ak's record**: every mechanism line reads the same result and two players at parity (50.46% ± 0.66 over twenty-four seeds) have no map; `scripts/probe-set-attribution.mjs` (an instrument, nothing in the engine) replays v0.38's twenty-four cells — 14,400 games of v0.33's vector against SESTINA and 14,400 with the claim knob — and ledgers every set: the deal's split, the ask race (hits and misses into the set by side, the last pull), the end (certain / speculative / gift / forced / after the finish) by side, and the public threat at the knob's speculative claims and at the sets the stack deferred; a read, no bar; the build after it is the largest asymmetry (§3.8al) | **read 21:25Z 2026-09-09 (c3 14,142 games in 46 min with the knob counterfactual, k98 14,185 in 27 s): the race symmetric at every split within a point (3–3 49.8% ours; the majority holder 65.3 / 65.4 at 4–2, 84.1 / 83.2 at 5–1); the mechanisms differ and cancel (ours +0.19 certain and +0.08 gifts, SESTINA +0.33 speculative; 4.497 to 4.503 sets a game); SESTINA asks half a point better (51.7 against 51.2%, 0.14 sets a game held) and gambles 0.08 back; waiting beats the knob's claim in every threat class (89.3% of the deferred sets come home against 79.6% claimed right) — the claim line closed by the play-out and the threat gate with it; the term after is the ask-choice read, row 48** | S |
@@ -10639,6 +10639,92 @@ asks; the placement of SESTINA's cards, marginal against reweighted, against the
 The calibration fails at the top: the marginal is overconfident where it matters and the licence line
 (v0.16) is reopened with the declare pinned.
 
+#### Record — 2026-09-09 22:25Z, read against the pre-registration
+
+**The read** (the c3 records, v0.33's vector against SESTINA: 14,142 games, 600,145 of our asks and 605,812 of
+SESTINA's replayed through this engine, 110 seconds a record set; the k98 records within a point at every line
+below, in the JSON on file).
+
+| at the ask | ours (the clone's choice) | SESTINA's (our knowledge at its view) |
+|---|---|---|
+| the ask chosen hit | 48.8% | 49.3% |
+| the ranker's own top | 53.9% | 54.6% |
+| the greedy ask by the marginal's p | 54.6% | 55.1% |
+| the oracle — some legal ask hits | 98.6% | 98.6% |
+| the chosen ask was the ranker's top / a greedy ask | 36.8 / 59.3% | 35.4 / 58.5% |
+| mean p of the chosen ask / of the greedy ask | 48.0 / 54.0% | 48.3 / 54.7% |
+| a certain ask (p ≥ 0.99) on the table / taken when there | 28.1 / 89.0% | 29.0 / 87.3% |
+
+The greedy ask's p minus the chosen ask's, by margin (share of our decisions; the chosen ask's hit → the greedy's):
+equal 59.3% (66.8 → 66.6); up to 0.1, 21.5% (22.2 → 27.4); 0.1–0.3, 14.1% (19.1 → 35.5); 0.3–0.6, 3.6%
+(33.7 → 73.5); above 0.6, 1.5% (30.5 → 99.5). SESTINA's within two points in every bucket.
+
+**Both players decline immediate hits, by the same amount.** The clone's ask hits 5.8 points below the greedy ask
+by its own belief; SESTINA's ask, read under that same belief, 5.8 below. In four decisions of ten the chosen ask
+is not a greedy one. The ranker's own top — the ask the vector plays *before* the clone chooses over its list —
+is within a point of greedy: **the vector without the clone was the greedy player, and it lost; the clone gave up
+five points of immediate hit rate and won** (§3.8ac's +3.64 at the bridge). The trade is not a defect. It is the
+play both players converge on, and the immediate hit is the wrong yardstick for an ask, as the map's half point
+already said (§3.8al). And the ceiling is the choice's, not the knowledge's: some legal ask hits at 98.6% of the
+decisions, the greedy ask by our belief at 54.6, the chosen at 48.8.
+
+#### The belief's own calibration — the control, and the mechanism under it
+
+The chosen asks' p sat *above* their hit in the middle of the range (0.5–0.6: 54.5 → 59.4; 0.6–0.7: 63.7 → 71.1;
+0.7–0.8: 74.2 → 83.2; 0.8–0.9: 83.5 → 91.7), exact at the mean (48.0 → 48.8) and exact at the top (150,272
+certain asks at 100.0%). **Control, run after the read with its prediction written first** ("in the 0.5–0.9
+deciles the hit over *every* legal ask is within ±3 of the mean p, 60% — the marginal's scale is right and the
+choice carries the rest"): **the prediction missed.** Over every legal ask on the ranker's list, not only the
+chosen, the same bands read 54.3 → 59.0, 63.5 → 72.6, 74.2 → 84.8, 83.5 → 92.1 — the deviation is the belief's,
+not the choice's, and it is if anything larger where no choice was made. Below 0.5 and at the top the marginal is
+exact (1.8 → 1.5; 17.1 → 16.9; 22.3 → 22.2; 34.0 → 34.3; 43.7 → 45.4; and 100.0 → 100.0).
+
+**Second control** — the 0.5–0.9 band split by the card's candidate count and by whether p is the uniform 1/n (the
+count alone) or the marginal's own scaled answer (n; mean p → hit; ours, SESTINA's within a point):
+
+| the card's candidates | p is the uniform 1/n | the marginal's scaled answer |
+|---|---|---|
+| 2 | 28,468: 50.0 → **50.7** | 71,671: 61.1 → **65.2** |
+| 3 | — | 92,164: 60.8 → **70.0** |
+| 4 | — | 41,926: 58.5 → **65.8** |
+| 5 or more | — | 126,231: 56.1 → **61.8** |
+
+**Where the marginal only counts, it is right; where its scaling concentrates mass above the count, it
+under-shoots by four to nine points.** The scaling moves p the right way and does not move it far enough. That is
+a mechanism, not a symptom, and it is the first defect in the belief the record has found that is neither a base
+rate (§3.8g) nor a selected population (v0.15's Brier). It is small in the raw — the band is 1.2% of legal asks —
+and it is not small where it is used: **11.6% of the asks actually chosen sit in it**, and the belief feeds the
+ranker's score, the clone's features and the claim path alike.
+
+**Predictions.** Q1 missed on all three parts: the chosen ask hits 48.8, not 51.2 (§3.8al's 51.2 was the asks into
+contested sets — a population error in the pre-registration's own framing); the ranker's top sits 5.1 above the
+chosen, not within 1.5; greedy − chosen is +5.8, the "above 3" branch given 20%. Q2: the oracle held (98.6 ≥ 93);
+the certain-ask band missed (28.1, not 33–40); taken-when-there held (89.0, in 85–92). Q3: the mean held (0.8
+apart); the deciles missed, four of them five to nine points *above* p — under-, not over-confident; the top
+decile held (100.0). Q4: the mirror band missed (SESTINA's ask 5.8 below the greedy, not within 1); the oracle
+held (98.6 against 98.6). Q5 held (110 seconds a record set). Six of twelve clauses held; the three the
+disclosure flagged missed as flagged. The control's own prediction missed, and its miss is this rung's finding.
+
+**The mirror is exact at every line.** §3.8an's conclusion holds one level down: at the ask, seen from our
+knowledge, the two players are the same player — the same hit, the same greedy gap, the same calibration decile by
+decile, the same share of certain asks taken.
+
+**The decision.** The pre-registered rule named the greedy-override knob on "greedy − chosen ≥ +2 **and** the
+calibration holds". The gap is +5.8 and the calibration does not hold — it fails in a mid band, under-confident,
+with the top exact, a case none of the three branches was written for. Taken by the standing rule instead
+(§3.8n), and stated plainly: **the greedy override is the weaker lead and is benched.** The greedy player is the
+ranker's top, which is the pre-clone vector, which lost by 3.64 at the bridge; overriding the clone toward it
+walks back a measured win. One dose survives that argument and is cheap — the extreme margin, where a near-certain
+ask (greedy hits 99.5%) is declined for one near 30%, 1.5% of decisions and 0.64 asks a game — and it is run as a
+single home cell beside the build, not as the build.
+
+**The build is the scaling repair — v0.43, row 51.** A monotone recalibration of the marginal's *scaled* answers
+(the uniform 1/n left alone, which the control says is already right), fit on these records and read at home in
+duplicate pairs by the pairs' win rate, then the bridge. **With the declare path pinned**: v0.16 is the standing
+warning that a calibrated licence repairs the records and loses abroad through the declare's chain, and this rung
+is that same belief moving. The pin is the first thing built and the mutation test proves it before any number is
+read.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -11109,7 +11195,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 47 | **After v0.38 stops at the claim — where do the nine sets of a game go between two players at parity?** | **TAKEN — v0.39 (§3.8al)**, by the standing rule and §3.8ak's record: the ask clone (F4, F5), the search (v0.36), the belief at the ask (v0.35) and at the claim (v0.38) all read the same result against v0.33's vector, which reads 50.46% ± 0.66 over twenty-four seeds; the counters say SESTINA's edge is the speculative claim (+0.33 sets a game), ours the certain declaration (+0.24) and its gifts (+0.09), and that they cancel; the read is the second order — the deal's split and the race behind the certain sets, and the value of a speculative claim by the public threat — from v0.38's 14,400 + 14,400 games on file, an instrument in `scripts/` and nothing in the engine; nothing ships; the build after is the largest asymmetry. Pre-registered in §3.8al before the run. **Read 21:25Z 2026-09-09: Q2 HELD — the race is symmetric at every deal split within a point; Q1 in shape (SESTINA +0.33 sets a game speculative, ours +0.19 certain and +0.08 gifts, the sums equal to a hundredth) and underneath it SESTINA holds 0.14 sets a game more — its asks hit 51.7% to the clone's 51.2% — and gives 0.08 back by gambling; Q3 INVERTED — waiting beats the knob's claim in every class (89.3% of the deferred sets come home against 79.6% claimed right), the threat gate cannot pay, the claim line is closed by the play-out. The term after is the ask-choice read — row 48.** |
 | 48 | **After §3.8al's map — the one asymmetry that is SESTINA's choice: can our play move its gambles?** | **TAKEN — v0.40 (§3.8am)**, by the standing rule and the map: the ask-choice read §3.8al named is half on the record already (on disagreements neither ask is the better by the immediate hit, §3.8ad and §3.8af; the sequel is the search's, closed three ways), so the read goes to the asymmetry our play can reach — SESTINA's 0.094 wrong claims a game, made when its public belief has placed every card on its side. The read: its speculative claims by our asks into the set before them and by our true cards in it; the sets it held 5–1 or 4–2 at the deal by whether we ever asked into them; both sides alike, on file, a minute a run. The build after, if the gambles concentrate where we were silent: a silence knob on the clone's ask (v0.41), read at home by the pairs' win rate and at the bridge by §3.8n's bar. Pre-registered in §3.8am before the run. **Read 21:40Z 2026-09-09: Q1 half held (56% of SESTINA's speculative claims in sets we never asked into) and half missed (wrong there 21.7% against 19.8% — the same); Q2 held (a gift 4.3% against 0.6% where we asked; the minority wins none of the sets it never asked into) and Q3 missed on the sign: silence forfeits the 35% of dominated sets the minority wins by asking for one gift in twenty-three — worth −0.65 sets a game. SESTINA's gambles are its own; the bait line CLOSES; nothing is built. The term after is the lead conversion under the clone — row 49.** |
 | 49 | **After §3.8am's close — does SESTINA still convert its leads better than the clone does?** | **TAKEN — v0.41 (§3.8an)**, by the standing rule and §3.8am's close: the map is symmetric but for the ask race, and the record located the race's edge before the clone at the lead (§3.8q: SESTINA chased first 59.5% to Monet's 39.9% and converted 60.8% to about 48%; §3.8w: "the search's kind of thing"); the clone imitates SESTINA's choice 58% of the time and its chase and conversion have never been read. The read: the first side to four in every 3–3 set, its first decision after (chase / elsewhere / none), the conversion by side, on v0.38's records, 31 seconds a run. The build after, if the gap stands at 8 or more: the closing family re-read by the pairs' win rate and the bridge (v0.42); if it has closed, the sequel is elsewhere. Pre-registered in §3.8an before the run. **Read 21:50Z 2026-09-09: THE GAP HAS CLOSED — the leads are taken (1.38 / 1.41 a game), chased (64.2 / 64.9% of lead decisions; +19.6 before the clone) and converted (61.1 / 60.9%) alike; Q1 held, Q2's band missed and its gap clause held, Q3's gap missed on the closed side, Q4 held. The sequel is not the lead chase; the map's half point of hit rate wins no sets and reads the claim timing; v0.33's vector and SESTINA are equivalent at every measured mechanism. The term after is the belief's ceiling at our own decisions — row 50.** |
-| 50 | **After §3.8an — two equivalent players: how far does our belief sit from the truth at the ask, and does the clone leave immediate hits on the table?** | **TAKEN — v0.42 (§3.8ao)**, by the standing rule and §3.8an's close: every mechanism on the map is symmetric and closed; the term under them — the belief the ask is chosen by, against the truth at our own decisions — has never been read. The read: at every ask of v0.33's vector, the chosen (the clone's), the ranker's top, the greedy-by-p and the oracle by the immediate hit, the chosen p's calibration by decile, and the mirror at SESTINA's seats; on file, two minutes a run. It decides between a greedy-override knob (v0.43, by the pairs' win rate) and the choice-likelihood belief read (SESTINA's asks as evidence of its hand through the clone; the declare pinned). Pre-registered in §3.8ao before the run. |
+| 50 | **After §3.8an — two equivalent players: how far does our belief sit from the truth at the ask, and does the clone leave immediate hits on the table?** | **TAKEN — v0.42 (§3.8ao)**, by the standing rule and §3.8an's close: every mechanism on the map is symmetric and closed; the term under them — the belief the ask is chosen by, against the truth at our own decisions — has never been read. The read: at every ask of v0.33's vector, the chosen (the clone's), the ranker's top, the greedy-by-p and the oracle by the immediate hit, the chosen p's calibration by decile, and the mirror at SESTINA's seats; on file, two minutes a run. It decides between a greedy-override knob (v0.43, by the pairs' win rate) and the choice-likelihood belief read (SESTINA's asks as evidence of its hand through the clone; the declare pinned). Pre-registered in §3.8ao before the run. **Read 22:25Z: at 600,145 of our asks the chosen hit 48.8%, the ranker's top 53.9%, the greedy ask by p 54.6%, the oracle 98.6% — and SESTINA's asks under our belief read the same at every line (49.3 / 54.6 / 55.1 / 98.6), so both players decline immediate hits by the same 5.8 points and the ceiling at the ask is the choice's, not the knowledge's. Two controls then moved the finding off the choice and onto the belief: over EVERY legal ask the 0.5–0.9 deciles run 5 to 10 points above their p, and split by the card's candidates the error is exactly where the marginal's scaling concentrates mass above the uniform 1/n (2 candidates uniform 50.0 → 50.7, scaled 61.1 → 65.2; 3 scaled 60.8 → 70.0; 4 scaled 58.5 → 65.8; 5+ scaled 56.1 → 61.8), the count-only answers and the certain top being exact. The greedy override is benched (it is the pre-clone vector, which lost) but for one cheap extreme dose; the build is the scaling repair with the declare path pinned — row 51.** |
 
 ---
 
