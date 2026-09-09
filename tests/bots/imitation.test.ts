@@ -7,8 +7,10 @@
  * refused; (3) `decide` with `askModel` in the style plays the model's choice where the stack would not,
  * and without it the stack is untouched; (4) `validateStyle` refuses a non-string `askModel`; (5) the second
  * feature set (§3.8af) extends the first byte for byte and reads the slot prior and the log as it says, a model
- * at its width is told apart by the width, and any other width is refused. Whether the fitted model plays well
- * is the pairs' and the bridge's question (MONET.md).
+ * at its width is told apart by the width, and any other width is refused; (6) the third feature set (§3.8ah)
+ * extends the second and reads the holder clone's belief at the asked card and target, a model at its width is
+ * bound to the holder model it names, and the rows cannot be built without one. Whether the fitted model plays
+ * well is the pairs' and the bridge's question (MONET.md).
  */
 import { describe, expect, it } from 'vitest'
 import { decide, hashSeed, legalActionsSummary, newGame, reduce, seatView, us54Config } from '../../lib/engine/index.ts'
@@ -20,8 +22,11 @@ import { buildKnowledge, rankAsksWith, slotPriorHitProbability } from '../../lib
 import { resolvePolicy, validateStyle } from '../../lib/engine/bots/style.ts'
 import type { BotPolicy } from '../../lib/engine/bots/style.ts'
 import { monetPolicy } from '../../lib/engine/bots/monet.ts'
-import { ASK_FEATURES, ASK_FEATURES_2, ASK_FEATURE_COUNT, ASK_FEATURE_COUNT_2, askFeatureRows, askFeatureSetOf, askModelOf, chooseAskByModel, registerAskModel } from '../../lib/engine/bots/imitation.ts'
+import { ASK_FEATURES, ASK_FEATURES_2, ASK_FEATURE_COUNT, ASK_FEATURE_COUNT_2, ASK_FEATURES_3, ASK_FEATURE_COUNT_3, askFeatureRows, askFeatureSetOf, askModelOf, chooseAskByModel, holderModelForAsk, registerAskModel } from '../../lib/engine/bots/imitation.ts'
 import type { AskModel } from '../../lib/engine/bots/imitation.ts'
+import { HOLDER_FEATURES, HOLDER_FEATURE_COUNT, holderBelief, holderContext, holderModelOf, registerHolderModel } from '../../lib/engine/bots/holder.ts'
+import type { HolderModel } from '../../lib/engine/bots/holder.ts'
+import type { RankedAsk } from '../../lib/engine/bots/types.ts'
 
 const POL = monetPolicy('v0.9')
 // the registry's entries are pairs; PolicySpec is the union with the adaptive names, and a pair's fields are read off the narrowed type
@@ -249,6 +254,94 @@ describe('the second feature set (MONET.md §3.8af)', () => {
     let asksSeen = 0
     for (const { view } of askPositions('imit-decide-2', 6)) {
       const modelled = decide(view, withModel, hashSeed(`imit-decide-2:${view.moveIndex}`)())
+      if (modelled.type !== 'ask') continue
+      asksSeen++
+      expect(legalAsksFromView(view).some((l) => l.target === modelled.target && l.card === modelled.card)).toBe(true)
+    }
+    expect(asksSeen).toBeGreaterThan(10)
+  })
+})
+
+describe('the third feature set (MONET.md §3.8ah)', () => {
+  const F3 = (n: (typeof ASK_FEATURES_3)[number]) => ASK_FEATURES_3.indexOf(n)
+  /** A linear model over the third set's raw features: unit standardisation, the given weights, no bias. */
+  function linear3(weights: Partial<Record<(typeof ASK_FEATURES_3)[number], number>>): AskModel {
+    return { features: ASK_FEATURE_COUNT_3, mean: new Array(ASK_FEATURE_COUNT_3).fill(0), std: new Array(ASK_FEATURE_COUNT_3).fill(1), layers: [{ w: ASK_FEATURES_3.map((n) => weights[n] ?? 0), b: [0] }] }
+  }
+  /** A linear holder model over raw features: unit standardisation, the given weights, no bias. */
+  function linearH(weights: Partial<Record<(typeof HOLDER_FEATURES)[number], number>>): HolderModel {
+    return { features: HOLDER_FEATURE_COUNT, mean: new Array(HOLDER_FEATURE_COUNT).fill(0), std: new Array(HOLDER_FEATURE_COUNT).fill(1), layers: [{ w: HOLDER_FEATURES.map((n) => weights[n] ?? 0), b: [0] }] }
+  }
+
+  it('extends the second set byte for byte, reads the holder model it is given at the asked card and target, and cannot be built without one', () => {
+    registerHolderModel('imit-holder-slot', linearH({ pSlot: 8 }))
+    const holder = holderModelOf('imit-holder-slot')
+    let checked = 0
+    let tops = 0
+    for (const { view } of askPositions('imit-features-3', 9)) {
+      const k = buildKnowledge(view, OPTS)
+      const ranked = rankAsksWith(view, k, style)
+      expect(() => askFeatureRows(view, k, ranked, 3)).toThrow(/holder/)
+      const rows2 = askFeatureRows(view, k, ranked, 2)
+      const rows3 = askFeatureRows(view, k, ranked, 3, holder)
+      const ctx = holderContext(view, k)
+      expect(rows3.length).toBe(ranked.length)
+      for (let j = 0; j < ranked.length; j++) {
+        const x = rows3[j]
+        const { card, target } = ranked[j]
+        expect(x.length).toBe(ASK_FEATURE_COUNT_3)
+        expect(Array.from(x.subarray(0, ASK_FEATURE_COUNT_2))).toEqual(Array.from(rows2[j]))
+        const bl = holderBelief(holder, ctx, k, view, card)
+        expect(x[F3('pHold')]).toBe(bl[target])
+        expect(x[F3('pHoldDiff')]).toBe(bl[target] - ranked[j].p)
+        expect(x[F3('holdEntropy')]).toBeGreaterThanOrEqual(0)
+        expect(x[F3('holdEntropy')]).toBeLessThanOrEqual(1 + 1e-12)
+        const cand = k.cands[card] ?? []
+        if (cand.length >= 2) {
+          // a monotone weight on the slot prior: the belief's first choice has the slot prior's maximum
+          if (x[F3('holdTop')] === 1) {
+            for (const s of cand) expect(slotPriorHitProbability(k, card, s)).toBeLessThanOrEqual(slotPriorHitProbability(k, card, target) + 1e-12)
+            tops++
+          }
+        } else {
+          expect(x[F3('holdEntropy')]).toBe(0)
+        }
+        checked++
+      }
+    }
+    expect(checked).toBeGreaterThan(50)
+    expect(tops).toBeGreaterThan(0)
+  })
+
+  it('a model at the third width is bound to its holder model when registered, told apart by its width, chooses by the belief it reads, and plays legal asks through decide()', () => {
+    const noHolder: AskModel = linear3({ pHold: 1 })
+    expect(() => registerAskModel('imit3-none', noHolder)).toThrow(/holder/)
+    expect(() => registerAskModel('imit3-missing', noHolder, 'no-such-holder')).toThrow(/no holder model/)
+    registerHolderModel('imit-holder-slot', linearH({ pSlot: 8 }))
+    registerAskModel('imit3-hold', linear3({ pHold: 1 }), 'imit-holder-slot')
+    expect(askFeatureSetOf(askModelOf('imit3-hold'))).toBe(3)
+    expect(holderModelForAsk(askModelOf('imit3-hold'))).toBe(holderModelOf('imit-holder-slot'))
+    expect(holderModelForAsk(askModelOf('imit-top'))).toBeUndefined()
+    // the holder may be named by the model's own meta
+    registerAskModel('imit3-meta', { ...linear3({ pHold: 1 }), meta: { holderModel: 'imit-holder-slot' } })
+    expect(holderModelForAsk(askModelOf('imit3-meta'))).toBe(holderModelOf('imit-holder-slot'))
+    let differs = 0
+    for (const { view } of askPositions('imit-model-3', 11)) {
+      const k = buildKnowledge(view, OPTS)
+      const ranked = rankAsksWith(view, k, style)
+      if (ranked.length < 2) continue
+      const byHold = chooseAskByModel(askModelOf('imit3-hold'), view, k, ranked)
+      const ctx = holderContext(view, k)
+      const pOf = (r: RankedAsk): number => holderBelief(holderModelOf('imit-holder-slot'), ctx, k, view, r.card)[r.target]
+      const best = pOf(byHold)
+      for (const r of ranked) expect(pOf(r)).toBeLessThanOrEqual(best + 1e-12)
+      if (byHold !== ranked[0]) differs++
+    }
+    expect(differs).toBeGreaterThan(0)
+    const withModel = Object.freeze({ skill: POLB.skill, style: Object.freeze({ ...POLB.style, askModel: 'imit3-hold' }) })
+    let asksSeen = 0
+    for (const { view } of askPositions('imit-decide-3', 6)) {
+      const modelled = decide(view, withModel, hashSeed(`imit-decide-3:${view.moveIndex}`)())
       if (modelled.type !== 'ask') continue
       asksSeen++
       expect(legalAsksFromView(view).some((l) => l.target === modelled.target && l.card === modelled.card)).toBe(true)

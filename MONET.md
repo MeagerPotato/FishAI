@@ -459,6 +459,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.35** — the holder clone: the belief fitted on the records' deals (2026-09-09) | **row 42's, by the standing rule and §3.8af's and §3.8ag's "after this rung"**: at every card the viewer cannot place, a conditional logit over its candidate seats — twenty features off the view, the knowledge and the log, the true holder the label (H1, `lib/engine/bots/holder.ts`) — and its belief the ask clone's third feature set (F5 = F3's recipe with the set the one variable); eligible for M1 at H1's holdout accuracy ≥ the marginal's + 2.0 with the NLL below (M0), for M2 at F5's top-1 ≥ F3's + 1.0 with the seat not below (M1), C5 against C3 at home ≥ +2 SE and a majority (M2), ships by §3.8n's bar against v0.33's vector on twelve fresh seeds (M3); the registry change a PR for the owner; nothing shipped reads the instrument (§3.8ah) | **the instrument built 03:38Z 2026-09-09; H1 beside F4 once its rows are extracted, F5 after F4 (about 13:15Z), landing about 19:00Z** | M |
 | **v0.34** — the wider net at the second width (2026-09-09) | **row 41's, by the standing rule and §3.8af's "after this rung"**: F4 = `mlp` 128·128 on the second feature set, F3's recipe with the width the one variable — the 2 × 2 of features × width completed (§3.8ag); eligible for M2 at holdout top-1 ≥ F3's + 0.5 with the half-suit-and-seat agreement not below (M1), C4 against C3 at home ≥ +2 SE and a majority of banks (M2), ships by §3.8n's bar against v0.33's vector on twelve fresh seeds (M3); the registry change a PR for the owner; nothing in the engine changes | **F4 starts when F2 releases the machine (the chain script waited on `fit f2 exit`; started 03:12Z 2026-09-09 at BelowNormal priority) and lands about 13:15Z** | M |
 | **v0.33** — the belief's seat: the clone's second feature set (2026-09-08) | **row 39's, by the standing rule**: sixteen features per legal ask on top of the clone's 33 — the slot prior (the independent per-card belief) beside the marginal, the slot prior under an ask-choice prior of SESTINA's `kappa`, and the target's own dealings with the asked half-suit off the log (its asks, hits, misses, the cards taken from it, how long ago) — fitted at §3.8ad's F1's width and data so the features are the one variable (§3.8af); the instrument costs 0.02 ms an ask | **F3 read 01:42Z: holdout top-1 58.51% (F1 56.56%, +1.95 on a +1.0 bar), the seat 85.61% (83.13%) — eligible; M2 C3 over C +0.412 ± 0.148 a pair (5.5 SE, 12 of 12) — eligible; M3 +3.64 ± 0.71 points abroad against v0.30's vector (5.11 SE, 11 of 12) — CLEARS §3.8n's bar; the ship the owner's (row 40, PR #60)** | M |
 | **v0.32** — the declare clone, read and not built (2026-09-08) | **row 38's, by the standing rule**: the reader of the records' declare events (`scripts/probe-declares.mjs`) read before a feature was written — per completed half-suit SESTINA declares as we do (1.20 cards placed by belief a declare against our 1.24, right 97.8% against 97.5%; declared at once 78% against 75%); the gap is the count of completed half-suits, which the asks make: +16% over v0.20c's vector, +6% over v0.30's (§3.8ae) | a records read: no cell played, nothing to ship; the instrument committed | S |
@@ -9350,6 +9351,89 @@ feature sets, and the room left is known: the 28% of decisions that are a card a
 and the seat class at 8.9%. The next term is SESTINA's belief itself — a per-card holder model fitted on
 the records' true deals (`rbelief=indep` in its spec), handed to the clone as its p — not a third width.
 
+### 3.8ah Monet v0.35 — the holder clone: the belief fitted on the records' deals
+
+**Decision row 42, taken 2026-09-09 by the standing rule** (§3.8n) **and by §3.8af's and §3.8ag's "after this
+rung"**: the room left for the ask clone is the belief itself. §3.8ad's F2 has read the width at the first set —
++0.46 of agreement, all of it in the card class and none in the seat, the sets unmoved — so the seat class (8.9% of
+SESTINA's decisions at C3, the one that moves the count of completed half-suits) is not reached by width or data;
+§3.8af reached it with features that hand the fit a better belief (the slot prior, the κ prior, the target's
+history with the half-suit). The bridge records carry the true deal of every game, so the belief need not be
+modelled at all: **the holder clone** — at every card the viewer cannot place, one row per candidate seat (our
+marginal, the slot prior, the κ prior, the seat's hand and slots, its dealings with the half-suit off the log, what
+it certainly holds of it, the constraints on it: twenty features), the true holder the label, a conditional logit
+over the candidates — the same fit as the ask clone's over another list. Its belief is then handed to the ask clone
+as a **third feature set**: `ASK_FEATURES_2` and, after them, the holder clone's probability for the target at the
+asked card, that probability against the marginal's, whether the target is its first choice among the candidates,
+and its spread over them. The instrument: `lib/engine/bots/holder.ts` (the rows, the belief, the registry),
+`askhistory.ts` (the log reader the sets share, moved out of `imitation.ts` unchanged), `imitation.ts`'s third set
+(the first two sets' rows byte for byte what they were; a model at the third width is bound to the holder model it
+names), `scripts/gen-holder-data.mjs`, `fit-imitation.mjs` reading the data's kind off the header, and
+`gen-imitation-data.mjs --features 3`. Nothing shipped reads any of it.
+
+#### Pre-registration — written 2026-09-09 03:34Z, before a row is extracted
+
+**M0 — the holder fit.** The data: §3.8ad's seven record groups, **a 2% sample of SESTINA's ask decisions under
+salt 35** (`--sample 0.02 --sample-salt 35`: a fresh draw, not the ask data's), the holdout every fifth file
+(`--holdout-mod 5`), S's knowledge (`--override` v0.20c's vector) — about 460,000 decisions and, at each, every
+unplaced card with two or more candidates (about 25 a decision, three to four candidates each): about 11 million
+cards, 40 million rows × 22. **One fit, H1: `mlp` 64·64, 12 epochs, Adam, batch 64 cards, learning rate 10⁻³, L2
+10⁻⁵, the best holdout NLL kept, seed 1.** Read on the holdout cards: the top-1 accuracy of the true holder and the
+mean NLL, against the marginal's argmax and NLL, the slot prior's and the κ prior's on the same cards (the generator
+writes the three into the header). **Eligibility for M1: H1's holdout top-1 at least 2.0 points above the
+marginal's, and its NLL below the marginal's.** Not eligible: the rung stops — the log and the knowledge hold no
+more of the deal than the marginal already reads, and the seat class is SESTINA's search, not its belief.
+
+**M1 — the ask clone at the third set (only if M0 is eligible).** The extraction at `--features 3` with H1
+(`--holder-model`, registered as `sestina-holder-1`): §3.8ad's seven groups, the same 5% sample under salt 31 as
+F1, F2, F3 and F4 — the same decisions, four columns wider. **One fit, F5: `mlp` 64·64, 24 epochs, seed 1 — F3's
+recipe with the feature set the one variable.** Read as F3 is read, and by the probe on the same twelve holdout
+files (H1 registered). **Eligibility for M2: F5's holdout top-1 at least 1.0 point above F3's 58.51% (≥ 59.51%),
+and its half-suit-and-seat agreement not below F3's 85.61%** — §3.8af's bar, for the same kind of step. The
+candidate carried is **C5**: F5 as data, H1 as data beside it (two modules; the registry binds them by name).
+
+**M2 — at home (only if M1 is eligible).** `scripts/duplicate-pairs.mjs`, 2,400 pairs in twelve banks of 200,
+the control first (`0.0000 +/- 0.0000`): **C5 inside S's stack against C3 inside S's stack** (the one-variable
+comparison to v0.33's vector, the rung on the table for the owner in #60) and, as the anchor, C5 against S
+(v0.20c's vector), where C3 read +1.279 ± 0.148. **Eligibility for M3: C5 against C3 at least +2 SE above zero
+and ahead on a majority of the twelve banks.** The instrument's cost is read here too: a holder belief is a
+forward pass per candidate per unplaced card at every ask decision (about ninety passes of a 64·64 net), and the
+ask decision must stay under §3.4a's 1.4 ms.
+
+**M3 — at the bridge (only if M2 is eligible).** Twelve fresh seeds by §6.5's rule under
+`"monet-v0.35-confirm-12"` — or §3.8ag's twelve, shared, where v0.34 has already drawn them and played C3 on them
+(the rule §3.8af used with §3.8ad's draw). **C3 — v0.33's vector — on the twelve first (where not already played),
+then C5**, each through `MONET_ASK_MODEL` with its md5 prefix in the hello label (the adapter registers the holder
+model the ask model's meta names, a second file in the package); the pins as §3.8ac's M3. **The ship rule is
+§3.8n's, paired against v0.33's vector on the twelve: at least two standard errors above zero and ahead on a
+majority; ±2.00 stays the rung.** The registry change a PR for the owner — v0.35 = v0.33's vector with
+`askModel: 'sestina-clone-5'`, the clone and its holder model as data — stacked on #60.
+
+**Wall clock.** The instrument goes on the record branch before a row is extracted (typecheck, lint, the tests,
+the smoke of the generator and the fitter on two record files). The holder extraction about fifteen minutes (seven
+groups, three processes at a time); **H1 about an hour** (40 million rows of 22 over twelve epochs, a third of
+F1's multiplies), run beside §3.8ag's F4 — two cores at BelowNormal, 11 GB and about 4 GB of rows; the third-set
+extraction about twenty minutes (the holder belief at every unplaced card of every decision, H1 in the loop);
+**F5 about five hours**, started when F4 has released its rows (about 13:15Z), landing about 19:00Z on
+2026-09-09; the probe two minutes; M2 five minutes; M3 twenty minutes. The rung inside a day.
+
+**Predictions, written before a row is extracted.**
+- **Q0 (M0).** H1's holdout top-1 above the marginal's by **+2 to +6 points** (odds 55%); eligible (≥ +2.0 with
+  the NLL below): 55%. The marginal already folds the constraints and the ask-choice prior; what is left is the
+  log's shape — who asked into what, and when — which the κ prior reads only crudely.
+- **Q1 (M1).** F5's holdout top-1 above F3's by **+0.5 to +2.0 points** (55%); eligible (≥ +1.0 with the seat
+  not below): 40%. The seat class at 8.9% is the room; a better belief takes a third of it at most.
+- **Q2 (M2).** C5 against C3 at home: **+0.05 to +0.30 a pair** (55% within); eligible: 35%.
+- **Q3 (M3, if reached).** C5 clears §3.8n's bar against v0.33's vector at the bridge: 30%; the paired read
+  +0.3 to +1.5 points (55% within).
+- **Q4.** Every wall clock within 1.5× of its projection: 65%.
+
+**After this rung.** If H1 is not eligible, the belief is not in the public log's shape either, and the seat class
+is SESTINA's search: the next term is the search with the clone as its policy (§3.8aa's form, the clone at our
+seat too), read at §3.8a's cost. If H1 is eligible and F5 is not, the belief is better and the ask clone cannot use
+it: the term is then the ranker's own p — the holder belief in place of the marginal on the ask path, a knob, byte
+identity when absent.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -9812,6 +9896,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 39 | **After §3.8ad's addendum (the clone's learnable disagreement with SESTINA is the seat, not the card), §3.8ae (no declare policy to clone) and §3.8ac's M4 (the search's loss abroad is not its opponent model) — what is v0.33?** | **TAKEN — the belief's seat, the clone's second feature set (§3.8af)**, by the standing rule: sixteen features per legal ask — the independent per-card belief beside the marginal, and the target's own dealings with the asked half-suit off the log — fitted at §3.8ad's F1's width and data, so the fit F3 against F1 is a one-variable read; eligible at +1.0 point of holdout top-1 with the half-suit-and-seat agreement not below; the pairs against C at home, then the bridge under §3.8n's rule against v0.30's vector. The instrument is committed and nothing shipped reads it. Read 2026-09-09: F3 eligible (+1.95 on top-1), C3 eligible at home (+0.412 a pair over C, 5.5 SE), the bridge +3.64 ± 0.71 — clears; row 40. The owner may reverse at review. |
 | 40 | **v0.33 clears §3.8n's bar against SESTINA itself — +3.64 ± 0.71 points of win rate on the twelve seeds drawn under `"monet-v0.31-confirm-12"`, 51.04% against v0.30's 47.40%, ahead on 11 of 12 (§3.8af). Does it ship?** | **FOR THE OWNER.** The chain held at every stage (the fit +1.95 points of agreement over F1 for sixteen features, the pairs +0.412 a pair over C at 5.5 SE, the bridge +3.64 points), the wall clock a day, the pins clean. The registry change is a PR — v0.33 = v0.30's vector with `askModel: 'sestina-clone-3'`, the model as data, stacked on #49: **PR #60** (`claude/monet-v0.33-ship`, opened 02:25Z 2026-09-09 — the entry, its pin, the clone as data, its forward bank of 26,635 decisions, the /play note re-measured at 91.24% agreement with Bass v2.0 against v0.30's 91.33%) — and, as with row 36, it is not merged by me. Merged, 51.0% becomes the shipped number; left open, the shipped vector stays where #49 leaves it. The rung after is the wider net at the second width. |
 | 41 | **After v0.33 clears — what is v0.34?** | **TAKEN — the wider net at the second width (§3.8ag)**, by the standing rule and §3.8af's own "after this rung" (F3 gained 1.95 points of agreement for the features; §3.8ad's F2 has since read the width at the first set at +0.46, 57.02% against F1's 56.56%, and passes §3.8ad's margin bar at 13.29): F4 = `mlp` 128·128 on §3.8af's rows, F3's recipe with the width the one variable, the 2 × 2 of features × width completed. Eligible for M2 at +0.5 of holdout top-1 over F3 with the seat not below; C4 against C3 at home, then the bridge against v0.33's vector on twelve fresh seeds; the ship the owner's, stacked on #60. One core for a night, run while §3.8ad's C2 goes through M2 and M3. |
+| 42 | **After v0.31's stop at the width and v0.34 in flight — the term after the width: the belief itself?** | **TAKEN — the holder clone (§3.8ah)**, by the standing rule and §3.8af's and §3.8ag's "after this rung": F2 read the width as the card class alone (+0.46 of agreement, the seat untouched, the sets unmoved), so the seat class is reached by the belief or not at all; the records carry the deal, so the belief is fitted, not modelled — one row per candidate seat of every unplaced card, the true holder the label, the same conditional logit as the ask clone's — and handed to the ask clone as a third feature set. Eligible at +2.0 of holder accuracy over the marginal (M0), +1.0 of ask agreement over F3 with the seat not below (M1), +2 SE over C3 at home (M2); the bridge against v0.33's vector; the ship the owner's, stacked on #60. Runs beside and after F4, inside a day. |
 
 ---
 

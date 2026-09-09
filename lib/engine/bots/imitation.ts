@@ -24,6 +24,12 @@
  * belief beside the marginal, and the target's own dealings with the asked half-suit read off the
  * log. `askFeatureRows` builds either set; a registered model reads the one its width names.
  *
+ * ## The third feature set (§3.8ah)
+ *
+ * `ASK_FEATURES_3` is the second list and, after it, the holder clone's belief (holder.ts): a model
+ * of who holds each card, fitted on the records' true deals, read at the asked card and the target.
+ * A model at this width names the holder model it was fitted with; the rows need it.
+ *
  * ## In play
  *
  * `StyleParams.askModel` names a model registered with `registerAskModel`; `pickAsk` in decide.ts
@@ -31,12 +37,16 @@
  * ranker still lists the legal asks and their probabilities, the model chooses among them. Absent,
  * byte identity. The declare, the pass and every window decision stay the stack's.
  */
-import type { BookId, Card, Seat, Team } from '../types.ts'
+import type { BookId, Card, Seat } from '../types.ts'
 import { allBooks, bookCards, cardBook, seatTeam } from '../cards.ts'
 import { slotPriorHitProbability } from './knowledge.ts'
 import type { Knowledge, RankedAsk, SeatView } from './types.ts'
 import { compileNet, forwardNet } from './net.ts'
 import type { CompiledNet, DenseModel } from './net.ts'
+import { INDEP_KAPPA, agoOf, indepK, seatBookHistory } from './askhistory.ts'
+import { holderBelief, holderContext, holderModelOf } from './holder.ts'
+
+export { INDEP_KAPPA }
 
 export const ASK_FEATURES = [
   /** The ranker's hit probability of the ask. */
@@ -160,19 +170,28 @@ export const ASK_FEATURES_2 = [
 
 export const ASK_FEATURE_COUNT_2 = ASK_FEATURES_2.length
 
-/** Which list a feature row is built over: 1 for `ASK_FEATURES`, 2 for `ASK_FEATURES_2`. */
-export type AskFeatureSet = 1 | 2
+/**
+ * MONET.md §3.8ah — the third feature set: `ASK_FEATURES_2` and, after them, THE HOLDER CLONE'S BELIEF —
+ * a model of who holds each card fitted on the records' true deals (holder.ts), read at the asked card
+ * and the target: its probability for the target, that probability against the marginal's, whether the
+ * target is its first choice among the card's candidates, and how spread it is over them (the entropy,
+ * over its maximum). A model at this width needs a holder model, registered under the name it carries
+ * (`registerAskModel`'s third argument, or its meta's `holderModel`).
+ */
+export const ASK_FEATURES_3 = [...ASK_FEATURES_2, 'pHold', 'pHoldDiff', 'holdTop', 'holdEntropy'] as const
+
+export const ASK_FEATURE_COUNT_3 = ASK_FEATURES_3.length
+
+/** Which list a feature row is built over: 1 for `ASK_FEATURES`, 2 for `ASK_FEATURES_2`, 3 for `ASK_FEATURES_3`. */
+export type AskFeatureSet = 1 | 2 | 3
 
 export function askFeatureNames(set: AskFeatureSet): readonly string[] {
-  return set === 2 ? ASK_FEATURES_2 : ASK_FEATURES
+  return set === 3 ? ASK_FEATURES_3 : set === 2 ? ASK_FEATURES_2 : ASK_FEATURES
 }
 
 export function askFeatureCount(set: AskFeatureSet): number {
-  return set === 2 ? ASK_FEATURE_COUNT_2 : ASK_FEATURE_COUNT
+  return set === 3 ? ASK_FEATURE_COUNT_3 : set === 2 ? ASK_FEATURE_COUNT_2 : ASK_FEATURE_COUNT
 }
-
-/** The ask-choice prior's strength the second set's `pIndepK` is built with: the value SESTINA's spec names. */
-export const INDEP_KAPPA = 2.5
 
 /** What the log says about the asks so far, read once per decision. */
 interface AskHistory {
@@ -221,101 +240,13 @@ function askHistory(view: SeatView): AskHistory {
 }
 
 /**
- * MONET.md §3.8af — what the log says about each seat's dealings with each half-suit, read once per
- * decision for the second feature set: per seat × half-suit the asks, their hits and misses, the
- * cards taken from the seat and the misses at it, and when it last asked; per half-suit the asks,
- * the opponents' asks and the last ask; per seat the last ask and the distinct half-suits asked.
- * Indices are positions in the log's ask order, −1 for never; `asks` is the total.
- */
-interface SeatBookHistory {
-  asks: number
-  bookAsks: Int32Array
-  bookAsksThem: Int32Array
-  bookLast: Int32Array
-  sbAsks: Int32Array
-  sbHits: Int32Array
-  sbMisses: Int32Array
-  sbTaken: Int32Array
-  sbMissedAt: Int32Array
-  sbLast: Int32Array
-  seatLast: Int32Array
-  seatBooks: Int32Array
-}
-
-function seatBookHistory(view: SeatView, bookIdx: ReadonlyMap<BookId, number>, myTeam: Team): SeatBookHistory {
-  const NB = bookIdx.size
-  const h: SeatBookHistory = {
-    asks: 0,
-    bookAsks: new Int32Array(NB),
-    bookAsksThem: new Int32Array(NB),
-    bookLast: new Int32Array(NB).fill(-1),
-    sbAsks: new Int32Array(6 * NB),
-    sbHits: new Int32Array(6 * NB),
-    sbMisses: new Int32Array(6 * NB),
-    sbTaken: new Int32Array(6 * NB),
-    sbMissedAt: new Int32Array(6 * NB),
-    sbLast: new Int32Array(6 * NB).fill(-1),
-    seatLast: new Int32Array(6).fill(-1),
-    seatBooks: new Int32Array(6),
-  }
-  const seen = new Uint8Array(6 * NB)
-  for (const ev of view.log) {
-    if (ev.type !== 'ask') continue
-    const bi = bookIdx.get(cardBook(ev.card))
-    if (bi === undefined) continue
-    const n = h.asks++
-    h.bookAsks[bi]++
-    if (seatTeam(ev.asker) !== myTeam) h.bookAsksThem[bi]++
-    h.bookLast[bi] = n
-    const a = ev.asker * NB + bi
-    const t = ev.target * NB + bi
-    h.sbAsks[a]++
-    if (ev.hit) {
-      h.sbHits[a]++
-      h.sbTaken[t]++
-    } else {
-      h.sbMisses[a]++
-      h.sbMissedAt[t]++
-    }
-    h.sbLast[a] = n
-    h.seatLast[ev.asker] = n
-    if (seen[a] === 0) {
-      seen[a] = 1
-      h.seatBooks[ev.asker]++
-    }
-  }
-  return h
-}
-
-/** Asks since the ask at `last` (−1 for never), over twenty, capped at 1. */
-function agoOf(last: number, asks: number): number {
-  return last < 0 ? 1 : Math.min(20, asks - 1 - last) / 20
-}
-
-/**
- * The slot prior with an ask-choice prior laid on it: each candidate seat's free slots, multiplied by
- * (1 + κ) per ask it made into the card's half-suit (saturating at three), the target's share of the
- * total. The certainties are the slot prior's own.
- */
-function indepK(k: Knowledge, h: SeatBookHistory, cand: readonly Seat[], target: Seat, bi: number, NB: number): number {
-  if (cand.length === 0 || !cand.includes(target)) return 0
-  if (cand.length === 1) return 1
-  let total = 0
-  let mine = 0
-  for (const s of cand) {
-    const w = k.unknownSlots[s] * Math.pow(1 + INDEP_KAPPA, Math.min(3, h.sbAsks[s * NB + bi]))
-    total += w
-    if (s === target) mine = w
-  }
-  return total > 0 ? mine / total : 1 / cand.length
-}
-
-/**
  * One feature row per entry of `ranked` (the ranker's list of every legal ask, best first), in
  * `ASK_FEATURES` order — or, for `set` 2, in `ASK_FEATURES_2`'s, the first set's columns first and
- * unchanged. Pure over the view, the knowledge and the list.
+ * unchanged; for `set` 3, in `ASK_FEATURES_3`'s, which needs the holder model the last four columns
+ * read. Pure over the view, the knowledge, the list and the model.
  */
-export function askFeatureRows(view: SeatView, k: Knowledge, ranked: readonly RankedAsk[], set: AskFeatureSet = 1): Float64Array[] {
+export function askFeatureRows(view: SeatView, k: Knowledge, ranked: readonly RankedAsk[], set: AskFeatureSet = 1, holder?: CompiledNet): Float64Array[] {
+  if (set === 3 && !holder) throw new Error('askFeatureRows: the third feature set needs a holder model')
   const me = view.seat
   const myTeam = seatTeam(me)
   const held = new Set(view.hand)
@@ -325,7 +256,18 @@ export function askFeatureRows(view: SeatView, k: Knowledge, ranked: readonly Ra
   const NB = books.length
   const bookIdx = new Map<BookId, number>()
   books.forEach((b, i) => bookIdx.set(b, i))
-  const hist2 = set === 2 ? seatBookHistory(view, bookIdx, myTeam) : null
+  const hist2 = set >= 2 ? seatBookHistory(view, bookIdx, myTeam) : null
+  const hctx = set === 3 && holder ? holderContext(view, k) : null
+  // the holder clone's belief, once per asked card
+  const beliefs = new Map<Card, Float64Array>()
+  const beliefOf = (card: Card): Float64Array => {
+    let b = beliefs.get(card)
+    if (b === undefined) {
+      b = hctx && holder ? holderBelief(holder, hctx, k, view, card) : new Float64Array(6)
+      beliefs.set(card, b)
+    }
+    return b
+  }
   // the seat's holding per half-suit, and each half-suit's rank by it
   const ownOf = new Map<BookId, number>()
   for (const b of books) ownOf.set(b, 0)
@@ -429,7 +371,22 @@ export function askFeatureRows(view: SeatView, k: Knowledge, ranked: readonly Ra
       x[i++] = Math.min(5, hist2.bookAsksThem[bi]) / 5
       x[i++] = hist2.seatBooks[t] / NB
       x[i++] = k.unknownSlots[t] / 9
-      x[i] = oppCands / 3
+      x[i++] = oppCands / 3
+    }
+    if (hctx) {
+      const t = r.target
+      const bl = beliefOf(r.card)
+      const pHold = bl[t]
+      let top = 0
+      let ent = 0
+      for (let q = 0; q < 6; q++) {
+        if (bl[q] > bl[top]) top = q
+        if (bl[q] > 0) ent -= bl[q] * Math.log(bl[q])
+      }
+      x[i++] = pHold
+      x[i++] = pHold - r.p
+      x[i++] = top === t && pHold > 0 ? 1 : 0
+      x[i] = cand.length > 1 ? ent / Math.log(cand.length) : 0
     }
     rows.push(x)
   }
@@ -439,21 +396,38 @@ export function askFeatureRows(view: SeatView, k: Knowledge, ranked: readonly Ra
 export type AskModel = DenseModel
 
 const MODELS = new Map<string, CompiledNet>()
+/** The holder model an ask model at the third width reads (§3.8ah), bound when it is registered. */
+const HOLDER_OF = new WeakMap<CompiledNet, CompiledNet>()
 
 /**
  * Register a fitted ask model under a name `StyleParams.askModel` can refer to (compiled once here).
  * The model's width names its feature set — `ASK_FEATURE_COUNT` the first, `ASK_FEATURE_COUNT_2` the
- * second (§3.8af); any other width is refused.
+ * second (§3.8af), `ASK_FEATURE_COUNT_3` the third (§3.8ah); any other width is refused. A model at the
+ * third width needs a holder model already registered under `holderName` (or its meta's `holderModel`).
  */
-export function registerAskModel(name: string, model: AskModel): void {
-  MODELS.set(name, compileNet(model, askFeatureCount(model.features === ASK_FEATURE_COUNT_2 ? 2 : 1), 1))
+export function registerAskModel(name: string, model: AskModel, holderName?: string): void {
+  const set: AskFeatureSet = model.features === ASK_FEATURE_COUNT_3 ? 3 : model.features === ASK_FEATURE_COUNT_2 ? 2 : 1
+  const net = compileNet(model, askFeatureCount(set), 1)
+  if (set === 3) {
+    const metaName = model.meta?.holderModel
+    const hn = holderName ?? (typeof metaName === 'string' ? metaName : undefined)
+    if (!hn) throw new Error(`ask model ${JSON.stringify(name)}: the third feature set needs a holder model's name`)
+    HOLDER_OF.set(net, holderModelOf(hn))
+  }
+  MODELS.set(name, net)
 }
 
 /** The feature set a compiled ask model reads, by its input width. */
 export function askFeatureSetOf(m: CompiledNet): AskFeatureSet {
+  if (m.features === ASK_FEATURE_COUNT_3) return 3
   if (m.features === ASK_FEATURE_COUNT_2) return 2
   if (m.features === ASK_FEATURE_COUNT) return 1
-  throw new Error(`ask model of ${m.features} features: neither ${ASK_FEATURE_COUNT} nor ${ASK_FEATURE_COUNT_2}`)
+  throw new Error(`ask model of ${m.features} features: none of ${ASK_FEATURE_COUNT}, ${ASK_FEATURE_COUNT_2} and ${ASK_FEATURE_COUNT_3}`)
+}
+
+/** The holder model a registered ask model at the third width reads; undefined for the other widths. */
+export function holderModelForAsk(m: CompiledNet): CompiledNet | undefined {
+  return HOLDER_OF.get(m)
 }
 
 export function askModelOf(name: string): CompiledNet {
@@ -464,7 +438,8 @@ export function askModelOf(name: string): CompiledNet {
 
 /** The model's score of every entry of `ranked`, in order. */
 export function scoreAsks(m: CompiledNet, view: SeatView, k: Knowledge, ranked: readonly RankedAsk[]): number[] {
-  return askFeatureRows(view, k, ranked, askFeatureSetOf(m)).map((x) => forwardNet(m, x))
+  const set = askFeatureSetOf(m)
+  return askFeatureRows(view, k, ranked, set, set === 3 ? HOLDER_OF.get(m) : undefined).map((x) => forwardNet(m, x))
 }
 
 /** The ranked entry the model scores highest; a tie goes to the earlier entry (the ranker's order). Throws on an empty list. */
