@@ -459,6 +459,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.44** — the search over the clone's shortlist: the candidate fill as the one variable (2026-09-09) | **row 52's, on the owner's word after §3.8ap's close**: §3.8ai already ran the search over this stack and lost (−0.170 ± 0.154 a pair; it changes the clone's pick 23% of the time at 0.009 sets a change) — but it never varied the CANDIDATE SET, and `candidateAsks` fills from the RANKER's top five under both `candMode` values, so every alternative the search has been offered on this stack is a ranker ask, which §3.8ao measured to be the greedy player that lost by 3.64. §3.8ap says a better set exists (a hitting ask in the clone's top three 72.8% of the time, carrying SESTINA's own ask 84.9%). Three stages, each gating the next: G the gate on file (three candidate sets — the ranker's fill, the clone's, and the two mixed — by how often each holds a hitting ask, and how far they overlap); B a third `candMode` filling from the clone, off by default and inert without an `askModel`; M §3.8ai's own cell with the fill as the only change, staged four banks first. Eligible only if M is ahead of zero by 2 SE and ahead of §3.8ai (§3.8aq) | **pre-registered 23:48Z 2026-09-09; G about eight minutes a record set, M quoted from §3.8ai at 631 ms an ask and staged** | L |
 | **v0.43** — the repair's reach, and the ceiling above the clone (2026-09-09) | **row 51's, by the standing rule and §3.8ao's close**: the scaling repair is monotone, so it cannot move the greedy ask and its whole reach is a few reorderings, a shifted feature vector under a clone fitted on the unshifted one, and a declare that fires sooner — which §3.8al priced as a loss (R1, fitted and read on disjoint files). Beside it the question §3.8an and §3.8ao raise together: imitation arrives at SESTINA and cannot exceed it, so the way past parity is a selector over the clone's shortlist — R2 measures where the asks that would have hit sit in the clone's own ranking (top 1, 2, 3, 5, all), with best-of-top-k by p as the identity check that a belief selector merely walks back to greedy. `scripts/probe-set-attribution.mjs` extended, nothing in the engine; a read, no bar; it decides whether v0.44 is the search over the clone's shortlist (§3.8ap) | **READ 22:55Z 2026-09-09 — R1: the repair reaches almost nothing (greedy 0.7%, ranker top 1.2%, clone choice 5.3%, claims 0.2% and every crossing upward, the losing direction) and is CLOSED as a build; R2: a hitting ask sits in the clone's top 3 at 72.8% against the 48.8% we play, best-of-k by belief arrives at greedy, and the top 3 carries SESTINA's own ask 84.9% — the shortlist is worth searching, row 52** | S |
 | **v0.42** — the belief's ceiling at our own decisions: the chosen ask, the greedy ask and the oracle (2026-09-09) | **row 50's, by the standing rule and §3.8an's close**: every mechanism line closed and the two players equivalent; the term under them read at last — at every ask of v0.33's vector on v0.38's records, the immediate hit of the ask chosen (the clone's), of the ranker's top, of the greedy ask by the marginal's p and of the oracle, the chosen p against its hit by decile, and the mirror at SESTINA's seats; `scripts/probe-set-attribution.mjs` extended, nothing in the engine; a read, no bar; it decides between a greedy-override knob (the clone leaves immediate hits on the table) and the choice-likelihood belief (the belief is the ceiling) (§3.8ao) | **READ 22:25Z 2026-09-09 — greedy − chosen +5.8 on both sides (the ranker's top is the greedy player and it lost by 3.64); the belief UNDER-confident by 4–9 points wherever its scaling concentrates mass above the uniform 1/n, exact where it only counts and exact at the top; the greedy override benched, the scaling repair is row 51** | S |
 | **v0.41** — the lead conversion under the clone: does SESTINA still convert its leads better? (2026-09-09) | **row 49's, by the standing rule and §3.8am's close**: §3.8q's lead — the first side to four of six in a 3–3 set — re-read with v0.33's vector at the table: `scripts/probe-set-attribution.mjs` extended to note the first side to four, its first ask decision after (a chase into the set, elsewhere, none) and whether it won the set, by side, on v0.38's records; before the clone SESTINA chased first 59.5% to Monet's 39.9% and converted 60.8% to about 48%; a read, no bar; if the conversion gap stands at 8 or more the build after is the closing family re-read by the pairs' win rate, if it has closed the sequel is elsewhere (§3.8an) | **read 21:50Z 2026-09-09 (32 s a record set): the gap has closed — leads taken 1.38 / 1.41 a game, converted 61.1% / 60.9%, the chase share over lead decisions 64.2% / 64.9% (Δ_lead +0.7 against +19.6 before the clone, §3.8q), chasing first converting 5 to 7 points more on both sides; the sequel is not the lead chase; the half point of hit rate wins no more sets at any split and reads the claim timing — v0.33's vector and SESTINA are equivalent players at every measured mechanism; the term after is the belief's ceiling at our own decisions (the greedy ask by p against the chosen against the oracle), row 50** | S |
@@ -10903,6 +10904,111 @@ the bridge. Its first measurement should be the one this rung did not take: the 
 set the search builds *today*, so the new mode is bought only if the ranker's fill is genuinely worse than the
 clone's.
 
+### 3.8aq Monet v0.44 — the search over the clone's shortlist: the candidate fill as the one variable
+
+**Decision row 52, taken 2026-09-09 on the owner's word ("go ahead with row 52") after §3.8ap's close.**
+
+**The rung this must answer to first.** §3.8ai (v0.36, row 43) already ran the search over exactly this stack —
+t32 with the clone as the pick, as our seats' rollout policy and as the opponents' — and it **lost**: −0.170 ±
+0.154 a pair, −1.26 ± 0.59 points, −2.2 SE, three of twelve banks ahead. Its diagnosis is the sentence this rung
+turns on: **the search changes the clone's pick 23% of the time and each change costs 0.009 sets.** The search
+line was stopped there, and the conclusion drawn was that the deals and the horizon are the search's arithmetic,
+not the models.
+
+**Why that is not the end of it, and what the one variable is.** §3.8ai varied the rollout policy and never
+varied the *candidate set*. `candidateAsks` in `lib/engine/search/search.ts` seeds its list with the fast policy's
+pick — which is the clone's choice when `askModel` is set — and then fills the rest from **the ranker's** top five
+(`t.ranked` is `ranked.slice(0, 5)`, set before `pickAsk` runs, so the clone never touches it). Both `candMode`
+values do this; `'sets'` only changes which half-suits the ranker entries may come from. So every alternative the
+search has ever been offered on this stack is a *ranker* ask. §3.8ao then measured what a ranker ask is: the
+ranker's top hits 53.9% against the clone's 48.8%, within a point of the greedy ask — **the ranker's top is the
+greedy player, and the greedy player is the pre-clone vector that lost by 3.64 at the bridge.** Read together,
+§3.8ai's 23% of overrides at 0.009 sets each is what it looks like when a search is handed greedy alternatives and
+takes them: the loss is exactly where the candidate set is weakest, and the candidate set is the term nobody has
+moved.
+
+**And §3.8ap says a better set exists.** A hitting ask sits in the clone's own top three 72.8% of the time and its
+top five 83.3%, against the 48.8% its top delivers; that shortlist carries SESTINA's own ask 84.9% of the time at
+depth three. A search choosing among *those* is choosing between what SESTINA would play and near neighbours of
+it, which is the shape that can come out ahead of the thing it copies. Whether that beats the ranker fill is not
+yet known, and the whole point of the gate below is that it is knowable for eight minutes before any pair is
+played.
+
+**The rung, in three stages, each gating the next.**
+
+*G — the gate, on file, before any engine change.* On v0.38's records, at every ask decision of ours, three
+candidate sets built at k = 3, 4 and 5, each seeded with the clone's pick (which at our seats *is* the record's
+ask, §3.8ap's 100.0% validation):
+
+- **A, today's:** filled from the ranker's order, capped at its top five, exactly as `candidateAsks` fills it.
+- **B, the clone's:** filled from the clone's own ranking — the shortlist §3.8ap measured.
+- **C, mixed:** filled alternately from the ranker and the clone, the union both orders would give.
+
+Read per set: how often it contains an ask that would have hit, and how far A and B overlap. **If A already
+contains a hitting ask as often as B, the fill is not the defect, §3.8ai's verdict stands unqualified, the search
+line stays closed and this rung stops at G having cost eight minutes.**
+
+*B — the build, only if G says the sets differ and B is ahead.* A third `candMode` that fills from the clone's
+ranking, off by default, inert without an `askModel`, no other behaviour of the search touched.
+
+*M — the cell, the same experiment §3.8ai ran with the fill as the only change.* §3.8aa's t32 form exactly —
+`{"det":32,"cand":4,"steps":24,"z":1,"guard":"lcb","leafLock":1,"leafCard":0,"candMode":<the new mode>}` over
+v0.33's vector with `oppAskModel` the same clone, against v0.33's vector with the clone and no search, on the same
+twelve banks of 200 pairs. Read by the **paired set-difference and the pairs' win rate** (§3.8al's tempo
+artifact), and against §3.8ai's −0.170 ± 0.154 directly, the banks being the same.
+
+**Eligibility.** G is a read, no bar. M is eligible to go further only if it is **ahead of zero by 2 SE or more**
+— the search must beat its own policy, which §3.8ai's did not — **and** ahead of §3.8ai's cell. Anything less and
+the search line closes for good, with the fill tested and excluded.
+
+**Wall clock, and the cost this rung must be honest about.** G is about eight minutes a record set. The build is
+under an hour. **M is the expensive one and it is quoted from §3.8ai's own measurement, not projected: 631 ms an
+ask, 44.3 s a mirror game.** Twelve banks of 200 pairs is on the order of five hours across twelve processes at
+BelowNormal, which is what §3.8ai spent. It is therefore **staged: four banks first**, about a third of that, read
+for its sign; the remaining eight only if the sign is right. The owner is told the four-bank wall clock before it
+starts and the machine runs one stage at a time.
+
+#### Pre-registration — written 2026-09-09 23:48Z, before the gate runs
+
+**Predictions.**
+- **G1.** At k = 4 (§3.8ai's number) set A contains a hitting ask at 70 to 78% (55%). **Set B beats set A by 2
+  points or more (45%)**; the two are within 2 points either way (35%); A beats B by 2 or more (20%).
+- **G2.** Set C beats both A and B at every k (55%) — the union of two different orders spans more of the truth
+  than either.
+- **G3.** A and B share the pick and, beyond it, fewer than 1.5 of the remaining 3 entries at k = 4 (65%) — the
+  ranker's order and the clone's genuinely disagree about what the alternatives are.
+- **G4.** The gate runs inside ten minutes a record set (70%).
+- **M1, recorded now and read only if the gate opens.** The cell with the clone fill is ahead of §3.8ai's −0.170
+  (60%), and still behind zero (55%) — the honest expectation being that the fill is part of §3.8ai's loss and
+  not all of it.
+
+**Disclosure.** A timing slice — one file of the c3 records at sample 0.1, 4,985 of our decisions — ran before this
+section was spliced, and its numbers were seen. **It already answers the gate, and it answers against the build**:
+at k = 4 the ranker's fill holds a hitting ask 83.2% of the time and the clone's fill 77.6%, with the mixed set at
+81.4%; the two fills genuinely differ, sharing 2.41 of their 3.98 entries. The predictions above are left exactly
+as written, so G1's 20% branch and G2 are on course to miss. Two things are said here rather than after the
+numbers, because saying them afterwards would be worth nothing.
+
+*First,* the gate's measure is **whether a set holds an ask that would have hit**, and §3.8ao is the reason to
+distrust it for this purpose: the greedy ask maximises exactly that quantity and loses by 3.64. A set richer in
+hitting asks is not thereby a set richer in *valuable* asks, and the ranker's fill is greedy-flavoured by
+construction. So the gate cannot prove the ranker's fill is better for a value search; it can only fail to support
+the hypothesis that it is worse, which is what it does.
+
+*Second,* the pre-registered rule stands anyway and the rung stops at G. The hypothesis that bought this rung was
+that §3.8ai lost because its alternatives were weak. They are not weak on the only cheap measure there is, and
+paying five hours to re-run §3.8ai's cell on a hypothesis whose one piece of cheap evidence points the other way
+is not what the standing rule ("whatever will improve the winning percentage") buys. The record decides on that,
+names what the gate cannot settle, and does not pretend the gate settled it.
+
+**After this rung.** G closes it: §3.8ai's verdict stands, the search line is closed with the candidate fill
+tested and excluded, and the next term is the one §3.8ap named second — the shortlist itself, either the ranker's
+list widened or the clone re-fitted to *propose* a set rather than choose one item from it. G opens it and M is
+ahead of zero by 2 SE: the fill was the defect, the search over the clone's shortlist is the first design on this
+ladder to beat its own policy, and it goes to the bridge against SESTINA. G opens it and M is behind zero: the
+search's evaluation is worse than the clone's choice whatever it is offered, which is a cleaner statement of
+§3.8ai's finding than §3.8ai could make, and the search line closes on it.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -11375,6 +11481,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 49 | **After §3.8am's close — does SESTINA still convert its leads better than the clone does?** | **TAKEN — v0.41 (§3.8an)**, by the standing rule and §3.8am's close: the map is symmetric but for the ask race, and the record located the race's edge before the clone at the lead (§3.8q: SESTINA chased first 59.5% to Monet's 39.9% and converted 60.8% to about 48%; §3.8w: "the search's kind of thing"); the clone imitates SESTINA's choice 58% of the time and its chase and conversion have never been read. The read: the first side to four in every 3–3 set, its first decision after (chase / elsewhere / none), the conversion by side, on v0.38's records, 31 seconds a run. The build after, if the gap stands at 8 or more: the closing family re-read by the pairs' win rate and the bridge (v0.42); if it has closed, the sequel is elsewhere. Pre-registered in §3.8an before the run. **Read 21:50Z 2026-09-09: THE GAP HAS CLOSED — the leads are taken (1.38 / 1.41 a game), chased (64.2 / 64.9% of lead decisions; +19.6 before the clone) and converted (61.1 / 60.9%) alike; Q1 held, Q2's band missed and its gap clause held, Q3's gap missed on the closed side, Q4 held. The sequel is not the lead chase; the map's half point of hit rate wins no sets and reads the claim timing; v0.33's vector and SESTINA are equivalent at every measured mechanism. The term after is the belief's ceiling at our own decisions — row 50.** |
 | 50 | **After §3.8an — two equivalent players: how far does our belief sit from the truth at the ask, and does the clone leave immediate hits on the table?** | **TAKEN — v0.42 (§3.8ao)**, by the standing rule and §3.8an's close: every mechanism on the map is symmetric and closed; the term under them — the belief the ask is chosen by, against the truth at our own decisions — has never been read. The read: at every ask of v0.33's vector, the chosen (the clone's), the ranker's top, the greedy-by-p and the oracle by the immediate hit, the chosen p's calibration by decile, and the mirror at SESTINA's seats; on file, two minutes a run. It decides between a greedy-override knob (v0.43, by the pairs' win rate) and the choice-likelihood belief read (SESTINA's asks as evidence of its hand through the clone; the declare pinned). Pre-registered in §3.8ao before the run. **Read 22:25Z: at 600,145 of our asks the chosen hit 48.8%, the ranker's top 53.9%, the greedy ask by p 54.6%, the oracle 98.6% — and SESTINA's asks under our belief read the same at every line (49.3 / 54.6 / 55.1 / 98.6), so both players decline immediate hits by the same 5.8 points and the ceiling at the ask is the choice's, not the knowledge's. Two controls then moved the finding off the choice and onto the belief: over EVERY legal ask the 0.5–0.9 deciles run 5 to 10 points above their p, and split by the card's candidates the error is exactly where the marginal's scaling concentrates mass above the uniform 1/n (2 candidates uniform 50.0 → 50.7, scaled 61.1 → 65.2; 3 scaled 60.8 → 70.0; 4 scaled 58.5 → 65.8; 5+ scaled 56.1 → 61.8), the count-only answers and the certain top being exact. The greedy override is benched (it is the pre-clone vector, which lost) but for one cheap extreme dose; the build is the scaling repair with the declare path pinned — row 51.** |
 | 51 | **After §3.8ao — does the belief's measured error reach any decision, and can anything beat a choice that arrives at SESTINA by copying it?** | **TAKEN — v0.43 (§3.8ap)**, by the standing rule. The repair §3.8ao named is monotone: it cannot change the greedy ask, and its only certain reach is the declare's thresholds, where §3.8al already measured that firing sooner loses. R1 fits the map on six files and reads its reach on the other six (greedy unchanged as a control on the argument, ranker top changed, clone choice changed, claim thresholds crossed and in which direction). R2 is the rung that matters: imitation arrives at the thing imitated, so parity is where a clone ends — R2 measures where the asks that would have hit sit in the clone's own ranking, and whether a shortlist of three is worth searching. Pre-registered in §3.8ap before the run. **Read 22:55Z: the instrument validated first — at our seats the record's ask is the clone's top 100.0%, so the model and the feature pipeline are exactly those that made the records. R1: the fitted map is a real correction where §3.8ao placed it (55 → 59.3, 65 → 74.1, 75 → 84.3, 85 → 94.9) and reaches almost nothing — the greedy ask moves at 0.7% (through the isotonic fit's flat blocks, not through order, so the pre-registration's argument holds in substance), the ranker's top at 1.2%, the clone's choice at 5.3%, and a claim's belief crosses 0.775 at 0.2% and 0.5 at 0.0%, every crossing on both sides upward — claiming sooner, which §3.8al priced as the losing direction. The scaling repair is closed as a build and §3.8ao's finding stands as a property of the belief with no decision behind it. R2: at 600,145 of our decisions a hitting ask sits in the clone's top 3 at 72.8% and its top 5 at 83.3%, against the 48.8% its top actually delivers; best-of-top-k by the belief climbs only 48.8 → 50.8 → 54.8, arriving exactly at greedy, so the selector must be a value and not the belief; and the clone's top 3 carries SESTINA's own ask 84.9% of the time, which is the shape that can exceed the thing it copies. Eight of thirteen clauses held; the top-3 band missed low as the pre-registration's disclosure said it would, into the gap between its two branches, and the record decides there to build. Row 52 is the search over the clone's shortlist — `candidateAsks` today seeds with the clone's pick but fills from the RANKER, so a new `candMode` is needed, and its first measurement is the headroom over the candidate set the search builds today.** |
+| 52 | **After §3.8ap — is the clone's shortlist worth searching, given that §3.8ai already searched this stack and lost?** | **TAKEN — v0.44 (§3.8aq)**, on the owner's word ("go ahead with row 52"). §3.8ai's loss is not a refutation of this design but evidence for it: it changed the clone's pick 23% of the time at 0.009 sets a change, and every alternative it was offered came from the RANKER's top five, which §3.8ao measured to be the greedy player that lost by 3.64 at the bridge. The candidate fill is the term nobody has moved. G gates the whole rung on file for eight minutes — three candidate sets by how often each holds an ask that would have hit — and closes the search line for good if the ranker's fill is already as good. Only then the new `candMode`, and only then §3.8ai's own cell with the fill as the single change, staged four banks first because M is the expensive stage at 631 ms an ask. Eligible only if it beats zero by 2 SE and beats §3.8ai. Pre-registered in §3.8aq before the gate runs. |
 
 ---
 
