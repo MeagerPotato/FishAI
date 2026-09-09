@@ -12,7 +12,8 @@
  *
  *     node scripts/probe-set-attribution.mjs --records <dir>[,<dir>...] [--version v0.9] [--override <json>]
  *          [--knob <json>] [--holder-model <fit.json>] [--holder-name holder] [--sample 1] [--sample-salt s]
- *          [--max-files N] [--debug N] [--ceiling 1] [--out summary.json]
+ *          [--max-files N] [--skip-files N] [--debug N] [--ceiling 1] [--pcal map.json] [--clone ask.json]
+ *          [--out summary.json]
  *
  * `--version`/`--override` is the stack whose knowledge options rebuild every seat's knowledge (the arm's own vector);
  * `--knob` lays a style over it and plays it at every window offer of the arm's seats as a one-step counterfactual
@@ -22,6 +23,14 @@
  * the ranker's own top, the greedy ask by the marginal's p and the oracle (some legal ask hits) by the true hands at
  * that moment, with the chosen p by decile and the greedy-minus-chosen p by margin; both sides, the arm's stack
  * rebuilding the knowledge and the ranker's list at either view.
+ * 3.8ap (row 51) adds two reads under `--ceiling 1`. `--pcal` applies a monotone map to every ask's p (a
+ * `{ bins: [...] }` of NB bin values, read at the bin p falls in) and reports what it moves: the greedy ask, the
+ * ranker's top (re-scored as `score + wHit * dp`, the other terms being untouched by a map that fixes 0 and 1) and,
+ * with `--clone`, the clone's own choice over the re-scored list. `--clone <ask model json>` also turns on the
+ * shortlist read: the clone's ranking of the legal asks by `scoreAsks`, where the asks that would have hit sit in
+ * it (its top, some hit in the top 2 / 3 / 5 / all), best-of-top-k by p as the identity check against greedy, and
+ * where the record's own ask sits in that ranking. `--skip-files N` drops the first N files so a map may be fitted
+ * on one half of the records and read on the other. Every ask's p is binned into `pbins` for that fit.
  */
 import { pathToFileURL, fileURLToPath } from 'node:url'
 import { dirname, join, resolve } from 'node:path'
@@ -33,6 +42,7 @@ const BOTS = await import(pathToFileURL(join(ROOT, 'lib/engine/bots/index.ts')).
 const MON = await import(pathToFileURL(join(ROOT, 'lib/engine/bots/monet.ts')).href)
 const CARDS = await import(pathToFileURL(join(ROOT, 'lib/engine/cards.ts')).href)
 const REC = await import(pathToFileURL(join(ROOT, 'scripts/bridge-records.mjs')).href)
+const IMI = await import(pathToFileURL(join(ROOT, 'lib/engine/bots/imitation.ts')).href)
 const { hashSeed, reduce, seatView, us54Config } = ENG
 
 function argOf(flag, dflt) {
@@ -51,11 +61,27 @@ const MAXF = Number(argOf('--max-files', 0))
 const OUT = argOf('--out', '')
 const DEBUG = Number(argOf('--debug', 0))
 const CEIL = Number(argOf('--ceiling', 0))
+const SKIPF = Number(argOf('--skip-files', 0))
+const PCAL_FILE = argOf('--pcal', '')
+const CLONE_FILE = argOf('--clone', '')
+const NB = 200
+const PCAL = PCAL_FILE ? JSON.parse(fs.readFileSync(PCAL_FILE, 'utf8')).bins : null
+if (PCAL && PCAL.length !== NB) throw new Error(`--pcal: ${PCAL.length} bins, expected ${NB}`)
+const binOf = (p) => Math.min(NB - 1, Math.max(0, Math.floor(p * NB)))
+// The map fixes the ends: a certain ask stays certain and a dead ask stays dead, so `certain`, `certainBonus` and
+// `gamble` are untouched and the re-score below only has to move the wHit term.
+const cal = (p) => (!PCAL || p <= 0 || p >= 1 ? p : PCAL[binOf(p)])
 if (DIRS.length === 0) {
   console.error('--records is required')
   process.exit(2)
 }
 if (HOLDER_FILE) BOTS.registerHolderModel(HOLDER_NAME, JSON.parse(fs.readFileSync(HOLDER_FILE, 'utf8')))
+let CLONE = null
+if (CLONE_FILE) {
+  const name = CLONE_FILE.replace(/^.*[\\/]/, '')
+  BOTS.registerAskModel(name, JSON.parse(fs.readFileSync(CLONE_FILE, 'utf8')), HOLDER_FILE ? HOLDER_NAME : undefined)
+  CLONE = IMI.askModelOf(name)
+}
 
 const pol0 = MON.monetPolicy(VERSION)
 const POL = OVER ? Object.freeze({ skill: pol0.skill, style: Object.freeze({ ...pol0.style, ...OVER }) }) : pol0
@@ -69,7 +95,8 @@ const BOOKS = CARDS.allBooks(us54Config)
 
 let files = []
 for (const d of DIRS) files = files.concat(REC.recordFiles(d))
-const useFiles = MAXF > 0 ? files.slice(0, MAXF) : files
+const afterSkip = SKIPF > 0 ? files.slice(SKIPF) : files
+const useFiles = MAXF > 0 ? afterSkip.slice(0, MAXF) : afterSkip
 
 const CLASSES = ['certain', 'speculative', 'gift', 'forced', 'afterFinish']
 const WRONG = ['certainWrong', 'wrong', 'forcedWrong', 'afterFinishWrong']
@@ -106,6 +133,8 @@ function side() {
     ceiling: ceil(),
   }
 }
+// 3.8ap: a tally over the shortlist depths 1, 2, 3, 5 and the whole list
+function kk() { return { k1: 0, k2: 0, k3: 0, k5: 0, all: 0 } }
 function ceil() {
   const mb = () => ({ n: 0, chosenHit: 0, greedyHit: 0 })
   return {
@@ -117,6 +146,12 @@ function ceil() {
     // the 0.5-0.9 band over every legal ask, by the card's candidate count (2, 3, 4, 5 or more) and by whether p is
     // the uniform 1/n (the count alone) or the marginal's own scaled answer
     band: Object.fromEntries([2, 3, 4, 5].map((c) => [c, { unif: { n: 0, sumP: 0, hits: 0 }, scaled: { n: 0, sumP: 0, hits: 0 } }])),
+    // 3.8ap R1: every legal ask's p binned for the monotone fit, and what the fitted map moves
+    pbins: Array.from({ length: NB }, () => ({ n: 0, sumP: 0, hits: 0 })),
+    cal: { n: 0, sumAbsDelta: 0, greedyChanged: 0, topChanged: 0, cloneChanged: 0 },
+    calClaims: { n: 0, cross775: { up: 0, down: 0 }, cross50: { up: 0, down: 0 } },
+    // 3.8ap R2: the clone's own ranking of the legal asks, and where the asks that would have hit sit in it
+    short: { n: 0, topHit: 0, recordIsTop: 0, someHit: kk(), bestByP: kk(), recordRank: kk() },
     // greedy p minus the chosen p: equal (the chosen ask is a greedy ask), (0, .1], (.1, .3], (.3, .6], above .6
     margin: { eq: mb(), lt10: mb(), lt30: mb(), lt60: mb(), gt60: mb() },
   }
@@ -302,6 +337,47 @@ function replay(rec) {
     const m = greedy.p - chosen.p
     const B = m <= 1e-9 ? C.margin.eq : m <= 0.1 ? C.margin.lt10 : m <= 0.3 ? C.margin.lt30 : m <= 0.6 ? C.margin.lt60 : C.margin.gt60
     B.n++; if (ev.hit) B.chosenHit++; if (greedyHit) B.greedyHit++
+    for (const r of ranked) { const P = C.pbins[binOf(r.p)]; P.n++; P.sumP += r.p; if (truth(r)) P.hits++ }
+    // R1: what the fitted map moves. The list is re-scored by the wHit term alone (see `cal` above) and re-sorted,
+    // the original index breaking ties so the ranker's own deck-order tiebreak is preserved among untouched asks.
+    if (PCAL) {
+      const R = C.cal
+      R.n++
+      const re = ranked.map((r, idx) => {
+        const p2 = cal(r.p)
+        R.sumAbsDelta += Math.abs(p2 - r.p)
+        return { ...r, p: p2, score: Math.round((r.score + style.wHit * (p2 - r.p)) * 100) / 100, idx }
+      })
+      let gi = 0
+      for (let j = 1; j < re.length; j++) if (re[j].p > re[gi].p) gi = j
+      if (re[gi].target !== greedy.target || re[gi].card !== greedy.card) R.greedyChanged++
+      re.sort((x, y) => (y.score !== x.score ? y.score - x.score : x.idx - y.idx))
+      if (re[0].target !== top.target || re[0].card !== top.card) R.topChanged++
+      if (CLONE) {
+        const sc = IMI.scoreAsks(CLONE, view, k, re)
+        let bi = 0
+        for (let j = 1; j < sc.length; j++) if (sc[j] > sc[bi]) bi = j
+        if (re[bi].target !== ev.target || re[bi].card !== ev.card) R.cloneChanged++
+      }
+    }
+    // R2: the clone proposes; where do the asks that would have hit sit in its own ranking?
+    if (CLONE) {
+      const sc = IMI.scoreAsks(CLONE, view, k, ranked)
+      const order = ranked.map((r, idx) => idx).sort((x, y) => (sc[y] !== sc[x] ? sc[y] - sc[x] : x - y))
+      const H = C.short
+      H.n++
+      if (truth(ranked[order[0]])) H.topHit++
+      const recAt = order.findIndex((idx) => ranked[idx].target === ev.target && ranked[idx].card === ev.card)
+      if (recAt === 0) H.recordIsTop++
+      for (const [key, kd] of [["k1", 1], ["k2", 2], ["k3", 3], ["k5", 5], ["all", order.length]]) {
+        const head = order.slice(0, Math.min(kd, order.length))
+        if (head.some((idx) => truth(ranked[idx]))) H.someHit[key]++
+        let bp = head[0]
+        for (const idx of head) if (ranked[idx].p > ranked[bp].p) bp = idx
+        if (truth(ranked[bp])) H.bestByP[key]++
+        if (recAt >= 0 && recAt < kd) H.recordRank[key]++
+      }
+    }
   }
   function replayOne(ev, i) {
     if (ev.type === 'ask') {
@@ -324,6 +400,25 @@ function replay(rec) {
       const u = uncertainCards(k, ev.book)
       const right = ev.outcome === `team${team}`
       const cls = ev.forced ? 'forced' : u === 0 ? 'certain' : 'speculative'
+      if (PCAL && CEIL) {
+        // R1d: the claimer's own belief in the whole assignment, as the product of the marginals over the cards it
+        // could not place - NOT the declare's joint (3.4b's pAssignment), and named as the approximation it is.
+        // The question R1d asks is whether the map carries that quantity across the declare's thresholds, and which way.
+        const R = sideOfTeam(team).ceiling.calClaims
+        let q = 1
+        let q2 = 1
+        for (const c of CARDS.bookCards(ev.book, us54Config)) {
+          if (k.holders[c] !== undefined) continue
+          const p = BOTS.askHitProbability(k, c, ev.assignments[c])
+          q *= p
+          q2 *= cal(p)
+        }
+        R.n++
+        for (const [key, bar] of [['cross775', 0.775], ['cross50', 0.5]]) {
+          if (q < bar && q2 >= bar) R[key].up++
+          else if (q >= bar && q2 < bar) R[key].down++
+        }
+      }
       if (u > 0 && !ev.forced) {
         const fl = threatFlags(s, ev.book, team, k)
         pendingThreat.push({ team, known: fl.known, pub: fl.pub, right })
@@ -464,6 +559,20 @@ for (const [name, S] of [['the arm (ours)', T.arm], ['SESTINA', T.sestina]]) {
     console.log(`  the chosen ask's p by decile (n, mean p, hit): ${C.deciles.map((D, i) => `${(i / 10).toFixed(1)}-${((i + 1) / 10).toFixed(1)}: ${D.n} ${D.n > 0 ? ((100 * D.sumP) / D.n).toFixed(1) + '%' : '-'} ${pct(D.hits, D.n)}`).join('; ')}`)
     console.log(`  every legal ask's p by decile (n, mean p, hit): ${C.decilesAll.map((D, i) => `${(i / 10).toFixed(1)}-${((i + 1) / 10).toFixed(1)}: ${D.n} ${D.n > 0 ? ((100 * D.sumP) / D.n).toFixed(1) + '%' : '-'} ${pct(D.hits, D.n)}`).join('; ')}`)
     console.log(`  the 0.5-0.9 band over every legal ask, by the card's candidates (n, mean p, hit): ${[2, 3, 4, 5].map((c) => { const B = C.band[c]; const one = (U) => `${U.n} ${U.n > 0 ? ((100 * U.sumP) / U.n).toFixed(1) + '%' : '-'} ${pct(U.hits, U.n)}`; return `${c}${c === 5 ? '+' : ''} uniform ${one(B.unif)} / scaled ${one(B.scaled)}` }).join('; ')}`)
+    if (PCAL) {
+      const R = C.cal
+      const Q = C.calClaims
+      console.log(`3.8ap R1: the fitted map over ${R.n} decisions moves p by ${(R.sumAbsDelta / Math.max(1, R.n)).toFixed(4)} summed over the list a decision; the greedy ask changed ${pct(R.greedyChanged, R.n)}, the ranker's top ${pct(R.topChanged, R.n)}, the clone's choice ${CLONE ? pct(R.cloneChanged, R.n) : 'n/a'}`)
+      console.log(`  at ${Q.n} claims (the product of the marginals over the unplaced cards, not the declare's joint): across 0.775 up ${pct(Q.cross775.up, Q.n)} down ${pct(Q.cross775.down, Q.n)}; across 0.5 up ${pct(Q.cross50.up, Q.n)} down ${pct(Q.cross50.down, Q.n)}`)
+    }
+    if (CLONE) {
+      const H = C.short
+      const row = (T) => ['k1', 'k2', 'k3', 'k5', 'all'].map((key) => `${key === 'all' ? 'all' : key.slice(1)}: ${pct(T[key], H.n)}`).join('; ')
+      console.log(`3.8ap R2: at ${H.n} decisions the clone's top ask hit ${pct(H.topHit, H.n)} and the record's ask was its top ${pct(H.recordIsTop, H.n)}`)
+      console.log(`  some hitting ask within the clone's top k: ${row(H.someHit)}`)
+      console.log(`  best-of-top-k by the marginal's p: ${row(H.bestByP)}`)
+      console.log(`  the record's own ask within the clone's top k: ${row(H.recordRank)}`)
+    }
     console.log(`  greedy p minus chosen p (n, the chosen hit, the greedy hit): ${Object.entries(C.margin).map(([key, B]) => `${key}: ${B.n} ${pct(B.chosenHit, B.n)} ${pct(B.greedyHit, B.n)}`).join('; ')}`)
   }
   const g = S.gambles
