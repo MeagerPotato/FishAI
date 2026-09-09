@@ -70,6 +70,7 @@ const CLASSES = ['certain', 'speculative', 'gift', 'forced', 'afterFinish']
 const WRONG = ['certainWrong', 'wrong', 'forcedWrong', 'afterFinishWrong']
 const pair = () => ({ n: 0, right: 0 })
 const cf = () => ({ n: 0, rightNow: 0, laterOwn: 0, laterLost: 0, never: 0 })
+const dom = () => ({ n: 0, certain: 0, specRight: 0, specWrong: 0, minorityWon: 0, other: 0 })
 /** A tally for one side (the arm, or SESTINA). */
 function side() {
   return {
@@ -84,6 +85,11 @@ function side() {
     threatClaims: { known: { yes: pair(), no: pair() }, public: { yes: pair(), no: pair() } },
     // the knob's first would-be claim of a set where this side declined (--knob), by threat, with the set's end
     knobDeferred: { known: { yes: cf(), no: cf() }, public: { yes: cf(), no: cf() } },
+    // 3.8am (row 48): this side's speculative claims by the other side's asks into the set before the claim (none /
+    // some) and by its own, with the outcome; and the other side's true cards in the set at the claim (0 / 1 / 2+)
+    gambles: { oppAsks0: pair(), oppAsks1: pair(), ownAsks0: pair(), ownAsks1: pair(), oppHeld: [0, 0, 0] },
+    // 3.8am: the sets this side held 5-1 or 4-2 at the deal, by whether the other side ever asked into them, by their end
+    dominated: { minorityAsks0: dom(), minorityAsks1: dom() },
   }
 }
 const T = { arm: side(), sestina: side() }
@@ -138,10 +144,12 @@ function replay(rec) {
   const sideIndex = (team) => (team !== rec.teamA ? 1 : 0) // 0 the arm, 1 SESTINA
   // the ledger: one entry a set
   const sets = {}
-  for (const b of BOOKS) sets[b] = { split: [0, 0], hits: [0, 0], misses: [0, 0], lastPull: -1, end: null }
+  for (const b of BOOKS) sets[b] = { split: [0, 0], held: [0, 0], hits: [0, 0], misses: [0, 0], lastPull: -1, end: null }
   rec.hands0.forEach((h, x) => { for (const c of h) sets[CARDS.cardBook(c)].split[seatTeam(x)]++ })
+  for (const b of BOOKS) { sets[b].held[0] = sets[b].split[0]; sets[b].held[1] = sets[b].split[1] }
   const deferred = []
   const pendingThreat = [] // the threat read at this side's speculative claims, written when the replay completes
+  const pendingGamble = [] // 3.8am: the speculative claims with the set's state before them, written with the ledger
   const knobSeen = new Set()
   let n = 0
   const step = (action) => {
@@ -201,7 +209,7 @@ function replay(rec) {
       if (ev.type === 'ask') { // the race is ledgered from the record itself, after the finish too
         const L = sets[CARDS.cardBook(ev.card)]
         const t = seatTeam(ev.asker)
-        if (ev.hit) { L.hits[t]++; L.lastPull = t } else L.misses[t]++
+        if (ev.hit) { L.hits[t]++; L.lastPull = t; L.held[t]++; L.held[1 - t]-- } else L.misses[t]++
       }
       // this engine ends the game once a team holds five sets (the win is decided); the recording engine plays on
       if (s.phase === 'finished') {
@@ -243,6 +251,9 @@ function replay(rec) {
       if (u > 0 && !ev.forced) {
         const fl = threatFlags(s, ev.book, team, k)
         pendingThreat.push({ team, known: fl.known, pub: fl.pub, right })
+        const L = sets[ev.book]
+        const opp = 1 - team
+        pendingGamble.push({ team, right, oppAsks: L.hits[opp] + L.misses[opp], ownAsks: L.hits[team] + L.misses[team], oppHeld: L.held[opp] })
       }
       endSet(ev, cls, u)
       step({ type: 'claim', seat: ev.claimer, book: ev.book, assignments: ev.assignments })
@@ -280,6 +291,16 @@ function replay(rec) {
       SP.majority[sideIndex(majority)]++
       if (majority === winner) SP.majorityWon[sideIndex(majority)]++
     }
+    if (split === 1 || split === 2) { // 3.8am: a set held 5-1 or 4-2 at the deal, classed by the minority's asks into it
+      const M = L.split[0] > L.split[1] ? 0 : 1
+      const m = 1 - M
+      const D = sideOfTeam(M).dominated[L.hits[m] + L.misses[m] === 0 ? 'minorityAsks0' : 'minorityAsks1']
+      D.n++
+      if (winner === M) { if (claimerTeam === M && cls === 'certain') D.certain++; else if (claimerTeam === M && cls === 'speculative') D.specRight++; else D.other++ }
+      else if (claimerTeam === M && cls === 'speculative') D.specWrong++
+      else if (claimerTeam === m && right) D.minorityWon++
+      else D.other++
+    }
     if (split >= 1) {
       for (const t of [0, 1]) {
         const S = sideOfTeam(t)
@@ -296,6 +317,11 @@ function replay(rec) {
         if (L.hits[winner] === 0) W.certainNoPull++
       }
     }
+  }
+  for (const g of pendingGamble) {
+    const S = sideOfTeam(g.team)
+    for (const P of [S.gambles[g.oppAsks === 0 ? 'oppAsks0' : 'oppAsks1'], S.gambles[g.ownAsks === 0 ? 'ownAsks0' : 'ownAsks1']]) { P.n++; if (g.right) P.right++ }
+    S.gambles.oppHeld[Math.min(2, Math.max(0, g.oppHeld))]++
   }
   for (const t of pendingThreat) {
     const S = sideOfTeam(t.team)
@@ -347,6 +373,9 @@ for (const [name, S] of [['the arm (ours)', T.arm], ['SESTINA', T.sestina]]) {
   console.log(`the race in contested sets: asks into them ${per(r.asks)} a game at ${pct(r.hits, r.asks)} hit; into sets it won ${r.intoWon.asks} at ${pct(r.intoWon.hits, r.intoWon.asks)}, into sets it lost ${r.intoLost.asks} at ${pct(r.intoLost.hits, r.intoLost.asks)}; certain sets won in contested splits ${S.certainContested}: the last pull its own ${pct(S.lastPullOwn, S.certainContested)}, no pull of its own ${pct(S.certainNoPull, S.certainContested)}`)
   const tc = S.threatClaims
   console.log(`the public threat at its speculative claims — known (the true hand): under threat ${tc.known.yes.n} right ${pct(tc.known.yes.right, tc.known.yes.n)}, not ${tc.known.no.n} right ${pct(tc.known.no.right, tc.known.no.n)}; public (believed at 0.5+): under threat ${tc.public.yes.n} right ${pct(tc.public.yes.right, tc.public.yes.n)}, not ${tc.public.no.n} right ${pct(tc.public.no.right, tc.public.no.n)}`)
+  const g = S.gambles
+  console.log(`3.8am: its speculative claims by the other side's asks into the set before the claim — none ${g.oppAsks0.n} right ${pct(g.oppAsks0.right, g.oppAsks0.n)}, some ${g.oppAsks1.n} right ${pct(g.oppAsks1.right, g.oppAsks1.n)}; by its own asks — none ${g.ownAsks0.n} right ${pct(g.ownAsks0.right, g.ownAsks0.n)}, some ${g.ownAsks1.n} right ${pct(g.ownAsks1.right, g.ownAsks1.n)}; the other side's cards in the set at the claim 0 / 1 / 2+: ${g.oppHeld.join(' / ')}`)
+  for (const [name, D] of [['the other side never asked into it', S.dominated.minorityAsks0], ['the other side asked into it', S.dominated.minorityAsks1]]) console.log(`  the sets it held 5-1 or 4-2 at the deal, ${name}: ${D.n} (${per(D.n)} a game): declared certain ${pct(D.certain, D.n)}, gambled right ${pct(D.specRight, D.n)}, gambled wrong (a gift) ${pct(D.specWrong, D.n)}, the other side won it ${pct(D.minorityWon, D.n)}, other ${pct(D.other, D.n)}`)
   if (KNOB_POL) {
     const kd = S.knobDeferred
     const line = (R) => `${R.n} (${per(R.n)} a game), right now ${pct(R.rightNow, R.n)}, the set later its own ${pct(R.laterOwn, R.n)}, later the other side's ${pct(R.laterLost, R.n)}, never ${R.never}`
