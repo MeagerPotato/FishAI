@@ -462,7 +462,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.34** — the wider net at the second width (2026-09-09) | **row 41's, by the standing rule and §3.8af's "after this rung"**: F4 = `mlp` 128·128 on the second feature set, F3's recipe with the width the one variable — the 2 × 2 of features × width completed (§3.8ag); eligible for M2 at holdout top-1 ≥ F3's + 0.5 with the half-suit-and-seat agreement not below (M1), C4 against C3 at home ≥ +2 SE and a majority of banks (M2), ships by §3.8n's bar against v0.33's vector on twelve fresh seeds (M3); the registry change a PR for the owner; nothing in the engine changes | **F4 starts when F2 releases the machine (the chain script waited on `fit f2 exit`; started 03:12Z 2026-09-09 at BelowNormal priority) and lands about 13:15Z** | M |
 | **v0.33** — the belief's seat: the clone's second feature set (2026-09-08) | **row 39's, by the standing rule**: sixteen features per legal ask on top of the clone's 33 — the slot prior (the independent per-card belief) beside the marginal, the slot prior under an ask-choice prior of SESTINA's `kappa`, and the target's own dealings with the asked half-suit off the log (its asks, hits, misses, the cards taken from it, how long ago) — fitted at §3.8ad's F1's width and data so the features are the one variable (§3.8af); the instrument costs 0.02 ms an ask | **F3 read 01:42Z: holdout top-1 58.51% (F1 56.56%, +1.95 on a +1.0 bar), the seat 85.61% (83.13%) — eligible; M2 C3 over C +0.412 ± 0.148 a pair (5.5 SE, 12 of 12) — eligible; M3 +3.64 ± 0.71 points abroad against v0.30's vector (5.11 SE, 11 of 12) — CLEARS §3.8n's bar; the ship the owner's (row 40, PR #60)** | M |
 | **v0.32** — the declare clone, read and not built (2026-09-08) | **row 38's, by the standing rule**: the reader of the records' declare events (`scripts/probe-declares.mjs`) read before a feature was written — per completed half-suit SESTINA declares as we do (1.20 cards placed by belief a declare against our 1.24, right 97.8% against 97.5%; declared at once 78% against 75%); the gap is the count of completed half-suits, which the asks make: +16% over v0.20c's vector, +6% over v0.30's (§3.8ae) | a records read: no cell played, nothing to ship; the instrument committed | S |
-| **v0.31** — the clone re-fitted (2026-09-08) | **row 37's, by the standing rule**: the same ask clone, its 33 features, fitted wider (128·128), longer (24 epochs) and on two and a half times the data with the 2026-09-08 cells added; nothing in the engine changes — a new data module and a registry entry (§3.8ad); the declare clone (v0.32) pre-registered when its reader exists, expert iteration after M4's read | a fit must beat C's margin over the stack's own decision by half a point on the same holdout (M1; the half-suit-and-seat agreement read beside it — C 82.7%, the ceiling on top-1 about 72%: SESTINA's card among equals is a random pick); C2 against C at home ≥ +2 SE and a majority of banks (M2); ships by §3.8n's bar against v0.30's vector on twelve fresh seeds (M3); the registry change a PR for the owner; the fits start when M4 releases the machine, the rung inside two days after — **F1 read 21:32Z: holdout top-1 56.56%, margin 12.83, not eligible at 13.2 (C's 12.67 + 0.16 for 2.5× the data and 2× the epochs); F2 lands about 05:00Z 2026-09-09** | M |
+| **v0.31** — the clone re-fitted (2026-09-08) | **row 37's, by the standing rule**: the same ask clone, its 33 features, fitted wider (128·128), longer (24 epochs) and on two and a half times the data with the 2026-09-08 cells added; nothing in the engine changes — a new data module and a registry entry (§3.8ad); the declare clone (v0.32) pre-registered when its reader exists, expert iteration after M4's read | a fit must beat C's margin over the stack's own decision by half a point on the same holdout (M1; the half-suit-and-seat agreement read beside it — C 82.7%, the ceiling on top-1 about 72%: SESTINA's card among equals is a random pick); C2 against C at home ≥ +2 SE and a majority of banks (M2); ships by §3.8n's bar against v0.30's vector on twelve fresh seeds (M3); the registry change a PR for the owner; the fits start when M4 releases the machine, the rung inside two days after — **F1 read 21:32Z: holdout top-1 56.56%, margin 12.83, not eligible at 13.2 (C's 12.67 + 0.16 for 2.5× the data and 2× the epochs); F2 read 03:11Z 2026-09-09: holdout top-1 57.02%, margin 13.29 — eligible by 0.09, the width buying 0.46 of a point in the card class and none in the seat (the probe's classes within a tenth of F1's); M2 C2 over C +0.027 ± 0.150 a pair (0.3 SE, 7 of 12) — NOT eligible for M3: the rung stops, as pre-registered; v0.31 ships nothing** | M |
 | **v0.30** — the SESTINA clone (2026-09-08) | **row 35's, under the owner's direction of 2026-09-08 ("learning from sestina's play is essential … we should be learning to beat sestina")**: an ask policy fitted on SESTINA's own ask decisions from the bridge records — 33 features per legal ask over the stack's own ranking, a conditional logit, the argmax the policy (`lib/engine/bots/imitation.ts`, `StyleParams.askModel`, `gen-imitation-data.mjs`, `fit-imitation.mjs`) — read as a player (M2 at home, M3 abroad) and as the search's opponent model in the rollouts of §3.8aa's t32 form (`SearchParams.oppAskModel`; M4 abroad, the one-variable comparison to t32's own bridge read of −1.61 points; §3.8ac) | the clone must predict SESTINA's choice at least 5 points better than the stack itself does on held-out games (M1); a player cell must read ≥ +2 SE at home before it goes abroad (M2); ships by §3.8n's bar against v0.20c's vector on twelve fresh seeds (M3, M4); the registry change a PR for the owner, stacked on #41; the whole rung inside two days of wall clock — **read 2026-09-08: M1 every fit eligible (C, the 64·64 net, predicts SESTINA's choice on 56.32% of held-out decisions; the stack's own choice 43.65%, the ranker's top 38.94%); M2 the MLP-64 clone +1.056 ± 0.145 a pair at home (+7.89 points, 14.2 SE, twelve of twelve banks), C +0.954 ± 0.146 (+7.13 points, 12.8 SE, twelve of twelve); M3 C +7.24 ± 0.63 points against SESTINA v1.0 on the twelve fresh seeds (48.0% against the base's 40.8%, 11.5 SE, every seed ahead; the MLP-64 clone +6.67 ± 0.61) — §3.8n's bar cleared, the registry PR #49 for the owner (row 36); M4 the t32 form with C at its rollouts' opponent seats −1.33 ± 0.74 points abroad (−1.80 SE, 5 of 12) against the same form's −1.61 with S — the opponent model is not the search's loss abroad** | L |
 | **v0.29** — the learned leaf (2026-09-08) | **row 34's, under the direction — the plan §3.8aa wrote**: a value function over the full-information state (118 features: the score, the cards and, per half-suit, who holds them and which seats have located them, from the engine's own knowledge walk) fitted on 48,000 self-play games of the shipped stack to the FINAL set differential (`lib/engine/search/value.ts`, `gen-value-data.mjs`, `fit-value.mjs`), evaluated at the search's horizon in place of the lock count (`leafNet`), with S 0 a one-ply expectation over the deals; read by duplicate pairs at home (S 0 at D 128 and 512, and s128's form with the leaf swapped), the marker re-read at the game's end, the bridge on twelve fresh seeds at the eligible cell (§3.8ab) | the fit must beat the static lock count as a predictor of the end (M1), a cell must read ≥ +2 SE at home (M2); ships by §3.8n's bar against v0.20c's vector on the twelve; the registry change a PR for the owner, stacked on #41 — **read 2026-09-08: M1 every fit eligible (the 128·128 net R² 0.302 against the static lock count's 0.209); M2 the dense n128 eligible at the bar's edge — +0.161 ± 0.144 (2.2 SE, eight of twelve banks, +1.2 points), the sparse forms +0.022 and +0.002, the linear leaf in the game −1.053 ± 0.143 on twelve banks (exploited by the search that optimises against it); n512 and n24 deferred, and n128's bridge read deferred behind v0.30's cells, under the owner's wall-clock direction; nothing shipped — the leaf buys little, the opponent model is the piece (§3.8ac)** | XL |
 | **v0.28** — the search re-scoped, compute unconstrained (2026-09-07) | **row 33's (s), under the owner's direction of 2026-09-07 ("I don't care about any cost of compute")**: §3.8a's arm with the shipped stack as its rollout policy and the lock-only leaf, the deals scaled 8 → 512 with §3.8a's marker read at every rung and pooled twenty processes wide, a second candidate generator (`candMode` `'sets'`: the pick and one ask per other half-suit), duplicate pairs at home at D 32 and at the largest D the marker justifies, the bridge on twelve fresh seeds at the eligible cell with the wall clock reported and not gated (§3.8aa) | the yield must grow with the deals or the leaf is the limit (v0.29, the learned leaf); ships by §3.8n's bar against v0.20c's vector on the twelve; the registry change a PR for the owner, stacked on #41 — **read 2026-09-07/08: M1 the cost as predicted; M2 the marker grows with the deals for `'sets'` (s128 +0.082 a searched decision, the grid's best) and caps at 32 for `'top'`; M3 s128 −0.333 ± 0.144 a pair at home (−4.5 SE, 3 of 16 banks) — the marker is not the objective, the leaf's units are not the game's; the sparse form −0.040 ± 0.127 (a searched move alone worth about nothing by the game's end); t32 +0.248 ± 0.144 (+3.4 SE, 9 of 10 banks — eligible at home) and −1.61 ± 0.77 abroad (−2.1 SE, 4 of 12 seeds) — the rollouts' model of the opponents is S, and abroad it is wrong; s32 −0.191 ± 0.140 (−2.7 SE, one of ten banks) — nine candidates are more than thirty-two deals resolve; nothing ships — the leaf is the limit (§3.8ab), the opponent model the piece (§3.8ac)** | XL |
@@ -8980,7 +8980,7 @@ card's: a per-card view is the wrong term for a tie broken at random; the seat i
 the clone still trails by (+6% completed half-suits for SESTINA, §3.8ae) lives in those 17.3% of
 decisions and in what a search sees past them.
 
-#### Record — M1, the first fit (F1 read 2026-09-08 21:32Z; F2 running)
+#### Record — M1, the two fits (F1 read 2026-09-08 21:32Z; F2 read 03:11Z 2026-09-09)
 
 **F1 — `mlp` 64·64, 24 epochs on the 5% sample (1,160,665 decisions, 54.0 million rows; holdout 238,508
 decisions of the files 0 mod 5) — 3 h 41 min of one core.** The holdout loss fell to the last epoch, as
@@ -8990,7 +8990,7 @@ C's did, and the last epoch was kept:
 |---|---|---|---|---|---|---|---|---|---|
 | C (§3.8ac) | 64·64 | 410,000 (a 2% sample) | 12 | 56.32% | — | — | 43.65% | 12.67 | — |
 | **F1** | 64·64 | 1,160,665 (5%) | 24 | **56.56%** | 86.42% | 1.0289 | 43.73% | **12.83** | **no** |
-| F2 | 128·128 | 1,160,665 (5%) | 24 | running (about 28 minutes an epoch; lands about 05:00Z 2026-09-09) | | | | | |
+| **F2** | 128·128 | 1,160,665 (5%) | 24 | **57.02%** | 86.65% | 1.0208 | 43.73% | **13.29** | **yes** |
 
 **Two and a half times the data and twice the epochs at C's width buy 0.16 of a point of margin.** Q1
 wrote F1 at 13.0–14.0 (65%); it reads 12.83, below the band and below the bar by 0.37. The learning
@@ -9002,7 +9002,8 @@ F2's question alone. The secondary read, `probe-clone-errors` on the same twelve
 | clone | agrees | the same half-suit, another seat | another half-suit | **the same half-suit and seat, the card aside** | SESTINA's ask hits / the clone's would, on disagreements |
 |---|---|---|---|---|---|
 | C | 55.18% | 11.52% | 5.74% | **82.74%** | 42.56% / 43.41% |
-| **F1** | 55.88% | — | — | **83.13%** | 41.29% / 45.04% |
+| **F1** | 55.88% | 11.05% | 5.83% | **83.13%** | 41.29% / 45.04% |
+| **F2** | 55.77% | 10.99% | 5.80% | **83.22%** | 42.07% / 43.84% |
 
 The same picture as C's, four tenths of a point up on the seat: on the decisions where the two differ,
 F1's ask would have hit 45.0% against SESTINA's 41.3% — the fit is, if anything, the more immediate
@@ -9012,6 +9013,44 @@ which read each file in one call and Node refuses a file over 2 GiB; the largest
 2.18 GB; the loader now reads in slices, and the smoke fit's standardisation is byte for byte the old
 loader's — read against these numbers: eligible at holdout top-1 ≥ 57.56% with the half-suit-and-seat
 agreement ≥ 83.13%).
+
+**F2 — `mlp` 128·128, 24 epochs on the same rows — 8 h 54 min of one core to the last epoch, 9 h 19 min to the
+file (17:52Z to 03:11Z 2026-09-09).** The holdout loss fell to the last epoch and the last epoch was kept: **top-1
+57.02%, margin 13.29 — eligible, by 0.09.** Q1 wrote F2's margin at 13.4–15.0 (60%): it reads below the band; F2
+above F1 (70%): yes, by 0.46. **The width buys 0.46 of a point of top-1 at the first set — three times what the data
+and the epochs bought at 64·64 (0.16), a quarter of what the sixteen seat features bought at 64·64 (§3.8af's F3,
++1.95).** Where it buys it is the card, not the seat: on the twelve probe files F2 agrees with SESTINA on 55.77%
+(F1 55.88%), names another seat in the same half-suit on 10.99% (F1 11.05%) and another half-suit on 5.80% (5.83%),
+and agrees on the half-suit and the seat on 83.22% (F1 83.13%) — every class within a tenth of a point of F1's. The
+wider net separates the tied cards a little better on the holdout; it does not move the belief. Against §3.8ad's own
+"after this rung" (a gain under a point of margin over C says the features are the limit): F2's margin is 0.62 over
+C's, and §3.8af had already taken the representation as the next term.
+
+#### Record — M2, 2026-09-09 (the pairs at home, 03:13Z to 03:16Z; twelve processes, about 70 seconds a bank)
+
+`duplicate-pairs`, 2,400 pairs in twelve banks of 200 (`$SP/monet-v31/pairs`, `$SP/monet-v31/run-m2-v31.sh`), the
+control first:
+
+| arm | banks; pairs | paired set-diff a pair ± 1.96 SE (SD) | points of win rate ± SE | × SE | banks ahead |
+|---|---|---|---|---|---|
+| control (S against S) | 2; 400 | 0.0000 ± 0.0000 | — | — | — |
+| **C2 inside S's stack against C inside S's stack** | 12; 2,400 | **+0.027 ± 0.150** (3.75) | **+0.19 ± 0.57** | **0.3** | **7 of 12** |
+| C2 against S (the anchor; C read +0.954 ± 0.146, C3 +1.279 ± 0.148) | 12; 2,400 | **+1.075 ± 0.147** (3.68) | +8.04 ± 0.56 | 14.3 | 12 of 12 |
+
+**C2 is not eligible for the bridge: +0.027 a pair over the clone v0.30 ships, a third of a standard error, ahead
+on seven banks of twelve.** Q2 wrote +0.05 to +0.30 (65%): it reads below the band, and the 45% for eligibility went
+the other way. **The rung stops at M2, as pre-registered: M3 is not played, and v0.31 ships nothing.** Q4: the
+extraction five minutes (five projected), F1 3 h 41 min (4.5 h), F2 9 h 19 min (14 h), M2 three minutes (forty) —
+every clock inside its projection.
+
+**What it says.** At 33 features the ask clone's ceiling is reached: two and a half times the data, twice the epochs
+and twice the width together move holdout agreement from 56.32% to 57.02%, and the sets do not move (+0.027 a pair,
+where §3.8af's sixteen seat features moved them +0.412 for +1.95 of agreement). The agreement the width buys is in
+the card class — the tie among equals that no feature reaches — and the seat class, the one that moves the count of
+completed half-suits, is untouched (10.99% against 11.05%). The width is not the term; the features are. §3.8ag's F4
+(the same width at the second set, running since 03:12Z) is read with this in hand: the width at 49 features is
+likelier to buy the card than the seat, and only a seat gain has moved the sets — which is why F4's half-suit-and-seat
+agreement is read beside its top-1.
 
 ### 3.8ae Monet v0.32 — the declare clone, read off the records and not built
 
