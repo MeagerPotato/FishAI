@@ -94,7 +94,7 @@ import { MONET_V04C_BANK } from './data/monet-v04c-bank.ts'
 import { MONET_V09_BANK } from './data/monet-v09-bank.ts'
 import { MONET_V020C_BANK } from './data/monet-v020c-bank.ts'
 import { MONET_V030_BANK } from './data/monet-v030-bank.ts'
-import { ASK_FEATURE_COUNT, askModelOf } from '../../lib/engine/bots/imitation.ts'
+import { ASK_FEATURE_COUNT, ASK_FEATURE_COUNT_2, askModelOf } from '../../lib/engine/bots/imitation.ts'
 import { ask, gs, mkView } from './util.ts'
 
 /** The versions, addressed the way a harness addresses them. */
@@ -107,6 +107,7 @@ const MONET_V04C: PolicySpec = monetPolicy('v0.4c')
 const MONET_V09: PolicySpec = monetPolicy('v0.9')
 const MONET_V020C: PolicySpec = monetPolicy('v0.20c')
 const MONET_V030: PolicySpec = monetPolicy('v0.30')
+const MONET_V033: PolicySpec = monetPolicy('v0.33')
 
 /**
  * The live roster arm, in both spellings — written out, never read from the registry.
@@ -217,6 +218,30 @@ describe('the Monet version registry names each version and resolves it to that 
     expect(styleDiffKeys(pair.style, STYLE_ROSTER.punter)).toEqual(['askModel', 'closing', 'closingFour', 'contest', 'licenceLambda', 'pAssignment', 'pModel'])
   })
 
+  it('v0.33 is v0.30 with the second-feature-set clone as its ask policy, on its own vector — and differs from v0.30 in NOTHING else', () => {
+    const pair = asPair(MONET_V033, "MONET_VERSIONS['v0.33']")
+    expect(pair.skill).toBe(SKILL_PRESETS.hard)
+    expect(styleDiffKeys(pair.style, (MONET_V030 as BotPolicy).style)).toEqual(['askModel'])
+    // MONET.md 3.8af: the clone predicts SESTINA's ask on 58.51% of held-out decisions (a first-set clone fitted
+    // the same way 56.56%, the stack's own choice 43.73%); inside the stack it read +0.412 ± 0.148 a pair at home
+    // against v0.30's vector (5.5 SE, twelve of twelve banks) and +3.64 ± 0.71 points of win rate (51.04%
+    // against v0.30's 47.40% on the same seeds, 5.1 SE, eleven of twelve) against SESTINA v1.0 on twelve fresh
+    // seeds - over 3.8n's bar and the ±2.00 floor, and the line's first read over 50%.
+    expect(pair.style.askModel).toBe('sestina-clone-3')
+    // the name resolves to the committed model, registered when monet.ts loads; the registry tells its feature
+    // set by the width - 49, the second set - and v0.30's clone stays registered at 33 beside it
+    expect(askModelOf('sestina-clone-3').features).toBe(ASK_FEATURE_COUNT_2)
+    expect(askModelOf('sestina-clone').features).toBe(ASK_FEATURE_COUNT)
+    expect((MONET_V030 as BotPolicy).style.askModel).toBe('sestina-clone')
+    expect(pair.style.closing).toBe(0.5)
+    expect(pair.style.closingFour).toBe(2)
+    expect(pair.style.contest).toBe(0.6)
+    expect(pair.style.licenceLambda).toBe(0.3)
+    expect(pair.style.pAssignment).toBe('joint')
+    expect(pair.style.pModel).toBe('marginal')
+    expect(styleDiffKeys(pair.style, STYLE_ROSTER.punter)).toEqual(['askModel', 'closing', 'closingFour', 'contest', 'licenceLambda', 'pAssignment', 'pModel'])
+  })
+
   it('v0.9 is v0.4c plus the contest credit, on its own vector — and differs from v0.4c in NOTHING else', () => {
     const pair = asPair(MONET_V09, "MONET_VERSIONS['v0.9']")
     expect(pair.skill).toBe(SKILL_PRESETS.hard)
@@ -307,7 +332,7 @@ describe('the Monet version registry names each version and resolves it to that 
 
   it('MONET_VERSION_IDS lists every shipped version, in order, and nothing else', () => {
     expect([...MONET_VERSION_IDS]).toEqual(Object.keys(MONET_VERSIONS))
-    expect([...MONET_VERSION_IDS]).toEqual(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9', 'v0.20c', 'v0.30'])
+    expect([...MONET_VERSION_IDS]).toEqual(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9', 'v0.20c', 'v0.30', 'v0.33'])
     expect(MONET_VERSION_IDS.every((v) => isMonetVersion(v))).toBe(true)
   })
 

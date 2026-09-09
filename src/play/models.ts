@@ -118,7 +118,7 @@ const MONET_LATEST: PlayModel = Object.freeze({
   spec: monetPolicy(LATEST_MONET),
   heading: 'Fixed style — Punter, at full strength',
   label: `Monet ${LATEST_MONET} · Punter at hard`,
-  note: 'The line at its shipped vector — thirty numbered rungs on the record, the last a model of SESTINA’s own ask choices, fitted on its play in that project’s own engine and grafted onto the stack: 48.0% against SESTINA v1.0 on twelve fresh seeds, up from 40.8% on the rung before it (MONET.md §3.8ac); v1.0 still does not exist at that vector (§3.9). Plays one fixed style rather than adapting — with SESTINA’s ask choices in place of its own, so it agrees with Bass v2.0 on about 91% of decisions.',
+  note: 'The line at its shipped vector — thirty-three numbered rungs on the record, the last a model of SESTINA’s own ask choices that also reads the stack’s own belief about who holds each card, fitted on its play in that project’s own engine and grafted onto the stack: 51.0% against SESTINA v1.0 on twelve fresh seeds, where the rung before it reads 47.4% on the same seeds (MONET.md §3.8af); v1.0 still does not exist at that vector (§3.9). Plays one fixed style rather than adapting — with SESTINA’s ask choices in place of its own, so it agrees with Bass v2.0 on about 91% of decisions.',
 })
 
 /** The menu, in the order it is offered. */
