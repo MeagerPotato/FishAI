@@ -12317,6 +12317,64 @@ right/wrong split of the declare advantage. Nothing else changes; the same 200 g
 >   direction at ~zero. **What C3 buys is a pointer at the belief, in the one population where this
 >   record has never looked.**
 
+#### S — the decision-type sweep, pre-registered before it is run
+
+**On the owner's word** (*"yes, keep going with the decision-type sweep"*). Every rung on this ladder
+has studied the ask or the declare. **The bot makes other decisions, and none of them has ever been
+priced.** This finishes the surface rather than adding another knob to a part of it.
+
+**The census came first, and it is a result in its own right.** 300 games, no rollouts, ~4 minutes:
+
+> | the decision the bot makes | a game | legal options (mean) | max | forced |
+> |---|---:|---:|---:|---:|
+> | `decline` — declare now, or wait | 525.0 | 2.0 | 2 | 0.0% |
+> | `ask` — which card, from whom | 85.9 | 49.8 | 135 | 0.2% |
+> | **`claim-window` — WHICH BOOK to declare** | **7.6** | **5.6** | 9 | 4.1% |
+> | **`claim-assignment` — WHICH TEAMMATE holds each card** | **7.6** | **361.5+** | 401+ | 2.8% |
+> | **`pass` — which teammate continues the turn** | **0.3** | **1.6** | 2 | 37.2% |
+> | `designate` — hand the endgame to an opponent | **0.0** | — | — | — |
+
+**Two of the four unstudied decisions turn out not to be decisions, and that is banked before any
+rollout.** `designate` **never occurs at all in 300 games** — `reduce` reaches `awaitDesignate` only
+when the claimant's *whole team* is out, which does not happen in `us54` self-play — and `pass` is
+**forced 37.2% of the time and only 0.2 real choices a game**. So the unmeasured surface is not four
+decisions but **two and a fraction**, and the sweep below is *complete*: after S1, S2 and S3 there is
+no decision type in this game that has not been priced.
+
+**S1 — which book to declare.** At each declare, `planClaimFor` every unresolved book, keep the legal
+plans, and roll each out from the true deal. Hindsight ceiling and belief-limited ceiling, exactly as
+in D — the same two readings, so the numbers are comparable across decision types.
+
+**S2 — which assignment, and it is measured the cheap way on purpose.** The hindsight-best assignment
+does not need enumerating over 361 options: **it is the true one.** So S2 rolls out what the bot
+played against the same book with the cards assigned to their actual holders. Two rollouts, not seven
+hundred. **And S2 is bounded before it runs:** §3.8at measured Monet's declare accuracy at **99.73%**
+over ~7.6 declares a game, so a perfect assignment can rescue at most **0.0205 wrong declares a game**
+at a 2-set swing each — **a hindsight ceiling of ~+0.041 sets a game, ~0.5 points of win rate**, with
+the achievable part necessarily smaller. **The measurement is run to confirm that arithmetic, not to
+discover the answer**, and it is recorded as such.
+
+**S3 — the pass.** Rare (0.2 real choices a game) but real. Priced over 600 games to reach ~120
+observations, at two options each.
+
+> **The bars, called before the numbers.**
+> - **S1 / S2 / S3 hold** if the belief-limited ceiling for that decision is **above zero by 2 SE**
+>   — the same clause D4 was scored on, so the three read on one scale.
+> - **S4, the honest prior: I expect all three to miss.** S2 is bounded at ~+0.041 by arithmetic
+>   before it runs. S3 carries 0.2 choices a game, so even a large per-decision effect is a rounding
+>   error on a game. **S1 is the only one that could surprise** — nobody has bounded it and 7.3 real
+>   choices a game is enough volume to matter — but the argument that closed the ask applies here too:
+>   which book is best to declare depends on what the opponents hold, and that is exactly what the
+>   view does not contain. **Called before the numbers.**
+> - **What a hold would mean.** If S1 clears, the declare's *selection* is a live channel even though
+>   its *timing* is not (C), and that is a rung worth building. If all three miss, **every decision
+>   this game offers has been priced and none of them has a belief-reachable gain** — which is a
+>   complete answer to the frontier question rather than another negative result.
+
+**Cost, measured from the census before it is claimed:** S1 ~2.2 s a decision over ~200 decisions;
+S2 ~0.2 s over ~2,300 declares; S3 ~600 games at ~0.35 s each plus 120 × 0.4 s. **~20 minutes for all
+three**, home-only. It runs after D6 and C3, one at a time.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
