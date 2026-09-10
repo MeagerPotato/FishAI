@@ -12375,6 +12375,222 @@ observations, at two options each.
 S2 ~0.2 s over ~2,300 declares; S3 ~600 games at ~0.35 s each plus 120 × 0.4 s. **~20 minutes for all
 three**, home-only. It runs after D6 and C3, one at a time.
 
+#### D6 read — the horizon is exonerated, D4 stands, and the mechanism is confirmed
+
+12 games, **53 sampled decisions**, 46,382 rollouts, **45.6 minutes**. The determinized selection was
+rolled **to the END of the game** — the same horizon as the evaluation — with everything else
+identical to D4.
+
+> | on D6's own sample | to the END | 24 steps |
+> |---|---:|---:|
+> | full legal set over the pick — the hindsight ceiling | +3.283 (SE 0.342) | +0.302 (SE 0.074) |
+> | **the belief-limited ceiling, selection rolled TO THE END** | **+0.038 (SE 0.327)** | **−0.189 (SE 0.085)** |
+> | what hindsight was worth | +3.245 (SE 0.328) | — |
+
+**D6 MISSES: +0.038 with a 2-SE band of −0.616 to +0.692, which does not clear zero. D4's conclusion
+stands, and D7's prior — written before the run — holds.** The 24-step reading of the same arm is
+**−0.189 (SE 0.085)**, negative by 2.2 SE.
+
+**The bound this control was and was not powered for, exactly as registered.** §3.8av sized D6 at ~55
+decisions to detect a move *toward* the +2.8 ceiling and said in writing that it was **"explicitly NOT
+enough to resolve a small positive."** It is not, and the claim is held to that: **D6 rules out the
+horizon being the story; it does not re-price the ask.** The precise reading of the ask remains D's own
+**−0.141 (SE 0.102) over 460 decisions.**
+
+**What raises this from "not refuted" to "confirmed" is that the longer horizon made the search
+WORSE, in the direction the reasoning predicted.**
+
+> | | D4 (24-step selection, n 460) | **D6 (to-the-end selection, n 53)** | chance |
+> |---|---:|---:|---:|
+> | found the hindsight-best ask | 8.7% | **3.8%** | 2.1% |
+> | re-played the pick | 19.6% | **5.7%** | — |
+> | its own true hit rate | 38.9% | **11.3%** | (pick: 41.5%) |
+
+**Rolling the determinization further does not find better asks — it finds worse ones, and drops the
+hit rate from 41.5% to 11.3%.** D7 called the reason in advance: *"the 7.6× growth of the ceiling with
+horizon is growth in HINDSIGHT, not in signal … lengthening it adds variance without adding
+information."* The data say something slightly stronger and worth stating separately: **a longer
+determinized rollout is not merely uninformative, it is actively corrupting** — every extra move is
+another move in which the perfect-information continuation exploits cards the real bot cannot see, so
+the score attached to each candidate drifts further from what that candidate is actually worth. That
+is textbook strategy fusion, and this rung has now **measured** it rather than invoked it.
+
+**Two sampling caveats, stated rather than buried.** D6 ran at stride 20 over 12 games and D at stride
+5 over 28, so the two populations are not the same decisions — D6's picks hit 41.5% against D's 49.3%,
+and its hindsight ceiling reads +3.283 against +2.841. The two belief-limited numbers, +0.038 and
+−0.141, differ by 0.179 against a combined SE of ~0.34: **consistent, and neither clears zero.** The
+horizon ratio on this sample is **10.88×** against D's 7.60× — same order, and the point of §3.8av's
+horizon-ratio finding is unchanged.
+
+#### C3 read — the belief IS over-confident where it decides, and the threshold is right anyway
+
+Same 200 games, same dedupe, same 15,661 observations, now with realised correctness collected per
+bin instead of inferred from two pooled means. **22.7 minutes.**
+
+> | the plan's own *p* | n | mean stated *p* | **realised correct** | gap | advantage when RIGHT | when WRONG |
+> |---|---:|---:|---:|---:|---:|---:|
+> | 0.000–0.100 | 13,006 | 0.014 | 0.018 | **+0.005** | +0.903 | −1.130 |
+> | 0.100–0.200 | 832 | 0.143 | 0.215 | **+0.073** | +0.514 | −1.023 |
+> | 0.200–0.300 | 530 | 0.256 | 0.317 | **+0.061** | +0.631 | −1.160 |
+> | 0.300–0.400 | 703 | 0.343 | 0.398 | **+0.055** | +0.471 | −1.045 |
+> | 0.400–0.500 | 265 | 0.443 | 0.479 | **+0.036** | +0.504 | −0.899 |
+> | **0.500–0.600** | 207 | 0.532 | **0.333** | **−0.198** | +0.870 | −0.862 |
+> | **0.600–0.700** | 81 | 0.639 | **0.420** | **−0.219** | +0.794 | −1.340 |
+> | **0.700–0.775** | 29 | 0.730 | **0.448** | **−0.282** | +0.692 | −1.563 |
+> | 0.775–0.900 | 7 | 0.841 | 0.857 | +0.016 | +1.167 | — |
+
+**C3 HOLDS on 2 of the 4 scoreable bins** — 0.50–0.60 (stated 0.532, realised 0.333) and 0.60–0.70
+(stated 0.639, realised 0.420). **C4's prior, called before the numbers, holds on both clauses:** C3
+held, and it held hardest in 0.6–0.775.
+
+**One near-miss reported rather than rounded in my favour.** The **largest gap of all is 0.700–0.775 at
+−0.282**, and it fails the 2-SE test **by two thousandths** — `realised + 2 SE = 0.633` against
+`stated − 0.10 = 0.630`. It is n = 29. It is not counted as a hold, and it is the bin closest to the
+bar.
+
+#### The unregistered finding: the belief flips sign at p = 0.5
+
+Nobody predicted this and it is the cleanest thing in the rung. **Below 0.5 the plan probability is
+UNDER-confident** — realised beats stated by +0.073, +0.061, +0.055, +0.036, monotonically shrinking.
+**From 0.5 to the bar it is OVER-confident and worsening** — −0.198, −0.219, −0.282. The crossing sits
+almost exactly at 0.5, and the error grows in both directions away from it. **That is not noise in a
+calibration curve; it is a shape**, and it says the plan's *p* is compressed toward the middle: it does
+not believe its confident plans enough at the bottom and believes them far too much at the top.
+
+**A specific, testable mechanism, offered as a hypothesis and not as a measurement.** `planClaim`'s *p*
+is a **product** of per-card success estimates over up to `declareMaxUncertain` = 2 uncertain cards.
+A product of marginals is exact only under independence, and these events are not independent — the
+planner decrements a working capacity map precisely because they are not. **A product that is too high
+in the region where two uncertain cards are in play is the signature you would predict**, and 0.5–0.775
+is exactly the region a two-card plan lands in. Testing that means checking the gap **split by
+`plan.uncertain.length`**, which this run did not collect. Named as the next measurement, not claimed.
+
+#### What it is worth, which is probably nothing, and the record should say so
+
+**The break-even is a realised correctness of 0.637.** The only bins whose realised correctness clears
+it are **0.775–0.900 (0.857) and 0.900–1.000 (1.000)** — both above the bar, n = 7 and n = 1. The bin
+immediately **below** the bar realises **0.448**, nowhere near break-even.
+
+**So the bar at 0.775 sits almost exactly where realised correctness crosses the price of being wrong** —
+and C1's miss at every dose is explained rather than merely observed. **The threshold is right.**
+
+**And correcting the miscalibration would not move it.** The over-confidence is in plans the bot
+already declines; de-rating them pushes them *further* below a bar they are already under, changing no
+decision. **C3 is a true statement about the belief that is worth zero to the declare.** Its value, if
+any, is as a pointer: the joint chain's plan probability is wrong in a characterised way, in a
+population — declined plans — that §3.8g's side-assignment reading and §3.8m's pooled bars never
+looked at, and §3.8h's lesson was exactly that a pooled score cannot see a selected population.
+
+**A limitation that bounds the whole of C3, stated plainly: this instrument only ever sees DECLINED
+plans.** The declares Monet actually makes are not in the sample at all, so **nothing here says its
+declares are miscalibrated** — §3.8at measured those at 99.73% accuracy and this rung does not touch
+that number. The seven observations above the bar are the odd population that cleared 0.775 and was
+refused anyway by the structural gate or the hoard limit, and they are far too few to read.
+
+#### S read — S1 closes precisely, S2 was not scored, S3 is a near miss on half its registered games
+
+300 games, **2,259 declares** (7.5 a game), 67 passes of which **42 were real choices** (0.14 a game),
+243,500 rollouts, **21.3 minutes.**
+
+> | decision | reading | to the END | 24 steps |
+> |---|---|---:|---:|
+> | **S1** which BOOK to declare (n 2,191, 5.8 options) | hindsight ceiling | +1.094 (SE 0.037) | +0.089 (SE 0.007) |
+> | | **belief-limited** | **−0.009 (SE 0.008)** | +0.005 (SE 0.004) |
+> | **S2** which ASSIGNMENT (n 2,250) | hindsight ceiling — the TRUE assignment | +0.014 (SE 0.004) | +0.014 (SE 0.004) |
+> | **S3** which teammate to PASS to (n 42) | hindsight ceiling | +0.452 (SE 0.145) | +0.095 (SE 0.057) |
+> | | **belief-limited** | **+0.214 (SE 0.116)** | +0.000 (SE 0.048) |
+
+**S1 MISSES, and it is the most precisely resolved number in the rung.** 2-SE band **−0.025 to +0.007**
+over 2,191 declares. The hindsight ceiling is **+1.094 at 29.8 SE** — which book to declare carries a
+large prize — and a perfect search over the same options on Monet's own belief collects **none of it**.
+The planner already declares the hindsight-best book on **61.8%** of decisions; the belief search
+re-plays the planner's book on **97.3%** and finds the hindsight-best on **60.8%** — *less* often than
+the planner does. **It is D's decomposition again, on a different decision:** the prize is real and
+made entirely of what the view does not contain.
+
+**S2 WAS NOT SCORED, and the probe's printed verdict "S2: HOLDS" is my instrument's error.** The
+registered bar is on the **belief-limited** assignment; the design collected only the hindsight
+ceiling, on the reasoning that the ceiling would be small enough to close S2 by itself. That rule runs
+one way only — **a ceiling at or below zero closes S2, a ceiling above zero does not score it** — and
+the probe applied the verdict function to the ceiling as if it were the bar. The ceiling came in at
+**+0.014 (SE 0.004), 3.7 SE above zero**, so the shortcut did not fire and **S2 is unscored.** It is
+completed below rather than read off the wrong number.
+
+**Two facts about S2 the run does establish.**
+1. **The ceiling decomposes exactly.** The played assignment was right on **2,234 of 2,250** declares
+   whose true assignment was legal; the other **16** were wrong and fixable, and `16 × 2 / 2,250 =
+   0.0142` — **every unit of the ceiling is those sixteen declares at a two-set swing each.** A further
+   **9 of 2,259** were unfixable by any assignment (a card sat with the opponents).
+2. **The bound I pre-registered was low by about 2.6×, and the reason is a population mismatch.** It
+   was built on §3.8at's **99.73%** declare accuracy — measured on the bridge against SESTINA. Home
+   mirror play realises **99.29%** on fixable declares and **98.89%** over all of them. A number from
+   one population was used to bound another; the arithmetic was right and the input was not.
+
+**And the sizing check for completing it shows where the whole ceiling lives.** On the sweep's own first
+40 deals, **282 of 288 declares carry no card with more than one teammate candidate** — the assignment
+is forced by what the bot knows — and **all 5 wrong declares were among the 6 that did.** S2's entire
+prize sits in roughly **2% of declares.**
+
+**S3 MISSES at 300 games, narrowly, and on half the games it was registered for.** **+0.214 (SE 0.116)**,
+2-SE band **−0.017 to +0.446**, z 1.85 — short of zero at 2 SE by 0.017, the only belief-limited
+reading anywhere in this rung that has come out positive. **A deviation from the pre-registration,
+disclosed:** S3 was registered at **600 games** (expected ~120 observations) and this run was launched
+at **300**, which yielded **42** — the realised rate is 0.14 real choices a game against the census's
+0.2. It is completed below to the registered count, under a rule written before the completion runs.
+
+#### S completion — pre-registered before it runs: S2b, and S3 to its registered count
+
+**Two defects in S's first run, both mine, both repaired by completing the registered procedure
+rather than by re-reading what it produced.**
+
+**1. S2's bar needs a number the design never collected — so collect it (S2b).** At every declare
+whose true assignment is legal, only a card with **more than one teammate candidate** in the bot's own
+knowledge can move; every other card keeps the seat it was played to. The option set is the product of
+those candidates (capped at 64, with the cap counted if it ever binds), scored on **16 determinizations
+from the bot's own belief at 24 steps** — the favourable horizon, since D6 measured that longer
+determinized selection is *worse* — with **ties going to the played assignment** so an indifferent
+search is an exact no-op. The chosen assignment is then evaluated against the **true deal**, to the
+end, paired with the played one. A declare with a single option contributes an **exact zero** with no
+rollout; that is determinism, not approximation, and it changes no number.
+
+**2. S3 ran 300 of its registered 600 games — so run the other 300, and stop there.** The completion
+plays games **0–599** under the same label, so games 0–299 are the first run's deals replayed.
+**S3 is scored on all 600 games, whatever that shows, and there will be no further extension.**
+Completing a registered count after seeing a near miss is not optional stopping; continuing *past* it
+would be, and is ruled out here in writing.
+
+> **Checks that void the run if they fail, stated before it runs.**
+> - **Reproduction.** Over games 0–299 the completion must reproduce S's first run **exactly** — S2's
+>   hindsight ceiling **+0.0142 over n 2,250** and S3's belief-limited **+0.2143 over n 42**. The
+>   rollout is deterministic in its key, so anything short of exact means the instrument changed.
+> - **Certainty.** A declare whose every card has **one** candidate cannot be wrong. The run counts any
+>   that are, and the count must be **zero**.
+>
+> **The bars — unchanged from S, now scoreable.**
+> - **S2 holds** if S2b's belief-limited assignment is **above zero by 2 SE**, over every declare in
+>   S2's population, forced ones counted as the exact zeros they are.
+> - **S3 holds** if its belief-limited pass is **above zero by 2 SE over all 600 games.**
+>
+> **S5, the honest priors, called before the numbers.**
+> - **S2: I expect it to miss**, and to land at or below zero. Its whole ceiling is sixteen declares in
+>   ~2% of the population, and on exactly those declares the belief already chose — a search over the
+>   same belief should break right declares about as often as it repairs wrong ones.
+> - **S3: I expect it to miss too, but I do not expect it with confidence — call it 70/30.** +0.214 at
+>   1.85 SE on 42 observations regresses toward zero as the base case, but it is the only
+>   belief-limited reading in this rung to come out positive, and a coin that has landed that way once
+>   is not yet a fair coin. **If S3 holds it is a finding, and it is still not a win rate**: 0.14 real
+>   choices a game, and §3.8av's amendment forbids reading a per-decision number off the per-game
+>   exchange rate.
+
+**Unscored, collected because it is free on the same population: declared-plan calibration.** C3
+recorded as its own limitation that it *"only ever sees DECLINED plans."* This run reads the bot's own
+*p* for the book it actually declared against whether the declare was right, split by whether any
+card was uncertain — the population C3 could not reach. It is a diagnostic and nothing is scored on it.
+**The C3 follow-up proper — declined plans split by uncertain-card count, to test the
+product-of-marginals hypothesis — is NOT run here**; it was proposed to the owner and not approved.
+
+**Cost, measured before it is claimed:** a 40-game timing slice, run on a DISJOINT label (v50Stime, not the registered v50S deals) with its output cut to the cost line so that nothing about the registered deals was seen, ran in **4.1 s — 0.10 s a game** — because the exact-zero shortcuts leave almost nothing to roll (200 rollouts in 40 games). **600 games is about a minute.** The slice is disclosed on the same terms as every earlier smoke test in this section.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
