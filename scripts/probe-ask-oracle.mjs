@@ -37,6 +37,7 @@ const VERSION = argOf('--version', 'v0.33')
 const LABEL = argOf('--label', 'oracle')
 const STRIDE = Number(argOf('--stride', 5))
 const JSONOUT = argOf('--json', '')
+const DETSTEPS = Number(argOf('--det-steps', 24)) // D4's SELECTION horizon; 24 is the search's own
 const DET = Number(argOf('--det', 16))   // D4's determinizations; 0 turns the belief-limited ceiling off
 const OVER = argOf('--override', '') ? JSON.parse(argOf('--override', '')) : null
 const params = { ...S.SEARCH_DEFAULTS, ...JSON.parse(argOf('--search', '{}')) }
@@ -155,7 +156,7 @@ for (let g = 0; g < GAMES; g++) {
                 const rr = reduce(base, { type: 'ask', seat, target: legal[i].target, card: legal[i].card })
                 if (!rr.ok) { sums[i] -= 99; continue }
                 rollouts++
-                sums[i] += S.rollout(rr.state, pol, `${seed}:${d}`, 24, team(seat), params.leafLock, params.leafCard)
+                sums[i] += S.rollout(rr.state, pol, `${seed}:${d}`, DETSTEPS, team(seat), params.leafLock, params.leafCard)
               }
             }
             if (drawn > 0) {
@@ -234,7 +235,7 @@ console.log(`  full - search cands, to the END: ${fmt(S_.gapSearchEnd)}`)
 console.log(`  full - search cands, 24 steps  : ${fmt(S_.gapSearch24)}`)
 console.log('')
 console.log('WHAT A POLICY COULD ACTUALLY REACH — D4. A perfect search over the FULL legal set at the')
-console.log(`  search's own horizon, scored on ${DET} determinizations drawn from the bot's OWN belief`)
+console.log(`  a ${DETSTEPS}-step horizon, scored on ${DET} determinizations drawn from the bot's OWN belief`)
 console.log('  (no candidate generator, no guard), then evaluated against the TRUE deal:')
 console.log(`  belief-limited ceiling over the pick, to the END : ${fmt(S_.beliefEnd)}   <- D4 reads this`)
 console.log(`  belief-limited ceiling over the pick, 24 steps   : ${fmt(S_.belief24)}`)
@@ -257,7 +258,7 @@ if (JSONOUT) {
     decisions, sampled, legalMean: legalSum / Math.max(1, sampled), legalMax,
     stats: S_, ratio, meanRank, meanRawRank: mean(rawRanks), meanRankedSize: mean(rankedSizes), rankTop1, rankTop3, rankTop5, rankOff,
     oracleIsPick, pickHit, oracleHit, pickCertain, oracleCertain,
-    det: DET, beliefN, beliefFoundOracle, beliefIsPick, beliefHit, beliefDeals,
+    det: DET, detSteps: DETSTEPS, beliefN, beliefFoundOracle, beliefIsPick, beliefHit, beliefDeals,
   }, null, 2))
   console.log(`\n-> ${JSONOUT}`)
 }

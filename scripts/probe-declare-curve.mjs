@@ -54,6 +54,11 @@ const fmt = (t) => (t.n === 0 ? '—' : `${t.mean >= 0 ? '+' : ''}${t.mean.toFix
 const EDGES = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.775, 0.9, 1.0001]
 const binOf = (p) => { let i = 0; while (i < EDGES.length - 2 && p >= EDGES[i + 1]) i++; return i }
 const binsEnd = EDGES.slice(0, -1).map(() => []), bins24 = EDGES.slice(0, -1).map(() => [])
+// 3.8av C3: per bin, the REALISED correctness against the stated p, and the right/wrong split of the
+// advantage. The curve alone cannot separate "p is over-confident here" from "a high-p plan sits on a
+// set worth more, so being wrong about it costs more"; these two columns do.
+const binOK = EDGES.slice(0, -1).map(() => 0), binP = EDGES.slice(0, -1).map(() => [])
+const binRight = EDGES.slice(0, -1).map(() => []), binWrong = EDGES.slice(0, -1).map(() => [])
 const allEnd = [], all24 = []
 const rightEnd = [], wrongEnd = []   // split by whether the plan was in fact correct
 let declines = 0, legalPlans = 0, observations = 0, planRight = 0
@@ -106,7 +111,8 @@ for (let g = 0; g < GAMES; g++) {
               allEnd.push(d); all24.push(d2)
               // was the plan actually right? every stated location matches the true holder
               const ok = Object.entries(best.assignments).every(([c, sd]) => s.hands[sd].includes(c))
-              if (ok) { planRight++; rightEnd.push(d) } else wrongEnd.push(d)
+              if (ok) { planRight++; rightEnd.push(d); binOK[bi]++; binRight[bi].push(d) } else { wrongEnd.push(d); binWrong[bi].push(d) }
+              binP[bi].push(best.p)
             }
           }
         }
@@ -135,6 +141,34 @@ for (let i = 0; i < binsEnd.length; i++) {
   rows.push({ lo, hi: Math.min(1, hi), n: te.n, end: te, s24: t2 })
 }
 console.log('')
+console.log('C3 — IS p CALIBRATED WHERE IT DECIDES? realised correctness against stated p, by bin')
+console.log('| p bin | n | mean stated p | realised correct | gap (realised − stated) | when RIGHT | when WRONG |')
+console.log('|---|---:|---:|---:|---:|---:|---:|')
+const c3rows = []
+for (let i = 0; i < binsEnd.length; i++) {
+  const lab = `${EDGES[i].toFixed(3)}–${Math.min(1, EDGES[i + 1]).toFixed(3)}`
+  const n = binsEnd[i].length
+  if (n === 0) { console.log(`| ${lab} | 0 | — | — | — | — | — |`); continue }
+  const ps = stat(binP[i]).mean
+  const q = binOK[i] / n
+  const gap = q - ps
+  const se = Math.sqrt(Math.max(q * (1 - q), 1e-9) / n)
+  console.log(`| ${lab} | ${n} | ${ps.toFixed(3)} | ${q.toFixed(3)} (SE ${se.toFixed(3)}) | ${gap >= 0 ? '+' : ''}${gap.toFixed(3)} | ${fmt(stat(binRight[i]))} | ${fmt(stat(binWrong[i]))} |`)
+  c3rows.push({ lo: EDGES[i], hi: Math.min(1, EDGES[i + 1]), n, statedP: ps, realised: q, gap, se, right: stat(binRight[i]), wrong: stat(binWrong[i]) })
+}
+// C3 is scored only between 0.4 and the bar -- the region that decides the threshold, named in advance
+const scoreable = c3rows.filter((r) => r.lo >= 0.4 && r.hi <= BAR && r.n >= 20)
+const shortBy10 = scoreable.filter((r) => r.gap <= -0.10 && r.realised + 2 * r.se < r.statedP - 0.10)
+console.log('')
+if (scoreable.length === 0) {
+  console.log('C3: no bin between 0.4 and the bar carries n >= 20 — C3 CANNOT BE SCORED at this sample size.')
+} else if (shortBy10.length > 0) {
+  console.log(`C3 HOLDS on ${shortBy10.length} of ${scoreable.length} scoreable bins: ${shortBy10.map((r) => `${r.lo.toFixed(2)}–${r.hi.toFixed(2)} stated ${r.statedP.toFixed(3)} realised ${r.realised.toFixed(3)}`).join('; ')}`)
+} else {
+  console.log(`C3 MISSES: no bin between 0.4 and the bar falls short of its stated p by >= 0.10 at 2 SE (${scoreable.map((r) => `${r.lo.toFixed(2)}–${r.hi.toFixed(2)} gap ${r.gap.toFixed(3)}`).join('; ')}).`)
+}
+
+console.log('')
 console.log(`pooled over every observation: to the END ${fmt(stat(allEnd))}, 24 steps ${fmt(stat(all24))}`)
 console.log(`the plan was in fact correct on ${planRight} of ${observations} (${(100 * planRight / Math.max(1, observations)).toFixed(1)}%)`)
 console.log(`  declaring when the plan was RIGHT : ${fmt(stat(rightEnd))} (n ${rightEnd.length})`)
@@ -149,7 +183,7 @@ if (JSONOUT) {
   fs.writeFileSync(JSONOUT, JSON.stringify({
     version: VERSION, override: OVER, games: GAMES, label: LABEL, secs, rollouts, bar: BAR,
     declines, legalPlans, observations, planRight, rows,
-    pooledEnd: stat(allEnd), pooled24: stat(all24), right: stat(rightEnd), wrong: stat(wrongEnd),
+    pooledEnd: stat(allEnd), pooled24: stat(all24), right: stat(rightEnd), wrong: stat(wrongEnd), c3rows,
   }, null, 2))
   console.log(`\n-> ${JSONOUT}`)
 }

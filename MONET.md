@@ -459,7 +459,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
-| **v0.50** — the two ceilings: the full-legal-set ask oracle and the declare curve (2026-09-10) | **row 58's, on the owner's word** (*"id like to see both just to fully explore the options"*): §3.8au closed the search line and took expert iteration down with it, so before another rung is built the two remaining channels are BOUNDED rather than tuned. **D** rolls out every one of the ~50 LEGAL asks from the true deal and reads the best against what Monet played, beside the same ceiling restricted to the clone's top three — their difference is what the candidate generator costs, the number §3.8ap and §3.8aq argued over without measuring. **C** takes every decline that had a legal declare available, rolls declare-now against what it did, paired from the true deal, and bins by the plan's own p — the whole threshold curve at once, where §3.8al priced one dose. **Neither can ship anything.** Nothing new in the engine; two new probes | *pre-registered; not yet read* | — |
+| **v0.50** — the two ceilings: the full-legal-set ask oracle and the declare curve (2026-09-10) | **row 58's, on the owner's word** (*"id like to see both just to fully explore the options"*): §3.8au closed the search line and took expert iteration down with it, so before another rung is built the two remaining channels are BOUNDED rather than tuned. **D** rolls out every one of the ~50 LEGAL asks from the true deal and reads the best against what Monet played, beside the same ceiling restricted to the clone's top three — their difference is what the candidate generator costs, the number §3.8ap and §3.8aq argued over without measuring. **C** takes every decline that had a legal declare available, rolls declare-now against what it did, paired from the true deal, and bins by the plan's own p — the whole threshold curve at once, where §3.8al priced one dose. **Neither can ship anything.** Nothing new in the engine; two new probes | **BOTH CEILINGS READ AND BOTH CHANNELS CLOSE.** D: 460 sampled ask decisions, 404,770 rollouts, 69.6 min. The hindsight ceiling over the FULL legal set is **+2.841 (SE 0.116)** a decision — and **D4, a perfect full-set search on Monet's OWN belief with no candidate generator and no guard, reads −0.141 (SE 0.102) to the end and +0.013 (SE 0.020) at 24 steps: D4 MISSES on both horizons.** **Hindsight is worth +2.983 of the +2.841 — more than all of it**, so there is no residue for a policy to collect. Mechanism, with no learned component anywhere in the arm: **the best legal ask HITS 34.1% against the pick's 49.3%** (certain hits 33 of 460 against 121), so a searcher chasing it drops to 38.9% and gains nothing — it finds the hindsight-best ask 8.7% against a 2.1% chance rate. The clone's top three (+0.941) and the search's own candidates (+0.998) are **indistinguishable**, which ends §3.8ap/§3.8aq: the generator enumerates the right ask on 460 of 460 and *orders* it at mean rank 20.0 of 48.7. C: 200 games, 15,661 deduped observations, 27.5 min — **C1 MISSES, every bin below the bar negative**, best −0.226 (SE 0.137) at p 0.4–0.5, break-even a plan right **63.7%** of the time against a realised **7.1%**. Unregistered: **the horizon ratio is 7.60×**, so every per-decision marker on this ladder (§3.8au's −0.034 included) is ~an eighth of its whole-game size; and **the curve FALLS from p 0.45 to the bar**, which a calibrated p cannot do. Cost under-registered by 46% (9.08 s a decision against 6.2 s). **D6 and C3 pre-registered, not yet run; nothing ships** | L |
 | **v0.49** — the learned leaf inside the search, at v0.33's vector (2026-09-10) | **row 57's, on the owner's word** (*"let's work towards the 58%"*, then all recommendations in order): §3.8aq earned *"the value estimate is the weak link"* — and the search that lost was running the LOCK-ONLY leaf, three hand-written terms, while §3.8ab's v0.29 had already fitted a learned leaf that beat it (R² 0.302 against 0.209) and read +0.161 a pair at home before its bridge read was deferred and never taken. Its closing note was *"the leaf buys little, the opponent model is the piece"*, and the opponent model was then solved by the clone for +10 points. **The two halves have never been in the same bot.** Nothing new in the engine. G1 the net beats `lock0`; **G2, which decides the rung, the net also beats `lock24` — the 24-step rollout the search actually consumes, a comparison v0.29 never made**; then the marker against the TRUE deal, twice, with the lock-only leaf as its control | **BOTH GATES OPEN AND THE MARKER CLOSES IT 11:47Z 2026-09-10 — the leaf predicts the end BETTER and makes the search play WORSE.** 2,072,028 rows in ~18 min (the cost predicted exactly). On identical holdout rows: `lock0` R² **0.2041** — **worse than the bare scoreboard's 0.2479**; `lock24` **0.2486** — twenty-four steps of rollout worth three ten-thousandths over the score; the net **0.2921**, so G1 and G2 both hold and **P2, called at 50% in writing, holds**. Then the truth: **the marker is −0.034 (SE 0.021) with the learned leaf against +0.013 (SE 0.024) with the lock-only control — P3 inverted on both clauses** — the true hit rate falling 53.5% → 48.1%, while **the arm's own estimate of its gain was +0.231: it believes it is winning a fifth of a set and is losing.** The mechanism is located: **it overrides a certain hit 244 times of 898 (27%) at −0.184 each**, against the static leaf's 92 of 912 at +0.033. **A guard cannot rescue it** — on uncertain picks both leaves read +0.011, so forbidding the overrides returns a no-op, and the fork is priced without being run. Fourth mechanism priced over this search and the fourth at or below zero; **and it leaves expert iteration without a signal, since the search is worse than the policy it searches over.** Stopped at C as pre-registered; H and F not run; nothing ships | L |
 | **v0.47** — §3.9's conditions 5 and 6, read on v0.33's vector (2026-09-10) | **row 55's**: §3.9's table has carried 5 and 6 as *"met at v0.9's vector, unread at v0.33's"* since §3.8ar corrected it. Nothing is built. Condition 5 is scored over §3.8ar's 72 cells from the 2,592 per-process cover files and never from `bot.log`; condition 6 runs the second, INDEPENDENTLY BUILT adapter — §3.8m's, written from the protocol docs alone and never shown this project's adapter — at v0.33 against SESTINA on §3.8ar's twelve seeds, on §3.8ar's own tree export so the adapter is the only difference. Four lines of 310 change (three labels and `MONET_VERSION`); `translate.mjs`, the view builder that IS the independent part, is byte-identical. Per-op expectations written down BEFORE the run, which §6.2 requires and §3.8ar did not do | **BOTH MET 06:29Z 2026-09-10 — 49.8680% against 49.8680% on every one of the twelve seeds, SD 1.6278 both sides, 14,396 of 14,400 games byte-identical; the four that differ are one position, the same one §3.8m named, and no result changed on any of them. Condition 5's cross-check is exact on 41 of 41 complete cells and short on 31 of 31 incomplete ones, which locates the 1.81% process loss in the collector and not in the play. §6.2 is owed two amendments the scoring found: `auditViolations` is a control that has NEVER PERFORMED A CHECK (`auditChecks: 0` on all 36 files of the only harness that ever collected it — the mirror cell's defect inside the table written to replace the mirror cell), and op coverage's written expectation was not being written. Six of seven registered bands held; the seventh, `mustfixDeclines`, found a counter-definition divergence between two adapters that agree on every decision. Conditions 1 and 2 are untouched and Monet v1.0 still does not exist** | S |
 | **v0.46** — the learned value over the clone's shortlist: the first label that is winning (2026-09-10) | **row 54's, on the owner's word**: every selector this repo owns has now been tried and priced — the belief walks back to greedy (§3.8ao), the rollout search overrides the clone at 23.3% for −0.009 sets a change even when handed a set holding the answer 84.0% of the time (§3.8aq) — and every learner on this ladder was fitted to predict what SESTINA chose. This one predicts **what won**: the taken ask's forty-nine features beside the state's, the asking team's final set differential as the target, and the coverage **generated** rather than assumed by taking a uniformly random member of the clone's top *k* at a fraction of ask decisions in home self-play, so the alternatives get their own outcomes instead of being extrapolated to. Three stages: A the generator (`scripts/gen-ask-value-data.mjs`), B the fit **gated on beating a state-only baseline on held-out games**, C the knob and the home cell by the pairs' win rate. Ships by §3.8n's bar (§3.8as) | **STAGES A AND B READ 02:53Z 2026-09-10 — THE GATE IS OPEN, and three of the five predictions read so far MISSED.** A: 6,000 games in 21.1 minutes, 512,211 rows, 50,883 of them explored; the pin reads 99.95% and not A1's 100.0%, because `containedPass: 1` overrides `pickAsk` after it — switching that knob off returns the pin to exactly 100.00%. A2 misses in the OPPOSITE direction and is the rung's most useful finding: paired on 1,200 shared deals, exploring costs −0.0158 sets a game at 0.17 SE, which says the clone's top three are close to INTERCHANGEABLE and therefore that selecting among them cannot be worth much either. B1 and B2 hold — the playable gain is +1.115% of held-out MSE over state plus the seven ask columns that are constant across a decision's candidates (`scoreDiff` carried the largest ask weight of all and can never move an argmax, so it was moved to the baseline's side before the gate was read). B3 misses narrowly at 52.80% against a 55–75% band, after a probe defect that read 23.14% was found and fixed: three features are list-relative, so the shortlist must be scored inside the full ranked list. The forty-two playable columns fitted alone reach R² 0.018. C is licensed and expected to lose. **STAGE C READ 05:51Z: IT LOSES AT EVERY DOSE AND THE RUNG SHIPS NOTHING.** Four banks of 800 pairs at each of two doses, 12,800 games in 25.3 minutes: the clone's top 3 reads 46.20% and −0.5922 a pair (8.97 SE behind), the top 2 reads 49.11% and −0.2087 (3.18 SE behind), **zero of eight banks ahead on either measure**. The ladder is ordered the way a pure loss is ordered — less room, less loss — and its limit as the shortlist narrows is the clone itself, so it approaches zero FROM BELOW and the best dose is no dose. C1 misses on both clauses: behind zero, and behind §3.8ai's rollout search at both doses, so the learned value is a WORSE judge of an ask than thirty-two rollouts and not a better one. **The line closes: the belief, the search and now a value fitted on winning have each been priced over this shortlist and all three lose, which is three ways of paying to learn what A2 measured first — the shortlist's members are worth the same.** The knob stays in the tree, off and pinned, for whatever selects over a WIDER set next. §3.8as's pre-registered cost for this cell was wrong by two orders of magnitude and is corrected in the record | L |
@@ -12097,6 +12097,226 @@ three more rungs.
 
 **Cost, measured before it is claimed** — the discipline §3.8au established. `probe-ask-oracle.mjs` ran **25 sampled decisions in 88.8 s** without D4 (3.6 s each); D4 at 16 determinizations adds a measured ~2.6 s, so **~6.2 s a decision**, and ~500 decisions is **~52 minutes**. `probe-declare-curve.mjs` ran **3 games in 21.4 s** at **72 deduped observations a game**, so 200 games is **~24 minutes** and ~14,000 observations. **Both are home-only: no Docker, no bridge, well under two hours, one at a time.**
 
+#### The read
+
+**Read 2026-09-10. D4 MISSES ON BOTH HORIZONS, AND IT CLOSES THE ASK.** A perfect search over the
+**full legal ask set** — every one of the ~49 legal asks, scored on 16 determinizations drawn from
+Monet's own belief, with **no candidate generator and no guard** — plays **no better than the ask
+Monet already picks.** That is the strongest ask this architecture can be asked to produce, and it is
+worth nothing. 28 games, **460 sampled ask decisions, 404,770 rollouts, 69.6 minutes.**
+
+#### The three ceilings, and only the third of them means anything
+
+> | reading, per ask decision | to the END | 24 steps |
+> |---|---:|---:|
+> | **full legal set** over the pick — the hindsight ceiling | **+2.841** (SE 0.116) | +0.374 (SE 0.025) |
+> | the clone's top three + the pick | +0.941 (SE 0.080) | +0.117 (SE 0.016) |
+> | the search's own `candidateAsks` set | +0.998 (SE 0.081) | +0.124 (SE 0.016) |
+> | **full set − clone top three** — "what the candidate generator costs" | **+1.900** (SE 0.091) | +0.257 (SE 0.021) |
+> | **D4 — the belief-limited ceiling, evaluated on the TRUE deal** | **−0.141** (SE 0.102) | **+0.013** (SE 0.020) |
+> | **what HINDSIGHT was worth** (full-set ceiling − D4) | **+2.983** (SE 0.118) | — |
+
+**D1 and D2 clear, and they were disclosed in advance as not blind.** They are also, now, beside the
+point: the +2.841 ceiling and the +1.900 "candidate generator cost" are **entirely hindsight**.
+
+**D4's 2-SE bands are −0.346 to +0.063 to the end and −0.028 to +0.054 at 24 steps.** Neither is above
+zero by 2 SE, so **D4 misses on both**, and the to-the-end reading is centred **negative**. At the
+horizon the search actually consumes it is **+0.013 — flat to two decimal places.**
+
+**The single sentence this rung is worth.** The ask's whole apparent headroom is **+2.841 sets a
+decision, and hindsight accounts for +2.983 of it — more than all of it.** There is no residue left
+for a policy to collect.
+
+#### Why, located rather than asserted: the best ask is usually a MISS
+
+> | | the pick | the hindsight-best ask | D4's belief-limited choice |
+> |---|---:|---:|---:|
+> | true hit rate | **49.3%** | **34.1%** | **38.9%** |
+> | certain in the ranking (p = 1) | 121 of 460 | 33 of 460 | — |
+> | it *is* the pick | — | 19.6% | 19.6% |
+
+**The best legal ask hits fifteen points LESS often than the one Monet plays.** It wins by what it
+reveals and where it leaves the turn, not by taking a card — and only 33 of 460 hindsight-best asks
+were certain hits against the pick's 121. So a searcher chasing that signature necessarily lets go of
+hits: **D4's hit rate falls to 38.9%.** It is the same mechanism §3.8au caught the learned leaf on,
+reproduced here with **no learned component anywhere in the arm** — which is what makes it structural
+rather than a fitting artefact.
+
+**And it cannot tell which miss is the good one.** D4 finds the hindsight-best ask on **8.7%** of
+decisions against a chance rate of **2.1%** (one in 48.7). Four times better than random — and still
+useless, because the other 91.3% cost exactly what the 8.7% gains.
+
+#### What this closes, and it is more than the ask
+
+**§3.8ap and §3.8aq argued about the candidate set. The argument is over, and both sides were asking
+the wrong question.** The clone's top three hold the hindsight-best ask **24.8%** of the time and the
+search's own candidates are worth **+0.998 against the clone's +0.941** — a difference of 0.057 with
+SEs of 0.08, i.e. **nothing**. Widening the candidate set cannot help and neither can a better
+selector over it, because **the belief cannot resolve which candidate is the good one.** The
+bottleneck was never the generator, never the selector and never the leaf: it is that **the
+information needed to choose a better ask is not in the view.**
+
+**This is now the fifth mechanism priced over the ask and the fifth at or below zero** — the belief,
+the rollout search, the learned ask-value, the candidate fill, the learned leaf — and D4 says why all
+five had to fail. **§3.8at's structural argument, that Monet's belief edge should be spendable on the
+ask, is refuted by measurement**: there is nothing at the ask to spend it on.
+
+#### Two unregistered findings, and one cost miss
+
+1. **The horizon ratio is 7.60×.** The same decisions read **+2.841 to the end and +0.374 at 24
+   steps**. Every per-decision marker on this ladder has been quoted at the 24-step horizon —
+   §3.8au's **−0.034** among them — and is therefore roughly **an eighth of its whole-game
+   consequence.** Nothing changes sign, but the magnitudes have all been read small.
+2. **The hindsight-best ask is never off the ranker's list** (0 of 460) but sits at **mean rank 20.0
+   of 48.7** in the clone's ordering — top 1 on 19.3%, top 3 on 24.8%, top 5 on 30.2%. So the ranker
+   *enumerates* the right ask essentially always and *orders* it near the middle. That is a precise
+   statement of where the ask policy stands: **the generator is not the problem, the ordering is, and
+   the ordering cannot be fixed from this view.**
+3. **The registered cost was wrong by 46% and it is corrected here rather than glossed.** §3.8av
+   registered **~6.2 s a decision, ~52 minutes**; the run took **9.08 s a decision, 69.6 minutes**.
+   The slice that produced 6.2 s timed D4 at 8 determinizations and the run used 16, and to-the-end
+   rollouts from early-game positions cost more than the mid-game positions the slice sampled.
+   **Under-registered, not over.**
+
+#### C — the declare curve. C1 misses at every dose, and the curve says WHY
+
+200 games, **103,475 declines**, 97,155 of them carrying a legal declare, **15,661 observations** after
+deduping to one per (seat, book) per book-resolution epoch, 62,644 rollouts, **27.5 minutes.**
+
+> | the plan's own *p* | n | to the END | 24 steps |
+> |---|---:|---:|---:|
+> | 0.000–0.100 | 13,006 | −1.092 (SE 0.025) | −0.997 (SE 0.004) |
+> | 0.100–0.200 | 832 | −0.692 (SE 0.088) | −0.736 (SE 0.034) |
+> | 0.200–0.300 | 530 | −0.592 (SE 0.103) | −0.668 (SE 0.052) |
+> | 0.300–0.400 | 703 | −0.441 (SE 0.095) | −0.425 (SE 0.045) |
+> | **0.400–0.500** | 265 | **−0.226 (SE 0.137)** | −0.211 (SE 0.072) |
+> | 0.500–0.600 | 207 | −0.285 (SE 0.165) | −0.691 (SE 0.078) |
+> | 0.600–0.700 | 81 | −0.444 (SE 0.254) | −0.494 (SE 0.124) |
+> | 0.700–0.775 | 29 | −0.552 (SE 0.393) | −0.345 (SE 0.254) |
+> | 0.775–0.900 *(above the bar)* | 7 | +1.000 (SE 0.756) | +0.714 (SE 0.474) |
+> | 0.900–1.000 *(above the bar)* | 1 | +0.000 | +0.000 |
+
+**C1 MISSES. Not one bin with n ≥ 20 clears zero at 2 SE, and every bin below the bar is negative.**
+The best of them is 0.400–0.500 at **−0.226 (SE 0.137)**, whose 2-SE band is −0.500 to +0.048 — centred
+negative and nowhere near the +0.05 C1 asked for. **The +0.18 sets a game the arithmetic once offered
+is not available at any dose**, and §3.8al's one-dose play-out generalises to the whole curve.
+**C2's prior holds.** (Disclosed in the pre-registration: the three-game smoke test had already shown
+this; what the full run adds is the bins near the bar, and it adds them decisively.)
+
+**The bins above the bar are eight observations and are reported, not read.** They exist because a plan
+can clear 0.775 and still be refused by the structural gate or the hoard limit — a real population, far
+too small to price.
+
+#### What the curve is actually saying, which is more useful than the miss
+
+**The declared plan is in fact correct on 7.1% of these decisions** (1,115 of 15,661). And the two
+branches split cleanly:
+
+> | | mean, to the END | n |
+> |---|---:|---:|
+> | declaring when the plan turns out **RIGHT** | **+0.639** (SE 0.063) | 1,115 |
+> | declaring when the plan turns out **WRONG** | **−1.119** (SE 0.023) | 14,546 |
+
+**So the break-even is a plan that is right 63.7% of the time** — `1.119 / (0.639 + 1.119)`. That is the
+whole declare problem in one number, and it is a *higher* bar than the 0.775 the vector already plays
+at, which is why moving the threshold down cannot pay.
+
+**The interesting part is that the curve does not rise monotonically to it.** It climbs from −1.092 at
+the floor to −0.226 at *p* ≈ 0.45 and then **falls back** — −0.285, −0.444, −0.552 — as *p* approaches
+the bar. **A plan the bot believes at 0.7 is priced worse than one it believes at 0.45.** If *p* were
+calibrated that is impossible; the advantage must increase with the true probability. **So *p* is not
+calibrated in the region that decides the threshold, and it is over-confident there.**
+
+That is a claim about the belief, arrived at from the declare, and it is **the one live lead this rung
+produced.** It is also in tension with what this record already holds — §3.8g's reading that the side
+assignment is calibrated, and §3.8m's calibration bars. Those were pooled or per-decile over a
+different population; **this is the selected population of declined plans, and §3.8h's lesson was
+precisely that a pooled Brier cannot see a selected population.**
+
+**It is not yet measured, and it is not claimed as measured.** The realised correctness per bin was not
+collected — the numbers above can only be *inferred* from the pooled right/wrong means, which assumes
+those two values do not themselves vary by bin, and they almost certainly do. **C3 below measures it
+directly instead of arguing from arithmetic.**
+
+#### What the rung closes, and the one thing it opens
+
+**Both channels are at their ceilings and neither is a route to 54%.** D4 says a perfect search over
+the FULL legal ask set on Monet's own belief is worth **−0.141 (SE 0.102)** a decision, and C says
+declaring earlier is negative at **every** dose below the bar. **The ask and the declare are done.**
+
+**The deeper result is the decomposition, not either miss.** The ask *does* carry a large prize —
+**+2.841 sets a decision** — and **hindsight accounts for +2.983 of it, more than all of it.** The
+prize is real and it is made of information the bot does not have. That is why the belief, the
+rollout, the learned ask-value, the candidate fill and the learned leaf all priced at or below zero:
+**they were five ways of re-arranging what the view already contains.**
+
+**An honest limit on how far that generalises, stated as reasoning and not as measurement.** D4 is a
+determinized (PIMC) search, and a determinized search is *structurally* unable to value information:
+inside each determinization the hidden cards are treated as known, so an ask that would be worth
+playing *because it reveals something* is scored as if the revelation were free. **The evidence here is
+consistent with exactly that** — the hindsight-best ask **hits 34.1% against the pick's 49.3%**, so the
+best asks are disproportionately the ones that do not take a card. **So D4 closes every selector, every
+candidate set and every PIMC search over this belief. It does NOT close a method that can price
+information**, and this rung does not claim it does.
+
+**That is the one live direction left at the ask, and it is a different kind of bot:** an ask policy
+trained against the game result rather than against hitting or against agreeing with SESTINA — which
+values a revealing ask automatically, because the reward arrives later. **It is also exactly the class
+of method §3.8au's closure did not touch**: expert iteration needed the search to beat its own policy,
+and a policy-gradient method does not, because its target is the outcome rather than the search.
+**Nothing here prices it, and it is named as a direction rather than a plan.**
+
+#### D6 — the horizon control, pre-registered before it is run
+
+**D4's miss has one confound and it must be closed before the conclusion is allowed to stand.** D4
+*selects* on 24-step rollouts (the search's own horizon) and is *evaluated* to the end. On the same
+460 decisions the hindsight ceiling reads **+0.374 at 24 steps and +2.841 to the end — a factor of
+7.6**. So the objective D4 optimised is a small and possibly misleading shadow of the objective it was
+scored against, and "a perfect search gains nothing" could instead be "a perfect search over the wrong
+24 moves gains nothing."
+
+**The control removes the confound rather than bounding it:** re-run D4 with the determinized
+selection rolled **to the END of the game** — the same horizon as the evaluation — everything else
+identical. `--det-steps` was added for this and defaults to 24, so the run above is unaffected.
+
+> - **D6 holds — and D4's conclusion is WITHDRAWN — if the belief-limited ceiling under to-the-end
+>   selection rises above zero by 2 SE.** In that case the ask is not closed, the instrument was, and
+>   the honest next rung is a longer-horizon determinized search rather than a different bot.
+> - **D6 misses and D4 stands** if it remains flat or negative on a second, independent horizon.
+> - **D7, the honest prior: I expect D6 to miss and D4 to stand.** The reason is stated before the
+>   numbers so it can be wrong in public: **the 7.6× growth of the ceiling with horizon is growth in
+>   HINDSIGHT, not in signal.** It comes from knowing the actual continuation, which a determinized
+>   rollout does not have at any length; lengthening it adds variance without adding information. If
+>   that reasoning is right the two horizons should agree, and if D6 clears the bar the reasoning was
+>   wrong and the ask line reopens. **Called before the numbers.**
+> - Sized at ~55 decisions, which is enough to see a move from −0.141 toward the +2.841 ceiling
+>   (SE ≈ 0.3) and **explicitly NOT enough to resolve a small positive** — the control is powered to
+>   answer *"is the horizon the story"*, not to re-price the ask.
+
+#### C3 — is the declare plan's *p* calibrated where it decides? Pre-registered before it is run
+
+The curve above **falls** as *p* rises through 0.45 → 0.775, which is impossible if *p* is calibrated.
+But the evidence for that is arithmetic on two pooled means, not a measurement. So measure it: collect,
+per *p* bin, **the realised fraction of declined plans that were in fact correct**, and the per-bin
+right/wrong split of the declare advantage. Nothing else changes; the same 200 games, the same dedupe.
+
+> - **C3 holds — the belief is over-confident where it matters — if realised correctness sits below
+>   stated *p* by ≥ 0.10 in the bins from 0.4 up to the bar**, with the bin's own SE clear of that gap.
+> - **C3 misses** if realised correctness tracks stated *p* inside ±0.10 there. Then the non-monotone
+>   curve is *not* a calibration fault and must be explained by something else — most likely that a
+>   high-*p* plan sits on a set worth more, so being wrong about it costs more — and the per-bin
+>   right/wrong split will show exactly that, because the WRONG branch will deepen with *p*.
+> - **C4, the honest prior: I expect C3 to HOLD**, and I expect it to hold hardest in 0.6–0.775. It is
+>   the only reading consistent with §3.8al's play-out (89.3% of *deferred* sets come home against
+>   79.6% of *claimed* ones right) — deferring wins because the plan is worse than it says it is.
+>   **Called before the numbers.** If C3 misses instead, the declare closes completely and cleanly and
+>   this rung's one live lead dies with it.
+> - **This is a diagnostic, not a rung, and it cannot ship anything.** A miscalibrated *p* does not
+>   become a win rate by being named: the threshold is already above the 63.7% break-even, so
+>   *correcting* the over-confidence would move the bar UP, not down, and §3.8al already priced that
+>   direction at ~zero. **What C3 buys is a pointer at the belief, in the one population where this
+>   record has never looked.**
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -12615,7 +12835,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 55 | **After §3.8as — §3.9's conditions 5 and 6 have never been read at v0.33's vector. Do they carry across the two version changes since?** | **TAKEN — v0.47 (§3.8at).** §3.8ar corrected §3.9's table and found it had been carrying v0.9's readings against a candidate two versions newer; it closed 3 and 4 and left 5 and 6 explicitly open, *"not assumed either way"*. Condition 5 costs no games — §6.2's controls are scorable from §3.8ar's 72 cells, summed from the 2,592 per-process cover files and never from `bot.log`. Condition 6 costs twelve, on §3.8ar's own tree export so the adapter is the only difference. **Read 06:29Z 2026-09-10: BOTH MET.** The independent adapter reproduces §3.8ar's SESTINA column at **49.8680% against 49.8680%, every seed to the digit**, SD 1.6278 both sides, with **14,396 of 14,400 games byte-identical** and the four that differ located to a single position — which teammate of an already-certain team emits the declare, and whether it lands before or after the turn-pass — with the set, the assignment, the event count, the score, the winner and the whole `setWinner` vector unchanged. That is the same position §3.8m located at v0.9, four days and two vectors earlier. Condition 5's cross-check is exact on 41 of 41 complete cells and short, never over, on 31 of 31 incomplete ones, which locates the 1.81% process loss in the collector and not in the play. **What the rung is really worth is the two amendments it owes §6.2, both found by scoring the controls instead of quoting them.** `auditViolations` is named mandatory and has **never once been able to fail**: it exists nowhere in this repository, nowhere in the adapter and nowhere in the engine's output, and in the one harness that ever collected it all 36 files read `auditViolations: 0` beside `auditChecks: 0` — zero violations because zero checks, which is the mirror cell's defect sitting inside the table §6.2 wrote to replace the mirror cell. And op coverage's *"written expectation for each, recorded before the run"* had not been happening: §3.8ar's `EXPECT-…` files pin the arm's identity, a different control. This rung wrote the expectations first, and **six of seven held while the seventh found something real** — `mustfixDeclines` at 699 against a band of 287–391 between two adapters that agree on every decision, so the counter is not comparable across instruments. Unregistered: the belief's calibration has drifted since v0.9 — §3.8m's bars held 12 of 12 against SESTINA and now hold 6 of 12, and miss on all sixty ancestor cells. **What it does not do: conditions 1 and 2 are untouched at 50.46% ± 0.66 over twenty-four seeds. Four of the six are now met and the whole remaining gap is a win rate, which no control table and no second adapter can move.** |
 | 56 | **After §3.8at — §3.9's condition 2 has two readings, and they differ by three points of win rate. Which did the owner mean?** The text requires every seed reported and the SD published, both of which are done; the *"one negative seed is a claim about a seed"* sentence can be read as a reporting rule (met) or as a bar no seed may fall under (not met, five of twelve). At SD 1.63 the second reading needs a pooled mean near 53-54% rather than 50%. | **PUT TO THE OWNER 2026-09-10 AND ANSWERED: THE FRONTIER READING, AND STRONGER.** *"I want Monet to become the new frontier bot, which means being consistently superior to SESTINA, so lets change that condition to match those expectations. You can improve upon SESTINA's habits while improving on Monet's own architecture to do so."* **Both conditions amended on that word.** Condition 1 goes from ≥ 50.0% to **≥ 52.0%** — not a new number, but the bar §3.8m already fixed for what *"beats"* means on the panel, so conditions 1 and 3 now score against one definition of beating instead of two. Condition 2 goes from a reporting rule to **every one of the twelve seeds ≥ 50.0%**: consistency is scored, not only disclosed. **Condition 2 is the binding one** — at SD 1.63 it needs a pooled mean near **53-54%**, where the old pair asked for ~50%. Recorded with the amendment so it is never re-derived: **the exchange rate, fitted over §3.8ar's 72 panel cells, is `win rate = 50.449 + 12.785 x (sets-a-game differential)` at R² 0.9942** — one extra set a game is **12.8 points**, so 54% costs **+0.278 sets a game** against Monet's −0.004 today. That is **one rung the size of the clone-3 step**, which bought +0.285 on its own: demanding, not unreachable. Every future rung is to be quoted in sets a game beside its win rate. **The estimate given to the owner with the amendment, as a judgement and not a measurement: 54% is reachable, 56-58% is the plausible ceiling, and past 60% would need a different bot.** The structural argument for where the headroom is: Monet's belief is measurably better than SESTINA's (99.73% declare accuracy against 97.77%; SESTINA's spec is `rbelief=indep`, Monet runs a joint chain), and the two tie only because **two opposite errors cancel** — SESTINA declares 4.558 times a game and gifts 0.102 sets away doing it, Monet declares 4.377 times and gifts 0.012, netting 4.468 against 4.467. Monet then **hands its ask to a clone of the bot with the worse belief**, so today's ask is *"what would SESTINA play, guessed well"* rather than *"what is best given what we know"* — which is exactly why all three selectors over the clone's shortlist priced at zero, the shortlist being SESTINA-shaped. **The next rung must spend the belief edge on the ask instead of spending it on imitation.** |
 | 57 | **After §3.8at — the owner set the frontier bar (~54%, and 58% named as the target). §3.8aq says the value estimate is the weak link and the search that lost was running a hand-written leaf. Does a learned one fix it?** §3.8ab fitted one at v0.29 that beat the static count and read +0.161 a pair at home; its bridge read was deferred behind v0.30's cells and never taken, its closing note blamed the opponent model, and the opponent model was then solved by the clone. The two halves have never been in the same bot. | **TAKEN — v0.49 (§3.8au), pre-registered at `eb521e8` before a row was generated. READ 11:47Z 2026-09-10: THE GATES OPEN, THE MARKER CLOSES IT, AND NOTHING SHIPS.** Stage A produced 2,072,028 rows in **~18 minutes against a registered ~18 minutes** — the correction to §3.8as's two-orders-of-magnitude miss, and it worked because the rate was measured before the number was written. Stage B: on identical holdout rows the net reaches **R² 0.2921** against `lock24`'s **0.2486** and `lock0`'s **0.2041**, so **G1 and G2 both hold and P2 — called at 50% in writing before the fit — holds.** Two unpredicted findings sit in the baseline column: **the search's own static leaf is a worse predictor of the end than the bare scoreboard** (0.2041 against 0.2479), and **twenty-four steps of rollout are worth three ten-thousandths of R² over that scoreboard** (0.2486) while costing 631 ms an ask. **Then the truth closed it.** The marker — the true paired advantage of what the arm played, rolled out from the real deal — reads **−0.034 (SE 0.021) with the learned leaf and +0.013 (SE 0.024) with the lock-only control**, so **P3 misses on both clauses and inverted on each**, and §3.8au's rule binds: the arm is worse than a no-op. The true hit rate falls **53.5% → 48.1%**, and **the arm's own estimate of what it gained was +0.231 while the truth was −0.034 — it believes it is winning a fifth of a set and is losing.** **The mechanism is located rather than guessed:** the learned leaf **overrides a certain hit on 244 of 898 such decisions (27%) at a true cost of −0.184 each**, against the static leaf's 92 of 912 at +0.033 — §3.8aa built that split to catch *"where the search leaves a certain hit for a chase"* and it caught it. **The obvious fork is priced without running it and refused:** on uncertain picks the two leaves read **+0.011 and +0.011**, identical and inside zero, so a certain-hit guard returns a no-op rather than a rung. **What this closes.** §3.8aq was right about the symptom and wrong about the cure — the failure is not that the leaf predicts badly on average, it is that **the search selects the candidates where its leaf is most wrong**, and a fitted leaf is most wrong exactly where the hand-written one is right. **Every component of this search has now been varied — the belief, the rollout, the ask-value, the candidate fill and the leaf — and none of them is the piece.** **And it removes the rung that was queued behind it:** expert iteration needs the search to beat the policy it searches over, and with the best value this project can fit the search is worse than that policy, so there is **no better-than-policy target to bootstrap from**. Under two hours of home compute, no Docker, no bridge. **Conditions 1 and 2 are untouched; the ~54% and 58% targets are unmoved and now need a route that is not this search.** |
-| 58 | **After §3.8au — the search line is closed and expert iteration went with it. Before another rung is built: how much is actually left in the two channels that remain?** Every ask rung on this ladder has been scored by agreement with SESTINA or by a selector over three candidates §3.8as measured to be interchangeable, so nobody has ever asked what the BEST ask is worth; and every declare rung has been scored at one threshold dose, so nobody has priced the whole curve. The owner asked for both: *"id like to see both just to fully explore the options"*. | **TAKEN — v0.50 (§3.8av), pre-registered before either instrument is read, and after a pilot that changed its design.** The instrument as first drafted split selection and evaluation across independent rollout keys to defeat a winner's curse. **The pilot found there is no such noise: `rollout` is deterministic in its key** — the only place `decide` consults the seeded rng is a blunder roll gated on `!skill.planClaims` and scaled by `skill.errorRate`, and Monet sets `planClaims: true` with `errorRate: 0`, so both gates are shut and four keys return the same number to the digit. Three consequences are on the record before anything is read: repeated keys buy nothing and the split is dropped rather than performed as theatre; `max_a V(a)` is an exact maximum rather than an inflated one; and **what the oracle therefore is, stated plainly, is a HINDSIGHT oracle and an UPPER BOUND** — it knows the true deal *and* the exact continuation, which no real policy can, so it is the right instrument for D1 read in the negative direction and is not a promise that any of it is reachable. It also settles a loose end in §3.8au, whose paired key was likewise inert — which is exactly what pairing wants, so **that marker stands unchanged.** Both instruments read at **two horizons**, to the END (the leaf is the final score differential, so the number sits on §3.8at's exchange-rate axis) and at 24 steps (what the search consumes, and §3.8au's unit); **their ratio has never been measured and is reported as its own line.** *Read pending.* |
+| 58 | **After §3.8au — the search line is closed and expert iteration went with it. Before another rung is built: how much is actually left in the two channels that remain?** Every ask rung on this ladder has been scored by agreement with SESTINA or by a selector over three candidates §3.8as measured to be interchangeable, so nobody has ever asked what the BEST ask is worth; and every declare rung has been scored at one threshold dose, so nobody has priced the whole curve. The owner asked for both: *"id like to see both just to fully explore the options"*. | **TAKEN — v0.50 (§3.8av), pre-registered before either instrument is read, and after a pilot that changed its design.** The instrument as first drafted split selection and evaluation across independent rollout keys to defeat a winner's curse. **The pilot found there is no such noise: `rollout` is deterministic in its key** — the only place `decide` consults the seeded rng is a blunder roll gated on `!skill.planClaims` and scaled by `skill.errorRate`, and Monet sets `planClaims: true` with `errorRate: 0`, so both gates are shut and four keys return the same number to the digit. Three consequences are on the record before anything is read: repeated keys buy nothing and the split is dropped rather than performed as theatre; `max_a V(a)` is an exact maximum rather than an inflated one; and **what the oracle therefore is, stated plainly, is a HINDSIGHT oracle and an UPPER BOUND** — it knows the true deal *and* the exact continuation, which no real policy can, so it is the right instrument for D1 read in the negative direction and is not a promise that any of it is reachable. It also settles a loose end in §3.8au, whose paired key was likewise inert — which is exactly what pairing wants, so **that marker stands unchanged.** Both instruments read at **two horizons**, to the END (the leaf is the final score differential, so the number sits on §3.8at's exchange-rate axis) and at 24 steps (what the search consumes, and §3.8au's unit); **their ratio has never been measured and is reported as its own line.** **READ 2026-09-10: BOTH CHANNELS CLOSE, AND THE DECOMPOSITION IS WORTH MORE THAN EITHER MISS.** **D4 MISSES on both horizons** — a perfect search over the FULL legal ask set, 16 determinizations from Monet's own belief, no candidate generator and no guard, reads **−0.141 (SE 0.102)** to the end and **+0.013 (SE 0.020)** at 24 steps, neither above zero by 2 SE. **C1 MISSES at every dose** — all eight bins below the bar negative, the best −0.226 (SE 0.137). **The finding is not the two misses, it is what sits behind them:** the ask carries a hindsight ceiling of **+2.841 sets a decision** and **hindsight accounts for +2.983 of it — more than all of it**. The prize is real and made of information the view does not contain, which is why the belief, the rollout, the learned ask-value, the candidate fill and the learned leaf all priced at or below zero: **five ways of re-arranging what the bot already knows.** The mechanism is visible with no learned component in the arm at all — **the best legal ask HITS 34.1% of the time against the pick's 49.3%**, so the good asks are the ones that do not take a card, and a searcher chasing them falls to 38.9% while finding the right one 8.7% of the time against a 2.1% chance rate. **§3.8ap and §3.8aq's argument is over and neither side was right:** the clone's top three (+0.941) and the search's own candidates (+0.998) are indistinguishable, and the generator enumerates the hindsight-best ask on **460 of 460** while ordering it at **mean rank 20.0 of 48.7** — the set was never the bottleneck and neither was the selector. **§3.8at's structural argument is refuted by measurement:** there is nothing at the ask for the belief edge to be spent on. **Three things recorded against this rung:** the registered cost was **46% low** (9.08 s a decision against 6.2 s); **D5's prior was half right** — D4 missed as called and hindsight dominated more strongly than predicted, but the "inside ±0.10 of zero" clause holds only at 24 steps (+0.013) and misses to the end (−0.141); and **the horizon ratio is 7.60×**, so every per-decision marker on this ladder, **§3.8au's −0.034 included**, has been read at about an eighth of its whole-game size. **What it opens, named as reasoning and not as measurement:** a determinized search is structurally unable to price information — each determinization treats the hidden cards as known — and the 34.1% hit rate says the good asks are exactly the revealing ones, **so D4 closes every selector and every PIMC search over this belief but does NOT close a method that can value information.** That is a different bot: an ask policy trained against the game result rather than against hitting or against agreeing with SESTINA. **D6 (the horizon control, which can WITHDRAW D4) and C3 (is p calibrated where it decides) are pre-registered and not yet run. Conditions 1 and 2 untouched; nothing ships.** |
 
 ---
 
