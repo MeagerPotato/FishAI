@@ -11512,6 +11512,81 @@ shipped vector changes; `monetPolicy('v0.33')` is byte identity and `/play` is u
 **Cost.** Stage C: 25.3 minutes over 12,800 games at two doses, plus the 40-pair timing slice. The whole rung,
 stages A through C: about an hour of home compute, no Docker and no bridge.
 
+### 3.8at Monet v0.47 — §3.9's conditions 5 and 6, read on v0.33's vector
+
+**Pre-registered before any cell is run.** §3.9's table has carried conditions 5 and 6 as *"met at v0.9's
+vector, unread at v0.33's"* since §3.8ar corrected it on 2026-09-10. §3.8ar closed 3 and 4; this rung reads the
+two that were never re-scored after the vector moved twice. Nothing is built and nothing ships: this is a
+measurement of the shipped bot, exactly as §3.8m was.
+
+**Condition 5 costs no games.** Every control of §6.2 is scorable from the 72 cells §3.8ar already ran — 86,400
+games, 2,592 per-process cover files — and is read from those files and never from `bot.log`, which is §6.2's
+own rule. **Condition 6 costs twelve cells**: the second, independently built arm on the same spec, against
+SESTINA on §3.8ar's twelve seeds, compared cell by cell with §3.8ar's SESTINA column.
+
+**The second arm, and what "independently built" is taken to mean here.** §3.8m's arm
+(`monet-v17-indep`, `bot.mjs` md5 4f524e71…) was written by an agent that read `docs/BOT_PACKAGE.md` and
+`docs/PLAY.md` and nothing else of FishLab's, was never shown this project's own adapter, and builds the seat
+view directly from the host's `state` and `history`. **That property is a fact about how the instrument was
+built, and it does not expire when the policy the instrument wraps changes version.** The v0.33 twin is
+therefore the same package with **four lines changed of 310** — `BOT_ID`, `BOT_NAME`, `BOT_VERSION` and the one
+constant `MONET_VERSION`, `'v0.9'` → `'v0.33'` — with `translate.mjs` (the whole view builder, which is the
+independent part), `bot.mjs`, and both home harnesses **byte-identical to §3.8m's**. Anything more than that
+would make it a different instrument and condition 6 would be measuring the wrong thing. The diff is recorded
+in full at `$SP/mk-indep33.cjs`.
+
+**Op coverage's second half, which §6.2 requires and this project has not been doing.** §6.2's op-coverage
+control is *"every protocol op exercised, **with a written expectation for each, recorded before the run**"*.
+§3.8ar's run recorded an `EXPECT-…` file per lane, but those pin the arm's **identity** (`monetPolicy('v0.33')
+style=punter` on the hello line), which is §6.2's *cross-instrument identity pin* and not its op expectation.
+No per-op expectation was written before §3.8ar's cells. **So this rung writes them down first**, from the
+eight complete SESTINA cells of §3.8ar — same opponent, same seeds, same policy, so the second arm should land
+inside them if it is playing the same bot. Per cell (200 deals × 6 rotations = 1,200 games, 36 processes):
+
+> | op | expected, per cell | why this band |
+> |---|---|---|
+> | `opAsk` | **54,074–54,762** | the arm's asks; must also equal the engine's own count of A's asks, exactly |
+> | `opPoll` | **360,441–364,134** | off-turn declare polls, `poll_off_turn: true` |
+> | `opPass` | **290–329, and > 0 on every cell** | §6.2's tripwire — the counter whose zero hid the bridge defect |
+> | `passfixDeclines` | **308–343** | tracks `opPass`; the known `us54` turn-pass deviation |
+> | `mustfixDeclines` | **287–391** | MUSTFIX answering `none` to a compelled sub-certain claim |
+> | `opForced` | **670–1,180** | forced polls received; §6.2 warns this one is seed-variable |
+> | `lastResort` | **13–32** | not one of §6.2's eleven; banded because it is non-zero |
+> | `declaresEmitted` | **10,109–10,901** | |
+> | `decisions` | **416,024–419,890** | and `= opAsk + opPoll + opPass + opForced`, exactly |
+> | `newGames` | **3,600 exactly** | 1,200 games × 3 seats |
+
+**The predictions, with their bars.**
+
+- **P1 — the number.** The second arm's twelve seeds pool to **49.87%**, §3.8ar's SESTINA column, and the bar is
+  §3.8m's: **the same win rate to the hundredth on every seed**. A seed that differs at all is a miss and is
+  located, not averaged away.
+- **P2 — the records.** §3.8m reproduced the number on 12 of 12 and the game-for-game record on 10 of 12, with
+  the three differing games traced to one position the spec did not name. **P2 predicts the records are
+  identical on at least 10 of 12 again**, and that any divergence is located to a named position.
+- **P3 — the home parity, read before the bridge.** Already run and recorded here because it is the cheaper
+  half and it gates the expensive one: the v0.33 twin's view against FishAI's own `seatView`, and its decision
+  against `decide` on both views. **Read: 216,490 views with 0 differences, 40,665 decisions with 0
+  differences, and 1,151 of 1,151 in-process handler decisions in parity.** P3 predicted zero and read zero.
+- **P4 — op coverage.** Every band above holds on every complete cell, `opPass` > 0 on 12 of 12, and `opAsk`
+  equals the engine's own count of A's asks on every complete cell.
+
+**A correction to how P3 was nearly read, disclosed because it would have inverted the finding.** The
+independent arm's home harness pins its reference at `bots.monetPolicy('v0.9')` on line 42 — **hardcoded, not
+the arm's own `MONET_VERSION`**. Run unchanged in the v0.33 twin it reports 218,198 views and 40,993 decisions
+with zero differences *while never once exercising v0.33's policy*, which is why it returns byte-identical
+numbers for both arms; and its second harness then reports **87 parity diffs of 1,191**, which is not a view
+defect at all but v0.33's policy disagreeing with v0.9's, as two different bots should. The reference was moved
+to v0.33 before P3 was read. **The three residual diffs are an `EIGHTS` claim whose `assignments` carry the same
+six entries in a different key order**, compared with `JSON.stringify`; identical as maps, so parity is
+1,151 of 1,151.
+
+**What this rung cannot do.** Conditions 1 and 2 are untouched. §3.9's gap is 50.46% ± 0.66 over twenty-four
+seeds against a 50.0% bar with a ±2.00 floor, and neither a control table nor a second adapter moves a win
+rate. If 5 and 6 both hold, **Monet v1.0 still does not exist**, and the record must say so in the same breath.
+
+**Cost.** Condition 5: no games. Condition 6: twelve cells, ~40 s of match time each, one container.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
