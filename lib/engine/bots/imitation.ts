@@ -18,6 +18,18 @@
  * target, and a few terms of the state the same for every ask (the score, the resolved count, the
  * hand, the asks so far). `ASK_FEATURES` names them in order.
  *
+ * ## The second feature set (§3.8af)
+ *
+ * `ASK_FEATURES_2` is the list above and, after it, the belief's seat: the independent per-card
+ * belief beside the marginal, and the target's own dealings with the asked half-suit read off the
+ * log. `askFeatureRows` builds either set; a registered model reads the one its width names.
+ *
+ * ## The third feature set (§3.8ah)
+ *
+ * `ASK_FEATURES_3` is the second list and, after it, the holder clone's belief (holder.ts): a model
+ * of who holds each card, fitted on the records' true deals, read at the asked card and the target.
+ * A model at this width names the holder model it was fitted with; the rows need it.
+ *
  * ## In play
  *
  * `StyleParams.askModel` names a model registered with `registerAskModel`; `pickAsk` in decide.ts
@@ -27,9 +39,14 @@
  */
 import type { BookId, Card, Seat } from '../types.ts'
 import { allBooks, bookCards, cardBook, seatTeam } from '../cards.ts'
+import { slotPriorHitProbability } from './knowledge.ts'
 import type { Knowledge, RankedAsk, SeatView } from './types.ts'
 import { compileNet, forwardNet } from './net.ts'
 import type { CompiledNet, DenseModel } from './net.ts'
+import { INDEP_KAPPA, agoOf, indepK, seatBookHistory } from './askhistory.ts'
+import { holderBelief, holderContext, holderModelOf } from './holder.ts'
+
+export { INDEP_KAPPA }
 
 export const ASK_FEATURES = [
   /** The ranker's hit probability of the ask. */
@@ -102,6 +119,80 @@ export const ASK_FEATURES = [
 
 export const ASK_FEATURE_COUNT = ASK_FEATURES.length
 
+/**
+ * MONET.md §3.8af — the second feature set: `ASK_FEATURES` and, after them, THE BELIEF'S SEAT. The
+ * clone's disagreements with SESTINA (§3.8ad's addendum) are the seat, not the card: on 11.5% of
+ * its decisions SESTINA asks the same half-suit at another seat and on 5.7% another half-suit, and
+ * the seat it prefers is one our marginal ranks lower. SESTINA's belief is independent per card
+ * (its spec's `rbelief=indep`); ours is the joint over the set. These features hand a fit the
+ * independent belief beside the marginal — the slot prior, and the slot prior under an ask-choice
+ * prior of the strength SESTINA's spec names (`kappa=2.5`, whatever its own use of it) — and what
+ * the log says about the target's own dealings with the half-suit: its asks into it, their hits
+ * and misses, the cards taken from it, how long ago. A model fitted at this width reads these
+ * rows (`registerAskModel` tells the sets apart by the width); the first set's rows are byte for
+ * byte what they were.
+ */
+export const ASK_FEATURES_2 = [
+  ...ASK_FEATURES,
+  /** The slot prior — the independent per-card belief — of the hit. */
+  'pSlot',
+  /** The ranker's probability less the slot prior: what the coupling over the set adds. */
+  'pDiff',
+  /** The slot prior under an ask-choice prior of strength κ = 2.5 (saturating at three asks). */
+  'pIndepK',
+  /** 1 when the target is a candidate the slot prior puts the card at first (ties included). */
+  'targetSlotMax',
+  /** The target's asks into the half-suit, over three. */
+  'targetAsksIntoBook',
+  /** Of those, the hits, over three. */
+  'targetHitsInBook',
+  /** Of those, the misses, over three. */
+  'targetMissesInBook',
+  /** Cards of the half-suit taken from the target by others' hits, over three. */
+  'takenFromTargetInBook',
+  /** Asks at the target for a card of the half-suit that missed, over three. */
+  'missedAtTargetInBook',
+  /** Asks since anyone last asked into the half-suit, over twenty (1 when nobody has). */
+  'bookLastAskAgo',
+  /** Asks since the target last asked, over twenty (1 when it never has). */
+  'targetLastAskAgo',
+  /** Asks since the target last asked into the half-suit, over twenty (1 when it never has). */
+  'targetBookLastAgo',
+  /** The opponents' asks into the half-suit, over five. */
+  'bookAsksByThem',
+  /** Distinct half-suits the target has asked into, over the half-suits in play. */
+  'targetBooksAsked',
+  /** The target's unidentified cards, over nine. */
+  'targetUnknownSlots',
+  /** Opponent seats among the card's candidate holders, over three. */
+  'oppCands',
+] as const
+
+export const ASK_FEATURE_COUNT_2 = ASK_FEATURES_2.length
+
+/**
+ * MONET.md §3.8ah — the third feature set: `ASK_FEATURES_2` and, after them, THE HOLDER CLONE'S BELIEF —
+ * a model of who holds each card fitted on the records' true deals (holder.ts), read at the asked card
+ * and the target: its probability for the target, that probability against the marginal's, whether the
+ * target is its first choice among the card's candidates, and how spread it is over them (the entropy,
+ * over its maximum). A model at this width needs a holder model, registered under the name it carries
+ * (`registerAskModel`'s third argument, or its meta's `holderModel`).
+ */
+export const ASK_FEATURES_3 = [...ASK_FEATURES_2, 'pHold', 'pHoldDiff', 'holdTop', 'holdEntropy'] as const
+
+export const ASK_FEATURE_COUNT_3 = ASK_FEATURES_3.length
+
+/** Which list a feature row is built over: 1 for `ASK_FEATURES`, 2 for `ASK_FEATURES_2`, 3 for `ASK_FEATURES_3`. */
+export type AskFeatureSet = 1 | 2 | 3
+
+export function askFeatureNames(set: AskFeatureSet): readonly string[] {
+  return set === 3 ? ASK_FEATURES_3 : set === 2 ? ASK_FEATURES_2 : ASK_FEATURES
+}
+
+export function askFeatureCount(set: AskFeatureSet): number {
+  return set === 3 ? ASK_FEATURE_COUNT_3 : set === 2 ? ASK_FEATURE_COUNT_2 : ASK_FEATURE_COUNT
+}
+
 /** What the log says about the asks so far, read once per decision. */
 interface AskHistory {
   byMe: Set<BookId>
@@ -150,14 +241,33 @@ function askHistory(view: SeatView): AskHistory {
 
 /**
  * One feature row per entry of `ranked` (the ranker's list of every legal ask, best first), in
- * `ASK_FEATURES` order. Pure over the view, the knowledge and the list.
+ * `ASK_FEATURES` order — or, for `set` 2, in `ASK_FEATURES_2`'s, the first set's columns first and
+ * unchanged; for `set` 3, in `ASK_FEATURES_3`'s, which needs the holder model the last four columns
+ * read. Pure over the view, the knowledge, the list and the model.
  */
-export function askFeatureRows(view: SeatView, k: Knowledge, ranked: readonly RankedAsk[]): Float64Array[] {
+export function askFeatureRows(view: SeatView, k: Knowledge, ranked: readonly RankedAsk[], set: AskFeatureSet = 1, holder?: CompiledNet): Float64Array[] {
+  if (set === 3 && !holder) throw new Error('askFeatureRows: the third feature set needs a holder model')
   const me = view.seat
   const myTeam = seatTeam(me)
   const held = new Set(view.hand)
   const hist = askHistory(view)
   const books = allBooks(view.config)
+  const NF = askFeatureCount(set)
+  const NB = books.length
+  const bookIdx = new Map<BookId, number>()
+  books.forEach((b, i) => bookIdx.set(b, i))
+  const hist2 = set >= 2 ? seatBookHistory(view, bookIdx, myTeam) : null
+  const hctx = set === 3 && holder ? holderContext(view, k) : null
+  // the holder clone's belief, once per asked card
+  const beliefs = new Map<Card, Float64Array>()
+  const beliefOf = (card: Card): Float64Array => {
+    let b = beliefs.get(card)
+    if (b === undefined) {
+      b = hctx && holder ? holderBelief(holder, hctx, k, view, card) : new Float64Array(6)
+      beliefs.set(card, b)
+    }
+    return b
+  }
   // the seat's holding per half-suit, and each half-suit's rank by it
   const ownOf = new Map<BookId, number>()
   for (const b of books) ownOf.set(b, 0)
@@ -199,7 +309,7 @@ export function askFeatureRows(view: SeatView, k: Knowledge, ranked: readonly Ra
     const b = cardBook(r.card)
     const pic = picture.get(b) ?? { team: 0, theirs: 0, atSeat: [0, 0, 0, 0, 0, 0] }
     const cand = k.cands[r.card] ?? []
-    const x = new Float64Array(ASK_FEATURE_COUNT)
+    const x = new Float64Array(NF)
     let i = 0
     x[i++] = r.p
     x[i++] = r.p === 1 ? 1 : 0
@@ -234,7 +344,50 @@ export function askFeatureRows(view: SeatView, k: Knowledge, ranked: readonly Ra
     x[i++] = held.size / 9
     x[i++] = hist.asks / 100
     x[i++] = matesIn / 2
-    x[i] = oppsIn / 3
+    x[i++] = oppsIn / 3
+    if (hist2) {
+      const t = r.target
+      const bi = bookIdx.get(b) ?? 0
+      const a = t * NB + bi
+      const pSlot = slotPriorHitProbability(k, r.card, t)
+      let maxSlots = -1
+      let oppCands = 0
+      for (const s of cand) {
+        if (k.unknownSlots[s] > maxSlots) maxSlots = k.unknownSlots[s]
+        if (seatTeam(s) !== myTeam) oppCands++
+      }
+      x[i++] = pSlot
+      x[i++] = r.p - pSlot
+      x[i++] = indepK(k, hist2, cand, t, bi, NB)
+      x[i++] = cand.includes(t) && k.unknownSlots[t] === maxSlots ? 1 : 0
+      x[i++] = Math.min(3, hist2.sbAsks[a]) / 3
+      x[i++] = Math.min(3, hist2.sbHits[a]) / 3
+      x[i++] = Math.min(3, hist2.sbMisses[a]) / 3
+      x[i++] = Math.min(3, hist2.sbTaken[a]) / 3
+      x[i++] = Math.min(3, hist2.sbMissedAt[a]) / 3
+      x[i++] = agoOf(hist2.bookLast[bi], hist2.asks)
+      x[i++] = agoOf(hist2.seatLast[t], hist2.asks)
+      x[i++] = agoOf(hist2.sbLast[a], hist2.asks)
+      x[i++] = Math.min(5, hist2.bookAsksThem[bi]) / 5
+      x[i++] = hist2.seatBooks[t] / NB
+      x[i++] = k.unknownSlots[t] / 9
+      x[i++] = oppCands / 3
+    }
+    if (hctx) {
+      const t = r.target
+      const bl = beliefOf(r.card)
+      const pHold = bl[t]
+      let top = 0
+      let ent = 0
+      for (let q = 0; q < 6; q++) {
+        if (bl[q] > bl[top]) top = q
+        if (bl[q] > 0) ent -= bl[q] * Math.log(bl[q])
+      }
+      x[i++] = pHold
+      x[i++] = pHold - r.p
+      x[i++] = top === t && pHold > 0 ? 1 : 0
+      x[i] = cand.length > 1 ? ent / Math.log(cand.length) : 0
+    }
     rows.push(x)
   }
   return rows
@@ -243,10 +396,38 @@ export function askFeatureRows(view: SeatView, k: Knowledge, ranked: readonly Ra
 export type AskModel = DenseModel
 
 const MODELS = new Map<string, CompiledNet>()
+/** The holder model an ask model at the third width reads (§3.8ah), bound when it is registered. */
+const HOLDER_OF = new WeakMap<CompiledNet, CompiledNet>()
 
-/** Register a fitted ask model under a name `StyleParams.askModel` can refer to (compiled once here). */
-export function registerAskModel(name: string, model: AskModel): void {
-  MODELS.set(name, compileNet(model, ASK_FEATURE_COUNT, 1))
+/**
+ * Register a fitted ask model under a name `StyleParams.askModel` can refer to (compiled once here).
+ * The model's width names its feature set — `ASK_FEATURE_COUNT` the first, `ASK_FEATURE_COUNT_2` the
+ * second (§3.8af), `ASK_FEATURE_COUNT_3` the third (§3.8ah); any other width is refused. A model at the
+ * third width needs a holder model already registered under `holderName` (or its meta's `holderModel`).
+ */
+export function registerAskModel(name: string, model: AskModel, holderName?: string): void {
+  const set: AskFeatureSet = model.features === ASK_FEATURE_COUNT_3 ? 3 : model.features === ASK_FEATURE_COUNT_2 ? 2 : 1
+  const net = compileNet(model, askFeatureCount(set), 1)
+  if (set === 3) {
+    const metaName = model.meta?.holderModel
+    const hn = holderName ?? (typeof metaName === 'string' ? metaName : undefined)
+    if (!hn) throw new Error(`ask model ${JSON.stringify(name)}: the third feature set needs a holder model's name`)
+    HOLDER_OF.set(net, holderModelOf(hn))
+  }
+  MODELS.set(name, net)
+}
+
+/** The feature set a compiled ask model reads, by its input width. */
+export function askFeatureSetOf(m: CompiledNet): AskFeatureSet {
+  if (m.features === ASK_FEATURE_COUNT_3) return 3
+  if (m.features === ASK_FEATURE_COUNT_2) return 2
+  if (m.features === ASK_FEATURE_COUNT) return 1
+  throw new Error(`ask model of ${m.features} features: none of ${ASK_FEATURE_COUNT}, ${ASK_FEATURE_COUNT_2} and ${ASK_FEATURE_COUNT_3}`)
+}
+
+/** The holder model a registered ask model at the third width reads; undefined for the other widths. */
+export function holderModelForAsk(m: CompiledNet): CompiledNet | undefined {
+  return HOLDER_OF.get(m)
 }
 
 export function askModelOf(name: string): CompiledNet {
@@ -257,7 +438,8 @@ export function askModelOf(name: string): CompiledNet {
 
 /** The model's score of every entry of `ranked`, in order. */
 export function scoreAsks(m: CompiledNet, view: SeatView, k: Knowledge, ranked: readonly RankedAsk[]): number[] {
-  return askFeatureRows(view, k, ranked).map((x) => forwardNet(m, x))
+  const set = askFeatureSetOf(m)
+  return askFeatureRows(view, k, ranked, set, set === 3 ? HOLDER_OF.get(m) : undefined).map((x) => forwardNet(m, x))
 }
 
 /** The ranked entry the model scores highest; a tie goes to the earlier entry (the ranker's order). Throws on an empty list. */

@@ -1,6 +1,8 @@
 /**
  * fit-imitation.mjs - MONET.md 3.8ac: fit the imitation ask policy on scripts/gen-imitation-data.mjs's files
- * and write it as an `AskModel` JSON (lib/engine/bots/imitation.ts) a style can name through `askModel`.
+ * and write it as an `AskModel` JSON (lib/engine/bots/imitation.ts) a style can name through `askModel` - or,
+ * on scripts/gen-holder-data.mjs's files (3.8ah; the kind is read off the header), the holder clone, the same
+ * conditional logit over a card's candidate seats, written as a `HolderModel` (lib/engine/bots/holder.ts).
  *
  *   node scripts/fit-imitation.mjs --data data/imit-1.bin[,data/imit-2.bin] --out models/v30-lin.json
  *        [--model linear|mlp] [--hidden 64 or 64,64] [--epochs 10] [--lr 0.001] [--l2 0.00001] [--seed 1] [--max-decisions 0] [--train-frac 0.5]
@@ -40,15 +42,38 @@ if (FILES.length === 0 || !OUT) {
 }
 
 // ---- load: rows [id, chosen, features...], decisions [id, file, game, ev, asks, chosen, ours, hit, holdout, seat]
-const NF = BOTS.ASK_FEATURE_COUNT
+/** A Float32 file read in 1 GiB slices straight into its array: readFileSync refuses a file over 2 GiB, and a group at the second feature set is larger. */
+function readF32(f) {
+  const size = fs.statSync(f).size
+  if (size % 4 !== 0) throw new Error(`${f}: ${size} bytes is not a Float32 file`)
+  const out = new Float32Array(size / 4)
+  const view = Buffer.from(out.buffer)
+  const fd = fs.openSync(f, 'r')
+  let off = 0
+  while (off < size) {
+    const n = fs.readSync(fd, view, off, Math.min(1 << 30, size - off), off)
+    if (n <= 0) throw new Error(`${f}: short read at ${off}`)
+    off += n
+  }
+  fs.closeSync(fd)
+  return out
+}
+// the feature set is the data's (gen-imitation-data's --features; 1 unless the header says 2), the width this build gives it
+let NF = 0, SET = 1, KIND = 'ask', HOLDER_NAME, HOLDER_MD5
 let COLS = 0, DCOLS = 0
 const rowParts = [], decParts = []
 for (const f of FILES) {
   const h = JSON.parse(fs.readFileSync(`${f}.json`, 'utf8'))
-  if (h.features !== NF) throw new Error(`${f}: ${h.features} features, this build has ${NF}`)
+  const kind = h.kind ?? 'ask'
+  const set = h.featureSet ?? 1
+  const width = kind === 'holder' ? BOTS.HOLDER_FEATURE_COUNT : BOTS.askFeatureCount(set)
+  if (width !== h.features) throw new Error(`${f}: ${h.features} features of ${kind === 'holder' ? 'the holder kind' : `set ${set}`}, this build has ${width}`)
+  if (NF === 0) { NF = h.features; SET = set; KIND = kind; HOLDER_NAME = h.holderModel; HOLDER_MD5 = h.holderMd5 }
+  else if (h.features !== NF || set !== SET || kind !== KIND) throw new Error(`${f}: ${h.features} features of set ${set} (${kind}), the first file has ${NF} of set ${SET} (${KIND})`)
+  else if ((h.holderModel ?? '') !== (HOLDER_NAME ?? '') || (h.holderMd5 ?? '') !== (HOLDER_MD5 ?? '')) throw new Error(`${f}: holder model ${h.holderModel} (${h.holderMd5}), the first file has ${HOLDER_NAME} (${HOLDER_MD5})`)
   COLS = h.cols; DCOLS = h.dcols
-  const rb = fs.readFileSync(f); rowParts.push(new Float32Array(rb.buffer, rb.byteOffset, rb.byteLength / 4))
-  const db = fs.readFileSync(`${f}.dec`); decParts.push(new Float32Array(db.buffer, db.byteOffset, db.byteLength / 4))
+  rowParts.push(readF32(f))
+  decParts.push(readF32(`${f}.dec`))
 }
 // decisions are contiguous in the row files; rebuild the offsets file by file
 const dec = [] // { part, start, n, chosen, ours, holdout } - the rows stay in their files' arrays (no copy: the data may exceed one array)
@@ -87,7 +112,9 @@ const baseline = (idx) => {
   return { top1: top1 / idx.length, top3: top3 / idx.length, ours: ours / idx.length }
 }
 const bT = baseline(train), bH = baseline(hold)
-console.log(`baselines - the ranker's top ask agrees with SESTINA: train ${(100 * bT.top1).toFixed(2)}% (top-3 ${(100 * bT.top3).toFixed(2)}%), holdout ${(100 * bH.top1).toFixed(2)}% (top-3 ${(100 * bH.top3).toFixed(2)}%); the stack's own decision agrees: train ${(100 * bT.ours).toFixed(2)}%, holdout ${(100 * bH.ours).toFixed(2)}%`)
+const L_FIRST = KIND === 'holder' ? 'the first candidate holds the card' : "the ranker's top ask agrees with SESTINA"
+const L_OURS = KIND === 'holder' ? "the marginal's argmax holds the card" : "the stack's own decision agrees"
+console.log(`baselines - ${L_FIRST}: train ${(100 * bT.top1).toFixed(2)}% (top-3 ${(100 * bT.top3).toFixed(2)}%), holdout ${(100 * bH.top1).toFixed(2)}% (top-3 ${(100 * bH.top3).toFixed(2)}%); ${L_OURS}: train ${(100 * bT.ours).toFixed(2)}%, holdout ${(100 * bH.ours).toFixed(2)}%`)
 
 // ---- the model: sizes [NF, ...hidden, 1]
 const sizes = MODEL === 'linear' ? [NF, 1] : [NF, ...HIDDEN, 1]
@@ -219,13 +246,13 @@ for (let ep = 1; ep <= EPOCHS; ep++) {
 }
 for (let l = 0; l < NL; l++) { W[l].set(best.W[l]); B[l].set(best.B[l]) }
 const eT = evaluate(train), eH = evaluate(hold)
-console.log(`kept epoch ${best.epoch}: train ${fmt(eT)}; holdout ${fmt(eH)}; against the ranker's top ${(100 * bH.top1).toFixed(2)}% and the stack's ${(100 * bH.ours).toFixed(2)}% on the holdout`)
+console.log(`kept epoch ${best.epoch}: train ${fmt(eT)}; holdout ${fmt(eH)}; against ${KIND === 'holder' ? 'the first candidate' : "the ranker's top"} ${(100 * bH.top1).toFixed(2)}% and ${KIND === 'holder' ? "the marginal's argmax" : "the stack's"} ${(100 * bH.ours).toFixed(2)}% on the holdout`)
 if (MODEL === 'linear') {
-  const names = [...BOTS.ASK_FEATURES]
+  const names = KIND === 'holder' ? [...BOTS.HOLDER_FEATURES] : [...BOTS.askFeatureNames(SET)]
   const top = Array.from({ length: NF }, (_, j) => [names[j], W[0][j]]).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
   console.log('standardised weights: ' + top.map(([n, v]) => `${n} ${v >= 0 ? '+' : ''}${v.toFixed(3)}`).join(', '))
 }
-const model = { features: NF, mean: Array.from(mean), std: Array.from(std), layers: W.map((w, l) => ({ w: Array.from(w), b: Array.from(B[l]) })), meta: { model: MODEL, hidden: MODEL === 'mlp' ? HIDDEN : [], epochs: EPOCHS, kept: best.epoch, lr: LR, l2: L2, seed: SEED, files: FILES, decisions: useDec.length, train: train.length, trainFrac: TRAIN_FRAC, holdout: hold.length, holdoutNll: eH.nll, holdoutTop1: eH.top1, holdoutTop3: eH.top3, baselineRankerTop1: bH.top1, baselineStackTop1: bH.ours } }
+const model = { features: NF, mean: Array.from(mean), std: Array.from(std), layers: W.map((w, l) => ({ w: Array.from(w), b: Array.from(B[l]) })), meta: { kind: KIND, featureSet: KIND === 'holder' ? undefined : SET, holderModel: HOLDER_NAME, holderMd5: HOLDER_MD5, model: MODEL, hidden: MODEL === 'mlp' ? HIDDEN : [], epochs: EPOCHS, kept: best.epoch, lr: LR, l2: L2, seed: SEED, files: FILES, decisions: useDec.length, train: train.length, trainFrac: TRAIN_FRAC, holdout: hold.length, holdoutNll: eH.nll, holdoutTop1: eH.top1, holdoutTop3: eH.top3, baselineRankerTop1: bH.top1, baselineStackTop1: bH.ours } }
 // the engine's own forward pass must agree with the fitter's on a few holdout decisions
 const compiled = BOTS.compileNet(model, NF, 1)
 {

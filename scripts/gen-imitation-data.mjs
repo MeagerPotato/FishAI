@@ -5,7 +5,8 @@
  *
  *   node scripts/gen-imitation-data.mjs --records DIR[,DIR...] --out data/imit-1.bin
  *        [--prefix conf-] [--max-files 0] [--sample 0.1] [--holdout-mod 5] [--side sestina|monet]
- *        [--version v0.9] [--override '{"contest":0.6,...}'] [--sample-salt b]
+ *        [--version v0.9] [--override '{"contest":0.6,...}'] [--sample-salt b] [--features 1|2|3]
+ *        [--holder-model <fit.json> [--holder-name <name>]]     (the third set's holder clone, MONET.md 3.8ah)
  *
  * Every game is replayed (scripts/bridge-records.mjs) and at every ask decision of the chosen side (SESTINA
  * by default: the team arm A did not play) the asking seat's view is rebuilt, the stack's knowledge and
@@ -14,13 +15,17 @@
  * own choice at the same decision (`decide`) is recorded beside it - the agreement baseline the fit is
  * read against. `--sample q` keeps each decision with probability q (from the decision's own seed);
  * `--holdout-mod m` marks the games of every m-th file as the holdout (a split by FILE = by seed cell,
- * never by row). Row layout (Float32): decision id, chosen (0/1), the ASK_FEATURES; the decisions file
+ * never by row). `--features 2` writes the second feature set (ASK_FEATURES_2, MONET.md 3.8af: the belief's seat)
+ * in place of the first, `--features 3` the third (ASK_FEATURES_3, MONET.md 3.8ah: the holder clone's belief, read from
+ * the holder model `--holder-model` names, registered as `--holder-name` and recorded in the header with its md5); the
+ * header records which. Row layout (Float32): decision id, chosen (0/1), the features; the decisions file
  * `<out>.dec` (Float32): decision id, file index, game index, event index, asks, chosen index, the stack's
  * index, hit (0/1), holdout (0/1), seat. `<out>.json` is the header.
  */
 import { pathToFileURL, fileURLToPath } from 'node:url'
 import { dirname, join, resolve } from 'node:path'
 import fs from 'node:fs'
+import { createHash } from 'node:crypto'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const ENG = await import(pathToFileURL(join(ROOT, 'lib/engine/index.ts')).href)
@@ -53,7 +58,27 @@ const { skill, style } = BOTS.resolvePolicy(pol)
 // decide.ts's knowledgeOptions, verbatim: the marginal and its priors ride on `pModel`
 const marginal = style.pModel === 'marginal'
 const KOPTS = { logWindow: skill.logWindow, useConstraints: skill.useConstraints, marginal, choiceKappa: marginal ? style.choiceKappa : undefined, choiceAdapt: marginal ? style.choiceAdapt : undefined, choicePrior: marginal ? style.choicePrior : undefined, licenceHold: marginal ? style.licenceHold : undefined }
-const NF = BOTS.ASK_FEATURE_COUNT
+const SET = Number(argOf('--features', 1))
+if (SET !== 1 && SET !== 2 && SET !== 3) {
+  console.error('--features must be 1, 2 or 3')
+  process.exit(2)
+}
+// the third set reads a holder model (MONET.md 3.8ah): registered here under --holder-name, handed to the rows
+const HOLDER_FILE = argOf('--holder-model', '')
+const HOLDER_NAME = argOf('--holder-name', 'holder')
+let HOLDER = undefined
+let HOLDER_MD5 = ''
+if (SET === 3) {
+  if (!HOLDER_FILE) {
+    console.error('--features 3 needs --holder-model <fit.json>')
+    process.exit(2)
+  }
+  const text = fs.readFileSync(HOLDER_FILE, 'utf8')
+  HOLDER_MD5 = createHash('md5').update(text).digest('hex')
+  BOTS.registerHolderModel(HOLDER_NAME, JSON.parse(text))
+  HOLDER = BOTS.holderModelOf(HOLDER_NAME)
+}
+const NF = BOTS.askFeatureCount(SET)
 const COLS = NF + 2
 const DCOLS = 10
 const uniform = (key) => (hashSeed(key)() >>> 0) / 4294967296
@@ -100,7 +125,7 @@ for (let fi = 0; fi < files.length; fi++) {
       const ranked = BOTS.rankAsksWith(view, k, style)
       const chosen = ranked.findIndex((r) => r.target === ev.target && r.card === ev.card)
       if (chosen < 0) { notFound++; return }
-      const feats = BOTS.askFeatureRows(view, k, ranked)
+      const feats = BOTS.askFeatureRows(view, k, ranked, SET, HOLDER)
       const ours = decide(view, pol, hashSeed(`${rec.label}:cf:${i}`)())
       const ourIdx = ours.type === 'ask' ? ranked.findIndex((r) => r.target === ours.target && r.card === ours.card) : -1
       const id = decisions++
@@ -126,6 +151,6 @@ for (let fi = 0; fi < files.length; fi++) {
 fs.closeSync(fdRows)
 fs.closeSync(fdDec)
 const secs = (Date.now() - t0) / 1000
-const header = { cols: COLS, dcols: DCOLS, features: NF, names: [...BOTS.ASK_FEATURES], rows, decisions, files: files.length, fileNames: files.map((f) => f.replace(/\\/g, '/')), skippedFiles, specB: SPEC_B, games, side: SIDE, sideDecisions, sample: SAMPLE, sampleSalt: SALT, holdoutMod: HOLD, version: VERSION, override: OVER, agree, agreeHold, decHold, hits, top1, top3, notFound, secs }
+const header = { kind: 'ask', cols: COLS, dcols: DCOLS, features: NF, featureSet: SET, holderModel: SET === 3 ? HOLDER_NAME : undefined, holderFile: SET === 3 ? HOLDER_FILE.replace(/\\/g, '/') : undefined, holderMd5: SET === 3 ? HOLDER_MD5 : undefined, names: [...BOTS.askFeatureNames(SET)], rows, decisions, files: files.length, fileNames: files.map((f) => f.replace(/\\/g, '/')), skippedFiles, specB: SPEC_B, games, side: SIDE, sideDecisions, sample: SAMPLE, sampleSalt: SALT, holdoutMod: HOLD, version: VERSION, override: OVER, agree, agreeHold, decHold, hits, top1, top3, notFound, secs }
 fs.writeFileSync(`${OUT}.json`, JSON.stringify(header))
 console.log(`gen-imitation-data: ${files.length} files, ${games} games, ${sideDecisions} ${SIDE} ask decisions, ${decisions} kept (sample ${SAMPLE}), ${rows} rows x ${COLS}; holdout ${decHold} decisions (files 0 mod ${HOLD}); the stack agrees with the chosen ask on ${((100 * agree) / Math.max(1, decisions)).toFixed(2)}% (holdout ${((100 * agreeHold) / Math.max(1, decHold)).toFixed(2)}%); the chosen ask is the ranker's top on ${((100 * top1) / Math.max(1, decisions)).toFixed(1)}%, in its top three on ${((100 * top3) / Math.max(1, decisions)).toFixed(1)}%; hit rate ${((100 * hits) / Math.max(1, decisions)).toFixed(2)}%; not in the ranking ${notFound}; ${secs.toFixed(0)}s -> ${OUT}`)

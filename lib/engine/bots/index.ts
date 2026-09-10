@@ -51,8 +51,13 @@ export {
   valueContainedPass,
 } from './contained.ts'
 export { decide, decideExplained, planClaimFor } from './decide.ts'
-export { ASK_FEATURES, ASK_FEATURE_COUNT, askFeatureRows, askModelOf, chooseAskByModel, registerAskModel, scoreAsks } from './imitation.ts'
-export type { AskModel } from './imitation.ts'
+export { ASK_FEATURES, ASK_FEATURE_COUNT, ASK_FEATURES_2, ASK_FEATURE_COUNT_2, INDEP_KAPPA, askFeatureCount, askFeatureNames, askFeatureRows, askFeatureSetOf, askModelOf, chooseAskByModel, registerAskModel, scoreAsks } from './imitation.ts'
+export { ASK_FEATURES_3, ASK_FEATURE_COUNT_3, holderModelForAsk } from './imitation.ts'
+export type { AskFeatureSet, AskModel } from './imitation.ts'
+export { agoOf, indepK, seatBookHistory } from './askhistory.ts'
+export type { SeatBookHistory } from './askhistory.ts'
+export { HOLDER_FEATURES, HOLDER_FEATURE_COUNT, holderBelief, holderContext, holderFeatureRows, holderModelOf, registerHolderModel } from './holder.ts'
+export type { HolderContext, HolderModel } from './holder.ts'
 export { compileNet, forwardNet } from './net.ts'
 export type { CompiledNet, DenseModel } from './net.ts'
 export type { ClaimPlan, DecisionTrace, ExplainedDecision } from './decide.ts'
@@ -87,6 +92,7 @@ export { LICENCE_MIN_Z, licenceConditionedHitProbability, licenceNormaliser, mod
 export { MARGINAL_ROUNDS, MARGINAL_TOLERANCE, attachMarginal, computeMarginalTable, marginalFor, marginalHitProbability } from './marginal.ts'
 export type { MarginalTable } from './marginal.ts'
 export { assignJointly } from './joint.ts'
+export { assignByHolder, holderContextFor } from './claimbelief.ts'
 export type { JointAssignment, JointStep } from './joint.ts'
 // `PolicySpec` is re-exported from bounded.ts, where adaptive.ts's widened union gains
 // `BoundedSpec` — the acyclic arrangement documented in both file headers. Everything

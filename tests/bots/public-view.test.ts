@@ -303,6 +303,13 @@ describe('public-view-only proof', () => {
       // imports nothing at all.
       './imitation.ts',
       './net.ts',
+      // MONET.md 3.8ah: './askhistory.ts' is the log reader the second and third feature sets and the holder
+      // clone share (the view's log and seats, nothing else); './holder.ts' is the holder clone — one row per
+      // candidate seat of an unplaced card off the view, the knowledge and the log, the belief a softmax of
+      // './net.ts' over them. Both import only '../types.ts', '../cards.ts', './types.ts', './knowledge.ts',
+      // './net.ts' and './askhistory.ts' — every one on this list.
+      './askhistory.ts',
+      './holder.ts',
       // MONET.md 3.8i: './chase.ts' is the other arm of 3.8h's gate. It reads the certain holders
       // through './knowledge.ts' and the majority walk through './closing.ts' - a strict subset of
       // what './closing.ts' already reads, and it never reads a hand.
