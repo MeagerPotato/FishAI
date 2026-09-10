@@ -9,6 +9,7 @@
  *
  *     node scripts/probe-clone-errors.mjs --records <dir>[,<dir>...] --model <fit.json> [--sample 0.02] [--holdout-mod 5]
  *          [--max-files N] [--version v0.9] [--override <json>] [--sample-salt s] [--out summary.json]
+ *          [--holder-model <holder fit.json> [--holder-name <name>]]   (a third-set clone, MONET.md 3.8ah)
  */
 import { pathToFileURL, fileURLToPath } from 'node:url'
 import { dirname, join, resolve } from 'node:path'
@@ -45,10 +46,19 @@ const pol = OVER ? Object.freeze({ skill: pol0.skill, style: Object.freeze({ ...
 const { skill, style } = BOTS.resolvePolicy(pol)
 const marginal = style.pModel === 'marginal'
 const KOPTS = { logWindow: skill.logWindow, useConstraints: skill.useConstraints, marginal, choiceKappa: marginal ? style.choiceKappa : undefined, choiceAdapt: marginal ? style.choiceAdapt : undefined, choicePrior: marginal ? style.choicePrior : undefined }
-BOTS.registerAskModel('probe-clone', JSON.parse(fs.readFileSync(MODEL, 'utf8')))
+const ASK_JSON = JSON.parse(fs.readFileSync(MODEL, 'utf8'))
+// a third-set clone (3.8ah) reads the holder clone it was fitted beside: registered first, under the name the ask model's meta carries
+const HOLDER_FILE = argOf('--holder-model', '')
+let HOLDER_NAME
+if (HOLDER_FILE) {
+  HOLDER_NAME = argOf('--holder-name', ASK_JSON?.meta?.holderModel ?? 'probe-holder')
+  BOTS.registerHolderModel(HOLDER_NAME, JSON.parse(fs.readFileSync(HOLDER_FILE, 'utf8')))
+}
+BOTS.registerAskModel('probe-clone', ASK_JSON, HOLDER_NAME)
 const M = BOTS.askModelOf('probe-clone')
 // the model's width names its feature set (imitation.ts); the rows and the names follow it
 const SET = BOTS.askFeatureSetOf(M)
+const HOLDER = SET === 3 ? BOTS.holderModelForAsk(M) : undefined
 const NAMES = BOTS.askFeatureNames(SET)
 const F = Object.fromEntries(NAMES.map((n, i) => [n, i]))
 const uniform = (key) => (hashSeed(key)() >>> 0) / 4294967296
@@ -89,7 +99,7 @@ for (let fi = 0; fi < useFiles.length; fi++) {
       const ranked = BOTS.rankAsksWith(view, k, style)
       const cs = ranked.findIndex((r) => r.target === ev.target && r.card === ev.card)
       if (cs < 0) return
-      const feats = BOTS.askFeatureRows(view, k, ranked, SET)
+      const feats = BOTS.askFeatureRows(view, k, ranked, SET, HOLDER)
       const scores = BOTS.scoreAsks(M, view, k, ranked)
       const mAsk = BOTS.chooseAskByModel(M, view, k, ranked)
       const cm = ranked.findIndex((r) => r.target === mAsk.target && r.card === mAsk.card)
