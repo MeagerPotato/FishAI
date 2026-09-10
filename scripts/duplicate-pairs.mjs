@@ -71,18 +71,35 @@ const BANK = argOf('--bank', 'home-a')
 // MONET.md 3.8ac: --a-ask-model / --b-ask-model <file> register an ask model under the file's basename and lay `askModel` over that side's override;
 // MONET.md 3.8ah: --a-holder-model / --b-holder-model <file> register a holder model under its basename first, and the side's ask model (a
 // third-set clone) is bound to it
-const overrideOf = (overFlag, modelFlag, holderFlag) => {
+// MONET.md 3.8as: --a-value-model / --b-value-model <file> register a SECOND ask model under its basename and lay
+// `askValueModel` over that side's override, with --a-value-topk / --b-value-topk as the shortlist depth (absent is 3).
+// That side's pickAsk then lets the clone order the ranker's list and takes the VALUE's argmax over the clone's top k.
+// Needs the side's ask model: without one there is no shortlist to select over and the knob is inert.
+const overrideOf = (overFlag, modelFlag, holderFlag, valueFlag, topkFlag) => {
   const over = argOf(overFlag, '') ? JSON.parse(argOf(overFlag, '')) : null
   const file = argOf(modelFlag, '')
   const holder = argOf(holderFlag, '')
+  const value = valueFlag ? argOf(valueFlag, '') : ''
   if (holder && !file) throw new Error(`${holderFlag} needs the side's ask model`)
-  if (!file) return over
-  if (holder) registerHolderModel(basename(holder), JSON.parse(readFileSync(holder, 'utf8')))
-  registerAskModel(basename(file), JSON.parse(readFileSync(file, 'utf8')), holder ? basename(holder) : undefined)
-  return { ...(over ?? {}), askModel: basename(file) }
+  if (!file && !value) return over
+  let out = { ...(over ?? {}) }
+  if (file) {
+    if (holder) registerHolderModel(basename(holder), JSON.parse(readFileSync(holder, 'utf8')))
+    registerAskModel(basename(file), JSON.parse(readFileSync(file, 'utf8')), holder ? basename(holder) : undefined)
+    out.askModel = basename(file)
+  }
+  if (value) {
+    // no ask-model FILE is required: the side may be a version whose style already names one, and the
+    // knob is inert without it either way (decide.ts only enters the branch under `askModel`)
+    registerAskModel(basename(value), JSON.parse(readFileSync(value, 'utf8')))
+    out.askValueModel = basename(value)
+    const topk = argOf(topkFlag, '')
+    if (topk) out.askValueTopK = Number(topk)
+  }
+  return out
 }
-const OVER_A = overrideOf('--a-override', '--a-ask-model', '--a-holder-model')
-const OVER_B = overrideOf('--b-override', '--b-ask-model', '--b-holder-model')
+const OVER_A = overrideOf('--a-override', '--a-ask-model', '--a-holder-model', '--a-value-model', '--a-value-topk')
+const OVER_B = overrideOf('--b-override', '--b-ask-model', '--b-holder-model', '--b-value-model', '--b-value-topk')
 const SEARCH_A = argOf('--a-search', '') ? JSON.parse(argOf('--a-search', '')) : null
 const SEARCH_B = argOf('--b-search', '') ? JSON.parse(argOf('--b-search', '')) : null
 const SEARCH = SEARCH_A || SEARCH_B ? await import(pathToFileURL(join(ROOT, 'lib/engine/search/index.ts')).href) : null
