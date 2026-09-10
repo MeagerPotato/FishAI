@@ -11746,6 +11746,81 @@ number is real; they cannot say it is bigger.
 **Cost.** Condition 5: no games. Condition 6: twelve cells, 7 minutes 35 seconds, one container,
 Docker up for the run and down after it.
 
+### 3.8au Monet v0.49 — the learned leaf inside the search, at v0.33's vector
+
+**Pre-registered before a row is generated.** The owner's direction of 2026-09-10, after §3.8at amended §3.9
+to the frontier bar: *"let's work towards the 58%, explore the options"*, then **"let's go with all your
+recommendations in order"** — this rung, expert iteration behind it if this one clears, and the declare-frequency
+line in parallel when the bridge is idle.
+
+**The gap this rung exists to close, stated as the record found it.** §3.8aq earned a sentence §3.8ai could not:
+*"the search is handed a set holding the answer 84.0% of the time and still picks worse than the clone, so the
+value estimate is the weak link and the search line closes."* The candidate set was tested and exonerated (the
+ranker's fill holds a hitting ask 84.0% of the time at k = 4 against the clone's 78.7%), and three selectors over
+the shortlist have all priced at zero. **What has never been fixed is how the bot evaluates a position.**
+
+> **And the search that lost was running the leaf a better one already beats.** §3.8ai's t32 form is *"D 32,
+> C 4, S 24, **the lock-only leaf**, the LCB guard"* — three hand-written terms: the score differential, a
+> hand-size term and a locked-book term (`leafValue`, `search.ts`). Meanwhile **§3.8ab's v0.29 fitted a learned
+> leaf over the same 118-feature state and beat that predictor** — the 128·128 net at held-out R² **0.302**
+> against the static lock count's **0.209** — and read **+0.161 ± 0.144 a pair (+1.2 points, 2.2 SE, eight of
+> twelve banks)** at home. **Its bridge read was deferred** behind v0.30's cells under the owner's wall-clock
+> direction and was never taken. Its closing note was *"the leaf buys little, **the opponent model is the
+> piece**"* — and the opponent model was then solved, by the clone, for +10 points. **The two halves have never
+> been in the same bot**, and `lib/engine/bots/data/` still carries no value model at all: `registerValueModel`,
+> `rollout(… leaf)` and `valueFeatures` are built, wired and unused on every shipped vector.
+
+**What is built and what is not.** Nothing new is proposed in the engine. `gen-value-data.mjs`, `fit-value.mjs`,
+`probe-search.mjs` and `duplicate-pairs.mjs --a-search / --a-leaf-model` all exist on `main`. This rung generates
+data at v0.33's vector, fits, gates, and reads. **If a gate closes, nothing is built and the record says which.**
+
+**The stages, each gating the next.**
+
+- **A — the data.** `gen-value-data.mjs --version v0.33 --eps 0.1 --sample 0.5 --lock-mod 5`, **24,000 games in
+  six processes**. Every row carries the 118 full-information features and the game's final set differential for
+  that team, plus **`lock0`** (the static lock-only leaf at the state) and, on holdout games only, **`lock24`**
+  (the arm's 24-step lock-only rollout from the TRUE state) — the two predictors a learned leaf has to beat.
+- **B — the fit, and the gate.** `fit-value.mjs --model mlp --hidden 128,128`, with `linear` fitted beside it as
+  a control, on a holdout split by game.
+  - **G1** — the net's held-out R² **beats `lock0`'s** on the same holdout rows. This is v0.29's own gate.
+  - **G2, and it is the one that decides the rung** — the net **also beats `lock24`**. v0.29 never made this
+    comparison: it beat the *static* count, but the value the search actually consumes at its horizon is the
+    24-step rollout, and **a leaf that cannot beat the thing it replaces cannot help the search that consumes
+    it.** If G2 closes, the rung stops at B, nothing is built, and the record says the leaf is not the piece
+    either.
+- **C — the marker, read against the truth, with §3.8at's oracle folded in.** `probe-search.mjs` rolls the pick
+  and the played action out from the **TRUE deal** on the same paired key, so it reports the true advantage of
+  what the arm played. Read **twice**: with the learned leaf, and with the lock-only leaf as the control, so the
+  leaf's own contribution is isolated rather than inferred. **The marker must be positive or the arm is a no-op.**
+- **H — home.** `duplicate-pairs.mjs`, A = v0.33's vector + the search + the learned leaf, B = v0.33's vector,
+  **twelve banks of 200**. Eligible at **≥ +2 SE above zero and ahead on a majority of banks** (§3.8n).
+- **F — abroad.** Only if H clears: **twelve fresh seeds against SESTINA v1.0**, §3.8n's bar, and per §3.8at
+  **quoted in sets a game beside the win rate** so it can be read against the exchange rate.
+
+**The predictions, with their bars.**
+
+- **P1 — G1 holds.** The 128·128 net beats `lock0` on held-out R². Stated at high confidence: v0.29 already read
+  0.302 against 0.209, and the only change is the vector the data comes from.
+- **P2 — G2 is a coin flip, and it is the prediction this rung turns on.** A *static* evaluation beating a
+  **24-step rollout with real lookahead** is genuinely uncertain, and no reading in this document bears on it.
+  **Called at 50%, in writing, before the fit.** If it misses, the honest conclusion is that the search's problem
+  is its horizon and its determinization rather than its leaf, and the search line stays closed.
+- **P3 — the marker separates.** Positive with the learned leaf; **≤ 0 with the lock-only leaf**, which is what
+  §3.8ai's −0.170 a pair predicts of the control.
+- **P4 — home lands between +0.10 and +0.25 a pair.** v0.29 read +0.161 on the weaker pre-clone stack.
+- **P5 — and this rung does not reach the target on its own.** If F is taken at all, **+1 to +3 points**, which
+  is **+0.08 to +0.23 sets a game** against the **+0.278** that 54% costs and the **+0.591** that 58% costs.
+  Said before the numbers so that a good read is not mistaken for the destination: **58% needs this rung AND the
+  expert-iteration rung behind it.**
+
+**Cost, measured rather than projected — §3.8as's estimate for its own stage C was wrong by two orders of
+magnitude and this is the correction.** A timing slice of **200 games ran in 53.2 seconds** (3.76 games a second,
+17,460 rows, 87 rows a game). **Stage A is therefore ~18 minutes** over six processes, not the hours a
+game-generating stage would suggest. The slice was run **before** this pre-registration was written and is
+disclosed here rather than folded into the result; its rows are discarded and not fitted. The fit, the marker and
+the home banks are all measured and reported when read; the bridge cell is affordable at **~7 minutes a cell at
+D 8 · C 3 (96 ms an ask)** and **~47 minutes at t32 (631 ms)**, so twelve seeds is a night at the heavy setting.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
