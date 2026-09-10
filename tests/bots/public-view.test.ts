@@ -310,6 +310,11 @@ describe('public-view-only proof', () => {
       // './net.ts' and './askhistory.ts' — every one on this list.
       './askhistory.ts',
       './holder.ts',
+      // MONET.md 3.8ak: './claimbelief.ts' is the holder clone read in the CLAIM path — it places a set's
+      // open cards by the same public belief './holder.ts' computes, over the view and the knowledge, and
+      // scores the plan. It imports only '../types.ts', './types.ts', './net.ts', './holder.ts' and
+      // './joint.ts' (type-only) — every one already on this list — so no engine state is reachable.
+      './claimbelief.ts',
       // MONET.md 3.8i: './chase.ts' is the other arm of 3.8h's gate. It reads the certain holders
       // through './knowledge.ts' and the majority walk through './closing.ts' - a strict subset of
       // what './closing.ts' already reads, and it never reads a hand.
