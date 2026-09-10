@@ -459,6 +459,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.45** — condition 3's panel, read on v0.33's vector (2026-09-10) | **row 53's, on the owner's word ("run the panel check, then pre-register row 53")**: nothing is built — §3.9's third condition has been open since 2026-09-06, when it was read on v0.9's vector and failed, and the candidate has changed twice since. `monetPolicy('v0.33')` against `v02 v03 v04 v05 v06` in their engine on twelve seeds, plus a SESTINA column so the ordering's endpoint sits under the same pin; 72 cells, 86,400 games, MUSTFIX, six lane arms so each container owns its `bot.log`. Scored against the reading §3.8m fixed before this vector existed: "beats" = the twelve-seed mean ≥ 52.00 with every seed reported, "monotone" = v02 ≥ v03 ≥ v04 ≥ v05 ≥ v06 ≥ SESTINA with ties inside the floor (§3.8ar) | **MET 01:47Z 2026-09-10 — 85.42 / 79.28 / 54.67 / 54.01 / 53.99 against 49.87 at SESTINA: five of five beaten at the floor (the tightest, v06, by 1.99), the ordering holding with no inversion so the tie clause is never used, and no seed of the sixty panel cells below 50%. Condition 4 falls out of the same cells — declare accuracy 99.638% mean and 99.258% worst against a 98.0% bar, the fourteen named fault counters zero over ~241,000 per-process readings — and the 97.96% that had it open belongs to §3.8's `k98` arm, a different vector. Two conditions change state; 1 and 2 do not move, and the SESTINA column is disclosed as a bit-exact reproduction of §3.8's `c3` cells rather than a second twelve. The set-aside first run's 44 cells reproduce identically, which prices the shared-`bot.log` defect at the identity pin and nothing else** | S |
 | **v0.44** — the search over the clone's shortlist: the candidate fill as the one variable (2026-09-09) | **row 52's, on the owner's word after §3.8ap's close**: §3.8ai already ran the search over this stack and lost (−0.170 ± 0.154 a pair; it changes the clone's pick 23% of the time at 0.009 sets a change) — but it never varied the CANDIDATE SET, and `candidateAsks` fills from the RANKER's top five under both `candMode` values, so every alternative the search has been offered on this stack is a ranker ask, which §3.8ao measured to be the greedy player that lost by 3.64. §3.8ap says a better set exists (a hitting ask in the clone's top three 72.8% of the time, carrying SESTINA's own ask 84.9%). Three stages, each gating the next: G the gate on file (three candidate sets — the ranker's fill, the clone's, and the two mixed — by how often each holds a hitting ask, and how far they overlap); B a third `candMode` filling from the clone, off by default and inert without an `askModel`; M §3.8ai's own cell with the fill as the only change, staged four banks first. Eligible only if M is ahead of zero by 2 SE and ahead of §3.8ai (§3.8aq) | **STOPPED AT G 23:58Z 2026-09-09 — the gate closes it: today's ranker fill holds a hitting ask 84.0% of the time at k = 4 against the clone's shortlist at 78.7%, at every depth, the fills genuinely differing (1.43 of 3 alternatives shared); the hypothesis is unsupported, nothing was built, eighteen minutes spent against §3.8ai's three hours thirty-nine; and the statement §3.8ai could not make is earned — the search is handed a set holding the answer 84.0% of the time and still picks worse than the clone, so the value estimate is the weak link and the search line closes** | L |
 | **v0.43** — the repair's reach, and the ceiling above the clone (2026-09-09) | **row 51's, by the standing rule and §3.8ao's close**: the scaling repair is monotone, so it cannot move the greedy ask and its whole reach is a few reorderings, a shifted feature vector under a clone fitted on the unshifted one, and a declare that fires sooner — which §3.8al priced as a loss (R1, fitted and read on disjoint files). Beside it the question §3.8an and §3.8ao raise together: imitation arrives at SESTINA and cannot exceed it, so the way past parity is a selector over the clone's shortlist — R2 measures where the asks that would have hit sit in the clone's own ranking (top 1, 2, 3, 5, all), with best-of-top-k by p as the identity check that a belief selector merely walks back to greedy. `scripts/probe-set-attribution.mjs` extended, nothing in the engine; a read, no bar; it decides whether v0.44 is the search over the clone's shortlist (§3.8ap) | **READ 22:55Z 2026-09-09 — R1: the repair reaches almost nothing (greedy 0.7%, ranker top 1.2%, clone choice 5.3%, claims 0.2% and every crossing upward, the losing direction) and is CLOSED as a build; R2: a hitting ask sits in the clone's top 3 at 72.8% against the 48.8% we play, best-of-k by belief arrives at greedy, and the top 3 carries SESTINA's own ask 84.9% — the shortlist is worth searching, row 52** | S |
 | **v0.42** — the belief's ceiling at our own decisions: the chosen ask, the greedy ask and the oracle (2026-09-09) | **row 50's, by the standing rule and §3.8an's close**: every mechanism line closed and the two players equivalent; the term under them read at last — at every ask of v0.33's vector on v0.38's records, the immediate hit of the ask chosen (the clone's), of the ranker's top, of the greedy ask by the marginal's p and of the oracle, the chosen p against its hit by decile, and the mirror at SESTINA's seats; `scripts/probe-set-attribution.mjs` extended, nothing in the engine; a read, no bar; it decides between a greedy-override knob (the clone leaves immediate hits on the table) and the choice-likelihood belief (the belief is the ceiling) (§3.8ao) | **READ 22:25Z 2026-09-09 — greedy − chosen +5.8 on both sides (the ranker's top is the greedy player and it lost by 3.64); the belief UNDER-confident by 4–9 points wherever its scaling concentrates mass above the uniform 1/n, exact where it only counts and exact at the top; the greedy override benched, the scaling repair is row 51** | S |
@@ -11073,6 +11074,165 @@ bridge, which is cheap. Fit the advantage, play the argmax over the clone's shor
 duplicate pairs by **the pairs' win rate** (§3.8al), then the bridge. It would be the first learner on this ladder
 whose label is winning rather than imitating, and it is the only remaining candidate that is not a better copy.
 
+### 3.8ar Monet v0.45 — condition 3's panel, read on v0.33's vector: the lineage ordering holds and the condition is met
+
+**Decision row 53, taken 2026-09-10 on the owner's word ("run the panel check, then pre-register row 53" — then
+"file the panel record when it finishes").** This rung builds nothing. It spends bridge cells on a §3.9 condition
+that has been open since 2026-09-06, and it reports what they say.
+
+**What condition 3 asks, and the reading fixed before this vector existed.** §3.9's third condition is *"the panel
+is monotone — Monet beats v0.2 through v0.6 as well. A bot that beats SESTINA and loses to v0.5 has been fitted,
+not built."* §3.8m fixed how that is read, in writing, on 2026-09-06, when v0.9 was the candidate and v0.33 did not
+exist: **"beats" = the twelve-seed mean is above 50.0% by at least the floor (≥ 52.00), every seed reported**;
+**"monotone" = Monet's win rate is ordered v02 ≥ v03 ≥ v04 ≥ v05 ≥ v06 ≥ SESTINA, ties inside the floor allowed.**
+That sentence is the arbiter here and it was not touched before the cells were read.
+
+**Two deviations from the pre-registered cell, disclosed before the numbers.**
+
+1. **The arm.** §3.8m names `monet-v17-base`, v0.9's vector, because v0.9 was the candidate when the condition was
+   written. The arm run here is **v0.33's vector** — `monetPolicy('v0.33')`, the SESTINA clone at every ask
+   decision — because that is the thing now proposed as v1.0. A condition on the candidate has to be read on the
+   candidate; re-reading v0.9's panel would have measured a vector nobody is proposing. This is a change of
+   subject, not of rule, and the rule is unchanged.
+2. **The cell count.** §3.8m budgets **60 cells** — five opponents by twelve seeds — with SESTINA's level inherited
+   from conditions 1 and 2 rather than replayed. **72 were run**, the extra twelve being a SESTINA column so the
+   ordering's endpoint sits in the same table, under the same pin, on the same seeds. A superset of the registered
+   run, and it changes no threshold. What that column turned out to be worth is the first honesty below.
+
+**The run.** Six lane arms `monet-v45-v033-l1` … `-l6`, one container an opponent, the new `LANE` variable giving
+each lane its own `bot.log` (the defect this run exists to correct — third honesty below). 200 deals × 6 rotations
+= **1,200 games a cell, 86,400 games over 72 cells**, launched 01:18Z and finished 01:47Z on 2026-09-10 —
+**29 minutes wall**, 8,772 engine-seconds across six parallel lanes. Pins: tree `bd14e4d`, `lib/` md5
+`52494d874d0f1457b4488c0dc764a303`, arm md5 `a6ca88dfd0f9c6f0000ce92eb891f7ca`, `MONET_MUSTFIX=1`, search off
+(`searchRun` summed to 0 over every process of every cell — the arm the hello line advertises is the arm that
+played).
+
+**The identity pin.** 2,335 hello lines across the 72 cells, **every one** carrying `arm=v0.33 root=/fishai`;
+2,330 carrying the full label `monetPolicy('v0.33') style=punter`; the remaining five torn mid-word at the
+identical byte, immediately after `root=/fishai monet`, with another FISHAI banner spliced into the line. Those
+are two of one lane's twelve worker processes writing the same log at the same moment — the fourth honesty below,
+where it is shown not to be an identity failure. No hello line names any version but `v0.33`; the tally over every
+line is `2330 × monetPolicy('v0.33')` and nothing else.
+
+**The panel, on the twelve seeds `9213365 3775311 5351772 8441236 8204382 7357655 5441637 2851007 1217923 3154643
+7314783 9385764`, every cell recorded:**
+
+> | seed | v02 | v03 | v04 | v05 | v06 | SESTINA |
+> |---|---|---|---|---|---|---|
+> | 9213365 | 86.58 | 80.83 | 54.67 | 54.08 | 55.25 | 50.00 |
+> | 3775311 | 86.42 | 78.08 | 52.50 | 55.33 | 55.08 | 52.67 |
+> | 5351772 | 86.17 | 80.17 | 55.00 | 53.92 | 53.08 | 50.50 |
+> | 8441236 | 84.58 | 76.08 | 55.58 | 52.67 | 51.83 | 49.58 |
+> | 8204382 | 85.58 | 80.00 | 53.92 | 54.25 | 53.42 | 49.83 |
+> | 7357655 | 85.42 | 77.83 | 55.83 | 54.33 | 51.75 | 49.83 |
+> | 5441637 | 84.42 | 80.58 | 52.25 | 52.50 | 54.00 | 50.08 |
+> | 2851007 | 85.00 | 80.17 | 55.00 | 53.50 | 53.17 | 50.50 |
+> | 1217923 | 85.92 | 79.25 | 57.08 | 56.00 | 55.00 | 47.83 |
+> | 3154643 | 86.50 | 79.00 | 57.67 | 53.58 | 56.25 | 50.33 |
+> | 7314783 | 84.50 | 78.75 | 52.67 | 53.00 | 55.17 | 51.17 |
+> | 9385764 | 84.00 | 80.58 | 53.83 | 54.92 | 53.92 | 46.08 |
+> | **mean** | **85.42** (SD 0.91) | **79.28** (SD 1.41) | **54.67** (SD 1.73) | **54.01** (SD 1.06) | **53.99** (SD 1.41) | **49.87** (SD 1.63) |
+> | SE | 0.26 | 0.41 | 0.50 | 0.30 | 0.41 | 0.47 |
+> | min – max | 84.00 – 86.58 | 76.08 – 80.83 | 52.25 – 57.67 | 52.50 – 56.00 | 51.75 – 56.25 | 46.08 – 52.67 |
+> | seeds above 50% | 12 of 12 | 12 of 12 | 12 of 12 | 12 of 12 | 12 of 12 | 6 of 12 (one exactly 50.00) |
+> | sets a game, Monet − opponent | 5.90 − 3.10 | 5.59 − 3.41 | 4.67 − 4.33 | 4.63 − 4.37 | 4.63 − 4.37 | 4.50 − 4.50 |
+> | beaten at the floor (mean ≥ 52.00) | **yes** | **yes** | **yes** | **yes** | **yes** | — |
+
+**The verdict: condition 3 is MET.** Five of five beaten at the floor, the lowest margin 1.99 points of headroom
+above it (v06 at 53.99); the ordering 85.42 ≥ 79.28 ≥ 54.67 ≥ 54.01 ≥ 53.99 ≥ 49.87 holds with no inversion at
+all, so the "ties inside the floor" clause is never needed; and no seed of the sixty panel cells falls below 50%.
+**This is the first §3.9 condition to change state since 2026-09-06.**
+
+**Against v0.9's panel, the same five opponents, disjoint seeds.** §3.8m's record read `monet-v17-base` on
+§3.8l's twelve; this run used twelve that share nothing with them, so the comparison is unpaired and the two
+columns are independent samples of the same quantity:
+
+> | opponent | v0.9's vector (§3.8m, 2026-09-06) | v0.33's vector (here) | change | inherited at v0.1 (§6.4) |
+> |---|---|---|---|---|
+> | v02 | 74.18 (SD 1.15) | **85.42** (SD 0.91) | +11.24 | 67.42 |
+> | v03 | 70.40 (SD 1.07) | **79.28** (SD 1.41) | +8.88 | 62.06 |
+> | v04 | 47.62 (SD 1.86) | **54.67** (SD 1.73) | +7.05 | 34.25 |
+> | v05 | 46.81 (SD 1.42) | **54.01** (SD 1.06) | +7.20 | 33.31 |
+> | v06 | 44.72 (SD 1.39) | **53.99** (SD 1.41) | +9.27 | 32.86 |
+> | SESTINA | 41.31 (SD 1.29) | **49.87** (SD 1.63) | +8.56 | 27.83 |
+
+Every gap is five to eight times the seed-to-seed spread on either side, so nothing here rests on the seed draw.
+§3.8m's P1 predicted v04, v05 and v06 would land "between 44 and 50%" at v0.9 and read 47.6 / 46.8 / 44.7 — that
+prediction was for v0.9 and it held. The wall §6.4 put at the v0.4 rung is now cleared by 2.67 points.
+
+**Four honesties, before anything further is read into the table.**
+
+**(a) The SESTINA column is not new evidence, and says so on its own numbers.** Its twelve cells reproduce
+§3.8's `c3` cells — v0.33's vector against SESTINA — **to the digit on all twelve seeds**: 50.00, 52.67, 50.50,
+49.58, 49.83, 49.83, 50.08, 50.50, 47.83, 50.33, 51.17, 46.08, mean 49.87, SD 1.63. Same seeds, same vector, same
+pinned `lib/`, a seed-deterministic engine — the same result, read twice. **Nothing else is inferred from it**,
+and in particular it is not a second twelve seeds against SESTINA and does not move conditions 1 or 2. What it is
+worth is an instrument check nobody registered: two runs, ten days and several ladder rungs apart, through
+different arm packages, land on identical cells.
+
+**(b) A v04 timing cell was seen before the full run was launched.** One cell was played against `v04` to measure
+the per-cell wall clock before committing to 72. It is one of the twelve v04 cells reported here. The rule it
+could have contaminated is a threshold fixed on 2026-09-06, and the seed was drawn with the other eleven, but the
+order of looking is recorded because that is the standard this document holds itself to.
+
+**(c) The first run's cells were set aside, and the re-run proves the defect cost the pin and not the games.**
+The first attempt gave all six containers one arm id, so all six wrote one `/src/engine/bots/<id>/bot.log`, which
+each cell truncates at its start; siblings wiped each other's `hello ok` lines and three lanes aborted on the
+missing pin. The matches themselves were clean — exit 0, no `FATAL`, full records — but **the pin is the point of
+the ceremony**, so those cells were set aside in `prior-shared-log/` rather than used, six lane arms were built,
+and all 72 cells were replayed. The set-aside run had completed 44 cells. **All 44 reproduce in the clean run
+exactly — 44 identical, 0 differing.** The defect was in the logging, the identity evidence was genuinely
+destroyed, and the games were never touched; that is now measured rather than asserted.
+
+**(d) The five torn hello lines are a write interleave, not a wrong arm.** All five tear at the same byte,
+mid-word, in the middle of `monetPolicy`, with a second banner spliced in from another process of the same lane.
+The identity fields sit before the tear and survive on every line: `arm=v0.33 root=/fishai`, 2,335 of 2,335. Two
+of the 2,443 `COVERAGE` banners are torn the same way and both halves read `OK`. **Per §3.8m's void rule a hello
+line not carrying its arm's label voids its cell**; the rule is written for a line that names a *different* arm,
+and these name the right one and then get cut. The cells are kept, and the reason is on the record so a reader can
+disagree with it.
+
+**Condition 4, settled in passing on the same 72 cells.** §3.9's fourth condition is declare accuracy ≥ 98.0% and
+zero fault counters across the whole run. **Monet's declare accuracy: mean 99.6382%, min 99.2583%, max 99.8642%,
+and zero of the 72 cells below 98.0%** — the worst cell is 1.26 points clear of the bar. **The fourteen fault
+counters by name** (`traceFallback`, `traceErrorBranch`, `askNotAsk`, `pollNotWindowMove`, `passNotPass`,
+`passNotCandidate`, `declareShapeBad`, `planMismatch`, `planMismatchP`, `booksDisagree`, `successHolderClash`,
+`viewInvariant`, `forcedOwnTeamOut`, `forcedNone`) **sum to zero**, each over roughly 241,000 per-process readings
+from the botlogs' `COVER` lines; all 2,443 `COVERAGE` banners read `OK`; `limit hits 0%` on every cell.
+**Condition 4 is met at v0.33's vector.** The 97.96% reading that had this condition open belongs to §3.8's `k98`
+arm — `claimBelief: 'holder'`, `claimOwnership: 'priced'`, `declareThreshold: 0.98` — which is a different vector
+that was measured and not shipped; it never applied to v0.33, and the record was ambiguous about that.
+
+**One observation nobody registered, marked as such.** The calibration harness rode along on all 72 cells, and
+the belief's bias reverses sign between the lineage and SESTINA. Believed minus realised hit rate on our own asks,
+averaged over twelve cells: **v02 −0.016, v03 −0.019, v04 −0.011, v05 −0.018, v06 −0.025 — and SESTINA +0.010.**
+Against every ancestor the belief *under*-claims by one to two and a half points; against SESTINA alone it
+*over*-claims by one. **This was not predicted, is one run on one vector, and nothing is built on it.** It is
+recorded because §3.8ao's finding was that the marginal's error is regional, and an opponent-dependent sign is
+the shape that finding predicts if the opponent changes which region the asks land in.
+
+**What this does and does not do to §3.9.** Conditions **3 and 4 are met** at v0.33's vector, on 86,400 recorded
+games with the pin held. Conditions **1 and 2 are not**: 51.04% on §3.8ad's twelve and 49.87% on these, 50.46% ±
+0.66 pooled over the twenty-four seeds v0.33's vector has now played, which is inside the ±2.00 floor and carries
+negative seeds either way. Conditions **5 and 6 were met on 2026-09-06 at v0.9's vector** — §6.2's controls
+passing with per-process op counts equal to the engine's on 73 of 73 cells, and a second adapter written from the
+protocol document alone reproducing all twelve seeds to the hundredth — and **have not been re-read at v0.33's**.
+Whether an instrument verified against one vector carries to another is a real question this record raises and
+does not settle; the honest statement is that 5 and 6 are met for the instrument and unread for this vector.
+**Monet v1.0 still does not exist, and the gap is entirely in conditions 1 and 2 — the one place the panel cannot
+help, because the panel's opponents do not adapt and SESTINA is not among them.**
+
+**What the panel is worth as evidence, stated at its real size.** The ancestors are frozen and this vector was
+developed against SESTINA, so beating them is evidence *against* having overfitted to SESTINA and is not evidence
+of strength. The part that carries weight is which rungs moved: **v05 and v06 do not search**, and they moved
++7.20 and +9.27 from v0.9 — a vector tuned narrowly to one opponent's search behaviour would not lift uniformly
+against opponents that have none. The part that does not carry weight is v02 and v03 at 85% and 79%, which say
+only that the early lineage is weak.
+
+**Cost.** 72 cells, 86,400 games, 29 minutes wall and 8,772 engine-seconds — plus the 44 cells of the set-aside
+first run, which are the price of the logging defect and are recorded as spent. Docker is quit at the end of this
+rung per the owner's heat constraint of 2026-09-08.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -11090,6 +11250,23 @@ whose label is winning rather than imitating, and it is the only remaining candi
 5. **Every control of §6.2 passes**, including op coverage, and **the mirror cell is not among them.**
 6. **The result is reproduced by a second, independently built arm** on the same spec. The seeds share
    a build and an adapter; §9.5's shared-adapter defect is what that is worth as a risk.
+
+**Where the six stand — 2026-09-10, at v0.33's vector.** The conditions above are unchanged; this block only
+records where each is scored, because §3.8ar found the table had been carrying v0.9's readings against a
+candidate two versions newer.
+
+> | # | condition | state at v0.33's vector | scored in |
+> |---|---|---|---|
+> | 1 | ≥ 50.0% vs SESTINA on twelve seeds, paired floor ±2.00 | **not met** — 51.04% on §3.8ad's twelve, 49.87% on §3.8ar's, **50.46% ± 0.66** pooled over the twenty-four seeds played; inside the floor | §3.8ad, §3.8ar |
+> | 2 | every seed reported, SD published, no negative seed | **not met** — every seed is reported and the SD published, but five of §3.8ar's twelve read under 50% | §3.8ad, §3.8ar |
+> | 3 | the panel is monotone — v0.2 through v0.6 beaten | **MET** — 85.42 / 79.28 / 54.67 / 54.01 / 53.99 against 49.87, five of five at the floor, no inversion | §3.8ar |
+> | 4 | declare accuracy ≥ 98.0% and zero fault counters | **MET** — 99.638% mean, 99.258% worst, zero cells under the bar; the fourteen named counters zero over ~241,000 readings on 72 cells | §3.8ar |
+> | 5 | every §6.2 control passes, the mirror cell excluded | **met at v0.9's vector, unread at v0.33's** — op counts equal to the engine's on 73 of 73 cells | §3.8m (2026-09-06) |
+> | 6 | reproduced by a second, independently built arm | **met at v0.9's vector, unread at v0.33's** — a second adapter from the protocol document alone, all twelve seeds to the hundredth | §3.8m (2026-09-06) |
+
+**Monet v1.0 does not exist.** The whole gap is conditions 1 and 2, and §3.8ar is explicit that the panel cannot
+close it. Whether 5 and 6, verified against v0.9's vector, carry across a change of vector is open and is not
+assumed either way here.
 
 ---
 
@@ -11546,6 +11723,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 50 | **After §3.8an — two equivalent players: how far does our belief sit from the truth at the ask, and does the clone leave immediate hits on the table?** | **TAKEN — v0.42 (§3.8ao)**, by the standing rule and §3.8an's close: every mechanism on the map is symmetric and closed; the term under them — the belief the ask is chosen by, against the truth at our own decisions — has never been read. The read: at every ask of v0.33's vector, the chosen (the clone's), the ranker's top, the greedy-by-p and the oracle by the immediate hit, the chosen p's calibration by decile, and the mirror at SESTINA's seats; on file, two minutes a run. It decides between a greedy-override knob (v0.43, by the pairs' win rate) and the choice-likelihood belief read (SESTINA's asks as evidence of its hand through the clone; the declare pinned). Pre-registered in §3.8ao before the run. **Read 22:25Z: at 600,145 of our asks the chosen hit 48.8%, the ranker's top 53.9%, the greedy ask by p 54.6%, the oracle 98.6% — and SESTINA's asks under our belief read the same at every line (49.3 / 54.6 / 55.1 / 98.6), so both players decline immediate hits by the same 5.8 points and the ceiling at the ask is the choice's, not the knowledge's. Two controls then moved the finding off the choice and onto the belief: over EVERY legal ask the 0.5–0.9 deciles run 5 to 10 points above their p, and split by the card's candidates the error is exactly where the marginal's scaling concentrates mass above the uniform 1/n (2 candidates uniform 50.0 → 50.7, scaled 61.1 → 65.2; 3 scaled 60.8 → 70.0; 4 scaled 58.5 → 65.8; 5+ scaled 56.1 → 61.8), the count-only answers and the certain top being exact. The greedy override is benched (it is the pre-clone vector, which lost) but for one cheap extreme dose; the build is the scaling repair with the declare path pinned — row 51.** |
 | 51 | **After §3.8ao — does the belief's measured error reach any decision, and can anything beat a choice that arrives at SESTINA by copying it?** | **TAKEN — v0.43 (§3.8ap)**, by the standing rule. The repair §3.8ao named is monotone: it cannot change the greedy ask, and its only certain reach is the declare's thresholds, where §3.8al already measured that firing sooner loses. R1 fits the map on six files and reads its reach on the other six (greedy unchanged as a control on the argument, ranker top changed, clone choice changed, claim thresholds crossed and in which direction). R2 is the rung that matters: imitation arrives at the thing imitated, so parity is where a clone ends — R2 measures where the asks that would have hit sit in the clone's own ranking, and whether a shortlist of three is worth searching. Pre-registered in §3.8ap before the run. **Read 22:55Z: the instrument validated first — at our seats the record's ask is the clone's top 100.0%, so the model and the feature pipeline are exactly those that made the records. R1: the fitted map is a real correction where §3.8ao placed it (55 → 59.3, 65 → 74.1, 75 → 84.3, 85 → 94.9) and reaches almost nothing — the greedy ask moves at 0.7% (through the isotonic fit's flat blocks, not through order, so the pre-registration's argument holds in substance), the ranker's top at 1.2%, the clone's choice at 5.3%, and a claim's belief crosses 0.775 at 0.2% and 0.5 at 0.0%, every crossing on both sides upward — claiming sooner, which §3.8al priced as the losing direction. The scaling repair is closed as a build and §3.8ao's finding stands as a property of the belief with no decision behind it. R2: at 600,145 of our decisions a hitting ask sits in the clone's top 3 at 72.8% and its top 5 at 83.3%, against the 48.8% its top actually delivers; best-of-top-k by the belief climbs only 48.8 → 50.8 → 54.8, arriving exactly at greedy, so the selector must be a value and not the belief; and the clone's top 3 carries SESTINA's own ask 84.9% of the time, which is the shape that can exceed the thing it copies. Eight of thirteen clauses held; the top-3 band missed low as the pre-registration's disclosure said it would, into the gap between its two branches, and the record decides there to build. Row 52 is the search over the clone's shortlist — `candidateAsks` today seeds with the clone's pick but fills from the RANKER, so a new `candMode` is needed, and its first measurement is the headroom over the candidate set the search builds today.** |
 | 52 | **After §3.8ap — is the clone's shortlist worth searching, given that §3.8ai already searched this stack and lost?** | **TAKEN — v0.44 (§3.8aq)**, on the owner's word ("go ahead with row 52"). §3.8ai's loss is not a refutation of this design but evidence for it: it changed the clone's pick 23% of the time at 0.009 sets a change, and every alternative it was offered came from the RANKER's top five, which §3.8ao measured to be the greedy player that lost by 3.64 at the bridge. The candidate fill is the term nobody has moved. G gates the whole rung on file for eight minutes — three candidate sets by how often each holds an ask that would have hit — and closes the search line for good if the ranker's fill is already as good. Only then the new `candMode`, and only then §3.8ai's own cell with the fill as the single change, staged four banks first because M is the expensive stage at 631 ms an ask. Eligible only if it beats zero by 2 SE and beats §3.8ai. Pre-registered in §3.8aq before the gate runs. **Read 23:58Z: the gate ran on both record sets (600,145 of our decisions on c3, 593,837 on k98, nine minutes a set, agreeing within half a point everywhere) and closed the rung. Today's ranker fill holds an ask that would have hit 77.7 / 84.0 / 88.2% at k = 3 / 4 / 5; the clone's shortlist 72.8 / 78.7 / 83.3%; the two alternated 77.5 / 82.4 / 86.9%. The fills genuinely differ — beyond the pick they share 1.43 of 3 alternatives at k = 4 — so the comparison is real, and the clone's shortlist is the WORSE candidate set on this measure. The hypothesis that §3.8ai lost because its alternatives were greedy is unsupported; nothing was built and `candidateAsks` is untouched. The gate's caveat is recorded before and after the numbers: its measure is the very quantity §3.8ao showed the greedy ask maximises while losing, so it can only fail to support the hypothesis, never prove the reverse. What the rung does earn is the statement §3.8ai could not make — at `cand` 4 the set handed to the search contains a hitting ask 84.0% of the time and the search still picks worse than the clone at 0.009 sets a change, so the candidates were never the problem and THE SEARCH'S VALUE ESTIMATE IS. The search line closes with the fill tested and excluded. Row 53 is the first learner whose label is winning rather than imitating: a learned value over the clone's shortlist, its coverage generated at home by taking a random member of the clone's top k at a fraction of decisions, fitted on the outcomes those alternatives actually get.** |
+| 53 | **After §3.8aq — is §3.9's panel condition still failing, now that the candidate is v0.33's vector rather than the v0.9 it was read on?** | **TAKEN — v0.45 (§3.8ar)**, on the owner's word ("run the panel check, then pre-register row 53"). The condition was scored once, on 2026-09-06, and failed: v0.9 beat v02 and v03 and lost to v04, v05 and v06 at 47.6 / 46.8 / 44.7. The candidate has moved twice since and nobody re-read it, so §3.9's table has been carrying a stale row against a vector nobody proposes. 72 cells rather than the registered 60 — the extra twelve a SESTINA column, so the ordering's endpoint sits in the same table under the same pin — on `monetPolicy('v0.33')`, scored against §3.8m's reading untouched. Two deviations disclosed before the numbers: the arm is the candidate rather than the pre-registered `monet-v17-base`, and the cell count is a superset. **Read 01:47Z 2026-09-10: CONDITION 3 IS MET.** 85.42 / 79.28 / 54.67 / 54.01 / 53.99 against 49.87 at SESTINA — five of five beaten at the floor, the tightest by 1.99 points, the ordering holding with no inversion, no seed of the sixty panel cells under 50%, and every gap over v0.9's panel five to eight times the seed spread on disjoint seeds. **Condition 4 is met on the same cells** (99.638% mean declare accuracy, 99.258% worst, zero cells under the 98.0% bar, the fourteen named counters zero over ~241,000 readings); the 97.96% that had it open is §3.8's `k98` arm, a different vector, and the record was ambiguous about that. Four honesties carried in the record rather than around it: the SESTINA column reproduces §3.8's `c3` cells to the digit on all twelve seeds and is therefore not a second twelve — the same result, read twice, and nothing else inferred; a v04 timing cell was seen before the full run was committed; the first attempt's cells were set aside because six containers shared one `bot.log` and destroyed the identity pin, and the clean re-run reproduces all 44 of them exactly, which prices that defect at the pin and not the games; and five of 2,335 hello lines are torn mid-word by a same-lane write interleave, all 2,335 still carrying `arm=v0.33 root=/fishai`, kept with the reasoning exposed so a reader can disagree. **What it does not do:** conditions 1 and 2 are untouched at 50.46% ± 0.66 over twenty-four seeds, and the panel cannot help there, because its opponents do not adapt and SESTINA is not among them. The panel's real weight is that v05 and v06 — the rungs that do not search — moved +7.20 and +9.27, which is evidence against having overfitted to one opponent's search behaviour, not evidence of strength. Row 54 is the first learner whose label is winning rather than imitating. |
 
 ---
 
