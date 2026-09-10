@@ -93,6 +93,8 @@ import { MONET_V04B_BANK } from './data/monet-v04b-bank.ts'
 import { MONET_V04C_BANK } from './data/monet-v04c-bank.ts'
 import { MONET_V09_BANK } from './data/monet-v09-bank.ts'
 import { MONET_V020C_BANK } from './data/monet-v020c-bank.ts'
+import { MONET_V030_BANK } from './data/monet-v030-bank.ts'
+import { ASK_FEATURE_COUNT, askModelOf } from '../../lib/engine/bots/imitation.ts'
 import { ask, gs, mkView } from './util.ts'
 
 /** The versions, addressed the way a harness addresses them. */
@@ -104,6 +106,7 @@ const MONET_V04B: PolicySpec = monetPolicy('v0.4b')
 const MONET_V04C: PolicySpec = monetPolicy('v0.4c')
 const MONET_V09: PolicySpec = monetPolicy('v0.9')
 const MONET_V020C: PolicySpec = monetPolicy('v0.20c')
+const MONET_V030: PolicySpec = monetPolicy('v0.30')
 
 /**
  * The live roster arm, in both spellings — written out, never read from the registry.
@@ -188,6 +191,30 @@ describe('the Monet version registry names each version and resolves it to that 
     expect(STYLE_ROSTER.punter.closing).toBeUndefined()
     expect(STYLE_ROSTER.punter.closingFour).toBeUndefined()
     expect(styleDiffKeys(pair.style, STYLE_ROSTER.punter)).toEqual(['closing', 'closingFour', 'contest', 'licenceLambda', 'pAssignment', 'pModel'])
+  })
+
+  it('v0.30 is v0.20c plus the SESTINA clone as its ask policy, on its own vector — and differs from v0.20c in NOTHING else', () => {
+    const pair = asPair(MONET_V030, "MONET_VERSIONS['v0.30']")
+    expect(pair.skill).toBe(SKILL_PRESETS.hard)
+    expect(styleDiffKeys(pair.style, (MONET_V020C as BotPolicy).style)).toEqual(['askModel'])
+    // MONET.md 3.8ac: the clone predicts SESTINA's ask on 56.32% of held-out decisions (the stack's own
+    // choice 43.65%); inside the stack it read +0.954 a pair at home against v0.20c's vector (12.8 SE,
+    // twelve of twelve banks) and +7.24 ± 0.63 points of win rate
+    // (48.0% against v0.20c's 40.8%, 11.5 SE, twelve of twelve seeds) against SESTINA v1.0 on twelve fresh seeds -
+    // the ladder's largest read, by 3.8n's rule and over the ±2.00 floor.
+    expect(pair.style.askModel).toBe('sestina-clone')
+    // the name resolves to the committed model, registered when monet.ts loads - a v0.30 played
+    // anywhere the registry is imported needs no caller to know a model exists
+    expect(askModelOf('sestina-clone').features).toBe(ASK_FEATURE_COUNT)
+    expect(pair.style.closing).toBe(0.5)
+    expect(pair.style.closingFour).toBe(2)
+    expect(pair.style.contest).toBe(0.6)
+    expect(pair.style.licenceLambda).toBe(0.3)
+    expect(pair.style.pAssignment).toBe('joint')
+    expect(pair.style.pModel).toBe('marginal')
+    // absent on the roster (style.ts): Monet-only, byte identity when absent
+    expect(STYLE_ROSTER.punter.askModel).toBeUndefined()
+    expect(styleDiffKeys(pair.style, STYLE_ROSTER.punter)).toEqual(['askModel', 'closing', 'closingFour', 'contest', 'licenceLambda', 'pAssignment', 'pModel'])
   })
 
   it('v0.9 is v0.4c plus the contest credit, on its own vector — and differs from v0.4c in NOTHING else', () => {
@@ -280,7 +307,7 @@ describe('the Monet version registry names each version and resolves it to that 
 
   it('MONET_VERSION_IDS lists every shipped version, in order, and nothing else', () => {
     expect([...MONET_VERSION_IDS]).toEqual(Object.keys(MONET_VERSIONS))
-    expect([...MONET_VERSION_IDS]).toEqual(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9', 'v0.20c'])
+    expect([...MONET_VERSION_IDS]).toEqual(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9', 'v0.20c', 'v0.30'])
     expect(MONET_VERSION_IDS.every((v) => isMonetVersion(v))).toBe(true)
   })
 
@@ -892,6 +919,75 @@ describe('Monet v0.20c replays its forward bank: every action of whole us54 game
     // runtime check: both fixtures are `as const`, so `MONET_V09_BANK`'s digests and this bank's
     // are disjoint literal unions, and `tsc` rejects a membership test between them (TS2345) the
     // way it rejects `a.digest === b.digest` for v0.1 and v0.2 below.
+  })
+})
+
+/* ----------------------------------------- 4g. v0.30's forward bank, replayed --- */
+
+const forwardF = { games: 0, decisions: 0, digestsChecked: 0 }
+
+/** `playForward` for v0.30 (MONET.md 3.8ac): same derivation, the v0.30 arm asked, the v0.30 bank compared. */
+function playForwardF(row: (typeof MONET_V030_BANK.games)[number]): void {
+  const { table, seed: gameSeed } = row
+  const policy = STYLE_ROSTER[table as keyof typeof STYLE_ROSTER]
+  let s = newGame(gameSeed, us54Config, row.startSeat as Seat)
+  const digest = new ActionDigest()
+  let steps = 0
+  while (s.phase !== 'finished') {
+    if (steps >= 5000) throw new Error(`${table}/${gameSeed}: hit the 5000-step cap`)
+    const { seat } = legalActionsSummary(s)
+    const view = seatView(s, seat)
+    const moveSeed = hashSeed(`${gameSeed}:${s.moveIndex}`)()
+    digest.push(canonicalAction(decide(view, MONET_V030, moveSeed)))
+    forwardF.decisions++
+    const r = reduce(s, decide(view, policy, moveSeed))
+    if (!r.ok) throw new Error(`${table}/${gameSeed} step ${steps}: ${r.error.code}`)
+    s = r.state
+    steps++
+  }
+  expect(digest.count, `${table}/${gameSeed}: decision count vs the v0.30 bank`).toBe(row.decisions)
+  expect(
+    digest.hex(),
+    `${table}/${gameSeed}: action digest vs ${MONET_V030_BANK.revision.slice(0, 12)}`,
+  ).toBe(row.digest)
+  forwardF.digestsChecked++
+  forwardF.games++
+}
+
+describe('Monet v0.30 replays its forward bank: every action of whole us54 games, as accepted', () => {
+  for (const id of STYLE_IDS) {
+    const rows = MONET_V030_BANK.games.filter((g) => g.table === id)
+    it(`${id} table: ${rows.length} us54 games, every digest as recorded`, () => {
+      expect(rows.length).toBe(SEEDS_PER_STYLE)
+      for (const row of rows) playForwardF(row)
+    }, 120_000)
+  }
+
+  it("covered the whole roster over the bank's 26,510 decisions", () => {
+    expect(forwardF.games).toBe(STYLE_IDS.length * SEEDS_PER_STYLE)
+    expect(forwardF.games).toBe(MONET_V030_BANK.games.length)
+    expect(forwardF.decisions).toBe(MONET_V030_BANK.totalDecisions)
+    expect(forwardF.decisions).toBe(26_510)
+    expect(forwardF.digestsChecked).toBe(MONET_V030_BANK.games.length)
+  })
+
+  it('the v0.30 bank says what it is: a forward baseline from a clean tree this repo can name', () => {
+    expect(MONET_V030_BANK.revision).toMatch(/^[0-9a-f]{40}$/)
+    expect(MONET_V030_BANK.tree).toBe('wt')
+    expect(MONET_V030_BANK.dirty).toBe(false)
+    expect(MONET_V030_BANK.arm).toBe('monetPolicy("v0.30")')
+    expect(MONET_V030_BANK.totalDecisions).toBe(
+      MONET_V030_BANK.games.reduce((n, g) => n + g.decisions, 0),
+    )
+    expect(new Set(MONET_V030_BANK.games.map((g) => g.digest)).size).toBe(
+      MONET_V030_BANK.games.length,
+    )
+    // v0.30's games are not v0.20c's: the SESTINA clone chooses the ask wherever the stack leaves
+    // the choice to its ranker, and one moved ask re-deals every position after it. That the two
+    // banks share no digest needs no runtime check: both fixtures are `as const`, so
+    // `MONET_V020C_BANK`'s digests and this bank's are disjoint literal unions, and `tsc` rejects
+    // a membership test between them (TS2345) the way it rejects `a.digest === b.digest` for v0.1
+    // and v0.2 below.
   })
 })
 

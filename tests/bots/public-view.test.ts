@@ -255,6 +255,9 @@ describe('public-view-only proof', () => {
       // Generated measured payoff table (scripts/gen-counter-table.mjs): frozen numeric data
       // plus the StyleId type, held to the same standard as the fingerprints above.
       './data/counter-table.ts',
+      // MONET.md 3.8ac: the SESTINA clone's fitted weights (scripts/gen-ask-model-module.mjs): frozen
+      // numeric data plus the DenseModel type from './net.ts', held to the same standard as the two above.
+      './data/sestina-clone.ts',
       // The CONCESSION.md concession layer. './threat.ts' derives what a seat could do with the
       // turn from the public log, the public counts and './knowledge.ts'; './defuse.ts' turns
       // that into an ask-score credit. Between them they import only '../types.ts',
@@ -318,7 +321,8 @@ describe('public-view-only proof', () => {
       './chase.ts',
       // The MONET.md version registry: a frozen table mapping a Monet version id to the
       // `PolicySpec` that version plays, plus two total pure functions over it. It imports
-      // only './roster.ts', './style.ts' and './bounded.ts' (type-only) — every one already
+      // only './roster.ts', './style.ts', './bounded.ts' (type-only), './imitation.ts' (to register
+      // the SESTINA clone at load, MONET.md 3.8ac) and './data/sestina-clone.ts' — every one already
       // on this list — and it holds parameter data, not positions: nothing in it takes a
       // view, let alone a GameState. It is on this list because `index.ts` re-exports it,
       // and it is admitted on the same standard as './roster.ts' rather than as an
