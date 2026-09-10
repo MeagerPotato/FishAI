@@ -156,7 +156,8 @@ describe('the two entries are different bots, and nearly the same one', () => {
     // v0.20c, whose closing credit moves three asks in a hundred (§3.8s), 91.33% at v0.30, whose
     // SESTINA clone chooses the ask at every ask decision in place of the ranker's own choice
     // (§3.8ac) — the largest single move on this measurement, as it is the largest read on the
-    // ladder. The copy says "about 91%"; the floor here is the honesty
+    // ladder — and 91.24% at v0.33, whose clone also reads the stack's own belief (§3.8af): the two
+    // clones choose alike at almost every ask. The copy says "about 91%"; the floor here is the honesty
     // bar for that sentence, not a target — a Monet that agreed with Bass on fewer than 90% of
     // decisions would need different copy, and one that agreed on all of them would be Bass.
     expect(agree).toBeGreaterThan(90)
