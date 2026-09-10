@@ -408,6 +408,29 @@ export interface StyleParams extends AskWeights {
    */
   askModel?: string
   /**
+   * MONET.md §3.8as — the learned ask value over the clone's shortlist: the name of a second model
+   * registered with `registerAskModel`, fitted not on what SESTINA chose but on what WON (the asking
+   * team's final set differential). Present WITH `askModel`, `pickAsk` lets the clone order the
+   * ranker's legal asks and then takes the VALUE's argmax over the clone's top `askValueTopK` only;
+   * absent, byte identity. Inert without `askModel` — there is no shortlist to select over — and
+   * absent on every roster style and every tier; a lab knob reached by `--a-override` and
+   * `MONET_OVERRIDE`.
+   *
+   * The value scores the WHOLE ranked list and the argmax is taken over the shortlist's indices,
+   * never the shortlist scored on its own: three of the forty-nine features are list-relative
+   * (`scoreRel` against the list's best, `rankInv` = 1/(1+j), `isTop` = j === 0), so a sublist would
+   * hand the model feature values its fit never saw. §3.8as measured that mistake at 23% agreement
+   * against the correct 53%.
+   */
+  askValueModel?: string
+  /**
+   * MONET.md §3.8as — how deep the clone's shortlist runs for `askValueModel`. Absent is 3, the depth
+   * the value was fitted over. 1 is the clone alone (the knob becomes a no-op); a value at or above
+   * the list length is the value choosing outright, which is a different mechanism and not this one.
+   * Inert without `askValueModel`.
+   */
+  askValueTopK?: number
+  /**
    * MONET.md §3.8u — the closing credit's rung BELOW the four, at its own dose: where the seat's
    * certain picture of the asked set has exactly two cards outstanding after the hit (the horizon's
    * worth, where `lock` is 0 and `closing` pays nothing — a seat-known three of six under `us54`, the
@@ -893,6 +916,15 @@ export function validateStyle(style: StyleParams): string[] {
   if (closingFour !== undefined && !(typeof closingFour === 'number' && Number.isFinite(closingFour) && closingFour >= 0)) bad.push(`closingFour ${String(closingFour)} is not a number >= 0`)
   const askModel = style.askModel
   if (askModel !== undefined && !(typeof askModel === 'string' && askModel.length > 0)) bad.push(`askModel ${String(askModel)} is not a non-empty string`)
+  const askValueModel = style.askValueModel
+  if (askValueModel !== undefined && !(typeof askValueModel === 'string' && askValueModel.length > 0)) bad.push(`askValueModel ${String(askValueModel)} is not a non-empty string`)
+  // A shortlist of one is the clone and a shortlist of none is nothing, so the floor is 2. The knob
+  // is refused rather than clamped: a dose sweep that wanders to 1 would read as "the value lost"
+  // when what it measured was the value never being consulted.
+  const askValueTopK = style.askValueTopK
+  if (askValueTopK !== undefined && !(typeof askValueTopK === 'number' && Number.isInteger(askValueTopK) && askValueTopK >= 2)) {
+    bad.push(`askValueTopK ${String(askValueTopK)} is not an integer >= 2`)
+  }
   const closingThree = style.closingThree
   if (closingThree !== undefined && !(typeof closingThree === 'number' && Number.isFinite(closingThree) && closingThree >= 0)) bad.push(`closingThree ${String(closingThree)} is not a number >= 0`)
   // The `>= 0` refusal is load-bearing rather than decoration: a NEGATIVE `chase` is a penalty on

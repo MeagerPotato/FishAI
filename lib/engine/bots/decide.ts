@@ -108,7 +108,7 @@ import {
   unaskableBooks,
 } from './knowledge.ts'
 import { marginalFor } from './marginal.ts'
-import { askModelOf, chooseAskByModel } from './imitation.ts'
+import { askModelOf, chooseAskByModel, chooseAskByValue } from './imitation.ts'
 import { assignJointly } from './joint.ts'
 import { assignByHolder } from './claimbelief.ts'
 import { holderModelOf } from './holder.ts'
@@ -1132,7 +1132,25 @@ function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: ActiveP
   // MONET.md §3.8ac — the imitation ask policy: the model chooses among the ranker's legal asks and
   // every term below is bypassed. Absent (every roster style, every tier, every version), byte identity.
   if (style.askModel !== undefined) {
-    const chosen = chooseAskByModel(askModelOf(style.askModel), view, k, ranked)
+    const clone = askModelOf(style.askModel)
+    // MONET.md §3.8as — the learned value over the clone's shortlist. Present, the clone still orders
+    // the list and the value only picks among its top `askValueTopK`; absent (every roster style,
+    // every tier, every shipped version), this branch is not entered and the line below is byte
+    // identity. Inert without `askModel` because the knob has no shortlist to select over.
+    if (style.askValueModel !== undefined) {
+      const depth = style.askValueTopK ?? 3
+      const chosen = chooseAskByValue(clone, askModelOf(style.askValueModel), view, k, ranked, depth)
+      if (t) {
+        const cloneTop = chooseAskByModel(clone, view, k, ranked)
+        t.notes.push(
+          chosen === cloneTop
+            ? `The ask value ${style.askValueModel} kept the clone's ${pc(chosen.card)} at seat ${chosen.target} from its top ${depth}.`
+            : `The ask value ${style.askValueModel} took ${pc(chosen.card)} at seat ${chosen.target} over the clone's ${pc(cloneTop.card)} at seat ${cloneTop.target}, from the clone's top ${depth}.`,
+        )
+      }
+      return chosen
+    }
+    const chosen = chooseAskByModel(clone, view, k, ranked)
     if (t) t.notes.push(`The ask model ${style.askModel} chose ${pc(chosen.card)} at seat ${chosen.target} over the ranker's ${pc(ranked[0].card)} at seat ${ranked[0].target}.`)
     return chosen
   }

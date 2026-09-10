@@ -442,6 +442,39 @@ export function scoreAsks(m: CompiledNet, view: SeatView, k: Knowledge, ranked: 
   return askFeatureRows(view, k, ranked, set, set === 3 ? HOLDER_OF.get(m) : undefined).map((x) => forwardNet(m, x))
 }
 
+/**
+ * MONET.md §3.8as — the learned value over the clone's shortlist. `clone` orders the ranker's legal
+ * asks as it always does; `value` scores THE SAME FULL LIST and the argmax is taken over the clone's
+ * top `topK` indices only.
+ *
+ * The full list is scored on purpose. Three of the forty-nine features are list-relative — `scoreRel`
+ * is measured against the list's best, `rankInv` is 1/(1+j), `isTop` is j === 0 — so scoring a
+ * `topK`-element sublist would hand the value feature values its fit never saw. §3.8as measured that
+ * mistake: it read 53% agreement with the clone as 23%.
+ *
+ * A tie goes to the CLONE: `best` starts at the clone's own top and a later candidate has to score
+ * strictly higher to displace it, so an indifferent value is byte-identical to `chooseAskByModel`.
+ * `topK` below 2 is the clone alone. Throws on an empty list.
+ */
+export function chooseAskByValue(
+  clone: CompiledNet,
+  value: CompiledNet,
+  view: SeatView,
+  k: Knowledge,
+  ranked: readonly RankedAsk[],
+  topK: number,
+): RankedAsk {
+  if (ranked.length === 0) throw new Error('chooseAskByValue: no asks')
+  const cs = scoreAsks(clone, view, k, ranked)
+  const order = ranked.map((_, i) => i).sort((a, b) => cs[b] - cs[a] || a - b)
+  const depth = Math.min(Math.max(topK, 1), order.length)
+  if (depth < 2) return ranked[order[0]]
+  const vs = scoreAsks(value, view, k, ranked)
+  let best = order[0]
+  for (let j = 1; j < depth; j++) if (vs[order[j]] > vs[best]) best = order[j]
+  return ranked[best]
+}
+
 /** The ranked entry the model scores highest; a tie goes to the earlier entry (the ranker's order). Throws on an empty list. */
 export function chooseAskByModel(m: CompiledNet, view: SeatView, k: Knowledge, ranked: readonly RankedAsk[]): RankedAsk {
   if (ranked.length === 0) throw new Error('chooseAskByModel: no asks')
