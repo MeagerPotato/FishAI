@@ -92,6 +92,7 @@ import { MONET_V04A_BANK } from './data/monet-v04a-bank.ts'
 import { MONET_V04B_BANK } from './data/monet-v04b-bank.ts'
 import { MONET_V04C_BANK } from './data/monet-v04c-bank.ts'
 import { MONET_V09_BANK } from './data/monet-v09-bank.ts'
+import { MONET_V020C_BANK } from './data/monet-v020c-bank.ts'
 import { ask, gs, mkView } from './util.ts'
 
 /** The versions, addressed the way a harness addresses them. */
@@ -102,6 +103,7 @@ const MONET_V04A: PolicySpec = monetPolicy('v0.4a')
 const MONET_V04B: PolicySpec = monetPolicy('v0.4b')
 const MONET_V04C: PolicySpec = monetPolicy('v0.4c')
 const MONET_V09: PolicySpec = monetPolicy('v0.9')
+const MONET_V020C: PolicySpec = monetPolicy('v0.20c')
 
 /**
  * The live roster arm, in both spellings — written out, never read from the registry.
@@ -160,6 +162,32 @@ describe('the Monet version registry names each version and resolves it to that 
     expect(pair.style.licenceLambda).toBe(0.6)
     expect(STYLE_ROSTER.punter.licenceLambda).toBeUndefined()
     expect(Object.isFrozen(pair.style)).toBe(true)
+  })
+
+  it('v0.20c is v0.9 plus the closing credit at its two rungs, on its own vector — and differs from v0.9 in NOTHING else', () => {
+    const pair = asPair(MONET_V020C, "MONET_VERSIONS['v0.20c']")
+    expect(pair.skill).toBe(SKILL_PRESETS.hard)
+    expect(styleDiffKeys(pair.style, (MONET_V09 as BotPolicy).style)).toEqual(['closing', 'closingFour'])
+    // closing 0.5 by 3.8h's home fit (+0.58 abroad at 3.8h, +0.25 at 3.8o, alone); closingFour 2 by
+    // 3.8r's home ladder over 1, 2, 4, 8 (the stack with closing 0.5 +0.30 a pair at 4.9 SE); the
+    // stack read abroad on twelve fresh seeds (3.8s): +0.94 paired against v0.9, SD 1.49, SE 0.43,
+    // 2.18 SE, ahead on 8 of 12 with one tie - the first term to ship by 3.8n's rule, under the
+    // ±2.00 floor and marked as such. closingFour 2 alone read +0.34 (0.81 SE) and did not ship.
+    expect(pair.style.closing).toBe(0.5)
+    expect(pair.style.closingFour).toBe(2)
+    // the belief form lost on every seed (3.8h), the chase credit closed (3.8i), the exposure charge
+    // read about zero on the bridge (3.8o): none of the three is on the vector
+    expect(pair.style.closingBelief).toBeUndefined()
+    expect(pair.style.chase).toBeUndefined()
+    expect(pair.style.exposure).toBeUndefined()
+    expect(pair.style.contest).toBe(0.6)
+    expect(pair.style.licenceLambda).toBe(0.3)
+    expect(pair.style.pAssignment).toBe('joint')
+    expect(pair.style.pModel).toBe('marginal')
+    // both closing knobs are absent on the roster (style.ts): Monet-only, byte identity when absent
+    expect(STYLE_ROSTER.punter.closing).toBeUndefined()
+    expect(STYLE_ROSTER.punter.closingFour).toBeUndefined()
+    expect(styleDiffKeys(pair.style, STYLE_ROSTER.punter)).toEqual(['closing', 'closingFour', 'contest', 'licenceLambda', 'pAssignment', 'pModel'])
   })
 
   it('v0.9 is v0.4c plus the contest credit, on its own vector — and differs from v0.4c in NOTHING else', () => {
@@ -252,7 +280,7 @@ describe('the Monet version registry names each version and resolves it to that 
 
   it('MONET_VERSION_IDS lists every shipped version, in order, and nothing else', () => {
     expect([...MONET_VERSION_IDS]).toEqual(Object.keys(MONET_VERSIONS))
-    expect([...MONET_VERSION_IDS]).toEqual(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9'])
+    expect([...MONET_VERSION_IDS]).toEqual(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9', 'v0.20c'])
     expect(MONET_VERSION_IDS.every((v) => isMonetVersion(v))).toBe(true)
   })
 
@@ -796,6 +824,74 @@ describe('Monet v0.9 replays its forward bank: every action of whole us54 games,
     expect(new Set(MONET_V09_BANK.games.map((g) => g.digest)).size).toBe(
       MONET_V09_BANK.games.length,
     )
+  })
+})
+
+/* ---------------------------------------- 4f. v0.20c's forward bank, replayed --- */
+
+const forwardE = { games: 0, decisions: 0, digestsChecked: 0 }
+
+/** `playForward` for v0.20c (MONET.md 3.8s): same derivation, the v0.20c arm asked, the v0.20c bank compared. */
+function playForwardE(row: (typeof MONET_V020C_BANK.games)[number]): void {
+  const { table, seed: gameSeed } = row
+  const policy = STYLE_ROSTER[table as keyof typeof STYLE_ROSTER]
+  let s = newGame(gameSeed, us54Config, row.startSeat as Seat)
+  const digest = new ActionDigest()
+  let steps = 0
+  while (s.phase !== 'finished') {
+    if (steps >= 5000) throw new Error(`${table}/${gameSeed}: hit the 5000-step cap`)
+    const { seat } = legalActionsSummary(s)
+    const view = seatView(s, seat)
+    const moveSeed = hashSeed(`${gameSeed}:${s.moveIndex}`)()
+    digest.push(canonicalAction(decide(view, MONET_V020C, moveSeed)))
+    forwardE.decisions++
+    const r = reduce(s, decide(view, policy, moveSeed))
+    if (!r.ok) throw new Error(`${table}/${gameSeed} step ${steps}: ${r.error.code}`)
+    s = r.state
+    steps++
+  }
+  expect(digest.count, `${table}/${gameSeed}: decision count vs the v0.20c bank`).toBe(row.decisions)
+  expect(
+    digest.hex(),
+    `${table}/${gameSeed}: action digest vs ${MONET_V020C_BANK.revision.slice(0, 12)}`,
+  ).toBe(row.digest)
+  forwardE.digestsChecked++
+  forwardE.games++
+}
+
+describe('Monet v0.20c replays its forward bank: every action of whole us54 games, as accepted', () => {
+  for (const id of STYLE_IDS) {
+    const rows = MONET_V020C_BANK.games.filter((g) => g.table === id)
+    it(`${id} table: ${rows.length} us54 games, every digest as recorded`, () => {
+      expect(rows.length).toBe(SEEDS_PER_STYLE)
+      for (const row of rows) playForwardE(row)
+    }, 120_000)
+  }
+
+  it("covered the whole roster over the bank's 25,726 decisions", () => {
+    expect(forwardE.games).toBe(STYLE_IDS.length * SEEDS_PER_STYLE)
+    expect(forwardE.games).toBe(MONET_V020C_BANK.games.length)
+    expect(forwardE.decisions).toBe(MONET_V020C_BANK.totalDecisions)
+    expect(forwardE.decisions).toBe(25_726)
+    expect(forwardE.digestsChecked).toBe(MONET_V020C_BANK.games.length)
+  })
+
+  it('the v0.20c bank says what it is: a forward baseline from a clean tree this repo can name', () => {
+    expect(MONET_V020C_BANK.revision).toMatch(/^[0-9a-f]{40}$/)
+    expect(MONET_V020C_BANK.tree).toBe('wt')
+    expect(MONET_V020C_BANK.dirty).toBe(false)
+    expect(MONET_V020C_BANK.arm).toBe('monetPolicy("v0.20c")')
+    expect(MONET_V020C_BANK.totalDecisions).toBe(
+      MONET_V020C_BANK.games.reduce((n, g) => n + g.decisions, 0),
+    )
+    expect(new Set(MONET_V020C_BANK.games.map((g) => g.digest)).size).toBe(
+      MONET_V020C_BANK.games.length,
+    )
+    // v0.20c's games are not v0.9's: the closing credit moves about three asks in a hundred, and
+    // one moved ask re-deals every position after it. That the two banks share no digest needs no
+    // runtime check: both fixtures are `as const`, so `MONET_V09_BANK`'s digests and this bank's
+    // are disjoint literal unions, and `tsc` rejects a membership test between them (TS2345) the
+    // way it rejects `a.digest === b.digest` for v0.1 and v0.2 below.
   })
 })
 
