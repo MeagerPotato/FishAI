@@ -12028,11 +12028,26 @@ the strongest thing this architecture can be asked to do at the ask, and unlike 
 is an **achievable** number: any real policy improvement through the ask has to come out of it.
 
 > **D4, the bar, called before the numbers.**
-> - **D4 holds if the belief-limited ceiling is ≥ +0.278 sets a game** over the pick, to the end —
->   **not an arbitrary bar: it is exactly what §3.8at's exchange rate prices 54% at**, the win rate
->   §3.9's amended conditions 1 and 2 now require. If a perfect full-set search under the bot's own
->   belief cannot reach the frontier bar, **no selector, shortlist or ask model built on this belief
->   can**, and the ask is shut as a route to 54% — not by argument, by measurement.
+> - **D4 holds if the belief-limited ceiling is above zero by 2 SE.** If a perfect full-set search
+>   under the bot's own belief cannot beat the ask Monet already plays, **no selector, no wider
+>   shortlist and no re-fitted ask model built on this belief can either** — the ask is shut, not by
+>   argument but by measurement, and 58% must come from somewhere else.
+> - **AMENDED BEFORE THE RUN LANDED, AND THE REASON IS ON THE RECORD.** The bar first written here
+>   was *"≥ +0.278 sets a game, exactly what §3.8at's exchange rate prices 54% at"*. **That compared
+>   two different units.** §3.8at's +0.278 is a **per-GAME** set differential; what this instrument
+>   accumulates is the change in the final set differential from altering **ONE** ask and then
+>   playing on as Monet — a **per-DECISION** quantity, and there are ~91 ask decisions in a game.
+>   The two are not convertible: a policy that improved every ask would gain more than one
+>   decision's worth and far less than ninety-one times it, because the counterfactual lines
+>   diverge and the gains do not add. **The same caution applies to §3.8au's marker and to every
+>   per-decision number on this ladder**, which have been quoted beside per-game figures without
+>   the distinction being drawn. Caught by re-reading the accumulator while the run was still
+>   going, before it had printed anything; amended rather than reinterpreted afterwards.
+> - **+0.278 is kept, relabelled, as a scale line only** — printed beside the result to say what
+>   54% costs per game, explicitly NOT as a threshold this per-decision number can be held to.
+>   **If D4 comes out positive it establishes a direction, not a price**, and the price would then
+>   have to be read the way every shipping decision on this ladder is read: duplicate pairs of an
+>   actual policy, by §3.8n's bar.
 > - **A second line, reported beside it: what hindsight was worth** — the full-set ceiling minus the
 >   belief-limited one. **The larger that gap, the more of the ask's apparent headroom is unreachable
 >   in principle**, and the more decisively §3.8au's negative marker is explained rather than merely
