@@ -459,6 +459,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
+| **v0.49** — the learned leaf inside the search, at v0.33's vector (2026-09-10) | **row 57's, on the owner's word** (*"let's work towards the 58%"*, then all recommendations in order): §3.8aq earned *"the value estimate is the weak link"* — and the search that lost was running the LOCK-ONLY leaf, three hand-written terms, while §3.8ab's v0.29 had already fitted a learned leaf that beat it (R² 0.302 against 0.209) and read +0.161 a pair at home before its bridge read was deferred and never taken. Its closing note was *"the leaf buys little, the opponent model is the piece"*, and the opponent model was then solved by the clone for +10 points. **The two halves have never been in the same bot.** Nothing new in the engine. G1 the net beats `lock0`; **G2, which decides the rung, the net also beats `lock24` — the 24-step rollout the search actually consumes, a comparison v0.29 never made**; then the marker against the TRUE deal, twice, with the lock-only leaf as its control | **BOTH GATES OPEN AND THE MARKER CLOSES IT 11:47Z 2026-09-10 — the leaf predicts the end BETTER and makes the search play WORSE.** 2,072,028 rows in ~18 min (the cost predicted exactly). On identical holdout rows: `lock0` R² **0.2041** — **worse than the bare scoreboard's 0.2479**; `lock24` **0.2486** — twenty-four steps of rollout worth three ten-thousandths over the score; the net **0.2921**, so G1 and G2 both hold and **P2, called at 50% in writing, holds**. Then the truth: **the marker is −0.034 (SE 0.021) with the learned leaf against +0.013 (SE 0.024) with the lock-only control — P3 inverted on both clauses** — the true hit rate falling 53.5% → 48.1%, while **the arm's own estimate of its gain was +0.231: it believes it is winning a fifth of a set and is losing.** The mechanism is located: **it overrides a certain hit 244 times of 898 (27%) at −0.184 each**, against the static leaf's 92 of 912 at +0.033. **A guard cannot rescue it** — on uncertain picks both leaves read +0.011, so forbidding the overrides returns a no-op, and the fork is priced without being run. Fourth mechanism priced over this search and the fourth at or below zero; **and it leaves expert iteration without a signal, since the search is worse than the policy it searches over.** Stopped at C as pre-registered; H and F not run; nothing ships | L |
 | **v0.47** — §3.9's conditions 5 and 6, read on v0.33's vector (2026-09-10) | **row 55's**: §3.9's table has carried 5 and 6 as *"met at v0.9's vector, unread at v0.33's"* since §3.8ar corrected it. Nothing is built. Condition 5 is scored over §3.8ar's 72 cells from the 2,592 per-process cover files and never from `bot.log`; condition 6 runs the second, INDEPENDENTLY BUILT adapter — §3.8m's, written from the protocol docs alone and never shown this project's adapter — at v0.33 against SESTINA on §3.8ar's twelve seeds, on §3.8ar's own tree export so the adapter is the only difference. Four lines of 310 change (three labels and `MONET_VERSION`); `translate.mjs`, the view builder that IS the independent part, is byte-identical. Per-op expectations written down BEFORE the run, which §6.2 requires and §3.8ar did not do | **BOTH MET 06:29Z 2026-09-10 — 49.8680% against 49.8680% on every one of the twelve seeds, SD 1.6278 both sides, 14,396 of 14,400 games byte-identical; the four that differ are one position, the same one §3.8m named, and no result changed on any of them. Condition 5's cross-check is exact on 41 of 41 complete cells and short on 31 of 31 incomplete ones, which locates the 1.81% process loss in the collector and not in the play. §6.2 is owed two amendments the scoring found: `auditViolations` is a control that has NEVER PERFORMED A CHECK (`auditChecks: 0` on all 36 files of the only harness that ever collected it — the mirror cell's defect inside the table written to replace the mirror cell), and op coverage's written expectation was not being written. Six of seven registered bands held; the seventh, `mustfixDeclines`, found a counter-definition divergence between two adapters that agree on every decision. Conditions 1 and 2 are untouched and Monet v1.0 still does not exist** | S |
 | **v0.46** — the learned value over the clone's shortlist: the first label that is winning (2026-09-10) | **row 54's, on the owner's word**: every selector this repo owns has now been tried and priced — the belief walks back to greedy (§3.8ao), the rollout search overrides the clone at 23.3% for −0.009 sets a change even when handed a set holding the answer 84.0% of the time (§3.8aq) — and every learner on this ladder was fitted to predict what SESTINA chose. This one predicts **what won**: the taken ask's forty-nine features beside the state's, the asking team's final set differential as the target, and the coverage **generated** rather than assumed by taking a uniformly random member of the clone's top *k* at a fraction of ask decisions in home self-play, so the alternatives get their own outcomes instead of being extrapolated to. Three stages: A the generator (`scripts/gen-ask-value-data.mjs`), B the fit **gated on beating a state-only baseline on held-out games**, C the knob and the home cell by the pairs' win rate. Ships by §3.8n's bar (§3.8as) | **STAGES A AND B READ 02:53Z 2026-09-10 — THE GATE IS OPEN, and three of the five predictions read so far MISSED.** A: 6,000 games in 21.1 minutes, 512,211 rows, 50,883 of them explored; the pin reads 99.95% and not A1's 100.0%, because `containedPass: 1` overrides `pickAsk` after it — switching that knob off returns the pin to exactly 100.00%. A2 misses in the OPPOSITE direction and is the rung's most useful finding: paired on 1,200 shared deals, exploring costs −0.0158 sets a game at 0.17 SE, which says the clone's top three are close to INTERCHANGEABLE and therefore that selecting among them cannot be worth much either. B1 and B2 hold — the playable gain is +1.115% of held-out MSE over state plus the seven ask columns that are constant across a decision's candidates (`scoreDiff` carried the largest ask weight of all and can never move an argmax, so it was moved to the baseline's side before the gate was read). B3 misses narrowly at 52.80% against a 55–75% band, after a probe defect that read 23.14% was found and fixed: three features are list-relative, so the shortlist must be scored inside the full ranked list. The forty-two playable columns fitted alone reach R² 0.018. C is licensed and expected to lose. **STAGE C READ 05:51Z: IT LOSES AT EVERY DOSE AND THE RUNG SHIPS NOTHING.** Four banks of 800 pairs at each of two doses, 12,800 games in 25.3 minutes: the clone's top 3 reads 46.20% and −0.5922 a pair (8.97 SE behind), the top 2 reads 49.11% and −0.2087 (3.18 SE behind), **zero of eight banks ahead on either measure**. The ladder is ordered the way a pure loss is ordered — less room, less loss — and its limit as the shortlist narrows is the clone itself, so it approaches zero FROM BELOW and the best dose is no dose. C1 misses on both clauses: behind zero, and behind §3.8ai's rollout search at both doses, so the learned value is a WORSE judge of an ask than thirty-two rollouts and not a better one. **The line closes: the belief, the search and now a value fitted on winning have each been priced over this shortlist and all three lose, which is three ways of paying to learn what A2 measured first — the shortlist's members are worth the same.** The knob stays in the tree, off and pinned, for whatever selects over a WIDER set next. §3.8as's pre-registered cost for this cell was wrong by two orders of magnitude and is corrected in the record | L |
 | **v0.45** — condition 3's panel, read on v0.33's vector (2026-09-10) | **row 53's, on the owner's word ("run the panel check, then pre-register row 53")**: nothing is built — §3.9's third condition has been open since 2026-09-06, when it was read on v0.9's vector and failed, and the candidate has changed twice since. `monetPolicy('v0.33')` against `v02 v03 v04 v05 v06` in their engine on twelve seeds, plus a SESTINA column so the ordering's endpoint sits under the same pin; 72 cells, 86,400 games, MUSTFIX, six lane arms so each container owns its `bot.log`. Scored against the reading §3.8m fixed before this vector existed: "beats" = the twelve-seed mean ≥ 52.00 with every seed reported, "monotone" = v02 ≥ v03 ≥ v04 ≥ v05 ≥ v06 ≥ SESTINA with ties inside the floor (§3.8ar) | **MET 01:47Z 2026-09-10 — 85.42 / 79.28 / 54.67 / 54.01 / 53.99 against 49.87 at SESTINA: five of five beaten at the floor (the tightest, v06, by 1.99), the ordering holding with no inversion so the tie clause is never used, and no seed of the sixty panel cells below 50%. Condition 4 falls out of the same cells — declare accuracy 99.638% mean and 99.258% worst against a 98.0% bar, the fourteen named fault counters zero over ~241,000 per-process readings — and the 97.96% that had it open belongs to §3.8's `k98` arm, a different vector. Two conditions change state; 1 and 2 do not move, and the SESTINA column is disclosed as a bit-exact reproduction of §3.8's `c3` cells rather than a second twelve. The set-aside first run's 44 cells reproduce identically, which prices the shared-`bot.log` defect at the identity pin and nothing else** | S |
@@ -11746,6 +11747,186 @@ number is real; they cannot say it is bigger.
 **Cost.** Condition 5: no games. Condition 6: twelve cells, 7 minutes 35 seconds, one container,
 Docker up for the run and down after it.
 
+### 3.8au Monet v0.49 — the learned leaf inside the search, at v0.33's vector
+
+**Pre-registered before a row is generated.** The owner's direction of 2026-09-10, after §3.8at amended §3.9
+to the frontier bar: *"let's work towards the 58%, explore the options"*, then **"let's go with all your
+recommendations in order"** — this rung, expert iteration behind it if this one clears, and the declare-frequency
+line in parallel when the bridge is idle.
+
+**The gap this rung exists to close, stated as the record found it.** §3.8aq earned a sentence §3.8ai could not:
+*"the search is handed a set holding the answer 84.0% of the time and still picks worse than the clone, so the
+value estimate is the weak link and the search line closes."* The candidate set was tested and exonerated (the
+ranker's fill holds a hitting ask 84.0% of the time at k = 4 against the clone's 78.7%), and three selectors over
+the shortlist have all priced at zero. **What has never been fixed is how the bot evaluates a position.**
+
+> **And the search that lost was running the leaf a better one already beats.** §3.8ai's t32 form is *"D 32,
+> C 4, S 24, **the lock-only leaf**, the LCB guard"* — three hand-written terms: the score differential, a
+> hand-size term and a locked-book term (`leafValue`, `search.ts`). Meanwhile **§3.8ab's v0.29 fitted a learned
+> leaf over the same 118-feature state and beat that predictor** — the 128·128 net at held-out R² **0.302**
+> against the static lock count's **0.209** — and read **+0.161 ± 0.144 a pair (+1.2 points, 2.2 SE, eight of
+> twelve banks)** at home. **Its bridge read was deferred** behind v0.30's cells under the owner's wall-clock
+> direction and was never taken. Its closing note was *"the leaf buys little, **the opponent model is the
+> piece**"* — and the opponent model was then solved, by the clone, for +10 points. **The two halves have never
+> been in the same bot**, and `lib/engine/bots/data/` still carries no value model at all: `registerValueModel`,
+> `rollout(… leaf)` and `valueFeatures` are built, wired and unused on every shipped vector.
+
+**What is built and what is not.** Nothing new is proposed in the engine. `gen-value-data.mjs`, `fit-value.mjs`,
+`probe-search.mjs` and `duplicate-pairs.mjs --a-search / --a-leaf-model` all exist on `main`. This rung generates
+data at v0.33's vector, fits, gates, and reads. **If a gate closes, nothing is built and the record says which.**
+
+**The stages, each gating the next.**
+
+- **A — the data.** `gen-value-data.mjs --version v0.33 --eps 0.1 --sample 0.5 --lock-mod 5`, **24,000 games in
+  six processes**. Every row carries the 118 full-information features and the game's final set differential for
+  that team, plus **`lock0`** (the static lock-only leaf at the state) and, on holdout games only, **`lock24`**
+  (the arm's 24-step lock-only rollout from the TRUE state) — the two predictors a learned leaf has to beat.
+- **B — the fit, and the gate.** `fit-value.mjs --model mlp --hidden 128,128`, with `linear` fitted beside it as
+  a control, on a holdout split by game.
+  - **G1** — the net's held-out R² **beats `lock0`'s** on the same holdout rows. This is v0.29's own gate.
+  - **G2, and it is the one that decides the rung** — the net **also beats `lock24`**. v0.29 never made this
+    comparison: it beat the *static* count, but the value the search actually consumes at its horizon is the
+    24-step rollout, and **a leaf that cannot beat the thing it replaces cannot help the search that consumes
+    it.** If G2 closes, the rung stops at B, nothing is built, and the record says the leaf is not the piece
+    either.
+- **C — the marker, read against the truth, with §3.8at's oracle folded in.** `probe-search.mjs` rolls the pick
+  and the played action out from the **TRUE deal** on the same paired key, so it reports the true advantage of
+  what the arm played. Read **twice**: with the learned leaf, and with the lock-only leaf as the control, so the
+  leaf's own contribution is isolated rather than inferred. **The marker must be positive or the arm is a no-op.**
+- **H — home.** `duplicate-pairs.mjs`, A = v0.33's vector + the search + the learned leaf, B = v0.33's vector,
+  **twelve banks of 200**. Eligible at **≥ +2 SE above zero and ahead on a majority of banks** (§3.8n).
+- **F — abroad.** Only if H clears: **twelve fresh seeds against SESTINA v1.0**, §3.8n's bar, and per §3.8at
+  **quoted in sets a game beside the win rate** so it can be read against the exchange rate.
+
+**The predictions, with their bars.**
+
+- **P1 — G1 holds.** The 128·128 net beats `lock0` on held-out R². Stated at high confidence: v0.29 already read
+  0.302 against 0.209, and the only change is the vector the data comes from.
+- **P2 — G2 is a coin flip, and it is the prediction this rung turns on.** A *static* evaluation beating a
+  **24-step rollout with real lookahead** is genuinely uncertain, and no reading in this document bears on it.
+  **Called at 50%, in writing, before the fit.** If it misses, the honest conclusion is that the search's problem
+  is its horizon and its determinization rather than its leaf, and the search line stays closed.
+- **P3 — the marker separates.** Positive with the learned leaf; **≤ 0 with the lock-only leaf**, which is what
+  §3.8ai's −0.170 a pair predicts of the control.
+- **P4 — home lands between +0.10 and +0.25 a pair.** v0.29 read +0.161 on the weaker pre-clone stack.
+- **P5 — and this rung does not reach the target on its own.** If F is taken at all, **+1 to +3 points**, which
+  is **+0.08 to +0.23 sets a game** against the **+0.278** that 54% costs and the **+0.591** that 58% costs.
+  Said before the numbers so that a good read is not mistaken for the destination: **58% needs this rung AND the
+  expert-iteration rung behind it.**
+
+**Cost, measured rather than projected — §3.8as's estimate for its own stage C was wrong by two orders of
+magnitude and this is the correction.** A timing slice of **200 games ran in 53.2 seconds** (3.76 games a second,
+17,460 rows, 87 rows a game). **Stage A is therefore ~18 minutes** over six processes, not the hours a
+game-generating stage would suggest. The slice was run **before** this pre-registration was written and is
+disclosed here rather than folded into the result; its rows are discarded and not fitted. The fit, the marker and
+the home banks are all measured and reported when read; the bridge cell is affordable at **~7 minutes a cell at
+D 8 · C 3 (96 ms an ask)** and **~47 minutes at t32 (631 ms)**, so twelve seeds is a night at the heavy setting.
+
+**Read 11:47Z 2026-09-10. THE GATES OPEN, THE MARKER CLOSES IT, AND THE RUNG SHIPS NOTHING.** The
+learned leaf predicts the end **better** than everything it replaces and makes the search play
+**worse**. Stopped at C as pre-registered; H and F were not run. Nothing on any shipped vector
+changes: `monetPolicy('v0.33')` is byte identity and `lib/engine/bots/data/` still carries no value
+model.
+
+#### Stage A — the data. The cost prediction was exact.
+
+24,000 games over six processes, **2,072,028 rows**, 415,956 of them carrying `lock24`. **~18 minutes
+of wall clock against the "~18 minutes" registered**, at 3.81 games a second against the timing
+slice's 3.76. §3.8as's two-orders-of-magnitude miss is not repeated, and the reason is that the rate
+was measured before the number was written rather than after.
+
+#### Stage B — both gates open, and P2 holds
+
+Every figure below is MSE on the **same 415,956 holdout rows**, split by game and never by row, so
+the R² share a denominator (constant MSE 6.7082).
+
+> | predictor | what it is | MSE | R² |
+> |---|---|---:|---:|
+> | plain `scoreDiff`, calibrated | just reading the score off the board | 5.0451 | 0.2479 |
+> | **`lock0`** calibrated | the search's **static** leaf — the three hand-written terms | 5.3392 | **0.2041** |
+> | `lock24` as-is | the 24-step lock-only rollout from the TRUE state | 5.1156 | 0.2374 |
+> | **`lock24`** calibrated | **the value the search actually consumes at its horizon** | 5.0405 | **0.2486** |
+> | `linear` | the learned leaf, ridge | 4.8320 | 0.2797 |
+> | **`mlp-128·128`** | the learned leaf, kept at epoch 3 | **4.7485** | **0.2921** |
+
+**G1 HELD** and **G2 HELD** — the net beats `lock0` and it also beats `lock24`, the thing it
+replaces. **P2 was called at 50% in writing before the fit and it holds.**
+
+**Two findings fall out of the baseline column and neither was predicted.** First, **the search's own
+static leaf is a worse predictor of the end than the bare score differential** — 0.2041 against
+0.2479 — so its locked-book term is not merely weak, it is **actively harmful as an evaluation**.
+Second, **twenty-four steps of rollout buy almost nothing over the bare score**: 0.2486 against
+0.2479, three ten-thousandths of R². The horizon the search pays 631 ms an ask for is worth
+approximately the number already printed on the scoreboard. [measured]
+
+#### Stage C — the marker, read against the truth, and it closes the rung
+
+`probe-search.mjs` rolls the pick and the played action out from the **TRUE deal** on the same paired
+key, so what it reports is not the arm's opinion but the outcome. Both arms are §3.8ai's t32 form
+(D 32, C 4, S 24, LCB guard) at v0.33's vector, 40 mirror games each, ~41 minutes each; the **only**
+difference is the leaf.
+
+> | | **learned leaf** | lock-only (the control) |
+> |---|---:|---:|
+> | searched decisions | 3,320 | 3,361 |
+> | played a candidate over the pick | **1,051 (31.7%)** | 836 (24.9%) |
+> | the arm's **own** estimate of what it gained | **+0.231** (SE 0.006) | +0.191 (SE 0.004) |
+> | **the marker — the TRUE advantage of what it played** | **−0.034 (SE 0.021)** | **+0.013 (SE 0.024)** |
+> | true hit rate, pick → what it played | **53.5% → 48.1%** | 53.0% → 50.9% |
+
+**P3 misses on both clauses, and inverted on each.** It predicted the marker positive with the
+learned leaf and at or below zero with the lock-only control; the learned leaf reads **negative** and
+the control reads **positive**. §3.8au's rule binds — *"the marker must be positive or the arm is a
+no-op"* — and this arm is worse than a no-op.
+
+**The single sentence this rung is worth.** The arm's own estimate of what it gained was **+0.231**
+and the truth was **−0.034**: **it believes it is winning a fifth of a set and it is losing.** A leaf
+fitted to predict the end, and succeeding, hands the search an evaluation the search then optimises
+*against* — §3.8ab saw this with the linear leaf at −1.053 a pair and could only call it exploitation;
+this rung reproduces it with the **better** net and **locates the mechanism**.
+
+**Where the damage is, exactly.**
+
+> | the pick was… | learned leaf: overridden | true cost each | lock-only: overridden | true cost each |
+> |---|---:|---:|---:|---:|
+> | **a certain hit** | **244 of 898 (27.2%)** | **−0.184** (SE 0.040) | 92 of 912 (10.1%) | +0.033 (SE 0.073) |
+> | uncertain | 807 of 2,422 | +0.011 (SE 0.024) | 744 of 2,449 | +0.011 (SE 0.026) |
+
+**The learned leaf makes the search walk away from certain hits** — it overrides a certain hit nearly
+three times as often as the static leaf does, and each override costs 0.184 sets. §3.8aa built this
+split precisely to catch *"where the search leaves a certain hit for a chase"*, and it has caught it.
+
+**And a guard cannot rescue it, which is why the rung closes rather than forking.** On uncertain picks
+the two leaves read **+0.011 and +0.011** — identical, and inside their own SEs of zero. Forbidding
+certain-hit overrides would move the marker from −0.034 to about +0.011 ± 0.024, which is **no-op**,
+not a rung. **The learned leaf does not help the search even where it does no harm.** The cheap fork
+is priced without running it, and it is not taken.
+
+#### What closes, and what it costs the plan behind it
+
+**§3.8aq's diagnosis was right about the symptom and wrong about the cure.** The value estimate *is*
+the weak link — `lock0` cannot beat the scoreboard and `lock24` barely can — but **replacing it with
+a better predictor does not help**, because the search's failure is not that its leaf is a poor
+predictor *on average*. It is that the search selects the candidates where the leaf is most wrong,
+and a fitted leaf is most wrong exactly where the hand-written one is right: on the value of taking
+a set you can already take.
+
+**This is now the fourth mechanism priced over this search and the fourth to read at or below zero** —
+the belief, the rollout search, the learned ask-value, and now the learned leaf. Together with
+§3.8aq's candidate-fill gate, **every component of the search has been varied and none of them is the
+piece.**
+
+**It also undercuts the rung that was queued behind it.** Expert iteration bootstraps a policy from
+targets the search produces, and it needs the search to be **better than the policy it searches
+over**. With the best value this project can fit, the search is **worse** than the policy — the marker
+is negative and the true hit rate falls from 53.5% to 48.1%. **There is no better-than-policy target
+to learn from**, so the expert-iteration rung is not merely deferred, it is **without a signal**, and
+it should not be run on this stack until something makes the search beat its own policy.
+
+**Cost.** Stage A ~18 minutes; stage B 24 minutes of fitting; stage C 41 minutes a probe, two in
+parallel. Under two hours of home compute, no Docker and no bridge, and it closed a line that four
+earlier rungs had left ambiguous.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -12263,6 +12444,7 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 54 | **After §3.8aq — every selector this repo owns has been priced and none beats the clone. What has never been fitted is a value whose label is winning.** | **TAKEN — v0.46 (§3.8as)**, on the owner's word. C1, C3, F4, F5 and H1 were all trained to predict SESTINA's choice; the clone therefore arrives at SESTINA and stops (§3.8an, §3.8ao). This rung fits the final set differential instead, over the clone's own shortlist, with the coverage generated by ε-exploration in home self-play — because the records hold only the asks the clone took, and §3.8ao is the standing example of what extrapolating past a fitted region costs. Gated twice: the generator must reproduce the clone's top at ε = 0, and the fit must beat a state-only baseline on held-out games before the engine is touched. Pre-registered in §3.8as before the generator is written. **Read 02:53Z 2026-09-10 — THE GATE IS OPEN and stage C is licensed, on a signal small enough that the record says so twice.** A1 missed: the pin is 99.95%, not 100.0%, and the whole residual is `containedPass: 1` overriding `pickAsk` afterwards — a property of the vector, not of the instrument, and §3.8ap's 100.0% was a statement about the ask policy that read as one about the bot. A2 missed in the other direction and is the finding that matters: paired on 1,200 shared deals, taking a uniformly random member of the clone's top three at 15% of decisions costs −0.0158 sets a game at 0.17 SE — nothing — which makes the coverage free AND says the shortlist's members are worth the same, so choosing better among them cannot be worth much. B1 and B2 held: +1.115% of held-out MSE, inside B2's 3%, after seven position-only ask columns were moved to the baseline so the gate measured what a candidate can change; the forty-two that remain reach R² 0.018 fitted alone. B3 missed narrowly at 52.80% against 55–75%, and its first reading of 23.14% was a probe defect (three ask features are list-relative) recorded beside the corrected one because the gap between them is the gap between "a different policy" and "a selector at the edge of its band". Two readings now predict C loses; C1's 45% is restated lower and the cell is staged. **Read 05:51Z 2026-09-10: STAGE C LOSES AT EVERY DOSE AND THE RUNG SHIPS NOTHING.** 46.20% and −0.5922 a pair over the clone's top 3, 49.11% and −0.2087 over the top 2, four banks of 800 pairs each, zero of eight ahead. The dose ladder approaches zero from below and its limit is the clone, so there is no dose at which the value is ahead. C1 misses twice over: behind zero at 3.18 SE at its best dose, and behind §3.8ai's −0.170 a pair at both doses — the learned value is a worse judge of an ask than thirty-two rollouts. **Three selectors over the clone's shortlist are now priced and all three lose** (the belief walks to greedy, the search −0.170, the value −0.209), which is what A2 predicted when it measured the shortlist's members as interchangeable. The third branch of §3.8as fires with its premise corrected: the clone's choice is close to the best available AT THIS SHORTLIST, so the next move must be wider than the shortlist — the candidate set itself, or a decision other than the ask. The knob is kept, off and pinned, so the next selector need not rebuild it. |
 | 55 | **After §3.8as — §3.9's conditions 5 and 6 have never been read at v0.33's vector. Do they carry across the two version changes since?** | **TAKEN — v0.47 (§3.8at).** §3.8ar corrected §3.9's table and found it had been carrying v0.9's readings against a candidate two versions newer; it closed 3 and 4 and left 5 and 6 explicitly open, *"not assumed either way"*. Condition 5 costs no games — §6.2's controls are scorable from §3.8ar's 72 cells, summed from the 2,592 per-process cover files and never from `bot.log`. Condition 6 costs twelve, on §3.8ar's own tree export so the adapter is the only difference. **Read 06:29Z 2026-09-10: BOTH MET.** The independent adapter reproduces §3.8ar's SESTINA column at **49.8680% against 49.8680%, every seed to the digit**, SD 1.6278 both sides, with **14,396 of 14,400 games byte-identical** and the four that differ located to a single position — which teammate of an already-certain team emits the declare, and whether it lands before or after the turn-pass — with the set, the assignment, the event count, the score, the winner and the whole `setWinner` vector unchanged. That is the same position §3.8m located at v0.9, four days and two vectors earlier. Condition 5's cross-check is exact on 41 of 41 complete cells and short, never over, on 31 of 31 incomplete ones, which locates the 1.81% process loss in the collector and not in the play. **What the rung is really worth is the two amendments it owes §6.2, both found by scoring the controls instead of quoting them.** `auditViolations` is named mandatory and has **never once been able to fail**: it exists nowhere in this repository, nowhere in the adapter and nowhere in the engine's output, and in the one harness that ever collected it all 36 files read `auditViolations: 0` beside `auditChecks: 0` — zero violations because zero checks, which is the mirror cell's defect sitting inside the table §6.2 wrote to replace the mirror cell. And op coverage's *"written expectation for each, recorded before the run"* had not been happening: §3.8ar's `EXPECT-…` files pin the arm's identity, a different control. This rung wrote the expectations first, and **six of seven held while the seventh found something real** — `mustfixDeclines` at 699 against a band of 287–391 between two adapters that agree on every decision, so the counter is not comparable across instruments. Unregistered: the belief's calibration has drifted since v0.9 — §3.8m's bars held 12 of 12 against SESTINA and now hold 6 of 12, and miss on all sixty ancestor cells. **What it does not do: conditions 1 and 2 are untouched at 50.46% ± 0.66 over twenty-four seeds. Four of the six are now met and the whole remaining gap is a win rate, which no control table and no second adapter can move.** |
 | 56 | **After §3.8at — §3.9's condition 2 has two readings, and they differ by three points of win rate. Which did the owner mean?** The text requires every seed reported and the SD published, both of which are done; the *"one negative seed is a claim about a seed"* sentence can be read as a reporting rule (met) or as a bar no seed may fall under (not met, five of twelve). At SD 1.63 the second reading needs a pooled mean near 53-54% rather than 50%. | **PUT TO THE OWNER 2026-09-10 AND ANSWERED: THE FRONTIER READING, AND STRONGER.** *"I want Monet to become the new frontier bot, which means being consistently superior to SESTINA, so lets change that condition to match those expectations. You can improve upon SESTINA's habits while improving on Monet's own architecture to do so."* **Both conditions amended on that word.** Condition 1 goes from ≥ 50.0% to **≥ 52.0%** — not a new number, but the bar §3.8m already fixed for what *"beats"* means on the panel, so conditions 1 and 3 now score against one definition of beating instead of two. Condition 2 goes from a reporting rule to **every one of the twelve seeds ≥ 50.0%**: consistency is scored, not only disclosed. **Condition 2 is the binding one** — at SD 1.63 it needs a pooled mean near **53-54%**, where the old pair asked for ~50%. Recorded with the amendment so it is never re-derived: **the exchange rate, fitted over §3.8ar's 72 panel cells, is `win rate = 50.449 + 12.785 x (sets-a-game differential)` at R² 0.9942** — one extra set a game is **12.8 points**, so 54% costs **+0.278 sets a game** against Monet's −0.004 today. That is **one rung the size of the clone-3 step**, which bought +0.285 on its own: demanding, not unreachable. Every future rung is to be quoted in sets a game beside its win rate. **The estimate given to the owner with the amendment, as a judgement and not a measurement: 54% is reachable, 56-58% is the plausible ceiling, and past 60% would need a different bot.** The structural argument for where the headroom is: Monet's belief is measurably better than SESTINA's (99.73% declare accuracy against 97.77%; SESTINA's spec is `rbelief=indep`, Monet runs a joint chain), and the two tie only because **two opposite errors cancel** — SESTINA declares 4.558 times a game and gifts 0.102 sets away doing it, Monet declares 4.377 times and gifts 0.012, netting 4.468 against 4.467. Monet then **hands its ask to a clone of the bot with the worse belief**, so today's ask is *"what would SESTINA play, guessed well"* rather than *"what is best given what we know"* — which is exactly why all three selectors over the clone's shortlist priced at zero, the shortlist being SESTINA-shaped. **The next rung must spend the belief edge on the ask instead of spending it on imitation.** |
+| 57 | **After §3.8at — the owner set the frontier bar (~54%, and 58% named as the target). §3.8aq says the value estimate is the weak link and the search that lost was running a hand-written leaf. Does a learned one fix it?** §3.8ab fitted one at v0.29 that beat the static count and read +0.161 a pair at home; its bridge read was deferred behind v0.30's cells and never taken, its closing note blamed the opponent model, and the opponent model was then solved by the clone. The two halves have never been in the same bot. | **TAKEN — v0.49 (§3.8au), pre-registered at `eb521e8` before a row was generated. READ 11:47Z 2026-09-10: THE GATES OPEN, THE MARKER CLOSES IT, AND NOTHING SHIPS.** Stage A produced 2,072,028 rows in **~18 minutes against a registered ~18 minutes** — the correction to §3.8as's two-orders-of-magnitude miss, and it worked because the rate was measured before the number was written. Stage B: on identical holdout rows the net reaches **R² 0.2921** against `lock24`'s **0.2486** and `lock0`'s **0.2041**, so **G1 and G2 both hold and P2 — called at 50% in writing before the fit — holds.** Two unpredicted findings sit in the baseline column: **the search's own static leaf is a worse predictor of the end than the bare scoreboard** (0.2041 against 0.2479), and **twenty-four steps of rollout are worth three ten-thousandths of R² over that scoreboard** (0.2486) while costing 631 ms an ask. **Then the truth closed it.** The marker — the true paired advantage of what the arm played, rolled out from the real deal — reads **−0.034 (SE 0.021) with the learned leaf and +0.013 (SE 0.024) with the lock-only control**, so **P3 misses on both clauses and inverted on each**, and §3.8au's rule binds: the arm is worse than a no-op. The true hit rate falls **53.5% → 48.1%**, and **the arm's own estimate of what it gained was +0.231 while the truth was −0.034 — it believes it is winning a fifth of a set and is losing.** **The mechanism is located rather than guessed:** the learned leaf **overrides a certain hit on 244 of 898 such decisions (27%) at a true cost of −0.184 each**, against the static leaf's 92 of 912 at +0.033 — §3.8aa built that split to catch *"where the search leaves a certain hit for a chase"* and it caught it. **The obvious fork is priced without running it and refused:** on uncertain picks the two leaves read **+0.011 and +0.011**, identical and inside zero, so a certain-hit guard returns a no-op rather than a rung. **What this closes.** §3.8aq was right about the symptom and wrong about the cure — the failure is not that the leaf predicts badly on average, it is that **the search selects the candidates where its leaf is most wrong**, and a fitted leaf is most wrong exactly where the hand-written one is right. **Every component of this search has now been varied — the belief, the rollout, the ask-value, the candidate fill and the leaf — and none of them is the piece.** **And it removes the rung that was queued behind it:** expert iteration needs the search to beat the policy it searches over, and with the best value this project can fit the search is worse than that policy, so there is **no better-than-policy target to bootstrap from**. Under two hours of home compute, no Docker, no bridge. **Conditions 1 and 2 are untouched; the ~54% and 58% targets are unmoved and now need a route that is not this search.** |
 
 ---
 
