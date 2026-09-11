@@ -108,7 +108,7 @@ import {
   unaskableBooks,
 } from './knowledge.ts'
 import { marginalFor } from './marginal.ts'
-import { askModelOf, chooseAskByModel, chooseAskByValue } from './imitation.ts'
+import { askAdvantageModelOf, askModelOf, chooseAskByAdvantage, chooseAskByModel, chooseAskByValue } from './imitation.ts'
 import { assignJointly } from './joint.ts'
 import { assignByHolder } from './claimbelief.ts'
 import { holderModelOf } from './holder.ts'
@@ -1133,6 +1133,24 @@ function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: ActiveP
   // every term below is bypassed. Absent (every roster style, every tier, every version), byte identity.
   if (style.askModel !== undefined) {
     const clone = askModelOf(style.askModel)
+    // MONET.md §3.8aw stage C / §3.8ax C′ — the learned advantage over the clone's choice. Present, every
+    // legal ask on the list is scored and the clone's choice is left only for the model's best, where that
+    // best scores more than `askAdvantageMargin` above it; absent (every roster style, every tier, every
+    // shipped version), this branch is not entered and everything below is byte identity.
+    if (style.askAdvantageModel !== undefined) {
+      const margin = style.askAdvantageMargin ?? 0
+      const { ask, cloneAsk, gap } = chooseAskByAdvantage(clone, askAdvantageModelOf(style.askAdvantageModel), view, k, ranked, margin)
+      if (t) {
+        t.notes.push(
+          ask !== cloneAsk
+            ? `The ask advantage ${style.askAdvantageModel} took ${pc(ask.card)} at seat ${ask.target} over the clone's ${pc(cloneAsk.card)} at seat ${cloneAsk.target}: ${gap.toFixed(3)} above it, past the margin ${margin}.`
+            : gap > 0
+              ? `The ask advantage ${style.askAdvantageModel} kept the clone's ${pc(ask.card)} at seat ${ask.target}: its best was ${gap.toFixed(3)} above it, inside the margin ${margin}.`
+              : `The ask advantage ${style.askAdvantageModel} kept the clone's ${pc(ask.card)} at seat ${ask.target}, its own best.`,
+        )
+      }
+      return ask
+    }
     // MONET.md §3.8as — the learned value over the clone's shortlist. Present, the clone still orders
     // the list and the value only picks among its top `askValueTopK`; absent (every roster style,
     // every tier, every shipped version), this branch is not entered and the line below is byte
