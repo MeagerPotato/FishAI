@@ -3,7 +3,7 @@
  * ≤ 0.9 s per six-seat game) and §0.2's cost line (Monet at ~0.14 ms per decision, ~82 ms per game).
  *
  *     node scripts/bench-decide.mjs --version v0.4a [--override '{"closing":0.5,...}'] [--games 24] [--warmup 4] [--search '{"det":8,"cand":3,"steps":24}']
- *         [--leaf-model models/leaf.json] [--ask-model models/ask.json]
+ *         [--leaf-model models/leaf.json] [--ask-model models/ask.json] [--advantage-model models/adv.json]
  *
  * `--override` (MONET.md 3.8aa) lays style keys over the named version's vector, as duplicate-pairs.mjs's
  * withOverride does, so the shipped stack can be costed before it is a version. `--ask-model` (MONET.md 3.8ac)
@@ -56,7 +56,11 @@ const WARMUP = Number(argOf('--warmup', 4))
 // MONET.md 3.8aa: --override lays style keys over the version's vector; 3.8ac: --ask-model <file> registers an ask model under the file's basename and names it as `askModel`
 const ASK = argOf('--ask-model', '')
 if (ASK) BOTS.registerAskModel(basename(ASK), JSON.parse(fs.readFileSync(ASK, 'utf8')))
-const OVER = { ...(argOf('--override', '') ? JSON.parse(argOf('--override', '')) : {}), ...(ASK ? { askModel: basename(ASK) } : {}) }
+// MONET.md 3.8ay: --advantage-model <file> registers an ask-advantage model under the file's basename and names it as
+// `askAdvantageModel` (the margin comes through --override as `askAdvantageMargin`), so the knob is costed on the same games
+const ADV = argOf('--advantage-model', '')
+if (ADV) BOTS.registerAskAdvantageModel(basename(ADV), JSON.parse(fs.readFileSync(ADV, 'utf8')))
+const OVER = { ...(argOf('--override', '') ? JSON.parse(argOf('--override', '')) : {}), ...(ASK ? { askModel: basename(ASK) } : {}), ...(ADV ? { askAdvantageModel: basename(ADV) } : {}) }
 const BASE = monetPolicy(VERSION)
 const POLICY = Object.keys(OVER).length > 0 ? Object.freeze({ skill: BASE.skill, style: Object.freeze({ ...BASE.style, ...OVER }) }) : BASE
 
