@@ -84,6 +84,11 @@ const B2_ARM = argOf('--b2-arm', '')
 // the same overlay on the --cf policy itself: on the arm's OWN records the counterfactual must then
 // agree with the play 100.0%, which pins the in-engine arm to the bridge arm before it prices anything
 const CF_KNOBS = argOf('--cf-knobs', '')
+// §3.8ay: an ask-ADVANTAGE model (imitation.ts) registered under its file's own name before any policy is built, so
+// --cf-knobs askAdvantageModel=<that name> (and --a-knobs / --b-knobs at home) can play it: v0.53's home pin of the
+// knob. A bridge arm's own asks are pinned by scripts/pin-bridge-asks.mjs, on bridge-records.mjs's walk, not by --cf
+const CF_ADV_MODEL = argOf('--cf-advantage-model', '')
+if (CF_ADV_MODEL) BOTS.registerAskAdvantageModel(path.basename(CF_ADV_MODEL), JSON.parse(fs.readFileSync(CF_ADV_MODEL, 'utf8')))
 // §3.8k: both tables' q scored on the same sampled pairs, and the sampling every N-th event index
 const ASSIGN_EXACT = process.argv.includes('--assign-exact')
 // §3.8l: an alternative belief — the --cf policy's knowledge built with extra KnowledgeOptions
