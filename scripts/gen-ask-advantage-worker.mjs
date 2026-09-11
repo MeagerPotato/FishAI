@@ -1,12 +1,13 @@
 /**
  * gen-ask-advantage-worker.mjs - the worker thread of scripts/gen-ask-advantage-data.mjs (MONET.md 3.8aw
- * stage A). A task is a contiguous range of games; its result is that range's labelled pairs as one
- * Float32Array, transferred back. The design and the row layout are the orchestrator's header.
+ * stage A, and 3.8ax's second round). A task is a contiguous range of games; its result is that range's
+ * labelled pairs as one Float32Array, transferred back. The design and the row layout are the orchestrator's
+ * header. A model, when there is one, arrives once as workerData.
  */
-import { parentPort } from 'node:worker_threads'
+import { parentPort, workerData } from 'node:worker_threads'
 import { pathToFileURL, fileURLToPath } from 'node:url'
 import { dirname, join, resolve } from 'node:path'
-import { advFeatureRows } from './ask-advantage-features.mjs'
+import { advFeatureRows, advFeatureCount } from './ask-advantage-features.mjs'
 
 if (!parentPort) throw new Error('gen-ask-advantage-worker.mjs must be run as a worker thread')
 
@@ -15,10 +16,12 @@ const ENG = await import(pathToFileURL(join(ROOT, 'lib/engine/index.ts')).href)
 const BOTS = await import(pathToFileURL(join(ROOT, 'lib/engine/bots/index.ts')).href)
 const MON = await import(pathToFileURL(join(ROOT, 'lib/engine/bots/monet.ts')).href)
 const IMI = await import(pathToFileURL(join(ROOT, 'lib/engine/bots/imitation.ts')).href)
+const NET = await import(pathToFileURL(join(ROOT, 'lib/engine/bots/net.ts')).href)
 const S = await import(pathToFileURL(join(ROOT, 'lib/engine/search/index.ts')).href)
 const { newGame, us54Config, legalActionsSummary, seatView, seatTeam, hashSeed, mulberry32, reduce, decide } = ENG
 
 const END = 5000
+const MODEL = workerData?.model ? NET.compileNet(workerData.model, advFeatureCount(IMI)) : null
 
 function runTask(t) {
   const pol = MON.monetPolicy(t.version)
@@ -35,7 +38,7 @@ function runTask(t) {
     choicePrior: marginal ? style.choicePrior : undefined,
   }
   const out = []
-  const c = { games: 0, askDecisions: 0, sampled: 0, overridden: 0, noAlt: 0, pairs: 0, rollouts: 0 }
+  const c = { games: 0, askDecisions: 0, sampled: 0, overridden: 0, noAlt: 0, modelIsClone: 0, pairs: 0, rollouts: 0 }
   const t0 = Date.now()
   for (let g = t.from; g < t.to; g++) {
     const label = `${t.label}-${g}`
@@ -70,6 +73,16 @@ function runTask(t) {
                 chosen.add(i)
                 alts.push({ i, kind })
               }
+            }
+            // 3.8ax: the model's own best ask over the whole legal list, labelled first as kind 4 wherever it
+            // is not the clone's choice - the marker probe's argmax and tie rule exactly, so the pairs written
+            // here are the deviations probe-ask-advantage.mjs prices at margin 0
+            if (MODEL !== null) {
+              const f = rows.map((x) => NET.forwardNet(MODEL, x))
+              let bi = ti
+              for (let j = 0; j < f.length; j++) if (f[j] > f[bi]) bi = j
+              if (bi === ti) c.modelIsClone++
+              else add(bi, 4)
             }
             for (let r = 0, got = 0; r < order.length && got < t.cloneAlts; r++) {
               if (!chosen.has(order[r])) {
