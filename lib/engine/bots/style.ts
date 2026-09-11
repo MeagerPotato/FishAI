@@ -431,6 +431,26 @@ export interface StyleParams extends AskWeights {
    */
   askValueTopK?: number
   /**
+   * MONET.md §3.8aw stage C / §3.8ax C′ — the learned ask ADVANTAGE: the name of a model registered with
+   * `registerAskAdvantageModel` (imitation.ts), fitted on pairs of play-outs from the true deal — the
+   * clone's ask and an alternative, one rollout key — to predict how much more or less of the final set
+   * differential an ask leaves the asking team than the clone's own. Present WITH `askModel`, `pickAsk`
+   * scores every legal ask on the ranker's list and leaves the clone's choice only for the model's best,
+   * and only where that best scores more than `askAdvantageMargin` above the clone's; absent, byte
+   * identity. Inert without `askModel` (the model's rows extend the clone's own), checked before
+   * `askValueModel` and refused beside it by `validateStyle` (two selectors over one list are two
+   * mechanisms), and absent on every roster style and every tier; a lab knob reached by
+   * `--a-advantage-model` and `--a-override`.
+   */
+  askAdvantageModel?: string
+  /**
+   * MONET.md §3.8aw — how far above the clone's choice, in the model's units (sets of final differential),
+   * the advantage's best ask must score before it is played. Absent is 0, the bare argmax. The marker chose
+   * it on half its games and scored it on the other half; §3.8ax's B2′ chose 0.2. Inert without
+   * `askAdvantageModel`.
+   */
+  askAdvantageMargin?: number
+  /**
    * MONET.md §3.8u — the closing credit's rung BELOW the four, at its own dose: where the seat's
    * certain picture of the asked set has exactly two cards outstanding after the hit (the horizon's
    * worth, where `lock` is 0 and `closing` pays nothing — a seat-known three of six under `us54`, the
@@ -925,6 +945,16 @@ export function validateStyle(style: StyleParams): string[] {
   if (askValueTopK !== undefined && !(typeof askValueTopK === 'number' && Number.isInteger(askValueTopK) && askValueTopK >= 2)) {
     bad.push(`askValueTopK ${String(askValueTopK)} is not an integer >= 2`)
   }
+  const askAdvantageModel = style.askAdvantageModel
+  if (askAdvantageModel !== undefined && !(typeof askAdvantageModel === 'string' && askAdvantageModel.length > 0)) bad.push(`askAdvantageModel ${String(askAdvantageModel)} is not a non-empty string`)
+  // The model's best never scores below the clone's choice, so a negative margin would play as 0 while
+  // printing as something else: refused rather than clamped, as the shortlist's floor is.
+  const askAdvantageMargin = style.askAdvantageMargin
+  if (askAdvantageMargin !== undefined && !(typeof askAdvantageMargin === 'number' && Number.isFinite(askAdvantageMargin) && askAdvantageMargin >= 0)) {
+    bad.push(`askAdvantageMargin ${String(askAdvantageMargin)} is not a number >= 0`)
+  }
+  // Two selectors over one list are two mechanisms, and `pickAsk` would read the advantage and never the value.
+  if (askAdvantageModel !== undefined && askValueModel !== undefined) bad.push('askAdvantageModel and askValueModel are both set; they are two selectors over one list')
   const closingThree = style.closingThree
   if (closingThree !== undefined && !(typeof closingThree === 'number' && Number.isFinite(closingThree) && closingThree >= 0)) bad.push(`closingThree ${String(closingThree)} is not a number >= 0`)
   // The `>= 0` refusal is load-bearing rather than decoration: a NEGATIVE `chase` is a penalty on

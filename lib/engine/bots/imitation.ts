@@ -483,3 +483,88 @@ export function chooseAskByModel(m: CompiledNet, view: SeatView, k: Knowledge, r
   for (let j = 1; j < s.length; j++) if (s[j] > s[best]) best = j
   return ranked[best]
 }
+
+/**
+ * MONET.md §3.8aw — the learned ask ADVANTAGE's row: the clone's own forty-nine (`ASK_FEATURES_2`) and two
+ * more that hand the model the clone's opinion of each ask — `cloneRel`, the clone's score less the best
+ * clone score on the list (0 at the clone's choice, negative elsewhere), and `isCloneTop`, 1 at the clone's
+ * choice. The model was fitted on pairs of play-outs from the true deal under one rollout key (the clone's
+ * ask and an alternative) to predict the difference in the asking team's final set differential, so a
+ * score difference between two asks is a prediction in sets. `scripts/ask-advantage-features.mjs` built
+ * these rows for the fit and the marker; `askAdvantageRows` builds them in play, and a test pins the two.
+ */
+export const ASK_ADVANTAGE_FEATURES = [...ASK_FEATURES_2, 'cloneRel', 'isCloneTop'] as const
+
+export const ASK_ADVANTAGE_FEATURE_COUNT = ASK_ADVANTAGE_FEATURES.length
+
+const ADVANTAGE_MODELS = new Map<string, CompiledNet>()
+
+/** Register a fitted advantage model under a name `StyleParams.askAdvantageModel` can refer to (compiled once here); any width but `ASK_ADVANTAGE_FEATURE_COUNT` is refused. */
+export function registerAskAdvantageModel(name: string, model: DenseModel): void {
+  ADVANTAGE_MODELS.set(name, compileNet(model, ASK_ADVANTAGE_FEATURE_COUNT, 1))
+}
+
+export function askAdvantageModelOf(name: string): CompiledNet {
+  const m = ADVANTAGE_MODELS.get(name)
+  if (!m) throw new Error(`no ask advantage model registered as ${JSON.stringify(name)}`)
+  return m
+}
+
+/**
+ * The advantage row of every entry of `ranked`, with the clone's scores and the index of its choice — the
+ * first entry at the clone's best score, exactly `chooseAskByModel`'s. The second set's rows are built
+ * once and read by the clone and the extension both, which is `scoreAsks` for a clone at that width. A
+ * clone at another width is refused: the rows extend its forty-nine, and no other clone was fitted beside
+ * them. Throws on an empty list.
+ */
+export function askAdvantageRows(
+  clone: CompiledNet,
+  view: SeatView,
+  k: Knowledge,
+  ranked: readonly RankedAsk[],
+): { rows: Float64Array[]; cloneScores: number[]; cloneIndex: number } {
+  if (ranked.length === 0) throw new Error('askAdvantageRows: no asks')
+  if (askFeatureSetOf(clone) !== 2) throw new Error('askAdvantageRows: the clone must read the second feature set')
+  const base = askFeatureRows(view, k, ranked, 2)
+  const cloneScores = base.map((x) => forwardNet(clone, x))
+  let cloneIndex = 0
+  for (let j = 1; j < cloneScores.length; j++) if (cloneScores[j] > cloneScores[cloneIndex]) cloneIndex = j
+  const top = cloneScores[cloneIndex]
+  const rows = base.map((b, j) => {
+    const x = new Float64Array(ASK_ADVANTAGE_FEATURE_COUNT)
+    x.set(b)
+    x[ASK_FEATURE_COUNT_2] = cloneScores[j] - top
+    x[ASK_FEATURE_COUNT_2 + 1] = j === cloneIndex ? 1 : 0
+    return x
+  })
+  return { rows, cloneScores, cloneIndex }
+}
+
+/**
+ * MONET.md §3.8aw stage C / §3.8ax C′ — the advantage over the clone's choice, behind a margin. Every
+ * entry of the ranked list is a candidate (every legal ask: there is no shortlist), and the choice leaves
+ * the clone's only for the model's best, and only where the best scores more than `margin` above the
+ * clone's. The best is found exactly as the marker found it (§3.8aw B2): the scan starts at the clone's
+ * choice and an entry must score strictly higher to displace it, so the clone's choice is kept whenever it
+ * attains the maximum, and otherwise the earliest entry that does is the best.
+ *
+ * An indifferent model is byte-identical to `chooseAskByModel` at every margin, because nothing scores
+ * strictly above the clone's choice; a margin above the largest gap is the clone too. `gap` is the best's
+ * score less the clone choice's (0 when they are one entry). Throws on an empty list.
+ */
+export function chooseAskByAdvantage(
+  clone: CompiledNet,
+  advantage: CompiledNet,
+  view: SeatView,
+  k: Knowledge,
+  ranked: readonly RankedAsk[],
+  margin: number,
+): { ask: RankedAsk; cloneAsk: RankedAsk; gap: number } {
+  if (ranked.length === 0) throw new Error('chooseAskByAdvantage: no asks')
+  const { rows, cloneIndex } = askAdvantageRows(clone, view, k, ranked)
+  const f = rows.map((x) => forwardNet(advantage, x))
+  let best = cloneIndex
+  for (let j = 0; j < f.length; j++) if (f[j] > f[best]) best = j
+  const gap = f[best] - f[cloneIndex]
+  return { ask: best !== cloneIndex && gap > margin ? ranked[best] : ranked[cloneIndex], cloneAsk: ranked[cloneIndex], gap }
+}

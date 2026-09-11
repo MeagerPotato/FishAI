@@ -53,6 +53,7 @@ export {
 export { decide, decideExplained, planClaimFor } from './decide.ts'
 export { ASK_FEATURES, ASK_FEATURE_COUNT, ASK_FEATURES_2, ASK_FEATURE_COUNT_2, INDEP_KAPPA, askFeatureCount, askFeatureNames, askFeatureRows, askFeatureSetOf, askModelOf, chooseAskByModel, chooseAskByValue, registerAskModel, scoreAsks } from './imitation.ts'
 export { ASK_FEATURES_3, ASK_FEATURE_COUNT_3, holderModelForAsk } from './imitation.ts'
+export { ASK_ADVANTAGE_FEATURES, ASK_ADVANTAGE_FEATURE_COUNT, askAdvantageModelOf, askAdvantageRows, chooseAskByAdvantage, registerAskAdvantageModel } from './imitation.ts'
 export type { AskFeatureSet, AskModel } from './imitation.ts'
 export { agoOf, indepK, seatBookHistory } from './askhistory.ts'
 export type { SeatBookHistory } from './askhistory.ts'

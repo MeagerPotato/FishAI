@@ -6,10 +6,19 @@
  *         [--a-override '{"defuse":0}'] [--b-override '{...}'] [--a-search '{"det":8,"cand":3,"steps":24,"z":1,"guard":"lcb"}'] [--b-search '{...}']
  *         [--a-search-prob 0.2] [--b-search-prob 0.2] [--a-leaf-model models/leaf.json] [--b-leaf-model ...]
  *         [--a-ask-model models/ask.json] [--b-ask-model ...]
+ *         [--a-advantage-model adv.json] [--a-advantage-margin 0.2] [--b-advantage-model ...] [--b-advantage-margin ...]
  *
  * `--a-ask-model` / `--b-ask-model` (MONET.md 3.8ac) register the file as an ask model (imitation.ts) under
  * its basename and lay `askModel` over that side's style, so its `pickAsk` plays the model's argmax over
  * the ranker's legal asks; `--a-leaf-model` / `--b-leaf-model` (3.8ab) do the same for the search's leaf.
+ *
+ * `--a-advantage-model` / `--b-advantage-model` (MONET.md 3.8aw stage C, 3.8ax C') register the file as an ask
+ * ADVANTAGE model under its basename and lay `askAdvantageModel` over that side's style, with
+ * `--a-advantage-margin` / `--b-advantage-margin` as `askAdvantageMargin`: the side's clone still chooses, and
+ * its choice is left for the model's best ask only where the best scores more than the margin above it.
+ *
+ * Beside the win rate, `win rate SE` prints its standard error binomially over the games and by pair (a seed's
+ * two games share one deal), with the count of games A won.
  *
  * `--a-search-prob` / `--b-search-prob` (MONET.md 3.8aa) make the search sparse: a decision is searched
  * only when a uniform drawn from the decision's own seed is below p (default 1, every decision), the
@@ -52,7 +61,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const ENG = await import(pathToFileURL(join(ROOT, 'lib/engine/index.ts')).href)
 const BOTS = await import(pathToFileURL(join(ROOT, 'lib/engine/bots/index.ts')).href)
 const { newGame, reduce, seatView, us54Config, legalActionsSummary, hashSeed, seatTeam } = ENG
-const { monetPolicy, isMonetVersion, MONET_VERSION_IDS, decide, registerAskModel, registerHolderModel } = BOTS
+const { monetPolicy, isMonetVersion, MONET_VERSION_IDS, decide, registerAskModel, registerAskAdvantageModel, registerHolderModel } = BOTS
 
 const argOf = (flag, dflt) => {
   const i = process.argv.indexOf(flag)
@@ -75,13 +84,20 @@ const BANK = argOf('--bank', 'home-a')
 // `askValueModel` over that side's override, with --a-value-topk / --b-value-topk as the shortlist depth (absent is 3).
 // That side's pickAsk then lets the clone order the ranker's list and takes the VALUE's argmax over the clone's top k.
 // Needs the side's ask model: without one there is no shortlist to select over and the knob is inert.
-const overrideOf = (overFlag, modelFlag, holderFlag, valueFlag, topkFlag) => {
+// MONET.md 3.8aw stage C / 3.8ax C': --a-advantage-model / --b-advantage-model <file> register an ask ADVANTAGE model
+// under its basename and lay `askAdvantageModel` over that side's override, with --a-advantage-margin /
+// --b-advantage-margin as `askAdvantageMargin` (absent is 0). That side's pickAsk then scores every legal ask and
+// leaves the clone's choice for the model's best where the best is more than the margin above it. Inert without
+// the side's ask model, like the value.
+const overrideOf = (overFlag, modelFlag, holderFlag, valueFlag, topkFlag, advFlag, marginFlag) => {
   const over = argOf(overFlag, '') ? JSON.parse(argOf(overFlag, '')) : null
   const file = argOf(modelFlag, '')
   const holder = argOf(holderFlag, '')
   const value = valueFlag ? argOf(valueFlag, '') : ''
+  const adv = advFlag ? argOf(advFlag, '') : ''
   if (holder && !file) throw new Error(`${holderFlag} needs the side's ask model`)
-  if (!file && !value) return over
+  if (marginFlag && argOf(marginFlag, '') && !adv) throw new Error(`${marginFlag} needs the side's ${advFlag}`)
+  if (!file && !value && !adv) return over
   let out = { ...(over ?? {}) }
   if (file) {
     if (holder) registerHolderModel(basename(holder), JSON.parse(readFileSync(holder, 'utf8')))
@@ -96,10 +112,21 @@ const overrideOf = (overFlag, modelFlag, holderFlag, valueFlag, topkFlag) => {
     const topk = argOf(topkFlag, '')
     if (topk) out.askValueTopK = Number(topk)
   }
+  if (adv) {
+    // the same as the value: the side's version names its clone, and the rows extend that clone's own
+    registerAskAdvantageModel(basename(adv), JSON.parse(readFileSync(adv, 'utf8')))
+    out.askAdvantageModel = basename(adv)
+    const margin = argOf(marginFlag, '')
+    if (margin) {
+      const m = Number(margin)
+      if (!(Number.isFinite(m) && m >= 0)) throw new Error(`${marginFlag} ${margin} is not a number >= 0`)
+      out.askAdvantageMargin = m
+    }
+  }
   return out
 }
-const OVER_A = overrideOf('--a-override', '--a-ask-model', '--a-holder-model', '--a-value-model', '--a-value-topk')
-const OVER_B = overrideOf('--b-override', '--b-ask-model', '--b-holder-model', '--b-value-model', '--b-value-topk')
+const OVER_A = overrideOf('--a-override', '--a-ask-model', '--a-holder-model', '--a-value-model', '--a-value-topk', '--a-advantage-model', '--a-advantage-margin')
+const OVER_B = overrideOf('--b-override', '--b-ask-model', '--b-holder-model', '--b-value-model', '--b-value-topk', '--b-advantage-model', '--b-advantage-margin')
 const SEARCH_A = argOf('--a-search', '') ? JSON.parse(argOf('--a-search', '')) : null
 const SEARCH_B = argOf('--b-search', '') ? JSON.parse(argOf('--b-search', '')) : null
 const SEARCH = SEARCH_A || SEARCH_B ? await import(pathToFileURL(join(ROOT, 'lib/engine/search/index.ts')).href) : null
@@ -160,6 +187,8 @@ let setsA = 0
 let setsB = 0
 let capped = 0
 const d = []
+// each pair's share of its two games won by A, for the win rate's standard error by pair
+const w = []
 for (let g = 0; g < PAIRS; g++) {
   const seed = `${BANK}-${g}`
   const x = play(seed, 0)
@@ -171,7 +200,9 @@ for (let g = 0; g < PAIRS; g++) {
   pairs++
   setsA += x[0] + y[0]
   setsB += x[1] + y[1]
-  winsA += (x[0] > x[1] ? 1 : 0) + (y[0] > y[1] ? 1 : 0)
+  const won = (x[0] > x[1] ? 1 : 0) + (y[0] > y[1] ? 1 : 0)
+  winsA += won
+  w.push(won / 2)
   d.push(x[0] - x[1] + (y[0] - y[1]))
 }
 const mean = d.reduce((a, b) => a + b, 0) / d.length
@@ -185,6 +216,12 @@ console.log(`sets            ${setsA} vs ${setsB}  (per game ${(setsA / (2 * pai
 console.log(`win rate (A)    ${((100 * winsA) / (2 * pairs)).toFixed(2)}%`)
 console.log(`paired set-diff ${mean.toFixed(4)} +/- ${(1.96 * se).toFixed(4)}   (SD ${sd.toFixed(4)} sets/pair, this cell's own; SE ${se.toFixed(4)})`)
 console.log(`verdict         ${Math.abs(mean) > 1.96 * se ? (mean > 0 ? `${A} AHEAD` : `${A} BEHIND`) + ' at 95%' : 'inside the interval: unresolved at this N'}`)
+// MONET.md 3.8ax C': the win rate's standard error two ways, with the count it is read from - binomial over the
+// games, and by pair (a seed's two games share one deal, so the pair is the unit, as it is for the set-diff)
+const wMean = w.reduce((a, b) => a + b, 0) / Math.max(1, w.length)
+const wSe = Math.sqrt(w.reduce((a, x) => a + (x - wMean) ** 2, 0) / Math.max(1, w.length - 1)) / Math.sqrt(Math.max(1, w.length))
+const wr = winsA / Math.max(1, 2 * pairs)
+console.log(`win rate SE     ${(100 * Math.sqrt((wr * (1 - wr)) / Math.max(1, 2 * pairs))).toFixed(2)}% binomial over the games, ${(100 * wSe).toFixed(2)}% by pair  (A won ${winsA} of ${2 * pairs})`)
 for (const [name, params, c] of [['A', PARAMS_A, COUNT.A], ['B', PARAMS_B, COUNT.B]]) {
   if (!params || pairs === 0) continue
   const perPair = c.changed / pairs
