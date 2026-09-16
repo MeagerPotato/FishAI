@@ -86,7 +86,8 @@ const B2_ARM = argOf('--b2-arm', '')
 const CF_KNOBS = argOf('--cf-knobs', '')
 // §3.8ay: an ask-ADVANTAGE model (imitation.ts) registered under its file's own name before any policy is built, so
 // --cf-knobs askAdvantageModel=<that name> (and --a-knobs / --b-knobs at home) can play it: v0.53's home pin of the
-// knob. A bridge arm's own asks are pinned by scripts/pin-bridge-asks.mjs, on bridge-records.mjs's walk, not by --cf
+// knob. A bridge arm's own asks are pinned by scripts/pin-bridge-asks.mjs, on bridge-records.mjs's walk; --cf agrees
+// with that pin on a clone arm's records only since the walk hands the view its score in team order (`teamScore`)
 const CF_ADV_MODEL = argOf('--cf-advantage-model', '')
 if (CF_ADV_MODEL) BOTS.registerAskAdvantageModel(path.basename(CF_ADV_MODEL), JSON.parse(fs.readFileSync(CF_ADV_MODEL, 'utf8')))
 // §3.8k: both tables' q scored on the same sampled pairs, and the sampling every N-th event index
@@ -282,6 +283,10 @@ function walk(rec, cfPol, acc) {
   const publicAt = new Map() // card -> the seat a public hit put it at, while it is in play
   const resolved = {}
   const awarded = [0, 0]
+  // `awarded` is by SIDE; the engine's score is by TEAM, so a view is handed it in team order. Until 2026-09-16 both
+  // view builds below passed `awarded` as it stands, which swapped the score wherever arm A plays team 1 - read by no
+  // policy until the clone's `scoreDiff` (MONET.md §3.8ay: --cf v0.33 agreed with v0.33's own records at 97.4%)
+  const teamScore = () => (rec.teamA === 0 ? [awarded[0], awarded[1]] : [awarded[1], awarded[0]])
   const split0 = {}
   for (const b of BOOKS) {
     split0[b] = BOOK_CARDS.get(b).filter((c) => side(seatOf.get(c)) === 0).length
@@ -972,7 +977,7 @@ function walk(rec, cfPol, acc) {
     const state = {
       config: us54Config, seed: rec.label, phase: 'playing', turn: seat,
       hands: hands.map((h, x) => (x !== seat ? [...h] : CARDS.sortHand(h, us54Config))),
-      books: { ...resolved }, score: [awarded[0], awarded[1]],
+      books: { ...resolved }, score: teamScore(),
       log: rec.events.slice(0, i), moveIndex: i,
     }
     const view = seatView(state, seat)
@@ -1128,7 +1133,7 @@ function walk(rec, cfPol, acc) {
           config: us54Config, seed: rec.label, phase: 'playing', turn: ev.asker,
           // abroad the adapter hands Monet a SORTED own hand; mirror it when no live order is known
           hands: (meta ? meta.hands : hands).map((h, x) => (meta || x !== ev.asker ? [...h] : CARDS.sortHand(h, us54Config))),
-          books: { ...resolved }, score: [awarded[0], awarded[1]],
+          books: { ...resolved }, score: teamScore(),
           log: rec.events.slice(0, i), moveIndex: meta ? meta.moveIndex : i,
         }
         const view = seatView(state, ev.asker)
