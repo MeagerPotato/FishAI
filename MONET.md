@@ -13428,6 +13428,20 @@ SE, the paired set differential, and §3.9's bar for the candidate (≥ 52% pool
    `bd14e4d` alike, so no change since v0.33 shipped explains it; the cause is not located. §3.8ap pinned clone arms
    by the clone-top identity on `bridge-records.mjs`'s walk instead, and **`pin-bridge-asks.mjs` on that walk agrees
    at 54,074 of 54,074 of our asks on the same cell** — every ask, the finish included — in 20 s.
+
+   > **Resolved, 2026-09-16: the cause is the score.** `attribute.mjs` tallies the sets won by *side* (arm A first)
+   > and handed that tally to the view as `score`, which the engine keeps by *team*, so in every game where arm A plays
+   > team 1 the view carried the score swapped. No policy could see it before the clone: the clone's `scoreDiff`
+   > feature (v0.30, `b1664fe`) is the first read of the score under `lib/engine/bots/` in the repository's history,
+   > and still the only one. Tested on this cell before any fix, on `bridge-records.mjs`'s walk: with the score by team
+   > our pre-clinch asks agree at 50,179 of 50,179; with the score by side, at 48,873 of 50,179 — the 97.4% to the ask,
+   > every disagreement in a game where our arm played team 1. `attribute.mjs` now hands the view the score in team
+   > order (`teamScore`). After the fix, `--cf v0.33` on this cell agrees at **100.0%** (0 disagreements; the
+   > counterfactual at SESTINA's asks moves too, 54.6% to 54.7%), and `--cf v0.30` on it at 60.2%, the mutation. A
+   > pre-clone cell (v0.9's `conf-base-1199342` with `--cf v0.4c`) and a home run (`--home 20`, v0.33 on both teams,
+   > `--validate`) print the same result before and after the fix, the elapsed time aside. Since the clone, the record
+   > names `attribute.mjs` only as the origin of `bridge-records.mjs`'s reader (§3.8ac) and in this section, so no
+   > earlier read rests on the swapped score.
 4. **The reader reproduces §3.8af's table from §3.8af's own cells**: all twelve rows, both arms' means, and +3.64
    (SD 2.47, SE 0.71), 5.11 SE, ahead on 11 of 12.
 5. **The seeds** reproduce from their label, and none had been played.
