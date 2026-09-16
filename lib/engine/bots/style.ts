@@ -439,8 +439,8 @@ export interface StyleParams extends AskWeights {
    * and only where that best scores more than `askAdvantageMargin` above the clone's; absent, byte
    * identity. Inert without `askModel` (the model's rows extend the clone's own), checked before
    * `askValueModel` and refused beside it by `validateStyle` (two selectors over one list are two
-   * mechanisms), and absent on every roster style and every tier; a lab knob reached by
-   * `--a-advantage-model` and `--a-override`.
+   * mechanisms), and absent on every roster style and every tier. Monet v0.53 ships it (`'adv-2'` at the
+   * margin 0.2, MONET.md §3.8ay); in the lab it is reached by `--a-advantage-model` and `--a-override`.
    */
   askAdvantageModel?: string
   /**
