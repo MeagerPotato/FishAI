@@ -95,7 +95,7 @@ import { MONET_V09_BANK } from './data/monet-v09-bank.ts'
 import { MONET_V020C_BANK } from './data/monet-v020c-bank.ts'
 import { MONET_V030_BANK } from './data/monet-v030-bank.ts'
 import { MONET_V033_BANK } from './data/monet-v033-bank.ts'
-import { ASK_FEATURE_COUNT, ASK_FEATURE_COUNT_2, askModelOf } from '../../lib/engine/bots/imitation.ts'
+import { ASK_ADVANTAGE_FEATURE_COUNT, ASK_FEATURE_COUNT, ASK_FEATURE_COUNT_2, askAdvantageModelOf, askModelOf } from '../../lib/engine/bots/imitation.ts'
 import { ask, gs, mkView } from './util.ts'
 
 /** The versions, addressed the way a harness addresses them. */
@@ -109,6 +109,7 @@ const MONET_V09: PolicySpec = monetPolicy('v0.9')
 const MONET_V020C: PolicySpec = monetPolicy('v0.20c')
 const MONET_V030: PolicySpec = monetPolicy('v0.30')
 const MONET_V033: PolicySpec = monetPolicy('v0.33')
+const MONET_V053: PolicySpec = monetPolicy('v0.53')
 
 /**
  * The live roster arm, in both spellings — written out, never read from the registry.
@@ -243,6 +244,29 @@ describe('the Monet version registry names each version and resolves it to that 
     expect(styleDiffKeys(pair.style, STYLE_ROSTER.punter)).toEqual(['askModel', 'closing', 'closingFour', 'contest', 'licenceLambda', 'pAssignment', 'pModel'])
   })
 
+  it('v0.53 is v0.33 with the learned ask advantage at margin 0.2, on its own vector — and differs from v0.33 in NOTHING else', () => {
+    const pair = asPair(MONET_V053, "MONET_VERSIONS['v0.53']")
+    expect(pair.skill).toBe(SKILL_PRESETS.hard)
+    expect(styleDiffKeys(pair.style, (MONET_V033 as BotPolicy).style)).toEqual(['askAdvantageMargin', 'askAdvantageModel'])
+    // MONET.md 3.8aw-3.8ay: a model fitted on what won - pairs of play-outs from the true deal - leaves the clone's
+    // choice only where its best legal ask scores more than 0.2 above the clone's. It read +0.0045 sets a decision
+    // (z 2.04) on 4,000 games neither fit saw, 51.39% of 6,400 games at home against v0.33 itself (z 2.23), and
+    // +1.46 ± 0.52 points of win rate against SESTINA v1.0 on twelve fresh seeds (52.05% against v0.33's 50.59% on
+    // the same seeds, 2.81 SE, eight of twelve) - over 3.8n's bar; 3.9's is not met (one seed at 49.17%).
+    expect(pair.style.askAdvantageModel).toBe('adv-2')
+    expect(pair.style.askAdvantageMargin).toBe(0.2)
+    // the advantage extends the second clone's rows, so the clone is v0.33's; the name resolves to the committed
+    // model, registered when monet.ts loads, at its own width - 51, the clone's forty-nine and its opinion of each ask
+    expect(pair.style.askModel).toBe('sestina-clone-3')
+    expect(askAdvantageModelOf('adv-2').features).toBe(ASK_ADVANTAGE_FEATURE_COUNT)
+    expect(askModelOf('sestina-clone-3').features).toBe(ASK_FEATURE_COUNT_2)
+    // v0.33 stays as it shipped, and the roster never carries the knob
+    expect((MONET_V033 as BotPolicy).style.askAdvantageModel).toBeUndefined()
+    expect((MONET_V033 as BotPolicy).style.askAdvantageMargin).toBeUndefined()
+    expect(STYLE_ROSTER.punter.askAdvantageModel).toBeUndefined()
+    expect(styleDiffKeys(pair.style, STYLE_ROSTER.punter)).toEqual(['askAdvantageMargin', 'askAdvantageModel', 'askModel', 'closing', 'closingFour', 'contest', 'licenceLambda', 'pAssignment', 'pModel'])
+  })
+
   it('v0.9 is v0.4c plus the contest credit, on its own vector — and differs from v0.4c in NOTHING else', () => {
     const pair = asPair(MONET_V09, "MONET_VERSIONS['v0.9']")
     expect(pair.skill).toBe(SKILL_PRESETS.hard)
@@ -333,7 +357,7 @@ describe('the Monet version registry names each version and resolves it to that 
 
   it('MONET_VERSION_IDS lists every shipped version, in order, and nothing else', () => {
     expect([...MONET_VERSION_IDS]).toEqual(Object.keys(MONET_VERSIONS))
-    expect([...MONET_VERSION_IDS]).toEqual(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9', 'v0.20c', 'v0.30', 'v0.33'])
+    expect([...MONET_VERSION_IDS]).toEqual(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9', 'v0.20c', 'v0.30', 'v0.33', 'v0.53'])
     expect(MONET_VERSION_IDS.every((v) => isMonetVersion(v))).toBe(true)
   })
 

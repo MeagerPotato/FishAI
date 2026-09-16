@@ -1136,7 +1136,7 @@ function pickAsk(view: SeatView, k: Knowledge, ranked: RankedAsk[], pol: ActiveP
     // MONET.md §3.8aw stage C / §3.8ax C′ — the learned advantage over the clone's choice. Present, every
     // legal ask on the list is scored and the clone's choice is left only for the model's best, where that
     // best scores more than `askAdvantageMargin` above it; absent (every roster style, every tier, every
-    // shipped version), this branch is not entered and everything below is byte identity.
+    // shipped version before v0.53), this branch is not entered and everything below is byte identity.
     if (style.askAdvantageModel !== undefined) {
       const margin = style.askAdvantageMargin ?? 0
       const { ask, cloneAsk, gap } = chooseAskByAdvantage(clone, askAdvantageModelOf(style.askAdvantageModel), view, k, ranked, margin)

@@ -11,9 +11,11 @@
  * way the marker's scan sent them; (P5) the margin gates the deviation exactly — the model's best is played
  * only where it scores more than the margin above the clone's choice; (P6) inert without `askModel`; (P7)
  * `validateStyle` closes both knobs and refuses the advantage beside the value, and registration refuses any
- * other width; (P8) both are absent from every roster style, every tier and every Monet version.
+ * other width; (P8) both are absent from every roster style, every tier and every Monet version but v0.53, which
+ * ships the fitted model at the margin 0.2 (§3.8ay, MONET.md row 62).
  *
- * Whether the fitted advantage plays WELL is the pairs' question (§3.8ax C′), not this file's.
+ * Whether the fitted advantage plays WELL is the pairs' question (§3.8ax C′) and the bridge's (§3.8ay), not this
+ * file's.
  */
 import { describe, expect, it } from 'vitest'
 import { decide, hashSeed, legalActionsSummary, newGame, reduce, seatView, us54Config } from '../../lib/engine/index.ts'
@@ -255,8 +257,8 @@ describe('P7 — validateStyle closes both knobs, and registration closes the wi
   })
 })
 
-describe('P8 — absent from every roster style, every tier and every Monet version', () => {
-  it('is a lab knob and nothing ships it', () => {
+describe('P8 — absent from every roster style, every tier and every Monet version but v0.53, which ships it', () => {
+  it('is on no roster style and no tier, and of the versions only v0.53 carries it, at the fitted model and 0.2', () => {
     for (const [id, s] of Object.entries(STYLE_ROSTER) as [string, StyleParams][]) {
       expect(s.askAdvantageModel, id).toBeUndefined()
       expect(s.askAdvantageMargin, id).toBeUndefined()
@@ -265,10 +267,13 @@ describe('P8 — absent from every roster style, every tier and every Monet vers
       expect(STYLE_PRESETS[t].askAdvantageModel, t).toBeUndefined()
       expect(STYLE_PRESETS[t].askAdvantageMargin, t).toBeUndefined()
     }
+    // MONET.md 3.8ay and row 62: v0.53 ships adv-2 at the margin 3.8ax's tune half chose; every version before it
+    // stays as it shipped
     for (const v of MONET_VERSION_IDS) {
       const s = resolvePolicy(monetPolicy(v)).style
-      expect(s.askAdvantageModel, v).toBeUndefined()
-      expect(s.askAdvantageMargin, v).toBeUndefined()
+      expect(s.askAdvantageModel, v).toBe(v === 'v0.53' ? 'adv-2' : undefined)
+      expect(s.askAdvantageMargin, v).toBe(v === 'v0.53' ? 0.2 : undefined)
     }
+    expect(askAdvantageModelOf('adv-2').features).toBe(ASK_ADVANTAGE_FEATURE_COUNT)
   })
 })
