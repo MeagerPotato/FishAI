@@ -13736,6 +13736,25 @@ SD / √12) and the candidate is strictly ahead on at least 7 of the 12.** Print
 pooled rates with their binomial SE, the paired set differential, and §3.9's first two conditions computed on these
 cells. That last line is **not a §3.9 read**, because §3.9 fixes 200 deals a seed.
 
+> **Amended 2026-09-17 at 01:41Z, before any D cell was played and before C was read: how D's control is built.**
+> The adapter this section names (§3.8ay's, md5 `547a4f7b`) accepts `MONET_ARM` only from its own list (v0.1 to
+> v0.4c, and v0.33) and refuses `v0.53` at start, so the control as written above could not run. This was found while
+> D's packages were being built, with C's banks still playing.
+>
+> - **Kept:** the adapter, unchanged, and everything else in D.
+> - **Changed:** both arms name `MONET_ARM=v0.33` and lay their model over it, which is how §3.8ay's candidate played
+>   v0.53. **The control, `monet-v54-v053`, is §3.8ay's candidate package** (`adv-2.json`, md5 5f01a97a, at margin
+>   0.2) under a new name. The candidate, `monet-v54-adv4`, lays `adv-4.json` at M1's margin over the same vector, which
+>   is v0.53's vector with the model and the margin changed.
+> - **The registry entry stays in the read through the pins.** Every control cell is replayed by `--version v0.53`, the
+>   entry as it ships, with no override and no model file, and must agree at every one of our asks; the entry already
+>   agreed with all 656,338 of §3.8ay's recorded candidate asks (PR #97). Every candidate cell is replayed by v0.33 with
+>   its own override and model file. The mutations replay the candidate's smoke and its first cell by `--version v0.53`,
+>   and must differ.
+> - **Step 0's identity is unchanged in substance:** the control at 6731069 for 200 deals must be IDENTICAL to §3.8ay's
+>   candidate cell there, every engine line but `elapsed` and the arm's name. It is now the same package on main's
+>   export at `6040eb1` in place of `0c08cd7`, so the check still says that nothing which has moved since touches play.
+
 #### What each outcome means, written before any of them
 
 - **A pin fails, B1 or B1′ fails, or D's identity differs:** a defect in the data, the instruments, the tree or the
