@@ -459,7 +459,7 @@ the rungs the owner added after it (§3.6–§3.8) carry pre-registered bars.
 | **v0.5** | **opponent reading** — ask-choice inference into the marginal's prior (`pPrior: 'choice'`, with a per-seat in-game variant) · the defusal appetite as a function of the state (`defusePolicy: 'state'`) | ≥ 35.0% (design target; expectation +1 to +3 over the base) — **read 2026-09-03: 34.92% at κ = 1 against the base's 34.46%, +0.47 paired (SE 0.59), inside the floor; nothing shipped (§3.6c)** | opponent-location score at home · ask accuracy · sets lost to opponent declarations · the 2 × 2 abroad at twelve seeds, ±2.00 | M–L |
 | **v0.6** | **communication** — asks chosen to reveal · the handoff played as an out-of-turn convention | ≥ 38.0% (design target; the ceiling is measured, 38.28%) — **read 2026-09-03: both items behind or flat at home (§3.7a), nothing went abroad, nothing shipped** | lock hold · compelled-declare accuracy · twelve seeds, ±2.00 | M |
 | **v0.7** | **the search arm**, only if a gap is left, only through §3.5c's cost-first test | no target until priced — **read 2026-09-03: priced at 96 ms an ask (budget 100); the pre-registered form a no-op at home (§3.8a); the lock-only leaf, post-hoc, abroad: 35.05% against the base's 34.91%, +0.14 paired (SE 0.67), inside the floor; nothing shipped** | cost budget first, then paired arms on shared determinizations | XL |
-| **v0.54** — the learned ask made more accurate: four times the data, a third round at its own choices, every read against v0.53 (2026-09-16) | **row 63's, on the owner's answer** (*"also go with the proposed next steps"*): v0.53 reads 52.05% against SESTINA, and 54% needs about +0.15 sets a game more. adv-2's gain is real only where it predicts more than 0.2 sets, which is 6% of its own choices, so the lever is accuracy. **A3:** 12,000 fresh games labelled as in §3.8aw, with adv-2's own choices among the alternatives (~2.9 million pairs, 3.8 times adv-2's). **B3:** a refit. **R3:** one more round at the new model's own choices. **B3′:** a second refit, with B1 at both fits. **M:** a marker on 8,000 fresh games, above zero by 2 SE, with adv-2 read on the same decisions and a floor. **C:** four home banks of 3,200 pairs against v0.53, above 50%. **D:** §3.8n against SESTINA on twelve fresh seeds at 800 deals a seed, against v0.53. One new script (`read-ask-advantage-pair.mjs`); nothing under `lib/` | **PRE-REGISTERED 2026-09-16, BEFORE ANY OF ITS DATA EXISTS.** Nine instrument checks exact, none on v0.54 data. ~7 hours of home compute projected, one stage at a time | M |
+| **v0.54** — the learned ask made more accurate: four times the data, a third round at its own choices, every read against v0.53 (2026-09-16) | **row 63's, on the owner's answer** (*"also go with the proposed next steps"*): v0.53 reads 52.05% against SESTINA, and 54% needs about +0.15 sets a game more. adv-2's gain is real only where it predicts more than 0.2 sets, which is 6% of its own choices, so the lever is accuracy. **A3:** 12,000 fresh games labelled as in §3.8aw, with adv-2's own choices among the alternatives (~2.9 million pairs, 3.8 times adv-2's). **B3:** a refit. **R3:** one more round at the new model's own choices. **B3′:** a second refit, with B1 at both fits. **M:** a marker on 8,000 fresh games, above zero by 2 SE, with adv-2 read on the same decisions and a floor. **C:** four home banks of 3,200 pairs against v0.53, above 50%. **D:** §3.8n against SESTINA on twelve fresh seeds at 800 deals a seed, against v0.53. One new script (`read-ask-advantage-pair.mjs`); nothing under `lib/` | **§3.8n HOLDS — +6.25 POINTS AGAINST SESTINA (26.5 SE, AHEAD ON 12 OF 12); SHIPPING IS THE OWNER'S CALL (ROW 64).** On twelve fresh seeds at 800 deals, 57,600 games an arm: v0.53 52.17%, v0.53 with adv-4 at margin 0.05 **58.42%**, paired SD 0.82 and SE 0.24, the size of the home gain (**C**, 17 min: 55.76% of 25,600 games against v0.53, z 18.56, four banks of four). **A3** (225 min): 2,143,564 pairs, the pin at 99.954%. **B3** (12 min): B1 passes (z 20.58), and the net now beats the ridge by 8.5 SE. **R3** (21 min): 108,927 pairs at adv-3's own choices. **B3′** (13 min): B1′ passes (z 19.74); four times the data alone did not shrink the over-rating of a model's own choices (adv-3 predicted +0.096 for them, and they measured −0.010). **M** (32 min): the tune half picks margin 0.05 and the score half reads **+0.0219 sets a decision (z 3.70)**, ahead of adv-2 on the same decisions by +0.0186 (z 3.17); at its own choices adv-4 predicts 0.094 and measures +0.040. **D** (90 min): the scratchpad's bridge had lost files to a clean-up of the temporary folder and was restored from its archive, md5 for md5; step 0 IDENTICAL; every one of our 5,337,702 asks pinned in-engine (2,621,425 by the v0.53 entry, 2,716,277 by the candidate's policy), adv-4 taking another ask than v0.53's at 35.9% of them; the wins recounted from the records agree to the game. §3.9's first two conditions read met on these cells, which is not a §3.9 read. S1 to S3 and S5 to S12 hold; S4 misses. About 6.8 hours of home compute against ~7 registered | M |
 | **v0.53** — the learned ask abroad: v0.33 with adv-2 at margin 0.2 against v0.33, both against SESTINA (2026-09-10) | **row 61's, by the standing rule**: §3.8ax's home cell held (51.39% of 6,400 games against v0.33, z 2.23), and §3.8n's bar is the one that ships. Both vectors against SESTINA v1.0 on the same twelve fresh seeds, 1,200 games a cell, on main's export at `0c08cd7`, with §3.8ar's adapter extended to register the model (md5 `547a4f7b`); step 0's identity cell IDENTICAL first, and every one of our asks pinned in-engine by a new `scripts/pin-bridge-asks.mjs` before the read. Nothing under `lib/` | **§3.8n HOLDS — +1.46 POINTS AGAINST SESTINA (2.81 SE, AHEAD ON 8 OF 12); SHIPPED AS v0.53 ON THE OWNER'S ANSWER TO ROW 62 (PR #97).** On twelve fresh seeds, 14,400 games an arm: v0.33 50.59%, v0.33 with adv-2 at 0.2 52.05%, paired SD 1.80 and SE 0.52 — the size of the home gain (+1.39 against v0.33). Step 0 IDENTICAL to §3.8ar's cell; every one of our 1,312,839 asks pinned in-engine (656,501 and 656,338, each by its own arm's policy), the knob taking another ask than the clone's at 3.60% of the asks of the one cell replayed without it; the wins recounted from the records agree to the game, and every leave-one-seed-out read stays above 2 SE. §3.9's bar is not met (52.05% pooled, one seed at 49.17%). P1 to P6 hold; P7 and P8 miss (the read pins at 1.54 times their figure). 24 minutes of stage time against about 25 registered | S |
 | **v0.52** — the second round: the learned ask relabelled at its own choices, refitted, and marked again (2026-09-10) | **row 60's, on the owner's answer** (*"Second round (Recommended)"*): §3.8aw's model had a real choice signal it could not act on, because the asks it chose for itself were worth far less than it predicted (+0.092 against +0.005). This round labels exactly those choices — 8,000 fresh games, the model's own best ask rolled out from the true state against the played one — refits on §3.8aw's pairs and these together with every registered setting unchanged, marks the new model on 4,000 games neither fit saw against §3.8aw's bar, and, only if the marker holds, reads it at home in four banks of duplicate pairs. Script changes through the marker (a `--model` flag on the generator, a re-read and an own-choices block on the marker, a new calibration reader); the home cell's knob, `askAdvantageModel` with `askAdvantageMargin`, is under `lib/` and off by default | **B2′ HOLDS AND C′ HOLDS — THE FIRST NON-IMITATIVE GAIN ON THE LADDER, AT HOME; NOTHING SHIPS.** **A2** (8,000 games, 23.7 min): 106,395 pairs at the first model's own choices, the pin at 99.943%; on fresh games adv-1 predicted +0.091 for them and they measured −0.011 (SE 0.018). **B′** (4.3 min): **B1′ passes (z 9.28)**, and the refit predicts +0.009 for those same choices. **B2′** (4,000 fresh games, 11.4 min): the tune half picks margin 0.2 and the score half reads **+0.0045 sets a decision (SE 0.0022, z 2.04): HOLDS**; at that margin it leaves the clone at 3.7% of decisions for +0.12 sets each, and the floor holds; over all its own choices it still predicts 0.085 and measures +0.001, with the measured value rising only above a predicted 0.2. **C′** (four banks of 800 pairs, 4.4 min): v0.33 with adv-2 at 0.2 against v0.33, **51.39% of 6,400 games (SE 0.62%, z 2.23), three banks of four ahead: HOLDS**; the paired set-diff +0.166 a pair (z 3.29) beside it. Q1 to Q8 all hold. The knob is pinned: eight pins in the suite, and the marker's own rule reproduced inside `decide` at 8,554 of 8,554 decisions. 44 minutes of home compute against the ~49 registered. A win rate against v0.33 itself, not against SESTINA: §3.8n's read on twelve fresh seeds is row 61's, and the shipped vector is the owner's | S |
 | **v0.51** — the learned ask: an ask policy fitted on what wins, each position replayed to the end (pilot, 2026-09-10) | **row 59's, on the owner's word** (*"lets go with option 2, start the pilot"*): §3.8av priced every decision and found no belief-limited deviation that clears zero, so the one open direction is a policy that learns what WINS instead of what the belief expects. At sampled ask decisions of v0.33 self-play, the played ask and up to eight alternatives are each rolled out from the TRUE state to the end under the same key — the rollout is deterministic, so each paired difference is caused by the ask alone, which is exactly what §3.8as's unpaired label could not see (R² 0.018). A 64·64 MLP is fitted pairwise on the differences, over the clone's 49 features plus the clone's own opinion, and plays as a correction to the clone over the whole legal list. Three gates: **B1** (a choice signal beyond the clone's opinion), **B2, the marker** (4,000 fresh games, the margin chosen on one half and scored on the other, above zero by 2 SE), **C** (four home banks, only if B2 holds). Three new scripts and their workers; nothing under `lib/` through stage B | **B1 PASSES, B2 MISSES NEAR ZERO; NOTHING SHIPS.** **A** (4,000 games, 66.2 min against ~86): 666,435 pairs, the pin at 99.946%. **B** (171 s): the net's holdout MSE 7.46103 against the clone baseline's 7.54065, **B1 PASSES (z 10.56)** — but a ridge model finds 93% of that gain and the net was best after one pass. **B2** (4,000 fresh games, 9.6 min): the tune half picks margin 0.3, and the score half reads **+0.0015 sets a decision (SE 0.0014, z 1.01): MISSES**; the match floor holds. **Why, located:** at its own choices over the whole legal list the model predicted +0.092 sets and measured +0.005 (SE 0.011) — the winner's curse the design named, measured; below a predicted 0.3 its choices are worth nothing measurable, and the 1.5% of decisions above it read about +0.09 each, within one SE of zero. P1, P2 and P4 hold; P3 and P5 miss; P6 not reached. 79 minutes of compute for the whole pilot. The two levers the pre-registration named — more data (about 5 hours) or a second round labelled at the model's own choices (about 35 minutes) — go to the owner (row 60) | M |
@@ -13842,6 +13842,384 @@ five row 60 priced for the data alone; the extra buys the third round, a marker 
 SESTINA four times as large. Nothing under `lib/` changes through D: v0.53's vector is untouched, and `/play` is
 unchanged.
 
+#### A3 — the data: 2,143,564 pairs from 12,000 fresh games, and the pin holds
+
+Three runs of 4,000 games on `v54A`, one after another, from 20:35:28Z on 2026-09-16 to 00:20:27Z on 2026-09-17:
+**225.0 minutes of wall clock against the ~3.6 hours registered** (74.2, 77.4 and 73.4 minutes a run; 158,319
+thread-seconds on 12 threads, 15.1 rollouts a thread-second). The games made 1,019,274 ask decisions, of which 254,714
+were sampled (24.99%), and 116 were dropped where the played ask was not the clone's choice. At the other 254,598,
+adv-2's best ask was the clone's own at 100,326 (39.4%, the rate its marker read) and another ask at **154,272**, each
+labelled as kind 4; 483 decisions had no alternative to label. **2,143,564 pairs** in all, from 2,397,679 rollouts:
+757,664 at the clone's next three, 498,392 at the ranker's top two, 733,236 at random, and 154,272 at adv-2's own
+choices. The console printed counts and timing only.
+
+**S1's first half holds:** the played ask was the clone's choice at **99.954%** of sampled decisions (116 of 254,714;
+called at ≥ 99.9%).
+
+#### B3 — the fit: B1 passes at z 20.58, and the net's edge over the ridge is no longer inside its noise
+
+The registered fit, every setting unchanged, ran on **2,916,394 pairs** (§3.8aw's 666,435, §3.8ax's 106,395 and A3's
+2,143,564) from 445,270 decisions in 24,000 games: 2,332,251 training pairs, and 584,143 holdout pairs from the games 0
+mod 5 of each file. It took **695 s against the ~15 minutes registered** and wrote `adv-3.json` (md5 17ddfedb). Mean
+squared error on the holdout pairs, in sets squared:
+
+> | predictor | holdout MSE | share of the zero predictor explained |
+> |---|---:|---:|
+> | zero | 7.61696 | 0.00% |
+> | clone (2 terms) | 7.58108 | 0.47% |
+> | linear (all features) | 7.51126 | 1.39% |
+> | **MLP 64·64, kept at epoch 1 of 12** | **7.49100** | **1.65%** |
+
+**B1 PASSES: the MLP's holdout MSE is below the clone baseline's by 0.0901 (SE 0.0044, clustered by game; z 20.58).**
+For information, and the first read on the question this rung turns on: the ridge beats the clone by 0.0698 (z 19.31),
+and **the MLP beats the ridge by 0.0203 (z 8.46)**, where adv-2's fit read 0.0085 (z 1.90). The holdouts differ, so this
+is not a paired comparison; but on four times the positions the net's edge over the linear model is 2.4 times as large
+a pair and far outside its noise. The net was again best after one pass: 7.491 at epoch 1, higher at every later epoch,
+and 7.554 at epoch 12. The fitter's own table still shows the net over-rating what it prefers on held-out labelled
+alternatives (0.140 predicted against 0.025 measured between 0.1 and 0.2; 0.269 against 0.131 between 0.2 and 0.5),
+which is what R3 is for. The fit's progress lines were on screen while it ran; nothing downstream depends on them.
+
+#### R3 — the third round: 108,927 labels at adv-3's own choices, and the pin holds
+
+8,000 fresh games on `v54R`, from 00:32:41Z to 00:54:07Z: **21.4 minutes of wall clock against the ~25 registered**
+(15,283 thread-seconds on 12 threads). The games made 680,293 ask decisions, of which 169,822 were sampled (24.96%), and
+73 were dropped where the played ask was not the clone's choice. At 60,822 of the 169,749 decisions read (35.8%), adv-3's
+best ask was the clone's own choice, so there was nothing to label. At the other **108,927 (64.2%)**, its choice and the
+played ask were rolled out from the true state to the end: 217,854 rollouts, exactly two a pair. The console printed
+counts and timing only.
+
+**S1 holds whole:** the played ask was the clone's choice at **99.957%** of R3's sampled decisions (73 of 169,822), as
+at A3's 99.954%.
+
+#### B3′ — the refit: B1′ passes at z 19.74, the net beats the ridge by 8 SE, and it learns where adv-3 over-rated
+
+The same fit ran on all six files: **3,025,321 pairs** from 554,197 decisions in 32,000 games, with 2,419,294 training
+pairs and 606,027 holdout pairs. It took 728 s and wrote `adv-4.json` (md5 49cdd7cc); the calibration reads took 23 s
+more, **12.5 minutes in all against the ~17 registered.**
+
+> | predictor | holdout MSE | share of the zero predictor explained |
+> |---|---:|---:|
+> | zero | 7.59151 | 0.00% |
+> | clone (2 terms) | 7.55770 | 0.45% |
+> | linear (all features) | 7.49007 | 1.34% |
+> | **MLP 64·64, kept at epoch 2 of 12** | **7.46950** | **1.61%** |
+
+**B1′ PASSES: the MLP's holdout MSE is below the clone baseline's by 0.0882 (SE 0.0045, clustered by game; z 19.74).
+S2 holds.** For information: the ridge beats the clone by 0.0676 (z 19.41), and **the MLP beats the ridge by 0.0206 (z
+8.03), so S3 holds**; adv-2's fit read 1.90 SE there. **S4 misses:** adv-3 kept epoch 1, but adv-4 was best after its
+second pass (7.4695, against 7.4739 at epoch 1), the first fit on this ladder to gain from a second look at the same
+positions.
+
+The calibration reads registered beside the gate, on held-out pairs, in sets a pair:
+
+> | held-out pairs | model | mean predicted | mean measured |
+> |---|---|---:|---:|
+> | A3's kind 4: adv-2's own choices (30,822) | adv-2 | **+0.086** | −0.023 (SE 0.015) |
+> | | adv-3 | +0.015 | |
+> | R3's: adv-3's own choices (21,884) | adv-3 | **+0.096** | −0.010 (SE 0.018) |
+> | | adv-4 | +0.028 | |
+
+**S5 holds:** on 12,000 games no model had seen, adv-2 predicted +0.086 for its own choices and they measured −0.023,
+which is §3.8ax's curse replicated (its marker read +0.085 against +0.001). **S6 holds:** adv-4 predicts +0.028 for
+adv-3's choices, less than a third of adv-3's +0.096.
+
+**The finding beside them: four times the data did not shrink the curse at the model's own choices.** adv-1 predicted
++0.091 for its own choices (§3.8ax's A2), adv-2 +0.086, and adv-3, fitted on 3.8 times adv-2's pairs, +0.096; each
+set of choices measured about zero. Whatever the extra data bought, it was not a smaller over-rating of the asks a model
+picks for itself; whether it bought better choices is the marker's question. The calibration reader's pin holds: adv-4
+on its own fit's data prints the fitter's MLP holdout MSE, 7.46950 over 606,027 pairs.
+
+#### M — the marker: adv-4 gains at the decisions it changes, and beats adv-2 on the same decisions by 3.2 SE
+
+The marker ran from 01:07:00Z to 01:38:46Z at `4c3b295`, with no change under `lib/`: adv-4 on 8,000 fresh games of
+`v54M` (1,263 s), then adv-2 on games 4,000–7,999 alone (10.7 minutes), then the paired read. **31.8 minutes of wall
+clock against the ~35 registered.** The games made 678,660 ask decisions, of which 170,280 were sampled (25.09%), and
+99 were dropped where the played ask was not the clone's choice. At the other 170,181, adv-4's best ask was the clone's
+own at 68,309 (40.1%) and another ask at 101,872 (59.9%).
+
+> | margin | tune half (85,337 decisions) | score half (84,844 decisions) | leaves the clone (score) | per deviation (score) | hit: its ask / the clone's (score) |
+> |---:|---:|---:|---:|---:|---:|
+> | 0 | +0.0271 (SE 0.0069) | +0.0205 (SE 0.0071) | 59.83% | +0.034 | 38.8% / 43.9% |
+> | **0.05** | **+0.0303 (SE 0.0057)** | **+0.0219 (SE 0.0059, z 3.70)** | **38.14%** | **+0.057** | **38.1% / 42.6%** |
+> | 0.1 | +0.0169 (SE 0.0043) | +0.0211 (SE 0.0044) | 21.23% | +0.099 | 38.8% / 41.5% |
+> | 0.2 | +0.0094 (SE 0.0023) | +0.0085 (SE 0.0023) | 5.89% | +0.144 | 44.3% / 37.6% |
+> | 0.3 | +0.0037 (SE 0.0013) | +0.0069 (SE 0.0013) | 1.76% | +0.393 | 54.8% / 39.0% |
+> | 0.5 | +0.0016 (SE 0.0006) | +0.0012 (SE 0.0005) | 0.31% | +0.400 | 64.9% / 44.9% |
+> | 1 | +0.0001 (SE 0.0001) | +0.0000 | 0.00% | | |
+> | 2 | +0.0000 | +0.0000 | 0.00% | | |
+>
+> Sets a decision to the end, against the ask v0.33 played (0 where the policy keeps it), the SE clustered by game.
+
+**M1 HOLDS: the tune half picks margin 0.05 (+0.0303), and on the score half it reads +0.0219 sets a decision (SE
+0.0059, z 3.70).** In wins, +0.0044 a decision (SE 0.0012). **S8 holds.** The probe's console line names the stage
+"B2", its fixed label from §3.8aw, where the marker was stage B2; the bar it applied is M1's.
+
+**S7 holds, by 0.7 points:** at margin 0, adv-4 leaves the clone at 59.9% of decisions against adv-2's 60.6%.
+
+**M2: adv-4 at 0.05 is ahead of adv-2 at 0.2 on the same 84,844 score-half decisions by +0.0186 sets a decision (SE
+0.0059, z 3.17).**
+
+> | | a decision, to the end | leaves the clone |
+> |---|---:|---:|
+> | adv-4 at 0.05 | +0.0219 (SE 0.0059) | 32,361 (38.14%) |
+> | adv-2 at 0.2 | +0.0033 (SE 0.0018) | 3,144 (3.71%) |
+> | **adv-4 less adv-2** | **+0.0186 (SE 0.0059, z 3.17)** | only one of them at 30,731 (36.22%) |
+
+The reader's own check holds: both models took the same ask at 9,548 decisions (at any margin), and the two runs
+measured the same outcome at every one. **Both parts of S9 hold:** ahead (called at 65%), and ahead by 2 SE (called at
+20%). The floor is far from failing. As registered, the adv-2 run's own margin line ("the tune half picks margin 2")
+is not a read: that run has no tune half.
+
+**Where adv-4's gain comes from, read at its own choices** (all 101,872 decisions where its best ask is not the
+clone's, both halves), by the gain it predicted:
+
+> | predicted gain | deviations | mean predicted | measured per deviation | hit: its ask / the clone's |
+> |---|---:|---:|---:|---:|
+> | 0 to 0.05 | 36,846 | 0.025 | −0.011 (SE 0.013) | 39.6% / 46.2% |
+> | 0.05 to 0.1 | 28,582 | 0.073 | +0.042 (SE 0.016) | 37.4% / 43.4% |
+> | 0.1 to 0.2 | 26,422 | 0.139 | +0.065 (SE 0.017) | 36.2% / 42.8% |
+> | 0.2 to 0.3 | 7,005 | 0.238 | +0.089 (SE 0.032) | 39.3% / 37.3% |
+> | 0.3 to 0.5 | 2,464 | 0.369 | +0.269 (SE 0.056) | 51.6% / 38.6% |
+> | above 0.5 | 553 | 0.607 | +0.432 (SE 0.117) | 62.2% / 42.1% |
+> | **all** | **101,872** | **0.094** | **+0.040 (SE 0.008)** | |
+
+**The finding: the relabel round is what shrank the curse, not the data.** At its own choices adv-4 predicted +0.094
+and measured **+0.040**, 43% of its prediction; adv-2's marker read +0.085 against +0.001 (§3.8ax), and at B3′ adv-3,
+fitted on the same four-times data without its own choices labelled, predicted +0.096 for its choices and they measured
+−0.010. The change is in the middle of the range. adv-2's choices predicted between 0.05 and 0.2 measured −0.005 and
+−0.010 (§3.8ax), and its measured value rose only above a predicted 0.2. adv-4's choices in that band measure **+0.042
+(SE 0.016) and +0.065 (SE 0.017)**, over 55,004 deviations. Below a predicted 0.05 they still measure about zero
+(−0.011, SE 0.013), and the margin of 0.05 is what leaves those out.
+
+**Two things this read cannot say, stated before C.** First, adv-4's asks hit less often than the clone's (38.1%
+against 42.6% on the score half) and still win more sets: the gain is not in hitting, and nothing here says where it
+is. Second, a decision's gain is read with every other decision played by the clone. At margin 0.05 the knob leaves the
+clone at **38% of decisions**, ten times adv-2's rate at 0.2, so whether those gains add up across a game, or unravel
+once the rest of the table is also playing adv-4's asks, is C's question and D's, not M's. adv-2 at 0.2, on these same
+4,000 games, read +0.0033 (SE 0.0018, z 1.83), smaller than its §3.8ax read of 2.04 SE on 2,000 games.
+
+**S12 so far:** A3 225.0 min (~3.6 h), B3 11.6 min (~15), R3 21.4 min (~25), B3′ 12.5 min (~17), M 31.8 min (~35);
+each inside its projection.
+
+#### C — at home against v0.53: 55.76% of 25,600 games, and every bank ahead
+
+Four banks of 3,200 duplicate pairs, one process a bank, from 01:38:58Z to 01:56:20Z at `4c3b295`, with no change under
+`lib/`: v0.53 with `adv-4.json` (md5 49cdd7cc) at margin 0.05 on side A, v0.53 on side B. **17.4 minutes of wall clock
+against the ~15 registered** (1,035 to 1,042 s a bank). No bank printed a step-cap line.
+
+> | bank | win rate (A) | won | SE | paired set-diff | SE |
+> |---|---:|---:|---:|---:|---:|
+> | v54C1 | 56.61% | 3,623 of 6,400 | 0.62% | +0.8759 | 0.0650 |
+> | v54C2 | 55.13% | 3,528 of 6,400 | 0.62% | +0.7250 | 0.0660 |
+> | v54C3 | 56.05% | 3,587 of 6,400 | 0.62% | +0.8184 | 0.0651 |
+> | v54C4 | 55.27% | 3,537 of 6,400 | 0.62% | +0.7466 | 0.0650 |
+> | **pooled** | **55.76%** | **14,275 of 25,600** | **0.31%** | **+0.7915** | **0.0326** |
+
+**C HOLDS: v0.53 with adv-4 at 0.05 won 55.76% of 25,600 games against v0.53 (SE 0.31%, z 18.56), ahead in 4 banks
+of 4.** The paired set differential beside it: +0.79 sets a pair (SE 0.033). **S10 holds** (called at 75%). The bar was
+the pooled rate above 50.00%; it cleared it by 5.76 points.
+
+For scale, and gated on nothing: §3.8ax's C′, adv-2 at 0.2 laid over v0.33 against v0.33 (v0.53 against its own base),
+read 51.39% of 6,400 games and +0.166 sets a pair.
+
+**What C cannot say.** Every label adv-4 learned from came from a game with v0.33 in all six seats. At home it plays
+v0.53, which plays v0.33's ask at all but 3.7% of its decisions (M2). So C measures the gain against the opponent whose
+replies the rollouts were made of. SESTINA answers differently, and D is the only read of whether the gain survives
+that.
+
+#### D, step 0 — the bridge restored from its archive, the identity IDENTICAL, and the pins hold
+
+**The first attempt stopped before any cell, and the cause is recorded.** Docker Desktop was started at 01:57:09Z (it had
+not been running, and it held no containers). Step 0 stopped at 01:57:26Z while installing the control: the
+scratchpad's FishLab clone had lost 2,411 of its files, including the engine's `fish` binary. The three pinned engine
+binaries (`fish_portable`, `fish_split`, `fish_record`) were gone as well. The directories were dated 2026-09-14 00:08
+local time, and every missing file was older than about a week, while everything written for §3.8ay on 2026-09-11 was
+intact; a clean-up of the temporary folder the scratchpad lives in is the likely cause. Nothing had played.
+
+**The repair was the archive, not a rebuild.** Only the missing files were copied back from
+`C:\Projects\FishAI-bench\bridge` (made 2026-09-06 for exactly this), and nothing that existed was overwritten. Then:
+
+> - the three binaries carry their recorded md5s: `fish_portable` f58f6f45, `fish_split` 95b82b18, `fish_record`
+>   df2c9f04;
+> - the clone outside `engine/bots` is identical to the archive's, file for file by md5 (1,643 files);
+> - the installed-bot directory keeps the scratchpad's later installs, and step 0 installs both v0.54 packages fresh.
+
+**Step 0, second attempt, 02:01:00Z to 02:01:50Z.** Both packages installed with the adapter's md5 (`547a4f7b`) and
+their registered environments; the tree export is `6040eb1` with the recorded `lib/` md5.
+
+> - **Identity: IDENTICAL.** The control at 6731069 for 200 deals printed every engine line but `elapsed` and the arm's
+>   name exactly as §3.8ay's recorded candidate cell did (`cell-conf-adv-6731069.txt`), so the restored bridge, the
+>   export of `6040eb1` and the renamed package play as §3.8ay's did. No fault: 0 FATAL lines, 0 COVERAGE FAIL, 36 of
+>   36 cover files.
+> - **Smoke:** the candidate at the same seed for 12 games started, labelled itself (`adv=49cdd7cc`, its override at
+>   0.05) and recorded. Not a read.
+> - **The pins** (`scripts/pin-bridge-asks.mjs` at `67ba990`, 27 s): the identity cell replayed by `--version v0.53`,
+>   the registry entry as it ships, agrees at **54,209 of 54,209** of our asks (§3.8ay's pin of the same cell counted
+>   the same 54,209); the smoke replayed by the candidate's policy at **551 of 551**; and the smoke replayed by v0.53
+>   **differs at 203 of 551**, so the pin sees the candidate's model.
+
+The hello count in the identity cell's shared `bot.log` read 24 labelled lines of 32; each of the other eight is the
+same line cut off mid-label and spliced with another process's line, which is why seat counts come from the cover
+files. After the read, every directory the scratchpad gained after the archive was made (v0.28's arms to D's run,
+about 48 GB, most of it the fit data of v0.30 to v0.49), which the same clean-up would reach next, was copied into the
+archive: sizes identical, and D's 26 record files md5-identical.
+
+#### D, the cells — and every ask pinned before a number was read
+
+**The 24 cells ran 02:03:02–02:52:10Z, 49 min 8 s**, the two containers side by side at about 4 min 5 s a cell. Every
+cell played and recorded its 4,800 games (4,801 lines a record file: the header and the games), drained 36 cover files,
+and ran with 0 FATAL and 0 COVERAGE FAIL lines. All 757 hello lines across the 24 bot logs carry `arm=v0.33
+root=/fishai`. The 721 whole ones each carry their own arm's exact label: the control's 375 with adv-2 at 0.2 and
+`adv=5f01a97a`, the candidate's 346 with adv-4 at 0.05 and `adv=49cdd7cc`, and not one the other's. The other 36 are
+torn mid-line by a second process's line. The run scripts printed no win rate.
+
+**The pins** (02:52:33–03:27:08Z, 34 min 35 s, at `67ba990`): every one of our asks in all 24 cells, the control's
+replayed by `--version v0.53`, the registry entry as it ships, and the candidate's by v0.33 with its own override and
+model file.
+
+> | seed | control, by `--version v0.53` | candidate, by v0.33 with adv-4 at 0.05 |
+> |---|---:|---:|
+> | 4549308 | 218,457 of 218,457 | 225,906 of 225,906 |
+> | 6528532 | 217,822 of 217,822 | 225,560 of 225,560 |
+> | 7359228 | 217,807 of 217,807 | 226,971 of 226,971 |
+> | 1949625 | 218,693 of 218,693 | 226,628 of 226,628 |
+> | 1427079 | 218,711 of 218,711 | 226,254 of 226,254 |
+> | 2677864 | 218,613 of 218,613 | 226,522 of 226,522 |
+> | 4260107 | 219,192 of 219,192 | 226,799 of 226,799 |
+> | 4445269 | 218,332 of 218,332 | 226,507 of 226,507 |
+> | 7698914 | 218,182 of 218,182 | 226,254 of 226,254 |
+> | 4129384 | 219,255 of 219,255 | 226,303 of 226,303 |
+> | 1916086 | 218,131 of 218,131 | 226,222 of 226,222 |
+> | 3732284 | 218,230 of 218,230 | 226,351 of 226,351 |
+> | **all twelve** | **2,621,425 of 2,621,425** | **2,716,277 of 2,716,277** |
+
+**All 24 hold, at every ask.** The mutation — the candidate's first cell, 4549308, replayed by v0.53 — agrees at
+144,830 of 225,906 (64.111%): **at that seed adv-4 at 0.05 took another ask than v0.53's at 81,076 of our asks,
+35.9%**, beside M's 38.1% against the clone. No number of the read was looked at before the runner printed
+`PINS read: ALL HOLD`.
+
+#### D, the read — §3.8n HOLDS: +6.25 points against SESTINA, 26.5 SE, ahead on all twelve
+
+Read at 03:27:26Z by `$SP/v54-read.mjs` (md5 `6f5b420b`), the first number of the read that was looked at:
+
+> | seed | v0.53 (`monet-v54-v053`) | v0.53 with adv-4 at 0.05 (`monet-v54-adv4`) | paired |
+> |---|---:|---:|---:|
+> | 4549308 | 52.77% | 57.90% | +5.13 |
+> | 6528532 | 52.42% | 58.50% | +6.08 |
+> | 7359228 | 52.10% | 58.81% | +6.71 |
+> | 1949625 | 52.08% | 58.27% | +6.19 |
+> | 1427079 | 53.27% | 58.48% | +5.21 |
+> | 2677864 | 50.96% | 58.54% | +7.58 |
+> | 4260107 | 51.88% | 59.04% | +7.17 |
+> | 4445269 | 52.38% | 58.52% | +6.15 |
+> | 7698914 | 51.65% | 59.08% | +7.44 |
+> | 4129384 | 53.04% | 58.69% | +5.65 |
+> | 1916086 | 51.46% | 57.31% | +5.85 |
+> | 3732284 | 52.02% | 57.85% | +5.83 |
+> | **twelve** | **52.17% (SD 0.66)** | **58.42% (SD 0.52)** | **+6.25 (SD 0.82, SE 0.24), 26.52 SE, ahead on 12 of 12** |
+
+**§3.8n holds: the paired mean, +6.248 points, is 26.5 standard errors above zero (the bar was 0.471), and the
+candidate is ahead on all 12 seeds, behind on none.** Pooled, v0.53 won 30,049 of 57,600 games (52.17%) and the
+candidate 33,648 (58.42%), each with a binomial SE of 0.21. Beside it and gated on nothing: the paired set differential
+is **+0.430 sets a game** (SE 0.011). §3.9's first two conditions, computed on these cells, read met (58.42% pooled, the
+lowest seed 57.31%). **That is not a §3.9 read:** §3.9 fixes 200 deals a seed, and its other four conditions have not
+been read at this vector.
+
+**Checked after the read; none of it was registered.**
+
+- **The count.** A second script counted the wins again from the 24 record files (the games whose winner is the team
+  our arm played): 30,049 and 33,648, the reader's to the game at every seed, with no game unfinished.
+- **No seed carries it.** Every seed gains between +5.13 and +7.58. With each seed left out in turn, the weakest eleven
+  read +6.25 (SE 0.26, z 24.2), ahead on 11 of 11; without the two largest gains together (2677864 and 7698914) the
+  other ten read +6.00 (SE 0.20).
+- **Both sides of the table.** The candidate won 58.88% of its games as team 0 and 57.96% as team 1, against v0.53's
+  52.10% and 52.23%.
+- **The size is the home size.** At home, adv-4 at 0.05 won 55.76% of 25,600 games against v0.53 head to head,
+  +5.76; here it moves the win rate against SESTINA by +6.25. At §3.8ay the two agreed as well (+1.39 at home, +1.46
+  abroad). They are different quantities.
+- **The exchange rate agrees in sign and roughly in size.** +0.430 sets a game is +5.50 points by §3.9's line
+  (12.785 a set); the read is +6.25.
+- **What the engine's own lines show,** averaged over the twelve cells of each arm: sets a game, ours 4.57 → 4.79 and
+  SESTINA's 4.43 → 4.21; our ask accuracy 50.69% → 52.63%, and SESTINA's 50.71% → 51.47%; our declarations 4.448 →
+  4.632 a game, at 99.74% and 99.73%; SESTINA's 4.482 → 4.295 a game, at 97.77% → 96.99%; events a game 100.6 →
+  102.8; **0% limit hits in all 24 cells.** Our arm made 3.6% more asks (47.16 a game against 45.51, from the pins).
+  These describe the games; they are not a mechanism, and none was registered.
+- **The pairing helped a little:** the paired SE is 0.236, against 0.242 for the two means read apart.
+
+#### Predictions, scored
+
+> - **S1 — the pins: HOLDS.** 99.954% at A3 and 99.957% at R3.
+> - **S2 — B1 and B1′ pass: HOLDS.** z 20.58 and z 19.74.
+> - **S3 — the net finds structure the ridge cannot: HOLDS.** At B3′ the MLP beats the ridge by 0.0206 (z 8.03).
+> - **S4 — still best after one pass: MISSES.** adv-3 kept epoch 1; adv-4 was best after its second.
+> - **S5 — the curse, replicated on fresh games: HOLDS.** adv-2 predicted +0.086 for its own choices and they measured
+>   −0.023.
+> - **S6 — the third round learns: HOLDS.** adv-4 predicts +0.028 for adv-3's choices, against adv-3's +0.096.
+> - **S7 — adv-4 leaves the clone less often: HOLDS, by 0.7 points.** 59.9% at margin 0, against adv-2's 60.6%.
+> - **S8 — M1 holds: HOLDS.** +0.0219 sets a decision on the score half, z 3.70.
+> - **S9 — M2: adv-4 ahead of adv-2: HOLDS, and by 2 SE: HOLDS** (called at 20%). +0.0186, z 3.17.
+> - **S10 — C holds: HOLDS.** 55.76% of 25,600 games, z 18.56.
+> - **S11 — D holds: HOLDS**, called at 40%. +6.25 points, 26.5 SE, ahead on 12 of 12. The pre-registration put the
+>   gain this rung hoped for near the +0.5 points D needed; the read is twelve times that, and the size of C's.
+> - **S12 — the clocks: HOLDS.** A3 225.0 min (~3.6 h), B3 11.6 min (~15), R3 21.4 min (~25), B3′ 12.5 min (~17),
+>   M 31.8 min (~35), C 17.4 min (~15), D 90.0 min (~1.7 h, from Docker's start at 01:57:09Z to the last pin at
+>   03:27:08Z, the failed first attempt and the restore included). The largest ratio is C's, 1.16. **About 6.8 hours
+>   of home compute in all, against the ~7 registered.**
+
+Ten of twelve hold, one misses (S4) and one holds by less than a point (S7).
+
+#### What this closes, and what comes next
+
+**The learned ask, made more accurate, clears the bar that ships by more than any rung on this ladder.** v0.53 with
+adv-4 at margin 0.05 beats v0.53 against SESTINA v1.0 by **+6.25 points on twelve seeds neither had played, 26.5 SE,
+ahead on every one**, with every one of our asks pinned in-engine: **58.42% against SESTINA**, the lowest seed at
+57.31%. The owner's frontier bar (~54%, §3.9's amendment of 2026-09-10) is cleared on this read by 4.4 points. It is
+**not Monet v1.0**: §3.9 is read at 200 deals a seed on its own pre-registration, with the panel, the §6.2 controls and
+a second independently built arm, and none of those has been read at this vector.
+
+**What made the difference, as far as these reads can say.** Not the data alone: adv-3, fitted on four times adv-2's
+pairs, over-rated its own choices as much as adv-2 did (B3′). The third round did: after adv-3's own choices were
+labelled and the model refitted, adv-4's choices predicted between 0.05 and 0.2 sets gained +0.04 to +0.07 each, where
+adv-2's in that band gained nothing. That let the margin fall from 0.2 to 0.05, and the knob now changes the ask at
+about 36–38% of our asks instead of about 4% (M; the mutation). The home cell and SESTINA agree on the size.
+
+**What it cannot say.**
+
+- **One opponent outside the family.** Nothing has been read at this vector against people on /play or against §3.9's
+  lineage panel (v0.2 to v0.6).
+- **Monet will look less like SESTINA.** The clone copies SESTINA's choices, and adv-4 departs from them at more than a
+  third of our asks.
+- **Why the gain carries from home to SESTINA is not established.** The labels came from games of v0.33 in all six
+  seats, and v0.33 is a clone of SESTINA's choices; that is one reason it might, not a finding.
+
+**Whether it ships is row 64, and it is the owner's.** The stakes, concretely:
+
+- **What changes.** A registry entry `v0.54`: v0.33's vector plus `askAdvantageModel` naming adv-4, committed as a data
+  module beside adv-2 (158 KB of JSON against adv-2's 158), and `askAdvantageMargin: 0.05`. /play's Monet moves to it.
+  The shape is v0.53's own ship (PR #97): the model as data, the entry and its pin (the entry must replay all twelve of
+  D's candidate cells at every ask), the /play note and its honesty floor re-measured, and the forward bank in the
+  commit after. v0.53 and v0.33 stay in the registry.
+- **What it buys.** +6.25 points against SESTINA on this read, a 95% interval of +5.73 to +6.77 (t on 11 degrees of
+  freedom, as §3.8ay's); the home read agrees on the size (+5.76 against v0.53 head to head).
+- **What it costs** (read after the numbers, for this question: `bench-decide.mjs`, 200 mirror games an arm, each run
+  twice in turn, on an AMD Ryzen 9 9900X): **0.174 → 0.178 ms a decision** against §3.4a item 6's 1.4 ms, 0.504 →
+  0.513 ms an ask, the 99th percentile of a decision 0.89 ms either way, and **107 → 119 ms a game** against 0.9 s:
+  the mirror games are longer, 671 decisions a game against 618, because more asks succeed. Inside the budget, with
+  the same room at the tail. The script's `max` overflowed V8's argument stack at adv-4's 134,220 decisions; a loop
+  in `scripts/bench-decide.mjs` fixes it, and all four runs used the fixed script.
+- **The risk.** Chance is not a live explanation: with no effect, twelve seeds of twelve ahead alone happens once in
+  4,096 reads, and the paired mean is 26.5 SE from zero. The systematic risks are what the instruments guard, and they
+  held: the identity IDENTICAL on the restored bridge, all 24 cells pinned at every ask, the mutation differing at
+  35.9% of asks, and the wins counted twice. The risk that is not measured is transfer to opponents other than
+  SESTINA.
+
+**The recommendation, reason first: ship v0.54.** It clears the bar the owner set for shipping by a margin no earlier
+rung approached, the home read and the read against SESTINA agree on its size, every seed moved the same way, and
+it costs about what v0.53 costs (0.178 ms a decision against 0.174). The alternatives are a second read on twelve
+more fresh seeds before shipping (about 1.5 hours) or keeping v0.53. After the answer, the natural next step is §3.9's
+acceptance read at the shipped vector — twelve fresh seeds at 200 deals, the panel, the controls and the second arm —
+which would be its own pre-registration.
+
 ### 3.9 Monet v1.0 — defined by its acceptance test and nothing else
 
 **Monet v1.0 exists when, and only when:**
@@ -14365,7 +14743,8 @@ where the old value stays visible. Anything less is choosing the answer you want
 | 60 | **After §3.8aw — the learned ask has a real signal (B1) that it cannot act on across the legal list (B2 near zero). Spend more on it, or stop the direction at v0.33?** The pre-registration wrote this outcome down before the numbers and named two levers to put to the owner, not take: **more data** — Stage A at four times the games, the same fit and a fresh marker, about 5 hours of home compute, against the fit's own evidence that the amount of data is not the limit (a ridge model finds 93% of the net's gain over the clone, and the net was best after one pass); or **a second round labelled at the model's own choices** — a small generator flag, fresh labels at B2's measured rate, a refit and a fresh marker, about 35 minutes, which attacks the measured failure directly and whose ceiling is the 1.5% of decisions whose choices read about +0.09 sets each, within one SE of zero. Or stop, keeping the instruments and the 666,435 pairs for any later rung. | **TAKEN — v0.52 (§3.8ax), on the owner's answer: *"Second round (Recommended)"*.** The recommendation had been, reason first: the second round is the only lever that tests the failure the marker measured, and it is cheap; more data spends five hours against the fit's own evidence. Pre-registered before any of its data exists: the first model's own choices labelled on 8,000 fresh games, a refit on §3.8aw's pairs and these with every registered setting unchanged, and the marker on 4,000 games neither fit saw, against the same bar — **a miss there stops the direction at v0.33.** About 35 minutes of home compute to the marker. **READ 2026-09-11: THE MARKER HOLDS AND THE HOME CELL HOLDS; NOTHING SHIPS.** On 4,000 fresh games the refitted model's margin, picked on one half (0.2), read **+0.0045 sets a decision on the other (SE 0.0022, z 2.04)**; at home, v0.33 with the model at that margin won **51.39% of 6,400 games against v0.33 itself (SE 0.62%, z 2.23), three banks of four ahead**. The direction does not stop at v0.33. A home win rate is not §3.8n's: the read against SESTINA on twelve fresh seeds is row 61's, and the shipped vector is the owner's. 44 minutes of home compute against the ~49 registered. |
 | 61 | **After §3.8ax — the learned ask beats v0.33 at home (51.39% of 6,400 games, z 2.23, three banks of four) after its marker held (+0.0045 sets a decision, z 2.04). Does it carry to SESTINA?** §3.8n's bar is the one that ships: a pre-registered read on twelve fresh seeds against SESTINA itself, pinned in-engine at 100% before it is read, the paired mean at least 2 SE above zero and ahead on a majority of seeds. The stake, from the record: v0.33's own read had a per-seed SD of 2.47 points (§3.8af), an SE of 0.71 at twelve seeds, and the home gain is 1.39 points — 1.96 of those SE. | **TAKEN — v0.53, by the standing rule** (the owner's call of 2026-09-06, §3.8n: *"just pick whatever will improve the winning percentage of Monet"*). §3.8af measured about eight minutes of bridge compute for a v0.33 arm over twelve cells, so the cells cost well under an hour; the arm must register the model and the in-engine pin must learn the knob before a cell is read, and the read is pre-registered on its own before any cell is played. A hold goes to the owner as a ship question; the shipped vector is theirs. **Pre-registered as §3.8ay on 2026-09-10, before any cell was played;** the pin is a new `scripts/pin-bridge-asks.mjs`, because `attribute.mjs --cf` read 97.4% on a recorded v0.33 cell where the new pin reads every ask. **READ (§3.8ay): §3.8n HOLDS** — +1.46 points against SESTINA on twelve fresh seeds (52.05% against 50.59%), 2.81 SE, ahead on 8 of 12, with every one of our asks pinned in-engine; the ship question is row 62. |
 | 62 | **After §3.8ay — v0.33 with the learned ask advantage (adv-2 at margin 0.2) beats v0.33 against SESTINA: +1.46 points on twelve fresh seeds (52.05% against 50.59%), 2.81 SE, ahead on 8 of 12, with every one of our asks pinned in-engine. Ship it as v0.53?** Shipping adds a registry entry `v0.53` — v0.33's vector plus the model, committed as data beside the two clones, and the margin — and moves /play's Monet to it, in the shape of v0.33's own ship (`3d1bbda`); v0.33 stays in the registry. It buys +1.46 points against SESTINA on this read (a 95% interval of +0.32 to +2.60), and the home read agrees on the size (+1.39 against v0.33). It costs 0.21 → 0.25 ms a decision against the 1.4 ms budget and 128 → 153 ms a game against 0.9 s (the 99th percentile of a decision 0.73 → 1.27 ms). With no true effect a knob clears this bar 3.6% of the time. §3.9's bar is still not met (one seed at 49.17%). | **TAKEN — ship v0.53, on the owner's answer of 2026-09-16 (*"ship v.53"*).** The recommendation had been, reason first: the read clears the bar the owner set for shipping (§3.8n), two independent reads agree on its size, and its cost stays inside the budget; the alternatives were a second read on twelve more fresh seeds or keeping v0.33. **PR #97** (`claude/monet-v0.53-ship`) carries the entry and its pin, the model as data (`lib/engine/bots/data/adv-2.ts`, written by the model generator, which now takes advantage models), the /play note re-measured (91.04% agreement with Bass v2.0 over 12,786 decisions, where v0.33 reproduces its 91.24%) and the forward bank of 27,263 decisions (v0.33's arm matches 1 of its 36 games). Before the PR opened, the entry itself — no override, no model file — replayed every one of the candidate's 656,338 recorded asks against SESTINA at 100% in each of the twelve cells; at the entry a decision costs 0.141 → 0.167 ms and a game 86 → 103 ms (v0.33, then v0.53, back to back). The owner's answer is the ship; the PR merges once typecheck, lint, the suite and the Vercel build pass. |
-| 63 | **After v0.53 ships (row 62): what next toward the owner's ~54%?** v0.53 reads 52.05% against SESTINA; 54% needs about +0.15 sets a game more, roughly v0.53's own step again. The proposal made with row 62 was to keep working on the learned ask, because a more accurate model can act on more asks: adv-2's gain is real only where it predicts more than 0.2 sets. The lever named was the one row 60 named and the owner did not pick then: four times the training data, about five hours of home compute. | **TAKEN — v0.54 (§3.8az), on the owner's answer of 2026-09-16** (*"go ahead and resolve the smaller items, and ship v.53, and also go with the proposed next steps."*). Pre-registered before any of its data exists: 12,000 fresh games of labels with adv-2's own choices among them; a refit; one more round at the new model's own choices; a second refit; a marker on 8,000 fresh games, with adv-2 read on the same decisions; a home cell against v0.53; and §3.8n's read against v0.53 and SESTINA on twelve fresh seeds at 800 deals a seed. About 7 hours of home compute is projected, two more than the five priced for the data alone. A hold at D goes to the owner as row 64; the shipped vector is theirs. |
+| 63 | **After v0.53 ships (row 62): what next toward the owner's ~54%?** v0.53 reads 52.05% against SESTINA; 54% needs about +0.15 sets a game more, roughly v0.53's own step again. The proposal made with row 62 was to keep working on the learned ask, because a more accurate model can act on more asks: adv-2's gain is real only where it predicts more than 0.2 sets. The lever named was the one row 60 named and the owner did not pick then: four times the training data, about five hours of home compute. | **TAKEN — v0.54 (§3.8az), on the owner's answer of 2026-09-16** (*"go ahead and resolve the smaller items, and ship v.53, and also go with the proposed next steps."*). Pre-registered before any of its data exists: 12,000 fresh games of labels with adv-2's own choices among them; a refit; one more round at the new model's own choices; a second refit; a marker on 8,000 fresh games, with adv-2 read on the same decisions; a home cell against v0.53; and §3.8n's read against v0.53 and SESTINA on twelve fresh seeds at 800 deals a seed. About 7 hours of home compute is projected, two more than the five priced for the data alone. A hold at D goes to the owner as row 64; the shipped vector is theirs. **READ 2026-09-17: every stage held, and §3.8n holds at D — +6.25 points against SESTINA (58.42% against v0.53's 52.17% on twelve fresh seeds at 800 deals), 26.5 SE, ahead on 12 of 12. The ship question is row 64.** |
+| 64 | **After §3.8az — v0.53 with the learned ask made more accurate (adv-4 at margin 0.05) beats v0.53 against SESTINA: +6.25 points on twelve fresh seeds at 800 deals (58.42% against 52.17%), 26.5 SE, ahead on 12 of 12, with every one of our asks pinned in-engine. Ship it as v0.54?** Shipping adds a registry entry `v0.54` — v0.33's vector plus adv-4, committed as data beside adv-2, and the margin 0.05 — and moves /play's Monet to it, in the shape of v0.53's own ship (PR #97); v0.53 and v0.33 stay in the registry. It buys +6.25 points against SESTINA on this read (a 95% interval of +5.73 to +6.77), and the home read agrees on the size (+5.76 against v0.53). It costs 0.174 → 0.178 ms a decision against the 1.4 ms budget and 107 → 119 ms a game against 0.9 s (longer games, because more asks succeed; the 99th percentile of a decision 0.89 ms either way). With no effect, twelve seeds of twelve ahead alone happens once in 4,096 reads. Nothing has been read at this vector against people or against §3.9's lineage panel, and its asks depart from v0.53's at more than a third of ours. §3.9's first two conditions read met on these cells at 800 deals, which is not a §3.9 read. | **FOR THE OWNER.** The recommendation, reason first: the read clears the bar the owner set for shipping (§3.8n) by more than any earlier rung, the home read and the read against SESTINA agree on its size, every seed moved the same way, and it costs about what v0.53 costs — **ship v0.54**, through a ship PR in v0.53's shape. The alternatives: a second read on twelve more fresh seeds first (about 1.5 hours of compute), or keep v0.53. After the answer, the natural next step is §3.9's acceptance read at the shipped vector, as its own pre-registration. |
 
 ---
 
