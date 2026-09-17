@@ -440,14 +440,15 @@ export interface StyleParams extends AskWeights {
    * identity. Inert without `askModel` (the model's rows extend the clone's own), checked before
    * `askValueModel` and refused beside it by `validateStyle` (two selectors over one list are two
    * mechanisms), and absent on every roster style and every tier. Monet v0.53 ships it (`'adv-2'` at the
-   * margin 0.2, MONET.md §3.8ay); in the lab it is reached by `--a-advantage-model` and `--a-override`.
+   * margin 0.2, MONET.md §3.8ay) and v0.54 (`'adv-4'` at 0.05, §3.8az); in the lab it is reached by
+   * `--a-advantage-model` and `--a-override`.
    */
   askAdvantageModel?: string
   /**
    * MONET.md §3.8aw — how far above the clone's choice, in the model's units (sets of final differential),
    * the advantage's best ask must score before it is played. Absent is 0, the bare argmax. The marker chose
-   * it on half its games and scored it on the other half; §3.8ax's B2′ chose 0.2. Inert without
-   * `askAdvantageModel`.
+   * it on half its games and scored it on the other half; §3.8ax's B2′ chose 0.2 for adv-2, and §3.8az's M
+   * 0.05 for adv-4. Inert without `askAdvantageModel`.
    */
   askAdvantageMargin?: number
   /**

@@ -157,9 +157,11 @@ describe('the two entries are different bots, and nearly the same one', () => {
     // SESTINA clone chooses the ask at every ask decision in place of the ranker's own choice
     // (§3.8ac) — the largest single move on this measurement, as it is the largest read on the
     // ladder — 91.24% at v0.33, whose clone also reads the stack's own belief (§3.8af): the two
-    // clones choose alike at almost every ask — and 91.04% at v0.53 (26 more of the same 12,786
+    // clones choose alike at almost every ask — 91.04% at v0.53 (26 more of the same 12,786
     // decisions), whose learned ask advantage leaves the clone's choice at a few asks in a hundred
-    // (§3.8ay). The copy says "about 91%"; the floor here is the honesty
+    // (§3.8ay) — and 90.65% at v0.54 (49 more again), whose refitted advantage leaves it at more
+    // than a third of the asks (656 of these games' 1,776, §3.8az). The copy says "about 91%"; the
+    // floor here is the honesty
     // bar for that sentence, not a target — a Monet that agreed with Bass on fewer than 90% of
     // decisions would need different copy, and one that agreed on all of them would be Bass.
     expect(agree).toBeGreaterThan(90)

@@ -84,6 +84,7 @@ import { registerAskAdvantageModel, registerAskModel } from './imitation.ts'
 import { SESTINA_CLONE } from './data/sestina-clone.ts'
 import { SESTINA_CLONE_3 } from './data/sestina-clone-3.ts'
 import { ASK_ADVANTAGE_2 } from './data/adv-2.ts'
+import { ASK_ADVANTAGE_4 } from './data/adv-4.ts'
 
 // MONET.md §3.8ac and §3.8af — the SESTINA clones are registered when this module loads, so `monetPolicy('v0.30')`
 // and `monetPolicy('v0.33')` play wherever a version is named without any caller knowing a model exists; the
@@ -91,17 +92,18 @@ import { ASK_ADVANTAGE_2 } from './data/adv-2.ts'
 // compiled at its own width when registered (33 and 49 features).
 registerAskModel('sestina-clone', SESTINA_CLONE)
 registerAskModel('sestina-clone-3', SESTINA_CLONE_3)
-// MONET.md §3.8ay — and v0.53's learned ask advantage beside them, under the name its vector carries
-// (`askAdvantageModel: 'adv-2'`), compiled at its own width (51: the second clone's forty-nine and its opinion of
-// each ask). Nothing else on the registry names a model.
+// MONET.md §3.8ay and §3.8az — and the learned ask advantages of v0.53 and v0.54 beside them, under the names their
+// vectors carry (`askAdvantageModel: 'adv-2'` and `'adv-4'`), each compiled at its own width (51: the second clone's
+// forty-nine and its opinion of each ask). Nothing else on the registry names a model.
 registerAskAdvantageModel('adv-2', ASK_ADVANTAGE_2)
+registerAskAdvantageModel('adv-4', ASK_ADVANTAGE_4)
 
 /**
  * The Monet versions that exist *in this repo*. MONET.md §3 plans v0.1 through v1.0; only the ones
  * that have actually shipped appear here, so the union is also the honest answer to "what can be
  * measured today".
  */
-export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a' | 'v0.4b' | 'v0.4c' | 'v0.9' | 'v0.20c' | 'v0.30' | 'v0.33' | 'v0.53'
+export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a' | 'v0.4b' | 'v0.4c' | 'v0.9' | 'v0.20c' | 'v0.30' | 'v0.33' | 'v0.53' | 'v0.54'
 
 /**
  * Version id -> the policy that version plays, ready for `decide(view, policy, seed)`.
@@ -201,6 +203,17 @@ export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a' | 'v0.4b' | 'v0.4c
  *   seeds, 2.81 × SE, eight of twelve) — replayed without the knob, the first of those cells differs at 3.60%
  *   of its asks. §3.9 is still not met: one of the twelve seeds sits at 49.17%. Shipped on the owner's answer
  *   to MONET.md row 62, not by the record.
+ * - `v0.54` is v0.53 with `askAdvantageModel: 'adv-4'` and `askAdvantageMargin: 0.05` in place of adv-2 at 0.2
+ *   (MONET.md §3.8az, the learned ask made more accurate): the same mechanism, with a model fitted on the same
+ *   kind of labels on about four times as many pairs, among them labels at the own choices of adv-1, adv-2 and
+ *   adv-3 (3,025,321 pairs at 554,197 decisions of 32,000 self-play games; `data/adv-4.ts`, registered above at
+ *   load). The margin a separate half picked is 0.05, so the clone's choice is left at more than a third of the
+ *   asks rather than a few in a hundred. Every other term is v0.33's. The reads: on 4,000 games no fit saw,
+ *   +0.0219 sets a decision (z 3.70), ahead of adv-2 at 0.2 on the same decisions by +0.0186 (z 3.17); at home
+ *   55.76% of 25,600 games against v0.53 itself (z 18.56); and +6.25 ± 0.24 points abroad against SESTINA v1.0 on
+ *   twelve fresh seeds at 800 deals a seed (58.42% against v0.53's 52.17% on the same seeds, 26.5 × SE, twelve of
+ *   twelve) — replayed by v0.53, the first of those cells differs at 35.9% of its asks. §3.9 has not been read at
+ *   this vector. Shipped on the owner's answer to MONET.md row 64, not by the record.
  *
  * No entry pins the *code* the knobs run through — see the header. Naming v0.1 here buys back
  * v0.1's SPEC on a v0.2 tree; it does not buy back v0.1's games.
@@ -247,6 +260,10 @@ export const MONET_VERSIONS: Readonly<Record<MonetVersion, PolicySpec>> = Object
     skill: SKILL_PRESETS.hard,
     style: Object.freeze({ ...STYLE_ROSTER.punter, pModel: 'marginal', pAssignment: 'joint', licenceLambda: 0.3, contest: 0.6, closing: 0.5, closingFour: 2, askModel: 'sestina-clone-3', askAdvantageModel: 'adv-2', askAdvantageMargin: 0.2 }),
   }),
+  'v0.54': Object.freeze({
+    skill: SKILL_PRESETS.hard,
+    style: Object.freeze({ ...STYLE_ROSTER.punter, pModel: 'marginal', pAssignment: 'joint', licenceLambda: 0.3, contest: 0.6, closing: 0.5, closingFour: 2, askModel: 'sestina-clone-3', askAdvantageModel: 'adv-4', askAdvantageMargin: 0.05 }),
+  }),
 })
 
 /**
@@ -254,7 +271,7 @@ export const MONET_VERSIONS: Readonly<Record<MonetVersion, PolicySpec>> = Object
  * ("Monet beats v0.2 through v0.6 as well"). Ordered, because a version list that is only a key set
  * cannot express "the one before this".
  */
-export const MONET_VERSION_IDS: readonly MonetVersion[] = Object.freeze(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9', 'v0.20c', 'v0.30', 'v0.33', 'v0.53'] as const)
+export const MONET_VERSION_IDS: readonly MonetVersion[] = Object.freeze(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9', 'v0.20c', 'v0.30', 'v0.33', 'v0.53', 'v0.54'] as const)
 
 /**
  * Is `id` a version this repo can play? For callers holding a string rather than a `MonetVersion` —

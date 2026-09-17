@@ -111,6 +111,7 @@ const MONET_V020C: PolicySpec = monetPolicy('v0.20c')
 const MONET_V030: PolicySpec = monetPolicy('v0.30')
 const MONET_V033: PolicySpec = monetPolicy('v0.33')
 const MONET_V053: PolicySpec = monetPolicy('v0.53')
+const MONET_V054: PolicySpec = monetPolicy('v0.54')
 
 /**
  * The live roster arm, in both spellings — written out, never read from the registry.
@@ -268,6 +269,27 @@ describe('the Monet version registry names each version and resolves it to that 
     expect(styleDiffKeys(pair.style, STYLE_ROSTER.punter)).toEqual(['askAdvantageMargin', 'askAdvantageModel', 'askModel', 'closing', 'closingFour', 'contest', 'licenceLambda', 'pAssignment', 'pModel'])
   })
 
+  it('v0.54 is v0.53 with adv-4 at margin 0.05 in place of adv-2 at 0.2, on its own vector — and differs from v0.53 in NOTHING else', () => {
+    const pair = asPair(MONET_V054, "MONET_VERSIONS['v0.54']")
+    expect(pair.skill).toBe(SKILL_PRESETS.hard)
+    expect(styleDiffKeys(pair.style, (MONET_V053 as BotPolicy).style)).toEqual(['askAdvantageMargin', 'askAdvantageModel'])
+    // MONET.md 3.8az: the same mechanism, refitted on about four times the pairs with labels at the own choices of
+    // adv-1, adv-2 and adv-3. It read +0.0219 sets a decision (z 3.70) on 4,000 games no fit saw, ahead of adv-2 at
+    // 0.2 on the same decisions (z 3.17); 55.76% of 25,600 games at home against v0.53 itself (z 18.56); and +6.25 ±
+    // 0.24 points of win rate against SESTINA v1.0 on twelve fresh seeds at 800 deals a seed (58.42% against v0.53's
+    // 52.17% on the same seeds, 26.5 SE, twelve of twelve) - over 3.8n's bar. 3.9 has not been read at this vector.
+    expect(pair.style.askAdvantageModel).toBe('adv-4')
+    expect(pair.style.askAdvantageMargin).toBe(0.05)
+    // the clone is still v0.33's, and both advantage models resolve to committed data at the same width
+    expect(pair.style.askModel).toBe('sestina-clone-3')
+    expect(askAdvantageModelOf('adv-4').features).toBe(ASK_ADVANTAGE_FEATURE_COUNT)
+    expect(askAdvantageModelOf('adv-4')).not.toBe(askAdvantageModelOf('adv-2'))
+    // v0.53 and v0.33 stay as they shipped
+    expect((MONET_V053 as BotPolicy).style.askAdvantageModel).toBe('adv-2')
+    expect((MONET_V053 as BotPolicy).style.askAdvantageMargin).toBe(0.2)
+    expect(styleDiffKeys(pair.style, (MONET_V033 as BotPolicy).style)).toEqual(['askAdvantageMargin', 'askAdvantageModel'])
+  })
+
   it('v0.9 is v0.4c plus the contest credit, on its own vector — and differs from v0.4c in NOTHING else', () => {
     const pair = asPair(MONET_V09, "MONET_VERSIONS['v0.9']")
     expect(pair.skill).toBe(SKILL_PRESETS.hard)
@@ -358,7 +380,7 @@ describe('the Monet version registry names each version and resolves it to that 
 
   it('MONET_VERSION_IDS lists every shipped version, in order, and nothing else', () => {
     expect([...MONET_VERSION_IDS]).toEqual(Object.keys(MONET_VERSIONS))
-    expect([...MONET_VERSION_IDS]).toEqual(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9', 'v0.20c', 'v0.30', 'v0.33', 'v0.53'])
+    expect([...MONET_VERSION_IDS]).toEqual(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9', 'v0.20c', 'v0.30', 'v0.33', 'v0.53', 'v0.54'])
     expect(MONET_VERSION_IDS.every((v) => isMonetVersion(v))).toBe(true)
   })
 
