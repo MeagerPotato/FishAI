@@ -96,6 +96,7 @@ import { MONET_V020C_BANK } from './data/monet-v020c-bank.ts'
 import { MONET_V030_BANK } from './data/monet-v030-bank.ts'
 import { MONET_V033_BANK } from './data/monet-v033-bank.ts'
 import { MONET_V053_BANK } from './data/monet-v053-bank.ts'
+import { MONET_V054_BANK } from './data/monet-v054-bank.ts'
 import { ASK_ADVANTAGE_FEATURE_COUNT, ASK_FEATURE_COUNT, ASK_FEATURE_COUNT_2, askAdvantageModelOf, askModelOf } from '../../lib/engine/bots/imitation.ts'
 import { ask, gs, mkView } from './util.ts'
 
@@ -1198,6 +1199,75 @@ describe('Monet v0.53 replays its forward bank: every action of whole us54 games
     // re-deals every position after it. That the two banks share no digest needs no runtime check, for the
     // reason 4h gives: both fixtures are `as const`, so their digests are disjoint literal unions and `tsc`
     // rejects a membership test between them (TS2345).
+  })
+})
+
+/* ----------------------------------------- 4j. v0.54's forward bank, replayed --- */
+
+const forwardI = { games: 0, decisions: 0, digestsChecked: 0 }
+
+/** `playForward` for v0.54 (MONET.md 3.8az): same derivation, the v0.54 arm asked, the v0.54 bank compared. */
+function playForwardI(row: (typeof MONET_V054_BANK.games)[number]): void {
+  const { table, seed: gameSeed } = row
+  const policy = STYLE_ROSTER[table as keyof typeof STYLE_ROSTER]
+  let s = newGame(gameSeed, us54Config, row.startSeat as Seat)
+  const digest = new ActionDigest()
+  let steps = 0
+  while (s.phase !== 'finished') {
+    if (steps >= 5000) throw new Error(`${table}/${gameSeed}: hit the 5000-step cap`)
+    const { seat } = legalActionsSummary(s)
+    const view = seatView(s, seat)
+    const moveSeed = hashSeed(`${gameSeed}:${s.moveIndex}`)()
+    digest.push(canonicalAction(decide(view, MONET_V054, moveSeed)))
+    forwardI.decisions++
+    const r = reduce(s, decide(view, policy, moveSeed))
+    if (!r.ok) throw new Error(`${table}/${gameSeed} step ${steps}: ${r.error.code}`)
+    s = r.state
+    steps++
+  }
+  expect(digest.count, `${table}/${gameSeed}: decision count vs the v0.54 bank`).toBe(row.decisions)
+  expect(
+    digest.hex(),
+    `${table}/${gameSeed}: action digest vs ${MONET_V054_BANK.revision.slice(0, 12)}`,
+  ).toBe(row.digest)
+  forwardI.digestsChecked++
+  forwardI.games++
+}
+
+describe('Monet v0.54 replays its forward bank: every action of whole us54 games, as accepted', () => {
+  for (const id of STYLE_IDS) {
+    const rows = MONET_V054_BANK.games.filter((g) => g.table === id)
+    it(`${id} table: ${rows.length} us54 games, every digest as recorded`, () => {
+      expect(rows.length).toBe(SEEDS_PER_STYLE)
+      for (const row of rows) playForwardI(row)
+    }, 120_000)
+  }
+
+  it("covered the whole roster over the bank's 24,771 decisions", () => {
+    expect(forwardI.games).toBe(STYLE_IDS.length * SEEDS_PER_STYLE)
+    expect(forwardI.games).toBe(MONET_V054_BANK.games.length)
+    expect(forwardI.decisions).toBe(MONET_V054_BANK.totalDecisions)
+    expect(forwardI.decisions).toBe(24_771)
+    expect(forwardI.digestsChecked).toBe(MONET_V054_BANK.games.length)
+  })
+
+  it('the v0.54 bank says what it is: a forward baseline from a clean tree this repo can name', () => {
+    expect(MONET_V054_BANK.revision).toMatch(/^[0-9a-f]{40}$/)
+    expect(MONET_V054_BANK.tree).toBe('wt')
+    expect(MONET_V054_BANK.dirty).toBe(false)
+    expect(MONET_V054_BANK.arm).toBe('monetPolicy("v0.54")')
+    expect(MONET_V054_BANK.totalDecisions).toBe(
+      MONET_V054_BANK.games.reduce((n, g) => n + g.decisions, 0),
+    )
+    expect(new Set(MONET_V054_BANK.games.map((g) => g.digest)).size).toBe(
+      MONET_V054_BANK.games.length,
+    )
+    // v0.54's games are not v0.53's: v0.54 takes another ask than v0.53's at more than a third of its asks
+    // (at 81,076 of the 225,906 asks of the one SESTINA cell replayed by v0.53, 35.9%, §3.8az), and one moved
+    // ask re-deals every position after it — asked at every decision of these 36 games, v0.53's arm
+    // reproduced none of their digests when the bank was emitted. That the two banks share no digest needs
+    // no runtime check, for the reason 4h gives: both fixtures are `as const`, so their digests are disjoint
+    // literal unions and `tsc` rejects a membership test between them (TS2345).
   })
 })
 
