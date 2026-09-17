@@ -99,9 +99,11 @@ const q = (a, p) => {
   return t[Math.min(t.length - 1, Math.floor(p * t.length))]
 }
 const f = (x) => x.toFixed(4)
+// MONET.md 3.8az: a loop, not Math.max(...a) - spreading ~134,000 timings overflows V8's argument stack
+const max = (a) => a.reduce((m, x) => (x > m ? x : m), -Infinity)
 console.log(`=== bench: Monet ${VERSION}, ${GAMES} us54 mirror games after ${WARMUP} warm-up, ${os.cpus()[0]?.model ?? 'cpu'} ===`)
 console.log(`decisions ${sink.all.length}  (ask decisions ${sink.ask.length})`)
-console.log(`per decision  mean ${f(mean(sink.all))} ms  median ${f(q(sink.all, 0.5))}  p99 ${f(q(sink.all, 0.99))}  max ${f(Math.max(...sink.all))}`)
+console.log(`per decision  mean ${f(mean(sink.all))} ms  median ${f(q(sink.all, 0.5))}  p99 ${f(q(sink.all, 0.99))}  max ${f(max(sink.all))}`)
 console.log(`per ask       mean ${f(mean(sink.ask))} ms  median ${f(q(sink.ask, 0.5))}  p99 ${f(q(sink.ask, 0.99))}`)
 console.log(`per game      mean ${mean(perGame).toFixed(1)} ms  max ${Math.max(...perGame).toFixed(1)} ms`)
 console.log(`budget (3.4a item 6): ${mean(sink.all) <= 1.4 ? 'PASS' : 'FAIL'} at 1.4 ms per decision; ${mean(perGame) <= 900 ? 'PASS' : 'FAIL'} at 0.9 s per game`)
