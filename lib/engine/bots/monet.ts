@@ -103,7 +103,7 @@ registerAskAdvantageModel('adv-4', ASK_ADVANTAGE_4)
  * that have actually shipped appear here, so the union is also the honest answer to "what can be
  * measured today".
  */
-export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a' | 'v0.4b' | 'v0.4c' | 'v0.9' | 'v0.20c' | 'v0.30' | 'v0.33' | 'v0.53' | 'v0.54'
+export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a' | 'v0.4b' | 'v0.4c' | 'v0.9' | 'v0.20c' | 'v0.30' | 'v0.33' | 'v0.53' | 'v0.54' | 'v1.0'
 
 /**
  * Version id -> the policy that version plays, ready for `decide(view, policy, seed)`.
@@ -212,8 +212,16 @@ export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a' | 'v0.4b' | 'v0.4c
  *   +0.0219 sets a decision (z 3.70), ahead of adv-2 at 0.2 on the same decisions by +0.0186 (z 3.17); at home
  *   55.76% of 25,600 games against v0.53 itself (z 18.56); and +6.25 ± 0.24 points abroad against SESTINA v1.0 on
  *   twelve fresh seeds at 800 deals a seed (58.42% against v0.53's 52.17% on the same seeds, 26.5 × SE, twelve of
- *   twelve) — replayed by v0.53, the first of those cells differs at 35.9% of its asks. §3.9 has not been read at
- *   this vector. Shipped on the owner's answer to MONET.md row 64, not by the record.
+ *   twelve) — replayed by v0.53, the first of those cells differs at 35.9% of its asks. §3.9 was read at this vector
+ *   afterwards (§3.8ba; see `v1.0`). Shipped on the owner's answer to MONET.md row 64, not by the record.
+ * - `v1.0` is v0.54's vector, unchanged, under the name MONET.md §3.9 reserves for the vector that meets its six
+ *   conditions on one pre-registered read. §3.8ba read all six at v0.54's vector on twelve fresh seeds: 58.38% against
+ *   SESTINA v1.0 at 200 deals a seed with the lowest seed at 56.58%; v0.2 to v0.6 each beaten, the order monotone
+ *   through ties inside the floor; every declare cell over 99.4% with zero fault counters; §6.2's controls as the
+ *   read registered them (its locked reader printed NOT MET on two rows the record resolves); and the independent
+ *   adapter's twin identical game for game. The entry is a second name for the same knobs, so it plays exactly what
+ *   v0.54 plays; the test pins the two equal key for key. Published on the owner's direction of 2026-09-18, which
+ *   §3.8ba registered before any cell.
  *
  * No entry pins the *code* the knobs run through — see the header. Naming v0.1 here buys back
  * v0.1's SPEC on a v0.2 tree; it does not buy back v0.1's games.
@@ -264,6 +272,10 @@ export const MONET_VERSIONS: Readonly<Record<MonetVersion, PolicySpec>> = Object
     skill: SKILL_PRESETS.hard,
     style: Object.freeze({ ...STYLE_ROSTER.punter, pModel: 'marginal', pAssignment: 'joint', licenceLambda: 0.3, contest: 0.6, closing: 0.5, closingFour: 2, askModel: 'sestina-clone-3', askAdvantageModel: 'adv-4', askAdvantageMargin: 0.05 }),
   }),
+  'v1.0': Object.freeze({
+    skill: SKILL_PRESETS.hard,
+    style: Object.freeze({ ...STYLE_ROSTER.punter, pModel: 'marginal', pAssignment: 'joint', licenceLambda: 0.3, contest: 0.6, closing: 0.5, closingFour: 2, askModel: 'sestina-clone-3', askAdvantageModel: 'adv-4', askAdvantageMargin: 0.05 }),
+  }),
 })
 
 /**
@@ -271,7 +283,7 @@ export const MONET_VERSIONS: Readonly<Record<MonetVersion, PolicySpec>> = Object
  * ("Monet beats v0.2 through v0.6 as well"). Ordered, because a version list that is only a key set
  * cannot express "the one before this".
  */
-export const MONET_VERSION_IDS: readonly MonetVersion[] = Object.freeze(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9', 'v0.20c', 'v0.30', 'v0.33', 'v0.53', 'v0.54'] as const)
+export const MONET_VERSION_IDS: readonly MonetVersion[] = Object.freeze(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9', 'v0.20c', 'v0.30', 'v0.33', 'v0.53', 'v0.54', 'v1.0'] as const)
 
 /**
  * Is `id` a version this repo can play? For callers holding a string rather than a `MonetVersion` —
