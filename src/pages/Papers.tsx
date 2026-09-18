@@ -84,6 +84,8 @@ interface Paper {
   /** `System paper · v0.5` / `Focused result` — what kind of document this is. */
   kind: string
   title: string
+  /** A zip under `public/papers/` that opens as an Overleaf project, when the paper ships one. */
+  overleaf?: string
 }
 
 const PAPERS: Paper[] = [
@@ -153,6 +155,13 @@ const PAPERS: Paper[] = [
     kind: 'Cross-engine result',
     title: 'Toward the Frontier: Seventeen Measured Rungs Against a Frontier Canadian Fish Agent, and the Wall Where They Stopped',
   },
+  {
+    slug: 'monet-v1',
+    serial: '12',
+    kind: 'Cross-engine result',
+    title: 'Monet v1.0: Imitating a Frontier Canadian Fish Agent, Correcting the Imitation, and Passing a Pre-Registered Acceptance Test',
+    overleaf: 'monet-v1-overleaf.zip',
+  },
 ]
 
 /* ---- rendering ----------------------------------------------------------------------------- */
@@ -200,6 +209,19 @@ function PaperEntry({ paper }: { paper: Paper }) {
               LaTeX source
             </a>
           </li>
+          {paper.overleaf && (
+            <li>
+              <a
+                className={p.link}
+                href={`/papers/${paper.overleaf}`}
+                download
+                aria-label={`Overleaf project of ${paper.title} (zip)`}
+              >
+                Overleaf project
+                <span className={p.linkNote}>zip</span>
+              </a>
+            </li>
+          )}
         </ul>
       </div>
     </article>
