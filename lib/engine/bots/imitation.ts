@@ -1,12 +1,17 @@
 /**
  * imitation.ts — MONET.md §3.8ac: the ask policy learned from SESTINA's recorded play. The bridge
  * records (their engine's output — data) hold every deal and every event of our matches against
- * SESTINA v1.0, so its ask choices — the output of its own twelve-deal, depth-twelve search — can
- * be fitted as a fast policy of ours: a score over the seat's legal asks, the chosen one the
- * argmax. The owner's direction of 2026-09-08: learning from SESTINA's play is essential, and the
- * goal past parity is to beat it — this policy is also the opponent model the search's rollouts
- * lacked (§3.8aa read the lock-leaf search ahead at home, where its rollouts model the opponents
- * exactly, and behind abroad, where they do not).
+ * SESTINA v1.0, so its ask choices can be fitted as a fast policy of ours: a score over the seat's
+ * legal asks, the chosen one the argmax. What those choices are, corrected 2026-09-18 (MONET.md's
+ * correction of that date, carried at §3.8b and §3.8af; `papers/monet-v1.tex`'s errata, item 2):
+ * SESTINA asks by a tuned linear score over 20 features with a one-step lookahead, and its spec's
+ * `det`, `cand`, `depth`, `kappa`, `maxq` and `rbelief` configure ONLY its endgame search — twelve
+ * sampled deals, the top four asks, twelve moves ahead — which runs when at most 26 cards are
+ * unresolved. Most of the decisions fitted here are therefore the linear policy's, not a search's.
+ * The owner's direction of 2026-09-08: learning from SESTINA's play is essential, and the goal past
+ * parity is to beat it — this policy is also the opponent model the search's rollouts lacked
+ * (§3.8aa read the lock-leaf search ahead at home, where its rollouts model the opponents exactly,
+ * and behind abroad, where they do not).
  *
  * ## The features
  *
@@ -123,14 +128,16 @@ export const ASK_FEATURE_COUNT = ASK_FEATURES.length
  * MONET.md §3.8af — the second feature set: `ASK_FEATURES` and, after them, THE BELIEF'S SEAT. The
  * clone's disagreements with SESTINA (§3.8ad's addendum) are the seat, not the card: on 11.5% of
  * its decisions SESTINA asks the same half-suit at another seat and on 5.7% another half-suit, and
- * the seat it prefers is one our marginal ranks lower. SESTINA's belief is independent per card
- * (its spec's `rbelief=indep`); ours is the joint over the set. These features hand a fit the
- * independent belief beside the marginal — the slot prior, and the slot prior under an ask-choice
- * prior of the strength SESTINA's spec names (`kappa=2.5`, whatever its own use of it) — and what
- * the log says about the target's own dealings with the half-suit: its asks into it, their hits
- * and misses, the cards taken from it, how long ago. A model fitted at this width reads these
- * rows (`registerAskModel` tells the sets apart by the width); the first set's rows are byte for
- * byte what they were.
+ * the seat it prefers is one our marginal ranks lower. The independent per-card belief below is
+ * ours, not SESTINA's: its spec's `rbelief=indep` names the belief of the blueprint that plays out
+ * its ENDGAME search's sampled deals, not the belief its asks are chosen by (corrected 2026-09-18,
+ * in this section's own correction block). Ours is the joint over the set. These features hand a
+ * fit the independent belief beside the marginal — the slot prior, and the slot prior under an
+ * ask-choice prior of the strength SESTINA's spec names (`kappa=2.5`, whatever its own use of it)
+ * — and what the log says about the target's own dealings with the half-suit: its asks into it,
+ * their hits and misses, the cards taken from it, how long ago. A model fitted at this width reads
+ * these rows (`registerAskModel` tells the sets apart by the width); the first set's rows are byte
+ * for byte what they were.
  */
 export const ASK_FEATURES_2 = [
   ...ASK_FEATURES,

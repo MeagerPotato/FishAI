@@ -167,8 +167,12 @@ export type MonetVersion = 'v0.1' | 'v0.2' | 'v0.3' | 'v0.4a' | 'v0.4b' | 'v0.4c
  *   64·64 units fitted on 410,000 of its decisions from the bridge records, agreeing with its
  *   choice on 56.3% of held-out decisions where the stack's own choice agrees on 43.7% — picks
  *   among them (`imitation.ts`; the weights `data/sestina-clone.ts`, registered above at load).
- *   Every other term is v0.20c's: the belief, the declares, the concessions, the reveal. The
- *   largest read on the ladder: +7.13 points of win rate at home against v0.20c's vector (2,400
+ *   Every other term is v0.20c's: the belief, the declares, the concessions, the reveal — carried,
+ *   but the four ranker credits among them (`licenceLambda`, `contest`, `closing`, `closingFour`)
+ *   act on the ranker's own choice and are therefore INERT from v0.30 on, the clone having taken
+ *   that choice over; they stay in the vector because removing them would be a new vector
+ *   (`papers/monet-v1.tex`, the v1.0 vector table).
+ *   The largest read on the ladder: +7.13 points of win rate at home against v0.20c's vector (2,400
  *   duplicate pairs, 12.8 × SE, twelve of twelve banks) and +7.24 ± 0.63 points (48.0% against
  *   the base's 40.8%, 11.5 × SE, twelve of twelve seeds) abroad against SESTINA v1.0
  *   on twelve fresh seeds. What the fit says SESTINA does: it keeps asking into the half-suit it
@@ -279,9 +283,9 @@ export const MONET_VERSIONS: Readonly<Record<MonetVersion, PolicySpec>> = Object
 })
 
 /**
- * The shipped versions in release order — the panel MONET.md §3.10's monotonicity check iterates
- * ("Monet beats v0.2 through v0.6 as well"). Ordered, because a version list that is only a key set
- * cannot express "the one before this".
+ * The shipped versions in release order — the panel MONET.md §3.9's condition 3, the monotonicity
+ * check, iterates ("Monet beats v0.2 through v0.6 as well"). Ordered, because a version list that is
+ * only a key set cannot express "the one before this".
  */
 export const MONET_VERSION_IDS: readonly MonetVersion[] = Object.freeze(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9', 'v0.20c', 'v0.30', 'v0.33', 'v0.53', 'v0.54', 'v1.0'] as const)
 
