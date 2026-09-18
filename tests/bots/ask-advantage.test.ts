@@ -258,8 +258,8 @@ describe('P7 — validateStyle closes both knobs, and registration closes the wi
   })
 })
 
-describe('P8 — absent from every roster style, every tier and every Monet version but v0.53 and v0.54, which ship it', () => {
-  it('is on no roster style and no tier, and of the versions only v0.53 (adv-2 at 0.2) and v0.54 (adv-4 at 0.05) carry it', () => {
+describe('P8 — absent from every roster style, every tier and every Monet version but v0.53, v0.54 and v1.0, which ship it', () => {
+  it('is on no roster style and no tier, and of the versions only v0.53 (adv-2 at 0.2), v0.54 and v1.0 (adv-4 at 0.05) carry it', () => {
     for (const [id, s] of Object.entries(STYLE_ROSTER) as [string, StyleParams][]) {
       expect(s.askAdvantageModel, id).toBeUndefined()
       expect(s.askAdvantageMargin, id).toBeUndefined()
@@ -269,8 +269,9 @@ describe('P8 — absent from every roster style, every tier and every Monet vers
       expect(STYLE_PRESETS[t].askAdvantageMargin, t).toBeUndefined()
     }
     // MONET.md 3.8ay and row 62: v0.53 ships adv-2 at the margin 3.8ax's tune half chose; 3.8az and row 64: v0.54
-    // ships adv-4 at the margin 3.8az's tune half chose; every version before them stays as it shipped
-    const SHIPS: Partial<Record<string, readonly [string, number]>> = { 'v0.53': ['adv-2', 0.2], 'v0.54': ['adv-4', 0.05] }
+    // ships adv-4 at the margin 3.8az's tune half chose; 3.8ba: v1.0 is v0.54's vector under 3.9's name; every version
+    // before them stays as it shipped
+    const SHIPS: Partial<Record<string, readonly [string, number]>> = { 'v0.53': ['adv-2', 0.2], 'v0.54': ['adv-4', 0.05], 'v1.0': ['adv-4', 0.05] }
     for (const v of MONET_VERSION_IDS) {
       const s = resolvePolicy(monetPolicy(v)).style
       expect(s.askAdvantageModel, v).toBe(SHIPS[v]?.[0])
