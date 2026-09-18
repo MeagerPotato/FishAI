@@ -113,6 +113,7 @@ const MONET_V030: PolicySpec = monetPolicy('v0.30')
 const MONET_V033: PolicySpec = monetPolicy('v0.33')
 const MONET_V053: PolicySpec = monetPolicy('v0.53')
 const MONET_V054: PolicySpec = monetPolicy('v0.54')
+const MONET_V10: PolicySpec = monetPolicy('v1.0')
 
 /**
  * The live roster arm, in both spellings — written out, never read from the registry.
@@ -291,6 +292,23 @@ describe('the Monet version registry names each version and resolves it to that 
     expect(styleDiffKeys(pair.style, (MONET_V033 as BotPolicy).style)).toEqual(['askAdvantageMargin', 'askAdvantageModel'])
   })
 
+  it('v1.0 is v0.54 under the name 3.9 reserves — the same skill, and a style equal to v0.54 in EVERY key', () => {
+    const pair = asPair(MONET_V10, "MONET_VERSIONS['v1.0']")
+    const v054 = asPair(MONET_V054, "MONET_VERSIONS['v0.54']")
+    // MONET.md 3.8ba: all six of 3.9's conditions read at v0.54's vector, so v1.0 is that vector and nothing else. A
+    // second registry entry is a second name for the same knobs: equal key for key, the models resolved to the same
+    // committed data, so it plays every game exactly as v0.54 does (v0.54's forward bank is its bank).
+    expect(pair.skill).toBe(v054.skill)
+    expect(styleDiffKeys(pair.style, v054.style)).toEqual([])
+    expect(pair.style).toEqual(v054.style)
+    expect(Object.keys(pair.style).sort()).toEqual(Object.keys(v054.style).sort())
+    expect(pair.style.askAdvantageModel).toBe('adv-4')
+    expect(pair.style.askAdvantageMargin).toBe(0.05)
+    expect(pair.style.askModel).toBe('sestina-clone-3')
+    // v0.54 stays in the registry as it shipped; v1.0 is the newest entry, so /play seats it
+    expect(MONET_VERSION_IDS[MONET_VERSION_IDS.length - 1]).toBe('v1.0')
+  })
+
   it('v0.9 is v0.4c plus the contest credit, on its own vector — and differs from v0.4c in NOTHING else', () => {
     const pair = asPair(MONET_V09, "MONET_VERSIONS['v0.9']")
     expect(pair.skill).toBe(SKILL_PRESETS.hard)
@@ -381,7 +399,7 @@ describe('the Monet version registry names each version and resolves it to that 
 
   it('MONET_VERSION_IDS lists every shipped version, in order, and nothing else', () => {
     expect([...MONET_VERSION_IDS]).toEqual(Object.keys(MONET_VERSIONS))
-    expect([...MONET_VERSION_IDS]).toEqual(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9', 'v0.20c', 'v0.30', 'v0.33', 'v0.53', 'v0.54'])
+    expect([...MONET_VERSION_IDS]).toEqual(['v0.1', 'v0.2', 'v0.3', 'v0.4a', 'v0.4b', 'v0.4c', 'v0.9', 'v0.20c', 'v0.30', 'v0.33', 'v0.53', 'v0.54', 'v1.0'])
     expect(MONET_VERSION_IDS.every((v) => isMonetVersion(v))).toBe(true)
   })
 
