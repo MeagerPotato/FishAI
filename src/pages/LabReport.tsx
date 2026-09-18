@@ -1,209 +1,70 @@
 /**
- * `/lab` — the report.
+ * `/lab` — the style report: the nine-style roster's payoff matrix, counter-graph and verdict, read
+ * from one committed artifact, with the verdict re-derived in the browser.
  *
- * SITE_SPEC.md §1: hero -> the rule set -> style roster -> method -> payoff matrix (pin act 1)
- * -> counter-graph (pin act 2) -> verdict -> exploitability -> cross-play -> sources. Plain
- * language is not a different register here: the numbers are the same numbers, said once in
- * words first — one plain sentence of body prose ahead of every figure, the six-idea on-ramp in
- * the hero, and the glossary under Sources.
- *
- * ## This page is also the index of the lab
- *
- * The nav used to carry six lab surfaces as sibling tabs, which told a visitor nothing: Report,
- * Matrix, Adaptive, Bounded, Live and Replay read as six words for "numbers". They are not
- * siblings — five of them are the evidence behind claims made here — so the nav now carries one
- * Research entry pointing at this page, and `#evidence` below the hero is where they are named,
- * each with the headline it found. Deleting a route was never on the table: every one of them is
- * a live deep link, and the footer carries them too.
- *
- * The on-ramp and the glossary sit in `<details>`. Both restate, in shorter words, things this
- * page says in full further down with their numbers attached; neither is the only place a fact
- * appears. That is the test applied before anything here was folded — and folding is all that
- * happened. No measurement, caveat or verdict word was cut, softened or moved.
+ * Titles, figures and tables only. On the owner's direction of 2026-09-18 the explanations live in
+ * the papers (/papers), and the site keeps the results.
  *
  * ## The accent budget (SITE_SPEC.md §2.1)
  *
- * §2.1 spends accent TEXT on three things: the verdict banner, the one focal matrix cell, and
- * the highlighted cycle. Those are exactly the three here —
+ * Accent TEXT is spent on three things: the verdict chip on the ink panel, the one focal cell of
+ * the payoff matrix, and the highlighted cycle of the counter-graph (or the dominant node when
+ * there is no cycle). Every `Button` here is `ghost` or `line`, so no amber fill appears in the
+ * page chrome.
  *
- *   1. the verdict chip on the ink panel — `live="VERDICT · …"`, the page's only accent text
- *      outside a figure;
- *   2. the one focal cell of the payoff matrix (inside FIG. 07);
- *   3. the highlighted cycle of the counter-graph, or the dominant node when there is no cycle
- *      to highlight (inside FIG. 08).
- *
- * Section badges, crop marks, the ink panel's registration corner and chart bar/dot fills are
- * MARKS, which §2.1 makes free. Every `Button` here is `ghost` or `line` and `SiteNav` is given
- * no `cta`, so no amber fill appears in the page chrome at all.
- *
- * The remaining amber on the page belongs to the diagram system, not to this page: §3.2 requires
- * every figure to carry exactly one focal element, so FIG. 01 marks the EIGHTS set and FIG. 04
- * marks the Analyze step whether this page wants them to or not. What that budget does control
- * is HOW MANY figures the page shows, so the two state machines — reference material rather than
- * argument — are collapsed behind a `<details>` and cost nothing until a reader asks for them.
- *
- * ## What is drawn from what
- *
- * The counter-graph is drawn from `matrix[].significant` — post-Benjamini-Hochberg — via the
- * reconciled ranking, never from a raw p-value. In the pilot BH demoted four cells that looked
- * significant uncorrected; drawing edges from p-values would have put those on the headline
- * diagram as findings.
+ * The counter-graph is drawn from `matrix[].significant` — post-Benjamini-Hochberg — never from a
+ * raw p-value.
  */
 
 import { useLocation } from 'react-router-dom'
 import {
   Board,
   Button,
-  Eyebrow,
-  Hairline,
   InkPanel,
   MaskedLines,
-  PinAct,
-  Reveal,
   Section,
   SectionHead,
-  TextLink,
   buttonRow,
   inkPanelBody,
-  pinHead,
-  pinHeadAside,
 } from '../components/index.ts'
 import {
-  AnalysisPipeline,
   BarChart,
   CounterGraph,
   DeckAssembly,
-  DeclareWindowMachine,
   DumbbellChart,
   LineChart,
   PayoffMatrix,
-  TurnMachine,
   claimPrecisionDumbbell,
   concedeRateBar,
   degradationLine,
 } from '../diagrams/index.ts'
 import { caseFromSearch, styleLabel } from '../lab/artifact.ts'
-import { count, edge, interval, rate, rate3 } from '../lab/format.ts'
+import { count, interval, rate } from '../lab/format.ts'
 import { labModel } from '../lab/model.ts'
-import { RULES_FILE, shortHash } from '../lab/rules.ts'
-import { Beats } from '../lab/ui/Beats.tsx'
+import { shortHash } from '../lab/rules.ts'
 import { LabContents, type LabSection } from '../lab/ui/LabContents.tsx'
 import { LabShell, withCase } from '../lab/ui/LabShell.tsx'
 import { replayHref } from '../lab/ui/replayHref.ts'
 import { ArtifactBroken, RulesMismatch } from '../lab/ui/Refusal.tsx'
-import { RuleStamp, SyntheticNotice, Us54Facts } from '../lab/ui/RuleStamp.tsx'
+import { RuleStamp, SyntheticNotice } from '../lab/ui/RuleStamp.tsx'
 import { ScrollRegion } from '../lab/ui/ScrollRegion.tsx'
 import { VerdictBody } from '../lab/ui/Verdict.tsx'
 import s from '../lab/ui/lab.module.css'
 
-/** The public repository, so the Sources list can link the documents it names. */
-const REPO = 'https://github.com/MeagerPotato/FishAI'
-
-/**
- * Family -> display label.
- *
- * A `Map`, not an object literal, for the same reason as `FAMILY_CODE` in the
- * counter-graph layout: `family` is a value out of the results document, and
- * `{...}[family]` walks `Object.prototype`. `family: "constructor"` would
- * return the `Object` constructor, which is truthy, so `?? style.family` never
- * fires and a function is passed as a React child. `Map.get` has no prototype
- * chain.
- */
-/**
- * The contents of this page, in document order.
- *
- * Every `id` here is a real element below, and the two pin acts got wrapper elements to carry
- * theirs — a `PinAct` owns its own `<section>` and takes no `id`, and the headline div inside it
- * is far too short for the scroll observer to ever find. The wrapper is a plain `<div>`, which
- * `position: sticky` inside the act is indifferent to.
- */
+/** The contents of this page, in document order. Every `id` is a real element below. */
 const CONTENTS: readonly LabSection[] = [
-  { id: 'evidence', label: 'The evidence', note: 'Five deep surfaces, and the write-ups' },
-  { id: 'rules', label: 'The rule set', note: 'us54, and why the ninth set decides everything' },
-  { id: 'roster', label: 'The roster', note: 'Nine styles, and two caveats on them' },
-  { id: 'method', label: 'Method', note: 'Duplicate deals and multiplicity control' },
-  { id: 'matrix', label: 'The payoff matrix', note: 'Who beats whom, and by how much' },
-  { id: 'counter-graph', label: 'The counter-graph', note: 'Only edges that survived correction' },
-  { id: 'verdict', label: 'The verdict', note: 'Four criteria, recomputed in your browser' },
-  {
-    id: 'exploitability',
-    label: 'Exploitability and cross-play',
-    note: 'Topping the table is not being strong',
-  },
-  { id: 'sources', label: 'Sources and glossary', note: 'Every document, every term' },
+  { id: 'rules', label: 'Rule set' },
+  { id: 'roster', label: 'Roster' },
+  { id: 'matrix', label: 'Payoff matrix' },
+  { id: 'counter-graph', label: 'Counter-graph' },
+  { id: 'verdict', label: 'Verdict' },
+  { id: 'exploitability', label: 'Exploitability' },
 ]
 
 /**
- * The plain-language on-ramp: six ideas that carry the whole report.
- *
- * It lives in a `<details>` in the hero rather than in a section of its own, and the reason is
- * that every one of these six is said AGAIN, in full and with its numbers, further down — the
- * caveats below the roster, the criteria in the verdict panel, duplicate deals under Method,
- * score rate in the glossary. A reader who needs the vocabulary opens it once; a reader who
- * does not is no longer scrolled a thousand pixels past a summary of a page they are about to
- * read anyway. Nothing here is the only place a fact appears, which is the test for folding.
+ * Family -> display label. A `Map`, not an object literal: `family` is a value out of the results
+ * document, and `{...}[family]` walks `Object.prototype` (`"constructor"` would render a function).
  */
-const HOW_TO_READ = [
-  {
-    ix: '01',
-    title: 'A style is settings, not a bot',
-    role: 'Definition',
-    body:
-      'Every seat runs the same deduction engine. A style is a vector of parameters ' +
-      'over it — how eagerly to declare, whom to target, what to weigh — so when one ' +
-      'style beats another, the difference is policy, never one bot being better ' +
-      'written than the rest.',
-  },
-  {
-    ix: '02',
-    title: 'A duplicate deal cancels the cards',
-    role: 'Method',
-    body:
-      'Each seeded deal is played twice with the teams swapped, and the pair is scored ' +
-      'as one observation. A lucky hand lifts both sides equally and cancels out, so ' +
-      'what remains is what the styles did with identical cards.',
-  },
-  {
-    ix: '03',
-    title: 'Score rate is a plain win rate',
-    role: 'Measure',
-    body:
-      'The share of games a style’s team won, from 0 to 1, where .500 is an even ' +
-      'match. Under us54 a tie is arithmetically impossible — nine sets, first to five ' +
-      '— so nothing hides in a draw column.',
-  },
-  {
-    ix: '04',
-    title: 'The matrix and the counter-graph',
-    role: 'Figures',
-    body:
-      'The matrix prints each style’s score rate against every other. The ' +
-      'counter-graph is the same data redrawn as arrows — one per pairing whose ' +
-      'advantage survived statistical correction. A cycle there (A beats B beats C ' +
-      'beats A) would mean no ranking can be honest; this roster has none.',
-  },
-  {
-    ix: '05',
-    title: 'Four criteria, or no winner',
-    role: 'Decision rule',
-    body:
-      'A style is called dominant only if it tops the table, loses no matchup even at ' +
-      'the cautious end of the interval, sits in a matrix transitive enough for a ' +
-      'ranking to mean anything, and folds no worse than its rivals to a counter-' +
-      'strategy tuned against it. Fail one and nobody is crowned.',
-  },
-  {
-    ix: '06',
-    title: 'Two caveats, stated up front',
-    role: 'Caveats',
-    body:
-      'The declare-threshold axis the style names advertise turns out not to fire, so ' +
-      'the styles differ along other knobs than the ones they are named for; and the ' +
-      'Hoarder is measured paying its strategy’s full cost without the mechanism ' +
-      'that was meant to pay it back. Both are unpacked below the roster.',
-  },
-]
-
 const FAMILY_LABEL = new Map<string, string>([
   ['control', 'Control'],
   ['aggressive', 'Aggressive'],
@@ -221,64 +82,13 @@ export function LabReport() {
   if (!model.ok) {
     return <ArtifactBroken which={which} current="/lab" file={model.file} detail={model.detail} />
   }
-  // SITE_SPEC.md §1.1 — refuse, with a message, before rendering a single number.
+  // SITE_SPEC.md §1.1 — refuse before rendering a single number.
   if (!model.check.ok) return <RulesMismatch which={which} current="/lab" check={model.check} />
 
   const { artifact, results, derived, check } = model
   const { meta } = artifact
-  const topStyle = derived.candidate
-  const cycle = derived.cycles[0]
   const exploit = [...artifact.exploitability].sort((a, b) => a.gap - b.gap)
   const maximinOf = new Map(derived.maximin.map((m) => [m.style, m]))
-
-  const matrixBeats = [
-    {
-      head: 'Read a row, not a column.',
-      body: `Every cell is the score rate of the ROW style against the COLUMN style, duplicate-averaged so a cell and its mirror sum to exactly 1. ${rate3(0.5)} is an even match.`,
-    },
-    {
-      head: 'The number is printed in every cell.',
-      body: 'The ink ramp quantises the same value into four steps, so the encoding is redundant: nothing on this figure is legible only by shade.',
-    },
-    {
-      head: 'A dashed border means "not significant".',
-      body: `${derived.cells - derived.significantCells} of ${derived.cells} cells did not survive Benjamini-Hochberg at α = ${meta.analysis.alpha}. They are drawn, because hiding them would make the matrix look tidier than it is.`,
-    },
-    {
-      head: 'Five columns of nine.',
-      body: (
-        <>
-          The security-matrix type caps columns at six, so the headline shows the five
-          highest-mean-score opponents. The whole N×N, every CI, every q-value, is one click away
-          on <TextLink href={withCase('/lab/matrix', which)}>the matrix page</TextLink>.
-        </>
-      ),
-    },
-  ]
-
-  const graphBeats = [
-    {
-      head: 'An edge means "beats, significantly".',
-      body: `Drawn from matrix[].significant — the post-Benjamini-Hochberg flag — never from a raw p-value. ${derived.edges.length} directed edges survived; a cell that merely looks significant uncorrected emits nothing here.`,
-    },
-    {
-      head: 'The fan-in badge is the point.',
-      body: '"3 IN" reads as "three styles counter this one". A ranking cannot say that; a graph built for multi-parent fan-in can.',
-    },
-    cycle
-      ? {
-          head: 'One cycle is highlighted, and only one.',
-          body: `${cycle.styles.map((id) => styleLabel(artifact, id)).join(' → ')} → ${styleLabel(artifact, cycle.styles[0])}, weakest edge ${rate3(cycle.minEdge)}. Every edge in it survived BH. Other cycles, if any, stay muted forward edges.`,
-        }
-      : {
-          head: 'There is no cycle to highlight.',
-          body: `No 3-cycle survived Benjamini-Hochberg, so the accent moves to the dominant node instead. The editorial point is still what the accent marks — it is just a different point.`,
-        },
-    {
-      head: 'This is the headline whenever the verdict is cyclic.',
-      body: `Here the verdict is "${derived.verdict}". ${derived.verdict === 'cyclic' ? 'So this figure, not a ranking, is the finding.' : 'The counter-graph is still shown, because a transitive matrix is a claim that has to be visible to be checked.'}`,
-    },
-  ]
 
   return (
     <LabShell
@@ -287,664 +97,159 @@ export function LabReport() {
       which={which}
       stamp={`us54 · rulesHash ${shortHash(meta.rulesHash)}`}
     >
-      {/* ---- hero ------------------------------------------------------------------------ */}
       <Section noRule noMarks>
-        <MaskedLines
-          level="h1"
-          lines={['Nine play styles.', 'One inference engine.', '*Is any of them best?*']}
-        />
-        <div className={s.split} style={{ marginTop: 'var(--fa-sp-head)' }}>
-          <Reveal as="p" className={s.prose}>
-            FishAI plays the <code>us54</code> dialect of Canadian Fish and runs a nine-style
-            roster against itself on duplicate deals. Every style shares the same deduction code,
-            so what the payoff matrix measures is the policy, not one bot being better written
-            than another. This page reports one committed artifact and computes its verdict in
-            front of you.
-          </Reveal>
-          <Reveal as="div" className={s.stack}>
-            <p className={s.prose}>
-              The answer is <strong>{derived.verdict}</strong>, and the four criteria it rests on
-              are printed in full further down. The site does not read that word off the artifact
-              — it re-derives it from the matrix each time you load the page.
-            </p>
-            <div className={buttonRow}>
-              <Button href="#verdict" variant="line">
-                Go straight to the verdict
-              </Button>
-              <Button href={withCase('/lab/matrix', which)} variant="ghost">
-                Full matrix
-              </Button>
-            </div>
-            <p className={s.figNote}>
-              The roster is not only measured — it is playable:{' '}
-              <TextLink href="/play" arrow={false}>
-                take a seat against it yourself
-              </TextLink>
-              , solo or assisted by the engine&rsquo;s own reasoning.
-            </p>
-          </Reveal>
+        <MaskedLines level="h1" lines={['The style report', `*${artifact.styles.length} styles, one engine*`]} />
+        <div className={buttonRow} style={{ marginTop: 'var(--fa-sp-head)' }}>
+          <Button href="#verdict" variant="line">
+            Verdict: {derived.verdict}
+          </Button>
+          <Button href={withCase('/lab/matrix', which)} variant="ghost">
+            Full matrix
+          </Button>
+          <Button href={withCase('/lab/adaptive', which)} variant="ghost">
+            Adaptive
+          </Button>
+          <Button href={withCase('/lab/bounded', which)} variant="ghost">
+            Bounded
+          </Button>
+          <Button href={replayHref(which)} variant="ghost">
+            Replay
+          </Button>
+          <Button href={withCase('/lab/live', which)} variant="ghost">
+            Live
+          </Button>
+          <Button href="/papers" variant="ghost">
+            Papers
+          </Button>
         </div>
-
         <div style={{ marginTop: 'var(--fa-sp-head)' }}>
           <RuleStamp artifact={artifact} check={check} />
           <SyntheticNotice artifact={artifact} />
         </div>
-
         <LabContents sections={CONTENTS} />
-
-        <details className={s.detail}>
-          <summary>
-            How to read this page — six ideas, in plain language, and no prior jargon
-          </summary>
-          <div className={s.detailBody}>
-            <Board items={HOW_TO_READ} />
-          </div>
-        </details>
       </Section>
 
-      {/* ---- the evidence index ----------------------------------------------------------- */}
-      {/*
-        This section is the six nav tabs, moved in-page and given room to say what they are.
-        As sibling links in the bar they read as synonyms — Matrix, Adaptive, Bounded, Live —
-        and a visitor could not tell which one answered which question. Here each one carries
-        its headline, so the index doubles as a summary of what the lab has actually found.
-      */}
-      <Section id="evidence" badge="The evidence">
-        <SectionHead
-          lines={['Every claim on this page', 'has a page *behind it*.']}
-          sub="This report is the argument; below it are the five deep surfaces that hold the evidence, and the write-ups they feed. Every one is a deep link you can send to somebody. Eight of the ten write-ups are negative results, and they are listed here as the findings they are."
-        />
-        <Board
-          items={[
-            {
-              ix: 'E1',
-              title: 'The full matrix',
-              role: '/lab/matrix',
-              body:
-                'The whole 9×9, every confidence interval and every q-value — the headline ' +
-                'figure below shows five columns of nine, and this is the other four.',
-              href: withCase('/lab/matrix', which),
-            },
-            {
-              ix: 'E2',
-              title: 'The adaptive engine',
-              role: '/lab/adaptive · v1.0',
-              body:
-                'An engine that classifies its opponents and best-responds. It degenerates to ' +
-                'always-Punter, then underpays for its warmup: negative in all nine gauntlet ' +
-                'cells and on mixed tables too.',
-              href: withCase('/lab/adaptive', which),
-            },
-            {
-              ix: 'E3',
-              title: 'The bounded-memory ladder',
-              role: '/lab/bounded · v1.5',
-              body:
-                'Difficulty priced in bits instead of dice. The ladder is monotone at all nine ' +
-                'rungs, the shipped tiers carry measured prices, and the old noise tier prices ' +
-                'below the zero-bit floor.',
-              href: withCase('/lab/bounded', which),
-            },
-            {
-              ix: 'E4',
-              title: 'Replay a game',
-              role: '/lab/replay',
-              body:
-                'One stored game, move by move, re-simulated from its seed by the same engine ' +
-                'the tournament ran — so a cell of the matrix can be watched rather than ' +
-                'taken on trust.',
-              href: replayHref(which),
-            },
-            {
-              ix: 'E5',
-              title: 'The live simulator',
-              role: '/lab/live',
-              body:
-                'Real duplicate pairs, run in this tab at demo scale. Put any two styles ' +
-                'against each other and watch the numbers land near the published cell.',
-              href: withCase('/lab/live', which),
-            },
-            {
-              ix: 'E6',
-              title: 'The papers',
-              role: '/papers',
-              body:
-                'Eleven write-ups with abstracts, PDFs and LaTeX sources — the tournament, the ' +
-                'adaptive result, the memory ladder, the concession paper, the five focused ' +
-                'findings the caveats on this page became, the cross-engine match against ' +
-                'another project’s frontier agent, and the seventeen-rung ladder built to beat it.',
-              href: '/papers',
-            },
-          ]}
-        />
-      </Section>
-
-      {/* ---- the rule set --------------------------------------------------------------- */}
-      <Section id="rules" badge="The rule set">
-        <SectionHead
-          lines={['54 cards, nine sets of six,', 'and *no way to draw*.']}
-          sub={`Results are only meaningful against the rules that produced them. This page reports ${RULES_FILE}, stamped above from meta.rulesHash and verified in the browser against the shipped document's own bytes — the same rule set the live table at /play deals.`}
-        />
-        {/* The figure deals the 54 cards into their nine sets, and the panel underneath says
-            why the ninth one decides everything. The sentence that used to sit here said both
-            of those things first, in shorter words. */}
+      <Section id="rules" badge="Rule set">
+        <SectionHead lines={['us54: 54 cards,', '*nine sets of six*']} />
         <DeckAssembly figNo="FIG. 01" />
-        <Hairline variant="soft" />
-        <div className={s.split} style={{ marginTop: 'var(--fa-sp-head)' }}>
-          <Us54Facts />
-          <div className={s.stack}>
-            <h3 className={s.criterionLabel}>Why the deck composition is the load-bearing rule</h3>
-            <p className={s.figNote}>
-              The ninth set — four 8s and two jokers — is what makes the count odd. Nine sets and
-              a clinch at five is the whole termination proof, and it is also why every threshold
-              inherited from the 48-card game is wrong here: a wrong declare no longer burns a
-              set, it hands one over, so the same decision that used to cost one set now swings
-              two.
-            </p>
-            <p className={s.figNote}>
-              Within EIGHTS the ask licence is uniform — holding any 8 <em>or</em> either joker
-              lets you ask for any other card of the set (row 6). That is one rule, and it is
-              enough to make the ninth set behave unlike the other eight.
-            </p>
-          </div>
-        </div>
       </Section>
 
-      {/* ---- the roster ----------------------------------------------------------------- */}
-      <Section id="roster" badge="The roster">
-        <SectionHead
-          lines={[`${artifact.styles.length} theses about *how to play*,`, 'tuned from scratch.']}
-          sub="Nine is not a round number chosen for the page — it is exactly the node budget of the counter-graph, which is the diagram the whole report turns on. Each style is a policy over the same inference engine."
-        />
+      <Section id="roster" badge="Roster">
+        <SectionHead lines={[`${artifact.styles.length} styles`]} />
         <Board
           items={artifact.styles.map((style, i) => ({
             ix: `S${i + 1}`,
             title: style.label,
             role: FAMILY_LABEL.get(style.family) ?? style.family,
-            body: style.rationale ? `${style.thesis}. ${style.rationale}.` : `${style.thesis}.`,
+            body: style.thesis.replace(/\.*$/, '.'),
           }))}
         />
-
-        {/* STYLES.md §6: *"Both must be stated wherever the ranking is published."* This page
-            publishes the ranking, so they are stated here, beside the roster whose labels the
-            first one is about — not filed in a document a reader of this page never opens. */}
-        <div style={{ marginTop: 'var(--fa-sp-head)' }}>
-          <Eyebrow tone="muted" track="head" as="h2">
-            Two measured caveats on this roster
-          </Eyebrow>
-          <div className={s.split} style={{ marginTop: 20 }}>
-            <div className={s.stack}>
-              <h3 className={s.criterionLabel}>
-                The axis the labels advertise does not fire
-              </h3>
-              <p className={s.figNote}>
-                <em>Aggressive</em> and <em>conservative</em> above name a declare-threshold
-                spectrum, and across the range this roster actually spans that knob changes
-                nothing: swept on the control over 40 seeded games, every value from 0.775 upward
-                produced <strong>zero</strong> divergent decisions, and all nine styles sit at
-                0.775 or above. The path is not unreachable — the control makes 171 speculative
-                declares to 138 certain ones over the same games — the inference engine&rsquo;s
-                confidence estimates are simply bimodal, so any threshold inside the empty band
-                selects the identical set of declares. The styles are still measurably distinct,
-                between 0.39% and 2.89% of decisions differing from the control, but along{' '}
-                <code>gambleBonus</code>, <code>declareMaxUncertain</code> and the ask-targeting
-                weights rather than along the axis they are named after (STYLES.md §6.1).
-              </p>
-            </div>
-            <div className={s.stack}>
-              <h3 className={s.criterionLabel}>
-                One style is measured without the benefit it exists to buy
-              </h3>
-              <p className={s.figNote}>
-                A book held entirely by one team cannot be asked into by an opponent, and leaving
-                it unclaimed keeps a repeatable, targetable turn-pass alive. That is the Hoarder
-                thesis — and no style in the roster <em>this run measured</em> used it. The
-                Hoarder therefore
-                pays hoarding&rsquo;s full cost, declare latency 22.90 → 31.02 and race losses
-                0.046 → 0.091, and collects none of its benefit. Its finish is a valid measurement
-                of <em>this implementation</em> and not a verdict on the strategy: the cost of
-                hoarding is measured, the benefit is not (CONTAINMENT.md, STYLES.md §6.2).
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div style={{ marginTop: 'var(--fa-sp-head)' }}>
-          <Eyebrow tone="muted" track="head">
-            What the styles actually do differently
-          </Eyebrow>
-          <div className={s.stackWide} style={{ marginTop: 20 }}>
-            <p className={s.prose}>
-              The first chart shows how often each style&rsquo;s declares handed the set to the
-              opposition — the costliest habit a style can have under us54, where any error in a
-              declare gifts the whole set.
-            </p>
-            <BarChart model={concedeRateBar(results, 'FIG. 02')} />
-            <p className={s.prose}>
-              The second puts every style&rsquo;s declare precision beside the Balanced
-              control&rsquo;s on the same deals, so the distance between the two dots is the
-              style&rsquo;s own doing.
-            </p>
-            <DumbbellChart model={claimPrecisionDumbbell(results, 'FIG. 03')} />
-          </div>
+        <div className={s.stackWide} style={{ marginTop: 'var(--fa-sp-head)' }}>
+          <BarChart model={concedeRateBar(results, 'FIG. 02')} />
+          <DumbbellChart model={claimPrecisionDumbbell(results, 'FIG. 03')} />
         </div>
       </Section>
 
-      {/* ---- method --------------------------------------------------------------------- */}
-      <Section id="method" badge="Method">
+      <Section id="matrix" badge="Payoff matrix">
         <SectionHead
-          lines={['Duplicate deals, or', 'the result is *noise*.']}
-          sub="Every pairing plays the same seeded deals from both sides, so a style is never credited for the cards it happened to be dealt. The engine is pure and deterministic: one seed, one byte-identical game."
+          lines={['Payoff matrix']}
+          sub={`${derived.significantCells} of ${derived.cells} cells significant after BH`}
         />
-        <p className={s.prose}>
-          One run flows left to right below, from the seed list to the published artifact this
-          page reads; the highlighted step is the analysis, because that is where a raw score
-          either survives correction or stops being a finding.
-        </p>
-        <AnalysisPipeline figNo="FIG. 04" />
-
-        <div className={s.split} style={{ marginTop: 'var(--fa-sp-head)' }}>
-          <div className={s.stack}>
-            <h3 className={s.criterionLabel}>Multiplicity is corrected before anything is called significant</h3>
-            <p className={s.figNote}>
-              {derived.cells} simultaneous cells at α = {meta.analysis.alpha} would produce roughly{' '}
-              {(derived.cells * meta.analysis.alpha).toFixed(1)} false positives by chance alone.
-              Benjamini-Hochberg controls the false-discovery rate across the whole matrix, and{' '}
-              {derived.significantCells} of {derived.cells} cells survived it. Every edge on the
-              counter-graph, and every cycle in the verdict, is drawn from that corrected flag.
-            </p>
-          </div>
-          <div className={s.stack}>
-            <h3 className={s.criterionLabel}>The health gate</h3>
-            <p className={s.figNote}>
-              A run is void, not merely noisy, if any of these is non-zero: illegal actions{' '}
-              {meta.health.illegalActions}, capped games {meta.health.cappedGames}, invariant
-              violations {meta.health.invariantViolations}. Distinct seeds:{' '}
-              {count(meta.health.distinctSeeds)}.
-            </p>
-          </div>
-        </div>
-
-        {/* Reference, not argument — and each state machine brings its own focal accent, so
-            keeping them closed by default keeps the amber on the page down to the marks that
-            are doing editorial work. */}
-        <details className={s.detail} style={{ marginTop: 'var(--fa-sp-head)' }}>
-          <summary>
-            The turn structure and the declare window, as state machines (FIG. 05a, FIG. 05b)
-          </summary>
-          <div className={`${s.detailBody} ${s.stackWide}`}>
-            <p className={s.prose}>
-              Two loops, drawn separately so neither has to lie by omission: first the turn
-              itself — ask, hit, miss, turn passes — then what happens inside a declare window,
-              where the us54 rules actually bind.
-            </p>
-            <TurnMachine figNo="FIG. 05a" />
-            <DeclareWindowMachine figNo="FIG. 05b" />
-          </div>
-        </details>
+        <PayoffMatrix results={results} figNo="FIG. 04" />
       </Section>
 
-      {/* ---- pin act 1: the payoff matrix ------------------------------------------------ */}
-      {/* The id lives on the wrapper, not on the headline inside: `#matrix` should mean the whole
-          act, which is what the contents list links to and what the scroll observer watches. */}
-      <div id="matrix">
-        <PinAct steps={matrixBeats.length} badge="Payoff matrix">
-          {(progress) => (
-            <>
-              <div className={pinHead}>
-                <MaskedLines lines={['Who beats whom,', 'and by *how much*.']} />
-                <div className={pinHeadAside}>
-                  <p>
-                    Each cell below is the share of identical deals the row style&rsquo;s team won
-                    against the column style&rsquo;s. {count(meta.seedSet.count)} duplicate pairs
-                    per cell, SE ≤ {rate3(Math.max(...artifact.matrix.map((c) => c.se)))}. The
-                    figure does not change as you scroll — only the reading does.
-                  </p>
-                </div>
-              </div>
-              <PayoffMatrix results={results} figNo="FIG. 07" />
-              <Beats beats={matrixBeats} progress={progress} />
-            </>
-          )}
-        </PinAct>
-      </div>
+      <Section id="counter-graph" badge="Counter-graph">
+        <SectionHead lines={['Counter-graph']} sub={`${derived.edges.length} significant edges`} />
+        <CounterGraph results={results} figNo="FIG. 05" />
+      </Section>
 
-      {/* ---- pin act 2: the counter-graph ------------------------------------------------ */}
-      <div id="counter-graph">
-        <PinAct steps={graphBeats.length} badge="Counter-graph">
-          {(progress) => (
-            <>
-              <div className={pinHead}>
-                <MaskedLines lines={['Every edge here', 'survived *correction*.']} />
-                <div className={pinHeadAside}>
-                  <p>
-                    Each arrow below points from a style to a style it reliably beats. Built from{' '}
-                    <code>matrix[].significant</code>, the Benjamini-Hochberg flag — never from a
-                    raw p-value. Uncorrected, four more cells in this matrix would have emitted an
-                    edge.
-                  </p>
-                </div>
-              </div>
-              <CounterGraph results={results} figNo="FIG. 08" />
-              <Beats beats={graphBeats} progress={progress} />
-            </>
-          )}
-        </PinAct>
-      </div>
-
-      {/* ---- the verdict ---------------------------------------------------------------- */}
       <Section id="verdict" noMarks>
-        <p className={s.prose} style={{ marginBottom: 'var(--fa-sp-head)' }}>
-          Everything above compresses into one word, printed below beside the four tests it had
-          to pass — recomputed from the matrix in your browser, not read off the artifact.
-        </p>
-        <InkPanel
-          fig="FIG. 09 — The verdict"
-          live={`VERDICT · ${derived.verdict.toUpperCase()}`}
-        >
+        <InkPanel fig="FIG. 06 — The verdict" live={`VERDICT · ${derived.verdict.toUpperCase()}`}>
           <div className={inkPanelBody} style={{ display: 'block' }}>
-            <VerdictBody derived={derived} artifact={artifact} />
+            <VerdictBody derived={derived} />
           </div>
         </InkPanel>
       </Section>
 
-      {/* ---- exploitability and cross-play ------------------------------------------------ */}
-      {/*
-        One section, not two. Both halves ask the same question from opposite ends — how much of
-        the ranking above is an artefact of who happened to be in the room — so they were being
-        introduced twice with two headlines that made the same point. The cross-play half keeps
-        its own heading and every word it had.
-      */}
       <Section id="exploitability" badge="Exploitability">
-        <SectionHead
-          lines={['Topping the table is not', 'the same as being *strong*.']}
-          sub="E(i) is how much a best-response style, tuned specifically against i, beats it. A style with a high maximin and a low E is genuinely superior; a style that merely tops the table is the current champion of a nine-bot population."
-        />
-
-        {artifact.exploitability.length === 0 ? (
-          <p className={s.prose}>
-            The exploitability search did not run for this artifact. That is why criterion 4 above
-            reads <em>not measured</em>, and why the verdict cannot be <code>dominant</code> no
-            matter how the other three criteria land. A style is not crowned because nobody
-            checked.
-          </p>
+        <SectionHead lines={['Exploitability']} />
+        {exploit.length === 0 ? (
+          <p className={s.prose}>Not measured in this artifact.</p>
         ) : (
-          <>
-            <ScrollRegion label="Exploitability per style">
-              <table className={s.table}>
-                <caption>
-                  E(i) per style, lowest first · {count(exploit[0]?.evalGames ?? 0)} fresh games per
-                  evaluation · search {count(exploit[0]?.searchGames ?? 0)} games
-                </caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Style</th>
-                    <th scope="col">E(i) — best-response gap</th>
-                    <th scope="col">Best-response score rate</th>
-                    <th scope="col">Best-response CI 95%</th>
-                    <th scope="col">Search score rate (biased high)</th>
-                    <th scope="col">Detectable δ</th>
-                    <th scope="col">Maximin score rate</th>
-                    <th scope="col">Worst matchup</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {exploit.map((e) => {
-                    const mm = maximinOf.get(e.style)
-                    return (
-                      <tr key={e.style}>
-                        <th scope="row">{styleLabel(artifact, e.style)}</th>
-                        <td>{rate(e.gap)}</td>
-                        <td>{rate(e.score)}</td>
-                        <td>{interval(e.ci95)}</td>
-                        <td className={s.ns}>{rate(e.searchScore)}</td>
-                        <td className={s.ns}>{rate(e.detectableDelta)}</td>
-                        <td>{mm ? rate(mm.value) : '—'}</td>
-                        <td>{mm ? styleLabel(artifact, mm.worstVs) : '—'}</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </ScrollRegion>
-            <p className={s.figNote}>
-              E(i) is a <em>maximum over a search</em>, so a small value means nothing without the
-              detectable δ beside it: the search could not have accepted an improvement smaller
-              than that. &ldquo;Search score&rdquo; is the search&rsquo;s own upward-biased
-              number, printed next to the fresh-block score so the bias stays visible rather than
-              being quietly corrected away. Sorted by E(i), ascending.
-              {topStyle ? (
-                <>
-                  {' '}
-                  The top of the table by mean score is {styleLabel(artifact, topStyle)}; whether
-                  that survives contact with a style nobody has written yet is exactly what this
-                  column cannot tell you.
-                </>
-              ) : null}
-            </p>
-          </>
-        )}
-
-        <div className={s.stackWide} style={{ marginTop: 'var(--fa-sp-head)' }}>
-          <p className={s.prose}>
-            The last figure asks how each style&rsquo;s score rate holds up as the opposition
-            gets stronger, opponent by opponent: a flat line degrades gracefully, a steep one
-            only ever beat the weak.
-          </p>
-          <LineChart model={degradationLine(results, 'FIG. 10')} />
-        </div>
-
-        <Hairline variant="soft" />
-        <Eyebrow tone="muted" track="head" as="h3">
-          Cross-play — against a bot nobody here wrote
-        </Eyebrow>
-        <p className={s.prose} style={{ marginTop: 16 }}>
-          Self-play measures a population against itself. The gap between a style&rsquo;s
-          self-play score and its cross-play score is the size of the overfit, which is a
-          different question from anything the matrix above can answer.
-        </p>
-        {artifact.crossplay.length === 0 ? (
-          <p className={s.prose}>
-            No cross-play run exists in this artifact. The protocol is specified — line-delimited
-            JSON over stdio, host as referee, a <code>rulesHash</code> handshake that refuses the
-            match outright if the two sides disagree about the rules — but no foreign bot has
-            been played, and an empty table is the honest render of that. It is not a placeholder
-            for a result that exists somewhere else.
-          </p>
-        ) : (
-          <>
-            <ScrollRegion label="Cross-play cells against foreign bots">
-              <table className={s.table}>
-                <caption>Cross-play cells · shared seed list published before the match</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Our style</th>
-                    <th scope="col">Foreign bot</th>
-                    <th scope="col">Mode</th>
-                    <th scope="col">Duplicate pairs</th>
-                    <th scope="col">Our score rate</th>
-                    <th scope="col">Our CI 95%</th>
-                    <th scope="col">Seed set</th>
-                    <th scope="col">rulesHash agreed</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {artifact.crossplay.map((row) => (
-                    <tr key={`${row.us}-${row.them}-${row.mode}`}>
-                      <th scope="row">{styleLabel(artifact, row.us)}</th>
-                      <td>{row.them}</td>
-                      <td>{row.mode}</td>
-                      <td>{count(row.pairs)}</td>
-                      <td>{rate(row.usScore)}</td>
-                      <td>{interval(row.ci95)}</td>
-                      <td>{row.seedSet}</td>
-                      <td className={s.ns}>{shortHash(row.rulesHashAgreed)}</td>
+          <ScrollRegion label="Exploitability per style">
+            <table className={s.table}>
+              <caption>
+                {count(exploit[0]?.evalGames ?? 0)} fresh games an evaluation · search{' '}
+                {count(exploit[0]?.searchGames ?? 0)} games
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Style</th>
+                  <th scope="col">E(i)</th>
+                  <th scope="col">Best response</th>
+                  <th scope="col">CI 95%</th>
+                  <th scope="col">Search score</th>
+                  <th scope="col">Detectable δ</th>
+                  <th scope="col">Maximin</th>
+                  <th scope="col">Worst matchup</th>
+                </tr>
+              </thead>
+              <tbody>
+                {exploit.map((e) => {
+                  const mm = maximinOf.get(e.style)
+                  return (
+                    <tr key={e.style}>
+                      <th scope="row">{styleLabel(artifact, e.style)}</th>
+                      <td>{rate(e.gap)}</td>
+                      <td>{rate(e.score)}</td>
+                      <td>{interval(e.ci95)}</td>
+                      <td className={s.ns}>{rate(e.searchScore)}</td>
+                      <td className={s.ns}>{rate(e.detectableDelta)}</td>
+                      <td>{mm ? rate(mm.value) : '—'}</td>
+                      <td>{mm ? styleLabel(artifact, mm.worstVs) : '—'}</td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </ScrollRegion>
-            {artifact.crossplay.map((row) => (
-              <p key={`${row.us}-${row.them}-note`} className={s.figNote}>
-                {row.note}
-              </p>
-            ))}
-          </>
+                  )
+                })}
+              </tbody>
+            </table>
+          </ScrollRegion>
         )}
-      </Section>
-
-      {/* ---- sources --------------------------------------------------------------------- */}
-      <Section id="sources" badge="Sources">
-        <SectionHead
-          lines={['Everything above', 'is *checkable*.']}
-          sub="One artifact, one schema, one rule document. Nothing on this site is computed from anything the reader cannot open."
-        />
-        <div className={s.split}>
-          <div className={s.stack}>
-            <h3 className={s.criterionLabel}>Documents</h3>
-            {/*
-              These are links, not names. The deck above promises that nothing here is computed
-              from anything the reader cannot open, and a plain-text list of filenames is that
-              promise unkept — the reader has to go and find them.
-            */}
-            <p className={s.figNote}>
-              <TextLink href={`${REPO}/blob/main/${RULES_FILE}`}>{RULES_FILE}</TextLink> — the
-              pinned rule set, hashed in the browser to{' '}
-              <span className={s.mono}>{shortHash(check.shipped)}</span>.<br />
-              <TextLink href={`${REPO}/blob/main/BOT_LAB.md`}>BOT_LAB.md</TextLink> — §4 the
-              metrics, §4.4 the decision rule this page applies, §5 the experimental design, §7.1
-              the data contract.
-              <br />
-              <TextLink href={`${REPO}/blob/main/STYLES.md`}>STYLES.md</TextLink> — the
-              nine-style roster and its parameter vectors.
-              <br />
-              <TextLink href={`${REPO}/blob/main/SITE_SPEC.md`}>SITE_SPEC.md</TextLink> — the
-              routes, the design system, the accent budget.
-            </p>
-          </div>
-          <div className={s.stack}>
-            <h3 className={s.criterionLabel}>The papers</h3>
-            {/* The three titles that used to be listed here are listed on /papers, with their
-                abstracts beside them. Naming them twice made this column a worse copy of a
-                page one link away. */}
-            <p className={s.figNote}>
-              This page&rsquo;s tournament, its verdict and both of its measured caveats are
-              written up in full — abstracts, PDFs and LaTeX sources — at{' '}
-              <TextLink href="/papers">the research papers</TextLink>.
-            </p>
-          </div>
-          <div className={s.stack}>
-            <h3 className={s.criterionLabel}>The artifact</h3>
-            <p className={s.figNote}>
-              <span className={s.mono}>{model.file}</span> — schema {meta.schemaVersion}, emitted
-              by <span className={s.mono}>{meta.engineCommit}</span> at {meta.generatedAt}, seed
-              set <span className={s.mono}>{meta.seedSet.prefix}</span>. It is imported, not
-              fetched: Vite emits it inside this route&rsquo;s chunk under{' '}
-              <span className={s.mono}>/assets/</span>, so there is no request that can 404 and no
-              copy at the dist root that can drift.
-            </p>
-          </div>
-          <div className={s.stack}>
-            <h3 className={s.criterionLabel}>Method references</h3>
-            <p className={s.figNote}>
-              Duplicate deals are the common-random-numbers estimator, standard in card-game AI
-              evaluation. The cyclic/transitive split is the Hodge decomposition of the
-              antisymmetric payoff matrix (Balduzzi et al., 2018). α-Rank is Omidshafiei et al.,
-              2019. Multiplicity control is Benjamini-Hochberg. Exploitability follows the
-              Nash-vs-exploitation framing: a style that beats today&rsquo;s roster may be
-              maximally exploitable by a style nobody has written.
-            </p>
-          </div>
+        <div className={s.stackWide} style={{ marginTop: 'var(--fa-sp-head)' }}>
+          <LineChart model={degradationLine(results, 'FIG. 07')} />
         </div>
-
-        {/* A glossary is a thing a reader goes TO, not a thing they read through. Open by
-            default it was 800px of definitions between the sources and the closing stamp for
-            everybody, including the reader who already knows what a maximin is. Every term is
-            still here, one click away, and the terms are still defined nowhere else. */}
-        <details className={s.detail} style={{ marginTop: 'var(--fa-sp-head)' }}>
-          {/* No count in this label. The list is static JSX, so a number here would be a
-              hand-maintained fact about the markup beside it — and the first term added would
-              make the page print something untrue about itself. */}
-          <summary>Glossary — every term this site uses as a measurement</summary>
-          <div className={s.detailBody}>
-            <dl className={s.glossary}>
-              <dt>Duplicate pair</dt>
-              <dd>
-                One seeded deal played twice with the teams swapped and scored as a single
-                observation, so the luck of the cards cancels.
-              </dd>
-              <dt>Score rate</dt>
-              <dd>
-                The share of games won, 0 to 1; .500 is an even match, and under us54 there are no
-                ties to blur it.
-              </dd>
-              <dt>Maximin</dt>
-              <dd>
-                A style&rsquo;s score rate in its worst matchup; above .500 means it loses to nobody
-                in the roster.
-              </dd>
-              <dt>Cyclic energy</dt>
-              <dd>
-                How much of the matrix is rock-paper-scissors rather than a ladder; past the
-                threshold, any single ranking misleads.
-              </dd>
-              <dt>Nash mixture</dt>
-              <dd>
-                The blend of styles that would be unbeatable within this roster; a dominant style is
-                the special case where one style takes all the weight.
-              </dd>
-              <dt>Exploitability</dt>
-              <dd>
-                How hard a style falls to an opponent tuned specifically against it; topping the
-                table without this check is only a claim about today&rsquo;s population.
-              </dd>
-              <dt>Concede rate</dt>
-              <dd>
-                The share of a style&rsquo;s declares that handed the set to the opposition — under
-                us54, any error in a declare gifts the whole set.
-              </dd>
-              <dt>Declare window</dt>
-              <dd>
-                The pause after every action in which each seat, in order, may declare a set or
-                decline; declining is itself a move.
-              </dd>
-              <dt>Clinch</dt>
-              <dd>
-                The game ends the moment a team&rsquo;s fifth set resolves, so a finished game always
-                leaves sets unresolved and cards in hand.
-              </dd>
-              <dt>Memory bits</dt>
-              <dd>
-                The v1.5 difficulty budget: facts derived from the public log are priced — 2 bits to
-                place a card, 1 to certify a basis — and a bounded seat keeps the highest-ranked
-                facts that fit. The ladder pricing it lives at /lab/bounded.
-              </dd>
-              <dt>Set-share</dt>
-              <dd>
-                A team&rsquo;s banked sets over all banked sets, per game, duplicate-averaged — the
-                ladder&rsquo;s metric, chosen because it keeps moving after a win rate saturates.
-              </dd>
-              <dt>Evidence age</dt>
-              <dd>
-                Public-log events since a hit located a card; the decay curves plot how often a
-                policy still exploits the fact as that distance grows.
-              </dd>
-              <dt>Bits-equivalent</dt>
-              <dd>
-                Where a shipped difficulty tier&rsquo;s set-share lands on the measured ladder,
-                interpolated over the finite rungs; a tier off the curve&rsquo;s ends is reported as
-                clamped or not finitely placeable, never invented.
-              </dd>
-            </dl>
-          </div>
-        </details>
-
-        <Hairline variant="soft" />
-        <p className={s.figNote}>
-          Payoff matrix top cell for reference: {topStyle ? styleLabel(artifact, topStyle) : '—'}{' '}
-          mean score {derived.meanScore[0] ? rate(derived.meanScore[0].value) : '—'}, edge over
-          even {derived.meanScore[0] ? edge(derived.meanScore[0].value) : '—'}.
-        </p>
+        {artifact.crossplay.length === 0 ? null : (
+          <ScrollRegion label="Cross-play cells against foreign bots">
+            <table className={s.table}>
+              <caption>Cross-play</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Our style</th>
+                  <th scope="col">Foreign bot</th>
+                  <th scope="col">Mode</th>
+                  <th scope="col">Duplicate pairs</th>
+                  <th scope="col">Our score rate</th>
+                  <th scope="col">Our CI 95%</th>
+                  <th scope="col">Seed set</th>
+                  <th scope="col">rulesHash agreed</th>
+                </tr>
+              </thead>
+              <tbody>
+                {artifact.crossplay.map((row) => (
+                  <tr key={`${row.us}-${row.them}-${row.mode}`}>
+                    <th scope="row">{styleLabel(artifact, row.us)}</th>
+                    <td>{row.them}</td>
+                    <td>{row.mode}</td>
+                    <td>{count(row.pairs)}</td>
+                    <td>{rate(row.usScore)}</td>
+                    <td>{interval(row.ci95)}</td>
+                    <td>{row.seedSet}</td>
+                    <td className={s.ns}>{shortHash(row.rulesHashAgreed)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </ScrollRegion>
+        )}
       </Section>
     </LabShell>
   )

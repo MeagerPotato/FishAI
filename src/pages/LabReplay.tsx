@@ -28,7 +28,7 @@ import { describeAction, describeEvent, replayGame, teamOf } from '../lab/replay
 import { shortHash } from '../lab/rules.ts'
 import { LabShell, withCase } from '../lab/ui/LabShell.tsx'
 import { ArtifactBroken, ReplayNotFound, RulesMismatch } from '../lab/ui/Refusal.tsx'
-import { RuleStamp, SyntheticNotice, Us54Facts } from '../lab/ui/RuleStamp.tsx'
+import { RuleStamp, SyntheticNotice } from '../lab/ui/RuleStamp.tsx'
 import { ScrollRegion } from '../lab/ui/ScrollRegion.tsx'
 import s from '../lab/ui/lab.module.css'
 
@@ -111,17 +111,13 @@ export function LabReplay() {
       stamp={`us54 · rulesHash ${shortHash(artifact.meta.rulesHash)}`}
     >
       <Section noRule badge="Replay">
-        <SectionHead
-          level="h1"
-          lines={['One deal,', 'replayed through *reduce()*.']}
-          sub={record.caption}
-        />
+        <SectionHead level="h1" lines={['One deal,', 'replayed through *reduce()*.']} />
         <RuleStamp artifact={artifact} check={check} />
         <SyntheticNotice artifact={artifact} />
 
         <ScrollRegion label="The stored replay record">
           <table className={s.table}>
-            <caption>The stored record · actions, not states</caption>
+            <caption>Stored record</caption>
             <thead>
               <tr>
                 <th scope="col">Id</th>
@@ -156,7 +152,7 @@ export function LabReplay() {
 
         {artifact.replays.length > 1 ? (
           <p className={s.figNote}>
-            Other stored replays:{' '}
+            Other replays:{' '}
             {artifact.replays
               .filter((r) => r.id !== record.id)
               .map((r) => (
@@ -209,7 +205,7 @@ export function LabReplay() {
         </p>
         <p className={s.figNote}>
           {frame.events.length === 0
-            ? 'This action emitted no public event — a decline advances the declare window and nothing else.'
+            ? 'No public event.'
             : frame.events.map(describeEvent).join(' ')}
         </p>
 
@@ -217,8 +213,7 @@ export function LabReplay() {
           <p className={s.disagree}>
             <strong>The stored action list stopped being legal at step {replay.error.step}.</strong>{' '}
             The engine returned <code>{replay.error.engine.code}</code>:{' '}
-            {replay.error.engine.message}. The replay is truncated there. This means the artifact
-            and the engine have drifted apart — re-emit the artifact rather than editing the log.
+            {replay.error.engine.message}. The replay is truncated there.
           </p>
         ) : null}
 
@@ -228,11 +223,7 @@ export function LabReplay() {
         <Eyebrow tone="muted" track="head" as="h2">
           Per-seat card counts
         </Eyebrow>
-        <p className={s.figNote} style={{ margin: '10px 0 18px' }}>
-          Counts are public under row 17; card identities never are, and this page never has
-          them. Team 0 is seats 0/2/4, team 1 is seats 1/3/5.
-        </p>
-        <div className={s.seats}>
+        <div className={s.seats} style={{ marginTop: 14 }}>
           {SEATS.map((seat) => {
             const active = view.declareWindow ? view.declareWindow.option === seat : view.turn === seat
             return (
@@ -289,12 +280,6 @@ export function LabReplay() {
             </tbody>
           </table>
         </ScrollRegion>
-        <p className={s.figNote}>
-          The clinch counts <strong>sets</strong>, not points. A clinched us54 game always
-          finishes with sets unresolved and cards still in hand, so the score is reported as{' '}
-          {frame.sets[0]}–{frame.sets[1]} · {frame.unresolved} unresolved rather than as a bare
-          pair of numbers, which would read as a completed nine-set game.
-        </p>
       </Section>
 
       {/* ---- resolved sets --------------------------------------------------------------- */}
@@ -309,9 +294,7 @@ export function LabReplay() {
         ) : (
           <ScrollRegion label="Sets resolved so far" style={{ marginTop: 14 }}>
             <table className={s.table}>
-              <caption>
-                Every resolved set goes to exactly one team — row 14 abolished the void outcome
-              </caption>
+              <caption>Resolved sets</caption>
               <thead>
                 <tr>
                   <th scope="col">Set</th>
@@ -342,13 +325,10 @@ export function LabReplay() {
       {/* ---- the public log --------------------------------------------------------------- */}
       <Section badge="Public log">
         <Eyebrow tone="muted" track="head" as="h2">
-          The public log, newest first
+          Public log, newest first
         </Eyebrow>
         <p className={s.figNote} style={{ margin: '10px 0 18px' }}>
-          {count(logRows.length)} event{logRows.length === 1 ? '' : 's'} through step {at}. This is
-          the whole information channel under row 17 — every ask, every result, every declare, and
-          nothing else. It is what a bot at this table can see, and it is what the inference
-          engine reasons over.
+          {count(logRows.length)} event{logRows.length === 1 ? '' : 's'} through step {at}.
         </p>
         <ol className={s.log}>
           {logRows.map((row) => (
@@ -358,15 +338,6 @@ export function LabReplay() {
             </li>
           ))}
         </ol>
-      </Section>
-
-      <Section badge="Rule set" noMarks>
-        <Eyebrow tone="muted" track="head" as="h2">
-          Two things about us54 that this replay depends on
-        </Eyebrow>
-        <div style={{ marginTop: 20 }}>
-          <Us54Facts />
-        </div>
       </Section>
     </LabShell>
   )

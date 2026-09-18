@@ -16,8 +16,8 @@ export interface FooterColumn {
 }
 
 export interface SiteFooterProps {
-  /** The one sentence the footer is allowed. */
-  standfirst: string
+  /** An optional one-line lead above the columns. */
+  standfirst?: string
   columns: FooterColumn[]
   /** Left of the legal bar. The year is supplied, never computed at render. */
   legal: string
@@ -33,12 +33,14 @@ export function SiteFooter({ standfirst, columns, legal, stamp }: SiteFooterProp
   return (
     <footer className={s.footer}>
       <Wrap>
-        <div className={s.lead}>
-          <Eyebrow tone="muted" track="head">
-            Colophon
-          </Eyebrow>
-          <p className={s.leadTitle}>{standfirst}</p>
-        </div>
+        {standfirst === undefined ? null : (
+          <div className={s.lead}>
+            <Eyebrow tone="muted" track="head">
+              Colophon
+            </Eyebrow>
+            <p className={s.leadTitle}>{standfirst}</p>
+          </div>
+        )}
 
         <div className={s.grid}>
           {columns.map((column) => (

@@ -170,11 +170,6 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
               {winner === 0 ? 'Your team clinches' : 'Team 1 clinches'} at{' '}
               {Math.max(sets[0], sets[1])} sets — {sets[0]}–{sets[1]} · {unresolved} unresolved.
             </p>
-            <p className={s.overBody}>
-              A clinched game always ends with sets unresolved and cards still in hand — the score
-              above is complete, not truncated. Rematch replays the identical deal; a new game
-              draws a fresh seed.
-            </p>
             <div className={buttonRow} style={{ marginTop: 20 }}>
               <Button variant="ghost" arrow={false} onClick={onRematch}>
                 Rematch — same seed
@@ -235,11 +230,6 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
                 <h2 id="pass-head" className={s.panelHead}>
                   Pass the turn
                 </h2>
-                <p className={s.panelNote}>
-                  Your declare emptied your hand, and the pass rule (row 20) is still in force in
-                  exactly this case: hand the turn to a teammate who still holds cards. The
-                  declare window re-opens on them.
-                </p>
                 <div className={s.choiceRow} role="group" aria-label="Teammate to receive the turn">
                   {([2, 4] as const).map((seat) => {
                     const out = view.counts[seat] === 0
@@ -264,12 +254,7 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
               </section>
             ) : null}
 
-            {!yours && !finished ? (
-              <p className={s.waiting}>
-                Nothing is owed from you right now — the other seats are playing. Your ask panel
-                reappears here the moment the turn comes back.
-              </p>
-            ) : null}
+            {!yours && !finished ? <p className={s.waiting}>The other seats are playing.</p> : null}
           </div>
 
           <div className={s.controls} role="group" aria-label="Table controls">
@@ -374,18 +359,6 @@ export function Table({ play, onRematch, onNewGame }: TableProps) {
           <Eyebrow tone="muted" track="head" as="h2">
             Public log — newest first
           </Eyebrow>
-          {/*
-            This used to promise "the whole information channel under row 17", which stopped being
-            true the moment the two-ask view became the default — the reader would have been told
-            they were seeing everything while looking at a deliberately restricted log. What row 17
-            actually describes is what the *bots* read, and that is still worth saying, because the
-            asymmetry is the point: they reason over the full channel whether or not you do.
-          */}
-          <p className={lab.figNote} style={{ margin: '10px 0 12px' }}>
-            Every ask, every result, every declare. The bots reason over all of it under row 17;
-            what you are shown depends on the view you choose below. Declines advance the window
-            and emit nothing.
-          </p>
           <PublicLog events={state.log} names={names} />
         </div>
       </div>

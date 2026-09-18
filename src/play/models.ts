@@ -98,7 +98,7 @@ const BASS_V20: PlayModel = Object.freeze({
   spec: Object.freeze({ adaptive: true as const }),
   heading: 'Adaptive — reads the table',
   label: 'Bass v1.0 adaptive · v2.0 defusal',
-  note: 'The adaptive engine: it classifies each seat from the public log and best-responds. Frozen — this is the baseline Monet has to beat.',
+  note: 'The adaptive engine: classify each seat, best-respond. The frozen baseline.',
 })
 
 /**
@@ -118,7 +118,7 @@ const MONET_LATEST: PlayModel = Object.freeze({
   spec: monetPolicy(LATEST_MONET),
   heading: 'Fixed style — Punter, at full strength',
   label: `Monet ${LATEST_MONET} · Punter at hard`,
-  note: 'The line at its shipped vector — fifty-four numbered rungs on the record. It asks as a model of SESTINA’s own ask choices would, fitted on its play in that project’s own engine, except where a second model, fitted on which asks go on to win, rates another ask higher by more than a small fixed margin, which it does at more than a third of its asks: 58.4% against SESTINA v1.0 on twelve fresh seeds, where v0.53, the version before it, reads 52.2% on the same seeds (MONET.md §3.8az); v1.0 still does not exist at that vector (§3.9). Plays one fixed style rather than adapting — with SESTINA’s ask choices in place of its own at nearly two asks in three, so it agrees with Bass v2.0 on about 91% of decisions.',
+  note: 'The Monet line at its newest shipped vector: SESTINA-cloned asks with a learned override (MONET.md).',
 })
 
 /** The menu, in the order it is offered. */

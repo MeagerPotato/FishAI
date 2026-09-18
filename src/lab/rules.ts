@@ -42,37 +42,3 @@ export function shortHash(hash: string): string {
   return hash.length <= 12 ? hash : hash.slice(0, 12)
 }
 
-/**
- * The two `us54` facts SITE_SPEC.md §5 requires the site to *state*, not assume. Both are
- * rendered as prose on every results page rather than being encoded only in an assertion,
- * because a reader comparing this matrix against a `pagat48` one needs to be told why they
- * cannot.
- */
-export const US54_FACTS = [
-  {
-    id: 'ties',
-    head: 'Ties are impossible — there is no tie column, and there never can be',
-    body:
-      'There are 9 sets and row 14 abolishes the void, so every resolved set is awarded to ' +
-      'exactly one team. If neither team reached 5 both hold at most 4, totalling at most 8 — ' +
-      'fewer than 9. Contradiction. A clinch is therefore guaranteed and a draw is ' +
-      'arithmetically impossible (RULES_US54.md §5). The ties field is retained in the schema ' +
-      'so the shape stays stable across variants, and this site asserts it is 0 at the ' +
-      'boundary rather than rendering a column that can never populate. Note what that does to ' +
-      'the primary outcome: score rate is normally a win/tie/loss mean, and under pagat48 about ' +
-      'a quarter of games tie. Here the tie arm is dead, so score rate is a win rate.',
-  },
-  {
-    id: 'concede',
-    head: 'Concede rate replaced void rate — a different event, not a new name',
-    body:
-      'Under RULES.md a wrong claim voided the set: nobody scored it, and the metric that ' +
-      'counted those was voidRate, a burn rate. Under RULES_US54.md row 14 any error at all ' +
-      'awards the set to the opposing team, so the event being counted is a gift, and the ' +
-      'metric is concedeRate. The two are not the same number under a new name and they are ' +
-      'not comparable: the declare that used to cost one set now swings two, which moves every ' +
-      'threshold in every style that was tuned around it. A matrix measured before the rule ' +
-      'change cannot be read against one measured after. An artifact still carrying voidRate is ' +
-      'refused at the boundary rather than quietly read as if it were this one.',
-  },
-] as const

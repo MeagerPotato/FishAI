@@ -37,10 +37,7 @@ export function Hand({ view }: HandProps) {
       </div>
 
       {groups.length === 0 ? (
-        <p className={s.handEmpty}>
-          You are out of cards. You can no longer ask or be asked, but you may still declare —
-          arm the Declare control and take your next window offer.
-        </p>
+        <p className={s.handEmpty}>You are out of cards.</p>
       ) : (
         <div className={s.hand}>
           {groups.map((group) => (

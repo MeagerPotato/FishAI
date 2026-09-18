@@ -75,11 +75,6 @@ export function RoomAsk({ view, nameOf, held, disabled, onAsk }: RoomAskProps) {
       <h2 id="room-ask-head" className={s.panelHead}>
         Your ask
       </h2>
-      <p className={s.panelNote}>
-        Name one opponent, then one card. You may only ask into a set you hold at least one card of
-        (row 6), never for a card already in your hand (row 7). A hit keeps your turn; a miss passes
-        it to the person you asked.
-      </p>
 
       <h3 className={s.step}>1 · Who are you asking?</h3>
       <div className={s.choiceRow} role="group" aria-label="Opponent to ask">
@@ -136,9 +131,7 @@ export function RoomAsk({ view, nameOf, held, disabled, onAsk }: RoomAskProps) {
 
       {shut.length > 0 ? (
         <p className={s.excluded}>
-          <span className={s.excludedWhat}>Not askable:</span> {shut.map((b) => bookLabel(b)).join(', ')} — you
-          hold nothing in {shut.length === 1 ? 'it' : 'them'}, so row 6 closes{' '}
-          {shut.length === 1 ? 'it' : 'them'} to you.
+          <span className={s.excludedWhat}>Not askable:</span> {shut.map((b) => bookLabel(b)).join(', ')}.
         </p>
       ) : null}
 

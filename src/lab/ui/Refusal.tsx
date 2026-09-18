@@ -10,7 +10,7 @@
  */
 
 import type { ReactNode } from 'react'
-import { Eyebrow, Section, SectionHead, TextLink } from '../../components/index.ts'
+import { Eyebrow, Section, SectionHead } from '../../components/index.ts'
 import { LabShell } from './LabShell.tsx'
 import type { ArtifactCase } from '../artifact.ts'
 import { RULES_FILE, type RulesCheck } from '../rules.ts'
@@ -48,12 +48,6 @@ function RefusalPage({ which, current, title, sub, rows, children }: RefusalProp
             ))}
           </div>
           {children}
-          <p className={s.prose}>
-            Nothing is rendered below this point on purpose. Results are only meaningful against
-            the rules that produced them, and a page that showed them anyway would be labelling
-            every score rate with a rule set it was not measured under.
-          </p>
-          <TextLink href="/design">Design specimen — still readable, it reports nothing</TextLink>
         </div>
       </Section>
     </LabShell>
@@ -75,24 +69,13 @@ export function RulesMismatch({
       which={which}
       current={current}
       title={['These results are for', 'rules this build *does not ship*.']}
-      sub={`The artifact stamps a rulesHash that ${RULES_FILE} no longer hashes to. Either the rule document changed after the run, or the artifact came from a different one — and both mean the numbers describe a game other than the one documented here.`}
+      sub={`The artifact's rulesHash does not match ${RULES_FILE}. Re-run the simulator and re-emit the artifact.`}
       rows={[
         { label: 'Artifact', value: check.file },
         { label: 'Stamped', value: check.stamped },
         { label: `SHA-256 of ${RULES_FILE}`, value: check.shipped },
       ]}
-    >
-      <p className={s.prose}>
-        The hash is computed in the browser from the shipped document&rsquo;s own bytes, with the
-        same <code>rulesHash()</code> the emitter uses — line endings normalised, trailing
-        whitespace trimmed. It is not a constant baked in at build time, which would only prove
-        that one number matches another number someone typed.
-      </p>
-      <p className={s.prose}>
-        To clear it: re-run the simulator against the current {RULES_FILE} and re-emit the
-        artifact. Do not edit the stamp.
-      </p>
-    </RefusalPage>
+    />
   )
 }
 
@@ -113,7 +96,7 @@ export function ArtifactBroken({
       which={which}
       current={current}
       title={['The artifact does not', 'match its *schema*.']}
-      sub="The site is a pure reader of one JSON document, and that document failed validation at the boundary. The exact path is below — it is the fastest thing to fix."
+      sub="The artifact failed validation."
       rows={[
         { label: 'Artifact', value: file },
         { label: 'Problem', value: detail },
@@ -137,7 +120,7 @@ export function ReplayNotFound({
       which={which}
       current="/lab/replay"
       title={['No replay is stored', 'under *that id*.']}
-      sub="Replays are part of the artifact, not a database — the site can only replay games the committed run actually recorded."
+      sub="Only games the committed run recorded can be replayed."
       rows={[
         { label: 'Asked for', value: id },
         {

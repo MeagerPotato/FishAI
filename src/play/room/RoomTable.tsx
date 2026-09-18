@@ -145,9 +145,7 @@ export function RoomTable({
             </h2>
             <p className={s.overBody}>
               {table.score[0]}–{table.score[1]}
-              {resolved < total ? ` · ${total - resolved} unresolved` : ''}. A clinched game ends
-              with sets still unresolved and cards still in hands — that is the rule set, not a
-              stopped clock.
+              {resolved < total ? ` · ${total - resolved} unresolved` : ''}.
             </p>
             <ul className={s.bookList}>
               {allBooks(table.config).map((book) => {
@@ -185,11 +183,6 @@ export function RoomTable({
               <h2 id="option-head" className={s.panelHead}>
                 Your declare option
               </h2>
-              <p className={s.panelNote}>
-                After every action, every seat in turn order is offered the chance to declare a set
-                (RULES_US54.md §3). Take it or stand down; six stand-downs in a row close the window
-                and {nameOf(table.turn)} asks.
-              </p>
               <div className={s.panelActions}>
                 <button
                   type="button"
@@ -249,10 +242,11 @@ export function RoomTable({
 
       <div className={s.logCol}>
         <h2 className={s.panelHead}>Public log</h2>
-        <p className={s.panelNote}>
-          Everything every seat can see — the whole information channel this game runs on.
-          {live ? '' : ' The live connection is down; this page is asking for updates instead.'}
-        </p>
+        {live ? null : (
+          <p className={s.panelNote}>
+            The live connection is down; this page is asking for updates instead.
+          </p>
+        )}
         <RoomLog events={table.log} viewer={viewer} nameOf={nameOf} />
       </div>
     </div>

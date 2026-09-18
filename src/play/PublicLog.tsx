@@ -7,8 +7,7 @@
  * players were if you forget. You cannot ask or reveal any previous information."* Row 17's
  * unlimited public log is a DEVIATION from that — the one the rules audit found and this control
  * answers — so **`recent` is the default**, because it is the accurate one. `all` is a
- * convenience that goes beyond what a real table allows, and the view says so in words rather
- * than leaving a player to discover they have been reading with an advantage.
+ * convenience that goes beyond what a real table allows.
  *
  * ## `recent` is not `slice(-2)`, and must never be simplified into it
  *
@@ -169,22 +168,11 @@ export function PublicLog({ events, names }: PublicLogProps) {
         </button>
       </div>
 
-      <p className={s.logNote}>
-        {view === 'recent' ? (
-          <>
-            The table&rsquo;s own rule: you may be reminded of the previous two asks, and nothing
-            older. Declares, out-of-cards notices and the score are not memory — they are the
-            board, and stay in both views.
-            {hidden > 0 ? ` ${hidden} older ask${hidden === 1 ? '' : 's'} withheld.` : ''}
-          </>
-        ) : (
-          <>
-            <strong>Beyond the table.</strong> Row 17&rsquo;s full log is more than a seated
-            player is allowed to recall; the bots reason over all of it, and this view lets you
-            check their work. Switch back to play by the rule.
-          </>
-        )}
-      </p>
+      {view === 'recent' && hidden > 0 ? (
+        <p className={s.logNote}>
+          {hidden} older ask{hidden === 1 ? '' : 's'} withheld.
+        </p>
+      ) : null}
 
       <div
         ref={box}

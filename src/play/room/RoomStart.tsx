@@ -7,8 +7,7 @@
  *
  * The pace is set here and nowhere else, because it is a property of the room rather than of a
  * player: the person who starts the table decides how fast it advances, and the other five inherit
- * it. What it does is stated in the control rather than left to be discovered — a floor between
- * moves, so nobody is left reading a log that has already moved past them.
+ * it — a floor between moves, so nobody is left reading a log that has already moved past them.
  */
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -99,10 +98,6 @@ export function RoomStart() {
         <h2 id="who-head" className={s.panelHead}>
           Who are you?
         </h2>
-        <p className={s.panelNote}>
-          The name the other five see on your seat and in the log. Leave it blank and you are
-          &ldquo;Player&nbsp;N&rdquo; — which works, and makes for a duller game.
-        </p>
         <label className={s.field}>
           <span className={s.fieldLabel}>Your name</span>
           <input
@@ -119,11 +114,6 @@ export function RoomStart() {
         </label>
 
         <h3 className={s.step}>Which side?</h3>
-        <p className={s.panelNote}>
-          Teams alternate around the table: {TEAM_LABEL[0]} are seats {teamSeats(0).join(', ')} and{' '}
-          {TEAM_LABEL[1]} are seats {teamSeats(1).join(', ')}. Picking a side picks a free seat on
-          it. You can still change sides in the lobby, until the cards are dealt.
-        </p>
         <div className={s.choiceRow} role="group" aria-label="Which side to play on">
           {sideOptions().map((option) => (
             <button
@@ -146,17 +136,8 @@ export function RoomStart() {
         <h2 id="start-head" className={s.panelHead}>
           Start a room
         </h2>
-        <p className={s.panelNote}>
-          You get a six-character code and a link to send. The game deals itself the moment all six
-          seats are taken — there are no bots at this table, so it waits for six people.
-        </p>
 
         <h3 className={s.step}>Pace</h3>
-        <p className={s.panelNote}>
-          The shortest time between two moves landing. It gives the other five a beat to read what
-          just happened before the table moves again. Declining a declare is never held back — only
-          the moves that produce something to read.
-        </p>
         <div className={s.choiceRow} role="group" aria-label="Seconds between moves">
           {PACES.map((pace) => (
             <button
@@ -191,10 +172,6 @@ export function RoomStart() {
         <h2 id="join-head" className={s.panelHead}>
           Join a room
         </h2>
-        <p className={s.panelNote}>
-          Six characters. Case does not matter, and neither do spaces or dashes — a code is meant
-          to survive being read out loud.
-        </p>
         <label className={s.field}>
           <span className={s.fieldLabel}>Room code</span>
           <input

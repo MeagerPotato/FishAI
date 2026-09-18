@@ -1,44 +1,34 @@
 /**
- * `/lab/adaptive` — the Bass v1.0 results page, led by its negative result.
+ * `/lab/adaptive` — the Bass v1.0 results page.
  *
  * The page reports one committed artifact (`src/lab/data/adaptive-results.json`, parsed at the
  * boundary by `adaptive-artifact.ts`) against four predictions that were written down before
- * the run. The headline is stated in the hero because it is the finding: best-response
- * adaptation over this roster degenerates to always-Punter — provably from the committed
- * counter table, and measured at 100% of warm delegations — and then underpays for its warmup.
- * A negative result is reported here with the same pride as a positive one; nothing is
- * softened, and nothing is dressed up as an ablation of a success.
+ * the run. It carries the data only; the explanations live in the v1.0 paper
+ * (`papers/fishai-v10.tex`, served at `/papers/fishai-v10.pdf`).
  *
  * ## The accent budget (SITE_SPEC.md §2.1)
  *
- * One accent-text spend: the verdict chip on the ink panel (`live="VERDICT · NEGATIVE"`).
- * Every Button is `line` or `ghost`, the nav gets no `cta`, and the tables are ink. The
- * remaining amber belongs to the diagram system's own per-figure budgets — the mechanism
- * strip's focal stage and delegation arrow, the dumbbell's solid series dot, the line chart's
- * focal series — which §3.2 requires of every figure regardless of what this page wants.
+ * One accent-text spend: the verdict chip on the ink panel (`live="VERDICT · NO GAIN"`).
+ * The nav gets no `cta`, and the tables are ink. The remaining amber belongs to the diagram
+ * system's own per-figure budgets — the mechanism strip's focal stage and delegation arrow, the
+ * dumbbell's solid series dot, the line chart's focal series — which §3.2 requires of every
+ * figure regardless of what this page wants.
  *
  * ## What is recomputed and what is read
  *
  * The best-response table is recomputed in the browser from `COUNTER_TABLE` — the constant the
  * engine actually plays from — and the gauntlet z column is recomputed from each row's delta
- * and SE. The four P1–P4 verdict words are the artifact's own, printed verbatim; every number
- * they cite appears in the sections above them, so a reader can check the words against the
- * evidence without trusting the emitter.
+ * and SE. The four P1–P4 verdict words are the artifact's own, printed verbatim.
  */
 
 import { useLocation } from 'react-router-dom'
 import {
-  Board,
-  Button,
   Eyebrow,
-  Hairline,
   InkPanel,
   MaskedLines,
-  Reveal,
   Section,
   SectionHead,
   TextLink,
-  buttonRow,
   inkPanelBody,
 } from '../components/index.ts'
 import { AdaptiveMechanism, DumbbellChart, LineChart } from '../diagrams/index.ts'
@@ -77,88 +67,13 @@ const VERDICT_MARK: Record<VerdictValue, { cls: string; word: string }> = {
 }
 
 const CONTENTS: readonly LabSection[] = [
-  { id: 'mechanism', label: 'The mechanism', note: 'Watch, classify, counter — and the counter is fixed' },
-  { id: 'gauntlet', label: 'The gauntlet', note: 'Nine pure opponents against the punter benchmark' },
-  { id: 'mixed', label: 'The mixed screen', note: 'Twenty-four mixed tables, one paired answer' },
-  { id: 'oracle', label: 'The oracle ablation', note: 'What a perfect read would have bought' },
-  { id: 'classifier', label: 'The classifier', note: 'Accuracy measured on its own terms' },
-  { id: 'usage', label: 'What it played', note: 'Every delegated decision, warmup and warm' },
-  { id: 'verdict', label: 'The verdict', note: 'P1–P4, stated before the run' },
-  { id: 'sources', label: 'Sources', note: 'The run, its health, its calibrations' },
-]
-
-/**
- * The plain-language on-ramp, in the register `/lab`'s own on-ramp established.
- *
- * Only the terms THIS page's tables and prose actually use, defined and nothing more. The
- * measurement vocabulary shared with the rest of the lab — duplicate pair, score rate — is
- * repeated here rather than linked, because a reader who lands on `/lab/adaptive` from a search
- * result should not have to open a second long page to find out what a pair is.
- *
- * It sits in a `<details>` in the hero rather than in a section of its own. Every one of the six
- * is a definition of a term the sections below then use WITH its numbers — Δ and z in the
- * gauntlet table, warm and warmup in the usage record, top-1 in the classifier section — so
- * nothing here is the only place a fact appears. That is the test that let it fold.
- */
-const HOW_TO_READ = [
-  {
-    ix: '01',
-    title: 'A duplicate pair, and a score rate',
-    role: 'Method',
-    body:
-      'Each seeded deal is played twice with the teams swapped and scored as one observation — a ' +
-      'pair — so the luck of the cards cancels. A score rate is the share of games a team won, 0 ' +
-      'to 1, where .500 is an even match.',
-  },
-  {
-    ix: '02',
-    title: 'The counter table and the best response',
-    role: 'Definition',
-    body:
-      'A measured 9×9 table of what each style scores against each other style. The “best ' +
-      'response” to an opponent is the row of that table with the highest score in the ' +
-      'opponent’s column; the “runner-up” is the second highest, and the margin between them is ' +
-      'how far the choice sits from flipping.',
-  },
-  {
-    ix: '03',
-    title: 'Warmup and warm',
-    role: 'Mechanism',
-    body:
-      'The engine has no read at the start of a game, so it plays a fixed anchor style until the ' +
-      'public log holds roughly 60 observed events. Decisions before that point are “warmup”; ' +
-      'decisions after it, driven by the posterior over opponent styles, are “warm”.',
-  },
-  {
-    ix: '04',
-    title: 'Δ, SE and z',
-    role: 'Uncertainty',
-    body:
-      'Δ is a difference between two arms, and every Δ column on this page names its own ' +
-      'direction in the header. SE is how far that difference would wobble on a fresh run of the ' +
-      'same design; z is Δ divided by its SE — roughly how many SEs from zero the difference ' +
-      'sits. Around ±2 is the conventional line, and a family of simultaneous tests needs a ' +
-      'stricter one, which the gauntlet note states.',
-  },
-  {
-    ix: '05',
-    title: 'Top-1 accuracy',
-    role: 'Classifier',
-    body:
-      'The share of seat reads where the classifier’s single most likely label was the true ' +
-      'style. Nine styles means chance is 1 in 9, about .111 — the floor every accuracy figure ' +
-      'on this page should be read against.',
-  },
-  {
-    ix: '06',
-    title: 'A pre-registered prediction',
-    role: 'Decision rule',
-    body:
-      'P1–P4 were written down before the run, with the rule that would score each one fixed ' +
-      'alongside. A prediction that failed is printed as refuted and a prediction that half held ' +
-      'is printed as mixed, with both halves shown — never rewritten after the fact to match ' +
-      'what the run returned.',
-  },
+  { id: 'mechanism', label: 'The mechanism' },
+  { id: 'gauntlet', label: 'The gauntlet' },
+  { id: 'mixed', label: 'The mixed screen' },
+  { id: 'oracle', label: 'The oracle ablation' },
+  { id: 'classifier', label: 'The classifier' },
+  { id: 'usage', label: 'What it played' },
+  { id: 'verdict', label: 'The verdict' },
 ]
 
 /** One-line names for the pre-registered predictions; the full text sits in the detail. */
@@ -241,9 +156,6 @@ export function LabAdaptive() {
 
   // The gauntlet, with the z each row's own delta and SE imply — recomputed here, not read.
   const gauntlet = artifact.gauntlet.map((g) => ({ ...g, z: g.delta / g.deltaSe }))
-  const deltas = gauntlet.map((g) => g.delta)
-  const worstDelta = Math.min(...deltas)
-  const bestDelta = Math.max(...deltas)
 
   // Warmup share of all delegated decisions, per opponent and pooled.
   const usage = artifact.styleUsage.map((u) => ({
@@ -253,10 +165,6 @@ export function LabAdaptive() {
   const pooledWarmup =
     usage.reduce((t, u) => t + u.decisions.warmup, 0) /
     usage.reduce((t, u) => t + u.decisions.warmup + u.decisions.warm, 0)
-  const shareLo = Math.min(...usage.map((u) => u.share))
-  const shareHi = Math.max(...usage.map((u) => u.share))
-
-  const mixedPositives = artifact.mixed.rows.filter((r) => r.delta > 0)
 
   return (
     <LabShell
@@ -267,98 +175,53 @@ export function LabAdaptive() {
     >
       {/* ---- hero ------------------------------------------------------------------------ */}
       <Section noRule noMarks>
-        <MaskedLines
-          level="h1"
-          lines={['An engine that adapts,', 'measured against the style', '*it always becomes*.']}
-        />
-        <div className={s.split} style={{ marginTop: 'var(--fa-sp-head)' }}>
-          <Reveal as="p" className={s.prose}>
-            Bass v1.0 watches the public log, keeps a running posterior over which of the nine
-            styles each opponent seat is playing, and best-responds by delegating every decision
-            to the style the measured counter table says pays most against that read. This page
-            reports the committed v1.0 experiment suite — {count(meta.gamesTotal)} games —
-            against the strongest possible null: a team that skips all of that machinery and
-            simply plays Punter.
-          </Reveal>
-          <Reveal as="div" className={s.stack}>
-            <p className={s.prose}>
-              The result is <strong>negative, and it is the headline</strong>: over this roster,
-              best-response adaptation degenerates to always-Punter — provably, and measured at
-              100% of warm delegations — and then pays for its warmup. The adaptive team fell
-              short of its own fixed-punter benchmark in all nine gauntlet cells and by{' '}
-              {sgn4(artifact.mixed.pairedDelta)} ± {rate(artifact.mixed.deltaSe)} on mixed
-              tables. Adaptation here is worth less than nothing.
-            </p>
-            <div className={buttonRow}>
-              <Button href="#verdict" variant="line">
-                Go straight to the verdict
-              </Button>
-              <Button href={withCase('/lab', which)} variant="ghost">
-                The style report
-              </Button>
-            </div>
-            <p className={s.figNote}>
-              The engine is playable, not only measured:{' '}
-              <TextLink href="/play" arrow={false}>
-                take a seat against it yourself
-              </TextLink>{' '}
-              — it will be classifying your log too, and you are the off-roster opponent none of
-              this page covers. The table runs this page&rsquo;s v1.0 architecture unchanged, but
-              over roster styles that have since gained v2.0&rsquo;s defusal term, so it is not a
-              re-run of the suite below.
-            </p>
-          </Reveal>
-        </div>
+        <MaskedLines level="h1" lines={['The adaptive engine', '*Bass v1.0*']} />
+        <p className={s.figNote} style={{ marginTop: 'var(--fa-sp-head)' }}>
+          <TextLink href="/papers/fishai-v10.pdf" arrow={false}>
+            Paper (PDF)
+          </TextLink>
+          {' · '}
+          <TextLink href={withCase('/lab', which)} arrow={false}>
+            Style report
+          </TextLink>
+          {' · '}
+          <TextLink href={withCase('/lab/matrix', which)} arrow={false}>
+            Full matrix
+          </TextLink>
+          {' · '}
+          <TextLink href={withCase('/lab/bounded', which)} arrow={false}>
+            Bounded memory
+          </TextLink>
+          {' · '}
+          <TextLink href={withCase('/lab/live', which)} arrow={false}>
+            Live simulator
+          </TextLink>
+          {' · '}
+          <TextLink href="/play" arrow={false}>
+            Play
+          </TextLink>
+        </p>
 
         <div style={{ marginTop: 'var(--fa-sp-head)' }}>
           <AdaptiveStamp artifact={artifact} shipped={check.shipped} ok={check.ok} />
         </div>
 
         <LabContents sections={CONTENTS} />
-
-        <details className={s.detail}>
-          <summary>
-            How to read this page — six terms, in plain language, and no prior jargon
-          </summary>
-          <div className={s.detailBody}>
-            <Board items={HOW_TO_READ} />
-          </div>
-        </details>
       </Section>
 
       {/* ---- the mechanism --------------------------------------------------------------- */}
       <Section id="mechanism" badge="The mechanism">
-        <SectionHead
-          lines={['Watch, classify, counter —', 'and the counter is *always the same*.']}
-          sub="v1.0 is four stages in a straight line. Everything it learns about its opponents flows into one decision — which style to delegate to — and over this roster that decision has exactly one answer."
-        />
-        <p className={s.prose}>
-          The figure traces one decision through the four stages. The highlighted stage is where
-          adaptation dies: the best-response lookup returns Punter whatever the classifier hands
-          it.
-        </p>
+        <SectionHead lines={['Watch, classify, counter']} />
         <AdaptiveMechanism figNo="FIG. 01" />
-
-        <div style={{ marginTop: 'var(--fa-sp-head)' }}>
-          <Eyebrow tone="muted" track="head" as="h3">
-            The degeneracy, stated exactly
-          </Eyebrow>
-          <p className={s.prose} style={{ marginTop: 16 }}>
-            The adaptive team&rsquo;s expected score against a belief over opponent styles is a
-            probability-weighted average of counter-table columns, so the best response to any
-            belief is the row that maximises each column — and punter&rsquo;s row weakly
-            dominates every column. The table below recomputes that claim in your browser from{' '}
-            <code>COUNTER_TABLE</code>, the constant the engine actually plays from: nine
-            columns, nine identical answers, with the margin over the runner-up printed so the
-            distance from a flip is visible.
-          </p>
-        </div>
-        <ScrollRegion label="Best response per opponent column of the counter table">
+        <ScrollRegion
+          label="Best response per opponent column of the counter table"
+          style={{ marginTop: 'var(--fa-sp-head)' }}
+        >
           <table className={s.table}>
             <caption>
-              Best response per opponent column · counter table from{' '}
-              {meta.counterTableProvenance.artifact} · {count(meta.counterTableProvenance.pairsPerCell)}{' '}
-              pairs per cell · recomputed in the browser
+              Best response per opponent column · counter table{' '}
+              {meta.counterTableProvenance.artifact} ·{' '}
+              {count(meta.counterTableProvenance.pairsPerCell)} pairs per cell
             </caption>
             <thead>
               <tr>
@@ -386,32 +249,16 @@ export function LabAdaptive() {
             </tbody>
           </table>
         </ScrollRegion>
-        <p className={s.figNote}>
-          Diagonal entries — punter&rsquo;s own column, and the runner-up in the blitz column —
-          are the .5000 duplicate-pair identity (SE —), true by symmetry rather than measured;
-          every other number is a measured cell. Warm delegation is therefore not merely
-          observed at 100% Punter — under this table it cannot be anything else. The full 9×9
-          matrix, with CIs and q-values, is on{' '}
-          <TextLink href={withCase('/lab/matrix', which)}>the matrix page</TextLink>.
-        </p>
       </Section>
 
       {/* ---- the gauntlet ---------------------------------------------------------------- */}
       <Section id="gauntlet" badge="The gauntlet">
-        <SectionHead
-          lines={['Nine pure opponents,', 'nine cells *below the line*.']}
-          sub={`${count(meta.config.gauntletPairs)} duplicate pairs per cell on matrix v2's exact seed list, so every deal behind the punter benchmark was replayed by the adaptive team. P1 predicted the warm engine would match punter's row within CI. It did not — in any cell.`}
-        />
-        <p className={s.prose}>
-          Each row below is the adaptive team against one pure style, beside punter&rsquo;s own
-          score against that style on the same deals; the delta is the P1 statistic and the z is
-          recomputed from the row&rsquo;s delta and SE in your browser.
-        </p>
+        <SectionHead lines={['Adaptive vs pure styles']} />
         <ScrollRegion label="Gauntlet cells against the paired punter benchmark">
           <table className={s.table}>
             <caption>
-              Adaptive vs pure styles · {count(meta.config.gauntletPairs)} pairs per cell · paired
-              against {meta.benchmark.artifact} · Δ = adaptive − punter row
+              Gauntlet · {count(meta.config.gauntletPairs)} pairs per cell · benchmark{' '}
+              {meta.benchmark.artifact}
             </caption>
             <thead>
               <tr>
@@ -447,41 +294,17 @@ export function LabAdaptive() {
             </tbody>
           </table>
         </ScrollRegion>
-        <p className={s.figNote}>
-          Every delta is negative — from {sgn4(bestDelta)} (balanced, banker) to{' '}
-          {sgn4(worstDelta)} (ghost). One cell rejects at the Bonferroni-corrected bound
-          |z| &gt; 2.773 for nine simultaneous tests: punter itself, z −3.53, where the
-          benchmark is the .5000 identity and the SE is smallest; ghost and archivist sit
-          between 1.96 and the bound. The Δ SE is the conservative cross-run combination over
-          shared deals — the runs replay the same seed list but their per-game records are not
-          joined — so these tests are weaker than a jointly-recorded pairing would be, and the
-          true shortfall is if anything better resolved than printed.
-        </p>
-        <div className={s.stackWide} style={{ marginTop: 'var(--fa-sp-head)' }}>
-          <p className={s.prose}>
-            Drawn on an honest zero-anchored axis, the shortfall is nearly invisible — in every
-            row the two dots almost coincide. That is the finding at a glance: v1.0 plays
-            punter&rsquo;s game to within a hundredth, and loses the difference to its warmup.
-          </p>
+        <div style={{ marginTop: 'var(--fa-sp-head)' }}>
           <DumbbellChart model={gauntletDumbbell(artifact, 'FIG. 02')} />
         </div>
       </Section>
 
       {/* ---- the mixed screen ------------------------------------------------------------ */}
       <Section id="mixed" badge="The mixed screen">
-        <SectionHead
-          lines={['Twenty-four mixed tables,', 'one *paired* answer.']}
-          sub="P2 predicted the delta against always-punter would be ≈ 0 on mixed opposition — the one roster setting where classifying opponents could plausibly pay, because different seats might warrant different counters. Instead, adaptation cost more."
-        />
-        <p className={s.prose}>
-          Both arms played the same {count(artifact.mixed.compositions * artifact.mixed.pairsPer)}{' '}
-          duplicate pairs — {count(artifact.mixed.compositions)} opposing compositions ×{' '}
-          {count(artifact.mixed.pairsPer)} pairs — so the pooled delta below is truly paired
-          within this run, deal for deal.
-        </p>
+        <SectionHead lines={['Mixed opposition']} />
         <div className={s.refuseBox}>
           <Eyebrow tone="muted" track="badge">
-            Pooled per-deal delta · adaptive − punter · truly paired within this run
+            Pooled paired delta · adaptive − punter
           </Eyebrow>
           <p className={s.stepAction} style={{ marginTop: 10 }}>
             {sgn4(artifact.mixed.pairedDelta)} ± {rate(artifact.mixed.deltaSe)} · 95% CI{' '}
@@ -489,74 +312,48 @@ export function LabAdaptive() {
           </p>
           <p className={s.figNote}>
             Adaptive arm mean {rate(artifact.mixed.adaptiveMean)} · punter arm mean{' '}
-            {rate(artifact.mixed.punterMean)}. The SE is clustered by seed: all{' '}
-            {count(artifact.mixed.compositions)} compositions replay one identical{' '}
-            {count(artifact.mixed.pairsPer)}-seed list, so a deal&rsquo;s replays are averaged
-            within seed before the SE is taken — never counted as independent evidence. The
-            interval still excludes zero: on mixed opposition the machinery does not merely fail
-            to pay — it charges.
+            {rate(artifact.mixed.punterMean)}
           </p>
         </div>
-        <div style={{ marginTop: 'var(--fa-sp-head)' }}>
-          <ScrollRegion label="The 24 mixed compositions">
-            <table className={s.table}>
-              <caption>
-                All {count(artifact.mixed.compositions)} opposing compositions · {count(artifact.mixed.pairsPer)}{' '}
-                pairs per composition per arm · seeds {meta.config.mixedSeedPrefix}
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Opposing composition</th>
-                  <th scope="col">Duplicate pairs</th>
-                  <th scope="col">Adaptive score rate</th>
-                  <th scope="col">Punter score rate</th>
-                  <th scope="col">Δ (adaptive − punter)</th>
-                  <th scope="col">Δ SE</th>
+        <ScrollRegion label="The 24 mixed compositions" style={{ marginTop: 'var(--fa-sp-head)' }}>
+          <table className={s.table}>
+            <caption>
+              All {count(artifact.mixed.compositions)} opposing compositions · {count(artifact.mixed.pairsPer)}{' '}
+              pairs per composition per arm · seeds {meta.config.mixedSeedPrefix}
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Opposing composition</th>
+                <th scope="col">Duplicate pairs</th>
+                <th scope="col">Adaptive score rate</th>
+                <th scope="col">Punter score rate</th>
+                <th scope="col">Δ (adaptive − punter)</th>
+                <th scope="col">Δ SE</th>
+              </tr>
+            </thead>
+            <tbody>
+              {artifact.mixed.rows.map((row) => (
+                <tr key={row.composition.join('-')}>
+                  <th scope="row">{row.composition.map(styleName).join(' · ')}</th>
+                  <td>{count(row.pairs)}</td>
+                  <td>{rate(row.adaptive)}</td>
+                  <td>{rate(row.punter)}</td>
+                  <td>{sgn4(row.delta)}</td>
+                  <td className={s.ns}>{rate(row.deltaSe)}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {artifact.mixed.rows.map((row) => (
-                  <tr key={row.composition.join('-')}>
-                    <th scope="row">{row.composition.map(styleName).join(' · ')}</th>
-                    <td>{count(row.pairs)}</td>
-                    <td>{rate(row.adaptive)}</td>
-                    <td>{rate(row.punter)}</td>
-                    <td>{sgn4(row.delta)}</td>
-                    <td className={s.ns}>{rate(row.deltaSe)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </ScrollRegion>
-          <p className={s.figNote}>
-            {count(mixedPositives.length)} of {count(artifact.mixed.rows.length)} compositions
-            came out positive
-            {mixedPositives.length > 0
-              ? ` (${mixedPositives
-                  .map((r) => `${r.composition.map(styleName).join('/')} ${sgn4(r.delta)}`)
-                  .join(', ')})`
-              : ''}
-            , none by more than one SE — scatter, not signal. The pooled paired estimate is the
-            result, and it is {sgn4(artifact.mixed.pairedDelta)}.
-          </p>
-        </div>
+              ))}
+            </tbody>
+          </table>
+        </ScrollRegion>
       </Section>
 
       {/* ---- the oracle ablation --------------------------------------------------------- */}
       <Section id="oracle" badge="The oracle">
-        <SectionHead
-          lines={['A perfect read,', 'worth *exactly nothing*.']}
-          sub="The ablation hands one arm the truth: the classifier is replaced by an oracle that knows each opponent seat's style outright. If classification quality were what holds v1.0 back, this is where it would show."
-        />
-        <p className={s.prose}>
-          Nine paired cells, oracle arm against classifier arm on identical seeds; the delta is
-          oracle − classifier.
-        </p>
+        <SectionHead lines={['Oracle ablation']} />
         <ScrollRegion label="Oracle-ablation cells">
           <table className={s.table}>
             <caption>
-              Oracle vs classifier · {count(meta.config.oraclePairs)} pairs per cell · paired
-              within this run
+              Oracle vs classifier · {count(meta.config.oraclePairs)} pairs per cell
             </caption>
             <thead>
               <tr>
@@ -582,127 +379,63 @@ export function LabAdaptive() {
             </tbody>
           </table>
         </ScrollRegion>
-        <p className={s.figNote}>
-          Zero to four decimal places, with zero variance, in all nine cells — because the two
-          arms are the same games. With a dominant counter-table row, the oracle and the
-          classifier delegate to the same style at every decision; the deterministic engine then
-          produces identical move sequences, and the paired deltas vanish identically rather
-          than statistically. This is the sharpest confirmation of the degeneracy the suite
-          contains: P3 is confirmed exactly, and it is the same fact as P1&rsquo;s refutation
-          seen from the other side.
-        </p>
       </Section>
 
       {/* ---- the classifier -------------------------------------------------------------- */}
       <Section id="classifier" badge="The classifier">
-        <SectionHead
-          lines={['The read is real,', 'but the table is *deaf to it*.']}
-          sub="The classifier is the one stage whose output the best response provably ignores here, so its accuracy is measured on its own terms: single games between pure teams, every ordered pairing of distinct styles, the three opposing seats read at each log truncation."
-        />
-        <div className={s.stackWide}>
-          <p className={s.prose}>
-            The first figure is top-1 accuracy against how much of the public log the classifier
-            was allowed to see. Chance is one in nine.
-          </p>
-          <LineChart model={classifierLine(artifact, 'FIG. 03')} />
-        </div>
-        <div style={{ marginTop: 'var(--fa-sp-head)' }}>
-          <p className={s.prose}>
-            Per style, at the full log — {endAccuracy ? count(endAccuracy.seats) : '—'} seat
-            reads:
-          </p>
-          <ScrollRegion label="End-of-game classifier accuracy per style">
-            <table className={s.table}>
-              <caption>
-                Top-1 accuracy at end of game · {count(endAccuracy?.seats ?? 0)} seat reads ·
-                chance = 1/9 ≈ {rate(chance)}
-              </caption>
-              <thead>
+        <SectionHead lines={['Classifier accuracy']} />
+        <LineChart model={classifierLine(artifact, 'FIG. 03')} />
+        <ScrollRegion
+          label="End-of-game classifier accuracy per style"
+          style={{ marginTop: 'var(--fa-sp-head)' }}
+        >
+          <table className={s.table}>
+            <caption>
+              Top-1 accuracy at end of game · {count(endAccuracy?.seats ?? 0)} seat reads ·
+              chance = 1/9 ≈ {rate(chance)}
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">True style</th>
+                <th scope="col">Seat reads</th>
+                <th scope="col">Top-1 accuracy</th>
+                <th scope="col">Top-1 − chance (1/9)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {endAccuracy
+                ? artifact.classifier.confusion.styles.map((id) => {
+                    const cell = endAccuracy.byStyle[id]
+                    return (
+                      <tr key={id}>
+                        <th scope="row">{styleName(id)}</th>
+                        <td>{count(cell.seats)}</td>
+                        <td>{rate(cell.top1)}</td>
+                        <td className={s.ns}>{sgn4(cell.top1 - chance)}</td>
+                      </tr>
+                    )
+                  })
+                : null}
+              {endAccuracy ? (
                 <tr>
-                  <th scope="col">True style</th>
-                  <th scope="col">Seat reads</th>
-                  <th scope="col">Top-1 accuracy</th>
-                  <th scope="col">Top-1 − chance (1/9)</th>
+                  <th scope="row">Overall</th>
+                  <td>{count(endAccuracy.seats)}</td>
+                  <td>{rate(endAccuracy.top1)}</td>
+                  <td className={s.ns}>{sgn4(endAccuracy.top1 - chance)}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {endAccuracy
-                  ? artifact.classifier.confusion.styles.map((id) => {
-                      const cell = endAccuracy.byStyle[id]
-                      return (
-                        <tr key={id}>
-                          <th scope="row">{styleName(id)}</th>
-                          <td>{count(cell.seats)}</td>
-                          <td>{rate(cell.top1)}</td>
-                          <td className={s.ns}>{sgn4(cell.top1 - chance)}</td>
-                        </tr>
-                      )
-                    })
-                  : null}
-                {endAccuracy ? (
-                  <tr>
-                    <th scope="row">Overall</th>
-                    <td>{count(endAccuracy.seats)}</td>
-                    <td>{rate(endAccuracy.top1)}</td>
-                    <td className={s.ns}>{sgn4(endAccuracy.top1 - chance)}</td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </ScrollRegion>
-          <p className={s.figNote}>
-            The overall end-of-game figure is now also a cross-artifact anchor: the v1.5 bounded
-            suite replays these exact games as its E4 ∞ cell and must reproduce this top-1
-            bit-for-bit before its memory dial turns —{' '}
-            <TextLink href={withCase('/lab/bounded', which)}>the bounded-memory ladder</TextLink>{' '}
-            carries the agreement.
-          </p>
-        </div>
-        <div className={s.split} style={{ marginTop: 'var(--fa-sp-head)' }}>
-          <div className={s.stack}>
-            <h3 className={s.criterionLabel}>The confusion structure, in words</h3>
-            <p className={s.figNote}>
-              Ghost is the one style the classifier genuinely reads (.5042), followed by Scout
-              (.4125) — the two whose fingerprints diverge most from everyone else&rsquo;s.
-              Hoarder (.3092) and Turtle (.2717) clear chance but fall well short of the
-              &ldquo;good&rdquo; P4 predicted. And the classifier over-calls the distinctive
-              styles: Ghost is the single most-predicted label for balanced, blitz, punter{' '}
-              <em>and</em> banker seats, so most of the matrix&rsquo;s mass sits in the
-              ghost and scout columns regardless of the truth.
-            </p>
-          </div>
-          <div className={s.stack}>
-            <h3 className={s.criterionLabel}>The quadrangle caveat</h3>
-            <p className={s.figNote}>
-              Balanced (.0558 — below chance), Blitz (.0925), Punter (.1292) and Banker (.1258)
-              are near-unreadable, and of their misclassifications only 30–40% even land inside
-              the balanced/blitz/punter/banker quadrangle — the confusion is diffuse, not a
-              tidy clique. This ties directly to the inert-axis finding on the style report:
-              those four styles diverge from the Balanced control on under 1.3% of decisions
-              (STYLES.md §6.1), so one public log simply carries very little to tell them
-              apart. P4 called the quadrangle correctly and overrated the loners — the artifact
-              scores it <em>mixed</em>.
-            </p>
-          </div>
-        </div>
+              ) : null}
+            </tbody>
+          </table>
+        </ScrollRegion>
       </Section>
 
       {/* ---- what v1.0 played ------------------------------------------------------------ */}
       <Section id="usage" badge="What it played">
-        <SectionHead
-          lines={['Half the game on the anchor,', 'the rest *on punter*.']}
-          sub="The suite records every delegated decision, so there is no mystery about what the adaptive engine actually did — and the record is the mechanism behind the gauntlet shortfall."
-        />
-        <p className={s.prose}>
-          Per opponent: how many decisions fell in the warmup (the anchor plays Balanced until
-          the log holds roughly 60 observed events) and how many after it, and what each phase
-          delegated to.
-        </p>
+        <SectionHead lines={['Delegation record']} />
         <ScrollRegion label="Delegation record per opponent">
           <table className={s.table}>
             <caption>
-              Every adaptive decision in the gauntlet · warmup = Balanced anchor · warm =
-              posterior-driven best response
+              Every adaptive decision in the gauntlet · pooled warmup share {pct(pooledWarmup)}
             </caption>
             <thead>
               <tr>
@@ -738,42 +471,18 @@ export function LabAdaptive() {
             </tbody>
           </table>
         </ScrollRegion>
-        <p className={s.figNote}>
-          The warmup covered {pct(shareLo)}–{pct(shareHi)} of decisions depending on opponent —{' '}
-          {pct(pooledWarmup)} pooled — and Balanced scores below Punter against every column of
-          the counter table. The warmup is therefore not a neutral prelude but a measured tax
-          paid on more than half of every game, and the all-negative gauntlet deltas are its
-          bill. Warm delegation was 100% Punter in all nine cells: the degeneracy, observed.
-        </p>
       </Section>
 
       {/* ---- the verdict ----------------------------------------------------------------- */}
       <Section id="verdict" noMarks>
-        <p className={s.prose} style={{ marginBottom: 'var(--fa-sp-head)' }}>
-          Four predictions were written down before the run, derived from the committed counter
-          table; the suite&rsquo;s job was to check the implication against play, not to
-          discover it. Here is how each landed — the verdict words are the artifact&rsquo;s
-          own, and every number they cite is printed in the sections above.
-        </p>
-        <InkPanel fig="FIG. 04 — The verdict" live="VERDICT · NEGATIVE">
+        <InkPanel fig="FIG. 04 — The verdict" live="VERDICT · NO GAIN">
           <div className={inkPanelBody} style={{ display: 'block' }}>
             <div className={s.verdictHead}>
-              <h2 className={s.verdictWord}>worth less than nothing</h2>
+              <h2 className={s.verdictWord}>no gain over Punter</h2>
               <Eyebrow tone="muted" track="badge">
-                Four pre-registered predictions · P1–P4 · stated before the run
+                Pre-registered predictions · P1–P4
               </Eyebrow>
             </div>
-            <p className={s.verdictSummary}>
-              Best-response adaptation over this roster degenerates to always-Punter — provably
-              from the committed counter table, and measured at 100% of warm delegations — and
-              then underpays for its warmup. Against every pure opponent, and pooled over 24
-              mixed tables, the adaptive team scored below a team that simply plays Punter from
-              the first move.
-            </p>
-            <p className={s.verdictSummary}>
-              That is a result, not a failure: the suite measured exactly the thing it was built
-              to measure, and the answer is that this roster gives adaptation nothing to buy.
-            </p>
             <ol className={s.criteria}>
               {artifact.verdicts.map((v) => {
                 const mark = VERDICT_MARK[v.verdict]
@@ -789,97 +498,8 @@ export function LabAdaptive() {
                 )
               })}
             </ol>
-            <p className={s.figNote}>
-              What would change the answer: an intransitive roster — a counter table with no
-              dominant row leaves the classifier something to buy; off-roster opponents — the
-              human at <TextLink href="/play">/play</TextLink> is one; or a rule-set shift that
-              re-prices the styles. On this roster, under us54, the honest engineering advice
-              is: play Punter and skip the machinery.
-            </p>
           </div>
         </InkPanel>
-      </Section>
-
-      {/* ---- sources --------------------------------------------------------------------- */}
-      <Section id="sources" badge="Sources">
-        <SectionHead
-          lines={['Everything above', 'is *checkable*.']}
-          sub="One artifact, one schema, one rule document — plus the provenance of the two committed calibrations the engine consulted, because an adaptive result is only as honest as the data it played from."
-        />
-        <div className={s.split}>
-          <div className={s.stack}>
-            <h3 className={s.criterionLabel}>The run</h3>
-            <p className={s.figNote}>
-              <span className={s.mono}>{loaded.file}</span> — schema {meta.schemaVersion},
-              emitted by <span className={s.mono}>{meta.engineCommit}</span> at{' '}
-              {isoDate(meta.generatedAt)}, records digest{' '}
-              <span className={s.mono}>{meta.recordsDigest}</span>, wall clock{' '}
-              {(meta.wallMs / 60000).toFixed(1)} minutes for {count(meta.gamesTotal)} games.
-              Gauntlet {count(meta.config.gauntletPairs)} pairs × 9 cells on seeds{' '}
-              <span className={s.mono}>{meta.config.gauntletSeedPrefix}</span>; mixed screen{' '}
-              {count(meta.config.mixedCompositions)} compositions × {count(meta.config.mixedPairs)}{' '}
-              pairs × 2 arms; oracle {count(meta.config.oraclePairs)} pairs × 9 cells; classifier
-              accuracy {count(meta.config.accGames)} games per ordered pairing, checkpoints{' '}
-              {meta.config.accCheckpoints.join(' / ')} events plus end of game. Step cap{' '}
-              {count(meta.config.stepCap)}, invariants checked{' '}
-              <span className={s.mono}>{meta.config.invariantCheck}</span> step. It is imported,
-              not fetched: Vite ships it inside this route&rsquo;s chunk.
-            </p>
-          </div>
-          <div className={s.stack}>
-            <h3 className={s.criterionLabel}>Health</h3>
-            <p className={s.figNote}>
-              All gates zero: illegal actions {count(meta.health.illegalActions)}, capped games{' '}
-              {count(meta.health.cappedGames)}, invariant violations{' '}
-              {count(meta.health.invariantViolations)}, ties {count(meta.health.ties)}, voids{' '}
-              {count(meta.health.voids)}, non-clinch finishes {count(meta.health.nonClinch)}.
-              The adaptive mirror — {count(artifact.mirror.pairs)} self-play pairs — scored
-              exactly {rate(artifact.mirror.score)} with SE {rate(artifact.mirror.se)}: the
-              engine is deterministic and the duplicate design is exactly symmetric, so anything
-              but .5000 there would have voided the run.
-            </p>
-          </div>
-          <div className={s.stack}>
-            <h3 className={s.criterionLabel}>Consulted calibrations</h3>
-            <p className={s.figNote}>
-              <strong>Counter table</strong> — {meta.counterTableProvenance.artifact}, records
-              digest <span className={s.mono}>{meta.counterTableProvenance.recordsDigest}</span>,
-              emitted by <span className={s.mono}>{meta.counterTableProvenance.engineCommit}</span>{' '}
-              at {isoDate(meta.counterTableProvenance.generatedAt)},{' '}
-              {count(meta.counterTableProvenance.pairsPerCell)} pairs per cell.
-              <br />
-              <strong>Fingerprints</strong> —{' '}
-              <span className={s.mono}>{meta.fingerprintProvenance.command}</span>,{' '}
-              {count(meta.fingerprintProvenance.gamesPerStyle)} games per style on seeds{' '}
-              <span className={s.mono}>{meta.fingerprintProvenance.seedPrefix}</span>, variant{' '}
-              {meta.fingerprintProvenance.variant}, step cap{' '}
-              {count(meta.fingerprintProvenance.stepCap)}.
-              <br />
-              <strong>Benchmark</strong> — {meta.benchmark.note}
-            </p>
-          </div>
-        </div>
-
-        <Hairline variant="soft" />
-        {/* This used to be a three-card board of cross-links. The evidence index on /lab now
-            introduces every lab surface in one place, and the footer carries all of them from
-            every page, so repeating three of them here was a third copy of the same list. The
-            two that this page's own argument actually reaches for keep their sentence. */}
-        <p className={s.figNote}>
-          Where this page sits: the counter table it plays from was cut from the payoff matrix on{' '}
-          <TextLink href={withCase('/lab', which)}>the style report</TextLink>, whose glossary
-          also defines the method vocabulary — duplicate pair, score rate, standard error. The{' '}
-          <TextLink href={withCase('/lab/live', which)}>live simulator</TextLink> carries
-          fishai-v1 on its roster, so the gauntlet cells above can be re-run at demo scale in
-          this tab. And a human at <TextLink href="/play">the table</TextLink> is an off-roster
-          opponent — exactly the population this page&rsquo;s negative result does not cover, and
-          the reason the machinery is kept.
-        </p>
-        <p className={s.figNote}>
-          The pre-registration discipline here is BOT_LAB.md §5&rsquo;s: predictions derived from
-          committed data before the run, and a refuted prediction emitted as <code>refuted</code>,
-          not massaged.
-        </p>
       </Section>
     </LabShell>
   )

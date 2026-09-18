@@ -237,10 +237,3 @@ export function reconcile(artifact: LabArtifact, derived: Derived): LabArtifact 
   }
 }
 
-export const VERDICT_GLOSS: Record<Verdict, string> = {
-  dominant: 'One style holds up under all four criteria.',
-  cyclic: 'No dominant style. The roster counters itself, and the counter-graph is the finding.',
-  inconclusive:
-    'No dominant style, and no cyclic structure either. The evidence does not support crowning ' +
-    'the top of the table.',
-}

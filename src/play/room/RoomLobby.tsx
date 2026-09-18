@@ -98,10 +98,6 @@ export function RoomLobby({
         <h2 id="invite-head" className={s.panelHead}>
           The invitation
         </h2>
-        <p className={s.panelNote}>
-          Five other people need one of these two things. The code is the one you can read out; the
-          link is the one you can send.
-        </p>
         <p className={s.code} aria-label={`Room code: ${code.split('').join(' ')}`}>
           {code}
         </p>
@@ -127,7 +123,7 @@ export function RoomLobby({
         <p className={s.panelNote}>
           {missing === 0
             ? 'All six seats are taken. Dealing now.'
-            : `Waiting for ${missing} more ${missing === 1 ? 'player' : 'players'}. A hand is nine cards and the deck is 54, so a game needs all six at once — and this table has no bots to stand in.`}
+            : `Waiting for ${missing} more ${missing === 1 ? 'player' : 'players'}.`}
           {live
             ? ''
             : ' The live connection is down, so this page is asking for updates every few seconds instead — new arrivals will show up a moment late.'}
@@ -173,8 +169,7 @@ export function RoomLobby({
           </h2>
           <p className={s.panelNote}>
             You are {nameOf(snapshot.seat as Seat)} in seat {snapshot.seat}, playing{' '}
-            {TEAM_LABEL[((snapshot.seat as Seat) % 2) as Team]}. You can change sides until the cards
-            are dealt.
+            {TEAM_LABEL[((snapshot.seat as Seat) % 2) as Team]}.
           </p>
           {!durable ? (
             <p className={s.warn}>
@@ -221,11 +216,6 @@ export function RoomLobby({
           <h2 id="take-seat-head" className={s.panelHead}>
             Take a seat
           </h2>
-          <p className={s.panelNote}>
-            {missing === 0
-              ? 'Every seat here is taken. A table is exactly six.'
-              : 'Give a name the others will recognise, and pick a side.'}
-          </p>
           <label className={s.field}>
             <span className={s.fieldLabel}>Your name</span>
             <input

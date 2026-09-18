@@ -22,9 +22,7 @@
 
 import { Eyebrow } from '../../components/index.ts'
 import type { Criterion } from '../../../lib/lab/analysis/index.ts'
-import type { LabArtifact } from '../artifact.ts'
-import { rate } from '../format.ts'
-import { VERDICT_GLOSS, type Derived } from '../verdict.ts'
+import type { Derived } from '../verdict.ts'
 import s from './lab.module.css'
 
 const MARK: Record<'pass' | 'fail' | 'unknown', { cls: string; word: string }> = {
@@ -59,46 +57,24 @@ export function CriteriaList({ criteria }: { criteria: readonly Criterion[] }) {
  * The full banner. Rendered inside the page's one `InkPanel` — the inverted block is spent once
  * per page and this is what it is spent on.
  */
-export function VerdictBody({
-  derived,
-  artifact,
-}: {
-  derived: Derived
-  artifact: LabArtifact
-}) {
-  const top = derived.meanScore[0]
-  const mm = derived.maximin.find((m) => m.style === derived.candidate)
-
+export function VerdictBody({ derived }: { derived: Derived }) {
   return (
     <>
       <div className={s.verdictHead}>
         <h2 className={s.verdictWord}>{derived.verdict}</h2>
         <Eyebrow tone="muted" track="badge">
-          BOT_LAB §4.4 · four criteria · all four must hold
+          Four criteria · all must hold
         </Eyebrow>
       </div>
 
-      <p className={s.verdictSummary}>{VERDICT_GLOSS[derived.verdict]}</p>
       <p className={s.verdictSummary}>{derived.summary}</p>
 
       <CriteriaList criteria={derived.criteria} />
 
-      <p className={s.figNote}>
-        Recomputed here from the matrix, not read off the artifact: criterion 2 is tested on the
-        worst cell&rsquo;s CI lower bound ({mm ? rate(mm.lower95) : '—'}
-        {mm ? ` vs ${mm.worstVs}` : ''}), and criterion 3 counts only 3-cycles whose every edge
-        survived Benjamini-Hochberg at α&nbsp;=&nbsp;{artifact.meta.analysis.alpha}. Top of the
-        table is {top ? `${top.style} at ${rate(top.value)}` : 'undefined'} — which is criterion 1
-        and criterion 1 alone.
-      </p>
-
       {derived.disagrees ? (
         <p className={s.disagree}>
-          <strong>The artifact and this page disagree.</strong> The emitter stamped{' '}
-          <code>{derived.statedVerdict}</code>; recomputing the four criteria from the same matrix
-          gives <code>{derived.verdict}</code>. The recomputation is what is shown above and what
-          the diagrams are drawn from. A disagreement means the artifact and the decision rule
-          have drifted apart — investigate before citing either.
+          <strong>Disagreement:</strong> the artifact stamps <code>{derived.statedVerdict}</code>;
+          recomputed from its matrix, <code>{derived.verdict}</code>.
         </p>
       ) : null}
     </>
