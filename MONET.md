@@ -14386,6 +14386,22 @@ by `--version v0.53`, which must differ.
 from §3.8ar's and §3.8at's. Their md5s are written into the record before any cell's number is read. The runners
 print completion only.
 
+> **The readers, as written before any number of this read was looked at** (2026-09-18, 09:40–09:47Z; committed
+> while the lanes ran, no cell file opened):
+>
+> > | reader | reads | md5 |
+> > |---|---|---|
+> > | `v55-read.cjs` | conditions 1–4 | `dc726414fbec285638e592f3b3f08369` |
+> > | `v55-controls.cjs` | condition 5, against `BANDS.json` | `72a7e87b8baadf3e53c1590628e39402` |
+> > | `v55-c6.cjs` | condition 6: P1, P2 (matched on `(deal, rot)`), P4 | `55cb31b74d7bc3611ac70da5f1f13880` |
+>
+> Each was run first on the cells of the reads it was adapted from and reproduces their published tables exactly.
+> On §3.8ar's cells: 85.42 / 79.28 / 54.67 / 54.01 / 53.99 against 49.87, and 99.258% as the worst declare cell.
+> On §3.8at's: 49.8680% against 49.8680%, and 14,396 of 14,400 games identical, the four at the same events with no
+> result changed. `v55-controls.cjs` reads `--version`-free cover files only. Its dry run on §3.8ar's cells
+> marked the calibration readout present on 60 of 72, because 12 of those old cells' calib files are not on disk.
+> This read's cells each write their own.
+
 **Monet v1.0 exists if, and only if, all six hold.**
 
 - **If all six hold:** the record says so, and the publish follows the owner's direction of 2026-09-18:
