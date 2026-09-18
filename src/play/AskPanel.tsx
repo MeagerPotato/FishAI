@@ -9,8 +9,8 @@
  * which a handful were ever legal — which is what pushed the one control a player uses every
  * single turn most of a page below the fold. The rules-teaching those exclusions do is real, so
  * it is kept, but it is kept at the size of the information: a book you hold a licence in is
- * expanded and clickable; every book you do not is named on ONE line that says why. A player
- * still learns that LOW HEARTS ♥ is closed to them, without paying six dead buttons for it.
+ * expanded and clickable; every book you do not is named on ONE line. A player still learns that
+ * LOW HEARTS ♥ is closed to them, without paying six dead buttons for it.
  *
  * ## The legality guarantee
  *
@@ -97,11 +97,6 @@ export function AskPanel({ view, onAsk, names = [] }: AskPanelProps) {
       <h2 id="ask-head" className={s.panelHead} ref={head} tabIndex={-1}>
         Your ask
       </h2>
-      <p className={s.panelNote}>
-        Name one opponent, then one card. You may only ask into a set you hold at least one card
-        of (row 6), never for a card already in your hand (row 7). A hit keeps your turn; a miss
-        passes it to the seat you asked.
-      </p>
 
       <h3 className={s.step}>1 · Who are you asking?</h3>
       <div className={s.choiceRow} role="group" aria-label="Opponent to ask">
@@ -166,9 +161,7 @@ export function AskPanel({ view, onAsk, names = [] }: AskPanelProps) {
       {shut.length > 0 ? (
         <p className={s.excluded}>
           <span className={s.excludedWhat}>Not askable:</span>{' '}
-          {shut.map((b) => bookLabel(b)).join(', ')} — you hold nothing in{' '}
-          {shut.length === 1 ? 'it' : 'them'}, so row 6 closes {shut.length === 1 ? 'it' : 'them'}{' '}
-          to you.
+          {shut.map((b) => bookLabel(b)).join(', ')}.
         </p>
       ) : null}
       {done.length > 0 ? (

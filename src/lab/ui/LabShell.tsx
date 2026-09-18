@@ -69,19 +69,7 @@ export function LabShell({
   which,
 }: LabShellProps) {
   useDocumentTitle(docTitle)
-  /**
-   * THREE links, down from nine.
-   *
-   * The nine were six lab surfaces plus Papers, Play and Design, and from their labels alone a
-   * visitor could not tell Report from Matrix from Adaptive from Bounded — they read as
-   * synonyms for "some numbers". They are not siblings and never were: five of them are the
-   * evidence behind claims the report makes, so they belong *under* the report, indexed on
-   * `/lab` where each one has room to say what it measures and what it found.
-   *
-   * What is left is the three things a visitor actually chooses between — play the game, read
-   * the evidence, read the write-ups — and the row now fits far below the 1080px collapse in
-   * SiteNav.module.css rather than pressing against it.
-   */
+  /** Three entries: play the game, read the evidence, read the papers. */
   const links = [
     { href: '/play', label: 'Play' },
     { href: withCase('/lab', which), label: 'Research' },
@@ -103,43 +91,29 @@ export function LabShell({
 
       <main id="main">{children}</main>
 
-      {/*
-        The footer is where the lab surfaces the nav no longer carries stay one click from
-        anywhere — a demoted link is not a deleted one, and every route below is still a live
-        deep link somebody may have bookmarked.
-
-        A replay is the one surface reached through the index rather than named here, because
-        its URL contains an id that only the artifact knows. The evidence index resolves a real
-        one from data `/lab` has already loaded; the footer would have to load it on every page.
-      */}
       <SiteFooter
-        standfirst="A bot that plays Canadian Fish, and the lab that measures whether any play style is actually superior."
         columns={[
           {
             title: 'Research',
             items: [
-              { href: withCase('/lab', which), label: 'The style report' },
+              { href: withCase('/lab', which), label: 'Style report' },
               { href: withCase('/lab/matrix', which), label: 'Full matrix' },
-              { href: withCase('/lab/adaptive', which), label: 'Adaptive engine' },
+              { href: withCase('/lab/adaptive', which), label: 'Adaptive' },
               { href: withCase('/lab/bounded', which), label: 'Bounded memory' },
               { href: withCase('/lab/live', which), label: 'Live simulator' },
-              { href: withCase('/lab', which) + '#evidence', label: 'The evidence index' },
             ],
           },
           {
             title: 'Play',
             items: [
-              { href: '/play', label: 'The lobby' },
+              { href: '/play', label: 'Lobby' },
               { href: '/play/table', label: 'Solo table' },
             ],
           },
           {
             title: 'Reference',
             items: [
-              { href: '/papers', label: 'Research papers' },
-              { href: withCase('/lab', which) + '#rules', label: 'The us54 rule set' },
-              { href: withCase('/lab', which) + '#method', label: 'Method' },
-              { href: '/design', label: 'Design specimen' },
+              { href: '/papers', label: 'Papers' },
               { href: 'https://github.com/MeagerPotato/FishAI', label: 'Repository' },
             ],
           },

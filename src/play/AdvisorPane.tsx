@@ -81,17 +81,8 @@ export function AdvisorPane({
         Assistant
       </Eyebrow>
 
-      <p className={lab.figNote} style={{ marginTop: 10 }}>
-        The advisor is the same engine the bot seats play — advice and opposition share one
-        policy, at full memory on both sides.
-      </p>
-
       {explained === null ? (
-        <p className={lab.figNote}>
-          Advice appears when a decision is yours — your turn to ask, a declare offer while the
-          control is armed, or a forced declare. The advisor sees exactly what you see: your hand
-          and the public log, nothing else.
-        </p>
+        <p className={lab.figNote}>Advice appears when a decision is yours.</p>
       ) : (
         <div className={s.panel} style={{ marginTop: 12 }}>
           {/* Only the suggestion and its one-line reason are announced — the ranked and
@@ -164,11 +155,7 @@ export function AdvisorPane({
           </button>
           {!playable ? (
             <p className={lab.figNote} style={{ margin: '8px 0 0' }}>
-              {explained.action.type === 'decline'
-                ? 'The declare dialog owns this decision — the advisor would stand down rather ' +
-                  'than declare; use the dialog’s stand-down if you agree.'
-                : 'The declare dialog owns this decision — the suggestion above is what the ' +
-                  'advisor would declare; commit or stand down in the dialog.'}
+              The declare dialog owns this decision.
             </p>
           ) : null}
         </div>

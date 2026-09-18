@@ -11,7 +11,7 @@
 import { Eyebrow } from '../../components/index.ts'
 import type { LabArtifact } from '../artifact.ts'
 import { count, isoDate } from '../format.ts'
-import { US54_FACTS, shortHash, type RulesCheck } from '../rules.ts'
+import { shortHash, type RulesCheck } from '../rules.ts'
 import s from './lab.module.css'
 
 function Cell({ label, value, numeric }: { label: string; value: string; numeric?: boolean }) {
@@ -49,23 +49,6 @@ export function RuleStamp({ artifact, check }: { artifact: LabArtifact; check: R
   )
 }
 
-/**
- * The two things SITE_SPEC.md §5 requires the site to *say plainly* rather than only assert in
- * code. They are prose, not a footnote: the comparison a reader is most likely to make by
- * reflex — this matrix against a `pagat48` one — is the comparison these two facts forbid.
- */
-export function Us54Facts() {
-  return (
-    <div className={s.stack}>
-      {US54_FACTS.map((fact) => (
-        <div key={fact.id}>
-          <h3 className={s.criterionLabel}>{fact.head}</h3>
-          <p className={s.figNote}>{fact.body}</p>
-        </div>
-      ))}
-    </div>
-  )
-}
 
 export function SyntheticNotice({ artifact }: { artifact: LabArtifact }) {
   if (!artifact.meta.synthetic) return null
@@ -75,14 +58,7 @@ export function SyntheticNotice({ artifact }: { artifact: LabArtifact }) {
         {artifact.meta.notice}
       </Eyebrow>
       <p className={s.syntheticBody}>
-        Every number on this page comes from the committed fixture in{' '}
-        <code>src/diagrams/fixture.ts</code>, generated deterministically so two builds are
-        byte-identical. It is not simulation output. The fixture exists to prove the site can
-        render a <em>cyclic</em> verdict honestly — no real run to date has produced one, and a
-        render path nobody can exercise is a render path nobody has checked. The measured runs
-        are one parameter away: the current evidence is the default page, with no{' '}
-        <code>?case=</code> at all. Nothing here is a finding about how Canadian Fish is best
-        played.
+        Synthetic fixture (<code>src/diagrams/fixture.ts</code>), not simulation output.
       </p>
     </div>
   )

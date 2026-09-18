@@ -32,7 +32,7 @@ import s from './room.module.css'
 function RoomShell({ badge, lines, sub, children }: {
   badge: string
   lines: string[]
-  sub: string
+  sub?: string
   children: React.ReactNode
 }) {
   return (
@@ -48,11 +48,7 @@ function RoomShell({ badge, lines, sub, children }: {
 /** `/play/room` — no code yet. */
 function StartSurface() {
   return (
-    <RoomShell
-      badge="Room"
-      lines={['A table for six,', '*no bots*.']}
-      sub="Open a room and send the code, or take a seat in one somebody sent you. The cards are dealt when all six seats are full."
-    >
+    <RoomShell badge="Room" lines={['A table for six,', '*no bots*.']}>
       <RoomStart />
     </RoomShell>
   )
@@ -74,7 +70,7 @@ function CodeSurface({ code }: { code: string }) {
 
   if (loading && snapshot === null) {
     return (
-      <RoomShell badge={`Room ${code}`} lines={['Finding', '*the room*.']} sub="One moment.">
+      <RoomShell badge={`Room ${code}`} lines={['Finding', '*the room*.']}>
         <p className={s.panelNote} role="status">
           Looking up {code}.
         </p>
@@ -88,11 +84,7 @@ function CodeSurface({ code }: { code: string }) {
       message: 'There is no room under that code. Codes belong to one room and do not outlive it.',
     }
     return (
-      <RoomShell
-        badge={`Room ${code}`}
-        lines={['That room', '*is not there*.']}
-        sub="A code names one room, and only while it lasts."
-      >
+      <RoomShell badge={`Room ${code}`} lines={['That room', '*is not there*.']}>
         <div className={s.refusal} role="alert">
           <span className={s.refusalCode}>{shown.code}</span>
           <p className={s.refusalText}>{shown.message}</p>
@@ -112,11 +104,6 @@ function CodeSurface({ code }: { code: string }) {
       <RoomShell
         badge={`Room ${code}`}
         lines={seated ? ['Waiting for', '*six*.'] : ['A seat', '*is open*.']}
-        sub={
-          seated
-            ? 'Send the code to five people. The moment the sixth sits down, the cards are dealt.'
-            : 'Give a name, pick a side, and sit down.'
-        }
       >
         {refusal ? (
           <div className={s.refusal} role="alert">
@@ -151,11 +138,7 @@ function CodeSurface({ code }: { code: string }) {
     <RoomShell
       badge={`Room ${code}`}
       lines={snapshot.status === 'finished' ? ['The game', '*is done*.'] : ['Six hands,', '*one table*.']}
-      sub={
-        snapshot.seat === null
-          ? 'You are watching this table. What you can see is what anybody sitting at it can see — counts, the log, the score, and no hands.'
-          : 'Your hand is yours alone. Nobody else’s browser was ever sent it.'
-      }
+      sub={snapshot.seat === null ? 'You are watching this table.' : undefined}
     >
       <RoomTable
         snapshot={snapshot}

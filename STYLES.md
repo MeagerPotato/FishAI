@@ -338,6 +338,11 @@ verdict, the ranking and the transitivity all unchanged, and §6.5 the **re-meas
 grid** at a later engine, which leaves the verdict standing and the top three of the ranking intact
 but re-orders its middle and costs the Punter its exploitability lead.
 
+*Where they are stated (2026-09-18).* On the owner's direction the site's pages carry no explanation
+(SITE_SPEC.md, under its header), so the ranking's pages state these caveats by linking the papers
+(`/papers`: *inert-axis*, *contained-book*, *fishai-v05*), which carry them in full, and not in
+prose beside the matrix.
+
 ### 6.1 The declare-threshold axis is inert across the roster's range
 
 `declareThreshold` is the knob this roster's aggressive↔conservative narrative is built on. Across

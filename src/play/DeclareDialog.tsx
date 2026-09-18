@@ -141,17 +141,9 @@ export function DeclareDialog({
       {mustDeclare ? (
         <p className={s.panelNote}>
           The turn-holder has no legal ask, so this window cannot close into a turn and declining
-          is illegal here (<code>MUST_DECLARE</code>, RULES_US54.md §3.2). A declare is always
-          constructible: name the set you can place best. A wrong one gifts the set — but a set
-          must resolve, and that is what ends the game rather than hanging it.
+          is illegal here (<code>MUST_DECLARE</code>, RULES_US54.md §3.2).
         </p>
-      ) : (
-        <p className={s.panelNote}>
-          Name an unresolved set and place all six of its cards with your own team — you,{' '}
-          {seatNameCap(2, names)} and {seatNameCap(4, names)}. You may declare a set you hold no
-          card of (row 15).
-        </p>
-      )}
+      ) : null}
 
       {advice ? (
         <div className={s.dialogAdvice}>
@@ -164,12 +156,6 @@ export function DeclareDialog({
               Declare plan: {bookLabel(advice.trace.claim.book)} · p ={' '}
               {advice.trace.claim.p.toFixed(2)} · {advice.trace.claim.uncertain} guessed
               {advice.trace.claim.foreign ? ' · a set this seat holds no card of' : ''}
-            </p>
-          ) : null}
-          {advice.action.type === 'decline' ? (
-            <p className={s.panelNote} style={{ margin: '6px 0 0' }}>
-              The advisor would not declare from here — any error gifts the whole set (row 14),
-              and declining this offer is legal. Stand down below if you agree.
             </p>
           ) : null}
         </div>
@@ -193,10 +179,6 @@ export function DeclareDialog({
 
       {book ? (
         <div className={s.dialogBody}>
-          <p className={s.panelNote} style={{ marginBottom: 0 }}>
-            Prefilled where the public log and your hand make it certain; everything else is
-            yours to place.
-          </p>
           <div className={s.assign}>
             {cards.map((c) => (
               <div key={c} className={s.assignRow}>
@@ -226,18 +208,10 @@ export function DeclareDialog({
       ) : null}
 
       {/* Pinned to the bottom of the dialog, not appended after six assignment rows. At narrow
-          widths those rows run past the dialog's own max-height, which put both the row-14
-          warning and the button a player had to reach below the fold OF A MODAL — the one place
-          a reader has no page scrollbar to tell them there is more. */}
+          widths those rows run past the dialog's own max-height, which put the button a player
+          had to reach below the fold OF A MODAL — the one place a reader has no page scrollbar
+          to tell them there is more. */}
       <div className={s.dialogFoot}>
-        {book ? (
-          <p className={s.warn}>
-            Row 14: any error at all — an opponent holding one of the six, or one card placed
-            with the wrong teammate — gifts the whole set to the opposing team. There is no void
-            outcome in this rule set.
-          </p>
-        ) : null}
-
         <div className={s.dialogActions}>
           {/* The commit button carries the risk it is committing. It used to read identically
               whether all six placements were proven by the log or all six were coin flips. */}

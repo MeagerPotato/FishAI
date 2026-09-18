@@ -9,12 +9,8 @@
  * Run, terminated on completion, on error and on unmount; a Stop posts a message and the
  * partial result comes back labelled partial rather than dressed as a finished run.
  *
- * ## The honesty contract this page carries
- *
- * Demo-scale numbers are not evidence and must not read as evidence. The page prints the run's
- * own SE beside its score, states the committed matrix's scale next to it, links the measured
- * cell whenever both picks are roster styles, and caps the run at 400 pairs with the reason
- * stated (a single worker thread's wall clock) instead of silently truncating.
+ * Demo-scale numbers are not evidence: the readout prints the run's own SE beside its score and
+ * links the measured cell whenever both picks are roster styles.
  *
  * ## Accent budget
  *
@@ -29,10 +25,8 @@ import { caseFromSearch, type ArtifactCase } from '../lab/artifact.ts'
 import { count, interval, rate } from '../lab/format.ts'
 import { createSimWorker } from '../lab/live/client.ts'
 import {
-  ADAPTIVE_ID,
   LIVE_DEFAULT_PAIRS,
   LIVE_DEFAULT_PREFIX,
-  LIVE_PAIR_CAP,
   LIVE_PAIR_CHOICES,
   LIVE_POLICY_IDS,
   isLivePolicyId,
@@ -52,12 +46,12 @@ type Phase =
   | { kind: 'done'; result: LiveResult }
   | { kind: 'failed'; detail: string }
 
-/** The §4.2 subset the demo reports per side — the four rates that read without a manual. */
+/** The §4.2 subset the demo reports per side. */
 const DIAGNOSTICS = [
-  { key: 'askHitRate', label: 'Ask hit rate', note: 'hits ÷ asks' },
-  { key: 'claimPrecision', label: 'Claim precision', note: 'correct declares ÷ declares' },
-  { key: 'concedeRate', label: 'Concede rate', note: 'declares that gifted the set ÷ declares' },
-  { key: 'declaresPerGame', label: 'Declares per game', note: 'how often the style spoke at all' },
+  { key: 'askHitRate', label: 'Ask hit rate' },
+  { key: 'claimPrecision', label: 'Claim precision' },
+  { key: 'concedeRate', label: 'Concede rate' },
+  { key: 'declaresPerGame', label: 'Declares per game' },
 ] as const
 
 function PolicySelect({
@@ -159,22 +153,16 @@ export function LabLive() {
     setPhase((prev) => (prev.kind === 'running' ? { ...prev, stopping: true } : prev))
   }
 
-  const adaptiveInPlay = a === ADAPTIVE_ID || b === ADAPTIVE_ID
-
   return (
     <LabShell
       current={withCase('/lab/live', which)}
       docTitle="Live simulator"
       which={which}
       ground="dots"
-      stamp="us54 · live demo · not the committed evidence"
+      stamp="us54 · live demo"
     >
       <Section noRule badge="Live simulator">
-        <SectionHead
-          level="h1"
-          lines={['Real games, in this tab,', 'at *demo scale*.']}
-          sub="Pick two policies and the browser plays real duplicate-pair us54 games in a Web Worker — the identical engine, seeding and pairing discipline as the committed matrix, at a fraction of its sample size. The page states that fraction rather than letting the numbers pose as the evidence."
-        />
+        <SectionHead level="h1" lines={['Real games,', 'at *demo scale*.']} />
 
         <div className={s.config}>
           <PolicySelect id="live-a" label="Side A" value={a} onChange={setA} disabled={running} />
@@ -231,20 +219,10 @@ export function LabLive() {
             {phase.kind === 'running' && phase.stopping ? 'Stopping…' : 'Stop'}
           </Button>
         </div>
-        <p className={lab.figNote}>
-          Deterministic end to end: the same two picks, pair count and seed prefix reproduce the
-          same numbers on any machine. Seeds are <code>prefix-000000</code> onward, start seats
-          rotate, and each pair is one deal played from both sides — the lab&rsquo;s own
-          protocol, not a lookalike.
-        </p>
 
         {/* The live region announces progress politely; the bar is the same number drawn. */}
         <div className={s.progress} role="status" aria-live="polite">
-          {phase.kind === 'idle' ? (
-            <span className={s.progressLine}>
-              No run yet. Configure a pairing above and press Run.
-            </span>
-          ) : null}
+          {phase.kind === 'idle' ? <span className={s.progressLine}>No run yet.</span> : null}
           {phase.kind === 'running' ? (
             <>
               <div className={s.bar} aria-hidden="true">
@@ -254,7 +232,7 @@ export function LabLive() {
                 />
               </div>
               <span className={s.progressLine}>
-                {phase.stopping ? 'Stopping — finishing the current chunk. ' : ''}
+                {phase.stopping ? 'Stopping… ' : ''}
                 {count(phase.pairsDone)} of {count(phase.pairsTotal)} pairs ·{' '}
                 {count(phase.games)} games played · {livePolicyLabel(a)} vs {livePolicyLabel(b)}
               </span>
@@ -263,7 +241,7 @@ export function LabLive() {
           {phase.kind === 'done' ? (
             <span className={s.progressLine}>
               {phase.result.partial
-                ? `Stopped at ${count(phase.result.pairsDone)} of ${count(phase.result.config.pairs)} pairs — the result below is partial.`
+                ? `Stopped at ${count(phase.result.pairsDone)} of ${count(phase.result.config.pairs)} pairs — partial result.`
                 : `Finished: ${count(phase.result.pairsDone)} pairs, ${count(phase.result.cell.games)} games.`}
             </span>
           ) : null}
@@ -274,71 +252,11 @@ export function LabLive() {
 
         {phase.kind === 'failed' ? (
           <p className={lab.disagree}>
-            <strong>The simulation did not run.</strong> {phase.detail}. Nothing is shown in its
-            place — a demo that renders numbers it did not compute would be worse than no demo.
+            <strong>The simulation did not run.</strong> {phase.detail}.
           </p>
         ) : null}
 
         {phase.kind === 'done' ? <Readout result={phase.result} which={which} /> : null}
-
-        {a === b ? (
-          <p className={lab.figNote}>
-            A mirror pairing scores exactly .5000 on duplicate deals by construction — both
-            orientations of every pair cancel. Useful as a health check of the harness, and
-            measured as one; it is not a finding about the style.
-          </p>
-        ) : null}
-        {adaptiveInPlay ? (
-          <p className={lab.figNote}>
-            The adaptive pick is v1.0 architecture: it classifies its opponents from the public
-            log and best-responds off the measured counter table. One measured caveat travels
-            with it: over this roster the best response to everything is Punter, so a warm
-            adaptive seat converges there — its adaptivity is aimed at opponents the matrix never
-            measured.
-          </p>
-        ) : null}
-        <p className={lab.figNote}>
-          All ten picks run today&rsquo;s engine, and since v2.0 that means all ten defuse: the
-          concession term sits on the base every roster style spreads from, so a pick named{' '}
-          <em>Blitz</em> is Blitz as v2.0 plays it. The default committed matrix and the counter
-          table were re-measured against that same knob ladder, which is why a live cell still
-          lines up with the committed cell of the same name; the older <code>?case=</code>
-          documents predate the term.
-        </p>
-      </Section>
-
-      <Section badge="Demo, not evidence">
-        <SectionHead
-          lines={['Same engine, same seeds —', 'a *fraction* of the sample.']}
-          sub="What separates this page from the report is nothing but sample size, which is exactly why the distinction has to be stated."
-        />
-        <div className={lab.split}>
-          <div className={lab.stack}>
-            <h3 className={lab.criterionLabel}>The committed evidence is next door</h3>
-            <p className={lab.figNote}>
-              The matrix on{' '}
-              <TextLink href={withCase('/lab', which)} arrow={false}>
-                the report
-              </TextLink>{' '}
-              runs 4,300 duplicate pairs per cell for a standard error at or under .005. A
-              100-pair demo run lands its SE in the few-hundredths — several times wider — and
-              the run above prints its own beside the score. Where both picks are roster styles,
-              the readout links the measured cell so the demo number is never the last word.
-            </p>
-          </div>
-          <div className={lab.stack}>
-            <h3 className={lab.criterionLabel}>Why the run is capped at {LIVE_PAIR_CAP} pairs</h3>
-            <p className={lab.figNote}>
-              This is one worker thread on your machine, and a us54 game spends hundreds of
-              steps in declare windows: {LIVE_PAIR_CAP} pairs is {LIVE_PAIR_CAP * 2} games and a
-              few hundred thousand decisions — tens of seconds of wall clock. Past that the demo
-              stops demonstrating and starts being a bad way to run the real experiment, which
-              is what the lab&rsquo;s worker pool is for. A backgrounded tab may throttle the
-              run&rsquo;s timers; it then finishes late, not never, and leaving the page
-              terminates it.
-            </p>
-          </div>
-        </div>
       </Section>
     </LabShell>
   )
@@ -360,8 +278,8 @@ function Readout({ result, which }: { result: LiveResult; which: ArtifactCase })
         {rate(cell.aScore)} <span aria-hidden="true">·</span> ± {cell.se.toFixed(4)} SE
       </p>
       <p className={s.headlineSub}>
-        Score rate of {livePolicyLabel(config.a)}, duplicate-averaged · CI 95%{' '}
-        {interval(cell.ci95)} · {count(cell.pairs)} pairs, {count(cell.games)} games
+        Score rate of {livePolicyLabel(config.a)} · CI 95% {interval(cell.ci95)} ·{' '}
+        {count(cell.pairs)} pairs, {count(cell.games)} games
       </p>
 
       <div className={s.statRow}>
@@ -397,10 +315,9 @@ function Readout({ result, which }: { result: LiveResult; which: ArtifactCase })
 
       {unhealthy ? (
         <p className={lab.disagree}>
-          <strong>Health gate: this run would be void at reporting scale.</strong> Illegal
-          actions {cell.health.illegalActions}, invariant violations{' '}
-          {cell.health.invariantViolations}, capped games {cell.health.cappedGames}. The numbers
-          above are shown for debugging, not belief.
+          <strong>Health gate failed.</strong> Illegal actions {cell.health.illegalActions},
+          invariant violations {cell.health.invariantViolations}, capped games{' '}
+          {cell.health.cappedGames}.
         </p>
       ) : null}
 
@@ -409,15 +326,12 @@ function Readout({ result, which }: { result: LiveResult; which: ArtifactCase })
         style={{ marginTop: 18 }}
       >
         <table className={lab.table}>
-          <caption>
-            Per-side diagnostics · the §4.2 subset the demo reports · {count(cell.games)} games
-          </caption>
+          <caption>Per-side diagnostics · {count(cell.games)} games</caption>
           <thead>
             <tr>
               <th scope="col">Metric</th>
               <th scope="col">{livePolicyLabel(config.a)}</th>
               <th scope="col">{livePolicyLabel(config.b)}</th>
-              <th scope="col">Definition</th>
             </tr>
           </thead>
           <tbody>
@@ -426,35 +340,19 @@ function Readout({ result, which }: { result: LiveResult; which: ArtifactCase })
                 <th scope="row">{d.label}</th>
                 <td>{cell.metrics.a[d.key].toFixed(3)}</td>
                 <td>{cell.metrics.b[d.key].toFixed(3)}</td>
-                <td style={{ textAlign: 'left', whiteSpace: 'normal' }} className={lab.ns}>
-                  {d.note}
-                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </ScrollRegion>
 
-      <p className={lab.figNote}>
-        {partial
-          ? 'A stopped run reports the pairs that finished and nothing more — the SE above is correspondingly wider. '
-          : ''}
-        This is a live demonstration at demo scale, not the committed evidence.{' '}
-        {anchor ? (
-          <>
-            The measured number for this pairing, at 4,300 pairs, is{' '}
-            <TextLink href={`${withCase('/lab/matrix', which)}#${anchor}`} arrow={false}>
-              its cell on the matrix page
-            </TextLink>
-            .
-          </>
-        ) : (
-          <>
-            No committed cell exists for this pairing — the matrix measures the nine pure styles
-            pairwise, and the adaptive engine&rsquo;s own evidence run is a separate experiment.
-          </>
-        )}
-      </p>
+      {anchor ? (
+        <p className={lab.figNote}>
+          <TextLink href={`${withCase('/lab/matrix', which)}#${anchor}`}>
+            Committed matrix cell
+          </TextLink>
+        </p>
+      ) : null}
     </div>
   )
 }

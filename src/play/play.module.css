@@ -984,16 +984,6 @@
   color: var(--fa-ink-3);
 }
 
-/* The row-14 warning. A dashed border, not a colour. */
-.warn {
-  margin: 0 0 12px;
-  padding: 10px 12px;
-  border: 1px dashed var(--fa-line);
-  font-size: var(--fa-fs-meta);
-  line-height: 1.55;
-  color: var(--fa-ink-2);
-}
-
 .dialogActions {
   display: flex;
   flex-wrap: wrap;
@@ -1026,14 +1016,6 @@
   color: var(--fa-amber-2);
 }
 
-.overBody {
-  margin: 10px 0 0;
-  font-size: var(--fa-fs-sm);
-  line-height: 1.6;
-  color: var(--fa-ink-2);
-  max-width: 64ch;
-}
-
 /* ==========================================================================
    THE LOBBY — mode cards and the style pickers
    ========================================================================== */
@@ -1053,14 +1035,6 @@
   font-weight: 500;
   line-height: 1.3;
   color: var(--fa-ink);
-}
-
-.modeBody {
-  margin: 12px 0 0;
-  font-size: var(--fa-fs-sm);
-  line-height: 1.65;
-  color: var(--fa-ink-2);
-  max-width: 60ch;
 }
 
 /* The honest not-yet state: a hatch, not a colour, exactly like .synthetic. */
@@ -1205,7 +1179,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 0 0 10px;
+  margin: 10px 0 10px;
 }
 
 .logNote {
@@ -1213,11 +1187,6 @@
   font-size: var(--fa-fs-meta);
   line-height: 1.6;
   color: var(--fa-ink-2);
-}
-
-.logNote strong {
-  font-weight: 500;
-  color: var(--fa-ink);
 }
 
 .logBox {

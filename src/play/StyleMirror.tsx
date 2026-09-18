@@ -10,11 +10,8 @@
  *
  * Honesty is inherited rather than re-implemented. The posterior arrives already blended
  * toward uniform by `min(1, asks/12)` (classify.ts), so a quiet game reads as "hard to say"
- * instead of a confident guess — the pane says so in words while the discount is active, and
- * refuses the headline entirely at zero asks, where the posterior is exactly uniform by
- * construction. The footnote quotes the measured end-of-game accuracy from the committed
- * adaptive artifact, because a mirror that implied more accuracy than the lab measured would
- * be marketing, not measurement.
+ * instead of a confident guess, and the pane refuses the headline entirely at zero asks, where
+ * the posterior is exactly uniform by construction.
  *
  * The bot seats are read too, but there is no longer an Agreement column beside them. It only
  * ever meant anything under v0.5, where the lobby pinned a known style per seat and the read
@@ -24,7 +21,7 @@
  */
 import type { SeatClassification, SeatView, StyleId } from '../../lib/engine/index.ts'
 import { STYLE_IDS, STYLE_ROSTER, classifySeats, observeSeats } from '../../lib/engine/index.ts'
-import { Eyebrow, TextLink } from '../components/index.ts'
+import { Eyebrow } from '../components/index.ts'
 import { ScrollRegion } from '../lab/ui/ScrollRegion.tsx'
 import lab from '../lab/ui/lab.module.css'
 import type { BotNames } from './format.ts'
@@ -33,9 +30,6 @@ import type { PlayModel } from './models.ts'
 import s from './play.module.css'
 
 const BOT_SEATS = [1, 2, 3, 4, 5] as const
-
-/** Asks at which classify.ts stops discounting its posterior — mirrored here for the prose. */
-const DAMP_ASKS = 12
 
 export interface StyleMirrorProps {
   /** The human's view of the FINISHED game — the log is complete, `game_over` included. */
@@ -69,16 +63,10 @@ export function StyleMirror({ view, names = [], model }: StyleMirrorProps) {
       <Eyebrow tone="muted" track="head" as="h2">
         Style mirror
       </Eyebrow>
-      <p className={lab.figNote} style={{ margin: '10px 0 0' }}>
-        The v1.0 classifier — the exact code the adaptive seats run — read the finished public
-        log. It sees no hands, only what each seat publicly did, so to it you are just another
-        seat.
-      </p>
 
       {humanAsks === 0 ? (
         <p className={s.mirrorVerdict}>
-          <strong>No read.</strong> You never asked, so the public log holds nothing of yours to
-          classify — the posterior is exactly uniform at one-ninth per style, by construction.
+          <strong>No read.</strong> You never asked.
         </p>
       ) : (
         <>
@@ -105,27 +93,12 @@ export function StyleMirror({ view, names = [], model }: StyleMirrorProps) {
               </div>
             ))}
           </div>
-          <p className={lab.figNote}>
-            Bars are scaled to the leading share; the printed numbers are the posterior itself.
-            {humanAsks < DAMP_ASKS ? (
-              <>
-                {' '}
-                You asked {humanAsks} time{humanAsks === 1 ? '' : 's'}, and below {DAMP_ASKS}{' '}
-                asks the classifier blends its answer toward uniform — its own honesty rule,
-                applied to you exactly as to any seat — so the spread above is deliberately
-                flat.
-              </>
-            ) : null}
-          </p>
         </>
       )}
 
       <ScrollRegion label="The classifier's read of the bot seats">
         <table className={lab.table}>
-          <caption>
-            The bot seats, played against read · full-log calibration bucket · seed follows the
-            URL
-          </caption>
+          <caption>The bot seats, played against read</caption>
           <thead>
             <tr>
               <th scope="col">Seat</th>
@@ -149,23 +122,6 @@ export function StyleMirror({ view, names = [], model }: StyleMirrorProps) {
           </tbody>
         </table>
       </ScrollRegion>
-
-      {/* 22.4% over 10,800 reads is the committed artifact's end-of-game (events === 0) row —
-          src/lab/data/adaptive-results.json, classifier.accuracy — the same figure the lab
-          page prints. Quoted rather than imported so the play chunk stays free of the 125k-game
-          artifact; if the artifact is regenerated, /lab/adaptive is the source of truth. */}
-      <p className={lab.figNote}>
-        Calibrated context from{' '}
-        <TextLink href="/lab/adaptive" arrow={false}>
-          the adaptive suite
-        </TextLink>
-        : reading full-strength roster bots at end of game, the classifier&apos;s top read is
-        exactly right 22.4% of the time over 10,800 seat reads, against an 11.1% chance floor —
-        better than guessing, far from an oracle. Treat the mirror as a resemblance, not a
-        verdict. The bot rows carry no verdict at all: every seat above ran the adaptive engine,
-        which selects a style per decision, so there is no single style for the read to be right
-        or wrong about.
-      </p>
     </section>
   )
 }

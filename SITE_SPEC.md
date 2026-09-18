@@ -9,6 +9,15 @@ dark-felt constraint is void);
 [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) v2.6 for every
 diagram. **All skinning uses the `--fa-*` tokens in [src/styles/tokens.css](src/styles/tokens.css)** — see §2.
 
+**Concise pages (the owner's direction, 2026-09-18).** *"remove all explanations from the website
+where its not needed … just leave everything inside the research papers, and kepe the website itself
+as clean and concise as possible."* Every route now carries titles, figures, tables, the stamps and the
+controls, and nothing that explains them. Figure captions stay in the markup for assistive tech but
+are not shown. The explanations live in the papers at `/papers`. Where this spec below asks for
+prose — the plain sentence before a figure, the on-ramp, the caveats beside the roster, §5's two
+stated `us54` facts, the sources and glossary, the method section — that requirement is withdrawn, and the section order in §1 is
+read with those sections removed.
+
 ---
 
 ## 1. Routes and page architecture

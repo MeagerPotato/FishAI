@@ -18,7 +18,7 @@
  * prove from your own hand and the public log; that inference is the bots' and it is the same
  * work a human is supposed to be doing at a real table. Against five other people, handing one of
  * them the engine's deductions is not an accessibility affordance, it is an advantage nobody
- * agreed to. Row 14 is stated instead, because the risk is the thing a declarer needs to know.
+ * agreed to.
  */
 import { useEffect, useRef, useState } from 'react'
 import type { BookId, Card, Seat } from '../../../lib/engine/index.ts'
@@ -113,17 +113,9 @@ export function RoomDeclare({
       {mustDeclare ? (
         <p className={s.panelNote}>
           The turn-holder has no legal ask, so this window cannot close into a turn and declining is
-          illegal here (<code>MUST_DECLARE</code>, RULES_US54.md §3.2). A declare is always
-          constructible: name the set you can place best. A wrong one gifts the set — but a set must
-          resolve, and that is what ends the game rather than hanging it.
+          illegal here (<code>MUST_DECLARE</code>, RULES_US54.md §3.2).
         </p>
-      ) : (
-        <p className={s.panelNote}>
-          Name an unresolved set and place all six of its cards with your own side —{' '}
-          {teammates.map((seat) => (seat === view.seat ? 'you' : nameOf(seat))).join(', ')}. You may
-          declare a set you hold no card of (row 15).
-        </p>
-      )}
+      ) : null}
 
       <div className={s.choiceRow} role="group" aria-label="Unresolved sets">
         {unresolved.map((b) => (
@@ -144,10 +136,6 @@ export function RoomDeclare({
 
       {book ? (
         <div className={s.dialogBody}>
-          <p className={s.panelNote} style={{ marginBottom: 0 }}>
-            Place each of the six with the person you believe is holding it. Nothing is filled in
-            for you — at a table of six people, the deductions are yours to make.
-          </p>
           <div className={s.assign}>
             {cards.map((c) => (
               <div key={c} className={s.assignRow}>
@@ -176,18 +164,9 @@ export function RoomDeclare({
       ) : null}
 
       {/* Pinned to the bottom rather than appended after six assignment rows: at narrow widths
-          those rows run past the dialog's max-height, which put both the row-14 warning and the
-          button below the fold OF A MODAL — the one place a reader has no page scrollbar to tell
-          them there is more. */}
+          those rows run past the dialog's max-height, which put the button below the fold OF A
+          MODAL — the one place a reader has no page scrollbar to tell them there is more. */}
       <div className={s.dialogFoot}>
-        {book ? (
-          <p className={s.warn}>
-            Row 14: any error at all — an opponent holding one of the six, or one card placed with
-            the wrong teammate — gifts the whole set to the other side. There is no void outcome in
-            this rule set.
-          </p>
-        ) : null}
-
         <div className={s.dialogActions}>
           <button
             type="button"

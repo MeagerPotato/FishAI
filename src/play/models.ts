@@ -98,7 +98,7 @@ const BASS_V20: PlayModel = Object.freeze({
   spec: Object.freeze({ adaptive: true as const }),
   heading: 'Adaptive — reads the table',
   label: 'Bass v1.0 adaptive · v2.0 defusal',
-  note: 'The adaptive engine: it classifies each seat from the public log and best-responds. Frozen — this is the baseline Monet has to beat.',
+  note: 'The adaptive engine: classify each seat, best-respond. The frozen baseline.',
 })
 
 /**

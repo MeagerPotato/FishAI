@@ -170,12 +170,7 @@ export function LabContents({ sections, id = 'contents', topHref = '#main' }: La
                   aria-current={section.id === active ? 'location' : undefined}
                 >
                   <span className={s.tocNo}>{String(ix + 1).padStart(2, '0')}</span>
-                  <span className={s.tocLabel}>
-                    {section.label}
-                    {section.note === undefined ? null : (
-                      <span className={s.tocNote}>{section.note}</span>
-                    )}
-                  </span>
+                  <span className={s.tocLabel}>{section.label}</span>
                 </a>
               </li>
             ))}

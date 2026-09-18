@@ -25,7 +25,7 @@ import { Eyebrow, Section, SectionHead, TextLink } from '../components/index.ts'
 import { caseFromSearch } from '../lab/case.ts'
 import { LabShell } from '../lab/ui/LabShell.tsx'
 import lab from '../lab/ui/lab.module.css'
-import { DEFAULT_MODEL_ID, modelOrDefault } from '../play/models.ts'
+import { modelOrDefault } from '../play/models.ts'
 import { freshSeed, parsePlayParams, retiredMode } from '../play/params.ts'
 import playCss from '../play/play.module.css'
 import { Table } from '../play/Table.tsx'
@@ -65,34 +65,18 @@ export function PlayTable() {
         <Section noRule badge="The table">
           <SectionHead
             level="h1"
-            lines={['That link names', '*a mode this table retired.*']}
+            lines={['That mode', '*is retired*.']}
             sub={
               <>
-                The URL asks for <code>v={retired}</code>, and this table cannot seat it. The
-                models it does seat are named in the lobby; none of them is that one, so there is
-                no honest way to open your link: the seed would still deal, the game would still
-                run, and every decision in it would be a different bot&apos;s. You would be
-                looking at someone else&apos;s game under your own seed.
+                The URL asks for <code>v={retired}</code>, and this table cannot seat it. Start a
+                fresh table{' '}
+                <TextLink href="/play" arrow={false}>
+                  in the lobby
+                </TextLink>
+                .
               </>
             }
           />
-          <p className={lab.prose}>
-            Nothing measured under the older versions has gone anywhere — the roster, the payoff
-            matrix and the bounded-memory ladder are all still in the lab, the papers still argue
-            from them, and each frozen version is archived as a git tag (<code>bass-v0.5</code>{' '}
-            through <code>bass-v2.0</code>) at the commit where it was last whole. What the play
-            surface cannot do is seat one: those versions differ from today&apos;s engine in code,
-            not in a setting, so offering them here would mean shipping a second bot brain rather
-            than accepting a parameter. Start a fresh table{' '}
-            <TextLink href="/play" arrow={false}>
-              in the lobby
-            </TextLink>
-            , or read the measured record{' '}
-            <TextLink href="/lab" arrow={false}>
-              in the report
-            </TextLink>
-            .
-          </p>
         </Section>
       </LabShell>
     )
@@ -116,43 +100,12 @@ export function PlayTable() {
           budget the ask panel — the control a player touches every single turn — has to be
           pushed down by, and this is a page you play rather than one you read. */}
       <Section noRule badge="The table" className={playCss.playSection}>
-        <SectionHead
-          level="h1"
-          lines={['One deal,', '*you against the roster.*']}
-          sub={
-            <>
-              us54, deterministic: the seed in the URL drives the deal and every bot decision, so
-              this link replays this game. Configure a different table{' '}
-              <TextLink href="/play" arrow={false}>
-                in the lobby
-              </TextLink>
-              .
-            </>
-          }
-        />
+        <SectionHead level="h1" lines={['One deal,', '*five bots*.']} />
 
         <div className={lab.synthetic}>
           <Eyebrow tone="muted" track="badge">
             {model.label} · every bot seat
           </Eyebrow>
-          {model.id === DEFAULT_MODEL_ID ? (
-            <p className={lab.syntheticBody}>
-              No styles can be assigned at this table. Each bot reads the public log, classifies
-              what the other seats appear to be playing, and best-responds with a roster style
-              chosen off the measured payoff table — re-derived from scratch at every decision, so
-              two seats with the same information reach the same read. The <em>architecture</em> is
-              v1.0; the styles it delegates to all carry v2.0&apos;s defusal term, so when you have
-              publicly shown a basis in a set these bots hold cards of, they will try to take that
-              card back. One measured caveat, stated up front: over this roster the best response
-              to <em>everything</em> is Punter, so a warm adaptive seat converges there; its
-              adaptivity matters against opponents the matrix never measured — such as you.
-            </p>
-          ) : (
-            <p className={lab.syntheticBody}>
-              {model.note} All five bot seats run it; no style can be assigned at this table. The
-              model is part of the link, so this URL replays this game against this opponent.
-            </p>
-          )}
         </div>
 
         <Table
