@@ -49,14 +49,16 @@ class BeliefNet(nn.Module):
         return cls(*ARCHS[arch])
 
     def states(self, slots):
-        """The recurrent state after each event: slots (S, L, 21) -> (S, L, d)."""
+        """The recurrent state after each of 0..L events: slots (S, L, 21) -> (S, L + 1, d), position 0 the zero
+        state (net.ts's fold starts from zeros, and nn.GRU's h0 is zeros)."""
         x = F.embedding(slots, self.embed.weight.t()).sum(dim=-2) + self.embed.bias
         out, _ = self.gru(x)
-        return out
+        return torch.cat([out.new_zeros(out.shape[0], 1, out.shape[2]), out], dim=1)
 
     def forward(self, slots, ask_seq, ask_pos, dec):
-        """The heads (A, 517) at each ask: the state after its `ask_pos` events (>= 1: game_started comes first)."""
-        h = self.states(slots)[ask_seq, ask_pos - 1]
+        """The heads (A, 517) at each ask: the state after its `ask_pos` events. Under the start-seat rule a game's
+        first decision has none (ask_pos 0), and folds nothing: the zero state, as `foldAll(net, rows, 0)`."""
+        h = self.states(slots)[ask_seq, ask_pos]
         u = torch.cat([h, dec], dim=-1)
         for lin in self.trunk:
             u = F.relu(lin(u))

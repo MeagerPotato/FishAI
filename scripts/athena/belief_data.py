@@ -92,10 +92,11 @@ def read_parts(parts_dir, max_games=0):
         raise FileNotFoundError(f'no part-*.npz in {parts_dir}')
     games = []
     for p in parts:
-        z = np.load(p)
-        off = z['offsets']
+        with np.load(p) as npz:  # an NpzFile decompresses a member at every access: read each once
+            z = {k: npz[k] for k in ('index', 'seed', 'start', 'score', 'deal', 'rot', 'offsets', 'actions')}
+        off, acts = z['offsets'], z['actions']
         for i in range(len(z['index'])):
-            a = z['actions'][off[i]:off[i + 1]]
+            a = acts[off[i]:off[i + 1]].copy()
             games.append({'seed': str(z['seed'][i]), 'start': int(z['start'][i]), 'actions': a,
                           'score': z['score'][i].tolist(), 'deal': int(z['deal'][i]), 'rot': int(z['rot'][i]),
                           'key': f'{z["seed"][i]}|{int(z["start"][i])}|{hashlib.md5(a.tobytes()).hexdigest()}'})
@@ -372,7 +373,7 @@ class BeliefViews:
             seat_l.append(seats)
             clus_l.append(np.full(hi - lo, int(g)))
         S = len(seq_rows)
-        L = max(seq_len) if seq_len else 1
+        L = max(1, max(seq_len) if seq_len else 1)  # a seat whose only ask is its game's first folds no row
         slots = np.zeros((S, L, 21), dtype=np.int64)
         if S:
             lens = np.array(seq_len, dtype=np.int64)
