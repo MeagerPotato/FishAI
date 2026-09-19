@@ -1,0 +1,444 @@
+{
+  "format": "athena-replay-1",
+  "spec": "scripts/athena/replay-format.md",
+  "registration": "ATHENA.md §4.6 G0a (i)",
+  "revision": "7d85c2edbc681b0b1686b9b038f218d9980112ac",
+  "dirty": false,
+  "rulesFile": "RULES_US54.md",
+  "rulesHash": "e9311958e811b7bc4cd93735fda0cbaaf6ab2485310ea5b992f2ec3569163b7c",
+  "engineBlobs": {
+    "lib/engine/reduce.ts": "c2d9b50a84f3b12a63206beb119e83134bc0163a",
+    "lib/engine/helpers.ts": "8d79707c372dca10a6c7a5ee2e8b916f7d709ad5",
+    "lib/engine/cards.ts": "92b5918eb1ec69ade663e504fdbb5e12bb796cd3",
+    "lib/engine/rng.ts": "5a484b85ee0ca55f81bbd96580cafcac8bcd80d0",
+    "lib/engine/deal.ts": "abd8e8b2c4f16252d1d826018eef7b60918e2495",
+    "lib/engine/variants.ts": "22f1874a6b285a0c004596559d70c0dd0e179916",
+    "lib/engine/views.ts": "cf155513b108b31959ea7f8458d48b9df457fdad",
+    "lib/engine/types.ts": "413a5eb10d6a43feaac47adb243c8ac103c0bdf8",
+    "lib/engine/invariants.ts": "3ed9bffe1778916cb373c2942070f1af81e6f0be"
+  },
+  "bankCheck": {
+    "bank": "tests/bots/data/monet-v054-bank.ts",
+    "arm": "monetPolicy(\"v0.54\")",
+    "reproduced": 36,
+    "of": 36,
+    "decisions": 24771
+  },
+  "corpusDir": "C:/Projects/FishAI-bench/athena/corpus/7d85c2e",
+  "blocks": {
+    "H1-0-2000": {
+      "population": "H1",
+      "from": 0,
+      "to": 2000,
+      "file": "H1-0-2000.tsv",
+      "games": 2000,
+      "steps": 1322873,
+      "capped": 0,
+      "bytes": 71255013,
+      "sha256": "8c995693bd779d436bcd4033d5652371d50d9d38eb27ba23c282f5b3ee101081",
+      "aggregate": "858d94ace470b4b7"
+    },
+    "H2-0-1800": {
+      "population": "H2",
+      "from": 0,
+      "to": 1800,
+      "file": "H2-0-1800.tsv",
+      "games": 1800,
+      "steps": 1278881,
+      "capped": 0,
+      "bytes": 68857004,
+      "sha256": "29bf7d4de40f6a62a63133f854d17d36106a22beec816840b6a21695ae382a67",
+      "aggregate": "dbd406806de1e353",
+      "bankSeedSteps": {
+        "monet-v054-balanced-0": 728,
+        "monet-v054-balanced-1": 780,
+        "monet-v054-balanced-2": 401,
+        "monet-v054-balanced-3": 431,
+        "monet-v054-blitz-0": 525,
+        "monet-v054-blitz-1": 549,
+        "monet-v054-blitz-2": 663,
+        "monet-v054-blitz-3": 620,
+        "monet-v054-punter-0": 620,
+        "monet-v054-punter-1": 537,
+        "monet-v054-punter-2": 695,
+        "monet-v054-punter-3": 608,
+        "monet-v054-banker-0": 603,
+        "monet-v054-banker-1": 954,
+        "monet-v054-banker-2": 818,
+        "monet-v054-banker-3": 494,
+        "monet-v054-turtle-0": 1604,
+        "monet-v054-turtle-1": 931,
+        "monet-v054-turtle-2": 1261,
+        "monet-v054-turtle-3": 1528,
+        "monet-v054-hoarder-0": 469,
+        "monet-v054-hoarder-1": 617,
+        "monet-v054-hoarder-2": 404,
+        "monet-v054-hoarder-3": 912,
+        "monet-v054-scout-0": 656,
+        "monet-v054-scout-1": 403,
+        "monet-v054-scout-2": 559,
+        "monet-v054-scout-3": 742,
+        "monet-v054-ghost-0": 604,
+        "monet-v054-ghost-1": 702,
+        "monet-v054-ghost-2": 434,
+        "monet-v054-ghost-3": 721,
+        "monet-v054-archivist-0": 685,
+        "monet-v054-archivist-1": 598,
+        "monet-v054-archivist-2": 418,
+        "monet-v054-archivist-3": 497
+      }
+    },
+    "H3-0-1000": {
+      "population": "H3",
+      "from": 0,
+      "to": 1000,
+      "file": "H3-0-1000.tsv",
+      "games": 1000,
+      "steps": 625905,
+      "capped": 0,
+      "bytes": 33745212,
+      "sha256": "6b6ef1ab449e1e0b059dc61d8152c107ed2871de178f8de792ca7f861c28122c",
+      "aggregate": "0f68c6ec0fe88fa1"
+    },
+    "H4-0-4000": {
+      "population": "H4",
+      "from": 0,
+      "to": 4000,
+      "file": "H4-0-4000.tsv",
+      "games": 4000,
+      "steps": 276644,
+      "capped": 0,
+      "bytes": 16087273,
+      "sha256": "d4e8efd6e03a0f8df48c0aa77d285f243ec5a1f257e7f6e20e409cd105d10576",
+      "aggregate": "6f10ae1ee0df724c"
+    },
+    "H5-0-2000": {
+      "population": "H5",
+      "from": 0,
+      "to": 2000,
+      "file": "H5-0-2000.tsv",
+      "games": 2000,
+      "steps": 1283915,
+      "capped": 0,
+      "bytes": 69168598,
+      "sha256": "b90bd5ad3ec8cb97b0b9f135b6721d26ad05f5aea38920f0d4b7cd54c577fde3",
+      "aggregate": "01c0d2d4fd3056c2"
+    }
+  },
+  "runs": [
+    {
+      "date": "2026-09-19T09:50:05.975Z",
+      "command": "node scripts/athena/emit-replay-corpus.mjs --workers 4",
+      "blocks": [
+        "H1-0-2000",
+        "H2-0-1800",
+        "H3-0-1000",
+        "H4-0-4000",
+        "H5-0-2000"
+      ],
+      "workers": 4,
+      "node": "24.19.0",
+      "cpu": "AMD Ryzen 9 9900X 12-Core Processor            ",
+      "bankCheckSeconds": 6,
+      "emitSeconds": 168.9,
+      "wallSeconds": 175.6
+    }
+  ],
+  "total": {
+    "blocks": 5,
+    "games": 10800,
+    "steps": 4788218,
+    "capped": 0,
+    "bytes": 259113100
+  },
+  "selfCheck": {
+    "date": "2026-09-19T09:52:35.010Z",
+    "checkedAt": "7d85c2edbc681b0b1686b9b038f218d9980112ac",
+    "command": "node scripts/athena/check-replay-corpus.mjs --workers 4 --write",
+    "partial": false,
+    "games": 10800,
+    "steps": 4788218,
+    "recordsOk": 10800,
+    "recordsBad": 0,
+    "probeVerdicts": 1977852,
+    "probeAccepted": 369294,
+    "probeCodeDiffs": 0,
+    "capped": {
+      "H1": 0,
+      "H2": 0,
+      "H3": 0,
+      "H4": 0,
+      "H5": 0
+    },
+    "fallbackAlone": 0,
+    "fallbackCoincided": 3092,
+    "bankSeeds": 36,
+    "bankSeedStepMismatch": 0,
+    "summaryClaimWindowClosed": 652944,
+    "summaryOtherDiff": 0,
+    "aggregates": [
+      {
+        "block": "H1-0-2000",
+        "games": 2000,
+        "aggregate": "858d94ace470b4b7",
+        "manifest": "858d94ace470b4b7",
+        "verdict": "equal to the manifest"
+      },
+      {
+        "block": "H2-0-1800",
+        "games": 1800,
+        "aggregate": "dbd406806de1e353",
+        "manifest": "dbd406806de1e353",
+        "verdict": "equal to the manifest"
+      },
+      {
+        "block": "H3-0-1000",
+        "games": 1000,
+        "aggregate": "0f68c6ec0fe88fa1",
+        "manifest": "0f68c6ec0fe88fa1",
+        "verdict": "equal to the manifest"
+      },
+      {
+        "block": "H4-0-4000",
+        "games": 4000,
+        "aggregate": "6f10ae1ee0df724c",
+        "manifest": "6f10ae1ee0df724c",
+        "verdict": "equal to the manifest"
+      },
+      {
+        "block": "H5-0-2000",
+        "games": 2000,
+        "aggregate": "01c0d2d4fd3056c2",
+        "manifest": "01c0d2d4fd3056c2",
+        "verdict": "equal to the manifest"
+      }
+    ],
+    "integrity": [],
+    "verdict": "PASS",
+    "workers": 4,
+    "seconds": 24.3,
+    "node": "24.19.0",
+    "cpu": "AMD Ryzen 9 9900X 12-Core Processor            "
+  },
+  "coverage": {
+    "floor": 50,
+    "groups": [
+      "H1",
+      "H2",
+      "H3",
+      "H4",
+      "H5"
+    ],
+    "rows": [
+      {
+        "id": "hitEmptiesTarget",
+        "label": "hit empties the target (player_out on a hit)",
+        "perPopulation": {
+          "H1": 2429,
+          "H2": 2004,
+          "H3": 1144,
+          "H4": 217,
+          "H5": 1178
+        },
+        "total": 6972,
+        "met": true
+      },
+      {
+        "id": "windowClosedBySixDeclines",
+        "label": "window closed by six declines",
+        "perPopulation": {
+          "H1": 184360,
+          "H2": 178401,
+          "H3": 86997,
+          "H4": 25987,
+          "H5": 177199
+        },
+        "total": 652944,
+        "met": true
+      },
+      {
+        "id": "forcedDeclare",
+        "label": "forced declare (the MUST_DECLARE window)",
+        "perPopulation": {
+          "H1": 1287,
+          "H2": 1212,
+          "H3": 582,
+          "H4": 77,
+          "H5": 725
+        },
+        "total": 3883,
+        "met": true
+      },
+      {
+        "id": "declareRight",
+        "label": "declare right",
+        "perPopulation": {
+          "H1": 15092,
+          "H2": 13579,
+          "H3": 7480,
+          "H4": 242,
+          "H5": 4110
+        },
+        "total": 40503,
+        "met": true
+      },
+      {
+        "id": "declareWrongOpponentHeld",
+        "label": "declare wrong, an opponent held a card",
+        "perPopulation": {
+          "H1": 81,
+          "H2": 4,
+          "H3": 20,
+          "H4": 29720,
+          "H5": 11048
+        },
+        "total": 40873,
+        "met": true
+      },
+      {
+        "id": "declareWrongMisassigned",
+        "label": "declare wrong, own team held all six (misassigned)",
+        "perPopulation": {
+          "H1": 93,
+          "H2": 176,
+          "H3": 39,
+          "H4": 238,
+          "H5": 10
+        },
+        "total": 556,
+        "met": true
+      },
+      {
+        "id": "outOfTurnDeclare",
+        "label": "out-of-turn declare",
+        "perPopulation": {
+          "H1": 5721,
+          "H2": 5555,
+          "H3": 3114,
+          "H4": 23351,
+          "H5": 9320
+        },
+        "total": 47061,
+        "met": true
+      },
+      {
+        "id": "cardlessDeclare",
+        "label": "declare by a cardless seat",
+        "perPopulation": {
+          "H1": 1,
+          "H2": 76,
+          "H3": 1,
+          "H4": 625,
+          "H5": 338
+        },
+        "total": 1041,
+        "met": true
+      },
+      {
+        "id": "turnHolderDeclarerEmptiedAwaitPass",
+        "label": "declarer who held the turn emptied -> awaitPass",
+        "perPopulation": {
+          "H1": 492,
+          "H2": 304,
+          "H3": 203,
+          "H4": 121,
+          "H5": 675
+        },
+        "total": 1795,
+        "met": true
+      },
+      {
+        "id": "otherDeclareEmptiesTurnHolderAwaitPass",
+        "label": "another seat's declare empties the turn-holder -> awaitPass",
+        "perPopulation": {
+          "H1": 112,
+          "H2": 73,
+          "H3": 79,
+          "H4": 396,
+          "H5": 241
+        },
+        "total": 901,
+        "met": true
+      },
+      {
+        "id": "wholeTeamOutNextSeat",
+        "label": "whole team out -> next seat with cards",
+        "perPopulation": {
+          "H1": 90,
+          "H2": 177,
+          "H3": 34,
+          "H4": 22,
+          "H5": 0
+        },
+        "total": 323,
+        "met": true
+      },
+      {
+        "id": "pass",
+        "label": "pass",
+        "perPopulation": {
+          "H1": 604,
+          "H2": 377,
+          "H3": 282,
+          "H4": 517,
+          "H5": 916
+        },
+        "total": 2696,
+        "met": true
+      },
+      {
+        "id": "finish5to0",
+        "label": "finish 5-0",
+        "perPopulation": {
+          "H1": 87,
+          "H2": 97,
+          "H3": 45,
+          "H4": 271,
+          "H5": 124
+        },
+        "total": 624,
+        "met": true
+      },
+      {
+        "id": "finish5to4",
+        "label": "finish 5-4",
+        "perPopulation": {
+          "H1": 580,
+          "H2": 557,
+          "H3": 262,
+          "H4": 1120,
+          "H5": 573
+        },
+        "total": 3092,
+        "met": true
+      },
+      {
+        "id": "declareAfterDecline",
+        "label": "declare after at least one decline in the same window (not counted before P0)",
+        "perPopulation": {
+          "H1": 5721,
+          "H2": 5555,
+          "H3": 3114,
+          "H4": 23351,
+          "H5": 9320
+        },
+        "total": 47061,
+        "met": true
+      },
+      {
+        "id": "cardlessSeatDeclines",
+        "label": "cardless seat declines (not counted before P0)",
+        "perPopulation": {
+          "H1": 21842,
+          "H2": 20920,
+          "H3": 11259,
+          "H4": 4312,
+          "H5": 34390
+        },
+        "total": 92723,
+        "met": true
+      }
+    ],
+    "short": []
+  }
+}
