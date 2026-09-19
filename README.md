@@ -2,7 +2,7 @@
 
 Bots for **Canadian Fish** (Literature), the six-player team card game, and the simulation lab
 that measures them. FishAI is the project, and Bass, Monet and ATHENA are its bot lines. The site is
-**https://fish-ai-taupe.vercel.app**. This README points to where things are; the documents and
+**https://fishai.allenkh.com**. This README points to where things are; the documents and
 papers hold the explanations.
 
 ## The bot lines
