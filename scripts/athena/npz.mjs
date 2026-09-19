@@ -25,8 +25,9 @@ const TYPED = {
   '<u8': BigUint64Array,
 }
 
-/** One `.npy` member's bytes into { dtype, shape, data }. */
-export function parseNpy(raw, name = 'array') {
+/** One `.npy` member's bytes (a Buffer or a Uint8Array) into { dtype, shape, data }. */
+export function parseNpy(bytes, name = 'array') {
+  const raw = Buffer.isBuffer(bytes) ? bytes : Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength)
   if (raw[0] !== 0x93 || raw.toString('latin1', 1, 6) !== 'NUMPY') throw new Error(`${name}: not an .npy member`)
   const major = raw[6]
   const hlen = major === 1 ? raw.readUInt16LE(8) : raw.readUInt32LE(8)
@@ -57,10 +58,10 @@ export function parseNpy(raw, name = 'array') {
   }
   const T = TYPED[descr]
   if (!T) throw new Error(`${name}: dtype ${descr} is not supported`)
-  const bytes = count * T.BYTES_PER_ELEMENT
-  if (body.length < bytes) throw new Error(`${name}: ${body.length} bytes of data, ${bytes} expected`)
-  const copy = new Uint8Array(bytes)
-  copy.set(body.subarray(0, bytes))
+  const nbytes = count * T.BYTES_PER_ELEMENT
+  if (body.length < nbytes) throw new Error(`${name}: ${body.length} bytes of data, ${nbytes} expected`)
+  const copy = new Uint8Array(nbytes)
+  copy.set(body.subarray(0, nbytes))
   return { dtype: descr, shape, data: new T(copy.buffer) }
 }
 

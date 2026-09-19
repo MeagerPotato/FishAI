@@ -1,0 +1,359 @@
+"""
+belief_data.py: ATHENA P1's belief-head data (ATHENA.md §8.3): population (a)'s stored games replayed through the port
+into belief views, and the loader that batches any belief-views directory for training and scoring.
+
+**Belief views** (`athena-p1-belief-views-1`) are one directory of `.npy` arrays, written for (a) by `replay_split`
+here and for the bridge records by `scripts/athena/export-belief-views.mjs` (populations (b) and (c), and D2's extra
+training views), in the same layout:
+
+- `streams` uint8 [R, 19]: event rows (API.md §5.3), relative to their seat, stream after stream;
+- `stream_off` int64 [G, 6], `stream_len` int32 [G, 6]: each (game, seat)'s stream, in the order the seat received the
+  rows (length 0 for a seat with no ask);
+- per ask decision, sorted by game: `ask_game` int32, `ask_seat` uint8 (absolute), `ask_pos` int32 (rows of the
+  seat's stream received before the decision: the recurrent state folds these), `ask_obs` uint8 [A, 94] (the obs row,
+  §5.2), `ask_cands` uint8 [A, 54] (the rules facts' candidate seats of each card, a six-bit mask relative to the
+  asker), `ask_holder` uint8 [A, 54] (each card's true holder relative to the asker, 255 once out of play: the critic
+  buffer, §5.4);
+- `game_keys.json`: each game's cluster key for the bootstrap; `meta.json`.
+
+**The unit** (§3.8ah's) is every card whose candidate mask has two or more bits: an open set's card the asker cannot
+place. The belief head's softmax runs over the card's candidate seats, and its loss and scores are over the units.
+
+**The facts.** The candidate masks of (a) are the rules-derived facts of §8.1, which the port gains as its `facts`
+buffer (agent A's G1a). Until that buffer exists, `replay_split(facts='placeholder')` writes a PLACEHOLDER mask from
+the obs row alone: the asker's own cards at the asker, a resolved set's cards nowhere, and every other card at every
+other seat holding cards. It is a superset of the true candidates, so every holder is a candidate, and it is only for
+smoke runs: meta.json records `facts: placeholder`, and the trainer refuses to call such data a registered read.
+The record exporter writes the true facts (`buildKnowledge`, as belief-baselines.mjs scores them).
+"""
+import hashlib
+import json
+from pathlib import Path
+
+import numpy as np
+
+FORMAT = 'athena-p1-belief-views-1'
+NONE = 255
+EVENT_LEN = 19
+OBS_LEN = 94
+O_HAND, O_COUNTS, O_PHASE, O_TURN, O_WINDOW, O_OPTION, O_DECLINED, O_SCORE, O_SETS = 0, 54, 60, 61, 62, 63, 64, 65, 67
+SET_FIELDS = 3
+N_ASK = 162
+EVENT_F = 176
+DEC_F = 516
+ARRAYS = ('streams', 'stream_off', 'stream_len', 'ask_game', 'ask_seat', 'ask_pos', 'ask_obs', 'ask_cands',
+          'ask_holder')
+
+
+def set_of_cards():
+    """Each card's set (API.md §4): LOW is 2-7 and HIGH 9-A of a suit, EIGHTS the four 8s and both jokers."""
+    out = np.zeros(54, dtype=np.int64)
+    for suit in range(4):
+        for rank in range(13):  # 2 3 4 5 6 7 8 9 T J Q K A
+            c = suit * 13 + rank
+            out[c] = 8 if rank == 6 else (suit if rank < 6 else 4 + suit)
+    out[52] = out[53] = 8
+    return out
+
+
+SET_OF = set_of_cards()
+
+
+def popcount6(m):
+    m = m.astype(np.uint8)
+    return sum(((m >> b) & 1) for b in range(6)).astype(np.uint8)
+
+
+def placeholder_cands(obs):
+    """The PLACEHOLDER facts (module header): six-bit relative masks (n, 54) from obs rows (n, 94) alone."""
+    obs = np.asarray(obs)
+    hand = obs[:, O_HAND:O_HAND + 54].astype(bool)
+    counts = obs[:, O_COUNTS:O_COUNTS + 6]
+    status = obs[:, O_SETS:O_SETS + SET_FIELDS * 9:SET_FIELDS]  # 0 open
+    open_card = status[:, SET_OF] == 0
+    others = np.zeros(len(obs), dtype=np.uint8)
+    for r in range(1, 6):
+        others |= ((counts[:, r] > 0).astype(np.uint8) << r)
+    out = np.where(hand, np.uint8(1), np.where(open_card, others[:, None], np.uint8(0)))
+    return out.astype(np.uint8)
+
+
+# ------------------------------------------------------------------------------------ population (a): replay ---
+
+def read_parts(parts_dir, max_games=0):
+    """A split's stored games (gen-belief-games.py): lists of seed, start, actions (uint16), score, cluster key."""
+    parts = sorted(Path(parts_dir).glob('part-*.npz'))
+    if not parts:
+        raise FileNotFoundError(f'no part-*.npz in {parts_dir}')
+    games = []
+    for p in parts:
+        z = np.load(p)
+        off = z['offsets']
+        for i in range(len(z['index'])):
+            a = z['actions'][off[i]:off[i + 1]]
+            games.append({'seed': str(z['seed'][i]), 'start': int(z['start'][i]), 'actions': a,
+                          'score': z['score'][i].tolist(), 'deal': int(z['deal'][i]), 'rot': int(z['rot'][i]),
+                          'key': f'{z["seed"][i]}|{int(z["start"][i])}|{hashlib.md5(a.tobytes()).hexdigest()}'})
+            if max_games and len(games) >= max_games:
+                return games
+    return games
+
+
+def replay_split(parts_dir, out_dir, ae, *, facts='placeholder', batch=2048, threads=4, dedup=False, max_games=0,
+                 lmax=512, log=print):
+    """Replay a split's stored games through `ae.BatchEnv` and write its belief views to `out_dir`.
+
+    Every step applies the stored action of every running game; every observation's event rows go to the observing
+    seat's stream; at every ask decision (a legal row with an ask) the asker's obs, facts and critic row are kept. With
+    `dedup`, a game whose cluster key (seed, start seat, actions) repeats one already kept is skipped (geometry B's
+    mirror rotations). Checks that every game finishes at its stored length with its stored score."""
+    if facts != 'placeholder':
+        raise NotImplementedError('only the placeholder facts exist until the port gains its facts buffer (ATHENA.md '
+                                  '§8.1); wire it here: the six-bit relative candidate masks of the acting seat')
+    games = read_parts(parts_dir, max_games)
+    n_all = len(games)
+    if dedup:
+        seen, kept = set(), []
+        for g in games:
+            if g['key'] not in seen:
+                seen.add(g['key'])
+                kept.append(g)
+        games = kept
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    chunks = {k: [] for k in ARRAYS}
+    rows_total = 0
+    for b0 in range(0, len(games), batch):
+        gs = games[b0:b0 + batch]
+        n = len(gs)
+        env = ae.BatchEnv(n, threads=threads)
+        env.reset([g['seed'] for g in gs], np.array([g['start'] for g in gs], dtype=np.int64))
+        bufs = env.make_buffers(critic=True)
+        env.observe(bufs)
+        lens = np.array([len(g['actions']) for g in gs])
+        T = int(lens.max())
+        acts = np.full((n, T), ae.A_DECLINE, dtype=np.int32)
+        for i, g in enumerate(gs):
+            acts[i, :len(g['actions'])] = g['actions']
+        stream = np.zeros((n, 6, lmax, EVENT_LEN), dtype=np.uint8)
+        slen = np.zeros((n, 6), dtype=np.int64)
+        a_game, a_seat, a_pos, a_obs, a_cands, a_holder = [], [], [], [], [], []
+        idx = np.arange(n)
+        for t in range(T):
+            active = t < lens
+            seat = bufs['seat'].astype(np.int64)
+            ne = bufs['n_events'].astype(np.int64)
+            ne = np.where(active, ne, 0)
+            for k in range(int(ne.max()) if ne.size else 0):
+                m = ne > k
+                gi, si = idx[m], seat[m]
+                pos = slen[gi, si] + k
+                if pos.max() >= lmax:
+                    raise RuntimeError(f'a stream passed {lmax} rows')
+                stream[gi, si, pos] = bufs['events'][m, k]
+            slen[idx, seat] += ne
+            ask = active & bufs['legal'][:, :N_ASK].any(axis=1)
+            if ask.any():
+                rows = np.flatnonzero(ask)
+                if (acts[rows, t] >= N_ASK).any():
+                    raise RuntimeError(f'step {t}: a stored action at an ask decision is not an ask')
+                a_game.append(rows + b0)
+                a_seat.append(seat[rows].astype(np.uint8))
+                a_pos.append(slen[rows, seat[rows]].astype(np.int32))
+                obs = bufs['obs'][rows].copy()
+                a_obs.append(obs)
+                a_cands.append(placeholder_cands(obs))
+                a_holder.append(bufs['critic'][rows].copy())
+            env.step(np.ascontiguousarray(acts[:, t]), bufs)
+        steps, ended, scores = env.steps(), env.ended(), env.scores()
+        for i, g in enumerate(gs):
+            if int(steps[i]) != len(g['actions']) or int(ended[i]) != 1 or scores[i].tolist() != g['score']:
+                raise RuntimeError(f'{g["seed"]} start {g["start"]}: the replay ends at {steps[i]} steps, end {ended[i]}, '
+                                   f'score {scores[i].tolist()}; stored {len(g["actions"])} and {g["score"]}')
+        # the streams, (game, seat) in order
+        off = np.zeros((n, 6), dtype=np.int64)
+        parts = []
+        for i in range(n):
+            for s in range(6):
+                off[i, s] = rows_total
+                L = int(slen[i, s])
+                parts.append(stream[i, s, :L])
+                rows_total += L
+        chunks['streams'].append(np.concatenate(parts))
+        chunks['stream_off'].append(off)
+        chunks['stream_len'].append(slen.astype(np.int32))
+        ag = np.concatenate(a_game).astype(np.int32)
+        order = np.argsort(ag, kind='stable')  # by game, each game's asks in step order
+        for name, lst in (('ask_game', [ag]), ('ask_seat', a_seat), ('ask_pos', a_pos), ('ask_obs', a_obs),
+                          ('ask_cands', a_cands), ('ask_holder', a_holder)):
+            chunks[name].append(np.concatenate(lst)[order])
+        log(f'  replayed {b0 + n} of {len(games)} games: {sum(len(x) for x in chunks["ask_game"])} asks, {rows_total} rows')
+    for name in ARRAYS:
+        np.save(out / f'{name}.npy', np.concatenate(chunks[name]))
+    (out / 'game_keys.json').write_text(json.dumps([g['key'] for g in games]))
+    asks = sum(len(x) for x in chunks['ask_game'])
+    units = int(sum((popcount6(c) >= 2).sum() for c in chunks['ask_cands']))
+    meta = {'format': FORMAT, 'source': 'port-replay', 'parts': str(Path(parts_dir)), 'games': len(games),
+            'games_in_split': n_all, 'dedup': dedup, 'facts': facts, 'asks': asks, 'units': units, 'rows': rows_total,
+            'athena_env': str(Path(ae.__file__).resolve())}
+    (out / 'meta.json').write_text(json.dumps(meta, indent=1))
+    return meta
+
+
+# ----------------------------------------------------------------------------------------------- the loader ---
+
+def event_slots(rows):
+    """net.ts's `eventSlots` over rows (N, 19) uint8, as its fold reads them: (N, 21) int64 (see the end)."""
+    rows = np.asarray(rows)
+    t = rows[:, 0].astype(np.int64)
+    if (t > 5).any():
+        raise ValueError('an event type is out of range')
+
+    def slot(v, n, what):
+        v = v.astype(np.int64)
+        bad = (v != NONE) & (v >= n - 1)
+        if bad.any():
+            raise ValueError(f'event byte {what} is out of range')
+        return np.where(v == NONE, n - 1, v)
+
+    cols = [t, 6 + slot(rows[:, 1], 7, 'actor'), 13 + slot(rows[:, 2], 7, 'target'), 20 + slot(rows[:, 3], 55, 'card'),
+            75 + slot(rows[:, 4], 3, 'hit'), 78 + slot(rows[:, 5], 10, 'set'), 88 + slot(rows[:, 6], 4, 'result')]
+    cols += [92 + 7 * j + slot(rows[:, 7 + j], 7, 'assign') for j in range(6)]
+    cols += [134 + 7 * j + slot(rows[:, 13 + j], 7, 'holder') for j in range(6)]
+    # net.ts's fold adds 21 embedding columns per event, idx[0..20], but eventSlots writes only the 19 above; the
+    # last two entries of its scratch are never written and stay 0, so every event also adds column 0 twice. The
+    # forward is G0d's pinned contract, so the model reproduces it: two slot-0 entries close every row.
+    zero = np.zeros(len(rows), dtype=np.int64)
+    return np.stack(cols + [zero, zero], axis=1)
+
+
+def decision_features(obs, cands):
+    """net.ts's `decisionFeatures` (DEC_F = 516), vectorised: obs rows (A, 94) and six-bit masks (A, 54) -> float32."""
+    obs = np.asarray(obs)
+    A = len(obs)
+    out = np.zeros((A, DEC_F), dtype=np.float32)
+    out[:, 0:54] = obs[:, O_HAND:O_HAND + 54]
+    out[:, 54:60] = obs[:, O_COUNTS:O_COUNTS + 6] / 9.0
+    ar = np.arange(A)
+
+    def one(base, v, n):
+        v = v.astype(np.int64)
+        ok = (v != NONE) & (v < n)
+        out[ar[ok], base + v[ok]] = 1
+
+    one(60, obs[:, O_PHASE], 3)
+    one(63, obs[:, O_TURN], 6)
+    out[:, 69] = obs[:, O_WINDOW]
+    one(70, obs[:, O_OPTION], 6)
+    one(76, obs[:, O_DECLINED], 6)
+    out[:, 82] = obs[:, O_SCORE] / 9.0
+    out[:, 83] = obs[:, O_SCORE + 1] / 9.0
+    for b in range(9):
+        o = O_SETS + SET_FIELDS * b
+        base = 84 + 12 * b
+        one(base, obs[:, o], 3)
+        one(base + 3, obs[:, o + 1], 6)
+        one(base + 9, obs[:, o + 2], 3)
+    bits = (cands[:, :, None] >> np.arange(6, dtype=np.uint8)) & 1  # (A, 54, 6)
+    out[:, 192:] = bits.reshape(A, 324)
+    return out
+
+
+class BeliefViews:
+    """One or more belief-views directories, concatenated, memory-mapped. `facts='file'` uses the stored candidate
+    masks as the network's input and mask; `facts='placeholder'` recomputes them from the obs rows (smoke runs). The
+    units are always the stored masks' (the registered unit set)."""
+
+    def __init__(self, dirs, facts='file'):
+        if isinstance(dirs, (str, Path)):
+            dirs = [dirs]
+        self.dirs = [Path(d) for d in dirs]
+        self.facts = facts
+        self.parts = []
+        self.keys = []
+        self.metas = []
+        g0 = 0
+        for d in self.dirs:
+            meta = json.loads((d / 'meta.json').read_text())
+            if meta.get('format') != FORMAT:
+                raise ValueError(f'{d}: not {FORMAT}')
+            arr = {k: np.load(d / f'{k}.npy', mmap_mode='r') for k in ARRAYS}
+            keys = json.loads((d / 'game_keys.json').read_text())
+            G = len(arr['stream_off'])
+            if len(keys) != G:
+                raise ValueError(f'{d}: {len(keys)} keys for {G} games')
+            ag = np.asarray(arr['ask_game'])
+            if len(ag) and (np.diff(ag) < 0).any():
+                raise ValueError(f'{d}: asks are not sorted by game')
+            starts = np.searchsorted(ag, np.arange(G + 1))
+            self.parts.append({'dir': d, 'arr': arr, 'g0': g0, 'G': G, 'ask_start': starts, 'meta': meta})
+            self.keys += keys
+            self.metas.append(meta)
+            g0 += G
+        self.G = g0
+        self.facts_in = {m.get('facts', 'buildKnowledge') for m in self.metas}
+
+    def __len__(self):
+        return self.G
+
+    def _where(self, g):
+        for p in self.parts:
+            if p['g0'] <= g < p['g0'] + p['G']:
+                return p, g - p['g0']
+        raise IndexError(g)
+
+    def batch(self, games):
+        """The tensors-to-be of a batch of games (numpy): per (game, seat) sequence with an ask, its event slots
+        (S, L, 21) and length; per ask, its sequence and position, decision features, candidate mask (A, 54, 6),
+        unit mask (A, 54), true holder (A, 54, relative; 0 where not a unit), seat, and cluster index."""
+        seq_rows, seq_len = [], []
+        ask_seq, ask_pos, obs_l, cand_l, hold_l, seat_l, clus_l = [], [], [], [], [], [], []
+        for g in games:
+            p, lg = self._where(int(g))
+            a = p['arr']
+            lo, hi = p['ask_start'][lg], p['ask_start'][lg + 1]
+            if hi == lo:
+                continue
+            seats = np.asarray(a['ask_seat'][lo:hi]).astype(np.int64)
+            pos = np.asarray(a['ask_pos'][lo:hi]).astype(np.int64)
+            seq_of = {}
+            for s in np.unique(seats):
+                need = int(pos[seats == s].max())
+                off = int(a['stream_off'][lg, s])
+                if need > int(a['stream_len'][lg, s]):
+                    raise ValueError(f'game {g}: an ask folds {need} rows of a {a["stream_len"][lg, s]}-row stream')
+                seq_of[int(s)] = len(seq_rows)
+                seq_rows.append(np.asarray(a['streams'][off:off + need]))
+                seq_len.append(need)
+            ask_seq.append(np.array([seq_of[int(s)] for s in seats]))
+            ask_pos.append(pos)
+            obs_l.append(np.asarray(a['ask_obs'][lo:hi]))
+            cand_l.append(np.asarray(a['ask_cands'][lo:hi]))
+            hold_l.append(np.asarray(a['ask_holder'][lo:hi]))
+            seat_l.append(seats)
+            clus_l.append(np.full(hi - lo, int(g)))
+        S = len(seq_rows)
+        L = max(seq_len) if seq_len else 1
+        slots = np.zeros((S, L, 21), dtype=np.int64)
+        if S:
+            lens = np.array(seq_len, dtype=np.int64)
+            flat = event_slots(np.concatenate(seq_rows))  # one call for the batch
+            seq_i = np.repeat(np.arange(S), lens)
+            pos_i = np.arange(len(flat)) - np.repeat(np.cumsum(lens) - lens, lens)
+            slots[seq_i, pos_i] = flat
+        obs = np.concatenate(obs_l)
+        cands_file = np.concatenate(cand_l)
+        cands_in = placeholder_cands(obs) if self.facts == 'placeholder' else cands_file
+        unit = popcount6(cands_file) >= 2
+        holder = np.concatenate(hold_l).astype(np.int64)
+        if (holder[unit] == NONE).any():
+            raise ValueError('a unit card has no holder')
+        mask = ((cands_in[:, :, None] >> np.arange(6, dtype=np.uint8)) & 1).astype(bool)
+        if not mask[unit, holder[unit].clip(0, 5)].all():
+            raise ValueError('a unit card\'s true holder is not among its candidates')
+        return {
+            'slots': slots, 'seq_len': np.array(seq_len, dtype=np.int64),
+            'ask_seq': np.concatenate(ask_seq).astype(np.int64), 'ask_pos': np.concatenate(ask_pos),
+            'dec': decision_features(obs, cands_in), 'mask': mask, 'unit': unit,
+            'holder': np.where(unit, holder, 0), 'seat': np.concatenate(seat_l), 'cluster': np.concatenate(clus_l),
+        }

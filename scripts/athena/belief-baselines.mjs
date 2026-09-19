@@ -223,7 +223,7 @@ async function extractRecords(sc, pop) {
 /* ---------------------------------------------------------------------------------------- the bootstrap --- */
 
 function readClusters(file) {
-  const lines = fs.readFileSync(file, 'utf8').split('\n').filter(Boolean)
+  const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/).filter(Boolean) // a CR would rename the last column
   const head = lines[0].split('\t')
   return lines.slice(1).map((ln) => {
     const v = ln.split('\t')
