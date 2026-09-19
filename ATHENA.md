@@ -4,9 +4,12 @@
 own play.** Monet v1.0 is the bar. It is also an opponent, a harness and a body of evidence. It is not a starting
 point.
 
-**Status: P0 REGISTERED 2026-09-19.** The owner approved §4 as drafted, and the installs it needs, in their words:
+**Status: P0 CLOSED 2026-09-19.** All four gates held (§4.6), and all of §4.7's predictions came true. Next is P1's
+pre-registration, written before any P1 run. No ATHENA game has been played for strength.
+
+**P0 was registered 2026-09-19.** The owner approved §4 as drafted, and the installs it needs, in their words:
 *"approve P0 as drafted, go ahead with the installs"* (§6 row 2). §4 is the draft of 2026-09-18, unchanged; anything
-amended after approval carries its date. No ATHENA game has been played. §4.1–§4.4 report the scoping measurements of
+amended after approval carries its date. §4.1–§4.4 report the scoping measurements of
 2026-09-18: engine checks and throughput timings, none of them a read of strength. The owner's answers to §5's
 questions, given the same day, are recorded in §5 and §6.
 
@@ -960,6 +963,90 @@ H1's rate × 2,000 + H5's × 2,000 + H4's × 4,000. H2 and H3 are left out, so t
 3. **The forward's cost per decision** is reported at three candidate sizes. This is information for P1 and D5, and it
    gates nothing.
 
+> **G0d scored 2026-09-19: PASS.**
+>
+> **Part 1, the package self-tests: holds.**
+> - **The registered run:** `stub-selftest.mjs` over 200 games, with the package on seats 0, 2 and 4 against
+>   Balanced.
+>   - It answered 6,203 asks, 48,479 declare polls and 2 passes.
+>   - Its 11 declares all came from the rules-certain rail, and none was wrong. Both of its compelled claims were
+>     PASSFIX.
+> - **Every fault counter is zero:** the package's 15, and the self-test's own 5 (divergences from the in-engine
+>   policy, log-shape mismatches, gifts, sweeps without a declare, and unexplained full-view differences).
+> - **The referee reproduces the host's reduced reveal.** After a wrong declare, the state it sends shows only the
+>   holders that a hit had located.
+> - **The forced test:** 42 of 42 checks pass, with the counters at zero. A weight file whose md5 is not the
+>   manifest's is refused before the handshake.
+> - [Information] It is a stub with random weights, not a player: it won 0 of the 200 games (39 sets to 1,000).
+> - **Coverage** [Information; amendment 2]. The Balanced run never reaches MUSTFIX or a forced request, so a second
+>   200-game run against the mixed stub covers them.
+>   - It answered 12,766 asks, 83,639 polls, 12 passes and 17 forced requests, in 2 emulated forced endgames.
+>   - It made 14 compelled claims: 12 PASSFIX and 2 MUSTFIX.
+>   - Every fault counter is zero.
+>
+> **Part 2, the in-engine pin: holds.**
+> - **The frozen weights** (md5 `2e6a12cd…`): the same forward, run in-engine, reproduces 6,203 of 6,203 asks, and
+>   12,766 of 12,766 in the mixed run.
+> - **The perturbed weights.** Every weight was scaled by up to ±1% (md5 `e1032df4…`).
+>   - 85 of the 6,203 asks differ, and 155 of the 12,766.
+>   - A package built with the perturbed file also plays with zero faults. It pins 6,297 of 6,297 against its own
+>     weights, and 89 differ against the frozen ones.
+>
+> **Part 3, the forward's cost per decision** [Measured, information]. One thread, the host at 2% load, over 12 Monet
+> v1.0 games (720 decisions and 114 events a game).
+>
+> | size | actor weights | fold per event | trunk and heads | the network at every decision | per six-seat game |
+> |---|---:|---:|---:|---:|---:|
+> | S | 1,363,717 | 0.147 ms | 0.54 ms | 0.61 ms | 439 ms |
+> | M | 5,349,381 | 0.554 ms | 1.87 ms | 2.41 ms | 1,735 ms |
+> | L | 23,283,205 | 2.146 ms | 8.80 ms | 10.35 ms | 7,450 ms |
+>
+> - [Estimate] A 14,400-game read at M, with ATHENA on one team, takes about 3.5 hours on one thread, or about 30
+>   minutes on seven.
+>
+> **The JavaScript encoder equals the port's** [Measured, information].
+> - 1,048,907 states over 5,200 corpus games show 0 mismatches in any field.
+> - A planted control that withholds a wrong declare's holders makes 409,569 states differ.
+> - Ten fixture games in vitest reproduce the port's digests.
+> - These are home views. At the bridge the host withholds a wrong declare's holders, so the package's inputs after a
+>   wrong declare differ from the port's home inputs in exactly the way the control does. Training for play at the
+>   bridge has to see that regime (P3).
+>
+> **Checked independently.** The checks were re-run from the branch head (`42b4052`, clean tree). Every number came
+> out the same:
+> - The build reproduces the weight file's md5 from its seed.
+> - The registered self-test gives 6,203 asks and zero faults, and the forced test 42 of 42.
+> - The pin holds at 6,203 of 6,203, and the perturbed weights differ on 85.
+> - The mixed run gives 12,766 asks, pinned 12,766 of 12,766.
+> - On a dump of 2,800 games, the encoder check compares 651,064 states with 0 mismatches, and the control catches
+>   232,127.
+> - vitest passes (81 files, 1,246 tests), and so do typecheck and lint.
+>
+> **Q4, G0d holds (80%): HIT.**
+>
+> **Amended with the result.** No bar changes.
+> 1. **The equivalence check compares with the view the host allows.** Holders are withheld after a wrong declare, so
+>    every divergence is a fault, and the original's exception after a failed declaration is gone. The full-information
+>    comparison is kept as information. It differs only after a wrong declare: 57 replies in the Balanced run and 1,327
+>    in the mixed run.
+> 2. **The mixed-stub run is part 1's coverage companion.**
+> 3. **The host's forced endgame is emulated from this repo's reading of it,** not from FishLab's code.
+>    - It asks only the seat holding the window option, and the real host may also ask teammates.
+>    - It sweeps the bars 1, 0.8, 0.6, 0.4, 0.2 and 0 over the open sets, then `last_resort`.
+> 4. **The forced test is adapted.**
+>    - Its premises are rebuilt as states a host could send.
+>    - Section 6(b) expects MUSTFIX's `none` on the poll and the declare in the sweep.
+>    - Section 8 (the counters and the md5 refusal) is new.
+> 5. **Parameter counts.** The actor alone is 1.36M, 5.35M and 23.3M at S, M and L. §3.1's 2.1M, 8.2M and 34.3M
+>    include the critic and a duplicated GRU cell.
+> 6. **The start seat.** The host does not publish it, so the adapter takes the first event's actor. That would be
+>    wrong only if the first event were an out-of-turn declare, which happened 0 times in 400 games. P1 registers the
+>    rule.
+> 7. **Determinism.** The arithmetic is float64 in a fixed order over float32 weights, with a deterministic exponential
+>    in place of `Math.exp` and `Math.tanh`.
+> 8. **The build.** The package is built into `dist/athena-stub/`, as Bass's is into `dist/botpkg/`. `/athena-stub`
+>    is in `.vercelignore`.
+
 **No bridge cell is played in P0,** and Docker is not needed. The first bridge cell is step 0 of P3's first read.
 
 ### 4.7 Predictions, written before anything is built
@@ -977,6 +1064,17 @@ H1's rate × 2,000 + H5's × 2,000 + H4's × 4,000. H2 and H3 are left out, so t
   60 Monet games and 13 in 2,000 fuzz games.
 - **Q7: P0 is done inside 12 working days (55%).**
 - **Joint:** all four gates held within P0's budget, **about 55%**. Most of the rest is G0b and time.
+
+> **Scored 2026-09-19. P0 is closed.** All eight predictions came true.
+> - **Q1 (90%): HIT.** G0a held, both (i) and (ii). The clean first full run (45%) happened too.
+> - **Q2 (75%): HIT.** 28,776 games/s on 8 threads. The single-thread core reached 73,937 games/s, so its part (80%)
+>   is a HIT as well.
+> - **Q3 (85%): HIT.**
+> - **Q4 (80%): HIT.**
+> - **Q5 (95%): HIT.** M1–M5 were all caught at G0a, and M1 again at G0c.
+> - **Q6 (70%): HIT.** No floor needed H4 extended.
+> - **Q7 (55%): HIT.** P0 was registered and closed on 2026-09-19, the same day.
+> - **Joint (about 55%): HIT.**
 
 ### 4.8 Cost and wall clock
 
