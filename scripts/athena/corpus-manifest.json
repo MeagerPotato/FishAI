@@ -457,9 +457,9 @@
   "portReplay": {
     "gate": "ATHENA.md §4.6 G0a (i): the Rust port replays the home corpus from its actions alone",
     "port": "athena-env (Rust), #![forbid(unsafe_code)], no dependencies",
-    "checkedAt": "c5e6b34bb79c5092aab487a113fd237379f83a33",
+    "checkedAt": "a2fc47438b7f1b37a14c991592831fafd1cbd946",
     "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
-    "date": "2026-09-19T10:31:36.734Z",
+    "date": "2026-09-19T10:36:38.320Z",
     "result": {
       "games": 10800,
       "steps": 4788218,
@@ -523,9 +523,9 @@
       {
         "threads": 4,
         "command": "cargo run --release --bin replay-check -- --corpus C:/Projects/FishAI-bench/athena/corpus/7d85c2e --threads 4 --json port-t4.json",
-        "seconds": 0.845,
-        "gamesPerSecond": 12788,
-        "stepsPerSecond": 5669447,
+        "seconds": 0.844,
+        "gamesPerSecond": 12793,
+        "stepsPerSecond": 5671675,
         "games": 10800,
         "steps": 4788218,
         "recordsOk": 10800,
@@ -535,9 +535,9 @@
       {
         "threads": 1,
         "command": "cargo run --release --bin replay-check -- --corpus C:/Projects/FishAI-bench/athena/corpus/7d85c2e --threads 1 --json port-t1.json",
-        "seconds": 3.222,
-        "gamesPerSecond": 3352,
-        "stepsPerSecond": 1485971,
+        "seconds": 3.25,
+        "gamesPerSecond": 3323,
+        "stepsPerSecond": 1473421,
         "games": 10800,
         "steps": 4788218,
         "recordsOk": 10800,
@@ -565,8 +565,8 @@
           "index": 3,
           "seed": "athena-p0-g0a-h1-3",
           "step": 722,
-          "field": "refused",
-          "detail": "step 723: the port refused pass 4->2 (WRONG_PHASE)"
+          "field": "d",
+          "detail": "8dbf7b4cbab98eb2 vs recorded 0c1b1edccc72d759"
         },
         "verdict": "mutant caught"
       },
@@ -587,8 +587,8 @@
           "index": 5,
           "seed": "athena-p0-g0a-h1-5",
           "step": 513,
-          "field": "length",
-          "detail": "the actions ended at step 794, before the game did"
+          "field": "d",
+          "detail": "b637f77ff9a64a64 vs recorded f39ba8ab7aa8e5ed"
         },
         "verdict": "mutant caught"
       },
@@ -609,8 +609,8 @@
           "index": 0,
           "seed": "athena-p0-g0a-h1-0",
           "step": 112,
-          "field": "refused",
-          "detail": "step 113: the port refused decline 5 (NOT_YOUR_OPTION)"
+          "field": "d",
+          "detail": "ace73ff3d8bdd0a4 vs recorded 9b73ca23a28fa476"
         },
         "verdict": "mutant caught"
       },
@@ -653,16 +653,16 @@
           "index": 0,
           "seed": "athena-p0-g0a-h1-0",
           "step": 6,
-          "field": "refused",
-          "detail": "step 7: the port refused decline 5 (NOT_YOUR_OPTION)"
+          "field": "d",
+          "detail": "09e861cb9a564f7a vs recorded c0789dd3e7b47be5"
         },
         "verdict": "mutant caught"
       }
     ],
     "stubLoopForInformation": {
       "note": "The core plus the mixed stub, no digests (stub-bench); information for G0b, which is measured later through the Python batch API. Not G0b.",
-      "oneThread": "61201 games/s: 200000 games after 10000 warm-up in 3.268 s, 639.0 actions a game, 0.026 us an action, capped 0, refused 0 (host shared, ~50% busy)",
-      "fourThreads": "214653 games/s (53663 a thread): 200000 games after 10000 warm-up in 0.932 s, capped 0, refused 0 (host shared, ~50% busy)"
+      "oneThread": "59259 games/s: 200000 games after 10000 warm-up in 3.375 s, 639.0 actions a game, 0.026 us an action, capped 0, refused 0; 59259-61201 over three runs today (host shared, ~50% busy)",
+      "fourThreads": "189094 games/s (47273 a thread): 200000 games after 10000 warm-up in 1.058 s, capped 0, refused 0; 189094-214653 over three runs today (host shared, ~50% busy)"
     }
   }
 }
