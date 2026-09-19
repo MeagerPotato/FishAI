@@ -13,8 +13,9 @@ rust-version = "1.80"
 
 [features]
 default = []
-# The planted mutants M1-M5 of ATHENA.md §4.6 G0a. Off in every normal build: without this feature their code paths
-# are not compiled at all. `replay-check --mutant Mk` needs `--features mutants`.
+# The planted mutants M1-M5 of ATHENA.md §4.6 G0a, M6-M7 of §8.1 G1a and G1b's full-reveal control. Off in every
+# normal build: without this feature their code paths are not compiled at all. `replay-check --mutant Mk` and
+# `facts-check --mutant Mk | --control full-reveal` need `--features mutants`.
 mutants = []
 
 [lib]
@@ -35,6 +36,12 @@ path = "src/bin/stub-bench.rs"
 [[bin]]
 name = "bridge-walk"
 path = "src/bin/bridge-walk.rs"
+
+# P1's G1a and G1b checker (ATHENA.md §8.1, §8.2): the port's facts, rails and bridge-regime views against the
+# reference's, over the corpus and the bridge's records.
+[[bin]]
+name = "facts-check"
+path = "src/bin/facts-check.rs"
 
 [profile.release]
 opt-level = 3
