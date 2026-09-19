@@ -1,0 +1,28 @@
+[package]
+name = "athena-env-py"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "The Python batch API over ATHENA's us54 rules core (ATHENA.md §4.5 item 2): PyO3 and rust-numpy bindings of athena-env's vecenv."
+publish = false
+rust-version = "1.80"
+
+# Its own workspace root, so the rules core in the parent directory keeps its own Cargo.lock with no dependencies.
+[workspace]
+
+# D12 (ATHENA.md §5): the Python bindings are the only dependencies, pinned by this crate's committed Cargo.lock.
+[dependencies]
+athena_core = { package = "athena-env", path = ".." }
+pyo3 = { version = "0.29", features = ["extension-module"] }
+numpy = "0.29"
+
+[lib]
+# The importable module is `athena_env` (pyproject.toml's module-name and the #[pymodule]'s name). The library itself
+# is named apart from the core crate, whose library is also `athena_env`.
+name = "athena_env_py"
+crate-type = ["cdylib"]
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
