@@ -229,6 +229,12 @@ def cmd_prepare(args):
 
 def cmd_train(args):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    if device.type == 'cuda' and args.gpu_mem_fraction:
+        # Batches vary in shape (events per game, asks per batch), and the caching allocator's reserve grew past the
+        # card during B-M (15.8 of 16.3 GB by epoch 11): under WDDM the driver then backs allocations with system
+        # memory and a step ran 2-3x slower. With a cap the allocator frees its cache and retries instead; the
+        # numbers are unchanged, since only where the tensors live changes.
+        torch.cuda.set_per_process_memory_fraction(args.gpu_mem_fraction)
     run = Path(args.out)
     run.mkdir(parents=True, exist_ok=True)
     train_dirs, val_dirs = dirs_of(args.train), dirs_of(args.val)
@@ -243,7 +249,8 @@ def cmd_train(args):
               'batch_games': BATCH_GAMES, 'max_epochs': args.max_epochs, 'patience': PATIENCE, 'seed': args.seed,
               'order': f'{args.seed}:order:<epoch>', 'train': train_dirs, 'train_games': G,
               'train_games_by_dir': [p['G'] for p in train.parts], 'val': val_dirs, 'val_games': val_G,
-              'smoke': smoke, 'amp': args.amp, 'workers': args.workers, 'device': str(device),
+              'smoke': smoke, 'amp': args.amp, 'workers': args.workers, 'gpu_mem_fraction': args.gpu_mem_fraction,
+              'device': str(device),
               'gpu': torch.cuda.get_device_name(0) if device.type == 'cuda' else None, 'torch': torch.__version__,
               'command': ' '.join(sys.argv)}
     (run / 'config.json').write_text(json.dumps(config, indent=1))
@@ -477,6 +484,8 @@ def main():
     p.add_argument('--max-train-games', type=int, default=0)
     p.add_argument('--amp', default='bf16', choices=['bf16', 'off'])
     p.add_argument('--workers', type=int, default=2, help='data loader worker processes (persistent)')
+    p.add_argument('--gpu-mem-fraction', type=float, default=0.7,
+                   help='cap the CUDA caching allocator at this share of the card (0: no cap); see cmd_train')
     p.add_argument('--smoke', action='store_true', help='label the run a smoke')
     p = sub.add_parser('eval')
     p.add_argument('--run', required=True)
