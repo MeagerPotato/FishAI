@@ -1,7 +1,12 @@
 /**
- * policy.ts: the ATHENA stub's decision over a `SeatView` (ATHENA.md §1, §4.5 item 6, G0d): the rules-certain declare
- * rail, and the network's choice among the legal moves everywhere else. The same code runs in-engine (the pin, the
- * tests, home play) and, type-stripped, inside the FishLab package.
+ * policy.ts: an ATHENA net's decision over a `SeatView` (ATHENA.md §1, §4.5 item 6, G0d; §9.2–§9.3): the rules-certain
+ * declare rail, and the network's choice among the legal moves everywhere else. The same code runs in-engine (the pin,
+ * the tests, home play, the evaluation arm of `scripts/duplicate-pairs.mjs`) and, type-stripped, inside the FishLab
+ * package.
+ *
+ * {@link decideNet} is the decision, and {@link decideStub} is its G0d name, kept for the package and the stub's
+ * scripts. The two differ nowhere: what a net does at a declare window follows from its weight format, and formats 1
+ * and 2 do exactly what the stub always did.
  *
  * ## What the stub decides, and how
  *
@@ -13,10 +18,12 @@
  *      canonical order is declared with that assignment. The network is not consulted, and the rail does not wait.
  *   2. **Otherwise, where declining is legal, the stub declines.** The speculative-declare head is computed by the
  *      network but not played: its gating is P1's to register (ATHENA.md §3, "Decisions a game": about 560 window
- *      offers a game). So a stub window costs the rules facts and no forward pass.
+ *      offers a game). So a stub window costs the rules facts and no forward pass. **At format 3 this is the
+ *      network's decision instead** (§9.1: G1c registered every offer), and the window costs a forward pass.
  *   3. **Where declining is illegal** (`MUST_DECLARE`: the turn-holder cannot ask), the claim is compelled. The set is
  *      the declare head's highest logit among the open sets that the rules do not already prove lost (all open sets
- *      if every one is lost); a tie goes to the lower set. Its assignment is {@link planSet}'s.
+ *      if every one is lost); a tie goes to the lower set. Its assignment is {@link planSet}'s. At format 3 the
+ *      lost-set filter is not applied: §9.3 registers three rails and this is not one of them.
  * - **A pass** (`awaitPass`): the pass head's logit over the legal passes; a tie goes to teammate rel 2.
  *
  * {@link planSet} places each card of a set: at its rules-fixed holder when that is a teammate; otherwise at the
@@ -63,13 +70,13 @@ import {
   H_BELIEF,
   H_DECLARE,
   H_PASS,
-  HEADS,
   decFOf,
   decisionFeatures,
   expDet,
   factsFeatures,
   foldAll,
   foldEvent,
+  headCountOf,
   headsOf,
   zeroState,
 } from './net.ts'
@@ -274,13 +281,13 @@ export function forwardView(net: AthenaNet, view: SeatView, cache: SeatForward |
     encodeFactsRow(view, facts, row)
     factsFeatures(row, dec, DEC_F)
   }
-  const heads = headsOf(net, h, dec, new Float64Array(HEADS))
+  const heads = headsOf(net, h, dec, new Float64Array(headCountOf(net.arch)))
   return { obs, legal, heads, k: facts }
 }
 
 /* --------------------------------------------------------------------------------------- the decision --- */
 
-export type StubKind = 'ask' | 'rail' | 'compelled' | 'decline' | 'pass'
+export type StubKind = 'ask' | 'rail' | 'compelled' | 'declare' | 'decline' | 'pass'
 
 export interface StubDecision {
   action: GameAction
@@ -291,32 +298,51 @@ export interface StubDecision {
   forward: boolean
 }
 
-/** The stub's move for the view's own seat (module header). Throws where the seat has no move to make. */
-export function decideStub(net: AthenaNet, view: SeatView, cache: SeatForward | null = null): StubDecision {
+/**
+ * The net's move for the view's own seat (module header). Throws where the seat has no move to make.
+ *
+ * Formats 1 and 2 take exactly the stub's path, unchanged: a window the rail does not take is declined wherever
+ * declining is legal, without a forward pass. **A format 3 net (P2, ATHENA.md §9.2) takes the window to the network
+ * instead** — G1c registered "every offer" (§9.1), so after the rail the declare head chooses among the legal sets and
+ * the decline (its tenth output, `H_DECLARE + N_SETS`), argmax with a tie to the lower index, and the assignment is
+ * {@link planSet}'s. Nothing else differs: the ask, the pass and the compelled claim are the same code.
+ *
+ * §9.3 registers exactly three rails, and the stub's fourth — the lost-set filter on a compelled claim, which is a
+ * stub heuristic, not a rule — is therefore **not** applied at format 3: the policy's argmax runs over every legal set.
+ */
+export function decideNet(net: AthenaNet, view: SeatView, cache: SeatForward | null = null): StubDecision {
   const me = view.seat
-  if (view.phase === 'finished') throw new Error('decideStub: the game is over')
+  const v3 = net.version === 3
+  if (view.phase === 'finished') throw new Error('decideNet: the game is over')
   const w = view.declareWindow
   if (w) {
-    if (w.option !== me) throw new Error(`decideStub: the window's option is seat ${w.option}, not seat ${me}`)
+    if (w.option !== me) throw new Error(`decideNet: the window's option is seat ${w.option}, not seat ${me}`)
     const k = factsOf(view)
     const rail = railPlan(view, k)
     if (rail !== null) return { action: claimOf(me, rail), kind: 'rail', plan: rail, forward: false }
-    const obs = new Uint8Array(OBS_LEN)
-    const legal = new Uint8Array(LEGAL_LEN)
-    encodeObservation(view, obs, legal)
-    if (legal[L_DECLINE] === 1) return { action: { type: 'decline', seat: me }, kind: 'decline', forward: false }
+    if (!v3) {
+      const obs = new Uint8Array(OBS_LEN)
+      const legal = new Uint8Array(LEGAL_LEN)
+      encodeObservation(view, obs, legal)
+      if (legal[L_DECLINE] === 1) return { action: { type: 'decline', seat: me }, kind: 'decline', forward: false }
+    }
     const f = forwardView(net, view, cache, k)
     const open: number[] = []
     for (let b = 0; b < N_SETS; b++) if (f.legal[L_DECLARE + b] === 1) open.push(b)
-    if (open.length === 0) throw new Error('decideStub: a compelled window with no open set')
-    const alive = open.filter((b) => !setLost(view, k, b))
+    if (open.length === 0) throw new Error('decideNet: a declare window with no open set')
+    const compelled = f.legal[L_DECLINE] !== 1
+    // format 1 and 2: the stub's pool, the open sets the rules do not already prove lost (all of them if every one is)
+    const alive = v3 ? open : open.filter((b) => !setLost(view, k, b))
     const pool = alive.length > 0 ? alive : open
     let best = pool[0]
     for (const b of pool) if (f.heads[H_DECLARE + b] > f.heads[H_DECLARE + best]) best = b
+    if (v3 && !compelled && f.heads[H_DECLARE + N_SETS] > f.heads[H_DECLARE + best]) {
+      return { action: { type: 'decline', seat: me }, kind: 'decline', forward: true }
+    }
     const plan = planSet(view, k, best, f.heads)
-    return { action: claimOf(me, plan), kind: 'compelled', plan, forward: true }
+    return { action: claimOf(me, plan), kind: compelled ? 'compelled' : 'declare', plan, forward: true }
   }
-  if (view.turn !== me) throw new Error(`decideStub: seat ${me} holds neither the option nor the turn (${view.turn})`)
+  if (view.turn !== me) throw new Error(`decideNet: seat ${me} holds neither the option nor the turn (${view.turn})`)
   const f = forwardView(net, view, cache)
   if (view.phase === 'awaitPass') {
     let pick = -1
@@ -324,7 +350,7 @@ export function decideStub(net: AthenaNet, view: SeatView, cache: SeatForward | 
       if (f.legal[L_PASS + kk] !== 1) continue
       if (pick < 0 || f.heads[H_PASS + kk] > f.heads[H_PASS + pick]) pick = kk
     }
-    if (pick < 0) throw new Error('decideStub: awaitPass with no legal pass')
+    if (pick < 0) throw new Error('decideNet: awaitPass with no legal pass')
     return { action: { type: 'pass', seat: me, to: abs(2 * (pick + 1), me) }, kind: 'pass', forward: true }
   }
   let code = -1
@@ -332,9 +358,15 @@ export function decideStub(net: AthenaNet, view: SeatView, cache: SeatForward | 
     if (f.legal[L_ASK + c] !== 1) continue
     if (code < 0 || f.heads[H_ASK + c] > f.heads[H_ASK + code]) code = c
   }
-  if (code < 0) throw new Error('decideStub: no legal ask')
+  if (code < 0) throw new Error('decideNet: no legal ask')
   return { action: decodeAction(me, code) as GameAction, kind: 'ask', forward: true }
 }
+
+/**
+ * {@link decideNet} under G0d's name. The ATHENA-stub package (`athena-stub/bot.mjs`) and the stub's scripts import
+ * this, and it is the same function: a format 1 net decides exactly as it always did.
+ */
+export const decideStub = decideNet
 
 function claimOf(seat: Seat, plan: DeclarePlan): GameAction {
   return { type: 'claim', seat, book: plan.book, assignments: { ...plan.assignments } }

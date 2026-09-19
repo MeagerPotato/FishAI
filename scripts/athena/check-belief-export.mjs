@@ -57,7 +57,7 @@ function main() {
   const net = NET.parseWeights(new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength))
   const decF = NET.decFOf(net.arch)
   const dec = new Float64Array(decF)
-  const heads = new Float64Array(NET.HEADS)
+  const heads = new Float64Array(NET.headCountOf(net.arch))
   const belief = new Float64Array(324)
   let cards = 0
   let argmaxDiffer = 0

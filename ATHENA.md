@@ -11,8 +11,8 @@ network: §3.1's training times are re-costed at about three times the first est
 read too (§8.4–§8.6). G1 failed: the learned belief heads are better calibrated than Monet's but pick the holder only
 slightly more often (§8.3), D4's H arm missed, so search stays closed (§8.4), and the head failed the declare pin
 (§8.3). **P1 is closed** (§8.10): every read it registered was run, and 13 of its 18 predictions hit. **P2 is
-registered as §9**, and its one three-day run (D4, taken 2026-09-19) is set for the
-weekend of 2026-09-26. No ATHENA game has been played for strength.
+registered as §9**, its code is built and checked without a training step (§9.12), and its one three-day run (D4,
+taken 2026-09-19) is set for the weekend of 2026-09-26. No ATHENA game has been played for strength.
 
 **P0 was registered 2026-09-19.** The owner approved §4 as drafted, and the installs it needs, in their words:
 *"approve P0 as drafted, go ahead with the installs"* (§6 row 2). §4 is the draft of 2026-09-18, unchanged; anything
@@ -2462,6 +2462,96 @@ PPO, clipped, on the port's batched environment.
 - **The budget for P3,** from the measured curve rather than the brief's range.
 - **Whether the fallback (C.5) is opened,** if the kill criterion fires.
 - **The size question, again:** if throughput binds rather than learning, S is re-costed with the curve's slope.
+
+### 9.12 Amendments, written while P2 was built and before any run (2026-09-19)
+
+§9 was registered before any P2 code. Building the code found places where it did not say enough, and one defect.
+**None of these changes a bar, a seed, a split, an opponent share or a stop rule.** Everything here is dated before
+the first training step.
+
+**The decision, and the arm.**
+
+1. **The declare head's tenth output is the decline.** §9.2 gives the head "the nine sets and decline" and §9.1
+   registers that every offer reaches the network, but not how they combine. The set is the argmax over the sets the
+   legal row allows, ties to the lower set; the decline is played only if its logit is strictly greater. A compelled
+   window (`MUST_DECLARE`) skips the decline.
+2. **The stub's lost-set filter does not apply to P2.** G0d's stub, at a compelled claim, first drops the sets the
+   rules already prove lost. §9.3 registers exactly three rails and this is a fourth, so ATHENA's policy chooses over
+   every open set. It is not blind to the fact: "this set is proven lost" is one of the facts features it reads
+   (§8.3). Formats 1 and 2 keep the filter, so G0d's stub is unchanged.
+3. **What 600 pairs means.** §9.6's "600 duplicate pairs (1,200 games)" and §9.7's "200 deals × 6 rotations (14,400
+   games)" are the same shape: a cell is 200 deals × 6 rotations = 600 pairs, and G2 is twelve cells.
+4. **A G2 cell's bank is its seed**, deals `<seed>-0` … `<seed>-199`, which is how §7.2's Kraken read turned a seed
+   into deals.
+5. **The weight file keeps G0d's container.** A v3 file is magic `ATHENAW1`, format `athena-weights-1`, and is told
+   apart by its arch alone: 912 decision features and 518 heads. One reader reads all three formats, and the two
+   already written are byte for byte what they were.
+
+**The learner.**
+
+6. **The critic is one hidden layer of 1,024.** §9.2 says "a 1,024-wide MLP" without a depth. One layer puts the
+   network at 7,138,311 parameters at M — §9.2's "about 7 million". Two puts it at 8,187,911, which is not.
+   The exported weight file holds the actor's 5,755,910; the critic is training-only and is never exported.
+7. **The value loss covers both heads.** §9.2 has a value head and a perfect-information critic; §9.4 registers one
+   value weight. Both regress to the same GAE return, and the registered 0.5 weighs the mean of the two errors. The
+   advantage is the critic's, as registered.
+8. **The set-difference target** is the paired set difference from the observing team's side at the end of the game,
+   squared error, unscaled.
+9. **Advantages are normalised per minibatch** (standard PPO). Not registered before; recorded now.
+10. **The value loss is not clipped.**
+11. **A declare's entropy** is H(declare) + P(a set) · Σ H(assignment), which is exact because the assignment head
+    does not depend on which set was drawn.
+12. **D2 enters as a weight, not a quota.** §9.4's "a fixed 10% of each minibatch's cards" is applied as
+    0.9 · (ATHENA's own cards) + 0.1 · (D2's cards) in the belief loss, with both card counts logged every iteration.
+13. **Rail decisions are not stored.** §9.3 takes them from the policy and does not call the network, so there is
+    nothing to train on. They are counted, and skipped by GAE — which changes nothing at γ = 1 with no intermediate
+    reward.
+14. **A capped game** (the 6,000-step cap) scores 0, is terminal for the advantage, and is counted. None is dropped.
+15. **Divergence checking runs in two tiers.** The cheap checks — refusals, the acting seat, and finished against
+    unfinished — are always on for every opponent game. The full state-digest and view comparison is a flag, for a
+    smoke and for a run's first hours, because it slows all 8,192 games for the 7% that have a reference. Either
+    tier firing stops the run (§9.8 rule 1).
+16. **Which opponent a game draws** is taken from the game's own seed through the reference's PRNG, so a run's whole
+    mix replays from its seed prefix.
+17. **The initialisation is PyTorch's default, with nothing added.** §9 registers no initialisation, and the choice
+    is not as obvious as it looks. At a uniform declare head a fresh policy declines about one window offer in ten,
+    so it declares at nine: every one a guess, five wrong guesses decide the game, and the first games are about five
+    decisions long and hold no ask at all. The tempting fix is to start the decline bias high — at +8 a fresh policy
+    would decline 99.7% of offers — but **a set in us54 is only ever resolved by a declare**, so a policy that will
+    not declare plays games that do not end. The code has `--init-decline-bias`, **off**, and a smoke measured the
+    argmax side of exactly this: at a decline bias of 0 a read finishes its games, and at +1, +2, +3 and +6 every
+    pair ran into the step cap. Which side costs more under **sampling** at the registered entropy is not measured,
+    and it cannot be measured without a training run. So P2 runs the default, and **the first hour's log decides it**:
+    the share of capped games and the mean game length are read before the run is left to its three days. If games
+    are not ending, the bias is registered then, with the number the log gives.
+
+**The defect, found by building the rollout.**
+
+18. **A bridge-regime game must not serve Monet a full-reveal view.** §9.5 draws the regime per game and gives 7% of
+    games a Monet opponent, but the opponent service published every holder, which is the home regime. ATHENA's own
+    buffers were correct and the state, the actions and the state digest all agreed with the reference — only the
+    opponent's view was wrong, which is why no gate caught it. **The service learns the reduced reveal of §8.2**, and
+    the rollout stops rather than train a bridge game against an opponent that sees too much. Monet's home play is
+    unchanged, byte for byte.
+    - **Checked** [Measured]: the service's reduced view equals the replay codec's at all **4,788,218 states** of the
+      corpus, 0 differing, and the planted full-reveal control is caught at 1,327,765 states in 6,203 games — the
+      same numbers §8.2 recorded for G1b. Against the port directly, 24 games in both regimes differ nowhere, and the
+      control is caught at 482 of 15,999 decisions. **27.7% of decisions see fewer published holders** under the
+      reduced reveal.
+    - **End to end** [Measured]: the rollout asked for the reduced view in every bridge-regime game and the
+      service served it. In 24 games, 18 of them against Monet and 40 bridge-regime opens, the 4,491 state-digest and
+      view comparisons found **0 divergences**, with 0 service faults.
+    - The service advertises `reveals` in its handshake; a service without that key is P0's, and the run stops with
+      a message naming `--bridge-reveal full` rather than training against the wrong opponent.
+
+19. **A curve read where no pair finished is a fault, not a 0%.** An untrained policy read by argmax may never
+    declare, and a game that never declares never ends: every pair hits the harness's 6,000-move guard and is
+    dropped, which would otherwise be logged as a win rate of exactly 0.0000%. The curve now records the fault and
+    withholds the number. §9.6's curve is an instrument, and an instrument may not invent a point.
+
+20. **The smoke exports with a nudged decline bias; the run does not.** P2's CPU smoke, which exists to prove the
+    wiring in seconds, shifts the decline bias before its export so that its two read pairs finish. That flag is on
+    the smoke alone: `export` writes the trained network untouched.
 
 ## Appendix A. How today's numbers were made
 

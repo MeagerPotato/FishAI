@@ -206,7 +206,8 @@ describe('the decF = 912 net of P1\'s heads', () => {
     const back = A.parseWeights(A.serializeWeights(net))
     expect(back.arch).toEqual(ARCH)
     expect(Array.from(back.blob)).toEqual(Array.from(net.blob))
-    expect(() => A.makeNet({ ...ARCH, decF: 600 }, new Float32Array(0))).toThrow(/516 or 912/)
+    // the refusal names what it read and every format this forward supports (net.ts's module header)
+    expect(() => A.makeNet({ ...ARCH, decF: 600 }, new Float32Array(0))).toThrow(/decF 600, heads 517; this forward supports v1 .*v2 .*v3 /)
   })
 
   it('keeps G0d\'s 516 header byte for byte: no decF in the arch, and decF 516 written after eventF', () => {
