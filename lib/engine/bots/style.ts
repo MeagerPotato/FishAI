@@ -34,7 +34,7 @@
  * ever read through a pure function of the arguments handed in (same discipline as
  * [variants.ts](../variants.ts), RULES_US54.md §2.4).
  */
-import type { AskWeights, BotDifficulty } from './types.ts'
+import type { AskWeights, BotDifficulty, TeamHand } from './types.ts'
 
 /** STYLES.md §2 family tag — reporting only; no policy reads it. */
 export type StyleFamily =
@@ -322,6 +322,13 @@ export interface StyleParams extends AskWeights {
    * `pModel: 'marginal'` builds and is inert without one. Absent on every roster style and every tier.
    */
   licenceHold?: number
+  /**
+   * ATHENA.md §8.5 (T1, the team-information ceiling). TEST ONLY: no registry entry sets it, and a harness supplies
+   * it afresh at every decision (`scripts/duplicate-pairs.mjs --a-override '{"teamHands":true}'`). The acting seat's
+   * teammates' true current hands, which the knowledge build injects as it injects the own hand
+   * (`KnowledgeOptions.teamHands`); nothing else reads it. Absent on every roster style, every tier and every version.
+   */
+  teamHands?: readonly TeamHand[]
   /**
    * MONET.md §3.7 item 1 — the reveal ask's weight (≥ 0). An ask into a half-suit this hand holds
    * a card of, whose public record would let a teammate prove the set should it be on this team
@@ -913,6 +920,9 @@ export function validateStyle(style: StyleParams): string[] {
   // A target holding above six cards, or below zero, is not a holding of a half-suit.
   const licenceHold = style.licenceHold
   if (licenceHold !== undefined && !(typeof licenceHold === 'number' && Number.isFinite(licenceHold) && licenceHold >= 0 && licenceHold <= 6)) bad.push(`licenceHold ${String(licenceHold)} is not a number in [0, 6]`)
+  // ATHENA.md §8.5: a list of teammates' hands, each a seat 0..5 and an array of card names.
+  const teamHands = style.teamHands
+  if (teamHands !== undefined && !(Array.isArray(teamHands) && teamHands.every((t) => t !== null && typeof t === 'object' && Number.isInteger(t.seat) && t.seat >= 0 && t.seat <= 5 && Array.isArray(t.hand) && t.hand.every((c: unknown) => typeof c === 'string')))) bad.push('teamHands is not a list of {seat 0..5, hand: card[]}')
   const reveal = style.reveal
   if (reveal !== undefined && !(typeof reveal === 'number' && Number.isFinite(reveal) && reveal >= 0)) bad.push(`reveal ${String(reveal)} is not a finite number >= 0`)
   const revealFar = style.revealFar

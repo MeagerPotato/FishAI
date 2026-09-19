@@ -53,6 +53,12 @@
  * Banks: `home-a` is the fitting bank; `home-b` and `home-c` are held out. Name the bank in every
  * number quoted from this script.
  *
+ * ATHENA.md §8.5 (T1, the team-information ceiling): `"teamHands": true` in a side's override seats that side with
+ * its teammates' true hands in its knowledge. It is not a style value: at every decision of that side the harness
+ * lays `teamHands` (the acting seat's two teammates' current hands, from the state) over the style, and the
+ * knowledge build injects them as it injects the own hand (`KnowledgeOptions.teamHands`). Nothing else changes. The
+ * header prints the override as given, `{"teamHands":true}`.
+ *
  * `--games-out FILE` (ATHENA.md §4.6 G0c) also writes one JSON line a game, in play order: the pair g, the seed,
  * teamA, A's and B's final sets (null for a game that hit the cap or had an action refused) and the number of actions
  * the game took. It changes nothing that is played or printed; it lets another harness be pinned to this one game for
@@ -149,8 +155,24 @@ const PROB_A = Number(argOf('--a-search-prob', 1))
 const PROB_B = Number(argOf('--b-search-prob', 1))
 const withOverride = (pol, over) =>
   over ? Object.freeze({ skill: pol.skill, style: Object.freeze({ ...pol.style, ...over }) }) : pol
-const POL_A = withOverride(monetPolicy(A), OVER_A)
-const POL_B = withOverride(monetPolicy(B), OVER_B)
+// ATHENA.md §8.5: `"teamHands": true` is the harness's switch, taken out of the style and supplied per decision
+const teamSwitch = (over, flag) => {
+  if (!over || over.teamHands === undefined) return [over, false]
+  if (over.teamHands !== true) throw new Error(`${flag}: teamHands must be true (the harness supplies the hands)`)
+  const rest = { ...over }
+  delete rest.teamHands
+  return [Object.keys(rest).length > 0 ? rest : null, true]
+}
+const [STYLE_OVER_A, TEAM_A] = teamSwitch(OVER_A, '--a-override')
+const [STYLE_OVER_B, TEAM_B] = teamSwitch(OVER_B, '--b-override')
+const POL_A = withOverride(monetPolicy(A), STYLE_OVER_A)
+const POL_B = withOverride(monetPolicy(B), STYLE_OVER_B)
+/** The side's policy at this decision: with T1's switch on, the acting seat's teammates' hands laid over its style. */
+const withTeamHands = (pol, s, seat) =>
+  Object.freeze({
+    skill: pol.skill,
+    style: Object.freeze({ ...pol.style, teamHands: [0, 1, 2, 3, 4, 5].filter((t) => t !== seat && seatTeam(t) === seatTeam(seat)).map((t) => ({ seat: t, hand: [...s.hands[t]] })) }),
+  })
 const LABEL_A = `${A}${OVER_A ? ' ' + JSON.stringify(OVER_A) : ''}${PARAMS_A ? ' search ' + JSON.stringify(PARAMS_A) + (PROB_A < 1 ? ` prob ${PROB_A}` : '') : ''}`
 const LABEL_B = `${B}${OVER_B ? ' ' + JSON.stringify(OVER_B) : ''}${PARAMS_B ? ' search ' + JSON.stringify(PARAMS_B) + (PROB_B < 1 ? ` prob ${PROB_B}` : '') : ''}`
 // a sparse search: searched when the decision's own seed says so (a uniform below prob), else the pick
@@ -178,7 +200,8 @@ function play(seed, teamA) {
     const { seat } = legalActionsSummary(s)
     const view = seatView(s, seat)
     const isA = seatTeam(seat) === teamA
-    const r = reduce(s, act(view, isA ? POL_A : POL_B, isA ? PARAMS_A : PARAMS_B, hashSeed(`${seed}:${s.moveIndex}`)(), isA ? PROB_A : PROB_B, isA ? COUNT.A : COUNT.B))
+    const pol = (isA ? TEAM_A : TEAM_B) ? withTeamHands(isA ? POL_A : POL_B, s, seat) : isA ? POL_A : POL_B
+    const r = reduce(s, act(view, pol, isA ? PARAMS_A : PARAMS_B, hashSeed(`${seed}:${s.moveIndex}`)(), isA ? PROB_A : PROB_B, isA ? COUNT.A : COUNT.B))
     if (!r.ok) return null
     s = r.state
     lastMoves = guard
