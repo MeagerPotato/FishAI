@@ -54,8 +54,9 @@
  * number quoted from this script.
  *
  * `--games-out FILE` (ATHENA.md §4.6 G0c) also writes one JSON line a game, in play order: the pair g, the seed,
- * teamA, A's and B's final sets (null for a game that hit the cap or had an action refused) and the actions the game
- * took. It changes nothing that is played or printed; it lets another harness be pinned to this one game for game.
+ * teamA, A's and B's final sets (null for a game that hit the cap or had an action refused) and the number of actions
+ * the game took. It changes nothing that is played or printed; it lets another harness be pinned to this one game for
+ * game.
  */
 import { pathToFileURL, fileURLToPath } from 'node:url'
 import { basename, dirname, join, resolve } from 'node:path'

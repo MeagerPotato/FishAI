@@ -896,6 +896,60 @@ H1's rate × 2,000 + H5's × 2,000 + H4's × 4,000. H2 and H3 are left out, so t
    games.
 3. **With M1 planted in the port,** check 2 fails.
 
+> **G0c scored 2026-09-19: PASS.**
+>
+> **Check 1, the identity pin: holds.** The harness reproduced
+> `duplicate-pairs.mjs --a v1.0 --b v0.33 --pairs 200 --bank athena-p0-pin` game for game.
+> - All 400 games' final set counts are equal, and so are all 400 move counts.
+> - Every printed number is equal:
+>   - the paired set difference, 0.5400;
+>   - the SD, 3.5696;
+>   - the win rate, 0.5325 (213 of 400);
+>   - the SE, 0.2524;
+>   - the sets, 1,569 against 1,461.
+> - Every printed line after the header is identical; only the elapsed time differs.
+> - As registered, these are harness checks on a named bank, not a read.
+>
+> **Check 2, the reference rides along: holds.** The service's state digest equals the port's at all 400 deals and
+> all 249,317 steps. Beyond the bar, the legal-move and view digests are also equal at the same 249,317 steps, and so
+> are all 400 final scores.
+>
+> **Check 3, M1 caught: holds.** With M1 planted, 27 of 400 games diverge on the state digest, first at steps 410 to
+> 767. A game's comparison stops at its first mismatch.
+>
+> **Checked independently.** The runner was re-run from the branch head (`091dfe0`, clean tree), building both
+> Python builds itself. Every number above came out the same: 400 of 400 games, 249,317 steps with 0 differences, and
+> 27 of 400 games under M1 at steps 410 to 767.
+>
+> **Q3, G0c holds (85%): HIT.** The off-by-one in `moveIndex` that §4.7 named as the risk did not occur.
+>
+> **The cost of Monet's decisions** [Measured, information for P2]
+> - On two service workers, the harness waited 0.128 ms a decision (80.1 ms a game), and deciding inside the workers
+>   took 0.170 ms. The independent re-run read 0.133 ms and 0.176 ms, with the host at 8–13% load.
+> - The port's own share was 0.09 s of the harness's 32.9 s. The reference script takes 38.7 s on one thread.
+> - A small P2-shaped run, a Python stub against v1.0 in geometry B over 120 games, waited 0.217 ms a Monet decision,
+>   44.6 ms a game, with every digest equal.
+> - The records are in `C:\Projects\FishAI-bench\athena\g0c\`.
+>
+> **Amended with the result.** No bar changes.
+> 1. **`duplicate-pairs.mjs` gained `--games-out`.** It writes each game's final sets and its number of actions. It
+>    changes nothing that is played or printed. The script prints only totals, so without it the 400 games' set counts
+>    could not be read.
+> 2. **"The win rate to four decimals"** is the fraction from the win count, 0.5325. The script prints a percentage to
+>    two decimals, so the printed string is compared as well.
+> 3. **Geometry B's rotation rule is ours, for P2 to register or amend.**
+>    - Rotation r of deal d uses the seed `${bank}-${d}`, starts at seat 2 × ⌊r/2⌋, and seats arm A on team r mod 2.
+>    - That makes three duplicate pairs a deal, and rotations 0 and 1 are geometry A's pair.
+>    - Seats 1, 3 and 5 never start. Arm A plays each team equally often, so each arm starts equally often.
+>    - It is unit-tested. It is not FishLab's rule, which has no licence and was not read.
+> 4. **Divergent and capped games.**
+>    - A divergent game is finished by the mixed stub and left out of the printed numbers.
+>    - A capped game drops its pair, as in `duplicate-pairs.mjs`.
+>    - No game was capped or refused in the default run.
+> 5. **The mutants reach Python only through an opt-in feature of the bindings.**
+>    - The default build has no `set_mutant`, and `athena_env.MUTANTS` is False.
+>    - The mutants build is unpacked into the bench and loaded from there. The venv never held it.
+
 **G0d: packaging and the inference contract.** All three must hold:
 
 1. **The ATHENA-stub package passes the repo's package self-tests** (`botpkg-selftest.mjs` over 200 games, and
