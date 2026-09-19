@@ -4,14 +4,15 @@
 own play.** Monet v1.0 is the bar. It is also an opponent, a harness and a body of evidence. It is not a starting
 point.
 
-**Status: P0 CLOSED and P1 REGISTERED, both 2026-09-19.** All four of P0's gates held (§4.6), and all of §4.7's
+**Status: P0 and P1 both CLOSED, and P2 REGISTERED, all 2026-09-19.** All four of P0's gates held (§4.6), and all of §4.7's
 predictions came true. P1's pre-registration is §8, written before any P1 code or run. P1's first two gates, G1a and
 G1b, passed the same day (§8.1, §8.2). G1c failed, so its window rule is dropped and every declare offer calls the
 network: §3.1's training times are re-costed at about three times the first estimate. T1, R1, R2 and D4's M arm are
 read too (§8.4–§8.6). G1 failed: the learned belief heads are better calibrated than Monet's but pick the holder only
-slightly more often (§8.3), and D4's H arm missed, so search stays closed (§8.4). **P2 is registered as §9**, and its
-one three-day run (D4, taken 2026-09-19) is set for the weekend of 2026-09-26. No ATHENA game has been played for
-strength.
+slightly more often (§8.3), D4's H arm missed, so search stays closed (§8.4), and the head failed the declare pin
+(§8.3). **P1 is closed** (§8.10): every read it registered was run, and 13 of its 18 predictions hit. **P2 is
+registered as §9**, and its one three-day run (D4, taken 2026-09-19) is set for the
+weekend of 2026-09-26. No ATHENA game has been played for strength.
 
 **P0 was registered 2026-09-19.** The owner approved §4 as drafted, and the installs it needs, in their words:
 *"approve P0 as drafted, go ahead with the installs"* (§6 row 2). §4 is the draft of 2026-09-18, unchanged; anything
@@ -1311,7 +1312,7 @@ In the form of MONET.md §8.3.
 | 4 | **D4: how long may one training run be, on this machine?** The owner asked for the estimates first, and no hardware upgrade is planned | **FOR THE OWNER.** The estimates are §3.1, from GPU rates measured on 2026-09-19, **re-costed the same day after G1c failed**: every declare offer now calls the network, about three times the first estimate. At the base case (network M, PPO reusing each game twice), P2's likely 10^7–10^8 games take about 5 hours to about 3 days, and a pessimistic 10^9 takes 3–5 weeks. Recommendation: runs of up to 3 days, checkpointed and reviewed. **TAKEN 2026-09-19:** *"let's go with three days for now, with expectations of more"*, and the run is set for the weekend of 2026-09-26, while the owner travels. P2's budget (§9.8) is one such run |
 | 5 | **D6, D10, D11, and D9's confirmation.** The owner asked what these mean. Each is explained in plain terms in §5, with a recommendation: D6 an exploiter gate at v1.0; D9 "the port trains, the reference judges" (already in the approved plan); D10 Monet frozen at v1.0; D11 readers that apply every registered rule | **FOR THE OWNER.** None of them blocks P0 |
 | 6 | **D8: Kraken was found. Read Monet v1.0 against it?** Kraken v1.0 is public and complete (`kv1514/fish-researchp12`, `b10a673`), runs at the bridge, and passed a step-0 identity and a 60-game smoke (§7.1) | **TAKEN 2026-09-19 under D8** (*"go ahead if you can find the whole model"*). Pre-registered as §7 before any read cell. It ships nothing and writes ATHENA's Kraken bar. **READ 2026-09-19 (§7.3):** Monet v1.0 won 58.49% of 14,400 games against Kraken v1.0, every seed at or above 55.08%; Q1–Q6 all hit |
-| 7 | **P1's pre-registration (§8).** The rules-derived facts ported and pinned (G1a); the observation's reveal regime, start seat and declare-window rule (G1b, G1c); the belief-head study (G1) on three populations, with the owner's D2 variant; D4 with the head; the team-information ceiling at home; two records studies; and P2's network size. About 6–9 CPU-hours and under 2 GPU-hours; no bridge cell | **REGISTERED 2026-09-19** under row 1's plan and the standing rule, as Monet's rungs were. It ships nothing and needs no install. The owner may amend any part before it runs. **G1a and G1b: PASS 2026-09-19** (§8.1, §8.2). **G1c: FAILED 2026-09-19**; its rule is dropped and P2's cost is re-costed (§3.1). **T1, R1, R2 and D4's M arm read 2026-09-19** (§8.4–§8.6). **G1: FAILED 2026-09-19**; P2 starts at M, with D2 (§8.3, §8.7). **D4's H arm MISSED 2026-09-19**; search stays closed (§8.4) |
+| 7 | **P1's pre-registration (§8).** The rules-derived facts ported and pinned (G1a); the observation's reveal regime, start seat and declare-window rule (G1b, G1c); the belief-head study (G1) on three populations, with the owner's D2 variant; D4 with the head; the team-information ceiling at home; two records studies; and P2's network size. About 6–9 CPU-hours and under 2 GPU-hours; no bridge cell | **REGISTERED 2026-09-19** under row 1's plan and the standing rule, as Monet's rungs were. It ships nothing and needs no install. The owner may amend any part before it runs. **G1a and G1b: PASS 2026-09-19** (§8.1, §8.2). **G1c: FAILED 2026-09-19**; its rule is dropped and P2's cost is re-costed (§3.1). **T1, R1, R2 and D4's M arm read 2026-09-19** (§8.4–§8.6). **G1: FAILED 2026-09-19**; P2 starts at M, with D2 (§8.3, §8.7). **D4's H arm MISSED 2026-09-19**; search stays closed (§8.4). **The declare pin FAILED 2026-09-19**: B-M's head may not drive a declare (§8.3). **P1 CLOSED 2026-09-19** with every registered read run and 13 of its 18 predictions hit (§8.10) |
 | 8 | **P2's pre-registration (§9).** Train ATHENA-L from scratch by self-play to G2: at least 50.0% against Monet v1.0 at home on twelve fresh seeds. It fixes the network (size M), the learner (PPO, with the perfect-information critic and the belief and set-difference auxiliaries), the opponents' shares, the rails, the curve reads, the stop rules and twelve predictions. One three-day run, 0.9–1.4 × 10⁸ games | **REGISTERED 2026-09-19** under row 1's plan and the standing rule, before any P2 code. It needs no new install, and D4 (row 4) is its only owner decision |
 
 ---
@@ -1876,6 +1877,41 @@ made a measured condition, as §5 said it would be.
 > Q9, B-M beats B-S on (a) by 2 SE (70%): HIT. Q10, D2 keeps B-M+D2 (30%): HIT. Q11, the export agrees within 10⁻⁴
 > (90%): HIT.**
 
+> **The declare pin, read 2026-09-19: the head FAILS it** [Measured]. `attribute.mjs --locks --cf v1.0`, with and
+> without `--locks-arm head:` (B-M, weights md5 `cb6b3ac8…`), over the same twelve panel-SESTINA files of §3.8ba:
+> 14,400 games an arm, 1,200 a file, from `ef61a85`.
+>
+> | at p ≥ 0.7, A's seats | probes | right |
+> |---|---:|---:|
+> | the shipped table | 126,029 | **96.07%** |
+> | B-M's head | 296,270 | **86.75%** |
+>
+> - **The bar was "not below the shipped table's by more than 2 SE on every bin at p ≥ 0.7".** Seven cells (bin by
+>   guessed cards) hold probes on both arms. The head is **below by more than 2 SE on four** of them, above on one,
+>   within noise on one, and identical on the rules-certain one. Pooled over p ≥ 0.7 it is **−9.32 points (SE
+>   0.083)**; paired file by file, **−9.33 points (SE 0.293)**, with all twelve files negative, from −7.67 to −11.60.
+> - **Where it goes wrong is where it is most sure.** At [0.9, 1) with two guessed cards the shipped table is right
+>   328 of 328 and the head 91.45% of 38,699; at [0.7, 0.9) with two, 92.32% against 69.12%.
+> - **The head is not simply worse.** With one guessed card at [0.7, 0.9) it is **better**, 72.45% against 54.47%.
+>   It is the rows with more guesses, where a plan multiplies several of its probabilities together, that it overstates.
+> - **It never reaches certainty.** The shipped table puts 4,865 probes at p = 1 with at least one guessed card, and is
+>   right at every one of them. The head puts none there: its probabilities are continuous, so those windows land in
+>   [0.9, 1) at about 93%.
+> - **The rules-certain row is identical,** as it must be: with no guessed card, both arms probe the same 107,341
+>   windows and are right at 100%. That row is the rail's, and no belief enters it.
+> - **It is the more confident table everywhere:** its plan p clears 0.1 at 1,408,672 probes against 1,257,107.
+> - It cost about 4.7 CPU-hours: 2 h 07 min of wall clock with at most three of our processes, and 25 minutes more to
+>   re-run two cells whose checkout was deleted under them mid-run (same revision, same weights, same command).
+>
+> **In plain words:** the head is the better-calibrated belief on a pooled score (§8.3) and still a worse gate for a
+> declare. The declare reads the top of the distribution, and that is exactly where the head is overconfident.
+>
+> **What it decides, as registered: the head may not drive Monet's declare, or a declare inside ATHENA-S.** Neither is
+> planned — no bot's belief changed in P1, and §8.4 closed ATHENA-S — so nothing registered today is blocked by this.
+> It stands as the answer to "could this head be used in a declare?", which is no, and as another instance of the
+> lesson that a pooled score cannot see a selected population (MONET.md §3.8h), which is why §3.8l made the declare
+> pin a condition on any belief change in the first place.
+
 ### 8.4 D4 with the head: is ATHENA-S open?
 
 **The instrument** is §3.8av's D4 (`scripts/probe-ask-oracle.mjs`), unchanged except for a sampler option.
@@ -2142,6 +2178,87 @@ bars, not its policy, not its rail.
 - **B.7.1 and B.8.3:** closed, or registered as levers (§8.6).
 - **Whatever G1 reads, P2's network carries a belief head.** It is part of ATHENA-L's architecture (§1), trained on
   ATHENA's own games. G1 says how much it should be expected to beat the marginal by, not whether it exists.
+
+### 8.10 P1, closed 2026-09-19
+
+> **Every read §8 registered was run, and each was re-run independently in a separate checkout** [Measured]. No bar,
+> split, seed or arm was changed after a number was seen. The amendments are listed with their blocks; all are
+> implementation, not bars.
+>
+> | the read | what it says | where |
+> |---|---|---|
+> | **G1a**, the rules-derived facts | **PASS.** The port and the reference agree on every field: 28,729,308 home views and 1,342,770 bridge views, no step differing. All five mutants are caught | §8.1 |
+> | **G1b**, the regime, the start seat, the events | **PASS.** The bridge regime equals the replay codec's reduced view at every step, and the encoder agrees on 1,302,128 states | §8.2 |
+> | **G1c**, a live-set declare window rule | **FAILED.** At k = 2 the rule is safe (99.995%) but keeps 90.1% of windows; at k = 4 it drops to 99.735% safe. 74,488 of 76,106 declares are already the rail's, so the rule is dropped | §8.2 |
+> | **G1**, the belief head | **FAILED.** B-M gains +0.713 top-1 points on (a), against a +2.0 bar, and loses 0.399 on (b). Every head beats the marginal on NLL and none beats it at naming the holder | §8.3 |
+> | **the declare pin** | **FAILED.** At p ≥ 0.7 the head is right at 86.75% against the shipped table's 96.07%, and below by more than 2 SE on four of the seven comparable cells. The head may not drive a declare | §8.3 |
+> | **D4 with the head** | **MISSED.** −0.149 sets a decision (SE 0.093), against a bar of +2 SE above zero. ATHENA-S stays closed | §8.4 |
+> | **T1**, the team-information ceiling | **98.64%** over 9,600 games. P3 registers a team-coordination variant | §8.5 |
+> | **R1**, the forced endgame | **Closed.** The bound is −0.00160 sets a game, against a 0.1 bar | §8.6 |
+> | **R2**, AIVAT | **Closed.** The correction cuts the pooled SE by 0.22%, and cannot tighten a paired read at all | §8.6 |
+> | **the size** | **M**, with D2's data | §8.7 |
+>
+> **What P1 decided for P2**, against §8.9's list, all carried into §9:
+> - **The inputs:** the facts buffer (§8.1), the regime bit and the start-seat rule (§8.2). **No window rule:** G1c
+>   failed, so P2 keeps the rails it already had.
+> - **The size:** M.
+> - **D2:** in. P2's belief loss also reads Monet's seats' views of SESTINA's recorded games.
+> - **ATHENA-S:** closed. A decision is one forward pass.
+> - **Team play:** P3 registers a team-coordination variant.
+> - **B.7.1 and B.8.3:** both closed as levers.
+> - **The head in a declare:** no. It failed the pin, which gates exactly that use.
+> - **The belief head stays in the network** whatever G1 read, as §8.9 said it would: it is part of ATHENA-L (§1),
+>   and in P2 it trains on ATHENA's own games.
+>
+> **The cost, against §8.9's estimate** [Measured]. About 16 CPU-hours and 1.5 GPU-hours, against "about 6–9
+> CPU-hours and under 2 GPU-hours".
+>
+> | item | estimate | measured |
+> |---|---|---|
+> | Monet self-play for (a) | 40–70 minutes on six to eight threads | 8.4 CPU-hours, for 107,501 games after the split was extended (§8.3 amendment 3) |
+> | Belief training | under 1 GPU-hour | 1.44 hours of wall time; the data loader, not the GPU, set the pace |
+> | G1a's reference side | about 10 CPU-minutes | 170 s at home and 9 s at the bridge on 3 threads; the port's own checks 19 s |
+> | D4, both samplers | 3.3–5.5 CPU-hours | 2.98 CPU-hours: 5,837 s for M and 4,871 s for H |
+> | T1 | 20–30 CPU-minutes | 7 minutes |
+> | R1 and R2 | under 1 CPU-hour | the scripts report 0.9 s and 22.7 s |
+> | the declare pin | not costed | about 4.7 CPU-hours, 24 cells of 1,200 games |
+>
+> Nothing hit a stopping rule of §8.9. The one place the estimate was badly wrong is the corpus. In a belief study the
+> games cost more than the training does: 8.4 CPU-hours to play them, against 1.44 hours to train three arms on them.
+>
+> **The predictions, scored** [Measured]. 13 of the 18 happened, against 10.9 expected. The Brier score is 0.146,
+> against 0.201 for predicting the base rate at every line.
+>
+> | | prediction | p | |
+> |---|---|---:|---|
+> | Q1 | G1a holds within P1 | 85% | HIT |
+> | Q2 | G1a's first full run is clean | 40% | HIT |
+> | Q3 | G1b holds | 90% | HIT |
+> | Q4 | G1c holds, with k = 3 or 4 | 60% | MISS |
+> | Q5 | the marginal reproduces 32.19% and 1.4542 on (b) | 95% | HIT |
+> | Q6 | B-M's top-1 is at least +2.0 above the marginal on (a) | 65% | MISS |
+> | Q7 | B-M's top-1 is at least +2.0 above the marginal on (b) | 20% | MISS |
+> | Q8 | **G1 holds** | 15% | MISS |
+> | Q9 | B-M beats B-S on (a) by at least 2 SE | 70% | HIT |
+> | Q10 | D2 keeps B-M+D2 | 30% | HIT |
+> | Q11 | the export agrees with PyTorch within 10⁻⁴ | 90% | HIT |
+> | Q12 | **D4 with the head clears +2 SE (ATHENA-S opens)** | 10% | MISS |
+> | Q13 | M's D4 at v1.0 is within 2 SE of zero or below | 90% | HIT |
+> | Q14 | T1's win rate is at least 55% | 75% | HIT |
+> | Q15 | T1's win rate is at least 65% | 30% | HIT |
+> | Q16 | R1's bound is below 0.1 sets a game | 85% | HIT |
+> | Q17 | R2's correction cuts the pooled SE by less than 15% | 80% | HIT |
+> | Q18 | P1 is done within 5 working days | 60% | HIT |
+>
+> - **Q18: HIT.** P1 was registered and closed on 2026-09-19, the same day P0 closed.
+> - Every line at 75% or above happened, eight of eight. None of the three at 20% or below happened. The two misses
+>   worth reading are **Q4** (60%) and **Q6** (65%): both were beliefs about how much structure a model could add
+>   over the rules, and both were too optimistic.
+>
+> **What P1 leaves behind.** The facts port and its checker, the encoder for format v2, the belief data path, trainer
+> and export, the D4 sampler option, the pin arm, the team-hands option, and R1's and R2's scripts. The bench outputs
+> are at `C:\Projects\FishAI-bench\athena\p1\`. No ATHENA game has been played for strength: **P2's G2 is the first
+> time an ATHENA network is read for how well it plays.**
 
 ## 9. P2 pre-registration (registered 2026-09-19, before any P2 code or run)
 
