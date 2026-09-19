@@ -3,3 +3,5 @@
 # Nor ATHENA's Python scripts (the G0b bench over the core's Python API, athena-env/API.md) and their caches.
 /scripts/athena/*.py
 __pycache__
+# The ATHENA-stub FishLab package's adapter (ATHENA.md §4.5 item 6, G0d): built into dist/ by scripts/athena/build-stub-package.mjs, never part of the site.
+/athena-stub
