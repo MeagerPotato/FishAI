@@ -7,8 +7,9 @@ point.
 **Status: P0 CLOSED and P1 REGISTERED, both 2026-09-19.** All four of P0's gates held (§4.6), and all of §4.7's
 predictions came true. P1's pre-registration is §8, written before any P1 code or run. P1's first two gates, G1a and
 G1b, passed the same day (§8.1, §8.2). G1c failed, so its window rule is dropped and every declare offer calls the
-network: §3.1's training times are re-costed at about three times the first estimate. No ATHENA game has been played
-for strength.
+network: §3.1's training times are re-costed at about three times the first estimate. T1, R1, R2 and D4's M arm are
+read too (§8.4–§8.6); the belief study and D4's H arm wait for the belief heads. No ATHENA game has been played for
+strength.
 
 **P0 was registered 2026-09-19.** The owner approved §4 as drafted, and the installs it needs, in their words:
 *"approve P0 as drafted, go ahead with the installs"* (§6 row 2). §4 is the draft of 2026-09-18, unchanged; anything
@@ -1308,7 +1309,7 @@ In the form of MONET.md §8.3.
 | 4 | **D4: how long may one training run be, on this machine?** The owner asked for the estimates first, and no hardware upgrade is planned | **FOR THE OWNER.** The estimates are §3.1, from GPU rates measured on 2026-09-19, **re-costed the same day after G1c failed**: every declare offer now calls the network, about three times the first estimate. At the base case (network M, PPO reusing each game twice), P2's likely 10^7–10^8 games take about 5 hours to about 3 days, and a pessimistic 10^9 takes 3–5 weeks. Recommendation unchanged: runs of up to 3 days, checkpointed and reviewed |
 | 5 | **D6, D10, D11, and D9's confirmation.** The owner asked what these mean. Each is explained in plain terms in §5, with a recommendation: D6 an exploiter gate at v1.0; D9 "the port trains, the reference judges" (already in the approved plan); D10 Monet frozen at v1.0; D11 readers that apply every registered rule | **FOR THE OWNER.** None of them blocks P0 |
 | 6 | **D8: Kraken was found. Read Monet v1.0 against it?** Kraken v1.0 is public and complete (`kv1514/fish-researchp12`, `b10a673`), runs at the bridge, and passed a step-0 identity and a 60-game smoke (§7.1) | **TAKEN 2026-09-19 under D8** (*"go ahead if you can find the whole model"*). Pre-registered as §7 before any read cell. It ships nothing and writes ATHENA's Kraken bar. **READ 2026-09-19 (§7.3):** Monet v1.0 won 58.49% of 14,400 games against Kraken v1.0, every seed at or above 55.08%; Q1–Q6 all hit |
-| 7 | **P1's pre-registration (§8).** The rules-derived facts ported and pinned (G1a); the observation's reveal regime, start seat and declare-window rule (G1b, G1c); the belief-head study (G1) on three populations, with the owner's D2 variant; D4 with the head; the team-information ceiling at home; two records studies; and P2's network size. About 6–9 CPU-hours and under 2 GPU-hours; no bridge cell | **REGISTERED 2026-09-19** under row 1's plan and the standing rule, as Monet's rungs were. It ships nothing and needs no install. The owner may amend any part before it runs. **G1a and G1b: PASS 2026-09-19** (§8.1, §8.2). **G1c: FAILED 2026-09-19**; its rule is dropped and P2's cost is re-costed (§3.1) |
+| 7 | **P1's pre-registration (§8).** The rules-derived facts ported and pinned (G1a); the observation's reveal regime, start seat and declare-window rule (G1b, G1c); the belief-head study (G1) on three populations, with the owner's D2 variant; D4 with the head; the team-information ceiling at home; two records studies; and P2's network size. About 6–9 CPU-hours and under 2 GPU-hours; no bridge cell | **REGISTERED 2026-09-19** under row 1's plan and the standing rule, as Monet's rungs were. It ships nothing and needs no install. The owner may amend any part before it runs. **G1a and G1b: PASS 2026-09-19** (§8.1, §8.2). **G1c: FAILED 2026-09-19**; its rule is dropped and P2's cost is re-costed (§3.1). **T1, R1, R2 and D4's M arm read 2026-09-19** (§8.4–§8.6) |
 
 ---
 
@@ -1797,6 +1798,29 @@ is Monet's own pick, so the bar is a paired difference, per decision (§3.8av).
 [Estimate] 9–15 s a decision (9.08 s at v0.33). About 3.3–5.5 CPU-hours for both samplers, about 1–1.5 hours on four
 processes.
 
+> **The M arm, read 2026-09-19** [Measured]. Branch `claude/athena-p1c` (the sampler seam at `4241a99`).
+> - **D4 with the marginal, to the end: −0.135 (SE 0.093)**, over 763 sampled decisions of the 40 games. At 24 steps
+>   it is +0.003 (SE 0.016).
+>   - A search on Monet v1.0's own belief does not beat its own pick, as §3.8av found at v0.33 (−0.141).
+>   - What hindsight is worth over this, with the true deal: +3.265 (SE 0.088).
+> - It took 5,837 s on one process: **7.65 s a decision**, under the 9–15 s estimated. It made 696,700 rollouts.
+> - Every decision's per-ask values are saved (`C:\Projects\FishAI-bench\athena\p1\c\d4\m-values.jsonl`).
+>   Recomputing D4 from that file gives −0.1350 (SE 0.0933).
+>
+> **The H arm waits for B-M.** It runs on M's decisions: it reads M's true-deal values from that file, checks each
+> decision against M's, and prints H − M.
+>
+> **Checked independently** from the branch head (`295b55f`, clean tree).
+> - The first two games, re-rolled from scratch, reproduce agent C's 38 decisions in every saved field.
+> - The H seam, run with the marginal as its sampler, reads H − M = +0.000 (SE 0.000) and chooses the same ask on 38
+>   of 38.
+>
+> **Amended with the result:**
+> 1. **H runs on M's saved decisions** (`--values-in`), so the two samplers are compared on exactly the same asks.
+> 2. **"About 650 decisions a sampler" was an estimate.** Stride 5 over these 40 games gives 763.
+>
+> **Q13, M's D4 at v1.0 is within 2 SE of zero or below (90%): HIT.** It is −1.45 SE.
+
 ### 8.5 The team-information ceiling, at home (brief B.6.1)
 
 **The arm.** T1 is Monet v1.0 whose knowledge also holds its two teammates' true hands. Nothing else changes: not its
@@ -1820,6 +1844,31 @@ bars, not its policy, not its rail.
 - **Between 55% and 60%,** it is noted, and P3 decides with its own read.
 
 [Estimate] About 20–30 CPU-minutes.
+
+> **T1, read 2026-09-19: 98.64%, in the top band** [Measured]. T1 against Monet v1.0, twelve banks of 400 pairs (9,600
+> games). No pair hit the step cap.
+>
+> | bank | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
+> |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+> | win rate % | 98.25 | 98.88 | 98.38 | 98.75 | 97.88 | 98.75 | 98.50 | 99.25 | 97.75 | 99.25 | 99.00 | 99.00 |
+>
+> - **The pooled win rate is 98.64%** (9,469 of 9,600): SD 0.50 across banks, SE 0.14; the lowest bank reads 97.75%.
+> - The paired set difference is +8.07 sets a pair (SE 0.025).
+> - [Information, a 40-game smoke bank] T1 asked 28.7 times a game and hit 62.7%, against v1.0's 19.5 asks at 42.6%.
+>   It declared 5.00 sets a game, none of them wrong.
+> - The forward bank reads 36 of 36 with the option unset, and every default output is unchanged.
+> - **It took 7 minutes** on one process, against 20–30 estimated.
+>
+> **Checked independently** from `295b55f`: all twelve banks, re-played, give the same games, byte for byte, and the
+> same printouts. vitest passes (84 files, 1,261 tests), and so do typecheck and lint.
+>
+> **What it decides, as registered: 60% or above, so P3 registers a team-coordination variant** (brief B.6.1).
+>
+> **Amended with the result** [Judgement]: 98.64% is a ceiling. No legal signal between teammates carries whole hands,
+> so P3's variant is sized by its own read of what a team can actually share, not by T1's number. T1 is also not
+> comparable with the record's +6.75, which was a different arm at the bridge.
+>
+> **Q14, T1 at least 55% (75%): HIT. Q15, T1 at least 65% (30%): HIT.**
 
 ### 8.6 Two records studies (no games)
 
@@ -1858,6 +1907,43 @@ bars, not its policy, not its rail.
   fact-sheet question 10.
 
 [Estimate] Both studies together take under one CPU-hour.
+
+> **R1, read 2026-09-19: closed** [Measured]. The counts match the fact sheet exactly: 1,041 forced declares, 540
+> Monet's (269 right) and 501 SESTINA's (225 right). No case came near 10⁶ deals (a mean of 4.0, at most 126), so none
+> was skipped.
+>
+> | declarer | declared the most probable assignment | mean probability given up | a | b | bound, sets a game |
+> |---|---:|---:|---:|---:|---:|
+> | both | 1,004 of 1,041 (96.45%) | 0.0084 | 6 | 29 | −0.00160 |
+> | Monet | 525 of 540 (97.22%) | 0.0078 | 2 | 12 | −0.00069 |
+> | SESTINA | 479 of 501 (95.61%) | 0.0091 | 4 | 17 | −0.00090 |
+>
+> - a counts the declares where the most probable assignment would have been right and the declared one was wrong.
+>   b counts the reverse.
+> - **The bound is below 0.1 sets a game, so B.7.1 is closed** as a lever for P2 and P3. The rail and MUSTFIX stay as
+>   they are.
+>
+> **R2, read 2026-09-19: no later read uses AIVAT** [Measured].
+> - **The fit.** 558 older record files (751,350 games) give a McFadden R² of 0.0030. The fitted value correlates 0.066
+>   with the result on the read's games.
+> - **The SE with the correction, against without,** on the same 14,400 games:
+>   - 0.4108 → 0.4099 over games (−0.22%);
+>   - 0.4094 → 0.4094 by deal (0.00%);
+>   - 0.4122 → 0.4125 by seed (+0.09%).
+> - **The null check passes.** The correction's mean over 100,000 fresh deals is 0.440396 (SE 0.000098). The read's
+>   mean differs from it by +0.000179, which is 1.81 SE.
+>
+> **Checked independently** from `295b55f`: both studies re-run to the same numbers in every field.
+>
+> **Amended with the result:**
+> 1. **R1's decision was fixed by the count.** The records hold 0.072 forced declares a game, so no bound could have
+>    reached 0.1.
+> 2. **R1 enumerates over `knowledge.ts`'s facts**, which keep a superset of the truly consistent deals. In 170 cases
+>    a constraint was dropped because it named a card that left play unrevealed after a wrong declare.
+> 3. **R2's "older records"** are every SESTINA v1.0 record except `monet-v55` and `kraken-v1`, which were played
+>    after the read. Files that replay an earlier file's (arm A, seed) are removed.
+>
+> **Q16, R1's bound below 0.1 (85%): HIT. Q17, R2 cuts the pooled SE by less than 15% (80%): HIT.**
 
 ### 8.7 Sizing for P2 (§1's "P1 sizes it")
 

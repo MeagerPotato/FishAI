@@ -83,7 +83,7 @@ import type { BookId, Card, PublicEvent, Seat } from '../types.ts'
 import type { Deck } from '../cards.ts'
 import { bookCards, cardBook, deckFor, seatTeam } from '../cards.ts'
 import { legalAsksFromView } from '../helpers.ts'
-import type { AskWeights, Knowledge, KnowledgeOptions, RankedAsk, SeatView } from './types.ts'
+import type { AskWeights, Knowledge, KnowledgeOptions, RankedAsk, SeatView, TeamHand } from './types.ts'
 import { attachMarginal, marginalFor, marginalHitProbability } from './marginal.ts'
 
 /** Six seats in both rule sets — see the header; never derived from the deck. */
@@ -451,7 +451,7 @@ export function markResolvedGone(w: Work, view: SeatView): void {
 export const CHOICE_ADAPT_CENTRE = 1.58
 
 export function recordedWalk(view: SeatView): { w: Work; rec: WalkRecord } {
-  const opts: Required<KnowledgeOptions> = { logWindow: Number.POSITIVE_INFINITY, useConstraints: true, marginal: false, choiceKappa: 0, choiceAdapt: 0, choicePrior: 'count', licenceHold: 0 }
+  const opts: Required<KnowledgeOptions> = { logWindow: Number.POSITIVE_INFINITY, useConstraints: true, marginal: false, choiceKappa: 0, choiceAdapt: 0, choicePrior: 'count', licenceHold: 0, teamHands: [] }
   const ownCardToggle = view.config?.toggles?.askOwnCardAllowed === true
   const log: readonly PublicEvent[] = Array.isArray(view.log) ? view.log : []
   const w = newWork(view)
@@ -485,6 +485,7 @@ export function buildKnowledge(view: SeatView, options: KnowledgeOptions = {}): 
     choiceAdapt: options.choiceAdapt ?? 0,
     choicePrior: options.choicePrior ?? 'count',
     licenceHold: options.licenceHold ?? 0,
+    teamHands: options.teamHands ?? [],
   }
   const ownCardToggle = view.config?.toggles?.askOwnCardAllowed === true
   const log: readonly PublicEvent[] = Array.isArray(view.log) ? view.log : []
@@ -504,7 +505,7 @@ export function buildKnowledge(view: SeatView, options: KnowledgeOptions = {}): 
   // with nothing thrown to notice them by.
   const runningCounts = new Array<number>(6).fill(w.deck.handSize)
   for (const ev of events) ingest(w, ev, runningCounts, opts, ownCardToggle, trackCounts)
-  const k = finishKnowledge(w, view)
+  const k = finishKnowledge(w, view, opts.teamHands)
   // MONET.md §3.6a: the ask-choice prior's evidence — asks per (book, seat) over the walked events,
   // every seat but the viewer — attached only when κ > 0, so every other build keeps its shape.
   // A2 (`choiceAdapt > 0`): the same walk, in order, also reads every SUCCESSFUL declaration — the
@@ -564,42 +565,58 @@ export function buildKnowledge(view: SeatView, options: KnowledgeOptions = {}): 
  * `buildKnowledge` so the bounded arm's fact-replay finishes through the identical code — the
  * large-budget equivalence pin (tests/bots/bounded.test.ts) holds by construction here, not by
  * a parallel implementation staying in step.
+ *
+ * `teamHands` (ATHENA.md §8.5, test only) injects each TEAMMATE's true hand after the own hand, by
+ * the same code; an entry for the viewer or an opponent is skipped. Absent or empty: unchanged.
  */
-export function finishKnowledge(w: Work, view: SeatView): Knowledge {
-  const deck = w.deck
-  const n = w.n
+export function finishKnowledge(w: Work, view: SeatView, teamHands?: readonly TeamHand[]): Knowledge {
   markResolvedGone(w, view)
 
   // Own hand: fully known. Held live cards are mine (if unmoved, they were
   // dealt to me); every other unmoved card was never mine.
   const me = view.seat
-  const held = new Set<Card>(Array.isArray(view.hand) ? view.hand : [])
+  injectHand(w, me, new Set<Card>(Array.isArray(view.hand) ? view.hand : []))
+  if (teamHands !== undefined) {
+    for (const t of teamHands) {
+      if (t.seat === me || seatTeam(t.seat) !== seatTeam(me)) continue
+      injectHand(w, t.seat, new Set<Card>(t.hand))
+    }
+  }
+
+  return materialise(w, view)
+}
+
+/**
+ * A fully known hand at `seat`: held live cards are at `seat` (if unmoved, they were dealt there); every other
+ * unmoved card was never there. The own-hand step of `finishKnowledge`, and T1's teammates' (ATHENA.md §8.5).
+ */
+function injectHand(w: Work, seat: Seat, held: ReadonlySet<Card>): void {
+  const deck = w.deck
+  const n = w.n
   for (let ci = 0; ci < n; ci++) {
     const c = deck.cards[ci]
     if (w.pos[ci] === GONE) continue
     if (held.has(c)) {
       if (w.pos[ci] === ORIGINAL) {
-        if (w.xfix[ci] !== me) {
-          w.xfix[ci] = me
-          w.cand[ci] = bit(me)
+        if (w.xfix[ci] !== seat) {
+          w.xfix[ci] = seat
+          w.cand[ci] = bit(seat)
         }
       } else {
-        w.pos[ci] = me // trust the hand over an inconsistent (truncated) log
+        w.pos[ci] = seat // trust the hand over an inconsistent (truncated) log
       }
     } else {
-      if (w.pos[ci] === me) w.pos[ci] = ORIGINAL // inconsistent truncated log; forget
+      if (w.pos[ci] === seat) w.pos[ci] = ORIGINAL // inconsistent truncated log; forget
       if (w.pos[ci] === ORIGINAL) {
-        if (w.xfix[ci] === me) {
+        if (w.xfix[ci] === seat) {
           w.xfix[ci] = -1
-          w.cand[ci] = FULL_MASK & ~bit(me)
+          w.cand[ci] = FULL_MASK & ~bit(seat)
         } else {
-          clearCand(w, ci, me)
+          clearCand(w, ci, seat)
         }
       }
     }
   }
-
-  return materialise(w, view)
 }
 
 /**
@@ -701,6 +718,7 @@ export function publicKnowledge(view: SeatView, options: KnowledgeOptions = {}, 
     choiceAdapt: 0,
     choicePrior: 'count',
     licenceHold: 0,
+    teamHands: [],
   }
   const ownCardToggle = view.config?.toggles?.askOwnCardAllowed === true
   const log: readonly PublicEvent[] = Array.isArray(view.log) ? view.log : []
