@@ -696,6 +696,31 @@ H1's rate × 2,000 + H5's × 2,000 + H4's × 4,000. H2 and H3 are left out, so t
 | declare after at least one decline in the same window | not counted today | | | floor only |
 | cardless seat declines | not counted today | | | floor only |
 
+> **Amended 2026-09-19, before any port code.** Building the emitter turned up three things.
+>
+> 1. **One floor row duplicates another.** "Declare after at least one decline in the same window" counts the same
+>    events as "out-of-turn declare": 47,061 each in the corpus. A us54 window always opens on the turn-holder, so any
+>    declare after a decline is out of turn. The row stays, and one row is **added**: "a declare by the window's last
+>    seat (declined = 5)", with a floor of 50. Adding a row can only tighten G0a.
+> 2. **Two choices the registration left open.** H2's fresh seeds start at seat j mod 6, and H5's at i mod 6, as the
+>    scoping run did. Both are recorded in `scripts/athena/replay-format.md`.
+> 3. **The legal-move record uses the reducer's own verdict.** `legalActionsSummary` lists `claim` while the window is
+>    closed, at every ask step, and the reducer refuses every such declare. The port must not copy that quirk.
+>    `lib/engine/` is unchanged.
+>
+> **Progress, 2026-09-19.** The oracle is built (`scripts/athena/`: `replay-format.md`, the codec, the emitter, and the
+> self-check with its coverage report). The corpus was emitted at `7d85c2e`, whose nine engine files equal §4.1's, with
+> rules hash `e9311958e811b7bc…`. It holds **10,800 games and 4,788,218 steps (259 MB)** at
+> `C:\Projects\FishAI-bench\athena\corpus\7d85c2e\`.
+> - Emission took 169 s on four processes (§4.8 estimated about 8 minutes on one thread, and about 0.5 GB).
+> - **The reference replays its own corpus at 100%:** every digest, and all 1,977,852 probe verdicts. It was checked
+>   twice, the second time independently, in 17.8 s.
+> - 0 games were capped, and the nine-set terminator never fired alone.
+> - All 36 bank games took exactly the bank's step counts.
+> - Every floor was met without extending H4. The rarest branch is a whole team out, 323 times (≈ 130 expected).
+>
+> This is the reference checking itself. G0a is scored only when the port replays the corpus.
+
 **(ii) The bridge walk.**
 
 - It covers the **14,400 games of §3.8ba's twelve SESTINA cells** (`bridge/monet-v55/records/panel-sestina-*.jsonl`).
