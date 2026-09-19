@@ -130,7 +130,8 @@ function npy(descr: string, shape: number[], data: Uint8Array): Uint8Array {
 interface NodeFs {
   readFileSync(path: URL, encoding: 'utf8'): string
 }
-const readText = async (rel: string): Promise<string> => ((await import(/* @vite-ignore */ 'node:fs')) as NodeFs).readFileSync(new URL(rel, import.meta.url), 'utf8')
+const nodeModule = async <T,>(name: string): Promise<T> => (await import(/* @vite-ignore */ name)) as T
+const readText = async (rel: string): Promise<string> => (await nodeModule<NodeFs>('node:fs')).readFileSync(new URL(rel, import.meta.url), 'utf8')
 const fromB64 = (s: string): Uint8Array => Uint8Array.from(atob(s), (ch) => ch.charCodeAt(0))
 
 describe('factsFeatures: the facts row as P1\'s heads read it', () => {
