@@ -30,6 +30,8 @@ use crate::codec::{
 };
 use crate::digest::{digest, ByteDigest};
 use crate::rng::Mulberry32;
+#[cfg(feature = "mutants")]
+use crate::rules::Mutant;
 use crate::rules::{Action, AskList, Event, Events, Game, FINISHED, TIE};
 use std::fmt::Write as _;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -251,6 +253,9 @@ struct Slot {
     seed: String,
     start: u8,
     track: Option<Track>,
+    /// The planted mutant every game dealt into this slot plays under (only with the `mutants` feature).
+    #[cfg(feature = "mutants")]
+    mutant: Mutant,
 }
 
 impl Slot {
@@ -269,6 +274,8 @@ impl Slot {
                 log: ByteDigest::new(),
                 log_len: 0,
             }),
+            #[cfg(feature = "mutants")]
+            mutant: Mutant::None,
         }
     }
 
@@ -281,6 +288,8 @@ impl Slot {
     /// Start a game on `game` (a deal or a hand-built position) labelled `seed` for the digest header.
     fn start_game(&mut self, game: Game, seed: &str, start: u8) {
         self.game = game;
+        #[cfg(feature = "mutants")]
+        self.game.set_mutant(self.mutant);
         self.steps = 0;
         self.ended = 0;
         self.logged = 0;
@@ -1113,6 +1122,18 @@ impl VecEnv {
         self.stats
     }
 
+    /// Plant a mutant of ATHENA.md §4.6 (G0a's M1-M5) in every game of the batch: the games in play now, and every
+    /// game dealt later by `reset`, `reset_hands` or auto-reset. [`Mutant::None`] restores the reference's rules. It
+    /// exists only with the `mutants` feature, so no default build (and no default Python build) can plant one. G0c
+    /// plants M1 to show that the harness's live replay check catches a rules change.
+    #[cfg(feature = "mutants")]
+    pub fn set_mutant(&mut self, m: Mutant) {
+        for slot in &mut self.slots {
+            slot.mutant = m;
+            slot.game.set_mutant(m);
+        }
+    }
+
     /// Test hook for the information rules: re-deal game i's cards that its acting seat cannot see, uniformly among
     /// the seats that hold them, keeping every hand count. The permuted state has the same `seatView` for that seat.
     /// A draw that would change whether the turn-holder could ask is redrawn (up to 64 times), because that state is
@@ -1832,5 +1853,115 @@ mod tests {
         // Same seeds, same deal as Game::new.
         env.reset(&["athena-p0-g0a-h5-0"], &[0]).unwrap();
         assert_eq!(*env.game(0), Game::new("athena-p0-g0a-h5-0", 0).unwrap());
+    }
+
+    /// `set_mutant` (the `mutants` feature only; G0c's control) plants the mutant in every game of the batch. Two
+    /// batches, one under M1, driven by the mixed stub from identical generators, play identical games until the
+    /// reference takes the rule M1 changes (another seat's declare empties the turn-holder, whose teammate still
+    /// holds cards: `awaitPass`); the chain digest d diverges at exactly that step and at no other, and a game dealt
+    /// later by auto-reset carries the mutant too.
+    #[cfg(feature = "mutants")]
+    #[test]
+    fn a_planted_m1_diverges_exactly_at_the_turn_pass_rule() {
+        use crate::rules::Mutant;
+        let n = 96;
+        let (sd, st) = seeds("athena-vecenv-m1-", n);
+        let mut env = [VecEnv::new(n, 2, true).unwrap(), VecEnv::new(n, 2, true).unwrap()];
+        env[1].set_mutant(Mutant::M1);
+        let mut rngs: Vec<Vec<Mulberry32>> = Vec::new();
+        for e in env.iter_mut() {
+            e.reset(&sd, &st).unwrap();
+            rngs.push(sd.iter().map(|s| mixed_stub_rng(s)).collect());
+        }
+        let mut bufs = [Bufs::new(n), Bufs::new(n)];
+        for (e, b) in env.iter_mut().zip(bufs.iter_mut()) {
+            e.observe(b.obs()).unwrap();
+        }
+        let mut diverged = vec![false; n];
+        let (mut dz, mut lz, mut vz) = (vec![0u64; n], vec![0u64; n], vec![0u64; n]);
+        let mut d0 = vec![0u64; n];
+        let mut caught = 0;
+        // Every game's codes until it diverged (or ended), for the replay below.
+        let mut played: Vec<Vec<i32>> = vec![Vec::new(); n];
+        while (0..n).any(|i| env[0].ended(i) == 0 || env[1].ended(i) == 0) {
+            let mut codes = [vec![0i32; n], vec![0i32; n]];
+            let mut out_of_turn = vec![false; n];
+            for k in 0..2 {
+                for i in 0..n {
+                    let g = env[k].game(i);
+                    let a = if env[k].ended(i) != 0 {
+                        Action::Decline { seat: 0 }
+                    } else {
+                        mixed_stub_action(g, g.acting_seat(), &mut rngs[k][i])
+                    };
+                    codes[k][i] = encode_action(&a).unwrap();
+                    if k == 0 && !diverged[i] && env[0].ended(i) == 0 {
+                        // Half of the rule M1 changes, read before the step: an out-of-turn declare.
+                        out_of_turn[i] = matches!(a, Action::Claim { seat, .. } if seat != g.turn());
+                    }
+                }
+            }
+            for i in 0..n {
+                if !diverged[i] {
+                    assert_eq!(
+                        codes[0][i], codes[1][i],
+                        "game {i}: the same state and generator chose differently"
+                    );
+                    if env[0].ended(i) == 0 {
+                        played[i].push(codes[0][i]);
+                    }
+                }
+            }
+            for k in 0..2 {
+                let (r, o) = bufs[k].split();
+                env[k].step(&codes[k], r, Some(o)).unwrap();
+            }
+            env[0].digests(&mut d0, &mut lz, &mut vz).unwrap();
+            env[1].digests(&mut dz, &mut lz, &mut vz).unwrap();
+            for i in 0..n {
+                if diverged[i] {
+                    continue;
+                }
+                // The other half, read after it: the declare emptied the turn-holder, whose teammate holds cards, so
+                // the reference enters awaitPass.
+                let m1_rule = out_of_turn[i] && env[0].game(i).phase() == AWAIT_PASS;
+                let differs = d0[i] != dz[i];
+                assert_eq!(
+                    differs, m1_rule,
+                    "game {i}: d differs {differs}, M1's rule taken {m1_rule}"
+                );
+                if differs {
+                    assert_eq!(env[1].game(i).phase(), PLAYING);
+                    diverged[i] = true;
+                    caught += 1;
+                }
+            }
+        }
+        assert!(caught >= 3, "M1 diverged in only {caught} of {n} games");
+        // A game dealt after set_mutant carries the mutant (reset, reset_hands and auto-reset all deal through
+        // start_game): replaying a diverged game's codes into fresh batches, the M1 batch's d differs at the last
+        // step only. And set_mutant(None) restores the reference's rules.
+        let i = (0..n).find(|&i| diverged[i]).unwrap();
+        let codes = &played[i];
+        let mut fresh = [VecEnv::new(1, 1, true).unwrap(), VecEnv::new(1, 1, true).unwrap()];
+        fresh[1].set_mutant(Mutant::M1);
+        let mut one = [Bufs::new(1), Bufs::new(1)];
+        let mut d = [[0u64; 1], [0u64; 1]];
+        for e in fresh.iter_mut() {
+            e.reset(&sd[i..=i], &st[i..=i]).unwrap();
+        }
+        for (t, &c) in codes.iter().enumerate() {
+            for k in 0..2 {
+                let (r, o) = one[k].split();
+                fresh[k].step(&[c], r, Some(o)).unwrap();
+                fresh[k].digests(&mut d[k], &mut lz[..1], &mut vz[..1]).unwrap();
+            }
+            assert_eq!(d[0][0] != d[1][0], t + 1 == codes.len(), "step {t} of {}", codes.len());
+        }
+        let mut again = VecEnv::new(1, 1, true).unwrap();
+        again.set_mutant(Mutant::M1);
+        again.set_mutant(Mutant::None);
+        again.reset(&sd[..1], &st[..1]).unwrap();
+        assert_eq!(*again.game(0), Game::new(&sd[0], st[0]).unwrap());
     }
 }

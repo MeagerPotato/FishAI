@@ -52,10 +52,15 @@
  *
  * Banks: `home-a` is the fitting bank; `home-b` and `home-c` are held out. Name the bank in every
  * number quoted from this script.
+ *
+ * `--games-out FILE` (ATHENA.md §4.6 G0c) also writes one JSON line a game, in play order: the pair g, the seed,
+ * teamA, A's and B's final sets (null for a game that hit the cap or had an action refused) and the number of actions
+ * the game took. It changes nothing that is played or printed; it lets another harness be pinned to this one game for
+ * game.
  */
 import { pathToFileURL, fileURLToPath } from 'node:url'
 import { basename, dirname, join, resolve } from 'node:path'
-import { readFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const ENG = await import(pathToFileURL(join(ROOT, 'lib/engine/index.ts')).href)
@@ -176,8 +181,16 @@ function play(seed, teamA) {
     const r = reduce(s, act(view, isA ? POL_A : POL_B, isA ? PARAMS_A : PARAMS_B, hashSeed(`${seed}:${s.moveIndex}`)(), isA ? PROB_A : PROB_B, isA ? COUNT.A : COUNT.B))
     if (!r.ok) return null
     s = r.state
+    lastMoves = guard
   }
   return [s.score[teamA], s.score[1 - teamA]]
+}
+// --games-out: the actions of the game `play` last finished, and the per-game lines
+let lastMoves = 0
+const GAMES_OUT = argOf('--games-out', '')
+const gameLines = []
+const record = (g, seed, teamA, x) => {
+  if (GAMES_OUT) gameLines.push(JSON.stringify({ g, seed, teamA, setsA: x ? x[0] : null, setsB: x ? x[1] : null, moves: x ? lastMoves : null }))
 }
 
 const t0 = Date.now()
@@ -192,7 +205,9 @@ const w = []
 for (let g = 0; g < PAIRS; g++) {
   const seed = `${BANK}-${g}`
   const x = play(seed, 0)
+  record(g, seed, 0, x)
   const y = play(seed, 1)
+  record(g, seed, 1, y)
   if (!x || !y) {
     capped++
     continue
@@ -209,6 +224,7 @@ const mean = d.reduce((a, b) => a + b, 0) / d.length
 const sd = Math.sqrt(d.reduce((a, x) => a + (x - mean) ** 2, 0) / Math.max(1, d.length - 1))
 const se = sd / Math.sqrt(d.length)
 const elapsed = ((Date.now() - t0) / 1000).toFixed(1)
+if (GAMES_OUT) writeFileSync(GAMES_OUT, gameLines.map((l) => l + '\n').join(''))
 
 console.log(`=== duplicate pairs: Monet ${LABEL_A} vs Monet ${LABEL_B}, bank ${BANK}, ${pairs} pairs (${2 * pairs} games), ${elapsed}s ===`)
 if (capped) console.log(`!!! ${capped} pairs hit the step cap and were dropped`)
