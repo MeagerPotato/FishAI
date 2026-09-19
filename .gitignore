@@ -16,6 +16,9 @@ dist/
 # next person to run a worktree there commits a whole extra tree by accident.
 .claude/worktrees/
 
+# Rust build output of the ATHENA rules core (ATHENA.md §5, D12: build output is git-ignored; Cargo.lock is committed)
+athena-env/target/
+
 # simulation output (regenerate with `npm run lab`)
 lab-out/
 
