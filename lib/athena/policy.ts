@@ -37,6 +37,7 @@ import { buildKnowledge } from '../engine/bots/knowledge.ts'
 import {
   CARDS,
   EVENT_LEN,
+  FACTS_LEN,
   L_ASK,
   L_DECLARE,
   L_DECLINE,
@@ -50,19 +51,23 @@ import {
   abs,
   decodeAction,
   encodeEventRows,
+  encodeFactsRow,
   encodeObservation,
   rel,
 } from './encode.ts'
 import {
   DEC_F,
+  DEC_F_FACTS,
   H_ASK,
   H_ASSIGN,
   H_BELIEF,
   H_DECLARE,
   H_PASS,
   HEADS,
+  decFOf,
   decisionFeatures,
   expDet,
+  factsFeatures,
   foldAll,
   foldEvent,
   headsOf,
@@ -250,7 +255,9 @@ export interface ForwardResult {
 
 /**
  * The network's heads for a view: the encoder's rows, the rules facts, the recurrent state (from `cache`, or refolded
- * from zero without one) and the trunk.
+ * from zero without one) and the trunk. A net reading {@link DEC_F_FACTS} decision features (P1's heads) also reads
+ * the facts row's features (net.ts `factsFeatures`, from `encodeFactsRow` over the same facts); G0d's stub reads
+ * {@link DEC_F} and takes exactly the path it always did.
  */
 export function forwardView(net: AthenaNet, view: SeatView, cache: SeatForward | null = null, k: Knowledge | null = null): ForwardResult {
   const obs = new Uint8Array(OBS_LEN)
@@ -259,8 +266,14 @@ export function forwardView(net: AthenaNet, view: SeatView, cache: SeatForward |
   const facts = k ?? factsOf(view)
   const rows = encodeEventRows(view.log, view.seat)
   const h = cache ? cache.stateFor(rows) : foldAll(net, rows, rows.length / EVENT_LEN)
-  const dec = new Float64Array(DEC_F)
+  const decF = decFOf(net.arch)
+  const dec = new Float64Array(decF)
   decisionFeatures(obs, candidateMatrix(view, facts), dec)
+  if (decF === DEC_F_FACTS) {
+    const row = new Uint8Array(FACTS_LEN)
+    encodeFactsRow(view, facts, row)
+    factsFeatures(row, dec, DEC_F)
+  }
   const heads = headsOf(net, h, dec, new Float64Array(HEADS))
   return { obs, legal, heads, k: facts }
 }

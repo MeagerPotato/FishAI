@@ -1,6 +1,6 @@
 /**
  * export-belief-views.mjs: the belief head's inputs and labels from the bridge records (ATHENA.md §8.3), in the
- * belief-views format (`athena-p1-belief-views-2`) that `scripts/athena/belief_data.py` also writes for population
+ * belief-views format (`athena-p1-belief-views-3`) that `scripts/athena/belief_data.py` also writes for population
  * (a) from the port.
  *
  * At each selected ask (`walkAsks`, `scripts/bridge-records.mjs`: the asking seat's view under the host's reduced
@@ -10,6 +10,8 @@
  * - the rules facts' candidate seats of every card as a six-bit mask, relative to the asker (bit r: relative seat r
  *   may hold the card), from `buildKnowledge(view, KOPTS)` (KOPTS as gen-holder-data.mjs derives them): the facts
  *   row's `F_CAND`;
+ * - the whole facts row (API.md §5.5, `encodeFactsRow` over the same facts), which P1's heads read (net.ts
+ *   `factsFeatures`); its `F_CAND` is asserted equal to the mask above;
  * - the true holder of every card, relative (255 once its set has resolved): the critic buffer's label;
  * - how many of the seat's event rows precede the ask: under the start-seat rule none while the log holds only
  *   `game_started` (a game's first ask), else one per logged event.
@@ -30,7 +32,7 @@
  * The output directory holds `.npy` files (`meta.json` lists them) and `meta.json`: `streams` uint8 [R, 19];
  * `stream_off` int64 [G, 6] and `stream_len` int32 [G, 6] (a seat with no selected ask has length 0); `ask_game`
  * int32, `ask_seat` uint8, `ask_pos` int32, `ask_event` int32 [A]; `ask_obs` uint8 [A, 95]; `ask_cands` and
- * `ask_holder` uint8 [A, 54]; `game_key` (the cluster key, `<file>|<game index>` as belief-baselines.mjs writes it)
+ * `ask_holder` uint8 [A, 54]; `ask_facts` uint8 [A, 278]; `game_key` (the cluster key, `<file>|<game index>` as belief-baselines.mjs writes it)
  * in `game_keys.json`.
  *
  *   node scripts/athena/export-belief-views.mjs --records "D1,D2" --side monet --files train --out <dir>
@@ -54,7 +56,7 @@ function argOf(flag, dflt) {
 }
 const has = (flag) => process.argv.includes(flag)
 
-export const FORMAT = 'athena-p1-belief-views-2'
+export const FORMAT = 'athena-p1-belief-views-3'
 
 /** An .npy file written as it grows: a fixed 128-byte header patched with the shape on close. */
 class NpyWriter {
@@ -150,6 +152,7 @@ async function main() {
     ask_obs: new NpyWriter(join(out, 'ask_obs.npy'), '|u1', [ATH.OBS_LEN], ATH.OBS_LEN),
     ask_cands: new NpyWriter(join(out, 'ask_cands.npy'), '|u1', [54], 54),
     ask_holder: new NpyWriter(join(out, 'ask_holder.npy'), '|u1', [54], 54),
+    ask_facts: new NpyWriter(join(out, 'ask_facts.npy'), '|u1', [ATH.FACTS_LEN], ATH.FACTS_LEN),
     stream_off: new NpyWriter(join(out, 'stream_off.npy'), '<i8', [6], 48),
     stream_len: new NpyWriter(join(out, 'stream_len.npy'), '<i4', [6], 24),
   }
@@ -203,7 +206,10 @@ async function main() {
         // the rows encodeEventRows gives for the log at the ask (view.log, i events): none while it holds only game_started
         const pos = i > 1 ? i : 0
         if (i <= 2 && ATH.encodeEventRows(view.log, me).length !== pos * ATH.EVENT_LEN) throw new Error(`${rec.label} event ${i}: the rows before the ask are not ${pos}`)
-        pending.push({ me, i, pos, obs: Uint8Array.from(obs), cands, holder })
+        const facts = new Uint8Array(ATH.FACTS_LEN)
+        ATH.encodeFactsRow(view, k, facts)
+        for (let c = 0; c < 54; c++) if (facts[ATH.F_CAND + c] !== cands[c]) throw new Error(`${rec.label} event ${i}: the facts row's candidates of ${ATH.CARDS[c]} are not the mask's`)
+        pending.push({ me, i, pos, obs: Uint8Array.from(obs), cands, holder, facts })
       })
       if (!pending.length) continue
       const off = new BigInt64Array(6)
@@ -231,6 +237,7 @@ async function main() {
         W.ask_obs.write(u8(p.obs), 1)
         W.ask_cands.write(u8(p.cands), 1)
         W.ask_holder.write(u8(p.holder), 1)
+        W.ask_facts.write(u8(p.facts), 1)
         asks++
       }
       games++

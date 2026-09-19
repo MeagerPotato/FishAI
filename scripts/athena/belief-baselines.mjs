@@ -27,7 +27,9 @@
  * 1,000, the RNG `mulberry32(hashSeed(--seed))`, default seed `athena-p1-boot`, index floor(u * G) over the clusters
  * sorted by key): the SE of each metric is the SD of its 1,000 resampled ratios. A cluster file from another scorer
  * (a head's) may join by key; every shared cluster must hold the same number of cards, and differences are
- * bootstrapped on the same resamples.
+ * bootstrapped on the same resamples. `FILE#old=new` renames a file's belief (`run-S/test-a.clusters.tsv#head=BS`), so
+ * two heads' files join; `--base NAME` (default `marg`) is the belief every other is differenced against, and
+ * `--pairs A-B,...` adds named differences on the same resamples.
  *
  *   node scripts/athena/belief-baselines.mjs extract --pop a --games <games>/test --out <dir>/a-test
  *   node scripts/athena/belief-baselines.mjs extract --pop b --records "D1,D2" --sample 0.02 --sample-salt 35 \
@@ -251,8 +253,11 @@ function readClusters(file) {
   })
 }
 
-/** The cluster bootstrap: the point ratio and its SE for each metric, and for each difference against `base`. */
-export function bootstrap(clusters, metrics, { seed = 'athena-p1-boot', resamples = 1000, base = null } = {}) {
+/**
+ * The cluster bootstrap: the point ratio and its SE for each metric, for each difference against `base`, and for each
+ * named pair `[a, b]` of beliefs (a - b, per metric kind), all on the same resamples.
+ */
+export function bootstrap(clusters, metrics, { seed = 'athena-p1-boot', resamples = 1000, base = null, pairs = [] } = {}) {
   const G = clusters.length
   const n = Float64Array.from(clusters, (c) => c.n)
   const cols = Object.fromEntries(metrics.map((m) => [m, Float64Array.from(clusters, (c) => c.cols[m])]))
@@ -298,6 +303,18 @@ export function bootstrap(clusters, metrics, { seed = 'athena-p1-boot', resample
       out.diffs[`${m} - ${bm}`] = { point: out.metrics[m].point - out.metrics[bm].point, se: sd(d) }
     }
   }
+  for (const [a, b] of pairs) {
+    out.diffs ??= {}
+    for (const kind of ['top1', 'nll']) {
+      const ma = `${a}.${kind}`
+      const mb = `${b}.${kind}`
+      if (!(ma in cols) || !(mb in cols)) throw new Error(`--pairs ${a}-${b}: ${ma} or ${mb} is not a metric`)
+      const i = metrics.indexOf(ma)
+      const j = metrics.indexOf(mb)
+      const d = draws[i].map((x, r) => x - draws[j][r])
+      out.diffs[`${ma} - ${mb}`] = { point: out.metrics[ma].point - out.metrics[mb].point, se: sd(d) }
+    }
+  }
   return out
 }
 
@@ -306,9 +323,17 @@ function boot() {
   const split = argOf('--split', 'test')
   const splits = new Set(split.split(',')) // e.g. 'holdout,test': (b)'s baseline calls its test split the holdout
   const byKey = new Map()
-  for (const f of files) {
+  for (const spec of files) {
+    // FILE#old=new renames a belief's columns (old.top1 -> new.top1, old.nll -> new.nll), so two heads' files join
+    const [f, ren] = spec.split('#')
+    const [from, to] = ren ? ren.split('=') : []
     for (const c of readClusters(f)) {
       if (!splits.has(c.split)) continue
+      if (ren) {
+        const cols = {}
+        for (const [m, v] of Object.entries(c.cols)) cols[m.startsWith(`${from}.`) ? `${to}${m.slice(from.length)}` : m] = v
+        c.cols = cols
+      }
       const prev = byKey.get(c.key)
       if (!prev) byKey.set(c.key, c)
       else {
@@ -325,7 +350,8 @@ function boot() {
   // --intersect (smoke runs over a subset): keep only the clusters every file scored; a registered read has none missing
   if (process.argv.includes('--intersect')) clusters = clusters.filter((c) => metrics.every((m) => m in c.cols))
   for (const c of clusters) for (const m of metrics) if (!(m in c.cols)) throw new Error(`cluster ${c.key} lacks ${m}`)
-  const res = bootstrap(clusters, metrics, { seed: argOf('--seed', 'athena-p1-boot'), resamples: Number(argOf('--resamples', 1000)), base: argOf('--base', 'marg') })
+  const pairs = argOf('--pairs', '').split(',').filter(Boolean).map((p) => p.split('-'))
+  const res = bootstrap(clusters, metrics, { seed: argOf('--seed', 'athena-p1-boot'), resamples: Number(argOf('--resamples', 1000)), base: argOf('--base', 'marg'), pairs })
   const out = { split, files, ...res }
   const o = argOf('--out', '')
   if (o) fs.writeFileSync(o, JSON.stringify(out, null, 1))

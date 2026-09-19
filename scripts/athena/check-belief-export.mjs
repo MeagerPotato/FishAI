@@ -1,7 +1,8 @@
 /**
  * check-belief-export.mjs: ATHENA.md §8.3's export check. A belief head trained in PyTorch
  * (`scripts/athena/belief_train.py export`) is written in G0d's weight format; this script runs `lib/athena`'s
- * deterministic forward (net.ts: `foldAll`, `decisionFeatures`, `headsOf`, and `beliefOf`) on the same inputs and
+ * deterministic forward (net.ts: `foldAll`, `decisionFeatures`, `factsFeatures` for a net reading the facts,
+ * `headsOf`, and `beliefOf`) on the same inputs and
  * compares each unit card's belief with PyTorch's. The bar: the argmax agrees on every card (the first maximum over
  * the candidates in ascending absolute seat order, as belief-baselines.mjs takes it), and no probability differs by
  * more than 1e-4.
@@ -9,8 +10,9 @@
  *   node scripts/athena/check-belief-export.mjs --check <run>/export-check.json [--out result.json]
  *
  * The check file holds the weight file's path and md5, and per decision: the seat, the event rows it folds (base64,
- * `pos` rows of 19 bytes), the obs row, the candidate matrix (324 bytes, relative) and, per unit card, PyTorch's six
- * probabilities (relative seats). Exit 0 on a pass, 1 on a fail.
+ * `pos` rows of 19 bytes), the obs row, the candidate matrix (324 bytes, relative), the facts row (API.md §5.5; read
+ * when the net's decF is DEC_F_FACTS) and, per unit card, PyTorch's six probabilities (relative seats). Exit 0 on a
+ * pass, 1 on a fail.
  */
 import fs from 'node:fs'
 import { createHash } from 'node:crypto'
@@ -53,7 +55,8 @@ function main() {
   const md5 = createHash('md5').update(bytes).digest('hex')
   if (md5 !== chk.md5) throw new Error(`the weight file's md5 is ${md5}, the check file names ${chk.md5}`)
   const net = NET.parseWeights(new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength))
-  const dec = new Float64Array(NET.DEC_F)
+  const decF = NET.decFOf(net.arch)
+  const dec = new Float64Array(decF)
   const heads = new Float64Array(NET.HEADS)
   const belief = new Float64Array(324)
   let cards = 0
@@ -68,6 +71,10 @@ function main() {
     if (rows.length !== it.pos * 19) throw new Error(`decision of game ${it.game}: ${rows.length} row bytes for ${it.pos} rows`)
     const h = NET.foldAll(net, rows, it.pos)
     NET.decisionFeatures(obs, cands, dec)
+    if (decF === NET.DEC_F_FACTS) {
+      if (!it.facts) throw new Error(`decision of game ${it.game}: the net reads the facts, and the check file has none`)
+      NET.factsFeatures(new Uint8Array(Buffer.from(it.facts, 'base64')), dec, NET.DEC_F)
+    }
     NET.headsOf(net, h, dec, heads)
     NET.beliefOf(heads, cands, belief)
     it.cards.forEach((c, j) => {
@@ -85,7 +92,7 @@ function main() {
     })
   }
   const pass = argmaxDiffer === 0 && maxDiff <= TOLERANCE
-  const res = { weights: chk.weights, md5, arch: net.arch, decisions: chk.items.length, cards, argmaxDiffer, maxAbsDiff: maxDiff, worst, tolerance: TOLERANCE, pass, secs: (Date.now() - t0) / 1000 }
+  const res = { weights: chk.weights, md5, arch: net.arch, decF, decisions: chk.items.length, cards, argmaxDiffer, maxAbsDiff: maxDiff, worst, tolerance: TOLERANCE, pass, secs: (Date.now() - t0) / 1000 }
   const out = argOf('--out', '')
   if (out) fs.writeFileSync(out, JSON.stringify(res, null, 1))
   console.log(`export check: ${cards} cards over ${res.decisions} decisions; argmax differs on ${argmaxDiffer}; max |dp| ${maxDiff.toExponential(3)} (bar ${TOLERANCE}); ${pass ? 'PASS' : 'FAIL'} (${res.secs.toFixed(1)}s)`)

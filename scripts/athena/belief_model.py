@@ -8,14 +8,15 @@ The model is net.ts's candidate network, parameter for parameter, so a trained h
 |---|---|---|
 | event embedding | `embed` Linear(176, d) over the event's 21 one-hot slots | `embed.weight` [d, 176], `embed.bias` |
 | recurrence | `gru` GRU(d, d), gates r, z, n (PyTorch's order, as net.ts's `foldEvent`) | `gru.weight_ih` [3d, d], `gru.weight_hh`, `gru.bias_ih`, `gru.bias_hh` |
-| trunk | `depth` Linear + ReLU, the first over [h, the decision's 516 features] | `trunk.<i>.weight`, `trunk.<i>.bias` |
+| trunk | `depth` Linear + ReLU, the first over [h, the decision's `dec_f` features: 912 for P1's heads, 516 + the facts features] | `trunk.<i>.weight`, `trunk.<i>.bias` |
 | heads | Linear(width, 517) | `heads.weight`, `heads.bias` |
 
 Only the belief head's 324 outputs (card x relative seat) are trained here; the other heads are carried so the file
 is G0d's format, and they stay at their initial values. The belief is each card's softmax over its candidate seats
 (`net.ts` `beliefOf`), and the loss is the cross-entropy of the true holder over the unit cards.
 
-Sizes (§3.1, net.ts `ARCHS`): S = GRU 256, trunk 2 x 512; M = 512, 3 x 1,024; L = 1,024, 4 x 2,048.
+Sizes (§3.1, net.ts `ARCHS`): S = GRU 256, trunk 2 x 512; M = 512, 3 x 1,024; L = 1,024, 4 x 2,048. The export writes
+`arch.decF` = `dec_f` (net.ts accepts 516, G0d's stub, or 912, `DEC_F_FACTS`).
 """
 import json
 import struct
@@ -27,6 +28,7 @@ import torch.nn.functional as F
 
 EVENT_F = 176
 DEC_F = 516
+DEC_F_FACTS = 912  # net.ts: DEC_F + FACTS_F
 HEADS = 517
 N_ASK = 162
 H_BELIEF = N_ASK + 10 + 18 + 2
@@ -36,17 +38,19 @@ NLL_CLAMP = -float(np.log(1e-12))  # belief-baselines.mjs clamps p(true holder) 
 
 
 class BeliefNet(nn.Module):
-    def __init__(self, d, width, depth):
+    def __init__(self, d, width, depth, dec_f=DEC_F_FACTS):
         super().__init__()
-        self.d, self.width, self.depth = d, width, depth
+        if dec_f not in (DEC_F, DEC_F_FACTS):
+            raise ValueError(f'dec_f {dec_f}: net.ts reads {DEC_F} or {DEC_F_FACTS}')
+        self.d, self.width, self.depth, self.dec_f = d, width, depth, dec_f
         self.embed = nn.Linear(EVENT_F, d)
         self.gru = nn.GRU(d, d, batch_first=True)
-        self.trunk = nn.ModuleList([nn.Linear(d + DEC_F if i == 0 else width, width) for i in range(depth)])
+        self.trunk = nn.ModuleList([nn.Linear(d + dec_f if i == 0 else width, width) for i in range(depth)])
         self.heads = nn.Linear(width, HEADS)
 
     @classmethod
-    def of(cls, arch):
-        return cls(*ARCHS[arch])
+    def of(cls, arch, dec_f=DEC_F_FACTS):
+        return cls(*ARCHS[arch], dec_f=dec_f)
 
     def states(self, slots):
         """The recurrent state after each of 0..L events: slots (S, L, 21) -> (S, L + 1, d), position 0 the zero
@@ -92,12 +96,12 @@ def to_torch(b, device):
 
 # ------------------------------------------------------------------------------------------------ the export ---
 
-def tensor_layout(d, width, depth):
+def tensor_layout(d, width, depth, dec_f=DEC_F_FACTS):
     """net.ts's `tensorLayout`: (name, shape) in blob order."""
     shapes = [('embed.weight', [d, EVENT_F]), ('embed.bias', [d]), ('gru.weight_ih', [3 * d, d]),
               ('gru.weight_hh', [3 * d, d]), ('gru.bias_ih', [3 * d]), ('gru.bias_hh', [3 * d])]
     for i in range(depth):
-        shapes += [(f'trunk.{i}.weight', [width, d + DEC_F if i == 0 else width]), (f'trunk.{i}.bias', [width])]
+        shapes += [(f'trunk.{i}.weight', [width, d + dec_f if i == 0 else width]), (f'trunk.{i}.bias', [width])]
     shapes += [('heads.weight', [HEADS, width]), ('heads.bias', [HEADS])]
     return shapes
 
@@ -117,7 +121,7 @@ def state_tensors(model):
 
 def export_weights(model, path, meta):
     """Write the model as an `athena-weights-1` file (net.ts `serializeWeights`'s layout); returns its bytes."""
-    layout = tensor_layout(model.d, model.width, model.depth)
+    layout = tensor_layout(model.d, model.width, model.depth, model.dec_f)
     tensors = state_tensors(model)
     specs, blobs, off = [], [], 0
     for name, shape in layout:
@@ -129,7 +133,7 @@ def export_weights(model, path, meta):
         blobs.append(t.numpy().astype('<f4').reshape(-1))
         off += n
     header = {'format': WEIGHTS_FORMAT,
-              'arch': {'d': model.d, 'width': model.width, 'depth': model.depth, 'eventF': EVENT_F, 'decF': DEC_F,
+              'arch': {'d': model.d, 'width': model.width, 'depth': model.depth, 'eventF': EVENT_F, 'decF': model.dec_f,
                        'heads': HEADS},
               'params': off, 'tensors': specs, 'meta': meta}
     js = json.dumps(header, separators=(',', ':'))
