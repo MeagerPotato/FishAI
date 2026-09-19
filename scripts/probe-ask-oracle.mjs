@@ -22,9 +22,25 @@
  * differential, so the number is a true sets-a-game reading on 3.8at's exchange-rate axis) and at
  * 24 steps (what the search consumes, and the unit 3.8au's marker was in). Their ratio has never
  * been measured and is reported as its own line.
+ *
+ * ATHENA.md §8.4 (D4 with the head) adds three options; without them nothing played, drawn or printed changes.
+ *   --sampler marginal|head:<weights>  D4's deal sampler. `marginal` (the default) is the record's: `sampleDeal` over
+ *                                      the table `marginalFor(k)` holds. `head:<file>` reads an `athena-weights-1`
+ *                                      file and, at each sampled decision, lays the belief head's per-card holder
+ *                                      probabilities (lib/athena's deterministic forward) over that table
+ *                                      (`lib/athena/belief.ts`), so `sampleDeal` draws from the head. A decision whose
+ *                                      table is null keeps the slot prior, and is counted.
+ *   --values-out FILE                  one JSON line a sampled decision: the game label and move, the legal asks, the
+ *                                      pick, every legal ask's value on the TRUE deal (to the end and at 24 steps),
+ *                                      the sampler's mean value of every ask over its deals, its choice, and seconds.
+ *   --values-in FILE                   another run's --values-out, on the same games: the true-deal values are read
+ *                                      from it (every decision checked to be the same decision: label, move, legal
+ *                                      asks and pick) instead of rolled out again, and the file's own sampler choice
+ *                                      is paired with this run's, so "H - M on the same decisions" is printed.
  */
 import { pathToFileURL } from 'node:url'
 import fs from 'node:fs'
+import { createHash } from 'node:crypto'
 const ENG = await import(pathToFileURL(process.cwd() + '/lib/engine/index.ts').href)
 const MON = await import(pathToFileURL(process.cwd() + '/lib/engine/bots/monet.ts').href)
 const BOTS = await import(pathToFileURL(process.cwd() + '/lib/engine/bots/index.ts').href)
@@ -41,6 +57,26 @@ const DETSTEPS = Number(argOf('--det-steps', 24)) // D4's SELECTION horizon; 24 
 const DET = Number(argOf('--det', 16))   // D4's determinizations; 0 turns the belief-limited ceiling off
 const OVER = argOf('--override', '') ? JSON.parse(argOf('--override', '')) : null
 const params = { ...S.SEARCH_DEFAULTS, ...JSON.parse(argOf('--search', '{}')) }
+const SAMPLER = argOf('--sampler', 'marginal')
+const VALUES_OUT = argOf('--values-out', '')
+const VALUES_IN = argOf('--values-in', '')
+if (SAMPLER !== 'marginal' && !SAMPLER.startsWith('head:')) throw new Error(`--sampler is marginal or head:<weights file>, not ${SAMPLER}`)
+// ATHENA.md 8.4: the head sampler's net, loaded once, with one incremental fold per seat (reset every game)
+const HEAD = SAMPLER.startsWith('head:') ? await (async () => {
+  const BEL = await import(pathToFileURL(process.cwd() + '/lib/athena/belief.ts').href)
+  const ATH = await import(pathToFileURL(process.cwd() + '/lib/athena/index.ts').href)
+  const file = SAMPLER.slice(5)
+  const bytes = fs.readFileSync(file)
+  const net = ATH.parseWeights(new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength))
+  return { BEL, ATH, file, net, md5: createHash('md5').update(bytes).digest('hex'), caches: [], patched: 0, fallback: 0 }
+})() : null
+// --values-in: the true-deal values of another run, by `${label}:${moveIndex}`
+const VIN = VALUES_IN ? new Map(fs.readFileSync(VALUES_IN, 'utf8').split('\n').filter(Boolean).map((l) => { const o = JSON.parse(l); return [`${o.label}:${o.move}`, o] })) : null
+const vout = VALUES_OUT ? [] : null
+const pairHM = []  // this run's choice minus the --values-in run's, on the true deal, to the end and at 24 steps
+const pairHM24 = []
+let pairSame = 0
+let viUsed = 0
 
 const pol0 = MON.monetPolicy(VERSION)
 const pol = OVER ? Object.freeze({ skill: pol0.skill, style: Object.freeze({ ...pol0.style, ...OVER }) }) : pol0
@@ -82,6 +118,7 @@ const t0 = Date.now()
 
 for (let g = 0; g < GAMES; g++) {
   const label = `${LABEL}-${g}`
+  if (HEAD) HEAD.caches = [0, 1, 2, 3, 4, 5].map(() => new HEAD.ATH.SeatForward(HEAD.net))
   let s = newGame(label, us54Config, 0)
   let n = 0
   while (s.phase !== 'finished' && n++ < 5000) {
@@ -96,16 +133,32 @@ for (let g = 0; g < GAMES; g++) {
         const legal = legalAsksFromView(view)
         if (legal.length > 1) {
           sampled++
+          const tDec = Date.now()
           legalSum += legal.length
           if (legal.length > legalMax) legalMax = legal.length
           const key = `${seed}:true`
+          // --values-in: this decision's true-deal values from the other run, checked to be the same decision
+          const vi = VIN ? VIN.get(`${label}:${s.moveIndex}`) : undefined
+          if (VIN) {
+            if (!vi) throw new Error(`--values-in has no decision ${label}:${s.moveIndex}`)
+            const sameLegal = vi.legal.length === legal.length && vi.legal.every(([t, c], i) => t === legal[i].target && c === legal[i].card)
+            if (!sameLegal || vi.pick[0] !== a.target || vi.pick[1] !== a.card) throw new Error(`--values-in's decision ${label}:${s.moveIndex} is not this one`)
+            viUsed++
+          }
+          const trueVal = new Map() // `${target}:${card}` -> [end, 24] on the true deal, as rolled or read
+          if (vi) vi.legal.forEach(([t, c], i) => trueVal.set(`${t}:${c}`, [vi.vEnd[i], vi.v24[i]]))
           const roll = (act, steps) => {
+            if (vi) {
+              const v = trueVal.get(`${act.target}:${act.card}`)
+              return v === undefined ? null : steps === END ? v[0] : v[1]
+            }
             const r = reduce(s, act)
             if (!r.ok) return null
             rollouts++
             return S.rollout(r.state, pol, key, steps, team(seat), params.leafLock, params.leafCard)
           }
           const vPickEnd = roll(a, END), vPick24 = roll(a, 24)
+          const vEndAll = [], v24All = []
           const holderOf = (card) => s.hands.findIndex((h) => h.includes(card))
 
           // the two restricted candidate sets, each unioned with the pick so its oracle is >= 0.
@@ -129,8 +182,10 @@ for (let g = 0; g < GAMES; g++) {
           for (const x of legal) {
             const act = { type: 'ask', seat, target: x.target, card: x.card }
             const ve = roll(act, END)
-            if (ve === null) continue
+            vEndAll.push(ve)
+            if (ve === null) { v24All.push(null); continue }
             const v2 = roll(act, 24)
+            v24All.push(v2)
             if (ve > bEnd) { bEnd = ve; bAct = x }
             if (v2 > b24) b24 = v2
             if (top3.some((y) => same(y, x))) { if (ve > tEnd) tEnd = ve; if (v2 > t24) t24 = v2 }
@@ -143,12 +198,20 @@ for (let g = 0; g < GAMES; g++) {
           // search over the FULL legal set at the search's own horizon, with no candidate
           // generator and no guard -- and then evaluate THAT ask against the TRUE deal, paired with
           // the pick. The gap between this and the hindsight ceiling is what hindsight was worth.
+          let dRec = null
           if (DET > 0) {
             const rng = ENG.mulberry32 ? ENG.mulberry32(seed) : hashSeed(`${label}:${s.moveIndex}:det`)
             const sums = legal.map(() => 0)
             let drawn = 0
+            // ATHENA.md 8.4: the head sampler draws from a knowledge of its own whose table carries the head's rows
+            let kS = k
+            if (HEAD) {
+              kS = BOTS.buildKnowledge(view, KOPTS)
+              if (HEAD.BEL.patchTableWithHead(HEAD.net, view, kS, HEAD.caches[seat])) HEAD.patched++
+              else HEAD.fallback++
+            }
             for (let d = 0; d < DET; d++) {
-              const hands = S.sampleDeal(view, k, rng)
+              const hands = S.sampleDeal(view, kS, rng)
               if (hands === null) continue
               drawn++
               const base = S.stateFromView(view, hands)
@@ -165,6 +228,14 @@ for (let g = 0; g < GAMES; g++) {
               const chosen = legal[bi]
               const ve = roll({ type: 'ask', seat, target: chosen.target, card: chosen.card }, END)
               const v2 = roll({ type: 'ask', seat, target: chosen.target, card: chosen.card }, 24)
+              // the rollout is deterministic in its key, so the chosen ask's value is the full loop's for that ask (checked
+              // where the values are saved or a head samples)
+              if ((HEAD || vout) && (ve !== vEndAll[bi] || v2 !== v24All[bi])) throw new Error(`${label}:${s.moveIndex}: the chosen ask's true-deal value is not the loop's (determinism broken)`)
+              dRec = { drawn, mean24: sums.map((x) => x / drawn), chosen: bi }
+              if (vi && vi.chosen !== null && vi.chosen !== undefined) {
+                pairHM.push(ve - vi.vEnd[vi.chosen]); pairHM24.push(v2 - vi.v24[vi.chosen])
+                if (vi.chosen === bi) pairSame++
+              }
               if (ve !== null) {
                 R.beliefEnd.push(ve - vPickEnd); R.belief24.push(v2 - vPick24)
                 R.hindsightEnd.push(bEnd - ve)
@@ -201,6 +272,14 @@ for (let g = 0; g < GAMES; g++) {
           if (rp !== undefined && rp.p === 1) pickCertain++
           const rb = ranked.find((r) => same(r, bAct))
           if (rb !== undefined && rb.p === 1) oracleCertain++
+          if (vout) {
+            vout.push(JSON.stringify({
+              label, g, move: s.moveIndex, seat, sampler: SAMPLER, legal: legal.map((x) => [x.target, x.card]), pick: [a.target, a.card],
+              vPickEnd, vPick24, vEnd: vEndAll, v24: v24All,
+              drawn: dRec ? dRec.drawn : 0, mean24: dRec ? dRec.mean24 : null, chosen: dRec ? dRec.chosen : null,
+              secs: (Date.now() - tDec) / 1000,
+            }))
+          }
         }
       }
     }
@@ -251,6 +330,16 @@ console.log(`  its rank in the CLONE's ordering (what a selector over the shortl
 console.log(`  its rank in the RAW ranker's ordering: mean ${mean(rawRanks).toFixed(1)}`)
 console.log(`  true hit rate: pick ${(100 * pickHit / Math.max(1, sampled)).toFixed(1)}%, ceiling ask ${(100 * oracleHit / Math.max(1, sampled)).toFixed(1)}%`)
 console.log(`  certain in the ranking (p = 1): pick ${pickCertain}, ceiling ask ${oracleCertain}`)
+if (HEAD || VIN || vout) {
+  console.log('')
+  console.log(`ATHENA.md 8.4: sampler ${SAMPLER}${HEAD ? ` (weights md5 ${HEAD.md5}; head rows laid over ${HEAD.patched} decisions' tables, ${HEAD.fallback} kept the slot prior)` : ''}`)
+  console.log(`  ${(secs / Math.max(1, sampled)).toFixed(2)} s a sampled decision`)
+  if (VIN) {
+    const hm = stat(pairHM), hm24 = stat(pairHM24)
+    console.log(`  true-deal values read from ${VALUES_IN} at ${viUsed} decisions (none rolled out again)`)
+    console.log(`  this sampler minus that run's, on the same decisions: to the END ${fmt(hm)}, 24 steps ${fmt(hm24)}; the same ask chosen ${pairSame} of ${pairHM.length}`)
+  }
+}
 
 if (JSONOUT) {
   fs.writeFileSync(JSONOUT, JSON.stringify({
@@ -259,6 +348,14 @@ if (JSONOUT) {
     stats: S_, ratio, meanRank, meanRawRank: mean(rawRanks), meanRankedSize: mean(rankedSizes), rankTop1, rankTop3, rankTop5, rankOff,
     oracleIsPick, pickHit, oracleHit, pickCertain, oracleCertain,
     det: DET, detSteps: DETSTEPS, beliefN, beliefFoundOracle, beliefIsPick, beliefHit, beliefDeals,
+    ...(HEAD || VIN || vout ? {
+      sampler: SAMPLER, headMd5: HEAD ? HEAD.md5 : null, headPatched: HEAD ? HEAD.patched : 0, headFallback: HEAD ? HEAD.fallback : 0,
+      valuesIn: VALUES_IN || null, pairHM: VIN ? stat(pairHM) : null, pairHM24: VIN ? stat(pairHM24) : null, pairSame,
+    } : {}),
   }, null, 2))
   console.log(`\n-> ${JSONOUT}`)
+}
+if (vout) {
+  fs.writeFileSync(VALUES_OUT, vout.map((l) => l + '\n').join(''))
+  console.log(`-> ${VALUES_OUT} (${vout.length} decisions)`)
 }

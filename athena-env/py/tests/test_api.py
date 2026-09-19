@@ -18,14 +18,14 @@ def test_layout_constants():
                                                                                              6726)
     assert (ae.L_ASK, ae.L_DECLARE, ae.L_DECLINE, ae.L_PASS, ae.LEGAL_LEN) == (0, 162, 171, 172, 174)
     assert (ae.O_HAND, ae.O_COUNTS, ae.O_PHASE, ae.O_TURN, ae.O_WINDOW, ae.O_OPTION, ae.O_DECLINED, ae.O_SCORE,
-            ae.O_SETS, ae.SET_FIELDS, ae.OBS_LEN) == (0, 54, 60, 61, 62, 63, 64, 65, 67, 3, 94)
+            ae.O_SETS, ae.SET_FIELDS, ae.O_REGIME, ae.OBS_LEN) == (0, 54, 60, 61, 62, 63, 64, 65, 67, 3, 94, 95)
     assert (ae.E_TYPE, ae.E_ACTOR, ae.E_TARGET, ae.E_CARD, ae.E_HIT, ae.E_SET, ae.E_RESULT, ae.E_ASSIGN, ae.E_HOLDERS,
             ae.EVENT_LEN, ae.MAX_EVENTS) == (0, 1, 2, 3, 4, 5, 6, 7, 13, 19, 32)
     assert ae.CRITIC_LEN == 54 and ae.NONE == 255 and ae.STEP_CAP == 6000
     assert ae.SET_CARDS[8] == [6, 19, 32, 45, 52, 53] and ae.SET_NAMES[8] == 'EIGHTS'
     b = ae.BatchEnv(3).make_buffers()
     assert {k: (v.shape, v.dtype.str) for k, v in b.items()} == {
-        'seat': ((3,), '|u1'), 'obs': ((3, 94), '|u1'), 'legal': ((3, 174), '|u1'), 'events': ((3, 32, 19), '|u1'),
+        'seat': ((3,), '|u1'), 'obs': ((3, 95), '|u1'), 'legal': ((3, 174), '|u1'), 'events': ((3, 32, 19), '|u1'),
         'n_events': ((3,), '|u1'), 'critic': ((3, 54), '|u1')}
     assert 'critic' not in ae.BatchEnv(3).make_buffers(critic=False)
 
@@ -75,8 +75,8 @@ def test_errors_are_loud():
     # Buffers: a missing key, a wrong dtype, a wrong shape, a non-contiguous array, the same array twice.
     expect(KeyError, lambda: env.observe({k: v for k, v in b.items() if k != 'legal'}))
     expect(TypeError, lambda: env.observe({**b, 'obs': b['obs'].astype(np.int16)}))
-    expect(ValueError, lambda: env.observe({**b, 'obs': np.zeros((4, 93), np.uint8)}))
-    expect(ValueError, lambda: env.observe({**b, 'obs': np.zeros((4, 188), np.uint8)[:, ::2]}))
+    expect(ValueError, lambda: env.observe({**b, 'obs': np.zeros((4, 94), np.uint8)}))
+    expect(ValueError, lambda: env.observe({**b, 'obs': np.zeros((4, 190), np.uint8)[:, ::2]}))
     expect(ValueError, lambda: env.observe({**b, 'n_events': b['seat']}))
     # Actions: int32 or int64; the first move is a window poll, so an ask is refused and that game is unchanged.
     expect(TypeError, lambda: env.step(np.zeros(4, np.float32)))

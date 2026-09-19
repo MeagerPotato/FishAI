@@ -74,6 +74,21 @@ const ASSIGN_RERANK = argOf('--assign-rerank', '') // §3.8j B1: shipped,side-p,
 const rerankArms = ASSIGN_RERANK ? ASSIGN_RERANK.split(',').map((x) => x.trim()).filter(Boolean) : []
 // §3.8j B1b: the patched belief through planClaimFor — shipped | side-p | seat-p | side-c (needs --locks)
 const LOCKS_ARM = argOf('--locks-arm', '')
+// ATHENA.md §8.3, the declare pin's arm: `head:<weights file>` lays a belief head's per-card holder probabilities
+// (lib/athena's deterministic forward, `lib/athena/belief.ts`: the belief block's softmax over each card's rule
+// candidates) over the --cf policy's marginal table at every probe, unscaled; `head-scaled:<file>` then rescales the
+// table to its margins with the arms' own step (`rescale`). A probe whose table is null keeps it, and is counted.
+const HEAD_ARM = /^head(-scaled)?:/.test(LOCKS_ARM)
+  ? await (async () => {
+      const BEL = await import(pathToFileURL(process.cwd() + '/lib/athena/belief.ts').href)
+      const ATH = await import(pathToFileURL(process.cwd() + '/lib/athena/index.ts').href)
+      const { createHash } = await import('node:crypto')
+      const file = LOCKS_ARM.slice(LOCKS_ARM.indexOf(':') + 1)
+      const bytes = fs.readFileSync(file)
+      const net = ATH.parseWeights(new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength))
+      return { BEL, ATH, file, net, scaled: LOCKS_ARM.startsWith('head-scaled:'), md5: createHash('md5').update(bytes).digest('hex'), patched: 0, fallback: 0 }
+    })()
+  : null
 // §3.8j B2: the misattributed-set ceiling over --majority's episodes, per --assign-rerank arm and per --b2-arm
 const B2 = process.argv.includes('--b2')
 const B2_THETA = [0.3, 0.5, 0.7]
@@ -287,6 +302,9 @@ function walk(rec, cfPol, acc) {
   // view builds below passed `awarded` as it stands, which swapped the score wherever arm A plays team 1 - read by no
   // policy until the clone's `scoreDiff` (MONET.md §3.8ay: --cf v0.33 agreed with v0.33's own records at 97.4%)
   const teamScore = () => (rec.teamA === 0 ? [awarded[0], awarded[1]] : [awarded[1], awarded[0]])
+  // ATHENA.md §8.3: one incremental fold per seat for the head arm, fresh every game
+  const headCaches = HEAD_ARM ? [0, 1, 2, 3, 4, 5].map(() => new HEAD_ARM.ATH.SeatForward(HEAD_ARM.net)) : null
+  const headMemo = new Map()
   const split0 = {}
   for (const b of BOOKS) {
     split0[b] = BOOK_CARDS.get(b).filter((c) => side(seatOf.get(c)) === 0).length
@@ -659,6 +677,24 @@ function walk(rec, cfPol, acc) {
   // asserted, not assumed.
   const armKnowledge = (arm, view, T, label) => {
     if (arm === 'side-c') { const ka = sideOracleK(ENG.buildKnowledge(view, OPTS)); BOTS.attachMarginal(ka); return ka }
+    if (HEAD_ARM) {
+      // ATHENA.md §8.3: the head's rows over the table, in place, through the seat's own incremental fold
+      const ka = ENG.buildKnowledge(view, OPTS)
+      const ta = BOTS.attachMarginal(ka)
+      if (ta && BOTS.marginalFor(ka) !== ta) throw new Error(`${rec.label}: marginalFor does not return the attached table`)
+      // one forward per (seat, window): every set probed from the same view reads the same heads
+      const hk = `${view.seat}:${view.log.length}`
+      let heads = headMemo.get(hk)
+      if (ta && heads === undefined) {
+        heads = HEAD_ARM.ATH.forwardView(HEAD_ARM.net, view, headCaches[view.seat], ka).heads
+        headMemo.set(hk, heads)
+      }
+      if (ta && HEAD_ARM.BEL.patchTableFromHeads(heads, view, ka)) {
+        HEAD_ARM.patched++
+        if (HEAD_ARM.scaled) rescale(ta, ka)
+      } else HEAD_ARM.fallback++
+      return ka
+    }
     const ka = ENG.buildKnowledge(view, OPTS)
     const ta = BOTS.attachMarginal(ka)
     if (ta && BOTS.marginalFor(ka) !== ta) throw new Error(`${rec.label}: marginalFor does not return the attached table`)
@@ -1970,7 +2006,8 @@ if (HOME > 0) {
   process.exit(2)
 }
 const gap = report(acc, head)
+if (HEAD_ARM) console.log(`-- ATHENA.md 8.3: locks arm ${LOCKS_ARM} (weights md5 ${HEAD_ARM.md5}${HEAD_ARM.scaled ? ', rescaled to the margins' : ', unscaled'}): the head's rows laid over ${HEAD_ARM.patched} probes' tables; ${HEAD_ARM.fallback} probes had no table and kept it --`)
 if (JSON_OUT) {
-  fs.writeFileSync(JSON_OUT, JSON.stringify({ head, gap, acc }, null, 1))
+  fs.writeFileSync(JSON_OUT, JSON.stringify(HEAD_ARM ? { head, gap, acc, headArm: { arm: LOCKS_ARM, md5: HEAD_ARM.md5, scaled: HEAD_ARM.scaled, patched: HEAD_ARM.patched, fallback: HEAD_ARM.fallback } } : { head, gap, acc }, null, 1))
   console.log(`\nwrote ${JSON_OUT}`)
 }

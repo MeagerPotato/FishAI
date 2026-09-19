@@ -11,6 +11,7 @@ export type {
   KnowledgeConstraint,
   KnowledgeOptions,
   RankedAsk,
+  TeamHand,
 } from './types.ts'
 export type { StyleId } from './roster.ts'
 export { STYLE_ROSTER, STYLE_IDS, rosterStyles } from './roster.ts'

@@ -258,7 +258,7 @@ export function forwardView(net: AthenaNet, view: SeatView, cache: SeatForward |
   encodeObservation(view, obs, legal)
   const facts = k ?? factsOf(view)
   const rows = encodeEventRows(view.log, view.seat)
-  const h = cache ? cache.stateFor(rows) : foldAll(net, rows, view.log.length)
+  const h = cache ? cache.stateFor(rows) : foldAll(net, rows, rows.length / EVENT_LEN)
   const dec = new Float64Array(DEC_F)
   decisionFeatures(obs, candidateMatrix(view, facts), dec)
   const heads = headsOf(net, h, dec, new Float64Array(HEADS))

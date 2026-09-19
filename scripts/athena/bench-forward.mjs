@@ -120,7 +120,8 @@ function timeSize(size) {
   A.encodeObservation(v0, obs, legal)
   const dec = new Float64Array(A.DEC_F)
   A.decisionFeatures(obs, A.candidateMatrix(v0, f0.k), dec)
-  const h = A.foldAll(net, A.encodeEventRows(v0.log, v0.seat), v0.log.length)
+  const r0 = A.encodeEventRows(v0.log, v0.seat)
+  const h = A.foldAll(net, r0, r0.length / A.EVENT_LEN)
   const out = new Float64Array(A.HEADS)
   for (let r = 0; r < 3; r++) A.headsOf(net, h, dec, out) // warm
   const tH = now()

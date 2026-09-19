@@ -11,10 +11,13 @@
 //! - [`digest`] and [`rng`]: the house digest and the reference's generators, bit for bit.
 //! - [`replay`] and [`census`]: replaying one corpus record, and the branch census of §4.6's floor table.
 //! - [`stub`]: the mixed stub, G0a's population H5 and G0b's stub.
-//! - [`vecenv`]: the batch environment behind the Python API (`API.md`): action codes, legal masks, observations.
+//! - [`facts`]: a view's rules-derived facts (ATHENA.md §8.1 G1a, `buildKnowledge` under Monet v1.0's options
+//!   without the marginal), the rail, the live-set window rule (§8.2 G1c), and the two reveal regimes (§8.2 G1b).
+//! - [`vecenv`]: the batch environment behind the Python API (`API.md`): action codes, legal masks, observations,
+//!   the regimes and the facts buffer.
 //!
 //! D12 (ATHENA.md §5): this library is pure computation. It has no dependencies, forbids `unsafe`, and opens no file,
-//! socket or process; the `replay-check` and `stub-bench` binaries do the reading.
+//! socket or process; the `replay-check`, `stub-bench` and `facts-check` binaries do the reading.
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
@@ -24,6 +27,7 @@ pub mod cards;
 pub mod census;
 pub mod codec;
 pub mod digest;
+pub mod facts;
 pub mod replay;
 pub mod rng;
 pub mod rules;

@@ -117,6 +117,19 @@ export interface KnowledgeOptions {
    * version before v0.16 built, byte for byte. Read only when `marginal` is set.
    */
   licenceHold?: number
+  /**
+   * ATHENA.md §8.5 (T1, the team-information ceiling). TEST ONLY: no registry entry sets it. The true current hands
+   * of the viewer's teammates, injected after the walk exactly as the viewer's own hand is, before the fixpoint.
+   * An entry whose seat is the viewer or an opponent is ignored, so this can never carry an opponent's hand.
+   * Absent or empty: the build every version plays, byte for byte.
+   */
+  teamHands?: readonly TeamHand[]
+}
+
+/** One teammate's true current hand, for `KnowledgeOptions.teamHands` (ATHENA.md §8.5; test only). */
+export interface TeamHand {
+  seat: Seat
+  hand: readonly Card[]
 }
 
 /**
