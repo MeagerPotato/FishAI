@@ -70,6 +70,10 @@ A game is about 640 steps under G0b's stub. Most of those steps are window offer
 | `threads` | Settable. `n` gives the number of games, as does `len(env)`. `next_game` gives the next auto-reset game number |
 | `set_auto_reset(prefix, start=0)` | Turns auto-reset on (a prefix) or off (`None`) |
 | `debug_permute_hidden(i, rng_seed)` | **A test hook** for the information rules (§6). It re-deals the cards that game i's acting seat cannot see, and returns whether any moved |
+| `set_mutant(name)` | **Only in a mutants build** (§10). Plants one of G0a's mutants, `"M1"` to `"M5"`, in every game of the batch, and in every game dealt later; `"none"` restores the reference's rules. A default build has no such method |
+
+The module constant `athena_env.MUTANTS` says which build is loaded: False in every default build, True in a mutants
+build.
 
 ### 3.1 Rewards and ends
 
@@ -282,13 +286,52 @@ cargo test --release                          # in athena-env: the core, vecenv 
 python athena-env/py/tests/test_api.py        # the contract: codes, errors, threads, auto-reset, GIL, the stub
 python athena-env/py/tests/test_info_rule.py  # the information rules
 python athena-env/py/tests/test_corpus.py     # H4 and H5 reproduced through the API (needs the corpus)
+python athena-env/py/tests/test_harness.py    # the home harness and the opponent service (§11; needs node)
+cargo test --release --features mutants       # in athena-env: the same, plus the batch's planted M1 (§10)
 ```
 
 - The Python tests need only the venv (no pytest), and `python` means the venv's.
 - `test_corpus.py` reads `C:/Projects/FishAI-bench/athena/corpus/7d85c2e/`. Set `ATHENA_CORPUS` to read another
   corpus.
+- `test_harness.py` tests the venv's build, or the unpacked build that `ATHENA_ENV_PATH` names. With
+  `ATHENA_ENV_MUTANTS` naming an unpacked mutants build (§10), it also checks that M1 is caught, in a child process.
 
 ## 9. G0b
 
 `scripts/athena/g0b-bench.py` measures G0b as ATHENA.md §4.6 registers it: this API, the mixed stub's rule in NumPy
 over the legal masks, and the buffers filled every step. Its docstring gives the modes and the exact commands.
+
+## 10. The mutants build (G0c's control)
+
+G0c's third check plants M1 in the port and must see the live replay check fail (ATHENA.md §4.6). The core's
+`mutants` feature (G0a's M1–M5) reaches Python only through the bindings' own `mutants` feature, which is off by
+default:
+
+- **The default build** (`maturin develop --release`, or `maturin build --release`) compiles no mutant code:
+  `BatchEnv` has no `set_mutant`, and `athena_env.MUTANTS` is False. `test_harness.py` asserts both.
+- **A mutants build** is made only on request, and is never installed into the venv:
+
+  ```sh
+  cd athena-env/py
+  CARGO_TARGET_DIR=target/g0c-mutants python -m maturin build --release --features mutants -o <dir>/mutants-wheel
+  python -m zipfile -e <dir>/mutants-wheel/athena_env-*.whl <dir>/mutants
+  ```
+
+  A process that puts `<dir>/mutants` first on `sys.path` imports it instead of the venv's build. The harness does
+  this with `--athena-env <dir>/mutants`, and checks which build it loaded. `scripts/athena/g0c-pin.py --build-envs`
+  builds and unpacks both builds this way.
+- `set_mutant` plants the mutant in every slot, and every later deal (`reset`, `reset_deals`, auto-reset) keeps it.
+
+## 11. The home harness and the opponent service
+
+- **The opponent service,** `scripts/athena/opponent-service.mjs`, is a Node process with a pool of worker threads.
+  It keeps the TypeScript reference's `GameState` of every game and applies this API's action codes to it. It
+  answers Monet's decisions with the lab's seeding, and returns the reference's digests d, l and v with every answer.
+  The protocol (newline-delimited JSON) is in its header. The rules half is `opponent-core.ts`.
+- **The harness,** `scripts/athena/home_harness.py`, steps a `BatchEnv(track_digests=True)`. It takes Monet's seats
+  from the service and other seats from Python policies, and compares the service's digests with `digests()` at
+  every step.
+  - Geometry A is `duplicate-pairs.mjs`'s.
+  - Geometry B is the bridge cell's shape, with its rotation rule defined in the harness's header.
+- **G0c** is `scripts/athena/g0c-pin.py`. It runs the reference, the harness on the default build, and the harness on
+  the mutants build with M1, and scores the three checks.
