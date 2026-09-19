@@ -50,9 +50,17 @@ export function headHolder(heads: Float64Array, me: number, card: Card, seats: r
  * the log from zero (the same bits either way, policy.ts).
  */
 export function patchTableWithHead(net: AthenaNet, view: SeatView, k: Knowledge, cache: SeatForward | null = null): boolean {
+  if (!marginalFor(k)) return false
+  return patchTableFromHeads(forwardView(net, view, cache, k).heads, view, k)
+}
+
+/**
+ * {@link patchTableWithHead} from a forward's heads already computed for this view (a caller that probes one view
+ * many times computes them once). Returns false, changing nothing, when `k` carries no table.
+ */
+export function patchTableFromHeads(heads: Float64Array, view: SeatView, k: Knowledge): boolean {
   const table = marginalFor(k)
   if (!table) return false
-  const { heads } = forwardView(net, view, cache, k)
   const row = new Float64Array(6)
   for (let i = 0; i < table.cards.length; i++) {
     const c = table.cards[i]
