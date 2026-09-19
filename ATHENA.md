@@ -240,6 +240,86 @@ estimate.** The brief's assumptions were:
     120–160 a second. 10^7 games against Monet would take roughly 17–23 hours of those eight threads.
   - So the league's share of real Monet games is set by CPU, not by the GPU. This is question D13 in §5.
 
+### 3.1 How long a training run takes on this machine (D4's estimates, 2026-09-19)
+
+The owner asked for these before choosing D4, and no hardware upgrade is planned, so every figure is for this
+machine: the RTX 5070 Ti (16 GB), the Ryzen 9 9900X and 31 GB of RAM.
+
+**What was measured** [Measured, 2026-09-19].
+- The tools: PyTorch 2.11.0+cu128 in bf16, with random inputs shaped like ATHENA's (§1), in `gpu-bench.py` and
+  `loop-bench.py`. The scripts and their outputs are archived at `C:\Projects\FishAI-bench\athena\p0-scoping\gpu\`.
+- A game is about 110 public events, folded into each of the six seats' recurrent state, and about 100 decisions
+  (§3's census).
+- **"Acting"** is the whole loop at a batch of 8,192 games. It includes the observations crossing to the GPU, the
+  legal-move mask, sampling, and the actions crossing back.
+- **"Training"** is one pass of forward, backward and Adam over whole games, with the perfect-information critic.
+
+| network | weights | acting, games a second | training, games a second per pass | GPU memory |
+|---|---:|---:|---:|---:|
+| **S**: GRU 256, trunk 2 × 512 | 2.1 M | 31,921 | 12,569 | 1.7 GB |
+| **M**: GRU 512, trunk 3 × 1,024 | 8.2 M | 15,031 | 4,896 | 3.2 GB |
+| **L**: GRU 1,024, trunk 4 × 2,048 | 34.3 M | 5,321 | 1,515 | 6.5 GB |
+| T: transformer, d 256, 4 layers, over the last 128 events, no cache | 5.0 M | 343 (arithmetic only) | 102 | 3.8 GB |
+
+- Without a cache, the transformer costs about a hundred times what a GRU of similar size costs. That form is ruled
+  out, and a cached transformer is P1's to size.
+- The acting loop kept 75% (S), 92% (M) and all (L) of the network arithmetic measured without it.
+- For scale: Monet's two networks have 7,425 and 7,553 weights (paper §4). S is about 280 times larger.
+
+**How the estimate is made** [Estimate].
+- **GPU time a game** = acting + E training passes. PPO reuses each game E = 1–4 times, and E = 2 is the base case.
+- **A discount to 50–80%** of the measured arithmetic covers what is not built yet: the environment's handoff, the
+  advantage computation, checkpoints and evaluation matches [Judgement].
+- **The environment** (the Rust port) must supply at least 10,000 games a second by G0b. That is above every row
+  below, so the GPU is the bound.
+
+| network (E = 2) | games a day | 10^7 games | 10^8 games | 10^9 games |
+|---|---:|---:|---:|---:|
+| S | 227–363 million | 0.7–1.1 h | 6.6–10.6 h | 2.8–4.4 days |
+| **M** | **91–146 million** | **1.6–2.6 h** | **16.5–26.4 h** | **6.9–11.0 days** |
+| L | 29–46 million | 5.2–8.4 h | 2.2–3.5 days | 21.8–34.9 days |
+
+At E = 1 each time is about 55–60% of the table's. At E = 4 it is about 1.8–1.9 times the table's.
+
+**How many games are needed.**
+- [Judgement, brief C.2] 10^7 to 10^8 from scratch to Monet's level, uncertain by about tenfold either way.
+- [Estimate] P3 then needs a comparable amount again, to beat Monet by the ship rule and to beat SESTINA strictly
+  (D3).
+- Nothing measured narrows this until P2's learning curve exists. The first hours of P2 give its slope, and the
+  estimate is redone from that slope before P2's budget is registered.
+
+**So one run, at the base case** (network M, E = 2) [Estimate]:
+
+| case | games | time |
+|---|---:|---:|
+| likely | 10^7 to 10^8 | about 2 hours to about 1 day |
+| pessimistic | 10^9 | about 7–11 days, which the owner's *"not weeks"* splits into several resumable runs |
+| optimistic | 10^6 | minutes |
+
+**What else a run costs.**
+- **Real Monet v1.0 runs on the CPU.** A game with Monet on one team costs about 57 ms of Monet's time, half of the
+  measured 114.7 ms for six seats (§3). That is about 17 games a second a thread, or about 120 on the seven threads
+  the environment leaves free.
+  - At a 5% share of an M-size run (50–85 Monet games a second), it fits without slowing the run.
+  - The distilled Monet (D13) carries the rest of the volume.
+- **Evaluation reads against Monet** run on the reference engine with ATHENA's deterministic CPU forward (G0d).
+  [Estimate] Roughly 20 minutes to an hour for a 14,400-game read at size M. G0d measures the forward, and this
+  estimate is replaced by that measurement.
+- **The machine during a run.**
+  - The GPU is fully busy and 8–10 CPU threads are busy. Light use of the PC is fine; other heavy jobs slow the run
+    (another session's backfill already shares the CPU).
+  - Every run checkpoints about every 30 minutes, so it can be paused and resumed without losing progress. In
+    practice, D4's "longest run" is the number of days in a row the machine is given to ATHENA.
+- **Power.** The GPU drew 213 W under the benchmark [Measured]. A whole-system draw of 350–450 W is 8–11 kWh a day
+  [Estimate].
+
+**Recommendation for D4** [Judgement].
+- Allow runs of up to **3 days**, each checkpointed, with its learning curve against Monet checked every few hours
+  and a stop rule registered with the run.
+- At M and E = 2, three days is 2.7–4.4 × 10^8 games. That covers the brief's whole likely range for P2, and a
+  tenfold miss at size S.
+- If P2 needs 10^9 games, that is two to four such runs back to back, each reviewed before the next.
+
 ---
 
 ## 4. P0 pre-registration (registered 2026-09-19, as drafted)
@@ -721,7 +801,18 @@ The whole of P0's compute is under an hour of CPU. The wall clock is engineering
 ### 4.10 What needs the owner: the installs
 
 Installing anything needs the owner's explicit approval (§6, row 2). **Nothing has been installed.** Today the machine
-has Python 3.12.10 with neither `torch` nor `numpy`; no Rust; and no C or C++ compiler [Measured]. The sizes below are
+has Python 3.12.10 with neither `torch` nor `numpy`; no Rust; and no C or C++ compiler [Measured].
+
+> **Installed 2026-09-19, on the owner's approval** (*"go ahead with the installs"*). Each was checked working.
+>
+> - **PyTorch 2.11.0+cu128, NumPy 2.5.3 and maturin 1.15.0,** in a virtual environment at
+>   `C:\Projects\FishAI-bench\venvs\athena` (4.4 GB), so the system Python is untouched. PyTorch sees the RTX
+>   5070 Ti through CUDA 12.8.
+> - **Rust 1.98.1,** stable, `x86_64-pc-windows-msvc`, minimal profile, in `%USERPROFILE%\.rustup` and `.cargo`
+>   (590 MB). It was installed without editing PATH, and a test build compiled, linked and ran.
+> - **Visual Studio 2022 Build Tools with the C++ workload,** through winget, at
+>   `C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools` (3.4 GB, plus the Windows SDK). This needed the
+>   administrator prompt, which the owner accepted, and installing it accepted Microsoft's Build Tools licence. The sizes below are
 approximate. None was fetched to check it, so each should be confirmed at install time.
 
 | install | from | about how big | needed for |
@@ -866,7 +957,7 @@ In the form of MONET.md §8.3.
 | 1 | **How is ATHENA built?** The brief (C.1, Part D) recommended ATHENA-L: one policy learned from game outcomes, **from scratch**, in a league. It is actor-critic self-play (PPO- or IMPALA-style) with a perfect-information critic in training only, a learned belief head, parameters shared across teammates, the rules-certain declare as a hard rail, and the game result as the reward. The alternatives were ATHENA-P (Monet-seeded policy iteration, the brief's control and fallback) and a warm start from Monet (C.5). SESTINA's recorded play enters only as an opponent, a yardstick and a test set (C.4) | **TAKEN 2026-09-18, on the owner's words** *"accept condition 5 and go from scratch with ATHENA-L"*, after *"I dont want monet to just be a fine tuned version of a sestina copy"* the same day. The same sentence accepts §3.9's condition 5 as registered, so Monet v1.0 stands as the bar (MONET.md row 65). **Not settled by it:** D2–D11 (§5); ATHENA-P as a control (D10); the warm-start fallback, which stays behind P2's kill criterion and the owner's explicit yes (§0.3) |
 | 2 | **Approve §4's P0 pre-registration and the installs it needs?** P0 would build the Rust port of the us54 core with PyO3 bindings, the oracle emitter, the Node opponent service, the home harness, and a stub package with a deterministic forward. Its gates are G0a (every state of 10,800 reference games plus a view walk of 14,400 bridge games, with branch floors and five mutants), G0b (≥ 10,000 games/s on 8 threads), G0c (game for game with `duplicate-pairs.mjs`) and G0d (the package self-tests, a 100% pin). The installs are PyTorch for CUDA 12.8, NumPy, Rust, the MSVC Build Tools and maturin (about 6 GB to download, 13–16 GB on disk, §4.10). The fallback if Rust is declined is (c′), which needs only PyTorch and NumPy. The stakes: 8–12 working days of engineering and under an hour of compute. It ships nothing and reads no strength. Without it, from-scratch training runs on the reference at about 550–1,800 games/s on all eleven cores [Estimate, §4.3]. That carries 10^8 games in about 15–50 hours but leaves no cores for Monet's games or the learner, and a tenfold overrun of the brief's budget becomes 6–21 days, against the owner's *"I don't want this to be running for weeks"* | **TAKEN 2026-09-19: approved as drafted, with the installs** (*"approve P0 as drafted, go ahead with the installs"*). P0 is registered from this commit, before any P0 code. D12 is decided the same day: the crate lives in the repository (§5) |
 | 3 | **The owner's answers to §5, 2026-09-19.** D2, D3, D5, D7, D8, D12 and D13 are answered in §5, each quoted with what it changes. The largest change is D3's: AC3 and G3b are now strict, so ATHENA must be above Monet against SESTINA by the ship rule | **TAKEN 2026-09-19.** Nothing measured changes; P0's gates are untouched. P3's and P5's bars tighten (D3); P1 registers D2's variant; the league may carry a distilled Monet (D13); D14 is new and not needed before P3 |
-| 4 | **D4: how long may one training run be, on this machine?** The owner asked for the estimates first, and no hardware upgrade is planned | **FOR THE OWNER.** The estimates go in §3.1, from measured GPU and engine rates |
+| 4 | **D4: how long may one training run be, on this machine?** The owner asked for the estimates first, and no hardware upgrade is planned | **FOR THE OWNER.** The estimates are §3.1, from GPU rates measured on 2026-09-19. At the base case (network M, PPO reusing each game twice), P2's likely 10^7–10^8 games take about 2 hours to about 1 day, and a pessimistic 10^9 takes 7–11 days. Recommendation: runs of up to 3 days, checkpointed and reviewed |
 | 5 | **D6, D10, D11, and D9's confirmation.** The owner asked what these mean. Each is explained in plain terms in §5, with a recommendation: D6 an exploiter gate at v1.0; D9 "the port trains, the reference judges" (already in the approved plan); D10 Monet frozen at v1.0; D11 readers that apply every registered rule | **FOR THE OWNER.** None of them blocks P0 |
 
 ---
