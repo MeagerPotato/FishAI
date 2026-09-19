@@ -641,6 +641,12 @@ budget would have to be re-costed at its rate.
    - **Archived 2026-09-18** to `C:\Projects\FishAI-bench\tools\`, with the other seed scripts and the sixteen
      `SEEDS` files of later rungs that it reads as spent. It is promoted into `scripts/` before any ATHENA seed is
      drawn.
+   - **Promoted 2026-09-19** as `scripts/seeds-next.mjs`, with the registry of spent seeds at `scripts/seeds/`.
+     - The rule and the historical spent list are unchanged.
+     - The one change: it reads the whole registry as spent, instead of taking the spent files on the command line.
+       It writes each new draw into the registry.
+     - Its test re-draws §7's `athena-kraken-read-12` from the registry without that file, and gets the same twelve
+       seeds, with 272 spent and none skipped.
 
 ### 4.6 Gates, with exact bars
 
@@ -948,7 +954,7 @@ The whole of P0's compute is under an hour of CPU. The wall clock is engineering
    rules change, and the bank files say so themselves: a `reduce.ts` change that moves a single action breaks a digest
    (`tests/bots/data/monet-v054-bank.ts`, header).
 6. **Not a stop, but a precondition for P2:** the seed drawer (§4.5 item 7), archived on 2026-09-18, must be in the
-   repo before ATHENA's first read draws a seed.
+   repo before ATHENA's first read draws a seed. **Met 2026-09-19** (§4.5 item 7).
 
 ### 4.10 What needs the owner: the installs
 
