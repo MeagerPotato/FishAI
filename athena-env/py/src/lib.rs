@@ -11,8 +11,9 @@
 
 use athena_core::cards::{NCARDS, NONE, NSEATS, NSETS, SET_CARDS, SET_NAMES};
 use athena_core::codec::STEP_CAP;
+use athena_core::facts::{WindowClass, REGIME_BRIDGE, REGIME_HOME};
 use athena_core::rules::Action;
-use athena_core::vecenv::{self as ve, ObsOut, StepOut, VecEnv};
+use athena_core::vecenv::{self as ve, ObsOut, RegimeRule, StepOut, VecEnv};
 use numpy::{
     PyArray1, PyArray2, PyArray3, PyArrayMethods, PyReadonlyArray2, PyReadwriteArray1, PyReadwriteArray2,
     PyReadwriteArray3, PyUntypedArrayMethods,
@@ -36,7 +37,7 @@ struct BatchEnv {
     actions32: Vec<i32>,
 }
 
-/// The five (or six) observation buffers of a dict, borrowed read-write.
+/// The observation buffers of a dict (five, and the optional critic and facts), borrowed read-write.
 struct Borrowed<'py> {
     seat: PyReadwriteArray1<'py, u8>,
     obs: PyReadwriteArray2<'py, u8>,
@@ -44,6 +45,7 @@ struct Borrowed<'py> {
     events: PyReadwriteArray3<'py, u8>,
     n_events: PyReadwriteArray1<'py, u8>,
     critic: Option<PyReadwriteArray2<'py, u8>>,
+    facts: Option<PyReadwriteArray2<'py, u8>>,
 }
 
 fn get_array<'py>(d: &Bound<'py, PyDict>, key: &str) -> PyResult<Bound<'py, PyAny>> {
@@ -97,6 +99,10 @@ impl<'py> Borrowed<'py> {
             Some(c) if !c.is_none() => Some(rw2(&c, "critic", n, ve::CRITIC_LEN)?),
             _ => None,
         };
+        let facts = match d.get_item("facts")? {
+            Some(c) if !c.is_none() => Some(rw2(&c, "facts", n, ve::FACTS_LEN)?),
+            _ => None,
+        };
         Ok(Borrowed {
             seat: rw1(&get_array(d, "seat")?, "seat", n)?,
             obs: rw2(&get_array(d, "obs")?, "obs", n, ve::OBS_LEN)?,
@@ -106,6 +112,7 @@ impl<'py> Borrowed<'py> {
                 .map_err(|e| PyValueError::new_err(format!("events cannot be borrowed for writing: {e}")))?,
             n_events: rw1(&get_array(d, "n_events")?, "n_events", n)?,
             critic,
+            facts,
         })
     }
 
@@ -121,29 +128,41 @@ impl<'py> Borrowed<'py> {
                 Some(c) => Some(c.as_slice_mut().map_err(contiguous)?),
                 None => None,
             },
+            facts: match self.facts.as_mut() {
+                Some(c) => Some(c.as_slice_mut().map_err(contiguous)?),
+                None => None,
+            },
         })
     }
 }
 
 #[pymethods]
 impl BatchEnv {
-    /// `BatchEnv(n, threads=1, auto_reset=None, auto_reset_start=0, track_digests=False)`.
+    /// `BatchEnv(n, threads=1, auto_reset=None, auto_reset_start=0, track_digests=False, facts=False,
+    /// auto_reset_regime="home")`.
     ///
     /// - `threads`: worker threads for every step and observation; the calling thread is one of them.
     /// - `auto_reset`: a seed prefix. A game that ends during `step` is replaced at once by game k, seed
     ///   `auto_reset + str(k)`, start seat `k % 6`, with k counting up from `auto_reset_start` in slot order.
     /// - `track_digests`: keep the replay format's digest streams so `digests()` can be compared with a corpus.
+    /// - `facts`: keep every game's facts walk, so that a `facts` buffer can be filled (API.md section 5.5).
+    /// - `auto_reset_regime`: each auto-reset game's reveal regime: `"home"`, `"bridge"`, or `"draw"` (bridge with
+    ///   probability one half, drawn from the game's seed; ATHENA.md section 8.2).
     #[new]
-    #[pyo3(signature = (n, threads=1, auto_reset=None, auto_reset_start=0, track_digests=false))]
+    #[pyo3(signature = (n, threads=1, auto_reset=None, auto_reset_start=0, track_digests=false, facts=false,
+                        auto_reset_regime="home"))]
     fn new(
         n: usize,
         threads: usize,
         auto_reset: Option<String>,
         auto_reset_start: u64,
         track_digests: bool,
+        facts: bool,
+        auto_reset_regime: &str,
     ) -> PyResult<Self> {
-        let mut inner = VecEnv::new(n, threads, track_digests).map_err(value_error)?;
+        let mut inner = VecEnv::with_facts(n, threads, track_digests, facts).map_err(value_error)?;
         inner.set_auto_reset(auto_reset, auto_reset_start);
+        inner.set_auto_regime(regime_rule(auto_reset_regime)?);
         Ok(BatchEnv {
             inner,
             actions32: Vec::new(),
@@ -171,10 +190,27 @@ impl BatchEnv {
         self.inner.set_threads(threads).map_err(value_error)
     }
 
-    /// Turn auto-reset on (a seed prefix) or off (None); the next game number is `start`.
-    #[pyo3(signature = (prefix, start=0))]
-    fn set_auto_reset(&mut self, prefix: Option<String>, start: u64) {
+    /// Turn auto-reset on (a seed prefix) or off (None); the next game number is `start`. With `regime`
+    /// (`"home"`, `"bridge"` or `"draw"`), also set how each new game's regime is chosen.
+    #[pyo3(signature = (prefix, start=0, regime=None))]
+    fn set_auto_reset(&mut self, prefix: Option<String>, start: u64, regime: Option<&str>) -> PyResult<()> {
+        if let Some(r) = regime {
+            self.inner.set_auto_regime(regime_rule(r)?);
+        }
         self.inner.set_auto_reset(prefix, start);
+        Ok(())
+    }
+
+    /// Whether this batch keeps the facts (the constructor's `facts`).
+    #[getter]
+    fn facts(&self) -> bool {
+        self.inner.facts_on()
+    }
+
+    /// Each game's reveal regime (uint8, n): `REGIME_HOME` (0) or `REGIME_BRIDGE` (1).
+    fn regimes<'py>(&self, py: Python<'py>) -> Bound<'py, PyArray1<u8>> {
+        let v: Vec<u8> = (0..self.inner.len()).map(|i| self.inner.regime(i)).collect();
+        PyArray1::from_vec(py, v)
     }
 
     /// The next auto-reset game number.
@@ -184,19 +220,31 @@ impl BatchEnv {
     }
 
     /// Deal every game: `seeds[i]` (a str; the same string deals the same hands as the TypeScript reference) at
-    /// `start_seats[i]` (0-5).
-    fn reset(&mut self, py: Python<'_>, seeds: Vec<String>, start_seats: Vec<i64>) -> PyResult<()> {
+    /// `start_seats[i]` (0-5), under `regimes[i]` (0 home, 1 bridge; every game home if None).
+    #[pyo3(signature = (seeds, start_seats, regimes=None))]
+    fn reset(
+        &mut self,
+        py: Python<'_>,
+        seeds: Vec<String>,
+        start_seats: Vec<i64>,
+        regimes: Option<Vec<i64>>,
+    ) -> PyResult<()> {
         let starts = seats_u8(&start_seats)?;
+        let regimes = regimes_u8(regimes)?;
         let inner = &mut self.inner;
-        py.detach(move || inner.reset(&seeds, &starts)).map_err(value_error)
+        py.detach(move || inner.reset_regimes(&seeds, &starts, regimes.as_deref()))
+            .map_err(value_error)
     }
 
-    /// Start every game from a given deal: `holders` is a (n, 54) uint8 array of the seat holding each card.
+    /// Start every game from a given deal: `holders` is a (n, 54) uint8 array of the seat holding each card; the
+    /// regimes as in `reset`.
+    #[pyo3(signature = (holders, start_seats, regimes=None))]
     fn reset_deals(
         &mut self,
         py: Python<'_>,
         holders: PyReadonlyArray2<'_, u8>,
         start_seats: Vec<i64>,
+        regimes: Option<Vec<i64>>,
     ) -> PyResult<()> {
         let n = self.inner.len();
         if holders.shape() != [n, NCARDS] {
@@ -206,14 +254,16 @@ impl BatchEnv {
             .as_slice()
             .map_err(|_| PyValueError::new_err("holders must be C-contiguous"))?;
         let starts = seats_u8(&start_seats)?;
+        let regimes = regimes_u8(regimes)?;
         let inner = &mut self.inner;
-        py.detach(move || inner.reset_hands(h, &starts)).map_err(value_error)
+        py.detach(move || inner.reset_hands_regimes(h, &starts, regimes.as_deref()))
+            .map_err(value_error)
     }
 
-    /// A dict of zeroed observation buffers for this batch: `seat`, `obs`, `legal`, `events`, `n_events`, and
-    /// `critic` unless `critic=False`.
-    #[pyo3(signature = (critic=true))]
-    fn make_buffers<'py>(&self, py: Python<'py>, critic: bool) -> PyResult<Bound<'py, PyDict>> {
+    /// A dict of zeroed observation buffers for this batch: `seat`, `obs`, `legal`, `events`, `n_events`, `critic`
+    /// unless `critic=False`, and `facts` when `facts=True` (by default, when the batch keeps the facts).
+    #[pyo3(signature = (critic=true, facts=None))]
+    fn make_buffers<'py>(&self, py: Python<'py>, critic: bool, facts: Option<bool>) -> PyResult<Bound<'py, PyDict>> {
         let n = self.inner.len();
         let d = PyDict::new(py);
         d.set_item("seat", PyArray1::<u8>::zeros(py, [n], false))?;
@@ -226,6 +276,9 @@ impl BatchEnv {
         d.set_item("n_events", PyArray1::<u8>::zeros(py, [n], false))?;
         if critic {
             d.set_item("critic", PyArray2::<u8>::zeros(py, [n, ve::CRITIC_LEN], false))?;
+        }
+        if facts.unwrap_or(self.inner.facts_on()) {
+            d.set_item("facts", PyArray2::<u8>::zeros(py, [n, ve::FACTS_LEN], false))?;
         }
         Ok(d)
     }
@@ -372,6 +425,23 @@ impl BatchEnv {
         Ok(())
     }
 
+    /// G1a's check 4, in a `mutants` build only: plant `"M6"` (skip count exhaustion) or `"M7"` (ignore the
+    /// set-membership constraints) in every game's facts walk, from the next deal on; `"none"` removes it.
+    #[cfg(feature = "mutants")]
+    fn set_facts_mutant(&mut self, name: &str) -> PyResult<()> {
+        let m = athena_core::facts::FactsMutant::parse(name)
+            .ok_or_else(|| PyValueError::new_err(format!("{name:?} is not a facts mutant (M6, M7 or none)")))?;
+        self.inner.set_facts_mutant(m);
+        Ok(())
+    }
+
+    /// G1b's planted control, in a `mutants` build only: the bridge regime publishes every holder (from the next
+    /// deal on) while its regime bit still says bridge.
+    #[cfg(feature = "mutants")]
+    fn set_full_reveal_control(&mut self, on: bool) {
+        self.inner.set_full_reveal_control(on);
+    }
+
     /// Test hook for the information rules: re-deal the cards game i's acting seat cannot see among the seats that
     /// hold them, keeping every hand count (and whether the turn-holder could ask). The acting seat's `seatView` is
     /// unchanged; its actor buffers must be too. Returns whether any card moved.
@@ -381,6 +451,27 @@ impl BatchEnv {
         }
         Ok(self.inner.debug_permute_hidden(i, rng_seed))
     }
+}
+
+fn regime_rule(s: &str) -> PyResult<RegimeRule> {
+    RegimeRule::parse(s).ok_or_else(|| PyValueError::new_err(format!("regime {s:?} is not home, bridge or draw")))
+}
+
+fn regimes_u8(v: Option<Vec<i64>>) -> PyResult<Option<Vec<u8>>> {
+    v.map(|v| {
+        v.iter()
+            .map(|&r| {
+                if r == REGIME_HOME as i64 || r == REGIME_BRIDGE as i64 {
+                    Ok(r as u8)
+                } else {
+                    Err(PyValueError::new_err(format!(
+                        "regime {r} is not 0 (home) or 1 (bridge)"
+                    )))
+                }
+            })
+            .collect()
+    })
+    .transpose()
 }
 
 fn seats_u8(v: &[i64]) -> PyResult<Vec<u8>> {
@@ -447,12 +538,46 @@ fn encode_action(kind: &str, seat: u8, args: &Bound<'_, PyTuple>) -> PyResult<i3
     ve::encode_action(&a).ok_or_else(|| PyValueError::new_err(format!("{a:?} has no action code")))
 }
 
+/// `window_classes(facts, legal, k)`: G1c's live-set rule (ATHENA.md section 8.2) for every row of a batch, from
+/// its facts row (n, FACTS_LEN) and legal row (n, LEGAL_LEN): a uint8 (n,) of `WINDOW_DECLINED` (0), `WINDOW_RAIL`
+/// (1), `WINDOW_LIVE` (2) or `WINDOW_COMPELLED` (3). Meaningful only for a row whose observation has the window open.
+#[pyfunction]
+fn window_classes<'py>(
+    py: Python<'py>,
+    facts: PyReadonlyArray2<'py, u8>,
+    legal: PyReadonlyArray2<'py, u8>,
+    k: u8,
+) -> PyResult<Bound<'py, PyArray1<u8>>> {
+    let n = facts.shape()[0];
+    if facts.shape() != [n, ve::FACTS_LEN] || legal.shape() != [n, ve::LEGAL_LEN] {
+        return Err(PyValueError::new_err(format!(
+            "window_classes needs facts (n, {}) and legal (n, {})",
+            ve::FACTS_LEN,
+            ve::LEGAL_LEN
+        )));
+    }
+    let f = facts
+        .as_slice()
+        .map_err(|_| PyValueError::new_err("facts must be C-contiguous"))?;
+    let l = legal
+        .as_slice()
+        .map_err(|_| PyValueError::new_err("legal must be C-contiguous"))?;
+    let v: Vec<u8> = (0..n)
+        .map(|i| {
+            let row = &f[i * ve::FACTS_LEN..(i + 1) * ve::FACTS_LEN];
+            ve::window_class_of_row(row, k, l[i * ve::LEGAL_LEN + ve::L_DECLINE] == 1).code()
+        })
+        .collect();
+    Ok(PyArray1::from_vec(py, v))
+}
+
 #[pymodule]
 #[pyo3(name = "athena_env")]
 fn athena_env_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<BatchEnv>()?;
     m.add_function(wrap_pyfunction!(decode_action, m)?)?;
     m.add_function(wrap_pyfunction!(encode_action, m)?)?;
+    m.add_function(wrap_pyfunction!(window_classes, m)?)?;
     // Whether this build can plant G0a's mutants (`BatchEnv.set_mutant`): False in every default build.
     m.add("MUTANTS", cfg!(feature = "mutants"))?;
     m.add("NONE", NONE)?;
@@ -490,7 +615,11 @@ fn athena_env_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("O_SCORE", ve::O_SCORE)?;
     m.add("O_SETS", ve::O_SETS)?;
     m.add("SET_FIELDS", ve::SET_FIELDS)?;
+    m.add("O_REGIME", ve::O_REGIME)?;
     m.add("OBS_LEN", ve::OBS_LEN)?;
+    // The reveal regimes.
+    m.add("REGIME_HOME", REGIME_HOME)?;
+    m.add("REGIME_BRIDGE", REGIME_BRIDGE)?;
     // The event rows.
     m.add("E_TYPE", ve::E_TYPE)?;
     m.add("E_ACTOR", ve::E_ACTOR)?;
@@ -505,5 +634,22 @@ fn athena_env_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("MAX_EVENTS", ve::MAX_EVENTS)?;
     // The critic buffer.
     m.add("CRITIC_LEN", ve::CRITIC_LEN)?;
+    // The facts row.
+    m.add("F_CAND", ve::F_CAND)?;
+    m.add("F_UNKNOWN", ve::F_UNKNOWN)?;
+    m.add("F_SET_CERTAIN", ve::F_SET_CERTAIN)?;
+    m.add("F_SET_LOST", ve::F_SET_LOST)?;
+    m.add("F_RAIL", ve::F_RAIL)?;
+    m.add("F_RAIL_ASSIGN", ve::F_RAIL_ASSIGN)?;
+    m.add("F_NCONS", ve::F_NCONS)?;
+    m.add("F_CONS", ve::F_CONS)?;
+    m.add("CONS_FIELDS", ve::CONS_FIELDS)?;
+    m.add("MAX_CONS", ve::MAX_CONS)?;
+    m.add("FACTS_LEN", ve::FACTS_LEN)?;
+    // G1c's window classes.
+    m.add("WINDOW_DECLINED", WindowClass::Declined.code())?;
+    m.add("WINDOW_RAIL", WindowClass::Rail.code())?;
+    m.add("WINDOW_LIVE", WindowClass::Live.code())?;
+    m.add("WINDOW_COMPELLED", WindowClass::Compelled.code())?;
     Ok(())
 }

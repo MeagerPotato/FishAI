@@ -7,10 +7,22 @@
 //! - **The legal masks** ([`LEGAL_LEN`] bytes a game) by the reducer's own verdict: [`Game::legal_asks`] for the asks
 //!   (gated by G0a's legal-move digests) and [`Game::validate`] for every declare set, the decline and both passes.
 //!   `legalActionsSummary`'s over-reported `claim` is not copied.
-//! - **The provisional observation** (P1 finalises it): the acting seat's hand, the public counts, phase, turn,
-//!   window, score and set outcomes ([`OBS_LEN`] bytes), the public events since that seat's last observation as
-//!   fixed-width rows ([`EVENT_LEN`] bytes each), and, in a separate buffer for the critic only, the true deal.
+//! - **The observation** (P0's provisional layout, with P1's additions): the acting seat's hand, the public counts,
+//!   phase, turn, window, score, set outcomes and the game's reveal regime ([`OBS_LEN`] bytes), the public events since
+//!   that seat's last observation as fixed-width rows ([`EVENT_LEN`] bytes each), optionally the rules-derived facts
+//!   of that seat's view ([`FACTS_LEN`] bytes, `crate::facts`), and, in a separate buffer for the critic only, the
+//!   true deal.
 //! - **[`VecEnv`]**: a batch of games stepped over `std::thread::scope` workers, with deterministic auto-reset.
+//!
+//! **The regimes** (ATHENA.md §8.2 G1b). Each game is played under one of two reveal regimes, fixed at its deal:
+//! home ([`REGIME_HOME`], the engine's rule: a declare publishes every true holder) or bridge ([`REGIME_BRIDGE`],
+//! `replay-format.md` §12.4: a wrong declare publishes only the holders a hit had located). The rules are the same;
+//! only what the observation shows of a wrong declare differs: its event row's holders, its set's "how" byte, the
+//! facts, and the view digest of [`VecEnv::digests`].
+//!
+//! **The start seat** (ATHENA.md §8.2). The bridge's host does not publish it, so in both regimes the observation's
+//! start seat is unknown until the first event, then that event's actor: the `game_started` row is withheld until the
+//! first event is logged, and then delivered with that event's actor, just before it.
 //!
 //! **The information rules.** Every actor byte is a function of `seatView(S_t, acting)`: the seat's own hand and the
 //! public state (counts, phase, turn, window, score, the set block with its true holders, the event log). Seats are
@@ -21,15 +33,19 @@
 //! after the turn-holder's legal decline, and declines move no cards. The tests assert this at every step.
 //!
 //! Pure computation, like the rest of the crate: no unsafe code, no dependency, no file access, and no allocation per
-//! step once each slot's seed string has grown to its longest seed.
+//! step once each slot's seed string and constraint lists have grown to their longest.
 
 use crate::cards::{is_seat, team, NCARDS, NONE, NSEATS, NSETS};
 use crate::codec::{
-    encode_action as codec_action, encode_event, encode_events, encode_legal, encode_state, encode_view, FORMAT,
-    STATE_LEN, STEP_CAP,
+    encode_action as codec_action, encode_event, encode_events, encode_legal, encode_state, encode_view_with_sets,
+    FORMAT, STATE_LEN, STEP_CAP,
 };
 use crate::digest::{digest, ByteDigest};
-use crate::rng::Mulberry32;
+#[cfg(feature = "mutants")]
+use crate::facts::FactsMutant;
+use crate::facts::{rail, resolved_mask, set_status, Facts, GameFacts, Reveal, WindowClass};
+pub use crate::facts::{REGIME_BRIDGE, REGIME_HOME};
+use crate::rng::{Mulberry32, Xmur3};
 #[cfg(feature = "mutants")]
 use crate::rules::Mutant;
 use crate::rules::{Action, AskList, Event, Events, Game, FINISHED, TIE};
@@ -176,8 +192,36 @@ pub const O_SCORE: usize = O_DECLINED + 1;
 pub const O_SETS: usize = O_SCORE + 2;
 /// Bytes a set in the obs row.
 pub const SET_FIELDS: usize = 3;
+/// Obs row: the game's reveal regime, [`REGIME_HOME`] (0) or [`REGIME_BRIDGE`] (1). Added by P1 (ATHENA.md §8.2 G1b).
+pub const O_REGIME: usize = O_SETS + NSETS * SET_FIELDS;
 /// Bytes a game in the obs buffer.
-pub const OBS_LEN: usize = O_SETS + NSETS * SET_FIELDS;
+pub const OBS_LEN: usize = O_REGIME + 1;
+
+/// Facts row: each card's candidate seats now, relative (bit r: seat rel r may hold it); a singleton is certain; 0
+/// once the card is out of play.
+pub const F_CAND: usize = 0;
+/// Facts row: the unknown slots of each seat, in relative order: its count less its certainly-located cards.
+pub const F_UNKNOWN: usize = F_CAND + NCARDS;
+/// Facts row: per set, how many of its cards are certain on the observer's team (NONE once resolved).
+pub const F_SET_CERTAIN: usize = F_UNKNOWN + NSEATS;
+/// Facts row: per set, 1 if the facts prove it lost for the observer's team (a card certainly with an opponent, or
+/// no teammate a candidate for it), else 0 (NONE once resolved).
+pub const F_SET_LOST: usize = F_SET_CERTAIN + NSETS;
+/// Facts row: the rules-certain declare (the rail): its set, or NONE.
+pub const F_RAIL: usize = F_SET_LOST + NSETS;
+/// Facts row: the rail's stated seat for each of the set's six cards, relative (NONE without a rail).
+pub const F_RAIL_ASSIGN: usize = F_RAIL + 1;
+/// Facts row: the number of distinct set-membership constraints.
+pub const F_NCONS: usize = F_RAIL_ASSIGN + 6;
+/// Facts row: the constraints, [`CONS_FIELDS`] bytes each, sorted: the seat (relative), the set, and the six-bit mask
+/// of the set's cards (set card order) of which that seat was dealt at least one. Entries past the count are NONE.
+pub const F_CONS: usize = F_NCONS + 1;
+/// Bytes a constraint in the facts row.
+pub const CONS_FIELDS: usize = 3;
+/// The most distinct constraints a facts row holds. More is an error, never a silent drop.
+pub const MAX_CONS: usize = 64;
+/// Bytes a game in the facts buffer.
+pub const FACTS_LEN: usize = F_CONS + MAX_CONS * CONS_FIELDS;
 
 /// Event row field: the type (0 game_started, 1 ask, 2 declare, 3 pass, 4 player_out, 5 game_over).
 pub const E_TYPE: usize = 0;
@@ -253,13 +297,16 @@ struct Slot {
     seed: String,
     start: u8,
     track: Option<Track>,
+    /// The game's reveal regime, and its facts machinery: the reveal always, the walk only when `walk_on`.
+    gf: GameFacts,
+    walk_on: bool,
     /// The planted mutant every game dealt into this slot plays under (only with the `mutants` feature).
     #[cfg(feature = "mutants")]
     mutant: Mutant,
 }
 
 impl Slot {
-    fn empty(track: bool) -> Slot {
+    fn empty(track: bool, walk_on: bool) -> Slot {
         Slot {
             game: Game::from_hands([0; NSEATS], 0),
             steps: 0,
@@ -274,19 +321,34 @@ impl Slot {
                 log: ByteDigest::new(),
                 log_len: 0,
             }),
+            gf: GameFacts::new(REGIME_HOME),
+            walk_on,
             #[cfg(feature = "mutants")]
             mutant: Mutant::None,
         }
     }
 
+    /// Log one event: into the ring, and through the regime's reveal (and the walk, when on). Returns the event as the
+    /// regime publishes it.
     #[inline]
-    fn log_event(&mut self, e: Event) {
+    fn log_event(&mut self, e: Event) -> Event {
         self.ring[self.logged as usize % RING] = pack_event(&e);
         self.logged += 1;
+        if self.walk_on {
+            self.gf.log(&e)
+        } else {
+            self.gf.reveal.publish(&e)
+        }
     }
 
-    /// Start a game on `game` (a deal or a hand-built position) labelled `seed` for the digest header.
-    fn start_game(&mut self, game: Game, seed: &str, start: u8) {
+    /// The game's reveal regime.
+    #[inline]
+    fn regime(&self) -> u8 {
+        self.gf.reveal.regime
+    }
+
+    /// Start a game on `game` (a deal or a hand-built position) labelled `seed` for the digest header, under `regime`.
+    fn start_game(&mut self, game: Game, seed: &str, start: u8, regime: u8) {
         self.game = game;
         #[cfg(feature = "mutants")]
         self.game.set_mutant(self.mutant);
@@ -297,6 +359,7 @@ impl Slot {
         self.seed.clear();
         self.seed.push_str(seed);
         self.start = start;
+        self.gf.reset(regime);
         self.log_event(Event::GameStarted { start });
         if let Some(t) = self.track.as_mut() {
             let mut buf = [0u8; 8];
@@ -318,10 +381,10 @@ impl Slot {
         }
     }
 
-    /// Deal `seed` at `start` (`newGame`).
-    fn deal(&mut self, seed: &str, start: u8) -> Result<(), String> {
+    /// Deal `seed` at `start` (`newGame`), under `regime`.
+    fn deal(&mut self, seed: &str, start: u8, regime: u8) -> Result<(), String> {
         let g = Game::new(seed, start).map_err(|e| e.to_string())?;
-        self.start_game(g, seed, start);
+        self.start_game(g, seed, start, regime);
         Ok(())
     }
 
@@ -333,8 +396,9 @@ impl Slot {
             .apply(&a, ev)
             .map_err(|e| format!("action code {code} ({a:?}) refused: {}", e.name()))?;
         self.steps += 1;
-        for &e in ev.as_slice() {
-            self.log_event(e);
+        let mut published = [Event::PlayerOut { seat: 0 }; 8];
+        for (p, &e) in published.iter_mut().zip(ev.as_slice()) {
+            *p = self.log_event(e);
         }
         if let Some(t) = self.track.as_mut() {
             let mut buf = [0u8; 160];
@@ -345,7 +409,9 @@ impl Slot {
             t.chain.push(&buf[..n]);
             encode_state(&self.game, &mut sbuf);
             t.chain.push(&sbuf);
-            for e in ev.as_slice() {
+            // The view's log digest takes each event as the regime published it (the state chain above keeps the
+            // true events: the game is the same game under either regime).
+            for e in &published[..ev.as_slice().len()] {
                 let n = encode_event(e, &mut buf);
                 t.log.push(&buf[..n]);
                 t.log_len += 1;
@@ -371,12 +437,22 @@ impl Slot {
         }
     }
 
+    /// The facts of `seat`'s view (needs the walk).
+    fn facts(&self, seat: u8, out: &mut Facts) -> Result<(), String> {
+        if !self.walk_on {
+            return Err("facts need an environment built with facts on".into());
+        }
+        self.gf.facts(&self.game, seat, out);
+        Ok(())
+    }
+
     /// Fill one game's observation for its acting seat. Returns the number of events delivered.
-    fn observe(&mut self, o: RowOut<'_>, asks: &mut AskList) -> Result<u32, String> {
+    fn observe(&mut self, o: RowOut<'_>, asks: &mut AskList, facts: &mut Facts) -> Result<u32, String> {
         let g = &self.game;
         let me = g.acting_seat();
         *o.seat = me;
         let my_team = team(me);
+        let reveal = self.gf.reveal;
 
         // The fixed part: hand, counts, phase, turn, window, score, sets.
         let obs = o.obs;
@@ -426,15 +502,9 @@ impl Slot {
             };
             let claimer = g.set_claimer(b);
             obs[o3 + 1] = rel_seat(claimer, me);
-            let ct = team(claimer);
-            obs[o3 + 2] = if outcome == ct {
-                HOW_RIGHT
-            } else if g.set_holders(b).iter().any(|&h| team(h) != ct) {
-                HOW_OPPONENT_HELD
-            } else {
-                HOW_MISASSIGNED
-            };
+            obs[o3 + 2] = how_byte(claimer, outcome, &g.set_holders(b), reveal.revealed(b));
         }
+        obs[O_REGIME] = reveal.regime;
 
         // The legal masks, by the reducer's verdict.
         let legal = o.legal;
@@ -471,21 +541,38 @@ impl Slot {
             legal[L_PASS + k as usize] = g.validate(&pass).is_ok() as u8;
         }
 
-        // The events since this seat's last observation.
+        // The events since this seat's last observation. The start-seat rule: `game_started` is withheld until the
+        // first event, and then delivered with that event's actor.
         let from = self.seen[me as usize];
-        let pending = self.logged - from;
+        let pending = if from == 0 && self.logged <= 1 {
+            0
+        } else {
+            self.logged - from
+        };
         if pending as usize > MAX_EVENTS {
             return Err(format!(
                 "seat {me} has {pending} undelivered events, above MAX_EVENTS = {MAX_EVENTS}: observe after every step"
             ));
         }
         for i in 0..pending {
-            let e = unpack_event(self.ring[(from + i) as usize % RING], g);
+            let k = from + i;
+            let mut e = unpack_event(self.ring[k as usize % RING], g, &reveal);
+            if k == 0 {
+                e = Event::GameStarted {
+                    start: event_actor(&unpack_event(self.ring[1], g, &reveal)),
+                };
+            }
             let row = &mut o.events[i as usize * EVENT_LEN..(i as usize + 1) * EVENT_LEN];
             encode_event_row(&e, me, row);
         }
-        self.seen[me as usize] = self.logged;
+        self.seen[me as usize] = from + pending;
         *o.n_events = pending as u8;
+
+        // The rules-derived facts of this seat's view.
+        if let Some(fr) = o.facts {
+            self.facts(me, facts)?;
+            write_facts_row(facts, resolved_mask(g), fr)?;
+        }
 
         // The critic's buffer: the true deal, never written into an actor buffer.
         if let Some(cr) = o.critic {
@@ -554,8 +641,9 @@ fn pack_event(e: &Event) -> [u8; 4] {
     }
 }
 
-/// The event a packed entry stands for, its declare rebuilt from `g`'s set block.
-fn unpack_event(p: [u8; 4], g: &Game) -> Event {
+/// The event a packed entry stands for, its declare rebuilt from `g`'s set block with the holders the regime
+/// published (the others NONE).
+fn unpack_event(p: [u8; 4], g: &Game, reveal: &Reveal) -> Event {
     match p[0] {
         0 => Event::GameStarted { start: p[1] },
         1 => Event::Ask {
@@ -564,13 +652,22 @@ fn unpack_event(p: [u8; 4], g: &Game) -> Event {
             card: p[3] & 0x7F,
             hit: p[3] >> 7 == 1,
         },
-        2 => Event::Claim {
-            claimer: g.set_claimer(p[1]),
-            set: p[1],
-            assign: g.set_assignments(p[1]),
-            holders: g.set_holders(p[1]),
-            outcome: g.set_outcome(p[1]),
-        },
+        2 => {
+            let mut holders = g.set_holders(p[1]);
+            let shown = reveal.revealed(p[1]);
+            for (j, h) in holders.iter_mut().enumerate() {
+                if shown & (1 << j) == 0 {
+                    *h = NONE;
+                }
+            }
+            Event::Claim {
+                claimer: g.set_claimer(p[1]),
+                set: p[1],
+                assign: g.set_assignments(p[1]),
+                holders,
+                outcome: g.set_outcome(p[1]),
+            }
+        }
         3 => Event::Pass { from: p[1], to: p[2] },
         4 => Event::PlayerOut { seat: p[1] },
         _ => Event::GameOver {
@@ -642,6 +739,117 @@ pub fn encode_event_row(e: &Event, me: u8, row: &mut [u8]) {
     }
 }
 
+/// A resolved set's "how" byte from its published holders (`lib/athena/encode.ts`'s `howByte`): right; wrong with a
+/// published holder on the other team than the declarer's; wrong with all six published on the declarer's team
+/// (misassigned); or NONE when the published holders cannot settle it (the bridge regime).
+fn how_byte(claimer: u8, outcome: u8, holders: &[u8; 6], shown: u8) -> u8 {
+    let ct = team(claimer);
+    if outcome == ct {
+        return HOW_RIGHT;
+    }
+    let mut known = 0;
+    for (j, &h) in holders.iter().enumerate() {
+        if shown & (1 << j) == 0 {
+            continue;
+        }
+        known += 1;
+        if team(h) != ct {
+            return HOW_OPPONENT_HELD;
+        }
+    }
+    if known == 6 {
+        HOW_MISASSIGNED
+    } else {
+        NONE
+    }
+}
+
+/// The seat an event is by: the asker, the declarer, the passer, the emptied seat (the start seat for
+/// `game_started`, NONE for `game_over`).
+fn event_actor(e: &Event) -> u8 {
+    match *e {
+        Event::GameStarted { start } => start,
+        Event::Ask { asker, .. } => asker,
+        Event::Claim { claimer, .. } => claimer,
+        Event::Pass { from, .. } => from,
+        Event::PlayerOut { seat } => seat,
+        Event::GameOver { .. } => NONE,
+    }
+}
+
+/// A six-bit mask of absolute seats as relative ones: bit r is seat `(observer + r) mod 6`.
+#[inline]
+fn rel_mask(m: u8, observer: u8) -> u8 {
+    ((m >> observer) | (m << (6 - observer))) & 0x3F
+}
+
+/// The facts row (API.md §5.4) of a view's facts, relative to its seat.
+fn write_facts_row(f: &Facts, resolved: u16, row: &mut [u8]) -> Result<(), String> {
+    let me = f.seat;
+    for ci in 0..NCARDS {
+        row[F_CAND + ci] = rel_mask(f.cand[ci], me);
+    }
+    for r in 0..NSEATS {
+        row[F_UNKNOWN + r] = f.unknown[abs_seat(r as u8, me) as usize];
+    }
+    for (b, &(certain, lost)) in set_status(f, resolved).iter().enumerate() {
+        row[F_SET_CERTAIN + b] = certain;
+        row[F_SET_LOST + b] = lost;
+    }
+    match rail(f, resolved) {
+        Some((set, a)) => {
+            row[F_RAIL] = set;
+            for j in 0..6 {
+                row[F_RAIL_ASSIGN + j] = rel_seat(a[j], me);
+            }
+        }
+        None => row[F_RAIL..F_RAIL_ASSIGN + 6].fill(NONE),
+    }
+    let mut cons = [[0u8; 3]; MAX_CONS];
+    let mut n = 0usize;
+    for k in &f.cons {
+        let (set, m) = k.set_and_mask();
+        let t = [rel_seat(k.seat, me), set, m];
+        if cons[..n].contains(&t) {
+            continue;
+        }
+        if n == MAX_CONS {
+            return Err(format!(
+                "a view has more than MAX_CONS = {MAX_CONS} distinct constraints; the facts row cannot hold them"
+            ));
+        }
+        cons[n] = t;
+        n += 1;
+    }
+    cons[..n].sort_unstable();
+    row[F_NCONS] = n as u8;
+    for (i, t) in cons[..n].iter().enumerate() {
+        row[F_CONS + CONS_FIELDS * i..F_CONS + CONS_FIELDS * (i + 1)].copy_from_slice(t);
+    }
+    row[F_CONS + CONS_FIELDS * n..FACTS_LEN].fill(NONE);
+    Ok(())
+}
+
+/// G1c's live-set rule (ATHENA.md §8.2; [`crate::facts::window_class`]) read off a facts row: the rail when
+/// `F_RAIL` names a set; else a live set when some open set is not proved lost and has at least `k` of its cards
+/// certain on the observer's team; else a compelled claim when declining is illegal; else declined by rule.
+pub fn window_class_of_row(row: &[u8], k: u8, decline_legal: bool) -> WindowClass {
+    if row[F_RAIL] != NONE {
+        return WindowClass::Rail;
+    }
+    let live = (0..NSETS).any(|b| {
+        let certain = row[F_SET_CERTAIN + b];
+        certain != NONE && row[F_SET_LOST + b] == 0 && certain >= k
+    });
+    if live {
+        WindowClass::Live
+    } else if !decline_legal {
+        WindowClass::Compelled
+    } else {
+        WindowClass::Declined
+    }
+}
+
 /* ------------------------------------------------------------------------------------------------ buffers --- */
 
 /// The observation buffers of a batch (or of a chunk of it), row-major, one row per game.
@@ -659,6 +867,19 @@ pub struct ObsOut<'a> {
     pub n_events: &'a mut [u8],
     /// `n x CRITIC_LEN`, the true deal, or None to skip it.
     pub critic: Option<&'a mut [u8]>,
+    /// `n x FACTS_LEN`, the rules-derived facts of the acting seat's view, or None to skip them. Needs an environment
+    /// built with facts on ([`VecEnv::with_facts`]).
+    pub facts: Option<&'a mut [u8]>,
+}
+
+fn split_opt(x: Option<&mut [u8]>, at: usize) -> (Option<&mut [u8]>, Option<&mut [u8]>) {
+    match x {
+        Some(c) => {
+            let (a, b) = c.split_at_mut(at);
+            (Some(a), Some(b))
+        }
+        None => (None, None),
+    }
 }
 
 impl<'a> ObsOut<'a> {
@@ -668,7 +889,8 @@ impl<'a> ObsOut<'a> {
             && self.legal.len() == n * LEGAL_LEN
             && self.events.len() == n * MAX_EVENTS * EVENT_LEN
             && self.n_events.len() == n
-            && self.critic.as_ref().map_or(true, |c| c.len() == n * CRITIC_LEN);
+            && self.critic.as_ref().map_or(true, |c| c.len() == n * CRITIC_LEN)
+            && self.facts.as_ref().map_or(true, |c| c.len() == n * FACTS_LEN);
         if ok {
             Ok(())
         } else {
@@ -682,13 +904,8 @@ impl<'a> ObsOut<'a> {
         let (l0, l1) = self.legal.split_at_mut(rows * LEGAL_LEN);
         let (e0, e1) = self.events.split_at_mut(rows * MAX_EVENTS * EVENT_LEN);
         let (n0, n1) = self.n_events.split_at_mut(rows);
-        let (c0, c1) = match self.critic {
-            Some(c) => {
-                let (a, b) = c.split_at_mut(rows * CRITIC_LEN);
-                (Some(a), Some(b))
-            }
-            None => (None, None),
-        };
+        let (c0, c1) = split_opt(self.critic, rows * CRITIC_LEN);
+        let (f0, f1) = split_opt(self.facts, rows * FACTS_LEN);
         (
             ObsOut {
                 seat: s0,
@@ -697,6 +914,7 @@ impl<'a> ObsOut<'a> {
                 events: e0,
                 n_events: n0,
                 critic: c0,
+                facts: f0,
             },
             ObsOut {
                 seat: s1,
@@ -705,6 +923,7 @@ impl<'a> ObsOut<'a> {
                 events: e1,
                 n_events: n1,
                 critic: c1,
+                facts: f1,
             },
         )
     }
@@ -720,6 +939,10 @@ impl<'a> ObsOut<'a> {
                 .critic
                 .as_deref_mut()
                 .map(|c| &mut c[i * CRITIC_LEN..(i + 1) * CRITIC_LEN]),
+            facts: self
+                .facts
+                .as_deref_mut()
+                .map(|c| &mut c[i * FACTS_LEN..(i + 1) * FACTS_LEN]),
         }
     }
 }
@@ -732,6 +955,7 @@ struct RowOut<'a> {
     events: &'a mut [u8],
     n_events: &'a mut u8,
     critic: Option<&'a mut [u8]>,
+    facts: Option<&'a mut [u8]>,
 }
 
 /// What a step returns for a batch (or a chunk of it).
@@ -812,12 +1036,57 @@ impl Stats {
     }
 }
 
+/// How auto-reset chooses each new game's reveal regime.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum RegimeRule {
+    /// Every game at home.
+    #[default]
+    Home,
+    /// Every game at the bridge.
+    Bridge,
+    /// Each game draws its regime with probability ½ from its seed: bridge when `rngFromSeed(seed + ':regime')()`
+    /// is below 0.5 ([`drawn_regime`]). ATHENA.md §8.2's rule for P2's training games.
+    Draw,
+}
+
+impl RegimeRule {
+    /// `home`, `bridge` or `draw`.
+    pub fn parse(s: &str) -> Option<RegimeRule> {
+        match s {
+            "home" => Some(RegimeRule::Home),
+            "bridge" => Some(RegimeRule::Bridge),
+            "draw" => Some(RegimeRule::Draw),
+            _ => None,
+        }
+    }
+
+    /// The regime of the game dealt from `seed` under this rule.
+    pub fn regime_of(self, seed: &str) -> u8 {
+        match self {
+            RegimeRule::Home => REGIME_HOME,
+            RegimeRule::Bridge => REGIME_BRIDGE,
+            RegimeRule::Draw => drawn_regime(seed),
+        }
+    }
+}
+
+/// The regime a seed draws with probability ½: bridge when `rngFromSeed(seed + ':regime')()` is below 0.5.
+pub fn drawn_regime(seed: &str) -> u8 {
+    let h = Xmur3::from_str_parts(&[seed, ":regime"]).next();
+    if Mulberry32::new(h).next_f64() < 0.5 {
+        REGIME_BRIDGE
+    } else {
+        REGIME_HOME
+    }
+}
+
 /// A batch of `n` us54 games stepped together.
 #[derive(Clone, Debug)]
 pub struct VecEnv {
     slots: Vec<Slot>,
     threads: usize,
     auto_reset: Option<String>,
+    auto_regime: RegimeRule,
     next_game: u64,
     ready: bool,
     stats: Stats,
@@ -826,6 +1095,7 @@ pub struct VecEnv {
 /// The shared context of one parallel pass.
 struct Pass<'a> {
     prefix: Option<&'a str>,
+    regime: RegimeRule,
     next_game: u64,
     counts: &'a [AtomicU64],
     barrier: Option<&'a Barrier>,
@@ -842,6 +1112,13 @@ impl VecEnv {
     /// `n` games, stepped on `threads` threads (the calling thread is one of them), optionally keeping the replay
     /// format's digest streams. Call [`VecEnv::reset`] (or [`VecEnv::reset_hands`]) before anything else.
     pub fn new(n: usize, threads: usize, track_digests: bool) -> Result<VecEnv, String> {
+        VecEnv::with_facts(n, threads, track_digests, false)
+    }
+
+    /// As [`VecEnv::new`], and with `facts` every game keeps the walk of `crate::facts` over its published log, so
+    /// that observations can fill a facts buffer and [`VecEnv::facts_of`] can answer. Without it neither can (an
+    /// error), and a step costs nothing for the facts.
+    pub fn with_facts(n: usize, threads: usize, track_digests: bool, facts: bool) -> Result<VecEnv, String> {
         if n == 0 {
             return Err("a batch needs at least one game".into());
         }
@@ -849,13 +1126,19 @@ impl VecEnv {
             return Err("threads must be at least 1".into());
         }
         Ok(VecEnv {
-            slots: vec![Slot::empty(track_digests); n],
+            slots: vec![Slot::empty(track_digests, facts); n],
             threads,
             auto_reset: None,
+            auto_regime: RegimeRule::Home,
             next_game: 0,
             ready: false,
             stats: Stats::default(),
         })
+    }
+
+    /// Does every game keep its facts walk?
+    pub fn facts_on(&self) -> bool {
+        self.slots[0].walk_on
     }
 
     /// The number of games.
@@ -891,14 +1174,46 @@ impl VecEnv {
         self.next_game = next;
     }
 
+    /// How auto-reset chooses each new game's regime (home, unless set).
+    pub fn set_auto_regime(&mut self, rule: RegimeRule) {
+        self.auto_regime = rule;
+    }
+
+    /// The auto-reset regime rule.
+    pub fn auto_regime(&self) -> RegimeRule {
+        self.auto_regime
+    }
+
     /// The next auto-reset game number.
     pub fn next_game(&self) -> u64 {
         self.next_game
     }
 
+    fn check_regimes(regimes: Option<&[u8]>, n: usize) -> Result<(), String> {
+        if let Some(r) = regimes {
+            if r.len() != n {
+                return Err(format!("{n} games need {n} regimes, got {}", r.len()));
+            }
+            if let Some(i) = r.iter().position(|&x| x != REGIME_HOME && x != REGIME_BRIDGE) {
+                return Err(format!("game {i}: regime {} is not 0 (home) or 1 (bridge)", r[i]));
+            }
+        }
+        Ok(())
+    }
+
     /// Deal every game: `seeds[i]` at `starts[i]`, exactly as the reference's `newGame` (the same seed string deals
-    /// the same hands as `lib/engine/`).
+    /// the same hands as `lib/engine/`), every game under the home regime.
     pub fn reset<S: AsRef<str>>(&mut self, seeds: &[S], starts: &[u8]) -> Result<(), String> {
+        self.reset_regimes(seeds, starts, None)
+    }
+
+    /// As [`VecEnv::reset`], game i under `regimes[i]` ([`REGIME_HOME`] or [`REGIME_BRIDGE`]; all home if None).
+    pub fn reset_regimes<S: AsRef<str>>(
+        &mut self,
+        seeds: &[S],
+        starts: &[u8],
+        regimes: Option<&[u8]>,
+    ) -> Result<(), String> {
         let n = self.slots.len();
         if seeds.len() != n || starts.len() != n {
             return Err(format!(
@@ -907,21 +1222,30 @@ impl VecEnv {
                 starts.len()
             ));
         }
+        VecEnv::check_regimes(regimes, n)?;
         for (i, (slot, (seed, &start))) in self.slots.iter_mut().zip(seeds.iter().zip(starts)).enumerate() {
-            slot.deal(seed.as_ref(), start).map_err(|e| format!("game {i}: {e}"))?;
+            let regime = regimes.map_or(REGIME_HOME, |r| r[i]);
+            slot.deal(seed.as_ref(), start, regime)
+                .map_err(|e| format!("game {i}: {e}"))?;
         }
         self.ready = true;
         Ok(())
     }
 
     /// Start every game from a given deal: `holders[i * 54 + c]` is the seat holding card c in game i (every card
-    /// in play; the hands need not be nine cards each), with the turn and the window at `starts[i]`. For tests and
-    /// hand-built positions; its digest header's seed is `deal`.
+    /// in play; the hands need not be nine cards each), with the turn and the window at `starts[i]`, under the home
+    /// regime. For tests and hand-built positions; its digest header's seed is `deal`.
     pub fn reset_hands(&mut self, holders: &[u8], starts: &[u8]) -> Result<(), String> {
+        self.reset_hands_regimes(holders, starts, None)
+    }
+
+    /// As [`VecEnv::reset_hands`], game i under `regimes[i]` (all home if None).
+    pub fn reset_hands_regimes(&mut self, holders: &[u8], starts: &[u8], regimes: Option<&[u8]>) -> Result<(), String> {
         let n = self.slots.len();
         if holders.len() != n * NCARDS || starts.len() != n {
             return Err(format!("reset_hands needs {n} x 54 holders and {n} start seats"));
         }
+        VecEnv::check_regimes(regimes, n)?;
         for (i, slot) in self.slots.iter_mut().enumerate() {
             let start = starts[i];
             if !is_seat(start) {
@@ -934,9 +1258,22 @@ impl VecEnv {
                 }
                 hands[h as usize] |= 1u64 << c;
             }
-            slot.start_game(Game::from_hands(hands, start), "deal", start);
+            slot.start_game(
+                Game::from_hands(hands, start),
+                "deal",
+                start,
+                regimes.map_or(REGIME_HOME, |r| r[i]),
+            );
         }
         self.ready = true;
+        Ok(())
+    }
+
+    fn check_obs(&self, o: &ObsOut<'_>) -> Result<(), String> {
+        o.check(self.slots.len())?;
+        if o.facts.is_some() && !self.facts_on() {
+            return Err("a facts buffer needs an environment built with facts on".into());
+        }
         Ok(())
     }
 
@@ -952,7 +1289,7 @@ impl VecEnv {
     /// logged since that seat's previous observation, which this consumes.
     pub fn observe(&mut self, out: ObsOut<'_>) -> Result<(), String> {
         self.need_ready()?;
-        out.check(self.slots.len())?;
+        self.check_obs(&out)?;
         self.run(None, None, Some(out))
     }
 
@@ -967,7 +1304,7 @@ impl VecEnv {
         }
         res.check(n)?;
         if let Some(o) = obs.as_ref() {
-            o.check(n)?;
+            self.check_obs(o)?;
         }
         self.run(Some(actions), Some(res), obs)
     }
@@ -989,6 +1326,7 @@ impl VecEnv {
         let barrier = (stepping && self.auto_reset.is_some()).then(|| Barrier::new(workers));
         let pass = Pass {
             prefix: if stepping { self.auto_reset.as_deref() } else { None },
+            regime: self.auto_regime,
             next_game: self.next_game,
             counts: &counts,
             barrier: barrier.as_ref(),
@@ -1086,7 +1424,8 @@ impl VecEnv {
             let kinds = s.game.legal_kinds(acting, &asks);
             let k = encode_legal(acting, kinds, &asks, &mut buf);
             l[i] = digest(&buf[..k]);
-            let k = encode_view(&s.game, acting, t.log_len, &t.log.hex(), &mut buf);
+            let sets = s.gf.reveal.mask_set_block(s.game.set_block());
+            let k = encode_view_with_sets(&s.game, acting, t.log_len, &t.log.hex(), &sets, &mut buf);
             v[i] = digest(&buf[..k]);
         }
         Ok(())
@@ -1117,6 +1456,30 @@ impl VecEnv {
         self.slots[i].start
     }
 
+    /// Game i's reveal regime ([`REGIME_HOME`] or [`REGIME_BRIDGE`]).
+    pub fn regime(&self, i: usize) -> u8 {
+        self.slots[i].regime()
+    }
+
+    /// The facts of `seat`'s view of game i now (needs facts on): the view the regime publishes, as the facts row of
+    /// an observation by that seat would give them.
+    pub fn facts_of(&self, i: usize, seat: u8, out: &mut Facts) -> Result<(), String> {
+        if i >= self.slots.len() || !is_seat(seat) {
+            return Err(format!("facts_of: no game {i} or no seat {seat}"));
+        }
+        self.slots[i].facts(seat, out)
+    }
+
+    /// The facts row (API.md §5.4) of `seat`'s view of game i now (needs facts on), into `row` of [`FACTS_LEN`] bytes.
+    pub fn facts_row(&self, i: usize, seat: u8, row: &mut [u8]) -> Result<(), String> {
+        if row.len() != FACTS_LEN {
+            return Err(format!("a facts row is {FACTS_LEN} bytes, got {}", row.len()));
+        }
+        let mut f = Facts::default();
+        self.facts_of(i, seat, &mut f)?;
+        write_facts_row(&f, resolved_mask(&self.slots[i].game), row)
+    }
+
     /// The counters so far.
     pub fn stats(&self) -> Stats {
         self.stats
@@ -1131,6 +1494,26 @@ impl VecEnv {
         for slot in &mut self.slots {
             slot.mutant = m;
             slot.game.set_mutant(m);
+        }
+    }
+
+    /// Plant a facts mutant of ATHENA.md §8.1 (M6 skips count exhaustion, M7 ignores the set-membership constraints)
+    /// in every game's walk, from the next deal on (a walk is replayed from its game's start, so plant it before
+    /// `reset`). Only with the `mutants` feature: G1a's check 4 plants each to show that check 1 catches it.
+    #[cfg(feature = "mutants")]
+    pub fn set_facts_mutant(&mut self, m: FactsMutant) {
+        for slot in &mut self.slots {
+            slot.gf.walk.set_mutant(m);
+        }
+    }
+
+    /// Plant G1b's control: the bridge regime publishing the full reveal (every holder of a wrong declare, as at
+    /// home) while its regime bit still says bridge, from the next deal on. Only with the `mutants` feature: G1b's
+    /// check must see it differ from `replay-codec.ts`'s reduced encoding.
+    #[cfg(feature = "mutants")]
+    pub fn set_full_reveal_control(&mut self, on: bool) {
+        for slot in &mut self.slots {
+            slot.gf.reveal.set_full_reveal_control(on);
         }
     }
 
@@ -1200,16 +1583,20 @@ fn work(ch: Chunk<'_>, pass: &Pass<'_>) -> Report {
     let mut ended = 0u64;
     let auto = pass.prefix.is_some();
 
-    let mut observe =
-        |slot: &mut Slot, obs: &mut ObsOut<'_>, i: usize, rep: &mut Report| match slot.observe(obs.row(i), &mut asks) {
-            Ok(backlog) => {
-                rep.stats.observations += 1;
-                rep.stats.max_backlog = rep.stats.max_backlog.max(backlog);
-            }
-            Err(e) => {
-                rep.error.get_or_insert_with(|| format!("game {}: {e}", offset + i));
-            }
-        };
+    let mut facts = Facts::default();
+    let mut observe = |slot: &mut Slot, obs: &mut ObsOut<'_>, i: usize, rep: &mut Report| match slot.observe(
+        obs.row(i),
+        &mut asks,
+        &mut facts,
+    ) {
+        Ok(backlog) => {
+            rep.stats.observations += 1;
+            rep.stats.max_backlog = rep.stats.max_backlog.max(backlog);
+        }
+        Err(e) => {
+            rep.error.get_or_insert_with(|| format!("game {}: {e}", offset + i));
+        }
+    };
 
     match res {
         None => {
@@ -1275,7 +1662,7 @@ fn work(ch: Chunk<'_>, pass: &Pass<'_>) -> Report {
         for (k, (i, slot)) in (first..).zip(ended_slots) {
             seed.clear();
             let _ = write!(seed, "{prefix}{k}");
-            if let Err(e) = slot.deal(&seed, (k % 6) as u8) {
+            if let Err(e) = slot.deal(&seed, (k % 6) as u8, pass.regime.regime_of(&seed)) {
                 rep.error.get_or_insert(e);
             }
             rep.stats.auto_resets += 1;
@@ -1304,6 +1691,7 @@ mod tests {
         events: Vec<u8>,
         n_events: Vec<u8>,
         critic: Vec<u8>,
+        facts: Option<Vec<u8>>,
         reward: Vec<f32>,
         term: Vec<bool>,
         trunc: Vec<bool>,
@@ -1318,6 +1706,7 @@ mod tests {
                 events: vec![0; n * MAX_EVENTS * EVENT_LEN],
                 n_events: vec![0; n],
                 critic: vec![0; n * CRITIC_LEN],
+                facts: None,
                 reward: vec![0.0; 2 * n],
                 term: vec![false; n],
                 trunc: vec![false; n],
@@ -1331,7 +1720,13 @@ mod tests {
                 events: &mut self.events,
                 n_events: &mut self.n_events,
                 critic: Some(&mut self.critic),
+                facts: self.facts.as_deref_mut(),
             }
+        }
+        fn with_facts(n: usize) -> Bufs {
+            let mut b = Bufs::new(n);
+            b.facts = Some(vec![0; n * FACTS_LEN]);
+            b
         }
         fn split(&mut self) -> (StepOut<'_>, ObsOut<'_>) {
             (
@@ -1347,6 +1742,7 @@ mod tests {
                     events: &mut self.events,
                     n_events: &mut self.n_events,
                     critic: Some(&mut self.critic),
+                    facts: self.facts.as_deref_mut(),
                 },
             )
         }
@@ -1373,7 +1769,9 @@ mod tests {
     fn every_code_round_trips_for_every_seat() {
         assert_eq!(N_ACTIONS, 6726);
         assert_eq!(LEGAL_LEN, 174);
-        assert_eq!(OBS_LEN, 94);
+        assert_eq!(OBS_LEN, 95);
+        assert_eq!(O_REGIME, 94);
+        assert_eq!(FACTS_LEN, 278);
         assert_eq!(EVENT_LEN, 19);
         for seat in 0..6u8 {
             for code in 0..N_ACTIONS {
@@ -1642,6 +2040,8 @@ mod tests {
                     assert_eq!(&longest[..s.len()], &s[..], "game {i}");
                 }
                 assert_eq!(longest[0][E_TYPE], 0, "game {i}: game_started first");
+                // The start-seat rule: game_started names the first event's actor.
+                assert_eq!(longest[0][E_ACTOR], longest[1][E_ACTOR], "game {i}");
             }
         }
     }
@@ -1649,13 +2049,26 @@ mod tests {
     /// The batch's results do not depend on the thread count, auto-reset included.
     #[test]
     fn threads_do_not_change_anything() {
+        for facts in [false, true] {
+            threads_do_not_change(facts);
+        }
+    }
+
+    /// With `facts`, the facts buffer is on and every game's regime is drawn from its seed.
+    fn threads_do_not_change(facts: bool) {
         let run = |threads: usize| {
             let n = 37;
-            let mut env = VecEnv::new(n, threads, true).unwrap();
+            let mut env = VecEnv::with_facts(n, threads, true, facts).unwrap();
             env.set_auto_reset(Some("athena-vecenv-auto-".into()), n as u64);
             let (sd, st) = seeds("athena-vecenv-auto-", n);
-            env.reset(&sd, &st).unwrap();
-            let mut b = Bufs::new(n);
+            if facts {
+                env.set_auto_regime(RegimeRule::Draw);
+                let regimes: Vec<u8> = sd.iter().map(|s| drawn_regime(s)).collect();
+                env.reset_regimes(&sd, &st, Some(&regimes)).unwrap();
+            } else {
+                env.reset(&sd, &st).unwrap();
+            }
+            let mut b = if facts { Bufs::with_facts(n) } else { Bufs::new(n) };
             env.observe(b.obs()).unwrap();
             let mut rngs: Vec<Mulberry32> = sd.iter().map(|s| mixed_stub_rng(s)).collect();
             let mut trace: Vec<u64> = Vec::new();
@@ -1676,7 +2089,13 @@ mod tests {
                 env.digests(&mut d, &mut l, &mut v).unwrap();
                 let mut h = ByteDigest::new();
                 h.push(&b.obs).push(&b.legal).push(&b.n_events).push(&b.critic);
-                for x in d.iter().chain(&l).chain(&v) {
+                if let Some(f) = b.facts.as_ref() {
+                    h.push(f);
+                }
+                for (i, x) in d.iter().chain(&l).chain(&v).enumerate() {
+                    if facts && i < n {
+                        assert_eq!(env.regime(i), drawn_regime(env.seed(i)));
+                    }
                     h.push(&x.to_le_bytes());
                 }
                 trace.push(h.value());
@@ -1817,6 +2236,7 @@ mod tests {
                 };
                 let mut g = Game::new(&seed, start).unwrap();
                 let mut ev = Events::new();
+                let mut reveal = Reveal::new(REGIME_HOME);
                 let mut t = 0;
                 while g.phase() != FINISHED && t < STEP_CAP {
                     let a = if fuzz {
@@ -1826,7 +2246,8 @@ mod tests {
                     };
                     g.apply(&a, &mut ev).unwrap();
                     for e in ev.as_slice() {
-                        assert_eq!(unpack_event(pack_event(e), &g), *e);
+                        assert_eq!(reveal.publish(e), *e, "home publishes every event whole");
+                        assert_eq!(unpack_event(pack_event(e), &g, &reveal), *e);
                         kinds[pack_event(e)[0] as usize] += 1;
                     }
                     t += 1;
@@ -1834,7 +2255,14 @@ mod tests {
             }
         }
         let start = Event::GameStarted { start: 4 };
-        assert_eq!(unpack_event(pack_event(&start), &Game::from_hands([0; 6], 0)), start);
+        assert_eq!(
+            unpack_event(
+                pack_event(&start),
+                &Game::from_hands([0; 6], 0),
+                &Reveal::new(REGIME_HOME)
+            ),
+            start
+        );
         assert!(kinds[1..].iter().all(|&c| c > 0), "{kinds:?}");
     }
 
@@ -1963,5 +2391,341 @@ mod tests {
         again.set_mutant(Mutant::None);
         again.reset(&sd[..1], &st[..1]).unwrap();
         assert_eq!(*again.game(0), Game::new(&sd[0], st[0]).unwrap());
+    }
+
+    /// Game i's delivered event rows.
+    fn rows_of(b: &Bufs, i: usize) -> Vec<&[u8]> {
+        let e0 = i * MAX_EVENTS * EVENT_LEN;
+        (0..b.n_events[i] as usize)
+            .map(|k| &b.events[e0 + k * EVENT_LEN..e0 + (k + 1) * EVENT_LEN])
+            .collect()
+    }
+
+    /// The start-seat rule (ATHENA.md §8.2): no event reaches any seat before the first event is logged; then every
+    /// seat's first delivery opens with `game_started`, naming the first event's actor, followed by that event. It
+    /// names the true start seat except when the first event is another seat's declare.
+    #[test]
+    fn the_start_seat_is_the_first_events_actor() {
+        for fuzz in [false, true] {
+            let n = 120;
+            let mut firsts = 0u64;
+            let mut wrong = vec![false; n];
+            let env = drive(n, 2, fuzz, "athena-vecenv-start-", |env, b, t| {
+                for (i, wrong_i) in wrong.iter_mut().enumerate() {
+                    if env.ended(i) != 0 {
+                        continue;
+                    }
+                    let rows = rows_of(b, i);
+                    if t == 0 {
+                        assert!(rows.is_empty(), "game {i}: an event before the first event");
+                    }
+                    let me = b.seat[i];
+                    for (k, r) in rows.iter().enumerate() {
+                        if r[E_TYPE] != 0 {
+                            continue;
+                        }
+                        assert_eq!(k, 0, "game {i}: game_started not first");
+                        let next = rows.get(1).expect("game_started arrives with the first event");
+                        assert_eq!(r[E_ACTOR], next[E_ACTOR], "game {i}");
+                        firsts += 1;
+                        if abs_seat(r[E_ACTOR], me) != env.start_seat(i) {
+                            assert_eq!(next[E_TYPE], 2, "game {i}: only a declare can precede the start seat");
+                            *wrong_i = true;
+                        }
+                    }
+                }
+            });
+            assert!(firsts >= 5 * n as u64, "{firsts}");
+            assert!(env.stats().max_backlog <= 27);
+            // The rule is exact unless the opening window's first event is another seat's declare.
+            assert!(wrong.iter().filter(|&&w| w).count() < n / 2, "{wrong:?}");
+        }
+    }
+
+    /// The regimes play the same game and differ only in what a wrong declare publishes. Two batches on the same
+    /// seeds, one home and one bridge, driven by the same stub (which reads the state, never the observation): every
+    /// obs byte is equal but the regime bit and a wrong declare's how byte (NONE at the bridge when its published
+    /// holders cannot settle it); every event row is equal but a wrong declare's holders, of which the bridge shows a
+    /// subset (the rest NONE); the legal masks and the chain and legal digests agree; the view digests and the facts
+    /// differ somewhere.
+    #[test]
+    fn the_regimes_differ_only_in_what_a_wrong_declare_publishes() {
+        let n = 48;
+        let (sd, st) = seeds("athena-vecenv-regime-", n);
+        let mut env = [
+            VecEnv::with_facts(n, 2, true, true).unwrap(),
+            VecEnv::with_facts(n, 2, true, true).unwrap(),
+        ];
+        env[0].reset_regimes(&sd, &st, Some(&vec![REGIME_HOME; n])).unwrap();
+        env[1].reset_regimes(&sd, &st, Some(&vec![REGIME_BRIDGE; n])).unwrap();
+        assert!((0..n).all(|i| env[0].regime(i) == REGIME_HOME && env[1].regime(i) == REGIME_BRIDGE));
+        let mut rngs: Vec<Mulberry32> = sd.iter().map(|s| mixed_stub_rng(s)).collect();
+        let mut bufs = [Bufs::with_facts(n), Bufs::with_facts(n)];
+        for (e, b) in env.iter_mut().zip(bufs.iter_mut()) {
+            e.observe(b.obs()).unwrap();
+        }
+        let mut dg = [
+            [vec![0u64; n], vec![0u64; n], vec![0u64; n]],
+            [vec![0u64; n], vec![0u64; n], vec![0u64; n]],
+        ];
+        let (mut how_hidden, mut holders_hidden, mut v_differ, mut facts_differ) = (0u64, 0u64, 0u64, 0u64);
+        let mut codes = vec![0i32; n];
+        while (0..n).any(|i| env[0].ended(i) == 0) {
+            for i in 0..n {
+                if env[0].ended(i) != 0 {
+                    continue;
+                }
+                let (a, b) = (&bufs[0], &bufs[1]);
+                assert_eq!(a.seat[i], b.seat[i]);
+                let oa = &a.obs[i * OBS_LEN..(i + 1) * OBS_LEN];
+                let ob = &b.obs[i * OBS_LEN..(i + 1) * OBS_LEN];
+                assert_eq!((oa[O_REGIME], ob[O_REGIME]), (REGIME_HOME, REGIME_BRIDGE));
+                for k in (0..O_REGIME).filter(|&k| oa[k] != ob[k]) {
+                    assert!(k >= O_SETS && (k - O_SETS) % SET_FIELDS == 2, "game {i}: obs byte {k}");
+                    assert_eq!(ob[k], NONE, "game {i}: obs byte {k}");
+                    assert!(oa[k] == HOW_OPPONENT_HELD || oa[k] == HOW_MISASSIGNED);
+                    how_hidden += 1;
+                }
+                let lr = i * LEGAL_LEN..(i + 1) * LEGAL_LEN;
+                assert_eq!(a.legal[lr.clone()], b.legal[lr]);
+                let (ra, rb) = (rows_of(a, i), rows_of(b, i));
+                assert_eq!(ra.len(), rb.len());
+                for (x, y) in ra.iter().zip(&rb) {
+                    for f in (0..EVENT_LEN).filter(|&f| x[f] != y[f]) {
+                        assert_eq!(x[E_TYPE], 2, "game {i}: event field {f}");
+                        assert!((E_HOLDERS..E_HOLDERS + 6).contains(&f), "game {i}: event field {f}");
+                        assert_eq!(y[f], NONE);
+                        // A wrong declare: the result is not the declarer's team.
+                        assert_ne!(
+                            x[E_ACTOR] % 2 == 0,
+                            x[E_RESULT] == 0,
+                            "game {i}: a right declare hid a holder"
+                        );
+                        holders_hidden += 1;
+                    }
+                }
+                let fr = i * FACTS_LEN..(i + 1) * FACTS_LEN;
+                let fa = &a.facts.as_ref().unwrap()[fr.clone()];
+                let fb = &b.facts.as_ref().unwrap()[fr];
+                facts_differ += u64::from(fa != fb);
+            }
+            for (i, c) in codes.iter_mut().enumerate() {
+                let g = env[0].game(i);
+                let a = if env[0].ended(i) != 0 {
+                    Action::Decline { seat: 0 }
+                } else {
+                    mixed_stub_action(g, g.acting_seat(), &mut rngs[i])
+                };
+                *c = encode_action(&a).unwrap();
+            }
+            for k in 0..2 {
+                let (r, o) = bufs[k].split();
+                env[k].step(&codes, r, Some(o)).unwrap();
+                let [d, l, v] = &mut dg[k];
+                env[k].digests(d, l, v).unwrap();
+            }
+            assert_eq!(dg[0][0], dg[1][0], "the chain digests");
+            assert_eq!(dg[0][1], dg[1][1], "the legal digests");
+            v_differ += (0..n).filter(|&i| dg[0][2][i] != dg[1][2][i]).count() as u64;
+        }
+        assert!(
+            how_hidden > 0 && holders_hidden > 0 && v_differ > 0 && facts_differ > 0,
+            "{how_hidden} {holders_hidden} {v_differ} {facts_differ}"
+        );
+    }
+
+    /// The facts buffer: equal to `facts_row` for the acting seat; sound against the true deal (every card in play
+    /// has its holder among its candidates, a card out of play has none, and each seat's unknown slots are its count
+    /// less the cards certain at it); a set proved lost has a card with the other team; a rail is a right declare;
+    /// the constraints are sorted and distinct; and turning facts on changes no other byte. Under both regimes.
+    #[test]
+    fn the_facts_buffer_is_sound_and_changes_nothing_else() {
+        let (mut rails, mut cons, mut singles) = (0u64, 0u64, 0u64);
+        for regime in [REGIME_HOME, REGIME_BRIDGE] {
+            let n = 30;
+            let (sd, st) = seeds("athena-vecenv-facts-", n);
+            let mut env = [
+                VecEnv::new(n, 2, false).unwrap(),
+                VecEnv::with_facts(n, 3, false, true).unwrap(),
+            ];
+            assert!(!env[0].facts_on() && env[1].facts_on());
+            for e in env.iter_mut() {
+                e.reset_regimes(&sd, &st, Some(&vec![regime; n])).unwrap();
+            }
+            let mut probe = Bufs::with_facts(n);
+            assert!(env[0].observe(probe.obs()).is_err(), "a facts buffer needs facts on");
+            let mut bufs = [Bufs::new(n), Bufs::with_facts(n)];
+            for (e, b) in env.iter_mut().zip(bufs.iter_mut()) {
+                e.observe(b.obs()).unwrap();
+            }
+            let mut rngs: Vec<Mulberry32> = sd.iter().map(|s| mixed_stub_rng(s)).collect();
+            let mut row = vec![0u8; FACTS_LEN];
+            let mut codes = vec![0i32; n];
+            while (0..n).any(|i| env[0].ended(i) == 0) {
+                for i in 0..n {
+                    if env[0].ended(i) != 0 {
+                        continue;
+                    }
+                    assert_eq!(
+                        bufs[0].actor(i),
+                        bufs[1].actor(i),
+                        "game {i}: facts on changed an actor byte"
+                    );
+                    let me = bufs[1].seat[i];
+                    let f = &bufs[1].facts.as_ref().unwrap()[i * FACTS_LEN..(i + 1) * FACTS_LEN];
+                    env[1].facts_row(i, me, &mut row).unwrap();
+                    assert_eq!(f, &row[..], "game {i}");
+                    let g = env[1].game(i);
+                    let mut certain = [0usize; 6];
+                    for c in 0..54u8 {
+                        let m = f[F_CAND + c as usize];
+                        let owner = g.owner(c);
+                        if owner == NONE {
+                            assert_eq!(m, 0, "game {i} card {c}");
+                            continue;
+                        }
+                        assert_ne!(
+                            m & (1 << rel_seat(owner, me)),
+                            0,
+                            "game {i} card {c}: the holder is excluded"
+                        );
+                        if m.count_ones() == 1 {
+                            certain[m.trailing_zeros() as usize] += 1;
+                            singles += u64::from(owner != me);
+                        }
+                    }
+                    for r in 0..6u8 {
+                        let count = g.count(abs_seat(r, me)) as usize;
+                        assert_eq!(f[F_UNKNOWN + r as usize] as usize + certain[r as usize], count);
+                    }
+                    for b in 0..9u8 {
+                        let (c, l) = (f[F_SET_CERTAIN + b as usize], f[F_SET_LOST + b as usize]);
+                        if g.is_resolved(b) {
+                            assert_eq!((c, l), (NONE, NONE));
+                            continue;
+                        }
+                        assert!(c <= 6 && l <= 1);
+                        if l == 1 {
+                            let cards = &crate::cards::SET_CARDS[b as usize];
+                            assert!(cards.iter().any(|&x| team(g.owner(x)) != team(me)), "game {i} set {b}");
+                        }
+                    }
+                    if f[F_RAIL] != NONE {
+                        rails += 1;
+                        let b = f[F_RAIL];
+                        for (j, &x) in crate::cards::SET_CARDS[b as usize].iter().enumerate() {
+                            assert_eq!(
+                                abs_seat(f[F_RAIL_ASSIGN + j], me),
+                                g.owner(x),
+                                "game {i}: the rail is wrong"
+                            );
+                        }
+                    }
+                    let nc = f[F_NCONS] as usize;
+                    cons += u64::from(nc > 0);
+                    assert!(f[F_CONS + CONS_FIELDS * nc..].iter().all(|&x| x == NONE));
+                    for k in 0..nc {
+                        let t = &f[F_CONS + CONS_FIELDS * k..F_CONS + CONS_FIELDS * (k + 1)];
+                        assert!(t[0] < 6 && t[1] < 9 && t[2] != 0 && t[2] < 64);
+                        if k > 0 {
+                            let prev = &f[F_CONS + CONS_FIELDS * (k - 1)..F_CONS + CONS_FIELDS * k];
+                            assert!(prev < t, "sorted and distinct");
+                        }
+                    }
+                }
+                for (i, c) in codes.iter_mut().enumerate() {
+                    let g = env[0].game(i);
+                    let a = if env[0].ended(i) != 0 {
+                        Action::Decline { seat: 0 }
+                    } else {
+                        mixed_stub_action(g, g.acting_seat(), &mut rngs[i])
+                    };
+                    *c = encode_action(&a).unwrap();
+                }
+                for k in 0..2 {
+                    let (r, o) = bufs[k].split();
+                    env[k].step(&codes, r, Some(o)).unwrap();
+                }
+            }
+        }
+        assert!(rails > 0 && cons > 0 && singles > 0, "{rails} {cons} {singles}");
+    }
+
+    /// G1c's rule read off the facts row equals `facts::window_class` on the facts themselves, at every window
+    /// offer, for k = 2, 3, 4, under the offer's own decline bit and its opposite; every class occurs. A compelled
+    /// window with no rail and no live set is rare in play (57 of H1's 1,137,909 offers at k = 4), so the compelled
+    /// class is reached through the opposite bit.
+    #[test]
+    fn the_window_rule_reads_the_same_off_the_row() {
+        let n = 40;
+        let mut seen = [0u64; 4];
+        for fuzz in [false, true] {
+            let (sd, mut st) = seeds("athena-vecenv-window-", n);
+            let mut rngs: Vec<Mulberry32> = Vec::new();
+            for (i, s) in sd.iter().enumerate() {
+                if fuzz {
+                    let (r, start) = fuzz_policy_rng(s);
+                    st[i] = start;
+                    rngs.push(r);
+                } else {
+                    rngs.push(mixed_stub_rng(s));
+                }
+            }
+            window_rule_pass(n, &sd, &st, fuzz, &mut rngs, &mut seen);
+        }
+        assert!(seen.iter().all(|&x| x > 0), "{seen:?}");
+    }
+
+    fn window_rule_pass(n: usize, sd: &[String], st: &[u8], fuzz: bool, rngs: &mut [Mulberry32], seen: &mut [u64; 4]) {
+        let mut env = VecEnv::with_facts(n, 2, false, true).unwrap();
+        env.reset(sd, st).unwrap();
+        let mut b = Bufs::with_facts(n);
+        env.observe(b.obs()).unwrap();
+        let mut f = Facts::default();
+        let mut codes = vec![0i32; n];
+        while (0..n).any(|i| env.ended(i) == 0) {
+            for i in 0..n {
+                if env.ended(i) != 0 || b.obs[i * OBS_LEN + O_WINDOW] != 1 {
+                    continue;
+                }
+                let me = b.seat[i];
+                env.facts_of(i, me, &mut f).unwrap();
+                let row = &b.facts.as_ref().unwrap()[i * FACTS_LEN..(i + 1) * FACTS_LEN];
+                let decline = b.legal[i * LEGAL_LEN + L_DECLINE] == 1;
+                for k in 2..=4u8 {
+                    for d in [decline, !decline] {
+                        let want = crate::facts::window_class(&f, resolved_mask(env.game(i)), k, d);
+                        assert_eq!(window_class_of_row(row, k, d), want, "game {i} k {k} decline {d}");
+                        seen[want.code() as usize] += 1;
+                    }
+                }
+            }
+            for (i, c) in codes.iter_mut().enumerate() {
+                let g = env.game(i);
+                let a = if env.ended(i) != 0 {
+                    Action::Decline { seat: 0 }
+                } else if fuzz {
+                    fuzz_policy_action(g, &mut rngs[i])
+                } else {
+                    mixed_stub_action(g, g.acting_seat(), &mut rngs[i])
+                };
+                *c = encode_action(&a).unwrap_or(-1);
+            }
+            let (r, o) = b.split();
+            env.step(&codes, r, Some(o)).unwrap();
+        }
+    }
+
+    /// The drawn regime is the seed's, about half bridge; a regime that is neither is an error.
+    #[test]
+    fn the_drawn_regime_is_about_half() {
+        let bridge = (0..10_000)
+            .filter(|k| drawn_regime(&format!("athena-p2-{k}")) == REGIME_BRIDGE)
+            .count();
+        assert!((4_800..5_200).contains(&bridge), "{bridge}");
+        assert_eq!(RegimeRule::parse("draw"), Some(RegimeRule::Draw));
+        assert_eq!(RegimeRule::Bridge.regime_of("x"), REGIME_BRIDGE);
+        let mut env = VecEnv::new(2, 1, false).unwrap();
+        assert!(env.reset_regimes(&["a", "b"], &[0, 1], Some(&[0, 2])).is_err());
     }
 }

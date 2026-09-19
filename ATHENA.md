@@ -5,8 +5,8 @@ own play.** Monet v1.0 is the bar. It is also an opponent, a harness and a body 
 point.
 
 **Status: P0 CLOSED and P1 REGISTERED, both 2026-09-19.** All four of P0's gates held (§4.6), and all of §4.7's
-predictions came true. P1's pre-registration is §8, written before any P1 code or run. No ATHENA game has been played
-for strength.
+predictions came true. P1's pre-registration is §8, written before any P1 code or run. P1's first two gates, G1a and
+G1b, passed the same day (§8.1, §8.2). No ATHENA game has been played for strength.
 
 **P0 was registered 2026-09-19.** The owner approved §4 as drafted, and the installs it needs, in their words:
 *"approve P0 as drafted, go ahead with the installs"* (§6 row 2). §4 is the draft of 2026-09-18, unchanged; anything
@@ -1271,7 +1271,7 @@ In the form of MONET.md §8.3.
 | 4 | **D4: how long may one training run be, on this machine?** The owner asked for the estimates first, and no hardware upgrade is planned | **FOR THE OWNER.** The estimates are §3.1, from GPU rates measured on 2026-09-19. At the base case (network M, PPO reusing each game twice), P2's likely 10^7–10^8 games take about 2 hours to about 1 day, and a pessimistic 10^9 takes 7–11 days. Recommendation: runs of up to 3 days, checkpointed and reviewed |
 | 5 | **D6, D10, D11, and D9's confirmation.** The owner asked what these mean. Each is explained in plain terms in §5, with a recommendation: D6 an exploiter gate at v1.0; D9 "the port trains, the reference judges" (already in the approved plan); D10 Monet frozen at v1.0; D11 readers that apply every registered rule | **FOR THE OWNER.** None of them blocks P0 |
 | 6 | **D8: Kraken was found. Read Monet v1.0 against it?** Kraken v1.0 is public and complete (`kv1514/fish-researchp12`, `b10a673`), runs at the bridge, and passed a step-0 identity and a 60-game smoke (§7.1) | **TAKEN 2026-09-19 under D8** (*"go ahead if you can find the whole model"*). Pre-registered as §7 before any read cell. It ships nothing and writes ATHENA's Kraken bar. **READ 2026-09-19 (§7.3):** Monet v1.0 won 58.49% of 14,400 games against Kraken v1.0, every seed at or above 55.08%; Q1–Q6 all hit |
-| 7 | **P1's pre-registration (§8).** The rules-derived facts ported and pinned (G1a); the observation's reveal regime, start seat and declare-window rule (G1b, G1c); the belief-head study (G1) on three populations, with the owner's D2 variant; D4 with the head; the team-information ceiling at home; two records studies; and P2's network size. About 6–9 CPU-hours and under 2 GPU-hours; no bridge cell | **REGISTERED 2026-09-19** under row 1's plan and the standing rule, as Monet's rungs were. It ships nothing and needs no install. The owner may amend any part before it runs |
+| 7 | **P1's pre-registration (§8).** The rules-derived facts ported and pinned (G1a); the observation's reveal regime, start seat and declare-window rule (G1b, G1c); the belief-head study (G1) on three populations, with the owner's D2 variant; D4 with the head; the team-information ceiling at home; two records studies; and P2's network size. About 6–9 CPU-hours and under 2 GPU-hours; no bridge cell | **REGISTERED 2026-09-19** under row 1's plan and the standing rule, as Monet's rungs were. It ships nothing and needs no install. The owner may amend any part before it runs. **G1a and G1b: PASS 2026-09-19** (§8.1, §8.2) |
 
 ---
 
@@ -1500,6 +1500,39 @@ The batch API gains a `facts` buffer. The rules-certain declare (the hard rail o
 **If it fails,** nothing downstream uses the facts until the divergence is located. A failure that is not located
 within two working days stops P1 and is reported.
 
+> **G1a scored 2026-09-19: PASS.** Branch `claude/athena-p1a`, commits `b413817`, `614aea6` and `bc02d84`.
+>
+> | check | bar | result |
+> |---|---|---|
+> | 1. Home | every step equal | 4,788,218 of 4,788,218 steps equal (28,729,308 views) |
+> | 2. The bridge | every view equal | 1,342,770 of 1,342,770 views equal, in 14,400 games |
+> | 3. The rail | equals `railPlan` | 4,132,578 window offers, 165,016 with a rail; 0 games differ |
+> | 4. M6, no count exhaustion | check 1 fails | CAUGHT: 759,806 steps in 7,586 games differ |
+> | 4. M7, no constraints | check 1 fails | CAUGHT: 4,614,471 steps in 10,744 games differ |
+> | 5. Coverage, home | each at least 50 | 26,431,644 views with a constraint; exhaustion fired in 4,406,695; 14,144,552 with a singleton reached only by propagation |
+> | 5. Coverage, bridge | information | 1,238,225 with a constraint (the reference counts the same); exhaustion 201,699; propagation 606,208 |
+>
+> - [Information] On the bridge check, M6 leaves 1,175,489 of the 1,342,770 views equal, and M7 leaves 74,106.
+> - [Information] The most distinct constraints in one view: 26 at home and 12 at the bridge. The facts buffer holds 64.
+> - **Cost** [Measured]. The reference side took 170 s at home on 3 threads (the estimate was about 8 CPU-minutes) and
+>   9 s at the bridge. The port's checks took 18 s and 1 s on 4 threads.
+>
+> **Checked independently.** Everything was re-run from the branch head (`bc02d84`, clean tree), with the reference
+> facts emitted afresh. Every number above came out the same.
+> - The Rust gates pass: fmt, clippy with and without the mutants, `cargo test`, and replay-check (G0a (i) PASS).
+> - The Python tests pass: test_facts and test_harness 9 of 9 each, run against the mutants build.
+> - typecheck and lint pass, and vitest passes (82 files, 1,252 tests).
+>
+> **Amended with the result** (definitions only; no bar changes). Check 5's counts:
+> - "Exhaustion fired" counts a view where count exhaustion fixed a card, during the walk over the log or in the
+>   view's own fixpoint.
+> - "A singleton reached only by propagation" counts a view with a card that is certain only by inference. At home,
+>   8,788,148 of the 14,144,552 were reached inside the view's own fixpoint.
+>
+> **Q1, G1a holds within P1 (85%): HIT.**
+> **Q2, G1a's first full run is clean (40%): HIT.** The first full run of checks 1 to 3 passed. Two smaller smoke
+> runs came before it (3,400 and 80,843 steps), and both passed.
+
 ### 8.2 G1b and G1c: the observation's regime and the declare windows
 
 **G1b: the reveal regime.** P2 will train under both regimes, and the observation says which one a game is in
@@ -1539,6 +1572,62 @@ within two working days stops P1 and is reported.
   registered.
 - [Judgement] This constrains ATHENA only where Monet itself almost never declares. P3 can relax k, registered on its
   own.
+
+> **G1b scored 2026-09-19: PASS.**
+> - **The bridge regime.** At every step of the 10,800 corpus games, the port's bridge-regime observation of the
+>   acting seat equals `replay-codec.ts`'s encoding under `Reveal = 'reduced'`: 4,788,218 of 4,788,218 steps. The
+>   bridge-regime facts differ in 0 games.
+> - **The planted control,** the full reveal in the bridge regime: CAUGHT, 1,327,765 steps in 6,203 games differ.
+> - **Home's rules are unchanged:** replay-check prints G0a (i) PASS.
+> - **The JavaScript encoder equals the port's** in both regimes, byte for byte, with the facts row: 1,302,128 states
+>   over 5,600 games, 0 differ. Its planted controls are caught in both regimes.
+> - **The layout.** The obs row gains one byte, the regime (`O_REGIME` = 94, so 95 bytes): 0 at home, 1 at the
+>   bridge. A game's regime is drawn from its seed: the bridge when `mulberry32(xmur3(seed + ":regime"))` draws
+>   below ½ (`athena-env/API.md` §3.5).
+> - **The start seat** (the rule above, now in both regimes). It is wrong in 1,903 of the 10,800 corpus games
+>   (17.6204%), and in every one of them the first event was a declare. By population:
+>
+>   | population | wrong |
+>   |---|---|
+>   | H1, Monet v1.0 in all six seats | 1 of 2,000 (0.05%) |
+>   | H2, the roster styles | 0 of 1,800 |
+>   | H3, Monet v1.0 against v0.33 | 0 of 1,000 |
+>   | H4, the fuzz policy | 1,652 of 4,000 (41.3%) |
+>   | H5, the mixed stub | 250 of 2,000 (12.5%) |
+>
+> - **One fix came with it.** `lib/athena/policy.ts`'s `forwardView` folded one row for each event in the log.
+>   Under the start-seat rule a game's first decision has no rows, so it now folds the rows the encoder returns.
+> - **G0d's stub package, re-tested on the new encoding** [Measured]. The start-seat rule changes what the stub's
+>   network sees early in a game, so some of its games changed: 189 of G0d's 200 Balanced games are identical, and 190
+>   of the 200 mixed ones.
+>   - It still plays with every fault counter at zero: 6,214 asks against Balanced, and 12,786 against the mixed stub.
+>   - The forced test passes 42 of 42.
+>   - The in-engine pin holds at 6,214 of 6,214, and 12,786 of 12,786.
+>   - G0d's archived stub records predate this change.
+> - **For P2** [Information]. The stub's network does not read the regime byte (its decision features stay at 516),
+>   and `forwardView` writes the home regime unless it is told otherwise. P2's network has to read it.
+>
+> **Amended with the result.** No bar changes.
+> 1. "The home regime is G0a's and G0d's, unchanged" means home's rules and digests. Home's actor buffers do change
+>    in two ways: they carry the regime byte (0), and their event rows follow the start-seat rule.
+> 2. The start seat's rate is reported by population, as above. The pooled 17.6% mixes policies that behave very
+>    differently.
+>
+> **Q3, G1b holds (90%): HIT.**
+>
+> **G1c before its registered reading** [Measured, information]. On H1's 2,000 games (15,266 declares by Monet v1.0,
+> 1,137,909 window offers):
+>
+> | k | Monet's declares the rule admits | offers evaluated |
+> |---|---:|---:|
+> | 4 | 99.653% | 23.689% |
+> | 3 | 99.882% | 56.631% |
+> | 2 | 99.987% | 90.169% |
+>
+> - On H1, no k meets both bars. k = 4 admits enough of Monet's declares, but evaluates 23.689% of offers, above the
+>   20% bar.
+> - The registered reading is on §8.3's held-out test games, which are not played yet (`scripts/athena/window-rule.py`).
+> - If they read the same way, the rule is dropped as registered, and P2's acting cost is re-costed for every offer.
 
 ### 8.3 G1: the belief-head study
 
