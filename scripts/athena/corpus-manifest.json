@@ -152,8 +152,8 @@
     "bytes": 259113100
   },
   "selfCheck": {
-    "date": "2026-09-19T09:52:35.010Z",
-    "checkedAt": "7d85c2edbc681b0b1686b9b038f218d9980112ac",
+    "date": "2026-09-19T10:28:39.265Z",
+    "checkedAt": "c5e6b34bb79c5092aab487a113fd237379f83a33",
     "command": "node scripts/athena/check-replay-corpus.mjs --workers 4 --write",
     "partial": false,
     "games": 10800,
@@ -437,8 +437,232 @@
         },
         "total": 92723,
         "met": true
+      },
+      {
+        "id": "declareByLastSeat",
+        "label": "a declare by the window's last seat (declined = 5) (not counted before P0)",
+        "perPopulation": {
+          "H1": 615,
+          "H2": 748,
+          "H3": 385,
+          "H4": 3531,
+          "H5": 1805
+        },
+        "total": 7084,
+        "met": true
       }
     ],
     "short": []
+  },
+  "portReplay": {
+    "gate": "ATHENA.md §4.6 G0a (i): the Rust port replays the home corpus from its actions alone",
+    "port": "athena-env (Rust), #![forbid(unsafe_code)], no dependencies",
+    "checkedAt": "c5e6b34bb79c5092aab487a113fd237379f83a33",
+    "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+    "date": "2026-09-19T10:31:36.734Z",
+    "result": {
+      "games": 10800,
+      "steps": 4788218,
+      "recordsOk": 10800,
+      "recordsBad": 0,
+      "probeVerdicts": 1977852,
+      "probeAccepted": 369294,
+      "probeCodeDiffs": 0,
+      "capped": {
+        "H1": 0,
+        "H2": 0,
+        "H3": 0,
+        "H4": 0,
+        "H5": 0
+      },
+      "fallbackAlone": 0,
+      "fallbackCoincided": 3092,
+      "bankSeeds": 36,
+      "bankSeedStepMismatch": 0,
+      "aggregates": [
+        {
+          "block": "H1-0-2000",
+          "games": 2000,
+          "aggregate": "858d94ace470b4b7",
+          "manifest": "858d94ace470b4b7",
+          "verdict": "equal to the manifest"
+        },
+        {
+          "block": "H2-0-1800",
+          "games": 1800,
+          "aggregate": "dbd406806de1e353",
+          "manifest": "dbd406806de1e353",
+          "verdict": "equal to the manifest"
+        },
+        {
+          "block": "H3-0-1000",
+          "games": 1000,
+          "aggregate": "0f68c6ec0fe88fa1",
+          "manifest": "0f68c6ec0fe88fa1",
+          "verdict": "equal to the manifest"
+        },
+        {
+          "block": "H4-0-4000",
+          "games": 4000,
+          "aggregate": "6f10ae1ee0df724c",
+          "manifest": "6f10ae1ee0df724c",
+          "verdict": "equal to the manifest"
+        },
+        {
+          "block": "H5-0-2000",
+          "games": 2000,
+          "aggregate": "01c0d2d4fd3056c2",
+          "manifest": "01c0d2d4fd3056c2",
+          "verdict": "equal to the manifest"
+        }
+      ],
+      "integrity": [],
+      "verdict": "PASS"
+    },
+    "runs": [
+      {
+        "threads": 4,
+        "command": "cargo run --release --bin replay-check -- --corpus C:/Projects/FishAI-bench/athena/corpus/7d85c2e --threads 4 --json port-t4.json",
+        "seconds": 0.845,
+        "gamesPerSecond": 12788,
+        "stepsPerSecond": 5669447,
+        "games": 10800,
+        "steps": 4788218,
+        "recordsOk": 10800,
+        "recordsBad": 0,
+        "verdict": "PASS"
+      },
+      {
+        "threads": 1,
+        "command": "cargo run --release --bin replay-check -- --corpus C:/Projects/FishAI-bench/athena/corpus/7d85c2e --threads 1 --json port-t1.json",
+        "seconds": 3.222,
+        "gamesPerSecond": 3352,
+        "stepsPerSecond": 1485971,
+        "games": 10800,
+        "steps": 4788218,
+        "recordsOk": 10800,
+        "recordsBad": 0,
+        "verdict": "PASS"
+      }
+    ],
+    "coverageIdenticalToSelfCheck": true,
+    "coverageShort": [],
+    "mutants": [
+      {
+        "mutant": "M1",
+        "command": "cargo run --release --features mutants --bin replay-check -- --corpus C:/Projects/FishAI-bench/athena/corpus/7d85c2e --threads 4 --mutant M1 --json port-M1.json",
+        "divergentGames": 867,
+        "of": 10800,
+        "byPopulation": {
+          "H1": 111,
+          "H2": 73,
+          "H3": 78,
+          "H4": 378,
+          "H5": 227
+        },
+        "firstDivergence": {
+          "population": "H1",
+          "index": 3,
+          "seed": "athena-p0-g0a-h1-3",
+          "step": 722,
+          "field": "refused",
+          "detail": "step 723: the port refused pass 4->2 (WRONG_PHASE)"
+        },
+        "verdict": "mutant caught"
+      },
+      {
+        "mutant": "M2",
+        "command": "cargo run --release --features mutants --bin replay-check -- --corpus C:/Projects/FishAI-bench/athena/corpus/7d85c2e --threads 4 --mutant M2 --json port-M2.json",
+        "divergentGames": 537,
+        "of": 10800,
+        "byPopulation": {
+          "H1": 91,
+          "H2": 165,
+          "H3": 38,
+          "H4": 233,
+          "H5": 10
+        },
+        "firstDivergence": {
+          "population": "H1",
+          "index": 5,
+          "seed": "athena-p0-g0a-h1-5",
+          "step": 513,
+          "field": "length",
+          "detail": "the actions ended at step 794, before the game did"
+        },
+        "verdict": "mutant caught"
+      },
+      {
+        "mutant": "M3",
+        "command": "cargo run --release --features mutants --bin replay-check -- --corpus C:/Projects/FishAI-bench/athena/corpus/7d85c2e --threads 4 --mutant M3 --json port-M3.json",
+        "divergentGames": 10800,
+        "of": 10800,
+        "byPopulation": {
+          "H1": 2000,
+          "H2": 1800,
+          "H3": 1000,
+          "H4": 4000,
+          "H5": 2000
+        },
+        "firstDivergence": {
+          "population": "H1",
+          "index": 0,
+          "seed": "athena-p0-g0a-h1-0",
+          "step": 112,
+          "field": "refused",
+          "detail": "step 113: the port refused decline 5 (NOT_YOUR_OPTION)"
+        },
+        "verdict": "mutant caught"
+      },
+      {
+        "mutant": "M4",
+        "command": "cargo run --release --features mutants --bin replay-check -- --corpus C:/Projects/FishAI-bench/athena/corpus/7d85c2e --threads 4 --mutant M4 --json port-M4.json",
+        "divergentGames": 2916,
+        "of": 10800,
+        "byPopulation": {
+          "H1": 959,
+          "H2": 827,
+          "H3": 450,
+          "H4": 75,
+          "H5": 605
+        },
+        "firstDivergence": {
+          "population": "H1",
+          "index": 1,
+          "seed": "athena-p0-g0a-h1-1",
+          "step": 875,
+          "field": "l",
+          "detail": "0cf34926d51f8d94 vs recorded d8dbf0d51c9ccf22"
+        },
+        "verdict": "mutant caught"
+      },
+      {
+        "mutant": "M5",
+        "command": "cargo run --release --features mutants --bin replay-check -- --corpus C:/Projects/FishAI-bench/athena/corpus/7d85c2e --threads 4 --mutant M5 --json port-M5.json",
+        "divergentGames": 10682,
+        "of": 10800,
+        "byPopulation": {
+          "H1": 2000,
+          "H2": 1800,
+          "H3": 1000,
+          "H4": 3882,
+          "H5": 2000
+        },
+        "firstDivergence": {
+          "population": "H1",
+          "index": 0,
+          "seed": "athena-p0-g0a-h1-0",
+          "step": 6,
+          "field": "refused",
+          "detail": "step 7: the port refused decline 5 (NOT_YOUR_OPTION)"
+        },
+        "verdict": "mutant caught"
+      }
+    ],
+    "stubLoopForInformation": {
+      "note": "The core plus the mixed stub, no digests (stub-bench); information for G0b, which is measured later through the Python batch API. Not G0b.",
+      "oneThread": "61201 games/s: 200000 games after 10000 warm-up in 3.268 s, 639.0 actions a game, 0.026 us an action, capped 0, refused 0 (host shared, ~50% busy)",
+      "fourThreads": "214653 games/s (53663 a thread): 200000 games after 10000 warm-up in 0.932 s, capped 0, refused 0 (host shared, ~50% busy)"
+    }
   }
 }
