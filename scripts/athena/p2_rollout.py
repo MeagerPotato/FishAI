@@ -24,13 +24,17 @@ and writes the trajectories `p2_train.py` consumes. What it implements, clause b
   `track_digests` and so costs the other 93% of games nothing. `digest_check` turns the digest comparison on for a
   smoke or a run's first hours. Any divergence raises `Divergence` (§9.8 stop rule 1: "Stop, and report").
 
-**One place where the port and the reference differ by construction.** `opponent-core.ts` has no reduced reveal, so in
-a **bridge-regime** game against Monet the service's reference publishes every holder of a wrong declare while the port
-shows ATHENA's seats the reduced reveal. ATHENA's own buffers are unaffected -- it is Monet that sees more than the
-bridge host would give it -- and the state, the actions and the `d` digest are the same on both sides; only the `v`
-digest differs, so `digest_check='full'` compares `l` and `v` in home-regime games only. §9.5 registers both the regime
-draw and the opponent mix and this driver keeps both; teaching the service `Reveal = 'reduced'` is the real fix and is
-carried in the report as a proposed amendment.
+**The reveal at the bridge.** In a **bridge-regime** game the host publishes only the reduced reveal of a wrong
+declare, and the port does. A service whose reference publishes every holder would show Monet more than the bridge
+host would give it, which would train ATHENA against an opponent that cannot exist. So this driver **asks for the
+reduced reveal and will not train without it**: every `open` spec carries `reveal` (`reduced` for a bridge-regime
+game, `full` for a home one), and `check_service_reveal` refuses to start unless the service's `hello` says it
+supports the reduced reveal (`REVEAL_HELLO_KEYS`). The message names `--bridge-reveal full`, the escape hatch that
+takes the old behaviour deliberately; it is off by default.
+
+With the reduced reveal in force the reference and the port agree on the bridge too, so `digest_check='full'`
+compares `l` and `v` in every game. Under `--bridge-reveal full` it compares them in home-regime games only, because
+there the `v` digest differs by construction.
 
 **The trajectory store** is flat and append-only. An *episode* is one (game, ATHENA seat): its decisions in time order
 and the seat's event rows. A decision holds the raw bytes the network read (the obs row, the facts row, the legal row
@@ -56,6 +60,12 @@ OPP_VERSION = {OPP_V10: 'v1.0', OPP_V033: 'v0.33'}
 # §9.5's mix, named here and nowhere else.
 OPP_SHARES = {OPP_SELF: 0.93, OPP_V10: 0.05, OPP_V033: 0.02}
 DECISIONS_PER_GAME = 654  # §3.1's re-cost, measured on P1's test games
+
+# The reveal a game's `open` spec asks for: the bridge host's reduced reveal, or the full one a home game gives.
+REVEAL_REDUCED, REVEAL_FULL = 'reduced', 'full'
+# The keys a service's `hello` may use to say it supports the reduced reveal. The service is built on another branch
+# (`claude/athena-p2-reveal`), so this reads every shape the reply might take rather than pinning one.
+REVEAL_HELLO_KEYS = ('reveal', 'reveals', 'reducedReveal', 'reduced_reveal', 'capabilities', 'features')
 
 M32 = 0xFFFFFFFF
 
@@ -125,6 +135,55 @@ def athena_team_of(seed):
 
 
 # ------------------------------------------------------------------------------------- the opponent service ---
+
+def says_reduced_reveal(hello):
+    """Does an opponent service's `hello` reply acknowledge the reduced reveal?
+
+    True for any of: a `reveal`/`reveals` list (or dict, or comma-joined string) naming `reduced`; a truthy
+    `reducedReveal` / `reduced_reveal`; a `capabilities` or `features` entry naming a reveal. Anything else -- an
+    older service, which answers `{protocol, workers, node, pid}` and nothing more -- is a no."""
+    if not isinstance(hello, dict):
+        return False
+    for k in REVEAL_HELLO_KEYS:
+        if k not in hello:
+            continue
+        v = hello[k]
+        if v is True:
+            return True
+        if isinstance(v, str):
+            parts = [p.strip().lower() for p in v.replace(',', ' ').split()]
+            if any(REVEAL_REDUCED in p for p in parts):
+                return True
+        elif isinstance(v, dict):
+            if v.get(REVEAL_REDUCED) or says_reduced_reveal(v):
+                return True
+        elif isinstance(v, (list, tuple)):
+            if any(isinstance(x, str) and REVEAL_REDUCED in x.strip().lower() for x in v):
+                return True
+    return False
+
+
+def check_service_reveal(service, bridge_reveal):
+    """§9.5, the bridge regime: stop before a game is played unless the service serves Monet the reduced reveal.
+
+    Raises `RuntimeError` naming `--bridge-reveal full`, so a run never trains against a Monet that sees every holder
+    of a wrong declare without someone having asked for that."""
+    if bridge_reveal not in (REVEAL_REDUCED, REVEAL_FULL):
+        raise ValueError(f'bridge_reveal {bridge_reveal!r}: {REVEAL_REDUCED} or {REVEAL_FULL}')
+    hello = dict(getattr(service, 'hello', None) or {})
+    if bridge_reveal == REVEAL_FULL:
+        return hello
+    if not says_reduced_reveal(hello):
+        keys = ', '.join(sorted(k for k in hello if k != 'id'))
+        raise RuntimeError(
+            'the opponent service does not acknowledge the reduced reveal, so in a bridge-regime game it would serve '
+            'Monet every holder of a wrong declare -- more than the bridge host gives it -- and ATHENA would train '
+            f'against an opponent that cannot exist. Its hello answered: {{{keys}}}, none of which names '
+            f'"{REVEAL_REDUCED}" (looked in {", ".join(REVEAL_HELLO_KEYS)}). Use a service that supports it '
+            '(scripts/athena/opponent-service.mjs with the reduced reveal of scripts/athena/opponent-core.ts), or '
+            'pass --bridge-reveal full to take the full-reveal Monet deliberately.')
+    return hello
+
 
 class AsyncOpponentService(hh.OpponentService):
     """`home_harness.OpponentService` with the request split in two, so the GPU can act while Node decides. The
@@ -319,11 +378,17 @@ class Rollout:
     def __init__(self, ae, model, device, *, prefix, in_flight=8192, threads=4, service=None, store=None,
                  shares=OPP_SHARES, stream_cap=160, gen=None, amp=True, digest_check='off', first_game=0,
                  iteration_games=2048, decision_cap=None, stream_table_cap=None, episode_cap=None,
-                 verify_first_reset=True):
+                 verify_first_reset=True, bridge_reveal=REVEAL_REDUCED):
         if service is None and (shares[OPP_V10] + shares[OPP_V033]) > 0:
             raise ValueError('the Monet share of §9.5 needs the opponent service')
         if digest_check not in ('off', 'd', 'full'):
             raise ValueError("digest_check: off, d or full")
+        # the reveal handshake, before a game is dealt: it only matters where Monet plays at all
+        self.bridge_reveal = bridge_reveal
+        self.service_hello = check_service_reveal(service, bridge_reveal) if service is not None else None
+        if service is not None and bridge_reveal == REVEAL_FULL:
+            print('!!! --bridge-reveal full: at the bridge the service serves Monet every holder of a wrong declare, '
+                  'which the bridge host would not (§9.5)', flush=True)
         self.ae, self.model, self.device, self.prefix = ae, model, device, prefix
         self.n, self.threads, self.service, self.shares = int(in_flight), threads, service, dict(shares)
         self.gen, self.amp, self.digest_check = gen, amp, digest_check
@@ -401,7 +466,9 @@ class Rollout:
         g = int(self.service.game_numbers(1))
         self.g_svc[i] = g
         versions = [None if self.mine[i, s] else OPP_VERSION[opp] for s in range(6)]
-        return [(i, {'g': g, 'seed': seed, 'start': int(start), 'seats': versions})]
+        # §9.5: a bridge-regime game asks for the host's reduced reveal; `--bridge-reveal full` asks for neither
+        reveal = REVEAL_REDUCED if (regime and self.bridge_reveal == REVEAL_REDUCED) else REVEAL_FULL
+        return [(i, {'g': g, 'seed': seed, 'start': int(start), 'seats': versions, 'reveal': reveal})]
 
     def _open(self, opens):
         if not opens:
@@ -594,7 +661,9 @@ class Rollout:
                 self.counters['d_compared'] += 1
                 if d != hh.hex16(pd[i]):
                     self._diverge(i, 'd', f"the reference's d {d} vs the port's {hh.hex16(pd[i])}")
-                if self.digest_check == 'full' and self.g_regime[i] == 0 and v is not None:
+                # l/v in every game under the reduced reveal; at full reveal the bridge's v differs by construction
+                lv_ok = self.g_regime[i] == 0 or self.bridge_reveal == REVEAL_REDUCED
+                if self.digest_check == 'full' and lv_ok and v is not None:
                     self.counters['lv_compared'] += 1
                     if lg != hh.hex16(pl[i]) or v != hh.hex16(pv[i]):
                         self._diverge(i, 'l/v', f"the reference's {lg}/{v} vs the port's "

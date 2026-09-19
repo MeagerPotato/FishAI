@@ -5,7 +5,7 @@ log, the learning-curve hook and the format v3 weight export.
     python scripts/athena/p2_train.py train --out <run> --prefix athena-p2-run1- [--athena-env <build>]
     python scripts/athena/p2_train.py train --out <run> --resume <run>/latest.pt
     python scripts/athena/p2_train.py export --ckpt <run>/latest.pt --weights <file> [--check <n decisions>]
-    python scripts/athena/p2_train.py smoke --out <dir>          # the CPU smoke: a tiny net, a handful of games
+    python scripts/athena/p2_train.py smoke --out <dir>          # the CPU round trip, seconds: see `cmd_smoke`
 
 **The learner, as §9.4 registers it.** Every one of these is a default of this file and a line of `config.json`:
 
@@ -46,16 +46,24 @@ optimiser state, the iteration count and the games played, so a run can be pause
 `--curve-hours` (2) exports the weights and calls the JS evaluation arm (§9.6: 600 duplicate pairs against Monet v1.0
 at home on the fixed bank `athena-p2-curve`).
 
-**The evaluation arm's interface** is assumed, not yet fixed: it is built in parallel on `claude/athena-p2-fwd`. It is
-called in one place, `run_curve`, through one command template, `CURVE_CMD`, and `--curve-cmd` replaces the template
-without touching this file. What is assumed:
+**The evaluation arm** is `scripts/athena/p2-read.mjs`, built in parallel on `claude/athena-p2-fwd`. It is called in
+one place, `run_curve`, through one command template, `CURVE_CMD`, and `--curve-cmd` replaces the template without
+touching this file. The command is
 
-    node scripts/athena/p2-eval.mjs --weights <file> --bank <bank> --pairs <n> --opponent v1.0 --threads <n>
-                                    --json <out>
+    node scripts/athena/p2-read.mjs curve --weights <file> --b v1.0 --bank <bank> --pairs <n> --procs <n>
+                                          --work <dir> --out <json> --quiet
 
-and that `<out>` holds JSON with a win rate for ATHENA as `winRate` (a fraction) or `summary.winRate`, the shape
-`home_harness.pairs_summary` already writes. The whole JSON is copied into the curve log whatever its shape, and a
-missing win rate is logged as a fault, never a crash.
+and `<json>` is the summary p2-read.mjs writes, whose top-level `winRate` is ATHENA's win rate as a fraction (beside
+`games`, `wins`, `diffMean` and `diffSe`). The whole JSON is copied into the curve log, and a missing win rate is
+logged as a fault, never a crash. `--b athena:<the same weight file>` turns the same command into §9.7's byte-exact
+null arm, which must read `winRate` 0.5 and `diffMean` 0.
+
+**The reveal at the bridge** (§9.5, `p2_rollout`). Half the training games are bridge-regime, where the host
+publishes only the reduced reveal of a wrong declare. The rollout asks the opponent service for that reveal, and
+**a run stops before its first game unless the service says it supports it**, naming `--bridge-reveal full` -- the
+escape hatch that takes the full-reveal Monet deliberately, off by default -- rather than training against an
+opponent that sees more than a bridge host would give it. The `smoke` subcommand defaults to `full`, because it is
+wiring and not training, and says so on every run.
 
 **Before and after a run** `replay-check` must still print `G0a (i), port replay: PASS` on the 10,800-game corpus
 (§9.5). This file does not build Rust; the command is
@@ -107,8 +115,8 @@ CURVE_PAIRS = 600
 CURVE_OPPONENT = 'v1.0'
 CURVE_HOURS = 2.0
 CHECKPOINT_MINUTES = 30.0
-CURVE_CMD = ('node scripts/athena/p2-eval.mjs --weights {weights} --bank {bank} --pairs {pairs} '
-             '--opponent {opponent} --threads {threads} --json {json}')
+CURVE_CMD = ('node scripts/athena/p2-read.mjs curve --weights {weights} --b {opponent} --bank {bank} '
+             '--pairs {pairs} --procs {threads} --work {work} --out {json} --quiet')
 
 
 def seed_int(label):
@@ -258,15 +266,25 @@ class D2Corpus:
 # ------------------------------------------------------------------------------------------------ the curve ---
 
 def run_curve(weights, out_json, *, cmd=CURVE_CMD, bank=CURVE_BANK, pairs=CURVE_PAIRS, opponent=CURVE_OPPONENT,
-              threads=6, cwd=REPO, timeout=None):
+              threads=6, cwd=REPO, timeout=None, work=None):
     """§9.6's curve read, behind one function with the command in one place. Returns a dict: what the arm wrote,
     the win rate if one can be found, and the cost. It never raises: a curve is an instrument, and a run does not
-    stop because the instrument did."""
+    stop because the instrument did.
+
+    `work` is where p2-read.mjs puts its shard files; it defaults to a directory beside `out_json`, so a run's curve
+    reads do not pile up under `dist/`. A `--curve-cmd` that names no `{work}` simply ignores it.
+
+    **Every path substituted into the template is written with forward slashes.** The line is split with
+    `shlex.split`, which reads a backslash as an escape, so a Windows path would otherwise arrive at Node with its
+    separators eaten; Node takes `C:/...` on Windows. A `--curve-cmd` that spells its own paths must do the same."""
     t0 = time.perf_counter()
-    line = cmd.format(weights=str(weights), bank=bank, pairs=pairs, opponent=opponent, threads=threads,
-                      json=str(out_json))
+    fwd = lambda p: Path(p).as_posix()  # noqa: E731 - the template's paths, backslash-free (see the docstring)
+    work = fwd(work if work is not None else Path(str(out_json) + '.shards'))
+    line = cmd.format(weights=fwd(weights), bank=bank, pairs=pairs, opponent=opponent, threads=threads,
+                      json=fwd(out_json), work=work)
     rec = {'command': line, 'bank': bank, 'pairs': pairs, 'opponent': opponent}
     try:
+        Path(out_json).unlink(missing_ok=True)  # never read a previous read's summary as this one's
         r = subprocess.run(shlex.split(line), cwd=str(cwd), capture_output=True, text=True, timeout=timeout)
         rec['returncode'] = r.returncode
         rec['stdout'] = r.stdout[-4000:]
@@ -276,6 +294,7 @@ def run_curve(weights, out_json, *, cmd=CURVE_CMD, bank=CURVE_BANK, pairs=CURVE_
     except Exception as exc:  # noqa: BLE001 - the curve never stops the run
         rec['error'] = f'{type(exc).__name__}: {exc}'
     res = rec.get('result') or {}
+    # p2-read.mjs writes `winRate` at the top level, as a fraction; the rest are fallbacks for another arm's shape.
     for path in (('winRate',), ('summary', 'winRate'), ('winRateA',), ('summary', 'winRateA')):
         v = res
         for k in path:
@@ -286,6 +305,9 @@ def run_curve(weights, out_json, *, cmd=CURVE_CMD, bank=CURVE_BANK, pairs=CURVE_
             break
     if 'win_rate' not in rec:
         rec['fault'] = 'the evaluation arm gave no win rate'
+    for k in ('games', 'wins', 'diffMean', 'diffSe', 'capped'):
+        if isinstance(res.get(k), (int, float)):
+            rec[k] = res[k]
     rec['secs'] = round(time.perf_counter() - t0, 1)
     return rec
 
@@ -430,7 +452,8 @@ def cmd_train(args, sink=None):
            'adv_norm': args.adv_norm, 'amp': args.amp, 'prefix': args.prefix, 'seed': args.seed,
            'shares': {str(k): v for k, v in shares.items()}, 'd2': bool(args.d2_views),
            'd2_views': args.d2_views, 'd2_cards_per_game': args.d2_cards_per_game, 'd2_max_games': args.d2_max_games,
-           'digest_check': args.digest_check, 'service_workers': args.service_workers, 'env_threads': args.env_threads,
+           'digest_check': args.digest_check, 'bridge_reveal': args.bridge_reveal,
+           'service_workers': args.service_workers, 'env_threads': args.env_threads,
            'curve_hours': args.curve_hours, 'checkpoint_minutes': args.checkpoint_minutes, 'curve_cmd': args.curve_cmd,
            'curve_bank': args.curve_bank, 'curve_pairs': args.curve_pairs, 'curve_threads': args.curve_threads,
            'device': str(device), 'torch': torch.__version__, 'athena_env': str(Path(ae.__file__).resolve()),
@@ -462,7 +485,7 @@ def cmd_train(args, sink=None):
                          service=service, shares=shares, gen=gen, amp=args.amp == 'bf16',
                          digest_check=args.digest_check, iteration_games=args.iteration_games,
                          first_game=state['next_k'], decision_cap=args.decision_cap,
-                         stream_table_cap=args.stream_table_cap)
+                         stream_table_cap=args.stream_table_cap, bridge_reveal=args.bridge_reveal)
     rollout.reset()
     print(json.dumps({'store': {'decision_cap': rollout.store.cap, 'stream_cap': rollout.store.stream_cap,
                                 'episode_cap': rollout.store.ep_cap, 'bytes': int(rollout.store.bytes_used()),
@@ -590,8 +613,25 @@ def cmd_export(args):
 # ------------------------------------------------------------------------------------------------- the smoke ---
 
 def cmd_smoke(args):
-    """A tiny net and a handful of games, end to end on the CPU: act, store, GAE, PPO, checkpoint, resume, export and
-    the JavaScript export check. It proves the wiring, never a number."""
+    """The CPU round trip, one command, seconds of compute: a tiny net trained for two iterations, exported to a
+    format v3 weight file, and that file carried through every reader that will judge a real run.
+
+        python scripts/athena/p2_train.py smoke --out <dir>
+
+    What it proves, in order, and what it prints:
+
+    1. **the learner's wiring** -- act, store, GAE, PPO, the checkpoint, the export (never a number);
+    2. **`lib/athena` reads the file.** `scripts/athena/check-p2-export.mjs` opens it with `parseWeights`, says which
+       format `formatOf` calls it, and re-writes it with `serializeWeights` to check the bytes come back identical;
+    3. **the heads agree with PyTorch** on `--check-decisions` real decisions of the games just played, at §8.3's bar:
+       every head within the tolerance, the ask argmax identical, no belief probability off by more than 1e-4;
+    4. **`decideNet` plays it.** The curve command of §9.6 -- `scripts/athena/p2-read.mjs curve` -- runs
+       `--smoke-pairs` duplicate pairs against Monet v1.0 in geometry B and prints a win rate;
+    5. **the null arm holds.** The same command with `--b athena:<the same file>` must read exactly 50.0000% with a
+       paired set difference of 0 (§9.7's byte-exact control). The smoke fails if it does not.
+
+    The two embedding paths (`bag` and `counts`) are compared at the end. The smoke exits non-zero if any step fails,
+    and writes `smoke-summary.json` beside the weights."""
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     t0 = time.perf_counter()
@@ -615,7 +655,8 @@ def cmd_smoke(args):
     model = pm.P2Net(p['d'], p['width'], p['depth'], critic_width=p['critic_width'],
                      critic_depth=p['critic_depth']).to(device)
     model.load_state_dict(ck['model'])
-    info = export(model, out / 'weights.bin', {'smoke': True, 'what': 'a CPU smoke', 'arch': 'tiny'},
+    weights = out / 'weights.bin'
+    info = export(model, weights, {'smoke': True, 'what': 'a CPU smoke', 'arch': 'tiny'},
                   fmt=args.weights_format, magic=args.weights_magic or None)
     print(f'-- smoke: exported {info["bytes"]} bytes, {info["params"]} weights, md5 {info["md5"]}', flush=True)
 
@@ -627,6 +668,24 @@ def cmd_smoke(args):
                         str(out / 'export-check.json'), '--out', str(out / 'export-check-result.json')],
                        cwd=str(REPO), capture_output=True, text=True)
     print(r.stdout + r.stderr, flush=True)
+    export_check = json.loads((out / 'export-check-result.json').read_text()) \
+        if (out / 'export-check-result.json').exists() else {'pass': False}
+
+    # §9.6's curve command, and §9.7's null arm through the same command
+    arm = f'athena:{Path(weights).as_posix()}'
+    curve = run_curve(weights, out / 'curve-result.json', cmd=args.curve_cmd, bank=args.curve_bank,
+                      pairs=args.smoke_pairs, opponent=CURVE_OPPONENT, threads=1)
+    cwr = curve.get('win_rate')
+    cwr_s = 'n/a (the arm gave no win rate)' if cwr is None else f'{100 * cwr:.4f}%'
+    print(f'-- smoke: curve vs Monet {CURVE_OPPONENT}, {args.smoke_pairs} pairs: win rate {cwr_s}, '
+          f'paired set-diff {curve.get("diffMean")}, {curve["games"] if "games" in curve else "?"} games, '
+          f'{curve["secs"]}s', flush=True)
+    null = run_curve(weights, out / 'null-result.json', cmd=args.curve_cmd, bank=args.curve_bank,
+                     pairs=args.smoke_pairs, opponent=arm, threads=1)
+    null_ok = (null.get('win_rate') == 0.5 and null.get('diffMean') == 0
+               and int(null.get('games') or 0) == 2 * args.smoke_pairs and int(null.get('capped') or 0) == 0)
+    print(f'-- smoke: null arm (--b {arm}): win rate {null.get("win_rate")}, paired set-diff {null.get("diffMean")}, '
+          f'{null.get("games")} games, {null.get("capped")} capped -> {"HOLDS" if null_ok else "BROKEN"}', flush=True)
 
     # the two embedding paths agree
     m2 = pm.P2Net(p['d'], p['width'], p['depth'], critic_width=p['critic_width'], critic_depth=p['critic_depth'],
@@ -636,9 +695,15 @@ def cmd_smoke(args):
     with torch.no_grad():
         diff = float((model.embed_events(slots) - m2.embed_events(slots)).abs().max())
     print(f'-- smoke: embedding bag vs counts, max |diff| {diff:.3e}', flush=True)
-    print(f'-- smoke: {time.perf_counter() - t0:.1f}s total; stop={summary["stop"]}', flush=True)
-    if r.returncode != 0:
-        sys.exit(r.returncode)
+    res = {'weights': info, 'decisions_checked': n, 'export_check': export_check, 'curve': curve, 'null_arm': null,
+           'null_arm_holds': null_ok, 'embed_bag_vs_counts': diff, 'bridge_reveal': args.bridge_reveal,
+           'stop': summary['stop'], 'secs': round(time.perf_counter() - t0, 1)}
+    (out / 'smoke-summary.json').write_text(json.dumps(res, indent=1))
+    ok = r.returncode == 0 and null_ok and curve.get('win_rate') is not None
+    print(f'-- smoke: {res["secs"]}s total; stop={summary["stop"]}; {"PASS" if ok else "FAIL"}', flush=True)
+    if not ok:
+        sys.exit(r.returncode or 1)
+    return res
 
 
 # ---------------------------------------------------------------------------------------------------- the CLI ---
@@ -674,6 +739,10 @@ def add_train_args(p):
     p.add_argument('--env-threads', type=int, default=4)
     p.add_argument('--digest-check', default='off', choices=['off', 'd', 'full'],
                    help='compare the reference digests in opponent games; it slows every game')
+    p.add_argument('--bridge-reveal', default=pr.REVEAL_REDUCED, choices=[pr.REVEAL_REDUCED, pr.REVEAL_FULL],
+                   help='the reveal the opponent service is asked for in a bridge-regime game (§9.5). The default '
+                        'stops the run unless the service acknowledges the reduced reveal; `full` takes the '
+                        'full-reveal Monet deliberately')
     p.add_argument('--d2-views', default='', help='§8.3 D2 belief-views directories, comma separated')
     p.add_argument('--d2-cards-per-game', type=float, default=1200.0, help='sizes the D2 draw only; the 10%% weight is exact either way')
     p.add_argument('--d2-max-games', type=int, default=256)
@@ -708,10 +777,15 @@ def main(argv=None):
     p.add_argument('--athena-env', default=None, help='a P1 athena_env build (only needed with --check)')
     p = sub.add_parser('smoke')
     add_train_args(p)
+    # `bridge_reveal='full'`: the smoke is wiring, not training, and the service on this branch has no reduced reveal
+    # yet (§9.5). It prints the `!!!` line every time, and `--bridge-reveal reduced` puts the guard back.
     p.set_defaults(prefix='athena-p2-smoke-', in_flight=24, iteration_games=3, critic_width=64,
-                   init_decline_bias=6.0)
+                   init_decline_bias=6.0, bridge_reveal=pr.REVEAL_FULL)
     p.add_argument('--no-service', action='store_true', help='self-play only (skips the Monet path)')
-    p.add_argument('--check-decisions', type=int, default=64)
+    p.add_argument('--check-decisions', type=int, default=300,
+                   help='decisions the JavaScript forward is compared with PyTorch on (§8.3\'s bar)')
+    p.add_argument('--smoke-pairs', type=int, default=2,
+                   help='duplicate pairs the curve read and the null arm each play')
     args = ap.parse_args(argv)
     return {'train': cmd_train, 'export': cmd_export, 'smoke': cmd_smoke}[args.cmd](args)
 

@@ -84,7 +84,11 @@ CRITIC_DEPTH = 1  # hidden layers; see the note in `P2Net` on why one
 ARCHS = {'S': (256, 512, 2), 'M': (512, 1024, 3), 'L': (1024, 2048, 4), 'tiny': (32, 64, 2)}
 SMOKE_ARCHS = ('tiny',)
 
-WEIGHTS_FORMAT = 'athena-weights-3'
+# The container is `net.ts`'s, and there is only one: `serializeWeights` writes `athena-weights-1` behind the magic
+# `ATHENAW1` at every format, and `parseWeights` tells v1, v2 and v3 apart by (`arch.decF`, `arch.heads`) alone
+# (net.ts `WEIGHT_FORMATS`). v3 is decF 912 with heads 518, which is what `export_weights` writes.
+WEIGHTS_FORMAT = 'athena-weights-1'
+WEIGHTS_MAGIC = b'ATHENAW1'
 
 # A masked logit. A finite value, not -inf: a non-unit card whose stored holder is not one of its candidates would
 # otherwise gather -inf, and inf * 0 is NaN. exp(-1e9 - max) underflows to 0, so every live entry is exactly what
@@ -502,20 +506,43 @@ def state_tensors(model):
     return m
 
 
+def json_stable(x):
+    """`meta` as a value that survives a JSON round trip through JavaScript unchanged.
+
+    `net.ts`'s `serializeWeights` re-writes the header from what `parseWeights` read, so a weight file is byte-stable
+    under a re-serialise only if its JSON is what `JSON.stringify` would produce. Python and JavaScript agree on
+    strings, bools, null and integers; they disagree on an integral float, which Python writes `6.0` and JavaScript
+    writes `6`. This converts those to ints and refuses NaN and the infinities, which are not JSON at all."""
+    if isinstance(x, bool) or x is None or isinstance(x, (str, int)):
+        return x
+    if isinstance(x, float):
+        if x != x or x in (float('inf'), float('-inf')):
+            raise ValueError(f'meta holds {x}, which is not JSON')
+        return int(x) if x.is_integer() else x
+    if isinstance(x, dict):
+        return {str(k): json_stable(v) for k, v in x.items()}
+    if isinstance(x, (list, tuple)):
+        return [json_stable(v) for v in x]
+    return str(x)
+
+
 def export_weights(model, path, meta, fmt=WEIGHTS_FORMAT, magic=None):
     """Write the actor as a **format v3** weight file and return its bytes.
 
-    The container is `net.ts`'s: the 8-byte magic, a u32 little-endian header length, that many bytes of UTF-8 JSON
-    padded with spaces so the blob starts on a 4-byte boundary, then every tensor as float32 little-endian in
-    `tensor_layout`'s order, each row-major in PyTorch's [out, in]. What v3 changes is the header:
+    The file is byte for byte what `net.ts`'s `serializeWeights` writes for the same arch, blob and meta, so
+    `parseWeights` reads it with no special case: the 8 ASCII bytes `ATHENAW1`, a u32 little-endian header length, that
+    many bytes of UTF-8 JSON padded with spaces so the blob starts on a 4-byte boundary, then every tensor as float32
+    little-endian in `tensor_layout`'s order, each row-major in PyTorch's [out, in].
 
-    - `format` is `athena-weights-3` and the magic is `ATHENAW3` (v1 and v2 are both `athena-weights-1` / `ATHENAW1`,
-      and are told apart only by `arch.decF`);
-    - `arch.heads` is 518, not 517;
-    - `arch.eventSlots` is 19, which says the fold reads the active slots and only those.
+    The header's keys are `serializeWeights`'s, in its order: `format` (`athena-weights-1` at every format -- the
+    container never versioned), then `arch` as `d, width, depth, decF, heads, eventF`, then `params`, `tensors`,
+    `meta`. **What makes the file v3 is (`decF` 912, `heads` 518)**, which is the row `net.ts`'s `WEIGHT_FORMATS`
+    reads as version 3, and which carries the 19-slot fold with it. There is no `arch.eventSlots`: `parseWeights`
+    would ignore such a key, but it would also put the file's bytes outside what `serializeWeights` can reproduce,
+    and the fold width is a consequence of the format, not an independent field.
 
-    `fmt` and `magic` exist so that a reader which versions differently costs a flag, not a change here: the magic
-    defaults to the format's trailing digit, `ATHENAW<n>`."""
+    `fmt` and `magic` exist so that a reader which versions the container differently costs a flag, not a change
+    here; the magic defaults to the format's trailing digit, `ATHENAW<n>`."""
     magic = magic if magic is not None else (b'ATHENAW' + fmt.rsplit('-', 1)[-1].encode())
     if isinstance(magic, str):
         magic = magic.encode()
@@ -532,11 +559,12 @@ def export_weights(model, path, meta, fmt=WEIGHTS_FORMAT, magic=None):
         specs.append([name, shape, off, n])
         blobs.append(t.numpy().astype('<f4').reshape(-1))
         off += n
+    # net.ts `serializeWeights`: `{...archOf(arch), eventF, decF, heads}`, so `eventF` lands after `decF` and `heads`
     header = {'format': fmt,
-              'arch': {'d': model.d, 'width': model.width, 'depth': model.depth, 'eventF': EVENT_F,
-                       'eventSlots': EVENT_SLOTS, 'decF': model.dec_f, 'heads': HEADS},
-              'params': off, 'tensors': specs, 'meta': meta}
-    js = json.dumps(header, separators=(',', ':'))
+              'arch': {'d': model.d, 'width': model.width, 'depth': model.depth, 'decF': model.dec_f,
+                       'heads': HEADS, 'eventF': EVENT_F},
+              'params': off, 'tensors': specs, 'meta': json_stable(meta)}
+    js = json.dumps(header, separators=(',', ':'), allow_nan=False)
     while (12 + len(js.encode('utf-8'))) % 4:
         js += ' '
     hb = js.encode('utf-8')
