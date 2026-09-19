@@ -247,6 +247,19 @@ pub fn encode_legal(acting: u8, kinds: u8, asks: &AskList, out: &mut [u8]) -> us
 /// V_t (§4.7): the acting seat's SeatView, with the log as its length and its digest's 16 hex characters; returns
 /// the length. Nothing of another seat's hand enters it.
 pub fn encode_view(g: &Game, seat: u8, log_len: u32, log_hex: &[u8; 16], out: &mut [u8]) -> usize {
+    encode_view_with_sets(g, seat, log_len, log_hex, g.set_block(), out)
+}
+
+/// V_t with the set block given. Under the bridge regime (ATHENA.md §8.2 G1b) a wrong declare's unpublished holders
+/// are NONE in it (replay-format.md §12.4), and the log digest is then taken over the events as published.
+pub fn encode_view_with_sets(
+    g: &Game,
+    seat: u8,
+    log_len: u32,
+    log_hex: &[u8; 16],
+    sets: &[u8; 14 * NSETS],
+    out: &mut [u8],
+) -> usize {
     out[0] = RULES_ID_US54;
     out[1] = seat;
     out[2..6].copy_from_slice(&g.move_index().to_le_bytes());
@@ -257,7 +270,7 @@ pub fn encode_view(g: &Game, seat: u8, log_len: u32, log_hex: &[u8; 16], out: &m
     let s = g.score();
     out[17] = s[0];
     out[18] = s[1];
-    out[19..145].copy_from_slice(g.set_block());
+    out[19..145].copy_from_slice(sets);
     let mut n = 146;
     let mut m = g.hand(seat);
     while m != 0 {
