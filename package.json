@@ -26,7 +26,9 @@
     "bounded:single:analyze": "node scripts/bounded-single-analyze.mjs",
     "papers:build": "node scripts/build-papers.mjs",
     "botpkg": "node scripts/build-bot-package.mjs",
-    "botpkg:check": "node scripts/botpkg-selftest.mjs 200 && node scripts/botpkg-forced-test.mjs"
+    "botpkg:check": "node scripts/botpkg-selftest.mjs 200 && node scripts/botpkg-forced-test.mjs",
+    "athena:stub": "node scripts/athena/build-stub-package.mjs",
+    "athena:stub:check": "node scripts/athena/stub-selftest.mjs 200 --records dist/athena-stub-records/selftest-balanced.jsonl && node scripts/athena/stub-forced-test.mjs && node scripts/athena/pin-stub-asks.mjs --records dist/athena-stub-records/selftest-balanced.jsonl"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",

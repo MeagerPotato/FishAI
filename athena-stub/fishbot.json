@@ -1,0 +1,16 @@
+{
+  "format": "fishlab-bot/1",
+  "id": "athena-stub",
+  "name": "ATHENA-stub",
+  "version": "0.0",
+  "author": "MeagerPotato",
+  "description": "ATHENA-stub: the inference contract of FishAI's ATHENA line, not a player. A fixed-weight GRU network of the candidate family (size S, random init from a fixed seed) chooses among the legal moves; the rules-certain declare is a hard rail; MUSTFIX and PASSFIX are in the adapter. The weight file's md5 is pinned below.",
+  "protocol": "fishlab-json-v1",
+  "run": ["node", "bot.mjs"],
+  "env": {
+    "ATHENA_WEIGHTS": "weights/athena-stub-s.bin",
+    "ATHENA_WEIGHTS_MD5": "2e6a12cd5193a857a4d450f0921655cb"
+  },
+  "timeout_ms": 30000,
+  "poll_off_turn": true
+}
