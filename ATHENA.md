@@ -755,6 +755,33 @@ H1's rate × 2,000 + H5's × 2,000 + H4's × 4,000. H2 and H3 are left out, so t
 >    - The Rust policies regenerate H4 and H5 byte for byte.
 >    - The raw core with the mixed stub runs about 60,000 games a second on one thread, and 190,000–215,000 on four.
 >    - That is not G0b, which is measured through the Python API.
+>
+> **G0a (ii) scored 2026-09-19: PASS.**
+>
+> **The walk.** The port reads FishLab's records itself, with a std-only JSON reader, and walks them the way
+> `bridge-records.mjs`'s `walkAsks` does. It ran on the 14,400 games of §3.8ba's twelve panel-SESTINA cells.
+> - The asking seat's view digest is equal at all **1,342,770 asks**: 679,615 of Monet's and 663,155 of SESTINA's.
+> - 0 reader refusals, and all twelve cell aggregates are equal.
+>
+> **The two controls are both caught.**
+> - Scoring by side changes 435,967 views in 7,200 games.
+> - Revealing every holder after a wrong declare changes 65,097 views in 1,822 games.
+>
+> **Speed.** 0.50 s on four threads; the reference's emission takes 9.2 s. It was checked twice, the second time
+> independently.
+>
+> **Information.** The twin arm's twelve cells (c6) pass too, and give the same views as the panel's on every seed.
+>
+> **Amended with the result.** No bar changes.
+> 1. **The reduced reveal needed an encoding rule.** A true holder that the host did not publish encodes as NONE
+>    (`replay-format.md` §12.4). This is opt-in, so the home corpus's encoding is unchanged, and G0a (i) was
+>    re-checked after the change: 10,800 of 10,800.
+> 2. **Both sides' asks are compared,** reading "at every ask event" literally.
+> 3. **Two fields of the walk's view are not a live seat's.** `moveIndex` is the event's position in the log,
+>    because the records hold no declines, and the declare window is always closed. The gate compares the walk's view
+>    as registered. The live adapter's view is G0d's to pin.
+> 4. **Twin cells compare by the aggregate ordered by deal and rotation.** The bridge's workers finish games in
+>    different orders, so the file-order aggregates differ.
 
 **(ii) The bridge walk.**
 
