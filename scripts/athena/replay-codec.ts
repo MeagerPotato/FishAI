@@ -1139,10 +1139,15 @@ export const BRANCHES = [
   { id: 'finish5to4', label: 'finish 5-4' },
   { id: 'declareAfterDecline', label: 'declare after at least one decline in the same window' },
   { id: 'cardlessSeatDeclines', label: 'cardless seat declines' },
+  // Added by §4.6's amendment of 2026-09-19: "declare after a decline" duplicates "out-of-turn declare" under us54
+  // (replay-format.md §9.2), so this row takes the window's far end instead.
+  { id: 'declareByLastSeat', label: "a declare by the window's last seat (declined = 5)" },
 ] as const
 
-/** The two rows §4.6 marks "not counted today": counted from P0 on. */
-export const NEW_BRANCH_IDS: readonly string[] = ['declareAfterDecline', 'cardlessSeatDeclines']
+/**
+ * The rows counted from P0 on: the two §4.6 marks "not counted today", and the row its 2026-09-19 amendment added.
+ */
+export const NEW_BRANCH_IDS: readonly string[] = ['declareAfterDecline', 'cardlessSeatDeclines', 'declareByLastSeat']
 
 export type Tally = Record<string, number>
 
@@ -1182,6 +1187,7 @@ export function classifyStep(
     if (action.seat !== pre.turn) bump(t, 'outOfTurnDeclare')
     if (pre.hands[action.seat].length === 0) bump(t, 'cardlessDeclare')
     if (pre.declareWindow && pre.declareWindow.declined >= 1) bump(t, 'declareAfterDecline')
+    if (pre.declareWindow && pre.declareWindow.declined === 5) bump(t, 'declareByLastSeat')
     if (post.phase === 'awaitPass')
       bump(t, action.seat === pre.turn ? 'turnHolderDeclarerEmptiedAwaitPass' : 'otherDeclareEmptiesTurnHolderAwaitPass')
     if (post.phase === 'playing' && post.turn !== pre.turn) bump(t, 'wholeTeamOutNextSeat')

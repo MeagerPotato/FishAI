@@ -417,6 +417,7 @@ S_t, "post" is S_{t+1}, and L_t is the step's legal-move record.
 | finish 5–0, finish 5–4 | a `game_over` whose score, high then low, is 5–0 (5–4). 5–1, 5–2 and 5–3 are counted as information |
 | declare after at least one decline in the same window | a claim with pre's window `declined` ≥ 1 |
 | cardless seat declines | a decline whose seat holds no card in pre |
+| a declare by the window's last seat (declined = 5) | a claim with pre's window `declined` = 5. Added by ATHENA.md §4.6's amendment of 2026-09-19 |
 
 **A structural identity, found while building this.** Under us54, "declare after at least one decline in the same
 window" and "out-of-turn declare" count the same events.

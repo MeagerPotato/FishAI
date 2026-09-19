@@ -11,7 +11,9 @@
  * 100%: anything less is a bug in the emitter, the codec or the corpus file, never a rules finding.
  *
  * It also reports, per population:
- * - the branch census of §4.6's floor table, every row, including the two rows marked "not counted today";
+ * - the branch census of §4.6's floor table, every row, including the two rows marked "not counted today" and the
+ *   row its 2026-09-19 amendment added, "a declare by the window's last seat (declined = 5)" (counted by the codec's
+ *   `classifyStep`; the Rust port's `replay-check` prints the same table, line for line);
  * - capped games (G0a: none in H1-H3 or H5);
  * - finished games whose clinch did not fire, i.e. the `resolved === 9` terminator alone (must be 0), and the
  *   5-4 finishes where the two coincide (information);
