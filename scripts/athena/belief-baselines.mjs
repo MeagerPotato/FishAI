@@ -286,10 +286,11 @@ export function bootstrap(clusters, metrics, { seed = 'athena-p1-boot', resample
 function boot() {
   const files = argOf('--clusters', '').split(',').filter(Boolean)
   const split = argOf('--split', 'test')
+  const splits = new Set(split.split(',')) // e.g. 'holdout,test': (b)'s baseline calls its test split the holdout
   const byKey = new Map()
   for (const f of files) {
     for (const c of readClusters(f)) {
-      if (c.split !== split) continue
+      if (!splits.has(c.split)) continue
       const prev = byKey.get(c.key)
       if (!prev) byKey.set(c.key, c)
       else {
@@ -301,8 +302,10 @@ function boot() {
       }
     }
   }
-  const clusters = [...byKey.values()].sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))
-  const metrics = Object.keys(clusters[0]?.cols ?? {})
+  let clusters = [...byKey.values()].sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))
+  const metrics = [...new Set(clusters.flatMap((c) => Object.keys(c.cols)))]
+  // --intersect (smoke runs over a subset): keep only the clusters every file scored; a registered read has none missing
+  if (process.argv.includes('--intersect')) clusters = clusters.filter((c) => metrics.every((m) => m in c.cols))
   for (const c of clusters) for (const m of metrics) if (!(m in c.cols)) throw new Error(`cluster ${c.key} lacks ${m}`)
   const res = bootstrap(clusters, metrics, { seed: argOf('--seed', 'athena-p1-boot'), resamples: Number(argOf('--resamples', 1000)), base: argOf('--base', 'marg') })
   const out = { split, files, ...res }
