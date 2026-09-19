@@ -10,12 +10,12 @@
  *
  * | part | shape |
  * |---|---|
- * | event features | {@link EVENT_F} = 176 one-hot slots over the 19 bytes of an event row (encode.ts), 21 active per event |
+ * | event features | {@link EVENT_F} = 176 one-hot slots over the 19 bytes of an event row (encode.ts), {@link EVENT_SLOTS} = 19 active per event |
  * | embedding | `embed`: 176 -> d, linear |
  * | recurrence | `gru`: PyTorch's GRUCell, d -> d, gates r, z, n stacked in that order |
  * | decision features | {@link DEC_F} = 516: the obs row as one-hots and scaled counts, plus the rules-derived candidate seats of every card (54 x 6, relative). P1's heads (ATHENA.md §8.3) append {@link FACTS_F} = 396 more from the facts row ({@link factsFeatures}): {@link DEC_F_FACTS} = 912 |
  * | trunk | `depth` layers of `width`, ReLU; the first reads [h, decision features] |
- * | heads | one linear layer to {@link HEADS} = 517 outputs: ask 162 (the ask codes), declare 10 (nine sets, then none), assignment 18 (six set positions x three teammates), pass 2, belief 324 (card x relative seat), value 1 |
+ * | heads | one linear layer to {@link HEADS} = 517 outputs: ask 162 (the ask codes), declare 10 (nine sets, then none), assignment 18 (six set positions x three teammates), pass 2, belief 324 (card x relative seat), value 1. P2's net (ATHENA.md §9.2) appends the set-difference auxiliary at {@link H_SETDIFF}: {@link HEADS_V3} = 518 |
  *
  * {@link ARCHS} names §3.1's three sizes: S (GRU 256, trunk 2 x 512), M (512, 3 x 1,024), L (1,024, 4 x 2,048).
  *
@@ -29,8 +29,10 @@
  *   sigmoid, the tanh and the softmax use {@link expDet}: a Cody-Waite range reduction, a degree-13 Taylor polynomial
  *   in Horner form, and an exact power-of-two scaling from a table built by doubling. Only `+ - * /`, `Math.round`
  *   and comparisons are used, each exactly specified by the language.
- * - **The embedding is sparse.** An event activates 21 of its 176 slots with the value 1, so the embedding adds the
- *   21 weight columns in ascending slot order; the omitted terms are exact zeros.
+ * - **The embedding is sparse.** An event activates {@link EVENT_SLOTS} = 19 of its 176 slots with the value 1, so the
+ *   embedding adds those 19 weight columns in ascending slot order; the omitted terms are exact zeros. Formats 1 and 2
+ *   add {@link FOLD_SLOTS_LEGACY} = 21 columns instead, the last two of them always column 0 — a reparametrisation of
+ *   the embedding bias that cost nothing and is kept, bit for bit, for every weight file already written.
  * - The GRU fold is a left fold over the log, so a seat that folds events as they arrive and a seat that refolds the
  *   whole log from zero produce the same bits (policy.ts's cache relies on this; the tests assert it).
  *
@@ -41,9 +43,18 @@
  * row-major, PyTorch's `[out, in]`). The header names the format, the arch, the tensors with their shapes and float
  * offsets, and the init. A package records the file's md5 in its manifest.
  *
- * The header's `arch.decF` is the trunk's decision-feature width: {@link DEC_F} (G0d's stub; an {@link Arch} without
- * `decF`) or {@link DEC_F_FACTS} (P1's belief heads, whose decision features end with {@link factsFeatures}). No other
- * width is accepted.
+ * **The forward reads its shape from the header**, and supports exactly the three rows of {@link WEIGHT_FORMATS}
+ * (ATHENA.md §9.2, "the weight format is v3"):
+ *
+ * | version | `arch.decF` | `arch.heads` | the fold | written by |
+ * |---|---|---|---|---|
+ * | 1 | {@link DEC_F} = 516 | {@link HEADS} = 517 | 21 slots | G0d's stub |
+ * | 2 | {@link DEC_F_FACTS} = 912 | {@link HEADS} = 517 | 21 slots | P1's belief heads (§8.3) |
+ * | 3 | {@link DEC_F_FACTS} = 912 | {@link HEADS_V3} = 518 | {@link EVENT_SLOTS} = 19 slots | P2 (§9.2) |
+ *
+ * An {@link Arch} names `decF` only when it is not {@link DEC_F} and `heads` only when it is not {@link HEADS}, so a
+ * v1 file's header and a v1 net's `arch` are byte for byte what they always were. Any other (`decF`, `heads`) pair is
+ * refused by {@link weightFormat}, whose message names what it read and what this forward supports.
  */
 import { hashSeed, mulberry32 } from '../engine/rng.ts'
 import {
@@ -72,18 +83,60 @@ import {
 /* ------------------------------------------------------------------------------------------- the shape --- */
 
 export const EVENT_F = 176
+/** The one-hot slots an event row activates ({@link eventSlots} writes exactly this many). */
+export const EVENT_SLOTS = 19
+/** The columns formats 1 and 2 fold: {@link EVENT_SLOTS}, then column 0 twice more (module header). */
+export const FOLD_SLOTS_LEGACY = 21
 export const DEC_F = 516
 /** P1's facts features ({@link factsFeatures}): 6 relative seats x 9 sets x 7, then 9 sets x 2. */
 export const FACTS_F = 6 * N_SETS * 7 + 2 * N_SETS
 /** The decision features of P1's heads: {@link DEC_F}'s, then {@link FACTS_F}'s. */
 export const DEC_F_FACTS = DEC_F + FACTS_F
 export const HEADS = 517
+/** P2's heads (ATHENA.md §9.2): {@link HEADS}, then the set-difference auxiliary at {@link H_SETDIFF}. */
+export const HEADS_V3 = 518
 export const H_ASK = 0
 export const H_DECLARE = H_ASK + N_ASK
 export const H_ASSIGN = H_DECLARE + 10
 export const H_PASS = H_ASSIGN + 18
 export const H_BELIEF = H_PASS + 2
 export const H_VALUE = H_BELIEF + 324
+/** The set-difference auxiliary (ATHENA.md §9.2); format 3 only. */
+export const H_SETDIFF = H_VALUE + 1
+
+/** One row of the module header's table: a weight format this forward can read. */
+export interface WeightFormat {
+  version: 1 | 2 | 3
+  /** The trunk's decision-feature width. */
+  decF: number
+  /** The head layer's outputs. */
+  heads: number
+  /** The embedding columns the event fold adds. */
+  foldSlots: number
+}
+
+/** Every weight format this forward supports, in version order (module header). Nothing else is accepted. */
+export const WEIGHT_FORMATS: readonly WeightFormat[] = Object.freeze([
+  Object.freeze({ version: 1 as const, decF: DEC_F, heads: HEADS, foldSlots: FOLD_SLOTS_LEGACY }),
+  Object.freeze({ version: 2 as const, decF: DEC_F_FACTS, heads: HEADS, foldSlots: FOLD_SLOTS_LEGACY }),
+  Object.freeze({ version: 3 as const, decF: DEC_F_FACTS, heads: HEADS_V3, foldSlots: EVENT_SLOTS }),
+])
+
+/** What this forward supports, for an error message. */
+const supported = (): string =>
+  WEIGHT_FORMATS.map((f) => `v${f.version} (eventF ${EVENT_F}, decF ${f.decF}, heads ${f.heads})`).join(', ')
+
+/**
+ * The format a (`decF`, `heads`) pair names, or a throw naming what was read and what this forward supports. The
+ * event-feature width is fixed at {@link EVENT_F}; pass it to have that checked here too.
+ */
+export function weightFormat(decF: number, heads: number, eventF: number = EVENT_F): WeightFormat {
+  const f = WEIGHT_FORMATS.find((w) => w.decF === decF && w.heads === heads)
+  if (f === undefined || eventF !== EVENT_F) {
+    throw new Error(`the weights were built for eventF ${eventF}, decF ${decF}, heads ${heads}; this forward supports ${supported()}`)
+  }
+  return f
+}
 
 export interface Arch {
   /** The GRU's state and the embedding's width. */
@@ -92,21 +145,44 @@ export interface Arch {
   width: number
   /** The trunk's layers. */
   depth: number
-  /** The decision features the trunk reads: {@link DEC_F} when absent (G0d's stub), or {@link DEC_F_FACTS} (P1's heads). */
+  /** The decision features the trunk reads: {@link DEC_F} when absent (format 1), or {@link DEC_F_FACTS} (2 and 3). */
   decF?: number
+  /** The head layer's outputs: {@link HEADS} when absent (formats 1 and 2), or {@link HEADS_V3} (3). */
+  heads?: number
+}
+
+/** The arch's weight format (module header), or a throw naming what it read. */
+export function formatOf(a: Arch): WeightFormat {
+  return weightFormat(a.decF ?? DEC_F, a.heads ?? HEADS)
 }
 
 /** The arch's decision-feature width (module header): {@link DEC_F} or {@link DEC_F_FACTS}, nothing else. */
 export function decFOf(a: Arch): number {
-  const f = a.decF ?? DEC_F
-  if (f !== DEC_F && f !== DEC_F_FACTS) throw new Error(`decision features ${f}: a net reads ${DEC_F} or ${DEC_F_FACTS}`)
-  return f
+  return formatOf(a).decF
 }
 
-/** The arch as a net keeps it: `decF` named only when it is not {@link DEC_F}, so G0d's stub is byte for byte as it was. */
+/** The arch's head count (module header): {@link HEADS} or {@link HEADS_V3}, nothing else. */
+export function headCountOf(a: Arch): number {
+  return formatOf(a).heads
+}
+
+/**
+ * The arch as a net keeps it: `decF` named only when it is not {@link DEC_F} and `heads` only when it is not
+ * {@link HEADS}, so G0d's stub and P1's heads are byte for byte as they were.
+ */
 function archOf(a: Arch): Arch {
-  const f = decFOf(a)
-  return f === DEC_F ? { d: a.d, width: a.width, depth: a.depth } : { d: a.d, width: a.width, depth: a.depth, decF: f }
+  const f = formatOf(a)
+  const out: Arch = { d: a.d, width: a.width, depth: a.depth }
+  if (f.decF !== DEC_F) out.decF = f.decF
+  if (f.heads !== HEADS) out.heads = f.heads
+  return out
+}
+
+/** The same arch at another weight format: the shape P2 asks {@link initBlob} and {@link ARCHS} for. */
+export function withFormat(a: Arch, version: 1 | 2 | 3): Arch {
+  const f = WEIGHT_FORMATS.find((w) => w.version === version)
+  if (f === undefined) throw new Error(`weight format ${version}: this forward supports ${supported()}`)
+  return archOf({ d: a.d, width: a.width, depth: a.depth, decF: f.decF, heads: f.heads })
 }
 
 /** ATHENA.md §3.1's three candidate sizes. */
@@ -138,8 +214,8 @@ export function tensorLayout(a: Arch): TensorSpec[] {
     shapes.push([`trunk.${i}.weight`, [a.width, i === 0 ? a.d + decFOf(a) : a.width]])
     shapes.push([`trunk.${i}.bias`, [a.width]])
   }
-  shapes.push(['heads.weight', [HEADS, a.width]])
-  shapes.push(['heads.bias', [HEADS]])
+  shapes.push(['heads.weight', [headCountOf(a), a.width]])
+  shapes.push(['heads.bias', [headCountOf(a)]])
   let offset = 0
   return shapes.map(([name, shape]) => {
     const length = shape.reduce((x, y) => x * y, 1)
@@ -222,6 +298,12 @@ export interface AthenaNet {
   trunkB: Float32Array[]
   headW: Float32Array
   headB: Float32Array
+  /** The weight format ({@link formatOf}), so the forward and the policy never re-read the arch at a hot call. */
+  version: 1 | 2 | 3
+  /** The head layer's outputs ({@link headCountOf}). */
+  heads: number
+  /** The embedding columns {@link foldEvent} adds: {@link EVENT_SLOTS} at format 3, {@link FOLD_SLOTS_LEGACY} at 1 and 2. */
+  foldSlots: number
   /** Scratch, reused by every call: the embedded event, the two gate pre-activations, the trunk's input and layers. */
   sx: Float64Array
   sgi: Float64Array
@@ -233,6 +315,7 @@ export interface AthenaNet {
 
 /** A net over an existing blob (not copied). */
 export function makeNet(arch: Arch, blob: Float32Array, meta: Record<string, unknown> = {}): AthenaNet {
+  const fmt = formatOf(arch)
   const layout = tensorLayout(arch)
   const n = paramCount(arch)
   if (blob.length !== n) throw new Error(`the weights hold ${blob.length} floats; arch ${JSON.stringify(arch)} needs ${n}`)
@@ -258,12 +341,16 @@ export function makeNet(arch: Arch, blob: Float32Array, meta: Record<string, unk
     trunkB,
     headW: get('heads.weight'),
     headB: get('heads.bias'),
+    version: fmt.version,
+    heads: fmt.heads,
+    foldSlots: fmt.foldSlots,
     sx: new Float64Array(arch.d),
     sgi: new Float64Array(3 * arch.d),
     sgh: new Float64Array(3 * arch.d),
-    su: new Float64Array(arch.d + decFOf(arch)),
+    su: new Float64Array(arch.d + fmt.decF),
     st: Array.from({ length: arch.depth }, () => new Float64Array(arch.width)),
-    sidx: new Int32Array(21),
+    // format 1 and 2 read slots 19 and 20 as well; `eventSlots` never writes them, so they stay 0 (module header)
+    sidx: new Int32Array(fmt.foldSlots),
   }
 }
 
@@ -300,7 +387,7 @@ export function serializeWeights(net: Pick<AthenaNet, 'arch' | 'blob' | 'meta'>)
   const layout = tensorLayout(net.arch)
   const header = {
     format: WEIGHTS_FORMAT,
-    arch: { ...archOf(net.arch), eventF: EVENT_F, decF: decFOf(net.arch), heads: HEADS },
+    arch: { ...archOf(net.arch), eventF: EVENT_F, decF: decFOf(net.arch), heads: headCountOf(net.arch) },
     params: paramCount(net.arch),
     tensors: layout.map((t) => [t.name, t.shape, t.offset, t.length]),
     meta: net.meta,
@@ -334,10 +421,9 @@ export function parseWeights(bytes: Uint8Array): AthenaNet {
   }
   if (header.format !== WEIGHTS_FORMAT) throw new Error(`weight format ${header.format}, not ${WEIGHTS_FORMAT}`)
   const a = header.arch
-  if (a.eventF !== EVENT_F || (a.decF !== DEC_F && a.decF !== DEC_F_FACTS) || a.heads !== HEADS) {
-    throw new Error(`the weights were built for eventF ${a.eventF}, decF ${a.decF}, heads ${a.heads}; this forward has ${EVENT_F}, ${DEC_F} or ${DEC_F_FACTS}, ${HEADS}`)
-  }
-  const arch: Arch = archOf({ d: a.d, width: a.width, depth: a.depth, decF: a.decF })
+  // the shape is read from the header, and only the three rows of WEIGHT_FORMATS are accepted (module header)
+  weightFormat(a.decF, a.heads, a.eventF)
+  const arch: Arch = archOf({ d: a.d, width: a.width, depth: a.depth, decF: a.decF, heads: a.heads })
   const layout = tensorLayout(arch)
   const same =
     header.tensors.length === layout.length &&
@@ -355,7 +441,11 @@ export function parseWeights(bytes: Uint8Array): AthenaNet {
 
 /* --------------------------------------------------------------------------------------- the features --- */
 
-/** The event row's 21 active one-hot slots, ascending, written into `out`. */
+/**
+ * The event row's {@link EVENT_SLOTS} = 19 active one-hot slots, ascending, written into `out[0 .. 19)`. Nothing above
+ * index 18 is ever written: formats 1 and 2 fold {@link FOLD_SLOTS_LEGACY} = 21 columns and read the two zeros a
+ * 21-long `out` starts with (module header).
+ */
 export function eventSlots(row: Uint8Array, off: number, out: Int32Array): void {
   const slot = (v: number, n: number, what: string): number => {
     if (v === NONE) return n - 1
@@ -464,10 +554,11 @@ export function foldEvent(net: AthenaNet, h: Float64Array, rows: Uint8Array, off
   const x = net.sx
   const embW = net.embW
   const embB = net.embB
+  const slots = net.foldSlots
   for (let i = 0; i < d; i++) {
     const o = i * EVENT_F
     let acc = 0
-    for (let k = 0; k < 21; k++) acc += embW[o + idx[k]]
+    for (let k = 0; k < slots; k++) acc += embW[o + idx[k]]
     x[i] = acc + embB[i]
   }
   const gi = net.sgi
@@ -522,7 +613,10 @@ export function beliefOf(heads: Float64Array, cands: Uint8Array, out: Float64Arr
   return out
 }
 
-/** The heads (HEADS = 517 outputs, written into `out`) for the state `h` and the decision features `dec`. */
+/**
+ * The heads (the net's own head count, {@link headCountOf}: 517 at formats 1 and 2, 518 at 3; written into `out`) for
+ * the state `h` and the decision features `dec`.
+ */
 export function headsOf(net: AthenaNet, h: Float64Array, dec: Float64Array, out: Float64Array): Float64Array {
   const d = net.arch.d
   const u = net.su
@@ -546,7 +640,7 @@ export function headsOf(net: AthenaNet, h: Float64Array, dec: Float64Array, out:
   const w = net.headW
   const b = net.headB
   const n = inp.length
-  for (let o = 0; o < HEADS; o++) {
+  for (let o = 0; o < net.heads; o++) {
     const base = o * n
     let acc = 0
     for (let j = 0; j < n; j++) acc += w[base + j] * inp[j]
