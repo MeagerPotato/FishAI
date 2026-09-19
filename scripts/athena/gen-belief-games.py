@@ -19,7 +19,18 @@ of every part, the revision, the command, the digest check's totals, the rate an
 
 **A mirror table in geometry B.** With the same arm on both teams, rotations 2p and 2p + 1 are the same seed, the same
 start seat and the same policy in every seat, so they are the same game (Monet decides from the view and the move
-seed alone). They are both played, as registered, and the manifest counts the pairs whose actions are identical.
+seed alone). The registered splits play both, and the manifest counts the pairs whose actions are identical.
+
+**The train extension** (§8.3's amendment of 2026-09-19: the registered train count is 100,000 DISTINCT games, so the
+split's first run, deals 0 to 16,666, is extended with deals 16,667 to 33,333, same label, geometry and checks):
+
+    python scripts/athena/gen-belief-games.py --split train --deals 16667:33333 --dir train-ext \\
+        --mirror-check-every 50 --out <games> --athena-env <build> --workers 4
+
+`--deals FIRST:LAST` plays those deals (inclusive, every rotation, index 6d + r as in the full geometry) in place of
+the first `--games`. `--mirror-check-every K` plays only rotations 0, 2 and 4 (one copy of each mirror pair), and
+the mirror copies too for every deal d with d % K == 0, whose pairs the manifest checks for identity. `--dir` names
+the folder under `--out` (default: the split).
 """
 import argparse
 import ctypes
@@ -71,10 +82,24 @@ def process_cpu_seconds(handle):
     return (((k.hi << 32) | k.lo) + ((u.hi << 32) | u.lo)) / 1e7
 
 
-def specs_for(split, games):
+def specs_for(split, games, deals=None, check_every=0):
+    """The games to play: the first `games` of the split's geometry B, or every rotation of `deals` (first, last),
+    inclusive; with `check_every`, the odd (mirror) rotations only of deals d with d % check_every == 0."""
     label = SPLITS[split]
-    deals = (games + hh.ROTATIONS - 1) // hh.ROTATIONS
-    return label, hh.geometry_b(label, deals)[:games]
+    if deals is None:
+        n = (games + hh.ROTATIONS - 1) // hh.ROTATIONS
+        specs = hh.geometry_b(label, n)[:games]
+    else:
+        first, last = deals
+        specs = [s for s in hh.geometry_b(label, last + 1) if s.deal >= first]
+    if check_every:
+        specs = [s for s in specs if s.rot % 2 == 0 or s.deal % check_every == 0]
+    return label, specs
+
+
+def distinct_counts(specs):
+    """Distinct games (a deal's start seat: its mirror rotations are one game) and deals among `specs`."""
+    return len({(s.deal, s.start) for s in specs}), len({s.deal for s in specs})
 
 
 def save_part(path, specs, res):
@@ -124,10 +149,16 @@ def main(argv=None):
     ap.add_argument('--workers', type=int, default=4, help='opponent service worker threads (default 4)')
     ap.add_argument('--threads', type=int, default=1, help='BatchEnv threads (default 1)')
     ap.add_argument('--athena-env', default=None, help='a directory holding an unpacked athena_env build')
+    ap.add_argument('--deals', default=None, help='FIRST:LAST, inclusive: play these deals in place of --games')
+    ap.add_argument('--mirror-check-every', type=int, default=0,
+                    help='play one copy of each mirror pair, and both for deals d with d %% K == 0 (0: play both)')
+    ap.add_argument('--dir', default=None, help='the folder under --out (default: the split)')
     args = ap.parse_args(argv)
     games = args.games if args.games is not None else REGISTERED[args.split]
-    label, specs = specs_for(args.split, games)
-    out = Path(args.out) / args.split
+    deals = tuple(int(x) for x in args.deals.split(':')) if args.deals else None
+    label, specs = specs_for(args.split, games, deals, args.mirror_check_every)
+    distinct, n_deals = distinct_counts(specs)
+    out = Path(args.out) / (args.dir or args.split)
     out.mkdir(parents=True, exist_ok=True)
     mpath = out / 'manifest.json'
     old = json.loads(mpath.read_text()) if mpath.exists() else None
@@ -139,12 +170,16 @@ def main(argv=None):
     dirty = git('status', '--porcelain', '--untracked-files=no')
     command = ' '.join(['python', 'scripts/athena/gen-belief-games.py'] + (argv if argv is not None else sys.argv[1:]))
     chunks = [specs[i:i + args.chunk] for i in range(0, len(specs), args.chunk)]
-    print(f'{args.split}: {label}, {len(specs)} games in {len(chunks)} parts of up to {args.chunk}; athena_env '
+    print(f'{args.split}: {label}, {len(specs)} games ({distinct} distinct, {n_deals} deals) in {len(chunks)} parts of '
+          f'up to {args.chunk}; athena_env '
           f'{info["file"]}; revision {rev}{" (dirty)" if dirty else ""}', flush=True)
 
     manifest = {
         'format': 'athena-p1-belief-games-1',
         'split': args.split, 'label': label, 'games': len(specs), 'registered': REGISTERED[args.split],
+        'distinct_games': distinct, 'deals': n_deals,
+        'deal_range': [specs[0].deal, specs[-1].deal] if specs else None,
+        'mirror_check_every': args.mirror_check_every,
         'geometry': 'B (ATHENA.md 4.6 G0c amendment 3): seed <label>-<d>, rotation r: start 2*(r//2), arm A team r%2',
         'arms': [ARM, ARM], 'chunk': args.chunk, 'workers': args.workers, 'threads': args.threads,
         'revision': rev, 'dirty': bool(dirty), 'command': command,

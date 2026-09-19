@@ -1,16 +1,21 @@
 /**
  * export-belief-views.mjs: the belief head's inputs and labels from the bridge records (ATHENA.md §8.3), in the
- * belief-views format that `scripts/athena/belief/data.py` also writes for population (a) from the port.
+ * belief-views format (`athena-p1-belief-views-2`) that `scripts/athena/belief_data.py` also writes for population
+ * (a) from the port.
  *
  * At each selected ask (`walkAsks`, `scripts/bridge-records.mjs`: the asking seat's view under the host's reduced
- * reveal, the score by team) it writes what the port's buffers hold at an ask, from that seat's view:
- * - the obs row (`lib/athena/encode.ts` `encodeObservation`, the port's layout);
+ * reveal, the score by team) it writes what the port's buffers hold at an ask of a bridge-regime game, from that
+ * seat's view (API.md §5, P1's layout):
+ * - the obs row (`lib/athena/encode.ts` `encodeObservation`, the regime byte at the bridge's);
  * - the rules facts' candidate seats of every card as a six-bit mask, relative to the asker (bit r: relative seat r
- *   may hold the card), from `buildKnowledge(view, KOPTS)` (KOPTS as gen-holder-data.mjs derives them);
+ *   may hold the card), from `buildKnowledge(view, KOPTS)` (KOPTS as gen-holder-data.mjs derives them): the facts
+ *   row's `F_CAND`;
  * - the true holder of every card, relative (255 once its set has resolved): the critic buffer's label;
- * - how many of the seat's event rows precede the ask (the log so far).
+ * - how many of the seat's event rows precede the ask: under the start-seat rule none while the log holds only
+ *   `game_started` (a game's first ask), else one per logged event.
  * Each (game, seat) with a selected ask has its whole log encoded once (`encodeEventRows`, relative to the seat, the
- * reduced reveal's absent holders as NONE); an ask's recurrent state folds the first `pos` rows.
+ * reduced reveal's absent holders as NONE, the start-seat rule applied); an ask's recurrent state folds the first
+ * `pos` rows, which are the rows `encodeEventRows` gives for the log at the ask.
  *
  * The unit (§3.8ah's) is the cards whose mask has two or more bits; the exporter asserts at every ask that this is
  * exactly `holderContext(view, k).unknownCards`, the set `belief-baselines.mjs` scores.
@@ -24,7 +29,7 @@
  *
  * The output directory holds `.npy` files (`meta.json` lists them) and `meta.json`: `streams` uint8 [R, 19];
  * `stream_off` int64 [G, 6] and `stream_len` int32 [G, 6] (a seat with no selected ask has length 0); `ask_game`
- * int32, `ask_seat` uint8, `ask_pos` int32, `ask_event` int32 [A]; `ask_obs` uint8 [A, 94]; `ask_cands` and
+ * int32, `ask_seat` uint8, `ask_pos` int32, `ask_event` int32 [A]; `ask_obs` uint8 [A, 95]; `ask_cands` and
  * `ask_holder` uint8 [A, 54]; `game_key` (the cluster key, `<file>|<game index>` as belief-baselines.mjs writes it)
  * in `game_keys.json`.
  *
@@ -49,7 +54,7 @@ function argOf(flag, dflt) {
 }
 const has = (flag) => process.argv.includes(flag)
 
-export const FORMAT = 'athena-p1-belief-views-1'
+export const FORMAT = 'athena-p1-belief-views-2'
 
 /** An .npy file written as it grows: a fixed 128-byte header patched with the shape on close. */
 class NpyWriter {
@@ -165,6 +170,7 @@ async function main() {
     for (const rec of REC.readRecordFile(files[fi])) {
       if (maxGames > 0 && games >= maxGames) break outer
       const g = gi++
+      if (rec.events[0]?.type !== 'game_started') throw new Error(`${rec.label}: the log does not open with game_started`)
       const seats = new Set()
       const pending = []
       REC.walkAsks(rec, ({ i, ev, view, hands }) => {
@@ -192,9 +198,12 @@ async function main() {
             units++
           }
         }
-        ATH.encodeObservation(view, obs, legal)
+        ATH.encodeObservation(view, obs, legal, ATH.REGIME_BRIDGE)
         seats.add(me)
-        pending.push({ me, i, obs: Uint8Array.from(obs), cands, holder })
+        // the rows encodeEventRows gives for the log at the ask (view.log, i events): none while it holds only game_started
+        const pos = i > 1 ? i : 0
+        if (i <= 2 && ATH.encodeEventRows(view.log, me).length !== pos * ATH.EVENT_LEN) throw new Error(`${rec.label} event ${i}: the rows before the ask are not ${pos}`)
+        pending.push({ me, i, pos, obs: Uint8Array.from(obs), cands, holder })
       })
       if (!pending.length) continue
       const off = new BigInt64Array(6)
@@ -217,7 +226,7 @@ async function main() {
       for (const p of pending) {
         W.ask_game.write(u8(Int32Array.of(gid)), 1)
         W.ask_seat.write(Buffer.of(p.me), 1)
-        W.ask_pos.write(u8(Int32Array.of(p.i)), 1)
+        W.ask_pos.write(u8(Int32Array.of(p.pos)), 1)
         W.ask_event.write(u8(Int32Array.of(p.i)), 1)
         W.ask_obs.write(u8(p.obs), 1)
         W.ask_cands.write(u8(p.cands), 1)
@@ -231,7 +240,7 @@ async function main() {
   for (const w of Object.values(W)) w.close()
   fs.writeFileSync(join(out, 'game_keys.json'), JSON.stringify(keys))
   const meta = {
-    format: FORMAT, source: 'records', side, files: which, records: dirs, prefix, sample, salt, holdoutMod: hold,
+    format: FORMAT, source: 'records', regime: 'bridge', side, files: which, records: dirs, prefix, sample, salt, holdoutMod: hold,
     version, override, kopts: KOPTS, fileNames: files.map((f) => f.replace(/\\/g, '/')), games, asks, sideAsks, units,
     rows: rowsWritten, secs: (Date.now() - t0) / 1000, arrays: Object.keys(W), command: process.argv.slice(1).join(' '),
   }

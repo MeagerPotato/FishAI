@@ -2,29 +2,31 @@
 belief_data.py: ATHENA P1's belief-head data (ATHENA.md §8.3): population (a)'s stored games replayed through the port
 into belief views, and the loader that batches any belief-views directory for training and scoring.
 
-**Belief views** (`athena-p1-belief-views-1`) are one directory of `.npy` arrays, written for (a) by `replay_split`
+**Belief views** (`athena-p1-belief-views-2`) are one directory of `.npy` arrays, written for (a) by `replay_split`
 here and for the bridge records by `scripts/athena/export-belief-views.mjs` (populations (b) and (c), and D2's extra
-training views), in the same layout:
+training views), in the same layout, P1's encoding (API.md §5: the obs row's regime byte, the start-seat rule):
 
 - `streams` uint8 [R, 19]: event rows (API.md §5.3), relative to their seat, stream after stream;
 - `stream_off` int64 [G, 6], `stream_len` int32 [G, 6]: each (game, seat)'s stream, in the order the seat received the
   rows (length 0 for a seat with no ask);
 - per ask decision, sorted by game: `ask_game` int32, `ask_seat` uint8 (absolute), `ask_pos` int32 (rows of the
-  seat's stream received before the decision: the recurrent state folds these), `ask_obs` uint8 [A, 94] (the obs row,
-  §5.2), `ask_cands` uint8 [A, 54] (the rules facts' candidate seats of each card, a six-bit mask relative to the
-  asker), `ask_holder` uint8 [A, 54] (each card's true holder relative to the asker, 255 once out of play: the critic
-  buffer, §5.4);
+  seat's stream received before the decision: the recurrent state folds these; 0 at a game's first decision, under
+  the start-seat rule), `ask_obs` uint8 [A, 95] (the obs row, §5.2), `ask_cands` uint8 [A, 54] (the rules facts'
+  candidate seats of each card, a six-bit mask relative to the asker: the facts row's `F_CAND`, §5.5),
+  `ask_holder` uint8 [A, 54] (each card's true holder relative to the asker, 255 once out of play: the critic buffer,
+  §5.4);
 - `game_keys.json`: each game's cluster key for the bootstrap; `meta.json`.
 
 **The unit** (§3.8ah's) is every card whose candidate mask has two or more bits: an open set's card the asker cannot
 place. The belief head's softmax runs over the card's candidate seats, and its loss and scores are over the units.
 
-**The facts.** The candidate masks of (a) are the rules-derived facts of §8.1, which the port gains as its `facts`
-buffer (agent A's G1a). Until that buffer exists, `replay_split(facts='placeholder')` writes a PLACEHOLDER mask from
-the obs row alone: the asker's own cards at the asker, a resolved set's cards nowhere, and every other card at every
-other seat holding cards. It is a superset of the true candidates, so every holder is a candidate, and it is only for
-smoke runs: meta.json records `facts: placeholder`, and the trainer refuses to call such data a registered read.
-The record exporter writes the true facts (`buildKnowledge`, as belief-baselines.mjs scores them).
+**The facts.** The candidate masks of (a) are the port's facts buffer (ATHENA.md §8.1, G1a PASS): what
+`buildKnowledge(view)` computes under Monet v1.0's knowledge options, the set the (a) scorer's units come from. At
+every ask `replay_split` also checks the buffer's unknown slots (`F_UNKNOWN`) against the hand counts less the
+certain cards, which is what B-M-scaled rescales to. `facts='placeholder'` (the smoke's stand-in from before the
+buffer existed) writes a mask from the obs row alone, a superset of the true candidates; meta.json records it and the
+trainer labels any run over it a smoke. The record exporter writes `buildKnowledge`'s candidates, as
+belief-baselines.mjs scores them.
 """
 import hashlib
 import json
@@ -32,12 +34,14 @@ from pathlib import Path
 
 import numpy as np
 
-FORMAT = 'athena-p1-belief-views-1'
+FORMAT = 'athena-p1-belief-views-2'
 NONE = 255
 EVENT_LEN = 19
-OBS_LEN = 94
+OBS_LEN = 95
 O_HAND, O_COUNTS, O_PHASE, O_TURN, O_WINDOW, O_OPTION, O_DECLINED, O_SCORE, O_SETS = 0, 54, 60, 61, 62, 63, 64, 65, 67
+O_REGIME = 94
 SET_FIELDS = 3
+F_CAND, F_UNKNOWN = 0, 54
 N_ASK = 162
 EVENT_F = 176
 DEC_F = 516
@@ -65,7 +69,7 @@ def popcount6(m):
 
 
 def placeholder_cands(obs):
-    """The PLACEHOLDER facts (module header): six-bit relative masks (n, 54) from obs rows (n, 94) alone."""
+    """The PLACEHOLDER facts (module header): six-bit relative masks (n, 54) from obs rows (n, OBS_LEN) alone."""
     obs = np.asarray(obs)
     hand = obs[:, O_HAND:O_HAND + 54].astype(bool)
     counts = obs[:, O_COUNTS:O_COUNTS + 6]
@@ -81,8 +85,9 @@ def placeholder_cands(obs):
 # ------------------------------------------------------------------------------------ population (a): replay ---
 
 def read_parts(parts_dir, max_games=0):
-    """A split's stored games (gen-belief-games.py): lists of seed, start, actions (uint16), score, cluster key."""
-    parts = sorted(Path(parts_dir).glob('part-*.npz'))
+    """A split's stored games (gen-belief-games.py; one folder, or several joined by '+'): lists of seed, start,
+    actions (uint16), score, and the game key (seed, start seat, the md5 of the actions)."""
+    parts = sorted(p for d in str(parts_dir).split('+') for p in Path(d).glob('part-*.npz'))
     if not parts:
         raise FileNotFoundError(f'no part-*.npz in {parts_dir}')
     games = []
@@ -99,17 +104,43 @@ def read_parts(parts_dir, max_games=0):
     return games
 
 
-def replay_split(parts_dir, out_dir, ae, *, facts='placeholder', batch=2048, threads=4, dedup=False, max_games=0,
-                 lmax=512, log=print):
-    """Replay a split's stored games through `ae.BatchEnv` and write its belief views to `out_dir`.
+def check_facts(obs, facts, holder):
+    """At a batch of asks: the facts row's unknown slots are the hand counts less the certain (singleton) cards, and
+    every unit card's true holder is a candidate. Raises on any row that breaks either."""
+    cands = facts[:, F_CAND:F_CAND + 54]
+    bits = (cands[:, :, None] >> np.arange(6, dtype=np.uint8)) & 1  # (A, 54, 6)
+    single = bits.sum(axis=2) == 1
+    certain = (bits * single[:, :, None]).sum(axis=1)
+    need = obs[:, O_COUNTS:O_COUNTS + 6].astype(np.int64) - certain
+    if (need != facts[:, F_UNKNOWN:F_UNKNOWN + 6]).any():
+        raise RuntimeError('the facts row\'s unknown slots are not the hand counts less the certain cards')
+    unit = popcount6(cands) >= 2
+    h = holder.astype(np.int64)
+    if (h[unit] == NONE).any() or not bits[unit, h[unit].clip(0, 5)].all():
+        raise RuntimeError('a unit card\'s true holder is not among its candidates')
+    if (obs[:, O_REGIME] != 0).any():
+        raise RuntimeError('a replayed game is not in the home regime')
+
+
+def replay_split(parts_dir, out_dir, ae, *, facts='port', batch=2048, threads=4, dedup=True, cluster='deal',
+                 max_games=0, lmax=512, log=print):
+    """Replay a split's stored games through `ae.BatchEnv` (the home regime) and write its belief views to `out_dir`.
 
     Every step applies the stored action of every running game; every observation's event rows go to the observing
-    seat's stream; at every ask decision (a legal row with an ask) the asker's obs, facts and critic row are kept. With
-    `dedup`, a game whose cluster key (seed, start seat, actions) repeats one already kept is skipped (geometry B's
-    mirror rotations). Checks that every game finishes at its stored length with its stored score."""
-    if facts != 'placeholder':
-        raise NotImplementedError('only the placeholder facts exist until the port gains its facts buffer (ATHENA.md '
-                                  '§8.1); wire it here: the six-bit relative candidate masks of the acting seat')
+    seat's stream; at every ask decision (a legal row with an ask) the asker's obs, facts and critic row are kept.
+    Checks that every game finishes at its stored length with its stored score, and (the port's facts) `check_facts`
+    at every ask.
+
+    §8.3's amendment of 2026-09-19: with `dedup` (the default), a game whose game key (seed, start seat, actions)
+    repeats one already kept is skipped, so each of geometry B's mirror pairs counts once; the cluster written to
+    `game_keys.json` is the deal (its seed; `cluster='game'`: the game key), which is what the (a) bootstrap
+    resamples."""
+    if cluster not in ('deal', 'game'):
+        raise ValueError(f'cluster must be deal or game, not {cluster}')
+    if facts not in ('port', 'placeholder'):
+        raise ValueError(f'facts must be port or placeholder, not {facts}')
+    if OBS_LEN != getattr(ae, 'OBS_LEN', OBS_LEN):
+        raise RuntimeError(f'athena_env\'s OBS_LEN is {ae.OBS_LEN}, the views\' {OBS_LEN}: load a P1 build')
     games = read_parts(parts_dir, max_games)
     n_all = len(games)
     if dedup:
@@ -126,7 +157,7 @@ def replay_split(parts_dir, out_dir, ae, *, facts='placeholder', batch=2048, thr
     for b0 in range(0, len(games), batch):
         gs = games[b0:b0 + batch]
         n = len(gs)
-        env = ae.BatchEnv(n, threads=threads)
+        env = ae.BatchEnv(n, threads=threads, facts=facts == 'port')
         env.reset([g['seed'] for g in gs], np.array([g['start'] for g in gs], dtype=np.int64))
         bufs = env.make_buffers(critic=True)
         env.observe(bufs)
@@ -161,9 +192,16 @@ def replay_split(parts_dir, out_dir, ae, *, facts='placeholder', batch=2048, thr
                 a_seat.append(seat[rows].astype(np.uint8))
                 a_pos.append(slen[rows, seat[rows]].astype(np.int32))
                 obs = bufs['obs'][rows].copy()
+                holder = bufs['critic'][rows].copy()
+                if facts == 'port':
+                    fr = bufs['facts'][rows]
+                    check_facts(obs, fr, holder)
+                    cands = fr[:, F_CAND:F_CAND + 54].copy()
+                else:
+                    cands = placeholder_cands(obs)
                 a_obs.append(obs)
-                a_cands.append(placeholder_cands(obs))
-                a_holder.append(bufs['critic'][rows].copy())
+                a_cands.append(cands)
+                a_holder.append(holder)
             env.step(np.ascontiguousarray(acts[:, t]), bufs)
         steps, ended, scores = env.steps(), env.ended(), env.scores()
         for i, g in enumerate(gs):
@@ -190,11 +228,12 @@ def replay_split(parts_dir, out_dir, ae, *, facts='placeholder', batch=2048, thr
         log(f'  replayed {b0 + n} of {len(games)} games: {sum(len(x) for x in chunks["ask_game"])} asks, {rows_total} rows')
     for name in ARRAYS:
         np.save(out / f'{name}.npy', np.concatenate(chunks[name]))
-    (out / 'game_keys.json').write_text(json.dumps([g['key'] for g in games]))
+    (out / 'game_keys.json').write_text(json.dumps([g['seed'] if cluster == 'deal' else g['key'] for g in games]))
     asks = sum(len(x) for x in chunks['ask_game'])
     units = int(sum((popcount6(c) >= 2).sum() for c in chunks['ask_cands']))
-    meta = {'format': FORMAT, 'source': 'port-replay', 'parts': str(Path(parts_dir)), 'games': len(games),
-            'games_in_split': n_all, 'dedup': dedup, 'facts': facts, 'asks': asks, 'units': units, 'rows': rows_total,
+    meta = {'format': FORMAT, 'source': 'port-replay', 'parts': str(parts_dir), 'games': len(games),
+            'games_in_split': n_all, 'dedup': dedup, 'deals': len({g['seed'] for g in games}), 'cluster': cluster,
+            'facts': facts, 'regime': 'home', 'asks': asks, 'units': units, 'rows': rows_total,
             'athena_env': str(Path(ae.__file__).resolve())}
     (out / 'meta.json').write_text(json.dumps(meta, indent=1))
     return meta

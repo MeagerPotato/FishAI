@@ -1,6 +1,6 @@
 /**
  * belief-baselines.mjs: ATHENA.md §8.3's belief unit and its scorer, Step 1's baselines (the marginal and the slot
- * prior) on the three populations, with the cluster bootstrap over games.
+ * prior) on the three populations, with the cluster bootstrap over games ((b), (c)) or deals ((a)).
  *
  * **The unit** is MONET.md §3.8ah's, exactly as `scripts/gen-holder-data.mjs` builds it, through the same calls: at an
  * ask decision, from the asking seat's view, `buildKnowledge(view, KOPTS)` with KOPTS as that script derives them
@@ -11,9 +11,11 @@
  * -ln max(1e-12, p(true holder)). A card whose true holder is not a candidate is counted as notFound and skipped.
  *
  * **The populations** (`extract --pop`):
- * - `a`: stored home games (`gen-belief-games.py`'s parts, `--games DIR`), replayed through the reference engine
- *   (`newGame` + `reduce`, the port's codes decoded by `opponent-core.ts`), every ask of every seat. The cluster is
- *   the game: seed, start seat and the md5 of its actions, so geometry B's identical mirror rotations are one cluster.
+ * - `a`: stored home games (`gen-belief-games.py`'s parts, `--games DIR[,DIR]`), replayed through the reference
+ *   engine (`newGame` + `reduce`, the port's codes decoded by `opponent-core.ts`), every ask of every seat. Under
+ *   §8.3's amendment of 2026-09-19, each distinct game counts once (geometry B's mirror copy of a game, the same seed,
+ *   start seat and actions, is skipped; `--keep-mirrors` keeps it) and the cluster is the DEAL, the seed shared by its
+ *   three distinct games (`--cluster game` clusters by game).
  * - `b`: the bridge records' SESTINA asks as gen-holder-data.mjs samples them: `--records` (one group's dirs), the
  *   spec filter, `--sample`, `--sample-salt`, `--holdout-mod`, `--version`, `--override`, all as that script reads
  *   them. The holdout is `fi % mod === 0` over the group's own file list. The cluster is (file, game).
@@ -132,22 +134,38 @@ function partFiles(dir) {
   return fs.readdirSync(dir).filter((f) => /^part-\d+\.npz$/.test(f)).sort().map((f) => join(dir, f))
 }
 
-function extractA(sc, dir, maxGames) {
+/**
+ * Population (a) under §8.3's amendment of 2026-09-19: one copy of each game (a mirror rotation repeating a game key,
+ * seed + start seat + the md5 of its actions, is skipped unless `keepMirrors`), and the deal (its seed) as the
+ * cluster, since a deal's three distinct games share its hands (`cluster: 'game'` keys by the game instead).
+ */
+function extractA(sc, dirs, maxGames, { keepMirrors = false, cluster = 'deal' } = {}) {
   let games = 0
   let asks = 0
   let steps = 0
   let scoreMismatch = 0
-  for (const file of partFiles(dir)) {
+  let mirrorsSkipped = 0
+  const seen = new Set()
+  const deals = new Set()
+  const done = () => ({ games, deals: deals.size, mirrorsSkipped, keepMirrors, cluster, asks, steps, scoreMismatch })
+  for (const file of dirs.flatMap(partFiles)) {
     const z = readNpz(file)
     const n = z.index.data.length
     for (let i = 0; i < n; i++) {
-      if (maxGames > 0 && games >= maxGames) return { games, asks, steps, scoreMismatch }
+      if (maxGames > 0 && games >= maxGames) return done()
       const seed = z.seed.data[i]
       const start = z.start.data[i]
       const lo = Number(z.offsets.data[i])
       const hi = Number(z.offsets.data[i + 1])
       const acts = z.actions.data.subarray(lo, hi)
-      const key = `${seed}|${start}|${createHash('md5').update(Buffer.from(acts.buffer, acts.byteOffset, acts.byteLength)).digest('hex')}`
+      const gameKey = `${seed}|${start}|${createHash('md5').update(Buffer.from(acts.buffer, acts.byteOffset, acts.byteLength)).digest('hex')}`
+      if (!keepMirrors && seen.has(gameKey)) {
+        mirrorsSkipped++
+        continue
+      }
+      seen.add(gameKey)
+      deals.add(seed)
+      const key = cluster === 'deal' ? seed : gameKey
       let state = newGame(seed, us54Config, start)
       for (let t = 0; t < acts.length; t++) {
         const acting = legalActionsSummary(state).seat
@@ -165,9 +183,9 @@ function extractA(sc, dir, maxGames) {
       if (state.score[0] !== z.score.data[2 * i] || state.score[1] !== z.score.data[2 * i + 1]) scoreMismatch++
       games++
     }
-    console.error(`  ${basename(file)}: ${games} games, ${asks} asks, ${sc.base.test.n} cards`)
+    console.error(`  ${basename(file)}: ${games} games (${mirrorsSkipped} mirror copies skipped), ${asks} asks, ${sc.base.test.n} cards`)
   }
-  return { games, asks, steps, scoreMismatch }
+  return done()
 }
 
 /* ---------------------------------------------------------------------------------- populations (b), (c) --- */
@@ -328,7 +346,11 @@ async function extract() {
   const sc = new Scorer(kopts)
   const t0 = Date.now()
   let info
-  if (pop === 'a') info = extractA(sc, argOf('--games', ''), Number(argOf('--max-games', 0)))
+  if (pop === 'a') {
+    const opts = { keepMirrors: process.argv.includes('--keep-mirrors'), cluster: argOf('--cluster', 'deal') }
+    if (!['deal', 'game'].includes(opts.cluster)) throw new Error('--cluster is deal or game')
+    info = extractA(sc, argOf('--games', '').split(',').filter(Boolean), Number(argOf('--max-games', 0)), opts)
+  }
   else info = await extractRecords(sc, pop)
   const secs = (Date.now() - t0) / 1000
   const header = { pop, version, override, kopts, ...info, decisions: sc.decisions, notFound: sc.notFound, baselines: sc.summary(), clusters: sc.clusters.size, secs, command: process.argv.slice(1).join(' ') }

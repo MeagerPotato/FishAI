@@ -3,7 +3,9 @@ belief_train.py: ATHENA P1's belief-head pipeline (ATHENA.md §8.3): prepare (a)
 score it on the test populations for belief-baselines.mjs's paired bootstrap, and export it to G0d's weight format
 with the registered agreement check against `lib/athena`'s deterministic JavaScript forward.
 
-    python scripts/athena/belief_train.py prepare --games <games>/test --out <views>/a-test [--dedup] [--max-games N]
+    python scripts/athena/belief_train.py prepare --games <games>/test --out <views>/a-test --athena-env <P1 build> \\
+        [--keep-mirrors] [--cluster game] [--max-games N]
+    python scripts/athena/belief_train.py prepare --games <games>/train+<games>/train-ext --out <views>/a-train ...
     python scripts/athena/belief_train.py train --arch M --train <views>/a-train[,<D2 dirs>] --val <views>/a-val \\
         --test a=<views>/a-test,b=<b views>,c=<c views> --out <run> [--seed athena-p1-B-M]
     python scripts/athena/belief_train.py eval --run <run> --views <dirs> --name a [--scaled]
@@ -29,8 +31,9 @@ PyTorch's float32 beliefs are written beside each decision's inputs, and `script
 recomputes them with net.ts's forward and `beliefOf`. It passes when every card's argmax agrees and no probability
 differs by more than 1e-4.
 
-**Placeholder facts.** Views made with `facts: placeholder` (belief_data.py) are smoke data: a run over them is
-labelled `smoke` in every output and is not a registered read.
+**Smoke runs.** A run is labelled `smoke` in every output, and is not a registered read, when any of its views were
+made with `facts: placeholder` (belief_data.py), when it stops short of the registered loop (`--max-epochs` below 20
+or `--max-train-games`), or with `--smoke`.
 """
 import argparse
 import base64
@@ -181,8 +184,10 @@ def cmd_prepare(args):
     import athena_env as ae
     t0 = time.perf_counter()
     meta = bd.replay_split(args.games, args.out, ae, facts=args.facts, batch=args.batch, threads=args.threads,
-                           dedup=args.dedup, max_games=args.max_games)
+                           dedup=not args.keep_mirrors, cluster=args.cluster, max_games=args.max_games)
     meta['secs'] = round(time.perf_counter() - t0, 1)
+    pyd = next(Path(ae.__file__).parent.glob('athena_env*.pyd'), None) or next(Path(ae.__file__).parent.glob('*.so'), None)
+    meta['athena_env_md5'] = hashlib.md5(pyd.read_bytes()).hexdigest() if pyd else None
     (Path(args.out) / 'meta.json').write_text(json.dumps(meta, indent=1))
     print(json.dumps(meta))
 
@@ -192,7 +197,8 @@ def cmd_train(args):
     run = Path(args.out)
     run.mkdir(parents=True, exist_ok=True)
     train_dirs, val_dirs = dirs_of(args.train), dirs_of(args.val)
-    smoke = smoke_label(train_dirs + val_dirs, args.facts)
+    smoke = (smoke_label(train_dirs + val_dirs, args.facts) or args.smoke or args.max_epochs != MAX_EPOCHS
+             or bool(args.max_train_games))
     torch.manual_seed(seed_int(args.seed))
     rng = np.random.default_rng(seed_int(args.seed + ':order'))
     model = bm.BeliefNet.of(args.arch).to(device)
@@ -349,8 +355,10 @@ def main():
     p = sub.add_parser('prepare')
     p.add_argument('--games', required=True)
     p.add_argument('--out', required=True)
-    p.add_argument('--facts', default='placeholder')
-    p.add_argument('--dedup', action='store_true', help='keep one of each identical mirror pair')
+    p.add_argument('--facts', default='port', choices=['port', 'placeholder'])
+    p.add_argument('--keep-mirrors', action='store_true',
+                   help='keep both copies of each identical mirror pair (default: one, §8.3 amendment)')
+    p.add_argument('--cluster', default='deal', choices=['deal', 'game'], help='the bootstrap cluster (default: deal)')
     p.add_argument('--max-games', type=int, default=0)
     p.add_argument('--batch', type=int, default=2048)
     p.add_argument('--threads', type=int, default=2)
@@ -366,6 +374,7 @@ def main():
     p.add_argument('--max-epochs', type=int, default=MAX_EPOCHS)
     p.add_argument('--max-train-games', type=int, default=0)
     p.add_argument('--amp', default='bf16', choices=['bf16', 'off'])
+    p.add_argument('--smoke', action='store_true', help='label the run a smoke')
     p.add_argument('--workers', type=int, default=0, help='data loader worker processes')
     p = sub.add_parser('eval')
     p.add_argument('--run', required=True)
