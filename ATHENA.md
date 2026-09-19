@@ -4,9 +4,11 @@
 own play.** Monet v1.0 is the bar. It is also an opponent, a harness and a body of evidence. It is not a starting
 point.
 
-**Status: DRAFT, 2026-09-18.** Nothing is built. No ATHENA game has been played. §4.1–§4.4 report scoping
-measurements made today: engine checks and throughput timings, none of them a read of strength. **§4 is a draft
-pre-registration for the owner's review, and nothing in it runs until the owner answers row 2 of §6.**
+**Status: P0 REGISTERED 2026-09-19.** The owner approved §4 as drafted, and the installs it needs, in their words:
+*"approve P0 as drafted, go ahead with the installs"* (§6 row 2). §4 is the draft of 2026-09-18, unchanged; anything
+amended after approval carries its date. No ATHENA game has been played. §4.1–§4.4 report the scoping measurements of
+2026-09-18: engine checks and throughput timings, none of them a read of strength. The owner's answers to §5's
+questions, given the same day, are recorded in §5 and §6.
 
 **Labels.** Every number or claim carries one of these:
 
@@ -49,7 +51,7 @@ The first sentence settles two things:
 | | against SESTINA v1.0 | against Monet v1.0 | source |
 |---|---:|---:|---|
 | **Monet v1.0** (v0.54's vector) | **58.38%** over 14,400 games on twelve fresh seeds; lowest seed 56.58%, SD 1.43 | (itself) | [Record] MONET.md §3.9, §3.8ba |
-| **ATHENA v1.0**, the target | not below Monet on the same seeds (brief AC3; strictness is question D3) | beaten head-to-head; brief AC1 proposes ≥ 52.0% on twelve fresh seeds | [Record] brief C.3; the bars are the owner's (§5, D3) |
+| **ATHENA v1.0**, the target | **above Monet on the same seeds, by the ship rule** (brief AC3, made strict by the owner on 2026-09-19, D3) | beaten head-to-head; brief AC1 proposes ≥ 52.0% on twelve fresh seeds | [Record] brief C.3; the bars are the owner's (§5, D3) |
 | **ATHENA today** | not built | not built | — |
 
 Monet decides in **0.178 ms** on average and plays a whole game in **119 ms**. It does not search at play time.
@@ -216,7 +218,7 @@ estimate.** The brief's assumptions were:
 | **P0** Engine and harness | Port the us54 rules to a fast engine that replays our recorded games byte for byte. Serve Monet v1.0 and v0.33 as callable opponents. Build a home head-to-head harness. Package a stub ATHENA as a FishLab guest bot | **G0a–G0d, §4.6.** G0a replays every state of 10,800 reference games plus a view walk of 14,400 bridge games; G0b is ≥ 10,000 games/s on 8 threads. G0b is raised from the brief's 10^3 because the reference alone nearly clears 10^3 (§4.3) | 8–12 working days of engineering; under an hour of CPU; no GPU training; no Docker |
 | **P1** Belief head and sizing studies | Port the rules-derived facts. Build the brief's B.4.1 belief head. Re-run D4 with the head as the deal sampler. Re-measure the cheat ceiling (B.6.1). Records studies of the forced endgame (B.7.1) and of AIVAT (B.8.3). Size the network against the deterministic forward's cost | G1 is informative, not a ship gate. The head must gain ≥ +2.0 top-1 over the marginal on both populations; the marginal's baseline is 32.19% top-1 and NLL 1.4542 (MONET.md §3.8ah). D4-with-head at ≥ +2 SE opens ATHENA-S. **Declare pin on any belief change** | 1–3 days; hours of GPU; the records studies play no cell |
 | **P2** From scratch to Monet's level | PPO with the perfect-information critic and the belief head. Opponents are ATHENA itself, Monet v1.0 and v0.33 | **G2:** ≥ 50.0% against Monet v1.0 at home on twelve fresh seeds. **Kill criterion:** below 45% after the registered budget (brief: for example 10^8 games) goes to the owner with C.5's fallback | 2–5 days of running if P0's throughput holds and the learner is the bound. Monet's share is CPU-bound (below) |
-| **P3** The league: beat Monet | Add snapshots, Bass styles, main exploiters, and the share of games against Monet (brief B.5.1) | **G3a (home):** ATHENA against Monet is ≥ 2 SE above 50%, strictly ahead on ≥ 7 of 12. **G3b (bridge):** ATHENA and Monet each play SESTINA on the *same* twelve fresh seeds, paired, and ATHENA is not below Monet | 3–7 days of running. A bridge read takes about 2–4 h, scaled from the acceptance read's 84 cells, which ran from 09:31Z to about 11:01Z (MONET.md §3.8ba, "What ran, and the wall clock"), and from ATHENA's decision cost |
+| **P3** The league: beat Monet | Add snapshots, Bass styles, main exploiters, and the share of games against Monet (brief B.5.1) | **G3a (home):** ATHENA against Monet is ≥ 2 SE above 50%, strictly ahead on ≥ 7 of 12. **G3b (bridge):** ATHENA and Monet each play SESTINA on the *same* twelve fresh seeds, paired, and ATHENA is not below Monet. **Tightened 2026-09-19 (D3):** ATHENA must be above Monet by the ship rule, ≥ 2 SE and ahead on ≥ 7 of 12 | 3–7 days of running. A bridge read takes about 2–4 h, scaled from the acceptance read's 84 cells, which ran from 09:31Z to about 11:01Z (MONET.md §3.8ba, "What ran, and the wall clock"), and from ATHENA's decision cost |
 | **P4** ATHENA-S (optional) | Endgame search using the head's belief. Opens only if D4-with-head clears | **G4:** §3.8n's bar over P3's vector at the bridge | 2–4 days |
 | **P5** Acceptance | brief C.3's AC1–AC8, as the owner fixes them | all conditions on one registered read | about a day, exploiter training included |
 
@@ -240,10 +242,11 @@ estimate.** The brief's assumptions were:
 
 ---
 
-## 4. P0 pre-registration (DRAFT, for the owner's review)
+## 4. P0 pre-registration (registered 2026-09-19, as drafted)
 
-**Status: DRAFT. Nothing below has run except the scoping in §4.1–§4.4.** These measurements are engine checks and
-timings. They read no win rate, spend no seed, and ship nothing.
+**Status: REGISTERED 2026-09-19, on the owner's approval of the draft as written.** When it was approved, nothing
+below had run except the scoping in §4.1–§4.4. Those measurements are engine checks and timings. They read no win
+rate, spend no seed, and ship nothing.
 
 ### 4.1 The rules to port
 
@@ -738,15 +741,34 @@ their answer to D12, whether a Rust crate may live in the public repository.
 
 ---
 
-## 5. Open questions for the owner
+## 5. The owner's questions, and their answers
 
-These are the brief's Part D, minus D1, which is answered (§0.1). Notes from today's scoping are marked.
+These are the brief's Part D, minus D1, which is answered (§0.1), plus D12 and D13 from the scoping. **The owner
+answered on 2026-09-19.** Each answer is quoted, then what it changes. Where they asked for an explanation first,
+the question stays open (§6 rows 4 and 5).
 
 - **D2. SESTINA's records inside ATHENA's belief?** A model of SESTINA's choices would be used to *read* SESTINA's
   asks, never to choose ATHENA's (brief C.4). Allowed or not?
+  - **Owner, 2026-09-19:** *"allowed if thats the best path to do so"*.
+  - **What changes:** allowed on C.4's terms: it reads opponents' asks and never chooses ATHENA's. "If it is the best
+    path" is a measured condition. P1 registers the belief head with and without it, and it is kept only if it reads
+    better on SESTINA's games without costing on the home population.
 - **D3. What does "beats Monet" mean?** Head-to-head only (AC1–AC2), or also strictly better than Monet against
   SESTINA (AC3 strict)?
+  - **Owner, 2026-09-19:** *"it should be strictly better than monet and sestina, it should be the new frontier all
+    around model"*.
+  - **What changes:**
+    - AC3 is strict. Against SESTINA v1.0, on twelve fresh seeds paired with Monet v1.0 on the same seeds, ATHENA's
+      win rate must be above Monet's by the ship rule: the mean paired difference ≥ 2 SE above zero, and ATHENA ahead
+      on ≥ 7 of 12. G3b (§3) is tightened to the same bar.
+    - It must also beat Monet head to head (AC1, AC2) and the panel (AC4).
+    - "All around" adds Kraken if it can be run (D8) and play against people (D7). Their bars are set when their
+      instruments exist.
+    - [Judgement] "Strictly better" is read here as the project's ship rule. The owner may add a margin.
 - **D4. Hardware, and the longest single run.**
+  - **Owner, 2026-09-19:** *"let me know the estimates first, no hardware upgrades are planned so far, and are very
+    unlikely."* **Open:** the estimates go in §3.1, written once this machine's GPU has been measured, and the choice
+    is §6 row 4. The plan assumes this machine.
   - *Scoping note:* the local machine has an **RTX 5070 Ti (16 GB, Blackwell, driver 616.56)**, a 12-core Ryzen 9
     9900X and 31 GB of RAM [Measured]. [Judgement] By §3's estimates that is enough for P0 to P2, with the learner on
     the local GPU. The binding constraint is CPU for Monet's games, not the GPU.
@@ -755,22 +777,70 @@ These are the brief's Part D, minus D1, which is answered (§0.1). Notes from to
     running for weeks"* (MONET.md §3.8ac).
 - **D5. The web build.** Must ATHENA run in the browser within Monet's budgets of 1.4 ms a decision and 0.9 s a game
   (MONET.md §3.4a item 6)? *Scoping note:* G0d's forward-cost numbers are the input.
+  - **Owner, 2026-09-19:** *"there shouldnt be a budget for time needed for decisions... even if its in the browser."*
+  - **What changes:** there is no decision-time budget, at home, at the bridge or in the browser. Three things
+    remain, and none of them is a budget:
+    - Cost is reported beside every read, as the owner directed for Monet on 2026-09-17: speed is secondary to the
+      best action.
+    - The bridge host's per-move timeout is a hard limit. Each package declares its own:
+      `timeout_ms` 10,000 for Bass v2.0's (`botpkg/fishbot.json`) and 30,000 for Monet v1.0's.
+    - A decision's cost is paid about a hundred times a game and millions of times a run. It is priced in the run
+      lengths (D4), never traded against strength.
+  - In the browser, the network runs in a Web Worker, so a slow decision never freezes the page. G0d still reports
+    the forward's cost, as information.
 - **D6. The exploiter condition (AC8):** reported only, or a gate? If a gate, at what bar?
+  - **Owner, 2026-09-19:** *"explain this further"*. **Open,** explained on 2026-09-19 (§6 row 5).
+  - An exploiter is a separate network trained only to beat one frozen copy of ATHENA. It measures the worst case
+    against a player who studies ATHENA, where the league measures the average.
+  - [Judgement] Recommendation: a gate at v1.0, with a registered budget and a bar the exploiter must stay under.
 - **D7. Partners.** Will ATHENA ever partner human players on the site? If so, its conventions must stay readable
   (Other-Play or OBL, brief B.6.1).
+  - **Owner, 2026-09-19:** *"it should play well against both bots and players, but logically better against actual
+    players"*.
+  - **What changes:** people are a first-class target, as opponents and as partners.
+    - ATHENA's play must not rest on private conventions that only copies of itself understand. P3 registers an
+      Other-Play- or OBL-style variant, or a population wide enough to prevent them (brief B.6.1).
+    - There is no measurement against people yet: no human game is recorded. The instrument is new, the site's
+      `/play` and `/play/room` with games logged, and it is a separate decision (D14).
+    - Until then the Bass styles in the league stand in for human-like play. They are a proxy, and are labelled so.
 - **D8. Kraken.** Should Kraken be made runnable and added to the acceptance panel? It has never been played (paper
   §9).
+  - **Owner, 2026-09-19:** *"sure, go ahead if you can find the whole model. It's my third friend's selfmade model, so
+    im not sure if its accessible"*.
+  - **What changes:** it is being located. If the whole model is found and runs at the bridge, it joins P3's reads and
+    P5's panel. If it is not public, the owner asks its author.
 - **D9. A second engine.** Is G0a enough to trust a port? *Scoping note, proposed answer:* §2's "the port trains, the
   reference judges", so no published number ever rests on the port.
+  - **Owner, 2026-09-19:** *"not sure what this means or implies"*. Explained on 2026-09-19 (§6 row 5). The plan as
+    approved already carries the proposed answer (§2), so nothing waits on it unless the owner objects.
 - **D10. Monet's ladder.** Is it frozen at v1.0 while ATHENA is built, or does ATHENA-P run on Monet's registry as the
   control (brief C.1)? Choosing to start from scratch (D1) does not settle this.
+  - **Owner, 2026-09-19:** *"not sure what this means"*. **Open,** explained on 2026-09-19 (§6 row 5).
+  - [Judgement] Recommendation: freeze Monet at v1.0, the fixed bar, and run no ATHENA-P unless P2's kill criterion
+    fires.
 - **D11. The condition-5 precedent.** For Monet, the owner accepted condition 5 as registered on 2026-09-18 (§0.1).
   For ATHENA, is a locked reader's "no" final, or is it scored as registered?
+  - **Owner, 2026-09-19:** *"sure sure what this means"*, read as "not sure". **Open,** explained on 2026-09-19 (§6
+    row 5).
+  - [Judgement] Recommendation: build ATHENA's readers to apply every registered rule themselves, so that the script
+    and the registration cannot disagree. Where they still do, the registration decides and the owner may overrule.
 
 **New from today's scoping:**
 
 - **D12. A Rust crate in the public repository** (MIT) beside the TypeScript engine. This is part of row 2's approval.
+  - **Owner, 2026-09-19:** *"im not sure what that means, but you can decide. If its secure and efficient and will
+    help us reach our goals, go ahead"*.
+  - **Decided 2026-09-19: yes.** The crate lives at `athena-env/` under the repository's MIT licence.
+    - **Secure:** it is pure computation with no network, file or process access. Its dependencies are the Python
+      bindings and nothing else, pinned in a committed `Cargo.lock`. The rules core forbids `unsafe` code, and build
+      output is git-ignored. The Vercel build never touches it.
+    - **Efficient:** it is §4.4's fastest option with a debuggable replay gate.
 - **D13. Monet at training volume.**
+  - **Owner, 2026-09-19:** *"of course, we want to beat out the frontier model, which should theorectically be monet
+    v1.0 now."*
+  - **What changes:** allowed. A distilled Monet v1.0 network may sit in the league's opponent seats to add volume.
+    It never enters ATHENA's own policy, and its agreement with Monet is reported. Real Monet v1.0 stays the bar and
+    plays every read. [Record] Monet v1.0 is the frontier: 58.38% against SESTINA (MONET.md §3.8ba).
   - Real Monet games are CPU-bound. [Estimate] That is about 15–20 a thread a second with Monet on one team (§3).
   - May the league also carry a **distilled Monet opponent**, a network fitted to Monet v1.0's own play and used only
     as an *opponent*, to add volume?
@@ -778,6 +848,12 @@ These are the brief's Part D, minus D1, which is answered (§0.1). Notes from to
     paper §4), so this is SESTINA-derived play in the opponent seats only,
     which C.4 allows. It never enters ATHENA's own policy.
   - Real Monet stays the bar and the evaluator.
+
+**New on 2026-09-19:**
+
+- **D14. Logging games on the site.** D7 needs games against people, and none is recorded. Would the owner allow
+  `/play` and `/play/room` games to be logged, with a notice to players, for ATHENA's evaluation and possibly its
+  training? What is stored, where, and for how long is part of the question. It is not needed before P3.
 
 ---
 
@@ -788,7 +864,10 @@ In the form of MONET.md §8.3.
 | # | decision | state |
 |---|---|---|
 | 1 | **How is ATHENA built?** The brief (C.1, Part D) recommended ATHENA-L: one policy learned from game outcomes, **from scratch**, in a league. It is actor-critic self-play (PPO- or IMPALA-style) with a perfect-information critic in training only, a learned belief head, parameters shared across teammates, the rules-certain declare as a hard rail, and the game result as the reward. The alternatives were ATHENA-P (Monet-seeded policy iteration, the brief's control and fallback) and a warm start from Monet (C.5). SESTINA's recorded play enters only as an opponent, a yardstick and a test set (C.4) | **TAKEN 2026-09-18, on the owner's words** *"accept condition 5 and go from scratch with ATHENA-L"*, after *"I dont want monet to just be a fine tuned version of a sestina copy"* the same day. The same sentence accepts §3.9's condition 5 as registered, so Monet v1.0 stands as the bar (MONET.md row 65). **Not settled by it:** D2–D11 (§5); ATHENA-P as a control (D10); the warm-start fallback, which stays behind P2's kill criterion and the owner's explicit yes (§0.3) |
-| 2 | **Approve §4's P0 pre-registration and the installs it needs?** P0 would build the Rust port of the us54 core with PyO3 bindings, the oracle emitter, the Node opponent service, the home harness, and a stub package with a deterministic forward. Its gates are G0a (every state of 10,800 reference games plus a view walk of 14,400 bridge games, with branch floors and five mutants), G0b (≥ 10,000 games/s on 8 threads), G0c (game for game with `duplicate-pairs.mjs`) and G0d (the package self-tests, a 100% pin). The installs are PyTorch for CUDA 12.8, NumPy, Rust, the MSVC Build Tools and maturin (about 6 GB to download, 13–16 GB on disk, §4.10). The fallback if Rust is declined is (c′), which needs only PyTorch and NumPy. The stakes: 8–12 working days of engineering and under an hour of compute. It ships nothing and reads no strength. Without it, from-scratch training runs on the reference at about 550–1,800 games/s on all eleven cores [Estimate, §4.3]. That carries 10^8 games in about 15–50 hours but leaves no cores for Monet's games or the learner, and a tenfold overrun of the brief's budget becomes 6–21 days, against the owner's *"I don't want this to be running for weeks"* | **FOR THE OWNER.** The choices are: approve as drafted; approve with the bars changed; approve on (c′) without Rust; or hold |
+| 2 | **Approve §4's P0 pre-registration and the installs it needs?** P0 would build the Rust port of the us54 core with PyO3 bindings, the oracle emitter, the Node opponent service, the home harness, and a stub package with a deterministic forward. Its gates are G0a (every state of 10,800 reference games plus a view walk of 14,400 bridge games, with branch floors and five mutants), G0b (≥ 10,000 games/s on 8 threads), G0c (game for game with `duplicate-pairs.mjs`) and G0d (the package self-tests, a 100% pin). The installs are PyTorch for CUDA 12.8, NumPy, Rust, the MSVC Build Tools and maturin (about 6 GB to download, 13–16 GB on disk, §4.10). The fallback if Rust is declined is (c′), which needs only PyTorch and NumPy. The stakes: 8–12 working days of engineering and under an hour of compute. It ships nothing and reads no strength. Without it, from-scratch training runs on the reference at about 550–1,800 games/s on all eleven cores [Estimate, §4.3]. That carries 10^8 games in about 15–50 hours but leaves no cores for Monet's games or the learner, and a tenfold overrun of the brief's budget becomes 6–21 days, against the owner's *"I don't want this to be running for weeks"* | **TAKEN 2026-09-19: approved as drafted, with the installs** (*"approve P0 as drafted, go ahead with the installs"*). P0 is registered from this commit, before any P0 code. D12 is decided the same day: the crate lives in the repository (§5) |
+| 3 | **The owner's answers to §5, 2026-09-19.** D2, D3, D5, D7, D8, D12 and D13 are answered in §5, each quoted with what it changes. The largest change is D3's: AC3 and G3b are now strict, so ATHENA must be above Monet against SESTINA by the ship rule | **TAKEN 2026-09-19.** Nothing measured changes; P0's gates are untouched. P3's and P5's bars tighten (D3); P1 registers D2's variant; the league may carry a distilled Monet (D13); D14 is new and not needed before P3 |
+| 4 | **D4: how long may one training run be, on this machine?** The owner asked for the estimates first, and no hardware upgrade is planned | **FOR THE OWNER.** The estimates go in §3.1, from measured GPU and engine rates |
+| 5 | **D6, D10, D11, and D9's confirmation.** The owner asked what these mean. Each is explained in plain terms in §5, with a recommendation: D6 an exploiter gate at v1.0; D9 "the port trains, the reference judges" (already in the approved plan); D10 Monet frozen at v1.0; D11 readers that apply every registered rule | **FOR THE OWNER.** None of them blocks P0 |
 
 ---
 
