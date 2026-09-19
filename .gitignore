@@ -18,6 +18,11 @@ dist/
 
 # Rust build output of the ATHENA rules core (ATHENA.md §5, D12: build output is git-ignored; Cargo.lock is committed)
 athena-env/target/
+# ...and of its Python bindings (athena-env/py, API.md): cargo's and maturin's trees, the built module, Python caches
+athena-env/py/target/
+*.pyd
+__pycache__/
+.venv/
 
 # simulation output (regenerate with `npm run lab`)
 lab-out/

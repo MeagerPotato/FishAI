@@ -8,7 +8,7 @@ publish = false
 rust-version = "1.80"
 
 # D12 (ATHENA.md §5): the core is pure computation with no network, file or process access, and the crate has no
-# dependencies at all. The Python bindings arrive at G0b and will be its only dependency.
+# dependencies at all. The Python bindings are a separate crate, `py/` (API.md), so they add none here.
 [dependencies]
 
 [features]

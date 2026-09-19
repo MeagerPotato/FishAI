@@ -1,0 +1,14 @@
+[build-system]
+requires = ["maturin>=1.15,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "athena-env"
+version = "0.1.0"
+description = "ATHENA's batched us54 environment: the Rust rules core behind a NumPy API (ATHENA.md §4.5 item 2)."
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = ["numpy>=2.0"]
+
+[tool.maturin]
+module-name = "athena_env"

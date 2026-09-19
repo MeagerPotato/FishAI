@@ -1176,6 +1176,22 @@ impl Game {
         self.score = score;
     }
 
+    /// Swap the holders of two cards in play (a test fixture, used by the information-rule tests to build states that
+    /// differ only in cards a seat cannot see). Both seats keep their hand counts. A no-op when either card is out of
+    /// play or one seat holds both.
+    #[doc(hidden)]
+    pub fn fixture_swap_cards(&mut self, a: u8, b: u8) {
+        let (ha, hb) = (self.owner[a as usize], self.owner[b as usize]);
+        if ha == NONE || hb == NONE || ha == hb {
+            return;
+        }
+        let both = bit(a) | bit(b);
+        self.hand[ha as usize] ^= both;
+        self.hand[hb as usize] ^= both;
+        self.owner[a as usize] = hb;
+        self.owner[b as usize] = ha;
+    }
+
     /// Overwrite the window on a hand-built position.
     #[doc(hidden)]
     pub fn set_window(&mut self, w: Option<Window>) {

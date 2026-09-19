@@ -11,6 +11,7 @@
 //! - [`digest`] and [`rng`]: the house digest and the reference's generators, bit for bit.
 //! - [`replay`] and [`census`]: replaying one corpus record, and the branch census of §4.6's floor table.
 //! - [`stub`]: the mixed stub, G0a's population H5 and G0b's stub.
+//! - [`vecenv`]: the batch environment behind the Python API (`API.md`): action codes, legal masks, observations.
 //!
 //! D12 (ATHENA.md §5): this library is pure computation. It has no dependencies, forbids `unsafe`, and opens no file,
 //! socket or process; the `replay-check` and `stub-bench` binaries do the reading.
@@ -27,6 +28,7 @@ pub mod replay;
 pub mod rng;
 pub mod rules;
 pub mod stub;
+pub mod vecenv;
 
 #[cfg(test)]
 mod vectors;

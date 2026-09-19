@@ -1,2 +1,5 @@
 # The Rust rules core (ATHENA.md §5, D12) is not part of the site: the Vercel build never uploads or sees it.
 /athena-env
+# Nor ATHENA's Python scripts (the G0b bench over the core's Python API, athena-env/API.md) and their caches.
+/scripts/athena/*.py
+__pycache__
