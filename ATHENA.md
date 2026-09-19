@@ -959,8 +959,86 @@ In the form of MONET.md §8.3.
 | 3 | **The owner's answers to §5, 2026-09-19.** D2, D3, D5, D7, D8, D12 and D13 are answered in §5, each quoted with what it changes. The largest change is D3's: AC3 and G3b are now strict, so ATHENA must be above Monet against SESTINA by the ship rule | **TAKEN 2026-09-19.** Nothing measured changes; P0's gates are untouched. P3's and P5's bars tighten (D3); P1 registers D2's variant; the league may carry a distilled Monet (D13); D14 is new and not needed before P3 |
 | 4 | **D4: how long may one training run be, on this machine?** The owner asked for the estimates first, and no hardware upgrade is planned | **FOR THE OWNER.** The estimates are §3.1, from GPU rates measured on 2026-09-19. At the base case (network M, PPO reusing each game twice), P2's likely 10^7–10^8 games take about 2 hours to about 1 day, and a pessimistic 10^9 takes 7–11 days. Recommendation: runs of up to 3 days, checkpointed and reviewed |
 | 5 | **D6, D10, D11, and D9's confirmation.** The owner asked what these mean. Each is explained in plain terms in §5, with a recommendation: D6 an exploiter gate at v1.0; D9 "the port trains, the reference judges" (already in the approved plan); D10 Monet frozen at v1.0; D11 readers that apply every registered rule | **FOR THE OWNER.** None of them blocks P0 |
+| 6 | **D8: Kraken was found. Read Monet v1.0 against it?** Kraken v1.0 is public and complete (`kv1514/fish-researchp12`, `b10a673`), runs at the bridge, and passed a step-0 identity and a 60-game smoke (§7.1) | **TAKEN 2026-09-19 under D8** (*"go ahead if you can find the whole model"*). Pre-registered as §7 before any read cell. It ships nothing and writes ATHENA's Kraken bar |
 
 ---
+
+## 7. Monet v1.0's bar against Kraken v1.0 (pre-registered 2026-09-19, before any read cell)
+
+**Why read it.**
+- D3 asks for ATHENA to be *"the new frontier all around model"*, and D8 adds Kraken if the whole model could be
+  found. It was found (`github.com/kv1514/fish-researchp12`), and it runs at the bridge (§7.1).
+- ATHENA's Kraken bar is Monet v1.0's own number against Kraken, read the way every other bar is read.
+- It has never been measured: the paper's Kraken column is a description (paper §9).
+
+### 7.1 The instrument [Measured, 2026-09-19]
+
+**Kraken v1.0**
+- It is `kv1514/fish-researchp12` at `b10a6732`, the 2026-08-28 merge of KV's PR #3.
+- It is pinned as a tree of 825 files, content md5 `3537a890…`, at `C:\Projects\FishAI-bench\opponents\kraken-v1.0`.
+- It has no licence. It is run and cited, never copied.
+- KV's own self-test passes in the image: 329 decisions, 0 mismatches.
+
+**How it runs.** It goes through FishLab's own `kraken` spec, `--b=kraken:py=/usr/bin/python3,dir=/kraken`, with the
+tree mounted read-only, `--network none` and `OMP_NUM_THREADS=1`.
+
+**The image**
+- `fishlab-play-kraken` (`sha256:4449a2d6…`) is `fishlab-play` plus numpy 2.4.6 (a cp311 wheel, sha256 `89cd4683…`)
+  and nothing else. A whole-filesystem diff shows only numpy's files added.
+- **Step 0 on it:** §3.8ba's step-0 cell was replayed identically. That is Monet v1.0's arm against SESTINA, seed
+  4549308, 4,800 games. Every engine line but `elapsed` matched, and so did every game record, the calibration
+  readout and all 139 counter sums.
+
+**A 60-game smoke** (seed 3677200, label `"athena-kraken-smoke"`, now spent)
+- 60 of 60 games completed.
+- Monet's fourteen fault counters were 0, and its declares were 99.64% right.
+- The pin held: all 2,988 of Monet's asks were reproduced by `v0.54`, and `v0.53` differs on 1,117.
+- There were no invented forced declares and no Kraken error. Two replays were byte-identical.
+- **Disclosed: Monet won 35 of the 60.** This was seen before this registration was written. It is not a read.
+
+**Three known quirks of this route**
+- FishLab tells Kraken alone the true holders after a wrong declare. That is a small information edge for Kraken,
+  and it is counted in every cell.
+- There is no reply timeout. A watchdog stops a cell at 3,600 s.
+- Kraken is asked twice a move on its turn. The answers are identical, so this costs CPU only.
+
+### 7.2 The read
+
+- **Arms:** Monet v1.0, the installed package §3.8ba played (`monet-v55-v054`: v0.54's vector, MUSTFIX), against
+  Kraken v1.0 as §7.1 runs it.
+- **Seeds:**
+  - Twelve fresh seeds were drawn today under `"athena-kraken-read-12"` by `seeds-next.mjs`, against 272 spent seeds,
+    with none skipped: **8860402 7541736 7385745 1737865 1731972 4293485 5279041 8868885 9553380 6153025 4639722
+    6216080**.
+  - Each seed is one cell of 200 deals × 6 rotations = 1,200 games, so the read is 14,400 games.
+- **Step 0:** the smoke's seed is replayed through the read's scripts. It must be byte-identical to the smoke's
+  records before any read cell runs.
+- **What is read:**
+  - Monet's win rate, pooled and per seed, with the SD and SE across seeds; §6.3's per-deal floor is reported beside
+    them.
+  - Monet's declare accuracy in every cell, and its fourteen fault counters.
+  - **The pin:** every one of Monet's asks, replayed in-engine through `v0.54`, agrees at 100%, and one cell replayed
+    through `v0.53` differs.
+  - **Completion:** 12 of 12 cells, with no watchdog stop and no Kraken error.
+  - **Information only:** Kraken's information edge (wrong declares whose holders it saw), forced declares, and each
+    cell's CPU time.
+- **What it decides:**
+  - Nothing ships. It writes ATHENA's Kraken bar: under D3, ATHENA must be above this number by the ship rule, on
+    seeds paired with Monet's, as G3b does against SESTINA.
+  - If Monet is below 50%, the bar is still Monet's number, and the record says that Monet v1.0 does not beat Kraken.
+- **Predictions** [Judgement], written before any read cell:
+  - **Q1: Monet's pooled win rate is above 50% (85%).**
+    - Monet wins 58.38% against SESTINA.
+    - KV's own unmerged draft reports Kraken losing to SESTINA: 43.3% of 1,200 games in KV's engine, and −0.648
+      sets a game over 5,400 games in FishLab's engine through KV's package, which exists only from v1.1.
+    - Results between bots do not transfer reliably, which is why this is read, not inferred.
+  - **Q2:** above 55% (60%).
+  - **Q3:** every seed at or above 50% (40%).
+  - **Q4:** declare accuracy ≥ 98.0% in every cell, and every fault counter zero (95%).
+  - **Q5:** the pin at 100% in every cell (97%).
+  - **Q6:** all twelve cells complete, with no watchdog stop and no Kraken error (90%).
+- **Cost** [Estimate, from the smoke]: 1,580–1,830 CPU-seconds a cell, or 5.3–6.1 CPU-hours in all. That is about
+  40 minutes on a quiet machine, and up to about 3 hours under contention, with at most two containers at a time.
 
 ## Appendix A. How today's numbers were made
 
