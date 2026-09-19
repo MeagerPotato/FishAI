@@ -6,19 +6,24 @@
  * - `ReferenceGame` keeps the replay format's digests exactly as `GameRecorder` does: the deal digest, d after every
  *   step, and l and v at every state, over whole mixed-stub games, the spec's vector included;
  * - a refused action changes nothing, and a judged decision applies identically to a fresh reduce.
+ * - the reveal regimes (ATHENA.md §8.2 G1b): a `'reduced'` game shows the replay codec's reduced view, field for
+ *   field, and withholds the holders a bridge host withholds; a `'full'` game is P0's, unchanged.
  */
 import { describe, expect, it } from 'vitest'
-import type { GameAction, Seat } from '../../lib/engine/types.ts'
-import { GameRecorder } from '../../scripts/athena/replay-codec.ts'
+import type { BookId, Card, GameAction, Seat } from '../../lib/engine/types.ts'
+import { ByteWriter, GameRecorder, SETS, SET_CARDS, digestBytes, encodeView } from '../../scripts/athena/replay-codec.ts'
+import { ReducedReveal } from '../../scripts/athena/facts-codec.ts'
 import { mixedStubAction, mixedStubRng } from '../../scripts/athena/mixed-stub.ts'
 import {
   A_DECLARE,
   A_DECLINE,
   A_PASS,
   N_ACTIONS,
+  REVEALS,
   ReferenceGame,
   actionCode,
   actionOfCode,
+  checkReveal,
   moveSeed,
 } from '../../scripts/athena/opponent-core.ts'
 
@@ -132,6 +137,143 @@ describe('ReferenceGame keeps the replay format digests', () => {
   it('the move seed is the lab seed', () => {
     expect(moveSeed('athena-p0-pin-0', 0)).toBe(new ReferenceGame('athena-p0-pin-0', 0).moveSeed())
     expect(moveSeed('a', 17)).not.toBe(moveSeed('a', 18))
+  })
+})
+
+/* ------------------------------------------------------------------------ the reveal regimes --- */
+
+/** The holders a view does not publish: cards of a resolved set whose true holder is absent (§12.4's NONE). */
+function unpublished(view: ReturnType<ReferenceGame['view']>): { card: Card; book: BookId }[] {
+  const out: { card: Card; book: BookId }[] = []
+  SETS.forEach((b, i) => {
+    const r = view.books[b]
+    if (!r) return
+    for (const c of SET_CARDS[i]) if (r.actualHolders[c] === undefined) out.push({ card: c, book: b })
+  })
+  return out
+}
+
+describe('the reveal regimes (ATHENA.md §8.2 G1b)', () => {
+  it('names its two regimes, defaults to the home one, and refuses anything else', () => {
+    expect(REVEALS).toEqual(['full', 'reduced'])
+    expect(checkReveal('full')).toBe('full')
+    expect(checkReveal('reduced')).toBe('reduced')
+    for (const bad of ['home', 'bridge', 'FULL', '', null, undefined, 0, 1, true, ['full']])
+      expect(() => checkReveal(bad)).toThrow(/is not one of full, reduced/)
+    // The two-argument constructor is P0's, and P0 is the home regime.
+    expect(new ReferenceGame('athena-test-reveal-default', 0).reveal).toBe('full')
+    expect(new ReferenceGame('athena-test-reveal-default', 0, 'reduced').reveal).toBe('reduced')
+  })
+
+  it("a reduced game's view is the replay codec's reduced view, field for field, at every step", () => {
+    for (const [seed, start] of [
+      ['athena-test-opponent-1', 3],
+      ['athena-p0-g0a-h5-0', 0],
+    ] as const) {
+      const red = new ReferenceGame(seed, start, 'reduced')
+      const full = new ReferenceGame(seed, start, 'full')
+      // The reference, built the way `emit-facts.mjs home` builds G1b's B column: the same reducer, with
+      // `ReducedReveal` fed every event, and `encodeView(..., 'reduced')` over the reduced log and its digest.
+      const ref = new ReducedReveal()
+      for (const e of red.state.log) ref.push(e)
+      const w = new ByteWriter(1024)
+      const rng = mixedStubRng(seed)
+      let steps = 0
+      let statesWithHidden = 0
+      while (!red.finished) {
+        const acting = red.acting()
+        expect(full.acting()).toBe(acting)
+        const want = ref.view(red.state, acting)
+        // Field for field: the whole view object, hand, counts, score, set block and published log alike.
+        expect(red.view()).toEqual(want)
+        w.reset()
+        encodeView(w, want, ref.log.length, ref.logDigest.hex(), 'reduced')
+        expect(red.viewDigest()).toBe(digestBytes(w.buf, w.n))
+        // Only the view is reduced: the rules, the state digest and the legal moves are the home game's.
+        expect(red.d).toBe(full.d)
+        expect(red.legalDigest()).toBe(full.legalDigest())
+        expect(red.moveSeed()).toBe(full.moveSeed())
+        // v differs from the home regime's exactly where a holder is unpublished, and nowhere else.
+        const hidden = unpublished(red.view())
+        expect(unpublished(full.view())).toEqual([])
+        expect(red.viewDigest() === full.viewDigest()).toBe(hidden.length === 0)
+        if (hidden.length > 0) statesWithHidden++
+        expect(red.hidden.holders).toBe(ref.hiddenHolders)
+        expect(red.hidden.wrongDeclares).toBe(ref.wrongDeclares)
+        expect(full.hidden).toEqual({ holders: 0, wrongDeclares: 0 })
+
+        const action = mixedStubAction(red.state, acting, rng)
+        const code = actionCode(action) as number
+        expect(red.applyCode(acting, code)).toEqual({ ok: true })
+        expect(full.applyCode(acting, code)).toEqual({ ok: true })
+        for (const e of red.state.log.slice(ref.log.length)) ref.push(e)
+        steps++
+      }
+      expect(red.steps).toBe(full.steps)
+      expect(red.state.score).toEqual(full.state.score)
+      // The game has to exercise the thing: these two seeds hold wrong declares that withhold holders.
+      expect(red.hidden.wrongDeclares).toBeGreaterThan(0)
+      expect(red.hidden.holders).toBeGreaterThan(0)
+      expect(statesWithHidden).toBeGreaterThan(0)
+      expect(steps).toBeGreaterThan(100)
+    }
+  })
+
+  it('a reduced view withholds the holders a hit had not located — re-publishing them fails this', () => {
+    // The spec's own vector, played by the mixed stub: its five wrong declares withhold 20 holders in all, and its
+    // sets end published 1, 1, 4, 2, 6, 2, 6, 6 — right declares all six, wrong ones only what a hit had located.
+    const seed = 'athena-p0-g0a-h5-0'
+    const red = new ReferenceGame(seed, 0, 'reduced')
+    const full = new ReferenceGame(seed, 0, 'full')
+    const rng = mixedStubRng(seed)
+    let found: { book: BookId; cards: Card[] } | null = null
+    while (!red.finished && found === null) {
+      const acting = red.acting()
+      const hidden = unpublished(red.view())
+      if (hidden.length > 0) found = { book: hidden[0].book, cards: hidden.map((h) => h.card) }
+      const action = mixedStubAction(red.state, acting, rng)
+      const code = actionCode(action) as number
+      expect(red.applyCode(acting, code)).toEqual({ ok: true })
+      expect(full.applyCode(acting, code)).toEqual({ ok: true })
+    }
+    // This is the whole point of the regime: a bridge host does not publish these, and the service must not either.
+    expect(found).not.toBeNull()
+    const book = (found as { book: BookId }).book
+    const cards = (found as { cards: Card[] }).cards
+    expect(cards.length).toBeGreaterThan(0)
+    const view = red.view()
+    const home = full.view()
+    // Home publishes all six true holders of the resolved set; the bridge publishes strictly fewer.
+    const i = SETS.indexOf(book)
+    expect(SET_CARDS[i].filter((c) => home.books[book]?.actualHolders[c] !== undefined)).toHaveLength(6)
+    for (const c of cards) {
+      expect(view.books[book]?.actualHolders[c]).toBeUndefined()
+      expect(home.books[book]?.actualHolders[c]).not.toBeUndefined()
+    }
+    // The same silence in the log's claim, not only in the set block (replay-format.md §12.4).
+    const claim = view.log.find((e) => e.type === 'claim' && e.book === book)
+    expect(claim).toBeDefined()
+    for (const c of cards) expect((claim as { actualHolders: Record<Card, Seat> }).actualHolders[c]).toBeUndefined()
+    expect(cards.length).toBeGreaterThan(0)
+    expect(red.viewDigest()).not.toBe(full.viewDigest())
+
+    // Not every unpublished holder is every holder: a hit publishes where a card is, and a wrong declare of a set
+    // some of whose cards a hit had already moved publishes exactly those. Play the game out and find one.
+    const counts = new Map<BookId, number>()
+    while (!red.finished) {
+      const acting = red.acting()
+      const v = red.view()
+      SETS.forEach((b, j) => {
+        const r = v.books[b]
+        if (r) counts.set(b, SET_CARDS[j].filter((c) => r.actualHolders[c] !== undefined).length)
+      })
+      const a = mixedStubAction(red.state, acting, rng)
+      expect(red.applyCode(acting, actionCode(a) as number)).toEqual({ ok: true })
+    }
+    const published = [...counts.values()]
+    expect(published.filter((k) => k === 6).length).toBeGreaterThan(0) // right declares publish all six
+    expect(published.filter((k) => k < 6).length).toBeGreaterThan(0) // wrong ones publish fewer
+    expect(published.filter((k) => k > 0 && k < 6).length).toBeGreaterThan(0) // and sometimes only some
   })
 })
 
