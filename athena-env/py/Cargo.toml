@@ -16,6 +16,13 @@ athena_core = { package = "athena-env", path = ".." }
 pyo3 = { version = "0.29", features = ["extension-module"] }
 numpy = "0.29"
 
+[features]
+default = []
+# G0c's control (ATHENA.md §4.6): `maturin build --release --features mutants` makes a build whose BatchEnv has
+# `set_mutant("M1".."M5")`, planting the core's G0a mutants. It is never the default: the default build (the one
+# `maturin develop --release` installs) compiles no mutant code at all, and `athena_env.MUTANTS` says which is loaded.
+mutants = ["athena_core/mutants"]
+
 [lib]
 # The importable module is `athena_env` (pyproject.toml's module-name and the #[pymodule]'s name). The library itself
 # is named apart from the core crate, whose library is also `athena_env`.

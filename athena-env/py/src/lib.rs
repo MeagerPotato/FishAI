@@ -361,6 +361,17 @@ impl BatchEnv {
         Ok(d)
     }
 
+    /// G0c's control, in a `mutants` build only (`maturin build --release --features mutants`): plant one of the
+    /// core's G0a mutants, `"M1"`..`"M5"`, in every game of the batch, now and in every game dealt later; `"none"`
+    /// restores the reference's rules. A default build has no such method (`athena_env.MUTANTS` is False).
+    #[cfg(feature = "mutants")]
+    fn set_mutant(&mut self, name: &str) -> PyResult<()> {
+        let m = athena_core::rules::Mutant::parse(name)
+            .ok_or_else(|| PyValueError::new_err(format!("{name:?} is not a mutant (M1-M5 or none)")))?;
+        self.inner.set_mutant(m);
+        Ok(())
+    }
+
     /// Test hook for the information rules: re-deal the cards game i's acting seat cannot see among the seats that
     /// hold them, keeping every hand count (and whether the turn-holder could ask). The acting seat's `seatView` is
     /// unchanged; its actor buffers must be too. Returns whether any card moved.
@@ -442,6 +453,8 @@ fn athena_env_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<BatchEnv>()?;
     m.add_function(wrap_pyfunction!(decode_action, m)?)?;
     m.add_function(wrap_pyfunction!(encode_action, m)?)?;
+    // Whether this build can plant G0a's mutants (`BatchEnv.set_mutant`): False in every default build.
+    m.add("MUTANTS", cfg!(feature = "mutants"))?;
     m.add("NONE", NONE)?;
     m.add("STEP_CAP", STEP_CAP)?;
     m.add("N_CARDS", NCARDS)?;
