@@ -427,6 +427,26 @@ export function foldAll(net: AthenaNet, rows: Uint8Array, n: number): Float64Arr
   return h
 }
 
+/**
+ * The belief head's probabilities (ATHENA.md §1's "card × seat, masked by the rules"; §8.3): for each card c, the
+ * softmax of its logits `heads[H_BELIEF + 6c + r]` over the relative seats r that `cands` (54 x 6 bytes, as
+ * {@link decisionFeatures} reads it) leaves possible, and 0 at every other seat; a card with no candidate is all
+ * zero. The same arithmetic as policy.ts's `planSet`: the maximum candidate logit is subtracted, then
+ * {@link expDet} over the candidates in ascending r, summed in that order, and each term divided by the sum.
+ */
+export function beliefOf(heads: Float64Array, cands: Uint8Array, out: Float64Array = new Float64Array(324)): Float64Array {
+  out.fill(0)
+  for (let c = 0; c < 54; c++) {
+    let m = Number.NEGATIVE_INFINITY
+    for (let r = 0; r < 6; r++) if (cands[c * 6 + r]) m = Math.max(m, heads[H_BELIEF + c * 6 + r])
+    if (m === Number.NEGATIVE_INFINITY) continue
+    let sum = 0
+    for (let r = 0; r < 6; r++) if (cands[c * 6 + r]) sum += expDet(heads[H_BELIEF + c * 6 + r] - m)
+    for (let r = 0; r < 6; r++) if (cands[c * 6 + r]) out[c * 6 + r] = expDet(heads[H_BELIEF + c * 6 + r] - m) / sum
+  }
+  return out
+}
+
 /** The heads (HEADS = 517 outputs, written into `out`) for the state `h` and the decision features `dec`. */
 export function headsOf(net: AthenaNet, h: Float64Array, dec: Float64Array, out: Float64Array): Float64Array {
   const d = net.arch.d
