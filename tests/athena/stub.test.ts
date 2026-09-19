@@ -3,8 +3,8 @@
  *
  * - **The encoder**: API.md's constants and worked examples; every action code round-trips; the legal row's asks are
  *   exactly the engine's legal asks; and the fixture games (`tests/athena/data/encoder-fixture.json`, written by
- *   `scripts/athena/dump-actor-buffers.py` from the Rust port's own buffers) replay here to the port's digests, byte for
- *   byte. The full comparison (1,048,907 states) is `scripts/athena/check-encoder.mjs`.
+ *   `scripts/athena/dump-actor-buffers.py` from the Rust port's own buffers, in both of P1's regimes with the facts
+ *   row) replay here to the port's digests, byte for byte. The full comparison is `scripts/athena/check-encoder.mjs`.
  * - **The forward is deterministic**: `expDet` against `Math.exp`; the init is a pure function of its seed; the weight
  *   file round-trips bit for bit; the frozen stub's file has the md5 its manifest pins; the incremental per-seat cache
  *   equals a full refold bit for bit at every decision of real games.
@@ -24,6 +24,7 @@ import type { Card, GameAction, GameState, Seat } from '../../lib/engine/types.t
 import { seatView } from '../../lib/engine/views.ts'
 import { mixedStubAction, mixedStubRng } from '../../scripts/athena/mixed-stub.ts'
 import { digestBytes } from '../../scripts/athena/replay-codec.ts'
+import { ReducedReveal } from '../../scripts/athena/facts-codec.ts'
 
 /** Node's own modules, loaded by a computed specifier: this project has no @types/node, so the parts used are typed here. */
 interface NodeFs {
@@ -79,7 +80,7 @@ function playStubGame(
 describe('the encoder (API.md)', () => {
   it('has the layout constants', () => {
     expect([A.N_CARDS, A.N_SETS, A.N_ASK, A.A_DECLINE, A.A_PASS, A.A_DECLARE, A.N_ACTIONS]).toEqual([54, 9, 162, 162, 163, 165, 6726])
-    expect([A.OBS_LEN, A.LEGAL_LEN, A.EVENT_LEN, A.NONE]).toEqual([94, 174, 19, 255])
+    expect([A.OBS_LEN, A.LEGAL_LEN, A.EVENT_LEN, A.NONE]).toEqual([95, 174, 19, 255])
     expect([A.L_ASK, A.L_DECLARE, A.L_DECLINE, A.L_PASS]).toEqual([0, 162, 171, 172])
     expect(A.SET_CARDS[8]).toEqual([6, 19, 32, 45, 52, 53])
     expect(['2C', '8C', 'AC', '8S', 'XR', 'XB'].map((c) => A.cardIndex(c as Card))).toEqual([0, 6, 12, 45, 52, 53])
@@ -135,29 +136,38 @@ describe('the encoder (API.md)', () => {
 
   it("replays the Rust port's fixture games to the port's digests", async () => {
     const fx = JSON.parse(await readText('./data/encoder-fixture.json')) as {
-      games: { population: string; seed: string; start: number; codes: number[]; digest: string }[]
+      format: string
+      facts: boolean
+      games: { population: string; seed: string; start: number; regime: number; codes: number[]; digest: string }[]
     }
-    expect(fx.games.length).toBe(10)
+    expect([fx.format, fx.facts, fx.games.length]).toEqual(['athena-encoder-fixture-2', true, 20])
+    expect(new Set(fx.games.map((g) => g.regime))).toEqual(new Set([A.REGIME_HOME, A.REGIME_BRIDGE]))
     const obs = new Uint8Array(A.OBS_LEN)
     const legal = new Uint8Array(A.LEGAL_LEN)
+    const facts = new Uint8Array(A.FACTS_LEN)
     for (const game of fx.games) {
       let s = newGame(game.seed, us54Config, game.start as Seat)
+      const red = new ReducedReveal()
+      for (const e of s.log) red.push(e)
       const seen = [0, 0, 0, 0, 0, 0]
       const bytes: number[] = []
       for (let t = 0; t <= game.codes.length; t++) {
         const seat = actorOf(s)
-        const v = seatView(s, seat)
-        A.encodeObservation(v, obs, legal)
-        const rows = A.encodeEventRows(v.log.slice(seen[seat]), seat)
-        seen[seat] = s.log.length
-        bytes.push(seat, rows.length / A.EVENT_LEN, ...obs, ...legal, ...rows)
+        const v = game.regime === A.REGIME_BRIDGE ? red.view(s, seat) : seatView(s, seat)
+        A.encodeObservation(v, obs, legal, game.regime)
+        A.encodeFactsRow(v, A.factsOf(v), facts)
+        const all = A.encodeEventRows(v.log, seat)
+        const rows = all.subarray(seen[seat] * A.EVENT_LEN)
+        seen[seat] = all.length / A.EVENT_LEN
+        bytes.push(seat, rows.length / A.EVENT_LEN, ...obs, ...legal, ...facts, ...rows)
         if (t === game.codes.length) break
         const r = reduce(s, A.decodeAction(seat, game.codes[t]) as GameAction)
         if (!r.ok) throw new Error(`${game.seed} step ${t}: ${r.error.code}`)
+        for (const e of r.events) red.push(e)
         s = r.state
       }
       expect(s.phase).toBe('finished')
-      expect(digestBytes(bytes), `${game.population} ${game.seed}`).toBe(game.digest)
+      expect(digestBytes(bytes), `${game.population} ${game.seed} regime ${game.regime}`).toBe(game.digest)
     }
   })
 })

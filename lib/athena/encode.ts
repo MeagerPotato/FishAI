@@ -3,19 +3,24 @@
  * (`athena-env/src/vecenv.rs`, documented in `athena-env/API.md` §4-§5). ATHENA.md §4.5 item 6, G0d.
  *
  * A network trained on the port's observations must see the same bytes inside a package, so every function here
- * reproduces the Rust encoder exactly: the action codes (API.md §4), the legal row (§5.1), the obs row (§5.2) and the
- * event rows (§5.3). `scripts/athena/check-encoder.mjs` compares this encoder with `athena_env.BatchEnv` on corpus
- * games, byte for byte, and `tests/athena/stub.test.ts` pins a sample of those comparisons.
+ * reproduces the Rust encoder exactly: the action codes (API.md §4), the legal row (§5.1), the obs row (§5.2), the
+ * event rows (§5.3) and the facts row (§5.5). `scripts/athena/check-encoder.mjs` compares this encoder with
+ * `athena_env.BatchEnv` on corpus games, byte for byte, in both regimes, and `tests/athena/stub.test.ts` pins a
+ * sample of those comparisons.
  *
  * - **Relative seats.** Seat s is written `(s - me) mod 6` for the observer `me`: rel 0 is the observer, rels 2 and 4
  *   its teammates, rels 1, 3 and 5 its opponents. NONE (255) marks an absent value.
  * - **Events.** `encodeEventRows` encodes the whole log. The Rust environment delivers the rows logged since the
  *   observing seat's last observation; concatenated over a game they are the same rows, in log order.
- * - **The reduced reveal.** At the bridge a wrong declare publishes only the holders a hit had already located
- *   (ATHENA.md §4.1; `scripts/athena/replay-format.md` §12.4). A holder absent from a view's `actualHolders` encodes
- *   as NONE in the event row, and a wrong declare whose "how" the published holders cannot settle encodes its how
- *   byte as NONE. Under the home engine's full reveal every holder is present and both rules reduce to the Rust
- *   encoder's. The port offers only the full reveal; which reveal ATHENA trains under is P1's to register.
+ * - **The start seat** (ATHENA.md §8.2, both regimes). The bridge's host does not publish it, so the observation's
+ *   start seat is unknown until the first event, then that event's actor: while the log holds only `game_started`
+ *   it encodes as no rows, and after that its row names the actor of the log's second event.
+ * - **The reveal regimes** (ATHENA.md §8.2 G1b). At home a declare publishes every true holder. At the bridge a
+ *   wrong declare publishes only the holders a hit had already located (ATHENA.md §4.1;
+ *   `scripts/athena/replay-format.md` §12.4). A holder absent from a view's `actualHolders` encodes as NONE in the
+ *   event row, and a wrong declare whose "how" the published holders cannot settle encodes its how byte as NONE. The
+ *   caller gives a bridge view its reduced holders and passes the regime, which the obs row carries (`O_REGIME`):
+ *   the view alone cannot say which regime it is in.
  * - **One legal bit depends on a hidden hand: the decline** (API.md §6). It is computed from the view as the Rust
  *   tests prove it can be in every reachable state: the window opens on the turn-holder, so an option seat other than
  *   the turn-holder exists only after the turn-holder's legal decline, and declines move no cards.
@@ -23,7 +28,7 @@
  * Pure over its inputs; no dependency beyond the engine's card tables.
  */
 import type { BookId, Card, GameAction, PublicEvent, Seat } from '../engine/types.ts'
-import type { SeatView } from '../engine/bots/types.ts'
+import type { Knowledge, SeatView } from '../engine/bots/types.ts'
 import { allBooks, allCards, cardBook } from '../engine/cards.ts'
 import { us54Config } from '../engine/reduce.ts'
 
@@ -154,7 +159,32 @@ export const O_DECLINED = O_OPTION + 1
 export const O_SCORE = O_DECLINED + 1
 export const O_SETS = O_SCORE + 2
 export const SET_FIELDS = 3
-export const OBS_LEN = O_SETS + N_SETS * SET_FIELDS
+/** The game's reveal regime: `REGIME_HOME` (0) or `REGIME_BRIDGE` (1). Added by P1 (ATHENA.md §8.2 G1b). */
+export const O_REGIME = O_SETS + N_SETS * SET_FIELDS
+export const OBS_LEN = O_REGIME + 1
+
+export const REGIME_HOME = 0
+export const REGIME_BRIDGE = 1
+
+/** The facts row (API.md §5.5): each card's candidate seats now, relative, a six-bit mask (0 once out of play). */
+export const F_CAND = 0
+/** Each seat's unknown slots, in relative order. */
+export const F_UNKNOWN = F_CAND + N_CARDS
+/** Per set, its cards certain on the observer's team (NONE once resolved). */
+export const F_SET_CERTAIN = F_UNKNOWN + 6
+/** Per set, 1 if the facts prove it lost for the observer's team, else 0 (NONE once resolved). */
+export const F_SET_LOST = F_SET_CERTAIN + N_SETS
+/** The rules-certain declare (the rail): its set, or NONE. */
+export const F_RAIL = F_SET_LOST + N_SETS
+/** The rail's stated seat for each of the set's six cards, relative (NONE without a rail). */
+export const F_RAIL_ASSIGN = F_RAIL + 1
+/** The number of distinct set-membership constraints. */
+export const F_NCONS = F_RAIL_ASSIGN + 6
+/** The constraints, sorted: (seat relative, set, six-bit mask of the set's cards); NONE past the count. */
+export const F_CONS = F_NCONS + 1
+export const CONS_FIELDS = 3
+export const MAX_CONS = 64
+export const FACTS_LEN = F_CONS + MAX_CONS * CONS_FIELDS
 
 export const E_TYPE = 0
 export const E_ACTOR = 1
@@ -218,9 +248,9 @@ export function viewerCouldAsk(view: SeatView): boolean {
 
 /**
  * The obs row (API.md §5.2) and the legal row (§5.1) of `view` for its own seat, written into `obs` (OBS_LEN bytes)
- * and `legal` (LEGAL_LEN bytes).
+ * and `legal` (LEGAL_LEN bytes). `regime` is the game's (a bridge view's holders are the caller's to reduce).
  */
-export function encodeObservation(view: SeatView, obs: Uint8Array, legal: Uint8Array): void {
+export function encodeObservation(view: SeatView, obs: Uint8Array, legal: Uint8Array, regime: number = REGIME_HOME): void {
   const me = view.seat
   const myTeam = team(me)
   obs.fill(0, 0, OBS_LEN)
@@ -261,6 +291,7 @@ export function encodeObservation(view: SeatView, obs: Uint8Array, legal: Uint8A
     obs[o + 1] = rel(r.claimer, me)
     obs[o + 2] = howByte(r.claimer, t, r.actualHolders ?? {}, b)
   }
+  obs[O_REGIME] = regime
 
   // The legal row, by the reducer's rules restated over the view (API.md §5.1).
   legal.fill(0, 0, LEGAL_LEN)
@@ -340,9 +371,97 @@ export function encodeEventRow(e: PublicEvent, me: number, row: Uint8Array, off:
   }
 }
 
-/** Every event of `log` as rows relative to `me`: `log.length * EVENT_LEN` bytes. */
+/** The seat an event is by: the start seat, asker, declarer, passer or emptied seat (undefined for game_over). */
+export function eventActor(e: PublicEvent): Seat | undefined {
+  switch (e.type) {
+    case 'game_started':
+      return e.startingSeat
+    case 'ask':
+      return e.asker
+    case 'claim':
+      return e.claimer
+    case 'pass':
+      return e.from
+    case 'player_out':
+      return e.seat
+    default:
+      return undefined
+  }
+}
+
+/**
+ * Every event of `log` as rows relative to `me`, under the start-seat rule (module header): no rows while the log
+ * holds only `game_started`; after that `log.length * EVENT_LEN` bytes, the first row naming the second event's actor.
+ */
 export function encodeEventRows(log: readonly PublicEvent[], me: number): Uint8Array {
+  if (log.length <= 1) return new Uint8Array(0)
   const out = new Uint8Array(log.length * EVENT_LEN)
-  for (let i = 0; i < log.length; i++) encodeEventRow(log[i], me, out, i * EVENT_LEN)
+  for (let i = 0; i < log.length; i++) {
+    const e = log[i]
+    const first = eventActor(log[1])
+    const row = i === 0 && e.type === 'game_started' && first !== undefined ? { type: 'game_started' as const, startingSeat: first } : e
+    encodeEventRow(row, me, out, i * EVENT_LEN)
+  }
   return out
+}
+
+/* ------------------------------------------------------------------------------------- the facts row --- */
+
+/**
+ * The facts row (API.md §5.5) of `view` for its own seat, from `k`, the view's rules-derived facts
+ * (`buildKnowledge(view)`, i.e. `lib/athena/policy.ts`'s `factsOf`), written into `row` (FACTS_LEN bytes): the Rust
+ * port's facts buffer, byte for byte.
+ */
+export function encodeFactsRow(view: SeatView, k: Knowledge, row: Uint8Array): void {
+  const me = view.seat
+  const myTeam = team(me)
+  row.fill(NONE, 0, FACTS_LEN)
+  for (let ci = 0; ci < N_CARDS; ci++) {
+    let m = 0
+    for (const s of k.cands[CARDS[ci]] ?? []) m |= 1 << rel(s, me)
+    row[F_CAND + ci] = m
+  }
+  for (let r = 0; r < 6; r++) row[F_UNKNOWN + r] = k.unknownSlots[abs(r, me)]
+  let rail = -1
+  for (let b = 0; b < N_SETS; b++) {
+    if (view.books[SETS[b]]) continue
+    let certain = 0
+    let lost = 0
+    let all = true
+    for (const ci of SET_CARDS[b]) {
+      const h = k.holders[CARDS[ci]]
+      if (h !== undefined) {
+        if (team(h) !== myTeam) {
+          lost = 1
+          all = false
+        } else certain++
+      } else {
+        all = false
+        if (!(k.cands[CARDS[ci]] ?? []).some((s) => team(s) === myTeam)) lost = 1
+      }
+    }
+    row[F_SET_CERTAIN + b] = certain
+    row[F_SET_LOST + b] = lost
+    if (rail < 0 && all) rail = b
+  }
+  if (rail >= 0) {
+    row[F_RAIL] = rail
+    SET_CARDS[rail].forEach((ci, j) => (row[F_RAIL_ASSIGN + j] = rel(k.holders[CARDS[ci]], me)))
+  }
+  const seen = new Set<number>()
+  for (const x of k.constraints) {
+    if (x.cards.length === 0) continue
+    const set = SET_OF[cardIndex(x.cards[0])]
+    let m = 0
+    for (const c of x.cards) m |= 1 << SET_CARDS[set].indexOf(cardIndex(c))
+    seen.add((rel(x.seat, me) << 16) | (set << 8) | m)
+  }
+  const cons = [...seen].sort((a, b) => a - b)
+  if (cons.length > MAX_CONS) throw new Error(`a view has ${cons.length} distinct constraints, above MAX_CONS = ${MAX_CONS}`)
+  row[F_NCONS] = cons.length
+  cons.forEach((v, i) => {
+    row[F_CONS + CONS_FIELDS * i] = v >> 16
+    row[F_CONS + CONS_FIELDS * i + 1] = (v >> 8) & 0xff
+    row[F_CONS + CONS_FIELDS * i + 2] = v & 0xff
+  })
 }
