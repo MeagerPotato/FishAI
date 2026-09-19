@@ -7,8 +7,10 @@ type Registry = Array<[string, number[]]>
 describe('seeds-next (the seed rule, MONET.md §6.5; ATHENA.md §4.5 item 7)', () => {
   it('re-draws ATHENA.md §7’s twelve seeds from the registry without their own file', async () => {
     const spent: Set<number> = spentSet({ except: ['athena-kraken-read-12/SEEDS'] })
-    expect(spent.size).toBe(272)
+    // The 272 that were on file when this draw was made, and whatever later draws have added since.
+    expect(spent.size).toBeGreaterThanOrEqual(272)
     const { seeds, skipped } = await drawSeeds('athena-kraken-read-12', spent)
+    // It skipped nothing then and skips nothing now: a later label never draws a seed an earlier one holds.
     expect(skipped).toBe(0)
     const registry = readRegistry() as Registry
     const recorded = registry.find(([rel]) => rel === 'athena-kraken-read-12/SEEDS')?.[1]
