@@ -11,10 +11,19 @@
  *   (`scripts/athena/replay-format.md` §5), kept exactly as `GameRecorder` keeps it, plus the legal-move digest l and
  *   the view digest v of the acting seat on request. The port's `BatchEnv(track_digests=True).digests()` returns the
  *   same three values, so every answer the service gives is also a live replay check (§4.5 item 4).
+ * - **The reveal regime** of the game (ATHENA.md §8.2 G1b, `replay-format.md` §12.4). A `ReferenceGame` is opened
+ *   `'full'` (the home regime: the default, and P0's only regime) or `'reduced'` (the bridge regime). Under
+ *   `'reduced'` the view a policy is shown is the one the bridge's host publishes: a wrong declare shows only the
+ *   holders a hit had already located, in the set block and in the log's claims alike. The reduction itself is
+ *   `facts-codec.ts`'s `ReducedReveal`, G1b's reference, so nothing here re-derives it.
+ *   - The rules, the actions, the state digest d and the legal-move digest l do NOT depend on the regime; only the
+ *     view does, and with it the view digest v (`athena-env/API.md` §3.5). So a reduced game's d and l still equal
+ *     the port's, and its v equals the port's bridge-regime v.
  * - **The move seed** of the lab: `hashSeed(`${seed}:${moveIndex}`)()`, as `duplicate-pairs.mjs` and the corpus
  *   emitter seed every decision.
  *
- * It imports the rules core and the replay codec only. Nothing here changes the engine.
+ * It imports the rules core, the replay codec and the facts codec's reduced reveal only. Nothing here changes the
+ * engine.
  */
 import type { Card, GameAction, GameState, ReduceResult, Seat } from '../../lib/engine/types.ts'
 import { newGame, reduce, us54Config } from '../../lib/engine/reduce.ts'
@@ -40,7 +49,18 @@ import {
   encodeView,
   legalKinds,
   setIndex,
+  type Reveal,
 } from './replay-codec.ts'
+import { ReducedReveal } from './facts-codec.ts'
+
+/** The reveal regimes an opponent game can be opened in, as the wire spells them (ATHENA.md §8.2 G1b). */
+export const REVEALS: readonly Reveal[] = ['full', 'reduced']
+
+/** `x` as a reveal regime; anything else is refused by name. */
+export function checkReveal(x: unknown): Reveal {
+  if (x === 'full' || x === 'reduced') return x
+  throw new Error(`opponent-core: reveal ${JSON.stringify(x)} is not one of ${REVEALS.join(', ')}`)
+}
 
 /* ------------------------------------------------------------- action codes --- */
 
@@ -145,20 +165,26 @@ export class ReferenceGame {
   readonly seed: string
   readonly startSeat: Seat
   readonly deal: string
+  /** The game's reveal regime: `'full'` at home, `'reduced'` at the bridge (ATHENA.md §8.2 G1b). */
+  readonly reveal: Reveal
   state: GameState
   steps = 0
   private readonly chain = new ByteDigest()
   private readonly logDigest = new ByteDigest()
   private logLength = 0
+  /** The bridge regime's published log, its digest and its set block; null under the full reveal. */
+  private readonly red: ReducedReveal | null
   private readonly w = new ByteWriter(1024)
   /** A decision's reduce result, kept so the apply of the same action does not reduce twice (reduce is pure). */
   private pending: { seat: number; code: number; result: ReduceResult } | null = null
 
-  constructor(seed: string, startSeat: number) {
+  constructor(seed: string, startSeat: number, reveal: Reveal = 'full') {
     checkSeed(seed)
     if (!isSeat(startSeat)) throw new Error(`opponent-core: start seat ${startSeat} is not a seat`)
     this.seed = seed
     this.startSeat = startSeat
+    this.reveal = checkReveal(reveal)
+    this.red = this.reveal === 'reduced' ? new ReducedReveal() : null
     this.state = newGame(seed, us54Config, startSeat)
     this.chain.pushAscii(`${FORMAT}|${startSeat}|${seed}`)
     this.w.reset()
@@ -168,11 +194,30 @@ export class ReferenceGame {
     for (const e of this.state.log) this.absorb(e)
   }
 
+  /**
+   * Take one log event. Under the full reveal the event's own encoding feeds the log digest, as `GameRecorder` feeds
+   * it; under the reduced reveal `ReducedReveal` republishes the event and keeps the reduced log and its digest,
+   * which is what `encodeView(..., 'reduced')` must be given (replay-format.md §12.3).
+   */
   private absorb(e: GameState['log'][number]): void {
+    if (this.red) {
+      this.red.push(e)
+      return
+    }
     this.w.reset()
     encodeEvent(this.w, e)
     this.logDigest.push(this.w.buf, this.w.n)
     this.logLength++
+  }
+
+  /** The number of published log events (the same under either reveal; only a claim's holders are reduced). */
+  private get logLen(): number {
+    return this.red ? this.red.log.length : this.logLength
+  }
+
+  /** The rolling log digest under this game's reveal. */
+  private logDigestHex(): string {
+    return this.red ? this.red.logDigest.hex() : this.logDigest.hex()
   }
 
   /** The rolling state digest after the last applied action (the deal digest before any). */
@@ -184,14 +229,29 @@ export class ReferenceGame {
     return this.state.phase === 'finished'
   }
 
+  /**
+   * How many true holders this game's reveal has withheld so far, and from how many wrong declares. Both are 0
+   * under the full reveal, always: it publishes every holder. Information, for the reads; nothing reads them to
+   * play.
+   */
+  get hidden(): { holders: number; wrongDeclares: number } {
+    return this.red
+      ? { holders: this.red.hiddenHolders, wrongDeclares: this.red.wrongDeclares }
+      : { holders: 0, wrongDeclares: 0 }
+  }
+
   /** The seat that acts now: the window's option seat when a window is open, else the turn seat. */
   acting(): Seat {
     return legalActionsSummary(this.state).seat
   }
 
-  /** The acting seat's `seatView`: all a policy is shown. */
+  /**
+   * The acting seat's view: all a policy is shown. Under the reduced reveal it is the view the bridge's host
+   * publishes — the same seat, hand, counts and score, with the reduced log and set block (replay-format.md §12.4).
+   */
   view(): ReturnType<typeof seatView> {
-    return seatView(this.state, this.acting())
+    const acting = this.acting()
+    return this.red ? this.red.view(this.state, acting) : seatView(this.state, acting)
   }
 
   /** The move seed of the current state. */
@@ -208,10 +268,13 @@ export class ReferenceGame {
     return digestBytes(this.w.buf, this.w.n)
   }
 
-  /** The view digest v of the current state for its acting seat (replay-format.md §4.7). */
+  /**
+   * The view digest v of the current state for its acting seat (replay-format.md §4.7), under this game's reveal:
+   * the port's `digests()[2]` in the same regime (`athena-env/API.md` §3.5).
+   */
   viewDigest(view: ReturnType<typeof seatView> = this.view()): string {
     this.w.reset()
-    encodeView(this.w, view, this.logLength, this.logDigest.hex())
+    encodeView(this.w, view, this.logLen, this.logDigestHex(), this.reveal)
     return digestBytes(this.w.buf, this.w.n)
   }
 

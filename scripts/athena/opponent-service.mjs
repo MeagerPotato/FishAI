@@ -15,8 +15,8 @@
  *
  * | request | reply |
  * |---|---|
- * | `{"id","op":"hello"}` | `{"id","ok":true,"protocol":1,"workers":W,"node":"v24...","pid"}` |
- * | `{"id","op":"open","games":[{"g","seed","start","seats":[v or null x6]}]}` | `{"id","ok":true,"games":[[g, deal, acting]]}` |
+ * | `{"id","op":"hello"}` | `{"id","ok":true,"protocol":1,"reveals":["full","reduced"],"workers":W,"node":"v24...","pid"}` |
+ * | `{"id","op":"open","games":[{"g","seed","start","seats":[v or null x6],"reveal":"full"}]}` | `{"id","ok":true,"games":[[g, deal, acting]]}` |
  * | `{"id","op":"step","full":bool,"items":[[g, applySeat, applyCode, decide]]}` | `{"id","ok":true,"items":[[g, d, acting, code, l, v, end, err]]}` |
  * | `{"id","op":"close","games":[g]}` | `{"id","ok":true,"closed":k}` |
  * | `{"id","op":"stats"}` | `{"id","ok":true,"workers":[{...counters}],"main":{...}}` |
@@ -25,6 +25,18 @@
  * - `g` is the caller's game number, a non-negative integer; game g lives on worker g mod W.
  * - `seats[s]` is the Monet version (`MONET_VERSION_IDS`) that plays seat s, or null for a seat the caller plays.
  *   `deal` is the deal digest (the port's d before any step). A refused open opens none of its games.
+ * - `reveal` is the game's reveal regime (ATHENA.md §8.2 G1b, `athena-env/API.md` §3.5): `"full"`, the home regime
+ *   and the **default**, or `"reduced"`, the bridge host's. It is a property of the game, fixed at its open, as the
+ *   port fixes a game's regime at its deal; P2 draws it per game (ATHENA.md §9.5). Under `"reduced"` the seats this
+ *   service plays are shown the view the bridge publishes — a wrong declare's unpublished holders are absent from
+ *   the set block and from the log's claims (`replay-format.md` §12.4) — and `v` is that view's digest, which is the
+ *   port's `digests()` `v` in the bridge regime. The rules do not change: the actions, `d` and `l` are the same in
+ *   either regime. Anything but those two strings refuses the open, and a missing `reveal` is `"full"`, so every
+ *   caller written before this field keeps its exact behaviour.
+ * - **The handshake names the capability.** `hello`'s `reveals` lists the regimes this service accepts. A service
+ *   built before P2 has no `reveals` field at all, so a caller that needs the bridge regime can tell the two apart
+ *   and stop rather than train its network against an opponent that sees more than a bridge host would show it.
+ *   `protocol` stays 1: every P0 request and reply is unchanged, and the new field is additive.
  * - A step item first applies `applyCode` for `applySeat` (the port's action code, `athena-env/API.md` §4, relative
  *   to the seat that acted in the port; `applySeat` -1 applies nothing), then, if `decide` is 1, decides for the
  *   reference's acting seat. The reply item holds the state digest d after the apply, the acting seat (null once
@@ -47,6 +59,14 @@ const HERE = fileURLToPath(import.meta.url)
 const ROOT = resolve(dirname(HERE), '../..')
 const imp = (p) => import(pathToFileURL(join(ROOT, p)).href)
 const PROTOCOL = 1
+/**
+ * The reveal regimes the handshake announces. It repeats `opponent-core.ts`'s `REVEALS` rather than importing it:
+ * the main thread answers `hello` before any worker has loaded the rules, and loading them here to read one array
+ * would pull the whole engine and the bots into a process that never plays. `opponent-service.test.mjs` pins the two
+ * equal, and the worker validates every `reveal` with the core's own `checkReveal`, so this list cannot drift into
+ * accepting something the core refuses.
+ */
+const REVEALS = ['full', 'reduced']
 
 // stdout is the protocol: anything a module prints goes to stderr instead.
 for (const k of ['log', 'info', 'debug', 'warn']) console[k] = (...a) => process.stderr.write(format(...a) + '\n')
@@ -71,6 +91,8 @@ async function workerMain() {
   const stats = {
     worker: workerData.index,
     opened: 0,
+    /** Of `opened`, the games opened in the bridge regime (ATHENA.md §8.2 G1b): a caller can see its draw landed. */
+    openedReduced: 0,
     closed: 0,
     live: 0,
     items: 0,
@@ -84,16 +106,19 @@ async function workerMain() {
 
   // All of a request's games are built before any is kept, so a refused request opens none.
   const open = (specs) => {
-    const made = specs.map(({ g, seed, start, seats }) => {
+    const made = specs.map(({ g, seed, start, seats, reveal }) => {
       if (!Number.isInteger(g) || g < 0) throw new Error(`game number ${JSON.stringify(g)}`)
       if (games.has(g)) throw new Error(`game ${g} is already open`)
       if (!Array.isArray(seats) || seats.length !== 6) throw new Error(`game ${g}: seats must list six entries`)
+      // An absent `reveal` is the home regime, so a caller written before P2 opens exactly the game it did before.
+      const rev = CORE.checkReveal(reveal === undefined || reveal === null ? 'full' : reveal)
       const pols = seats.map((v) => (v === null ? null : policyOf(v)))
-      return [g, { game: new CORE.ReferenceGame(seed, start), pols }]
+      return [g, { game: new CORE.ReferenceGame(seed, start, rev), pols }]
     })
     if (new Set(made.map(([g]) => g)).size !== made.length) throw new Error('a game number appears twice')
     for (const [g, e] of made) games.set(g, e)
     stats.opened += made.length
+    stats.openedReduced += made.filter(([, e]) => e.game.reveal === 'reduced').length
     return made.map(([g, e]) => [g, e.game.deal, e.game.acting()])
   }
 
@@ -248,7 +273,8 @@ async function mainMain() {
   const handle = async (req) => {
     switch (req.op) {
       case 'hello':
-        return { protocol: PROTOCOL, workers: W, node: process.version, pid: process.pid }
+        // `reveals` is the capability: a service without it is P0's, which shows every holder in every game.
+        return { protocol: PROTOCOL, reveals: REVEALS, workers: W, node: process.version, pid: process.pid }
       case 'open': {
         // A refused open opens nothing: each worker opens all of its share or none, and if any worker refuses, the
         // games the others opened for this request are closed again before the error is returned.
