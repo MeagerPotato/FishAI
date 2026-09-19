@@ -252,9 +252,13 @@ def hex16(x):
 
 
 def play(specs, arm_a, arm_b, service=None, *, threads=1, full=True, mutant=None, fallback_seed=20260919,
-         progress=None):
+         progress=None, record=False):
     """Play `specs` with arm A on each spec's team_a and arm B on the other team, the port stepping every game, and
-    check the reference's digests against the port's at every step. Returns a dict (see the keys at the end)."""
+    check the reference's digests against the port's at every step. Returns a dict (see the keys at the end).
+
+    With `record`, the result also holds `action_codes`: per game, in spec order, the action codes the port applied
+    (uint16, API.md §4), so a game can be replayed from its seed, start seat and actions alone (ATHENA.md §8.3's
+    stored games). Recording reads the codes the loop already has; it changes nothing that is played."""
     ae = athena_env()
     n = len(specs)
     if n == 0:
@@ -315,6 +319,7 @@ def play(specs, arm_a, arm_b, service=None, *, threads=1, full=True, mutant=None
 
     pend_seat = np.full(n, -1, dtype=np.int64)
     pend_code = np.zeros(n, dtype=np.int64)
+    trace = [] if record else None  # per batch step: (the games stepped, their codes)
     step_t = 0
     t_env = t_service = t_policy = 0.0
     service_steps = 0
@@ -429,6 +434,9 @@ def play(specs, arm_a, arm_b, service=None, *, threads=1, full=True, mutant=None
         te = time.perf_counter()
         env.step(codes, bufs)
         t_env += time.perf_counter() - te
+        if trace is not None:
+            rows = np.flatnonzero(running)
+            trace.append((rows, codes[rows].astype(np.uint16)))
         stepped = running & live
         pend_seat[stepped] = acting[stepped]
         pend_code[stepped] = codes[stepped]
@@ -449,7 +457,19 @@ def play(specs, arm_a, arm_b, service=None, *, threads=1, full=True, mutant=None
             'end': {1: 'finished', 2: 'capped'}.get(int(ended[i]), 'running'),
             'diverged': bool(diverged[i]), 'refused': bool(refused[i]),
         })
+    out = {}
+    if trace is not None:
+        rows = np.concatenate([r for r, _ in trace]) if trace else np.zeros(0, dtype=np.int64)
+        codes_all = np.concatenate([c for _, c in trace]) if trace else np.zeros(0, dtype=np.uint16)
+        order = np.argsort(rows, kind='stable')  # stable: each game's codes stay in step order
+        bounds = np.searchsorted(rows[order], np.arange(n + 1))
+        sorted_codes = codes_all[order]
+        out['action_codes'] = [sorted_codes[bounds[i]:bounds[i + 1]].copy() for i in range(n)]
+        for i in range(n):
+            if len(out['action_codes'][i]) != int(steps[i]):
+                raise RuntimeError(f'game {i}: {len(out["action_codes"][i])} recorded actions, the port applied {steps[i]}')
     return {
+        **out,
         'games': games,
         'divergences': divergences,
         'counts': counts,

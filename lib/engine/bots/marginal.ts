@@ -100,8 +100,12 @@ export interface MarginalTable {
   readonly conditioned: number
 }
 
-/** Alternate row and column scaling until nothing moves. Rows are exact on exit. */
-function scaleToMargins(p: Float64Array, n: number, need: readonly number[]): { rounds: number; converged: boolean } {
+/**
+ * Alternate row and column scaling until nothing moves. Rows are exact on exit. Exported for ATHENA.md §8.3's
+ * B-M-scaled arm (a learned belief table, `n` cards × 6 seats, rescaled to the public hand counts `need`); the
+ * export changes nothing here, which the v0.54 forward bank pins at 36 of 36.
+ */
+export function scaleToMargins(p: Float64Array, n: number, need: readonly number[]): { rounds: number; converged: boolean } {
   let rounds = 0
   let converged = false
   while (rounds < MARGINAL_ROUNDS) {

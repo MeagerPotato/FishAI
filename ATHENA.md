@@ -8,8 +8,9 @@ point.
 predictions came true. P1's pre-registration is §8, written before any P1 code or run. P1's first two gates, G1a and
 G1b, passed the same day (§8.1, §8.2). G1c failed, so its window rule is dropped and every declare offer calls the
 network: §3.1's training times are re-costed at about three times the first estimate. T1, R1, R2 and D4's M arm are
-read too (§8.4–§8.6); the belief study and D4's H arm wait for the belief heads. No ATHENA game has been played for
-strength.
+read too (§8.4–§8.6). G1 failed: the learned belief heads are better calibrated than Monet's but pick the holder only
+slightly more often (§8.3). P2 starts at size M, with D2's data. D4's H arm and the declare pin are next. No ATHENA game
+has been played for strength.
 
 **P0 was registered 2026-09-19.** The owner approved §4 as drafted, and the installs it needs, in their words:
 *"approve P0 as drafted, go ahead with the installs"* (§6 row 2). §4 is the draft of 2026-09-18, unchanged; anything
@@ -1309,7 +1310,7 @@ In the form of MONET.md §8.3.
 | 4 | **D4: how long may one training run be, on this machine?** The owner asked for the estimates first, and no hardware upgrade is planned | **FOR THE OWNER.** The estimates are §3.1, from GPU rates measured on 2026-09-19, **re-costed the same day after G1c failed**: every declare offer now calls the network, about three times the first estimate. At the base case (network M, PPO reusing each game twice), P2's likely 10^7–10^8 games take about 5 hours to about 3 days, and a pessimistic 10^9 takes 3–5 weeks. Recommendation unchanged: runs of up to 3 days, checkpointed and reviewed |
 | 5 | **D6, D10, D11, and D9's confirmation.** The owner asked what these mean. Each is explained in plain terms in §5, with a recommendation: D6 an exploiter gate at v1.0; D9 "the port trains, the reference judges" (already in the approved plan); D10 Monet frozen at v1.0; D11 readers that apply every registered rule | **FOR THE OWNER.** None of them blocks P0 |
 | 6 | **D8: Kraken was found. Read Monet v1.0 against it?** Kraken v1.0 is public and complete (`kv1514/fish-researchp12`, `b10a673`), runs at the bridge, and passed a step-0 identity and a 60-game smoke (§7.1) | **TAKEN 2026-09-19 under D8** (*"go ahead if you can find the whole model"*). Pre-registered as §7 before any read cell. It ships nothing and writes ATHENA's Kraken bar. **READ 2026-09-19 (§7.3):** Monet v1.0 won 58.49% of 14,400 games against Kraken v1.0, every seed at or above 55.08%; Q1–Q6 all hit |
-| 7 | **P1's pre-registration (§8).** The rules-derived facts ported and pinned (G1a); the observation's reveal regime, start seat and declare-window rule (G1b, G1c); the belief-head study (G1) on three populations, with the owner's D2 variant; D4 with the head; the team-information ceiling at home; two records studies; and P2's network size. About 6–9 CPU-hours and under 2 GPU-hours; no bridge cell | **REGISTERED 2026-09-19** under row 1's plan and the standing rule, as Monet's rungs were. It ships nothing and needs no install. The owner may amend any part before it runs. **G1a and G1b: PASS 2026-09-19** (§8.1, §8.2). **G1c: FAILED 2026-09-19**; its rule is dropped and P2's cost is re-costed (§3.1). **T1, R1, R2 and D4's M arm read 2026-09-19** (§8.4–§8.6) |
+| 7 | **P1's pre-registration (§8).** The rules-derived facts ported and pinned (G1a); the observation's reveal regime, start seat and declare-window rule (G1b, G1c); the belief-head study (G1) on three populations, with the owner's D2 variant; D4 with the head; the team-information ceiling at home; two records studies; and P2's network size. About 6–9 CPU-hours and under 2 GPU-hours; no bridge cell | **REGISTERED 2026-09-19** under row 1's plan and the standing rule, as Monet's rungs were. It ships nothing and needs no install. The owner may amend any part before it runs. **G1a and G1b: PASS 2026-09-19** (§8.1, §8.2). **G1c: FAILED 2026-09-19**; its rule is dropped and P2's cost is re-costed (§3.1). **T1, R1, R2 and D4's M arm read 2026-09-19** (§8.4–§8.6). **G1: FAILED 2026-09-19**; P2 starts at M, with D2 (§8.3, §8.7) |
 
 ---
 
@@ -1773,6 +1774,105 @@ made a measured condition, as §5 said it would be.
 - This does not gate G1: no bot's belief changes in P1.
 - It gates any later use of the head inside Monet's declare, or inside ATHENA-S. That use must be within the shipped
   table's on every bin at p ≥ 0.7 (§3.8l), read as "not below by more than 2 SE" (fact-sheet question 7).
+
+> **The data, 2026-09-19** [Measured]. Branch `claude/athena-p1b`.
+> - **(a)** is Monet v1.0 self-play, played by the port and the opponent service. Every step's digests equal the
+>   reference's, with no game diverged, refused or capped.
+>   - Test: 5,000 distinct games, 1,667 deals.
+>   - Validation: 2,500 games, 834 deals.
+>   - Train: 100,001 games, 33,334 deals, 9,252,034 asks and 260,582,282 scored cards. The extension's first deal
+>     makes one game over 100,000.
+> - **D2** is 417,720 games of the non-holdout files, with 18,618,468 Monet asks, every ask and unsampled.
+> - Generating the games took 8.4 CPU-hours.
+>
+> **Step 1, the baselines** [Measured]. SE by the cluster bootstrap: (a) by deal, (b) and (c) by game.
+>
+> | population | cards | clusters | the marginal: top-1 | NLL | the slot prior: top-1 | NLL |
+> |---|---:|---:|---:|---:|---:|---:|
+> | (a) test | 12,975,493 | 1,667 | 30.6512% (SE 0.0539) | 1.473020 | 25.9582% | 1.522746 |
+> | (b) holdout | 2,632,109 | 64,506 | 32.1946% (SE 0.0355) | 1.454243 | 26.5381% | 1.510334 |
+> | (c) | 17,802,616 | 14,400 | 31.4532% (SE 0.0263) | 1.461756 | 26.3406% | 1.514003 |
+>
+> - **(b) reproduces §3.8ah exactly: 32.19% and 1.4542.** The re-run of `gen-holder-data.mjs` is bit-identical to
+>   the original's, group by group.
+> - **Q5, the marginal reproduces 32.19% and 1.4542 on (b) (95%): HIT.**
+>
+> **The head's inputs, amended before any arm was trained.** The first pipeline gave the head the facts only as each
+> card's candidate seats: G0d's 516 decision features. §8.1's facts also hold set-membership constraints that no mask
+> shows, and the marginal uses them. So the heads read format v2, with 912 decision features:
+> - G0d's 516;
+> - for each relative seat and open set, its tightest constraint (fewest cards; ties to the smaller mask), as a flag
+>   and a six-bit card mask: 378;
+> - each open set's count of cards certain on the team (÷ 6), and its "proven lost" flag: 18.
+>
+> `lib/athena`'s forward reads 516 or 912 from the weight header. G0d's stub keeps 516, and it still passes the
+> package check: 0 faults, and the pin at 6,214 of 6,214.
+>
+> **G1 scored 2026-09-19: FAILED** [Measured]. Each test split was read once.
+>
+> | arm | (a) top-1 | (a) NLL | (b) top-1 | (b) NLL | (c) top-1 | (c) NLL |
+> |---|---:|---:|---:|---:|---:|---:|
+> | the marginal | 30.6512% | 1.473020 | 32.1946% | 1.454243 | 31.4532% | 1.461756 |
+> | B-S | 31.2273% | 1.452813 | 31.8852% | 1.449106 | 31.4804% | 1.456785 |
+> | **B-M** | **31.3642%** | **1.445926** | **31.7955%** | **1.448096** | **31.4366%** | **1.455582** |
+> | B-M+D2 | 31.5140% | 1.443813 | 32.5044% | 1.445381 | 31.8811% | 1.444990 |
+> | B-M-scaled | 31.7116% | 1.440593 | 32.2268% | 1.440781 | 31.8189% | 1.448868 |
+>
+> - **B-M against the marginal** (paired, on the same clusters):
+>   - (a): top-1 +0.713 points (SE 0.036), against the +2.0 bar. NLL −0.0271 (SE 0.0004).
+>   - (b): top-1 −0.399 points (SE 0.026). NLL −0.0061 (SE 0.0002).
+>   - (c), beside: top-1 −0.017 points (SE 0.020). NLL −0.0062 (SE 0.0002).
+> - **No arm passes.** The largest top-1 gain is B-M-scaled's +1.060 points on (a).
+> - **In plain words:** the learned heads put more probability on the true holder than the marginal does, in every
+>   population. But they name the single most likely holder only slightly more often at home, and no more often on
+>   SESTINA's games.
+>
+> **§8.7: P2 starts at M.** B-M's top-1 on (a) is above B-S's by +0.137 points (SE 0.027, 5.0 SE).
+> - [Information] On (b) and (c) B-S is ahead of B-M, by 3.1 and 2.3 SE.
+>
+> **D2: B-M+D2 replaces B-M as P2's configuration.** Both conditions hold:
+> - on (c), its top-1 beats B-M's by +0.445 points (SE 0.022, 19.9 SE), with a lower NLL;
+> - on (a), it is not below B-M; it is above, by +0.150 points (5.2 SE).
+>
+> P2's belief loss therefore also reads Monet's seats' views of SESTINA's recorded games. That is evidence about hands,
+> never ATHENA's action.
+>
+> **B-M-scaled** (Sinkhorn-scaled to the public hand counts) beats B-M on every population: +0.347, +0.431 and +0.382
+> points, with lower NLL. [Information for P2: the scaling needs no training.]
+>
+> **The export passes for every arm.** On 10,000 (a)-test cards, the argmax differs on 0, and the largest probability
+> difference is 3.9·10⁻⁷ (B-S), 1.0·10⁻⁶ (B-M) and 6.8·10⁻⁷ (B-M+D2).
+>
+> **Training** [Measured]. The epoch was chosen on (a)-val.
+> - B-S and B-M reached the 20-epoch cap still improving. B-S was best at epoch 20; B-M was best at 19, with a
+>   validation NLL of 1.445844.
+> - B-M+D2 stopped by patience at epoch 13, best at epoch 11 (1.443943).
+> - The GPU job took 1.44 hours of wall time, above the estimate of under one. The data loader set the pace: about 45 s
+>   an epoch, against 12 s (S) and 24 s (M) of GPU work.
+>
+> **Checked independently** from `ef61a85`, in a separate checkout. Everything came out the same:
+> - Every game part matches its manifest's md5.
+> - The test split's first 1,200 games, generated afresh, are identical in every array.
+> - Every baseline's cluster file is byte for byte the same, and so is every bootstrap.
+> - Each arm's chosen checkpoint re-scores to the same cluster files, on all three populations and scaled. It exports
+>   to the same weight file (B-M: md5 `cb6b3ac8…`) and passes the export check.
+> - typecheck, lint and vitest pass (85 files, 1,270 tests), and so does the stub's package check.
+>
+> **Amended with the result** (implementation only; no bar, split, seed or arm changes):
+> 1. The facts features above.
+> 2. **Events enter the head as slot counts through one linear layer.** It is the same sum as the forward's
+>    embedding. This was changed after the first B-S run spilled out of GPU memory, and that run is void.
+> 3. **G0d's fold adds the embedding's column 0 twice an event, and PyTorch mirrors it.** This only reparametrises the
+>    embedding's bias, so it limits nothing. P2's format fixes it.
+> 4. B-M+D2 validates on (a)-val.
+> 5. The arm seeds are `athena-p1-B-S`, `athena-p1-B-M` and `athena-p1-B-M+D2`.
+> 6. The export check's cards are drawn from (a)-test with seed `athena-p1-export`, with PyTorch in float32 against
+>    the float64 forward.
+> 7. The bootstrap resamples the clusters that hold a scored card: 64,506 of (b)'s 65,623 games.
+>
+> **Q6, B-M +2.0 above the marginal on (a) (65%): MISS. Q7, the same on (b) (20%): MISS. Q8, G1 holds (15%): MISS.
+> Q9, B-M beats B-S on (a) by 2 SE (70%): HIT. Q10, D2 keeps B-M+D2 (30%): HIT. Q11, the export agrees within 10⁻⁴
+> (90%): HIT.**
 
 ### 8.4 D4 with the head: is ATHENA-S open?
 

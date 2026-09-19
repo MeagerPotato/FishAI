@@ -13,7 +13,7 @@
  * | event features | {@link EVENT_F} = 176 one-hot slots over the 19 bytes of an event row (encode.ts), 21 active per event |
  * | embedding | `embed`: 176 -> d, linear |
  * | recurrence | `gru`: PyTorch's GRUCell, d -> d, gates r, z, n stacked in that order |
- * | decision features | {@link DEC_F} = 516: the obs row as one-hots and scaled counts, plus the rules-derived candidate seats of every card (54 x 6, relative) |
+ * | decision features | {@link DEC_F} = 516: the obs row as one-hots and scaled counts, plus the rules-derived candidate seats of every card (54 x 6, relative). P1's heads (ATHENA.md §8.3) append {@link FACTS_F} = 396 more from the facts row ({@link factsFeatures}): {@link DEC_F_FACTS} = 912 |
  * | trunk | `depth` layers of `width`, ReLU; the first reads [h, decision features] |
  * | heads | one linear layer to {@link HEADS} = 517 outputs: ask 162 (the ask codes), declare 10 (nine sets, then none), assignment 18 (six set positions x three teammates), pass 2, belief 324 (card x relative seat), value 1 |
  *
@@ -40,11 +40,22 @@
  * blob starts on a 4-byte boundary, then every tensor as float32 little-endian in {@link tensorLayout}'s order (each
  * row-major, PyTorch's `[out, in]`). The header names the format, the arch, the tensors with their shapes and float
  * offsets, and the init. A package records the file's md5 in its manifest.
+ *
+ * The header's `arch.decF` is the trunk's decision-feature width: {@link DEC_F} (G0d's stub; an {@link Arch} without
+ * `decF`) or {@link DEC_F_FACTS} (P1's belief heads, whose decision features end with {@link factsFeatures}). No other
+ * width is accepted.
  */
 import { hashSeed, mulberry32 } from '../engine/rng.ts'
 import {
+  CONS_FIELDS,
   EVENT_LEN,
+  F_CONS,
+  F_NCONS,
+  F_SET_CERTAIN,
+  F_SET_LOST,
+  MAX_CONS,
   N_ASK,
+  N_SETS,
   NONE,
   O_COUNTS,
   O_DECLINED,
@@ -62,6 +73,10 @@ import {
 
 export const EVENT_F = 176
 export const DEC_F = 516
+/** P1's facts features ({@link factsFeatures}): 6 relative seats x 9 sets x 7, then 9 sets x 2. */
+export const FACTS_F = 6 * N_SETS * 7 + 2 * N_SETS
+/** The decision features of P1's heads: {@link DEC_F}'s, then {@link FACTS_F}'s. */
+export const DEC_F_FACTS = DEC_F + FACTS_F
 export const HEADS = 517
 export const H_ASK = 0
 export const H_DECLARE = H_ASK + N_ASK
@@ -77,6 +92,21 @@ export interface Arch {
   width: number
   /** The trunk's layers. */
   depth: number
+  /** The decision features the trunk reads: {@link DEC_F} when absent (G0d's stub), or {@link DEC_F_FACTS} (P1's heads). */
+  decF?: number
+}
+
+/** The arch's decision-feature width (module header): {@link DEC_F} or {@link DEC_F_FACTS}, nothing else. */
+export function decFOf(a: Arch): number {
+  const f = a.decF ?? DEC_F
+  if (f !== DEC_F && f !== DEC_F_FACTS) throw new Error(`decision features ${f}: a net reads ${DEC_F} or ${DEC_F_FACTS}`)
+  return f
+}
+
+/** The arch as a net keeps it: `decF` named only when it is not {@link DEC_F}, so G0d's stub is byte for byte as it was. */
+function archOf(a: Arch): Arch {
+  const f = decFOf(a)
+  return f === DEC_F ? { d: a.d, width: a.width, depth: a.depth } : { d: a.d, width: a.width, depth: a.depth, decF: f }
 }
 
 /** ATHENA.md §3.1's three candidate sizes. */
@@ -105,7 +135,7 @@ export function tensorLayout(a: Arch): TensorSpec[] {
     ['gru.bias_hh', [3 * a.d]],
   ]
   for (let i = 0; i < a.depth; i++) {
-    shapes.push([`trunk.${i}.weight`, [a.width, i === 0 ? a.d + DEC_F : a.width]])
+    shapes.push([`trunk.${i}.weight`, [a.width, i === 0 ? a.d + decFOf(a) : a.width]])
     shapes.push([`trunk.${i}.bias`, [a.width]])
   }
   shapes.push(['heads.weight', [HEADS, a.width]])
@@ -215,7 +245,7 @@ export function makeNet(arch: Arch, blob: Float32Array, meta: Record<string, unk
     trunkB.push(get(`trunk.${i}.bias`))
   }
   return {
-    arch: { d: arch.d, width: arch.width, depth: arch.depth },
+    arch: archOf(arch),
     blob,
     meta,
     embW: get('embed.weight'),
@@ -231,7 +261,7 @@ export function makeNet(arch: Arch, blob: Float32Array, meta: Record<string, unk
     sx: new Float64Array(arch.d),
     sgi: new Float64Array(3 * arch.d),
     sgh: new Float64Array(3 * arch.d),
-    su: new Float64Array(arch.d + DEC_F),
+    su: new Float64Array(arch.d + decFOf(arch)),
     st: Array.from({ length: arch.depth }, () => new Float64Array(arch.width)),
     sidx: new Int32Array(21),
   }
@@ -253,7 +283,7 @@ export function initBlob(arch: Arch, seed: string): Float32Array {
     else if (t.name.startsWith('embed.')) a = 1 / Math.sqrt(EVENT_F)
     else {
       const i = Number(t.name.split('.')[1])
-      a = 1 / Math.sqrt(i === 0 ? arch.d + DEC_F : arch.width)
+      a = 1 / Math.sqrt(i === 0 ? arch.d + decFOf(arch) : arch.width)
     }
     for (let j = 0; j < t.length; j++) blob[t.offset + j] = Math.fround((2 * rng() - 1) * a)
   }
@@ -270,7 +300,7 @@ export function serializeWeights(net: Pick<AthenaNet, 'arch' | 'blob' | 'meta'>)
   const layout = tensorLayout(net.arch)
   const header = {
     format: WEIGHTS_FORMAT,
-    arch: { ...net.arch, eventF: EVENT_F, decF: DEC_F, heads: HEADS },
+    arch: { ...archOf(net.arch), eventF: EVENT_F, decF: decFOf(net.arch), heads: HEADS },
     params: paramCount(net.arch),
     tensors: layout.map((t) => [t.name, t.shape, t.offset, t.length]),
     meta: net.meta,
@@ -304,10 +334,10 @@ export function parseWeights(bytes: Uint8Array): AthenaNet {
   }
   if (header.format !== WEIGHTS_FORMAT) throw new Error(`weight format ${header.format}, not ${WEIGHTS_FORMAT}`)
   const a = header.arch
-  if (a.eventF !== EVENT_F || a.decF !== DEC_F || a.heads !== HEADS) {
-    throw new Error(`the weights were built for eventF ${a.eventF}, decF ${a.decF}, heads ${a.heads}; this forward has ${EVENT_F}, ${DEC_F}, ${HEADS}`)
+  if (a.eventF !== EVENT_F || (a.decF !== DEC_F && a.decF !== DEC_F_FACTS) || a.heads !== HEADS) {
+    throw new Error(`the weights were built for eventF ${a.eventF}, decF ${a.decF}, heads ${a.heads}; this forward has ${EVENT_F}, ${DEC_F} or ${DEC_F_FACTS}, ${HEADS}`)
   }
-  const arch: Arch = { d: a.d, width: a.width, depth: a.depth }
+  const arch: Arch = archOf({ d: a.d, width: a.width, depth: a.depth, decF: a.decF })
   const layout = tensorLayout(arch)
   const same =
     header.tensors.length === layout.length &&
@@ -374,6 +404,51 @@ export function decisionFeatures(obs: Uint8Array, cands: Uint8Array, out: Float6
   for (let i = 0; i < 324; i++) out[192 + i] = cands[i]
 }
 
+/**
+ * P1's facts features ({@link FACTS_F} = 396; ATHENA.md §8.3, "the facts of §8.1 as input") from the facts row (the
+ * port's `facts` buffer, API.md §5.5; encode.ts's `encodeFactsRow` from a view), written into `out` from `off`
+ * ({@link DEC_F} by default, after {@link decisionFeatures}'s). The candidate seats are already in the decision
+ * features; these add what the fixpoint leaves unresolved:
+ * - **the set-membership constraints**, at `off + 7 (9r + b)` for relative seat r and set b: 1 if the facts hold a
+ *   constraint on (r, b), then the six bits (set card order) of the tightest one: the smallest popcount, a tie to the
+ *   smaller mask. All 0 without a constraint, and for a resolved set;
+ * - **per set**, at `off + 378 + 2b`: F_SET_CERTAIN / 6 and F_SET_LOST (both 0 once the set is resolved, NONE).
+ *
+ * `scripts/athena/belief_data.py`'s `facts_features` is the same function over the port's buffer; a fixture pins the
+ * two (tests/athena/belief-views.test.ts).
+ */
+export function factsFeatures(facts: Uint8Array, out: Float64Array, off: number = DEC_F): void {
+  out.fill(0, off, off + FACTS_F)
+  const n = facts[F_NCONS]
+  if (n > MAX_CONS) throw new Error(`the facts row holds ${n} constraints, above MAX_CONS = ${MAX_CONS}`)
+  const best = new Int16Array(6 * N_SETS).fill(-1)
+  const pop = (m: number): number => (m & 1) + ((m >> 1) & 1) + ((m >> 2) & 1) + ((m >> 3) & 1) + ((m >> 4) & 1) + ((m >> 5) & 1)
+  for (let i = 0; i < n; i++) {
+    const r = facts[F_CONS + CONS_FIELDS * i]
+    const b = facts[F_CONS + CONS_FIELDS * i + 1]
+    const m = facts[F_CONS + CONS_FIELDS * i + 2]
+    if (r >= 6 || b >= N_SETS || m === 0 || m >= 64) throw new Error(`constraint ${i} (${r}, ${b}, ${m}) is out of range`)
+    if (facts[F_SET_CERTAIN + b] === NONE) continue
+    const j = N_SETS * r + b
+    const cur = best[j]
+    if (cur < 0 || pop(m) < pop(cur) || (pop(m) === pop(cur) && m < cur)) best[j] = m
+  }
+  for (let j = 0; j < 6 * N_SETS; j++) {
+    const m = best[j]
+    if (m < 0) continue
+    const o = off + 7 * j
+    out[o] = 1
+    for (let k = 0; k < 6; k++) out[o + 1 + k] = (m >> k) & 1
+  }
+  for (let b = 0; b < N_SETS; b++) {
+    const c = facts[F_SET_CERTAIN + b]
+    if (c === NONE) continue
+    const lost = facts[F_SET_LOST + b]
+    out[off + 7 * 6 * N_SETS + 2 * b] = c / 6
+    out[off + 7 * 6 * N_SETS + 2 * b + 1] = lost === NONE ? 0 : lost
+  }
+}
+
 /* --------------------------------------------------------------------------------------- the forward --- */
 
 /** A zero recurrent state. */
@@ -425,6 +500,26 @@ export function foldAll(net: AthenaNet, rows: Uint8Array, n: number): Float64Arr
   const h = zeroState(net)
   for (let i = 0; i < n; i++) foldEvent(net, h, rows, i * EVENT_LEN)
   return h
+}
+
+/**
+ * The belief head's probabilities (ATHENA.md §1's "card × seat, masked by the rules"; §8.3): for each card c, the
+ * softmax of its logits `heads[H_BELIEF + 6c + r]` over the relative seats r that `cands` (54 x 6 bytes, as
+ * {@link decisionFeatures} reads it) leaves possible, and 0 at every other seat; a card with no candidate is all
+ * zero. The same arithmetic as policy.ts's `planSet`: the maximum candidate logit is subtracted, then
+ * {@link expDet} over the candidates in ascending r, summed in that order, and each term divided by the sum.
+ */
+export function beliefOf(heads: Float64Array, cands: Uint8Array, out: Float64Array = new Float64Array(324)): Float64Array {
+  out.fill(0)
+  for (let c = 0; c < 54; c++) {
+    let m = Number.NEGATIVE_INFINITY
+    for (let r = 0; r < 6; r++) if (cands[c * 6 + r]) m = Math.max(m, heads[H_BELIEF + c * 6 + r])
+    if (m === Number.NEGATIVE_INFINITY) continue
+    let sum = 0
+    for (let r = 0; r < 6; r++) if (cands[c * 6 + r]) sum += expDet(heads[H_BELIEF + c * 6 + r] - m)
+    for (let r = 0; r < 6; r++) if (cands[c * 6 + r]) out[c * 6 + r] = expDet(heads[H_BELIEF + c * 6 + r] - m) / sum
+  }
+  return out
 }
 
 /** The heads (HEADS = 517 outputs, written into `out`) for the state `h` and the decision features `dec`. */
