@@ -139,6 +139,8 @@ pub struct ReplayResult {
     pub code_diffs: u64,
     /// The earliest step at which anything differed, or -1.
     pub first_step: i64,
+    /// The mismatch found at `first_step` (`d`, `l`, `v`, `refused`, `length` or `decode`), or "" when no step differed.
+    pub first_field: &'static str,
     /// Steps applied.
     pub steps: u32,
     /// `finished`, `capped`, or None if the replay did not reach an end.
@@ -378,6 +380,7 @@ impl Replayer {
             });
         }
         let mut first: i64 = -1;
+        let mut first_field: &'static str = "";
         for (what, mine, want) in [("d", &self.d, rec.d), ("l", &self.l, rec.l), ("v", &self.v, rec.v)] {
             let rec_n = want.len() / 16;
             let n = mine.len().min(rec_n);
@@ -405,6 +408,7 @@ impl Replayer {
                 });
                 if first < 0 || (i as i64) < first {
                     first = i as i64;
+                    first_field = what;
                 }
             }
         }
@@ -463,9 +467,12 @@ impl Replayer {
             }
             game = Some(gd);
         }
+        // A refusal (or a length or decode failure) at step t is why d_t is missing, so at an equal step it names the
+        // divergence.
         for m in &mismatches {
-            if matches!(m.what, "refused" | "length" | "decode") && m.at >= 0 && (first < 0 || m.at < first) {
+            if matches!(m.what, "refused" | "length" | "decode") && m.at >= 0 && (first < 0 || m.at <= first) {
                 first = m.at;
+                first_field = m.what;
             }
         }
         if let Some(tl) = tally {
@@ -476,6 +483,7 @@ impl Replayer {
             mismatches,
             code_diffs,
             first_step: first,
+            first_field,
             steps: t,
             end,
             game,

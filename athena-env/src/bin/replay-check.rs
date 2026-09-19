@@ -191,7 +191,19 @@ struct BadGame {
     index: u64,
     seed: String,
     first_step: i64,
+    first_field: &'static str,
     mismatches: Vec<Mismatch>,
+}
+
+impl BadGame {
+    /// The mismatch that names the first divergence: the one at `first_step` in `first_field`; failing that (no step
+    /// differed: a deal, probe, end or game mismatch alone), the first mismatch found.
+    fn first(&self) -> Option<&Mismatch> {
+        self.mismatches
+            .iter()
+            .find(|m| m.what == self.first_field && m.at == self.first_step)
+            .or_else(|| self.mismatches.first())
+    }
 }
 
 #[derive(Default)]
@@ -268,6 +280,7 @@ fn check_line(r: &mut Replayer, acc: &mut Acc, ctx: &Ctx<'_>, file: usize, line:
                 index: rec.index,
                 seed: rec.seed.to_string(),
                 first_step: res.first_step,
+                first_field: res.first_field,
                 mismatches: res.mismatches.iter().take(6).cloned().collect(),
             });
         }
@@ -688,11 +701,12 @@ fn report(
             .map(|m| format!("{}@{} {}", m.what, m.at, m.detail))
             .collect();
         println!(
-            "MISMATCH {} #{} {}: first divergence at step {}: {}",
+            "MISMATCH {} #{} {}: first divergence at step {} ({}): {}",
             b.population,
             b.index,
             b.seed,
             b.first_step,
+            b.first().map(|m| m.what).unwrap_or(""),
             ms.join("; ")
         );
     }
@@ -751,7 +765,7 @@ fn report(
             .iter()
             .take(5)
             .map(|b| {
-                let m = b.mismatches.first();
+                let m = b.first();
                 format!(
                     "{{\"population\": {}, \"index\": {}, \"seed\": {}, \"step\": {}, \"field\": {}, \"detail\": {}}}",
                     js(&b.population),

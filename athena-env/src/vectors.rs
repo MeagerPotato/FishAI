@@ -1034,6 +1034,7 @@ fn spec_vector_10_5_the_whole_h5_game_0() {
     let res = r.replay(&parse_line(&tampered).unwrap(), None);
     assert!(!res.ok);
     assert_eq!(res.first_step, k as i64);
+    assert_eq!(res.first_field, "d");
     assert!(res.mismatches.iter().any(|m| m.what == "d" && m.at == k as i64));
     let mut actions = cols.actions.clone().into_bytes();
     // The first action is a decline by seat 0: `04 00`. Re-seat it to seat 1.
@@ -1042,6 +1043,8 @@ fn spec_vector_10_5_the_whole_h5_game_0() {
     let reseated = line.replace(&cols.actions, std::str::from_utf8(&actions).unwrap());
     let res = r.replay(&parse_line(&reseated).unwrap(), None);
     assert_eq!(res.mismatches[0].what, "refused");
+    // The refusal leaves d_0 missing too; the refusal names the divergence.
+    assert_eq!((res.first_step, res.first_field), (0, "refused"));
 }
 
 /// Every gated column is compared: flipping one character of the deal, of l_k, of v_k, of the game digest, or turning
@@ -1107,6 +1110,13 @@ fn every_compared_column_is_checked() {
             res.mismatches.iter().any(|m| m.what == what && m.at == at),
             "{what}: {:?}",
             res.mismatches
+        );
+        // A step column names the first divergence; a whole-game column leaves no step.
+        let step_column = matches!(what, "l" | "v");
+        assert_eq!(
+            (res.first_step, res.first_field),
+            if step_column { (at, what) } else { (-1, "") },
+            "{what}"
         );
     }
     // A refusal recorded as an acceptance is a gated probe mismatch; another refusal code is information only.
