@@ -308,6 +308,15 @@ def run_curve(weights, out_json, *, cmd=CURVE_CMD, bank=CURVE_BANK, pairs=CURVE_
     for k in ('games', 'wins', 'diffMean', 'diffSe', 'capped'):
         if isinstance(res.get(k), (int, float)):
             rec[k] = res[k]
+    # A pair that hits duplicate-pairs.mjs's 6,000-move cap is dropped, and the win rate is then taken over the pairs
+    # that survived -- 0 of 0 reads as 0%, which is not a number about the policy. An early checkpoint whose argmax
+    # never declares does this in self-play, so it is named here rather than read as a curve point.
+    if int(rec.get('capped') or 0) > 0:
+        rec['fault'] = (f'{int(rec["capped"])} of {pairs} pairs hit the step cap and were dropped; '
+                        f'the win rate is over the {int(rec.get("games") or 0) // 2} pairs that finished')
+    if int(rec.get('games') or 0) == 0:
+        rec['fault'] = 'no pair finished: every game hit the step cap, so there is no win rate'
+        rec.pop('win_rate', None)
     rec['secs'] = round(time.perf_counter() - t0, 1)
     return rec
 
@@ -481,12 +490,19 @@ def cmd_train(args, sink=None):
     service = None
     if shares[pr.OPP_V10] + shares[pr.OPP_V033] > 0:
         service = pr.AsyncOpponentService(workers=args.service_workers)
-    rollout = pr.Rollout(ae, model, device, prefix=args.prefix, in_flight=args.in_flight, threads=args.env_threads,
-                         service=service, shares=shares, gen=gen, amp=args.amp == 'bf16',
-                         digest_check=args.digest_check, iteration_games=args.iteration_games,
-                         first_game=state['next_k'], decision_cap=args.decision_cap,
-                         stream_table_cap=args.stream_table_cap, bridge_reveal=args.bridge_reveal)
-    rollout.reset()
+    try:
+        # the reveal handshake of §9.5 is inside this call, and it refuses before a game is dealt
+        rollout = pr.Rollout(ae, model, device, prefix=args.prefix, in_flight=args.in_flight,
+                             threads=args.env_threads, service=service, shares=shares, gen=gen,
+                             amp=args.amp == 'bf16', digest_check=args.digest_check,
+                             iteration_games=args.iteration_games, first_game=state['next_k'],
+                             decision_cap=args.decision_cap, stream_table_cap=args.stream_table_cap,
+                             bridge_reveal=args.bridge_reveal)
+        rollout.reset()
+    except BaseException:
+        if service is not None:
+            service.quit()
+        raise
     print(json.dumps({'store': {'decision_cap': rollout.store.cap, 'stream_cap': rollout.store.stream_cap,
                                 'episode_cap': rollout.store.ep_cap, 'bytes': int(rollout.store.bytes_used()),
                                 'event_rows_bytes': int(rollout.srows.nbytes)}}), flush=True)
@@ -630,6 +646,15 @@ def cmd_smoke(args):
     5. **the null arm holds.** The same command with `--b athena:<the same file>` must read exactly 50.0000% with a
        paired set difference of 0 (§9.7's byte-exact control). The smoke fails if it does not.
 
+    **One thing the smoke does to its own net.** It trains with `--init-decline-bias` on, so the games it plays hold
+    asks, passes and rails; before the export it moves the declare head's decline bias the other way
+    (`--export-decline-nudge`, 0 to export the trained net untouched). A read is all argmax, and a near-random policy
+    that always declines never finishes an ATHENA-against-ATHENA game: every pair is dropped at the 6,000-move cap and
+    the null arm has nothing to read. Declaring instead resolves a set at every offer and ends the game whatever the
+    weights. That cap is a property of a near-random deterministic policy, not of the arm -- but the same will be true
+    of a real run's first curve points, which is why `run_curve` now names a capped read as a fault instead of reading
+    0 of 0 as 0%.
+
     The two embedding paths (`bag` and `counts`) are compared at the end. The smoke exits non-zero if any step fails,
     and writes `smoke-summary.json` beside the weights."""
     out = Path(args.out)
@@ -655,10 +680,22 @@ def cmd_smoke(args):
     model = pm.P2Net(p['d'], p['width'], p['depth'], critic_width=p['critic_width'],
                      critic_depth=p['critic_depth']).to(device)
     model.load_state_dict(ck['model'])
+    # The smoke trains with the decline nudge on (`--init-decline-bias`), so its games hold asks, passes and rails and
+    # the export check has real ask rows to compare argmaxes on. It then moves the decline bias the other way before
+    # the export, so that the read's argmax declares: a near-random policy that always declines never finishes an
+    # ATHENA-against-ATHENA game, every pair is dropped at duplicate-pairs.mjs's 6,000-move cap, and the null arm has
+    # nothing to read. Declaring at every offer resolves a set each time and ends the game in a few moves, whatever
+    # the weights. One file is exported, checked and read.
+    nudge = float(args.export_decline_nudge)
+    if nudge:
+        pm.nudge_decline_bias(model, nudge)
     weights = out / 'weights.bin'
-    info = export(model, weights, {'smoke': True, 'what': 'a CPU smoke', 'arch': 'tiny'},
+    info = export(model, weights, {'smoke': True, 'what': 'a CPU smoke', 'arch': 'tiny',
+                                   'export_decline_nudge': nudge},
                   fmt=args.weights_format, magic=args.weights_magic or None)
-    print(f'-- smoke: exported {info["bytes"]} bytes, {info["params"]} weights, md5 {info["md5"]}', flush=True)
+    print(f'-- smoke: exported {info["bytes"]} bytes, {info["params"]} weights, md5 {info["md5"]}'
+          f'{f" (the trained net, decline bias {nudge:+g} so the read finishes its games)" if nudge else ""}',
+          flush=True)
 
     b = sink['batch']
     n = write_export_check(model, b, out / 'export-check.json', info, args.check_decisions, device,
@@ -786,6 +823,10 @@ def main(argv=None):
                    help='decisions the JavaScript forward is compared with PyTorch on (§8.3\'s bar)')
     p.add_argument('--smoke-pairs', type=int, default=2,
                    help='duplicate pairs the curve read and the null arm each play')
+    p.add_argument('--export-decline-nudge', type=float, default=-12.0,
+                   help='added to the declare head decline bias before the export, so the read\'s argmax declares '
+                        'and its games finish; 0 exports the trained net untouched, whose self-play will then hit '
+                        'the step cap (see cmd_smoke)')
     args = ap.parse_args(argv)
     return {'train': cmd_train, 'export': cmd_export, 'smoke': cmd_smoke}[args.cmd](args)
 
