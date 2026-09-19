@@ -54,10 +54,19 @@ class BeliefNet(nn.Module):
 
     def states(self, slots):
         """The recurrent state after each of 0..L events: slots (S, L, 21) -> (S, L + 1, d), position 0 the zero
-        state (net.ts's fold starts from zeros, and nn.GRU's h0 is zeros)."""
-        x = F.embedding(slots, self.embed.weight.t()).sum(dim=-2) + self.embed.bias
+        state (net.ts's fold starts from zeros, and nn.GRU's h0 is zeros).
+
+        Each event's input is embed(one-hot counts): the sum of the weight columns its slots name, a slot named twice
+        counted twice (net.ts's fold, quirk and all). The counts are built as an (S * L, 176) tensor and go through the
+        Linear once; gathering the 21 columns per event instead materialises (S, L, 21, d), which ran the GPU out of
+        memory at M's width."""
+        S, L, K = slots.shape
+        idx = slots.reshape(S * L, K).long()
+        counts = torch.zeros(S * L, EVENT_F, device=slots.device, dtype=torch.float32)
+        counts.scatter_add_(1, idx, torch.ones(S * L, K, device=slots.device, dtype=torch.float32))
+        x = F.linear(counts, self.embed.weight, self.embed.bias).view(S, L, -1)
         out, _ = self.gru(x)
-        return torch.cat([out.new_zeros(out.shape[0], 1, out.shape[2]), out], dim=1)
+        return torch.cat([out.new_zeros(S, 1, out.shape[2]), out], dim=1)
 
     def forward(self, slots, ask_seq, ask_pos, dec):
         """The heads (A, 517) at each ask: the state after its `ask_pos` events. Under the start-seat rule a game's
