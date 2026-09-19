@@ -10,6 +10,7 @@ games in this format, and the self-check (`check-replay-corpus.mjs`) replays the
 - **A port passes when**, from each record's seed, start seat and actions alone, it reproduces everything the gate
   compares (§9.1): the deal digest, every per-step state digest d_t, every legal-move digest l_t, every view
   digest v_t, and every probe's accept-or-refuse verdict.
+- **§12 specifies G0a (ii)**, the bridge walk: the views the port builds from the bridge's recorded games.
 
 ## 1. Conventions
 
@@ -480,3 +481,147 @@ window" and "out-of-turn declare" count the same events.
 - **`legalActionsSummary` over-reports `claim`** with the us54 window closed (§4.6). L_t uses the reducer's verdict.
 - **Declares at the clinch.** A clinching declare emits `claim`, any `player_out`, then `game_over`, and closes the
   window. The game then ends with sets unresolved and cards still in hands. S_T keeps those cards' holders.
+
+## 12. The bridge walk, `athena-bridge-view-1` (G0a (ii))
+
+This section specifies G0a (ii) (ATHENA.md §4.6): the port reads the bridge's recorded games and must build, at every
+ask, the asking seat's view exactly as the reference does.
+
+- **The reference** is `scripts/bridge-records.mjs`, unchanged: `readRecordFile` translates each game (its `toRecord`)
+  and `walkAsks` hands its caller the asking seat's view at every ask event.
+- **The emitter** is `scripts/athena/emit-bridge-views.mjs`. It digests each of those views with this codec's
+  `encodeView`, taking the reduced reveal (§12.4), and writes the expected file (§12.5).
+- **The port** is `athena-env/src/bridge.rs`, with its own std-only JSON reader. The checker is the `bridge-walk`
+  binary.
+
+### 12.1 The records
+
+A record file holds one JSON object a line. Lines are split on LF, and empty lines are skipped (`.filter(Boolean)`).
+
+- **A header line** has a truthy `header` and a `cards` list of 54 names.
+  - A name translates to a us54 card as `toAi` does: `RJ` is XR, `BJ` is XB, and `10x` is `Tx`.
+  - Each run of six consecutive names is one of the host's half-suits. It must lie inside one us54 set.
+  - A later header replaces the deck for the games after it.
+- **A game line** has these fields:
+  - `deal` and `rot`, which label the game;
+  - `orient`, the team arm A played;
+  - `dealt`, six lists of header positions;
+  - `events`, each `[kind, actor, target, card, set, success, owner[6], counts[6]]`;
+  - `setWinner`, per half-suit.
+- **The kinds** are 0 ask, 1 declare, 2 pass, 3 forced declare, and 4 end. `card` is a header position, and `set` is
+  a half-suit index. `owner` lists the stated seats in the header's order within the half-suit. `counts` holds the
+  host's six hand counts after the event.
+
+### 12.2 The log the reader builds
+
+The events are read in order:
+
+- **An end event** (kind 4) is skipped entirely.
+- **The first other event** is preceded by `game_started(actor)`.
+- **An ask** becomes `ask(actor, target, card, hit)`, where `hit` is `success`'s JavaScript truthiness. A hit moves
+  the card to the asker.
+- **A declare** (kind 1 or 3) becomes `claim(actor, set, stated, holders, outcome)`.
+  - The stated seats and the holders are rewritten in the set's card order (§1).
+  - The true holders follow §12.4.
+  - The outcome is the declarer's team if `success` is truthy, and the other team otherwise.
+  - The set's six cards then leave play.
+- **A pass** becomes `pass(actor, target)`.
+- **After each event,** `player_out(x)` is appended for every seat x whose host count went from above zero to zero,
+  in seat order 0 to 5.
+
+The log has no `game_over`.
+
+**The checks, every one an error:**
+
+- After every event, each tracked hand count must equal the host's.
+- Every declare's outcome must equal `setWinner` for its half-suit.
+- The walk checks every recorded hit against the tracked deal.
+
+### 12.3 The view at an ask, V_b
+
+At log event i, an ask by seat a, V_b is V_t's layout (§4.7) with these values:
+
+| field | value |
+|---|---|
+| rules id, seat | 1, a |
+| `moveIndex` | i, the event's index in the log. It is **not** the host's move count: the record has no declines |
+| phase, turn | `playing`, a |
+| window | closed: 0, NONE, NONE. The record carries no window |
+| counts | the tracked hands' sizes |
+| score | awarded sets by outcome, **team 0 first: by team, never by side** (`scripts/attribute.mjs:286-289`) |
+| set block | the declares so far (§4.1), with the reduced reveal (§12.4) |
+| hand | a's tracked hand, canonical order |
+| log length, log digest | i, and the digest of log events 0 … i−1 (§4.7), claims encoded with the reduced reveal |
+
+The asks of both sides are taken: arm A's and SESTINA's.
+
+### 12.4 The reduced reveal
+
+FishLab's host reveals less than the home engine (ATHENA.md §4.1; `botpkg/bridge.mjs:133-150`):
+
+- **A right declare** publishes all six true holders.
+- **A wrong declare** publishes only the cards whose location a hit had already made public. That is the seat whose
+  hit last moved the card, while its set is open.
+- **Every other holder is absent, and encodes as NONE,** in the set block and in the claim event alike.
+
+`replay-codec.ts` takes this as `Reveal = 'reduced'`. The home corpus of G0a (i) uses `'full'`, the default, under
+which a missing holder is an error. When every holder is present, the two encode the same bytes.
+
+### 12.5 The expected file
+
+The file has one line a game, tab-separated, in the record file's order:
+
+| # | column | content |
+|---:|---|---|
+| 1 | format | `athena-bridge-view-1` |
+| 2 | cell | the record file's name |
+| 3 | index | the game's position among the file's games, from 0 |
+| 4, 5 | deal, rot | as JavaScript prints them |
+| 6 | orient | `teamA` |
+| 7 | events | the log's length |
+| 8 | asks | the number of ask events |
+| 9 | v | 16 hex a view digest, `digest(V_b)`, one per ask in event order |
+| 10 | f | 16 hex an ask: the eight field fingerprints (§12.6) |
+| 11 | game | the game digest |
+
+- **The game digest** is a fresh stream fed two ASCII elements, the `v` column and then the decimal ask count, then
+  `hex()`.
+- **A cell has two aggregates,** each a fresh stream fed the game digests (ASCII), then `hex()`:
+  - `aggregate` takes the games in file order;
+  - `sortedAggregate` takes them in (deal, rot) order, which does not depend on the order in which the bridge's
+    workers finished.
+- **The manifest** sits beside the file as `<set>.manifest.json`. It is merged into
+  `scripts/athena/bridge-walk-manifest.json` under `sets.<set>`, and holds per cell:
+  - the aggregates;
+  - the record file's SHA-256;
+  - information counts: events, asks by arm A and by SESTINA, wrong and forced declares, unrevealed holders, views
+    that show one, and views with an uneven score.
+
+### 12.6 The field fingerprints
+
+The fingerprints are a diagnostic, not the gate. They let a port name the field of a divergence without the view's
+bytes. V_b is cut into eight fields:
+
+| # | field | bytes (h = the hand size) |
+|---:|---|---|
+| 0 | head | 0–1 and 6–10, as one element: rules id, seat, phase, turn, window |
+| 1 | moveIndex | 2–5 |
+| 2 | counts | 11–16 |
+| 3 | score | 17–18 |
+| 4 | sets | 19–144 |
+| 5 | hand | 145 … 145+h, the size byte and the cards |
+| 6 | logLength | the four bytes after the hand |
+| 7 | logDigest | the last 16 |
+
+A field's fingerprint is the low byte of `digest(field)`, which is the last two hex characters of its digest. A
+one-byte fingerprint can collide, so a checker reports "field unknown" when the view digest differs but no
+fingerprint does.
+
+### 12.7 The gate and its controls
+
+- **The gate:** over the 14,400 games of §3.8ba's twelve `panel-sestina-*` cells, every ask's view digest is equal.
+  So are every game count and ask count, and every cell's aggregates equal the manifest's.
+- **The controls** (`--features mutants`, `bridge-walk --control …`). Each must make at least one view digest
+  differ.
+  - **(a) `score-by-side`:** arm A's sets first, wherever arm A sits.
+  - **(b) `full-reveal`:** a wrong declare fills every true holder from the tracked deal.

@@ -309,13 +309,29 @@ function outcomeCode(o: BookResult['outcome']): number {
 }
 
 /**
+ * How a declare's true holders are read (replay-format.md §12.4).
+ *
+ * - `'full'`, the home rule and the default everywhere in G0a (i): the engine reveals all six true holders of every
+ *   declare, right or wrong, so a missing holder is an error.
+ * - `'reduced'`, the bridge host's rule (ATHENA.md §4.1; `botpkg/bridge.mjs:133-150`), used only by the bridge walk
+ *   of G0a (ii): a wrong declare publishes only the holders a hit had already shown, so a holder that is absent from
+ *   `actualHolders` encodes as NONE, in the set block and in the claim event alike.
+ */
+export type Reveal = 'full' | 'reduced'
+
+function holderByte(x: unknown, what: string, reveal: Reveal): number {
+  return reveal === 'reduced' && x === undefined ? NONE : seatByte(x, what)
+}
+
+/**
  * The set block, 9 × 14 bytes: per set in canonical order, the outcome, the claimer, the six stated seats and the
- * six true holders (each in the set's card order). Memoised by the `books` object, which the reducer replaces
- * rather than mutates, and only on a declare.
+ * six true holders (each in the set's card order). Under the full reveal it is memoised by the `books` object,
+ * which the reducer replaces rather than mutates, and only on a declare. The bridge walk builds a fresh `books`
+ * object at every ask, so the reduced reveal is not memoised.
  */
 const SET_BLOCK_CACHE = new WeakMap<object, Uint8Array>()
-function setBlock(books: GameState['books']): Uint8Array {
-  const hit = SET_BLOCK_CACHE.get(books)
+function setBlock(books: GameState['books'], reveal: Reveal = 'full'): Uint8Array {
+  const hit = reveal === 'full' ? SET_BLOCK_CACHE.get(books) : undefined
   if (hit) return hit
   const out = new Uint8Array(9 * 14).fill(NONE)
   for (let b = 0; b < 9; b++) {
@@ -327,10 +343,10 @@ function setBlock(books: GameState['books']): Uint8Array {
     const cards = SET_CARDS[b]
     for (let j = 0; j < 6; j++) {
       out[o + 2 + j] = seatByte(r.assignments[cards[j]], `stated seat of ${cards[j]}`)
-      out[o + 8 + j] = seatByte(r.actualHolders[cards[j]], `true holder of ${cards[j]}`)
+      out[o + 8 + j] = holderByte(r.actualHolders[cards[j]], `true holder of ${cards[j]}`, reveal)
     }
   }
-  SET_BLOCK_CACHE.set(books, out)
+  if (reveal === 'full') SET_BLOCK_CACHE.set(books, out)
   return out
 }
 
@@ -362,7 +378,8 @@ export function encodeState(w: ByteWriter, s: GameState): void {
   w.u8(s.score[1])
 }
 
-export function encodeEvent(w: ByteWriter, e: PublicEvent): void {
+/** One event (replay-format.md §4.5). `reveal` is `'reduced'` only in the bridge walk (§12.4). */
+export function encodeEvent(w: ByteWriter, e: PublicEvent, reveal: Reveal = 'full'): void {
   switch (e.type) {
     case 'game_started':
       w.u8(EVENT_TAG.game_started).u8(seatByte(e.startingSeat, 'starting seat'))
@@ -378,7 +395,7 @@ export function encodeEvent(w: ByteWriter, e: PublicEvent): void {
       const b = setIndex(e.book)
       w.u8(EVENT_TAG.claim).u8(seatByte(e.claimer, 'claimer')).u8(b)
       for (const c of SET_CARDS[b]) w.u8(seatByte(e.assignments[c], `stated seat of ${c}`))
-      for (const c of SET_CARDS[b]) w.u8(seatByte(e.actualHolders[c], `true holder of ${c}`))
+      for (const c of SET_CARDS[b]) w.u8(holderByte(e.actualHolders[c], `true holder of ${c}`, reveal))
       w.u8(outcomeCode(e.outcome))
       return
     }
@@ -482,9 +499,17 @@ export type SeatViewLike = PublicState & { seat: Seat; hand: readonly Card[] }
 
 /**
  * V_t (replay-format.md §4.7): the canonical SeatView. The log enters as its length and its rolling digest (the
- * digest of every log event's encoding, in log order), so a port keeps a digest, not an event list.
+ * digest of every log event's encoding, in log order), so a port keeps a digest, not an event list. The bridge
+ * walk's view V_b (§12) is this encoding with `reveal = 'reduced'`; its log digest must be taken with the same
+ * reveal.
  */
-export function encodeView(w: ByteWriter, v: SeatViewLike, logLength: number, logDigestHex: string): void {
+export function encodeView(
+  w: ByteWriter,
+  v: SeatViewLike,
+  logLength: number,
+  logDigestHex: string,
+  reveal: Reveal = 'full',
+): void {
   if (v.log.length !== logLength)
     throw new Error(`replay-codec: view log has ${v.log.length} events, digest covers ${logLength}`)
   if (v.counts.length !== 6) throw new Error('replay-codec: a view without six counts')
@@ -497,7 +522,7 @@ export function encodeView(w: ByteWriter, v: SeatViewLike, logLength: number, lo
   for (let i = 0; i < 6; i++) w.u8(v.counts[i])
   w.u8(v.score[0])
   w.u8(v.score[1])
-  w.append(setBlock(v.books))
+  w.append(setBlock(v.books, reveal))
   w.u8(v.hand.length)
   for (const c of v.hand) w.u8(cardIndex(c))
   w.u32(logLength)
@@ -505,12 +530,12 @@ export function encodeView(w: ByteWriter, v: SeatViewLike, logLength: number, lo
 }
 
 /** The log digest of a whole log, from scratch (the recorder keeps it incrementally). */
-export function logDigestOf(log: readonly PublicEvent[]): string {
+export function logDigestOf(log: readonly PublicEvent[], reveal: Reveal = 'full'): string {
   const d = new ByteDigest()
   const w = new ByteWriter(64)
   for (const e of log) {
     w.reset()
-    encodeEvent(w, e)
+    encodeEvent(w, e, reveal)
     d.push(w.buf, w.n)
   }
   return d.hex()

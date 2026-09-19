@@ -18,6 +18,7 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
+pub mod bridge;
 pub mod cards;
 pub mod census;
 pub mod codec;
