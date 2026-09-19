@@ -8,7 +8,9 @@ export default defineConfig([
   // `.claude/worktrees` holds throwaway checkouts of this same repository. Without this ignore
   // eslint parses every copy, which is both meaningless and slow: it reported 2,474 parser errors
   // across ~43 worktrees, none of them about this checkout's code.
-  globalIgnores(['dist', 'node_modules', '.claude']),
+  // `athena-env` is the Rust rules core (ATHENA.md §5, D12): no JavaScript lives there, and its `target/` build tree
+  // must never be walked.
+  globalIgnores(['dist', 'node_modules', '.claude', 'athena-env']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [js.configs.recommended, tseslint.configs.recommended],

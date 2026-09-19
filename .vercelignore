@@ -1,0 +1,2 @@
+# The Rust rules core (ATHENA.md §5, D12) is not part of the site: the Vercel build never uploads or sees it.
+/athena-env

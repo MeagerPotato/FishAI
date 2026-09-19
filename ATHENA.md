@@ -696,6 +696,66 @@ H1's rate × 2,000 + H5's × 2,000 + H4's × 4,000. H2 and H3 are left out, so t
 | declare after at least one decline in the same window | not counted today | | | floor only |
 | cardless seat declines | not counted today | | | floor only |
 
+> **Amended 2026-09-19, before any port code.** Building the emitter turned up three things.
+>
+> 1. **One floor row duplicates another.** "Declare after at least one decline in the same window" counts the same
+>    events as "out-of-turn declare": 47,061 each in the corpus. A us54 window always opens on the turn-holder, so any
+>    declare after a decline is out of turn. The row stays, and one row is **added**: "a declare by the window's last
+>    seat (declined = 5)", with a floor of 50. Adding a row can only tighten G0a.
+> 2. **Two choices the registration left open.** H2's fresh seeds start at seat j mod 6, and H5's at i mod 6, as the
+>    scoping run did. Both are recorded in `scripts/athena/replay-format.md`.
+> 3. **The legal-move record uses the reducer's own verdict.** `legalActionsSummary` lists `claim` while the window is
+>    closed, at every ask step, and the reducer refuses every such declare. The port must not copy that quirk.
+>    `lib/engine/` is unchanged.
+>
+> **Progress, 2026-09-19.** The oracle is built (`scripts/athena/`: `replay-format.md`, the codec, the emitter, and the
+> self-check with its coverage report). The corpus was emitted at `7d85c2e`, whose nine engine files equal §4.1's, with
+> rules hash `e9311958e811b7bc…`. It holds **10,800 games and 4,788,218 steps (259 MB)** at
+> `C:\Projects\FishAI-bench\athena\corpus\7d85c2e\`.
+> - Emission took 169 s on four processes (§4.8 estimated about 8 minutes on one thread, and about 0.5 GB).
+> - **The reference replays its own corpus at 100%:** every digest, and all 1,977,852 probe verdicts. It was checked
+>   twice, the second time independently, in 17.8 s.
+> - 0 games were capped, and the nine-set terminator never fired alone.
+> - All 36 bank games took exactly the bank's step counts.
+> - Every floor was met without extending H4. The rarest branch is a whole team out, 323 times (≈ 130 expected).
+>
+> This is the reference checking itself. G0a is scored only when the port replays the corpus.
+>
+> **G0a (i) scored 2026-09-19: PASS.**
+>
+> **The port.** `athena-env/` has 5,665 lines of Rust, no dependencies and `#![forbid(unsafe_code)]`. It replays all
+> 10,800 games from their actions alone.
+> - Every per-step, legal-move and view digest is equal, over 4,788,218 steps.
+> - 1,977,852 probe verdicts, with 0 accept-or-refuse differences and 0 error-code differences.
+> - The five block aggregates equal the manifest.
+> - 0 capped games, and the nine-set terminator never fired alone.
+> - 36 of 36 bank games match.
+> - The coverage table is identical to the reference's. Every gated row is at or above 50; the added last-seat row
+>   has 7,084.
+>
+> **The five mutants are all caught.** Games that diverge: M1 867, M2 537, M3 10,800, M4 2,916, M5 10,682.
+>
+> **Speed.** The replay takes 0.85 s on four threads (12,700 games a second) and 3.25 s on one. It was checked twice,
+> the second time independently (0.90 s, with M2 and M4 re-run).
+>
+> **First run.** The first complete corpus run was clean: no rules or codec divergence from the reference was found
+> at any point, so Q1's "clean first full run" (45%) came true. Next is G0a (ii), the bridge walk.
+>
+> **Amended with the result.** No bar changes.
+> 1. **The mutants as implemented.**
+>    - M1: an out-of-turn declare that empties the turn-holder moves the turn to the next seat with cards, instead of
+>      entering `awaitPass`.
+>    - M3: after a declare, the window keeps cycling as it does after a decline, and closes after the sixth seat.
+>    - M5: after a miss, the window opens on the asker while the target takes the turn.
+>    - M2 and M4 are as registered.
+> 2. **The rules hash.** The reference self-check recomputes SHA-256 of `RULES_US54.md`. The port compares each
+>    record's header with the manifest, because the crate has no dependencies and Rust's standard library has no SHA-256.
+> 3. **The npm gate** runs `npx vitest run --maxWorkers=4`, to stay inside the four-process cap.
+> 4. **Information, not a gate.**
+>    - The Rust policies regenerate H4 and H5 byte for byte.
+>    - The raw core with the mixed stub runs about 60,000 games a second on one thread, and 190,000–215,000 on four.
+>    - That is not G0b, which is measured through the Python API.
+
 **(ii) The bridge walk.**
 
 - It covers the **14,400 games of §3.8ba's twelve SESTINA cells** (`bridge/monet-v55/records/panel-sestina-*.jsonl`).
