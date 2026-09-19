@@ -812,6 +812,71 @@ H1's rate × 2,000 + H5's × 2,000 + H4's × 4,000. H2 and H3 are left out, so t
   - [Estimate] At 10,000 games/s, 10^8 games, the top of C.2's P2 range, take **2.8 hours** of environment time. The
     environment stays a small part of any multi-day run, and the GPU learner becomes the bound that P1 sizes.
 
+> **G0b scored 2026-09-19: PASS.**
+>
+> **The bar: 28,776 games a second end to end on 8 threads,** against 10,000.
+> - It was measured over 200,011 games after 98,304 of warm-up. No game was capped.
+> - The host was at 1.8% load before the start (five one-second samples, 0.0–5.9%).
+> - A repeat of the 8-thread run read 29,397 games/s, with the host at 1.5%.
+> - "End to end" is as registered:
+>   - `athena_env.BatchEnv` behind Python;
+>   - the mixed stub in NumPy over the port's legal masks;
+>   - every observation buffer filled at every step.
+>
+> **Scaling** (the same run: pipeline mode, 32,768 games in flight)
+>
+> | threads | 1 | 2 | 4 | 8 |
+> |---|---:|---:|---:|---:|
+> | end to end, games/s | 11,184 | 16,133 | 30,320 | 28,776 |
+> | the Rust core alone (`stub-bench`), games/s | 73,937 | 145,831 | 286,925 | not run (the tool stops at 4) |
+>
+> - **The single-thread core rate is 73,937 games/s,** so Q2's second part (≥ 20,000) holds.
+> - **Where the ceiling is.** Above 4 threads the end-to-end rate stops rising.
+>   - The NumPy stub runs on one thread and costs 54 ns of every action, 55% of the thread time at 8 threads. That caps
+>     the loop at about 29,000 games/s.
+>   - The Rust step and observation cost 43 ns an action.
+>   - In training, the network on the GPU takes the stub's place (§3.1). The ceiling is the stub's, not the port's.
+> - **The command:** `scripts/athena/g0b-bench.py --registered --threads 8,1,2,4 --batch 32768`, at `c667b16`. The
+>   output is in `C:\Projects\FishAI-bench\athena\g0b\`.
+> - **Earlier runs, information only.** On a host at about 11–50% load, the rates were 8,361, 11,722 and 20,375 games/s
+>   at 1, 2 and 4 threads. The script refuses the registered run above 10% load, and these are not the measurement.
+>
+> **Checked independently.**
+> - **The core:** `cargo fmt` and clippy are clean, with and without the mutants, and 53 of 53 tests pass.
+> - **G0a (i), re-run on this branch** because the core gained a test hook (amendment 5): PASS, 10,800 of 10,800.
+>   M1–M5 are caught in the same numbers of games as before: 867, 537, 10,800, 2,916 and 10,682.
+> - **The Python tests all pass:** the API 8 of 8, the information rules 3 of 3, the corpus 2 of 2.
+>   - **The corpus through the API.** H5 (2,000 games) and H4 (4,000 games) replay through `BatchEnv`. Every digest is
+>     equal at every step, and every played action is legal in its mask.
+>   - **The information rules.**
+>     - 400 deal pairs that differ only in hidden cards give identical actor buffers, both at the opening window and at
+>       the first ask.
+>     - 2,560 mid-game states with the hidden cards re-dealt give identical actor buffers, while the critic buffer
+>       differs in all 2,560.
+>     - A planted leak is caught.
+> - **Q2, G0b holds (75%): HIT.**
+>
+> **Amended with the result.** No bar changes.
+> 1. **How threads are counted in pipeline mode.** "8 threads" means seven for Rust and one for the NumPy stub. The
+>    batch is split into two halves, and the stub runs on one half while Rust steps the other.
+> 2. **The warm-up is max(10,000, 3 × batch),** here 98,304 games. A batch that starts together ends its short games
+>    first. With 10,000 games of warm-up at this batch size, the timed window would lean toward short games (628
+>    against 640 actions a game).
+> 3. **The API as built** (§4.5 item 2).
+>    - `observe(bufs)` fills buffers that the caller allocates once, with `make_buffers()`. `step(actions, bufs)`
+>      refills them.
+>    - The critic buffer is 54 bytes a game: each card's holder, relative to the acting seat, and 255 once the card is
+>      out of play. It is expanded to one-hot on the GPU. It is a separate buffer, and no actor buffer contains it.
+>    - The layout is `athena-env/API.md`'s, and it stays provisional until P1.
+> 4. **D12's dependencies, stated exactly.**
+>    - The bindings are a separate crate, `athena-env/py`, so the rules core still has no dependencies.
+>    - The bindings' committed `Cargo.lock` pins 24 third-party crates: PyO3 (five crates), rust-numpy, and 18 that
+>      they pull in, among them ndarray, the num crates, libc and syn. These are what "the Python bindings and nothing
+>      else" means.
+>    - The bindings deny `unsafe` in their own code. PyO3 and rust-numpy use it inside, as any Python extension must.
+> 5. **One test hook in the core,** `Game::fixture_swap_cards` (`#[doc(hidden)]`), builds states for the
+>    information-rule tests. G0a (i) was re-run after it was added (above).
+
 **G0c: the harness and the opponents.** All three must hold:
 
 1. **The cross-instrument identity pin.**
