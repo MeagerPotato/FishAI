@@ -13,8 +13,12 @@ byte for byte against the reference, behind a NumPy API for the learner.
 
 - The action encoding and the legal masks are fixed.
 - **The observation encoding is provisional.** P1 finalises it (ATHENA.md §1: "The sizes and the event encoding are
-  P1's to register"). P1 may, for example, add the rules-derived facts of `lib/engine/bots/knowledge.ts`, which P0
-  does not port.
+  P1's to register"). P1 (ATHENA.md §8.1, §8.2) has added:
+  - **the rules-derived facts** of `lib/engine/bots/knowledge.ts`, ported (`src/facts.rs`) and gated by G1a, as an
+    opt-in buffer (§5.5);
+  - **the reveal regimes**, home and bridge, chosen per game, with a regime bit in the obs row (§3.5, §5.2);
+  - **the start-seat rule**: the start seat is unknown until the first event (§5.3);
+  - **G1c's window rule** over the facts row (§5.6).
 - Every layout below is a named constant of the module (`athena_env.OBS_LEN`, `athena_env.L_DECLINE`, ...). Code
   that reads the buffers should use the constants, not the numbers.
 
@@ -58,19 +62,20 @@ A game is about 640 steps under G0b's stub. Most of those steps are window offer
 
 | member | what it does |
 |---|---|
-| `BatchEnv(n, threads=1, auto_reset=None, auto_reset_start=0, track_digests=False)` | `n` games. `threads` workers do every step and observation, and the calling thread is one of them. `auto_reset` is a seed prefix (§3.2). `track_digests` keeps the replay format's digest streams for `digests()` (for tests; it slows every step) |
-| `reset(seeds, start_seats)` | Deals game i from `seeds[i]` (a `str`) at `start_seats[i]` (0–5). A seed deals exactly the hands that `newGame(seed, us54Config, start)` deals in `lib/engine/`: xmur3 over UTF-16 code units, then Fisher–Yates |
-| `reset_deals(holders, start_seats)` | Starts each game from a given deal. `holders` is a `(n, 54)` uint8 array holding the seat of each card. Meant for tests and hand-built positions |
-| `make_buffers(critic=True)` | A dict of zeroed, C-contiguous uint8 buffers: `seat`, `obs`, `legal`, `events`, `n_events`, and `critic` unless `critic=False` (§5) |
+| `BatchEnv(n, threads=1, auto_reset=None, auto_reset_start=0, track_digests=False, facts=False, auto_reset_regime="home")` | `n` games. `threads` workers do every step and observation, and the calling thread is one of them. `auto_reset` is a seed prefix (§3.2). `track_digests` keeps the replay format's digest streams for `digests()` (for tests; it slows every step). `facts` keeps each game's facts walk, so a `facts` buffer can be filled (§5.5). `auto_reset_regime` is `"home"`, `"bridge"` or `"draw"` (§3.5) |
+| `reset(seeds, start_seats, regimes=None)` | Deals game i from `seeds[i]` (a `str`) at `start_seats[i]` (0–5), under `regimes[i]` (0 home, 1 bridge; all home if `None`). A seed deals exactly the hands that `newGame(seed, us54Config, start)` deals in `lib/engine/`: xmur3 over UTF-16 code units, then Fisher–Yates |
+| `reset_deals(holders, start_seats, regimes=None)` | Starts each game from a given deal. `holders` is a `(n, 54)` uint8 array holding the seat of each card. Meant for tests and hand-built positions |
+| `make_buffers(critic=True, facts=None)` | A dict of zeroed, C-contiguous uint8 buffers: `seat`, `obs`, `legal`, `events`, `n_events`, `critic` unless `critic=False`, and `facts` when `facts=True` (by default, when the batch was built with `facts=True`) (§5) |
 | `observe(bufs)` | Fills the buffers **in place**, for every game's acting seat. It consumes each observing seat's pending event rows (§5.3) |
 | `step(actions, bufs=None)` | `actions` is a 1-d int32 or int64 array of `n` action codes (§4). Returns `(reward, terminated, truncated)`: a float32 array `(n, 2)` and two bool arrays `(n,)` (§3.1). With `bufs`, every game is observed after the step, in the same parallel pass |
 | `digests()` | Needs `track_digests=True`. Returns `(d, l, v)`, three uint64 arrays `(n,)`: `d` is the state chain after the last step (the deal digest before any step); `l` and `v` are the legal-move and view digests of the current state for its acting seat (replay-format.md §4.6, §4.7, §5) |
-| `steps()`, `ended()`, `scores()`, `seeds()`, `start_seats()` | Per game: the actions applied; the end state (0 running, 1 finished, 2 capped); the absolute score `(n, 2)`; the seed; the start seat |
+| `steps()`, `ended()`, `scores()`, `seeds()`, `start_seats()`, `regimes()` | Per game: the actions applied; the end state (0 running, 1 finished, 2 capped); the absolute score `(n, 2)`; the seed; the start seat; the reveal regime (uint8, 0 home, 1 bridge) |
 | `stats()` | A dict of counters over the environment's life: `steps`, `finished`, `capped`, `ended_steps`, `wins_team0`, `wins_team1`, `observations`, `max_backlog`, `auto_resets` |
-| `threads` | Settable. `n` gives the number of games, as does `len(env)`. `next_game` gives the next auto-reset game number |
-| `set_auto_reset(prefix, start=0)` | Turns auto-reset on (a prefix) or off (`None`) |
+| `threads` | Settable. `n` gives the number of games, as does `len(env)`. `next_game` gives the next auto-reset game number. `facts` says whether the batch keeps the facts |
+| `set_auto_reset(prefix, start=0, regime=None)` | Turns auto-reset on (a prefix) or off (`None`). With `regime`, also sets how each new game's regime is chosen (§3.5) |
 | `debug_permute_hidden(i, rng_seed)` | **A test hook** for the information rules (§6). It re-deals the cards that game i's acting seat cannot see, and returns whether any moved |
 | `set_mutant(name)` | **Only in a mutants build** (§10). Plants one of G0a's mutants, `"M1"` to `"M5"`, in every game of the batch, and in every game dealt later; `"none"` restores the reference's rules. A default build has no such method |
+| `set_facts_mutant(name)`, `set_full_reveal_control(on)` | **Only in a mutants build** (§10). G1a's M6 (skip count exhaustion) or M7 (ignore the set-membership constraints) in every game's facts walk; G1b's control, the bridge regime publishing every holder. Both from the next deal on |
 
 The module constant `athena_env.MUTANTS` says which build is loaded: False in every default build, True in a mutants
 build.
@@ -100,6 +105,7 @@ build.
 - The step's `reward`, `terminated` and `truncated` describe the game that ended. The buffers then hold the new
   game's first observation.
 - The seed convention matches the corpus's H5: game i is `<prefix><i>`, with start seat `i % 6`.
+- Each new game's regime follows `auto_reset_regime` (§3.5): home by default.
 
 ### 3.3 Threads, the GIL, determinism
 
@@ -114,6 +120,31 @@ build.
 - Spawning scoped threads costs about 60 µs a thread per call on this machine, measured under load. Batches of
   several thousand games per call amortise it.
 
+### 3.5 The reveal regimes (P1, ATHENA.md §8.2 G1b)
+
+Every game is played under one of two regimes, fixed at its deal. The rules are the same; only what a **wrong**
+declare publishes differs.
+
+- **Home** (`REGIME_HOME` = 0), the engine's rule: a declare publishes all six true holders, right or wrong.
+- **Bridge** (`REGIME_BRIDGE` = 1), the bridge host's reduced reveal (`scripts/athena/replay-format.md` §12.4): a
+  right declare publishes all six holders; a wrong one publishes only the cards a hit had moved while their set was
+  open (a hit moves a card publicly, and only a hit moves a card, so these are where they were).
+- What differs under the bridge regime:
+  - a wrong declare's event row shows NONE for each unpublished holder (§5.3);
+  - its set's "how" byte is NONE when the published holders cannot settle it (§5.2);
+  - the facts are computed from the published log (§5.5);
+  - `digests()`'s `v` is the view with the unpublished holders NONE in the set block and in the log's declares.
+- The obs row's regime bit (`O_REGIME`) says which regime a game is in: the view alone cannot say.
+- **Choosing the regime:**
+  - `reset` and `reset_deals` take one per game (all home by default);
+  - auto-reset takes `auto_reset_regime`: `"home"`, `"bridge"`, or `"draw"`. Under `"draw"` game k is at the bridge
+    when `rngFromSeed(seed + ':regime')()` (the reference's xmur3 and mulberry32) is below 1/2. That is ATHENA.md
+    §8.2's rule for P2's training games: each draws its regime with probability ½.
+- **G1b's gate.** At every step of every corpus game, the bridge regime's view digest of the acting seat equals
+  `replay-codec.ts`'s `encodeView` under `Reveal = 'reduced'` of the view the reduced reveal makes
+  (`facts-check home`, §8). The home regime is unchanged: G0a's replay, G0b's tests and the encoder comparison still
+  hold.
+
 ### 3.4 Errors
 
 Errors are loud: `ValueError`, `TypeError` or `KeyError`, never a silent skip.
@@ -124,6 +155,7 @@ Errors are loud: `ValueError`, `TypeError` or `KeyError`, never a silent skip.
 - Wrong shapes, wrong dtypes and non-contiguous buffers raise. So does an array given twice.
 - Observing before `reset` raises.
 - So does an event backlog above `MAX_EVENTS` (§5.3).
+- A `facts` buffer given to a batch built without `facts=True` raises, and so does a regime other than 0 or 1.
 
 ## 4. The action encoding (fixed)
 
@@ -182,7 +214,7 @@ a recurrent state for each seat. The legal row holds 0 or 1 in each byte:
   - A game whose window is closed has asks, or passes in `awaitPass`.
   - A finished game (auto-reset off) has an all-zero row.
 
-### 5.2 `obs` (n × `OBS_LEN` = 94). Provisional
+### 5.2 `obs` (n × `OBS_LEN` = 95). Provisional
 
 | bytes | constant | field |
 |---|---|---|
@@ -194,7 +226,8 @@ a recurrent state for each seat. The legal row holds 0 or 1 in each byte:
 | 63 | `O_OPTION` | the window's option seat, relative (NONE when closed) |
 | 64 | `O_DECLINED` | declines so far in this window, 0–5 (NONE when closed) |
 | 65, 66 | `O_SCORE` | the observer's team's score, then the other team's |
-| 67–93 | `O_SETS` | nine sets × `SET_FIELDS` = 3: **status** (0 open, 1 awarded to the observer's team, 2 to the other team); **claimer**, relative (NONE if open); **how** (0 right; 1 wrong, an opponent of the declarer held a card; 2 wrong, the declarer's team held all six but misassigned; NONE if open) |
+| 67–93 | `O_SETS` | nine sets × `SET_FIELDS` = 3: **status** (0 open, 1 awarded to the observer's team, 2 to the other team); **claimer**, relative (NONE if open); **how** (0 right; 1 wrong, an opponent of the declarer held a card; 2 wrong, the declarer's team held all six but misassigned; NONE if open, or, under the bridge regime, when the published holders cannot settle it) |
+| 94 | `O_REGIME` | the game's reveal regime: 0 home, 1 bridge (§3.5). Added by P1; the bytes before it are P0's |
 
 ### 5.3 `events` (n × `MAX_EVENTS` = 32 × `EVENT_LEN` = 19) and `n_events` (n). Provisional
 
@@ -211,8 +244,15 @@ fixed-width rows for a recurrent encoder, and fields an event lacks are NONE:
 | 5 | `E_SET` | the declared set |
 | 6 | `E_RESULT` | for a declare, the team awarded the set; for game_over, the winner: 0 the observer's team, 1 the other team |
 | 7–12 | `E_ASSIGN` | a declare's stated seat for each card, relative, in set card order |
-| 13–18 | `E_HOLDERS` | each card's true holder at the declare, relative. It is public even for a wrong declare (ATHENA.md §4.1) |
+| 13–18 | `E_HOLDERS` | each card's true holder at the declare, relative. At home it is public even for a wrong declare (ATHENA.md §4.1); under the bridge regime a wrong declare's unpublished holders are NONE (§3.5) |
 
+- **The start seat (P1, ATHENA.md §8.2), in both regimes.** The bridge's host does not publish it, so the
+  observation's start seat is unknown until the first event, then that event's actor:
+  - no event row is delivered while the log holds only `game_started`;
+  - with the first logged event, `game_started` is delivered just before it, its actor being that event's actor.
+  - It names the true start seat unless the first event is another seat's declare (the start seat having declined
+    the opening window). Over the G0a corpus that happened in 1 of 2,000 H1 games (Monet v1.0), 0 of 1,800 H2, 0 of
+    1,000 H3, 1,652 of 4,000 H4 (the fuzz policy) and 250 of 2,000 H5 (the mixed stub).
 - **Each seat sees each event exactly once, in log order.**
   - `game_started` comes first.
   - Declines are not logged, as in the reference. They show only through the window bytes.
@@ -240,6 +280,46 @@ fixed-width rows for a recurrent encoder, and fields an event lacks are NONE:
 - **G0b's stub reads it,** because the mixed stub declares the sets its team holds by the true deal (ATHENA.md §4.3). That stub
   is not a player.
 
+### 5.5 `facts` (n × `FACTS_LEN` = 278). Opt-in (P1, ATHENA.md §8.1 G1a)
+
+The rules-derived facts of the observer's view: what `buildKnowledge(view)` in `lib/engine/bots/knowledge.ts` computes
+under Monet v1.0's knowledge options (the whole log, the set-membership constraints on), without the marginal. The
+port is `src/facts.rs`; G1a gates it against the reference at every step of the corpus from all six seats' views, and
+at every ask of the bridge's panel-SESTINA records (`facts-check`, §8). Under the bridge regime the facts are those of
+the published log. Only a batch built with `facts=True` fills it.
+
+| bytes | constant | field |
+|---|---|---|
+| 0–53 | `F_CAND` | each card's candidate seats now, relative: bit r set if seat rel r may hold it. A singleton is certain (the observer's own cards included). 0 once the card is out of play |
+| 54–59 | `F_UNKNOWN` | each seat's unknown slots, in relative order: its hand count less the cards certainly located at it |
+| 60–68 | `F_SET_CERTAIN` | per set, how many of its cards are certain on the observer's team (NONE once resolved) |
+| 69–77 | `F_SET_LOST` | per set, 1 if the facts prove it lost for the observer's team (a card certainly with an opponent, or no teammate a candidate for it; `setLost`), else 0 (NONE once resolved) |
+| 78 | `F_RAIL` | the rules-certain declare (the rail, `lib/athena/policy.ts`'s `railPlan`): the first open set, in canonical order, whose six cards are certain on the observer's team; NONE if none |
+| 79–84 | `F_RAIL_ASSIGN` | the rail's stated seat for each card of its set, relative, in set card order (NONE without a rail) |
+| 85 | `F_NCONS` | the number of distinct set-membership constraints |
+| 86–277 | `F_CONS` | up to `MAX_CONS` = 64 constraints of `CONS_FIELDS` = 3 bytes, sorted ascending: the seat (relative), the set, and the six-bit mask (set card order) of the cards of which that seat was dealt at least one. NONE past the count. More than 64 raises; the corpus's largest is 26 |
+
+- The candidate masks describe who holds a card now. A card never moved is still with its deal holder, and a moved
+  card's holder is public, so the reference's deal-holder candidates and the current holders coincide.
+- The constraints are about the deal: seat s was dealt at least one of the named cards, all of one set. They are
+  what survives the reference's propagation, as a set (the reference keeps a list with repeats).
+- `lib/athena/encode.ts`'s `encodeFactsRow(view, factsOf(view), row)` writes the same bytes from a SeatView.
+
+### 5.6 G1c's window rule (ATHENA.md §8.2)
+
+`window_classes(facts, legal, k)` classifies window offers from their facts and legal rows (two C-contiguous uint8
+arrays, `(n, FACTS_LEN)` and `(n, LEGAL_LEN)`), for k in 2..6, returning a uint8 `(n,)`:
+
+| value | constant | the offer |
+|---|---|---|
+| 1 | `WINDOW_RAIL` | a rules-certain set: the rail declares it |
+| 2 | `WINDOW_LIVE` | a **live set**: an open set the facts do not prove lost, with at least k of its cards certain on the team. The declare head is evaluated |
+| 3 | `WINDOW_COMPELLED` | no live set, and declining is illegal (`MUST_DECLARE`): the head must choose a claim |
+| 0 | `WINDOW_DECLINED` | declined by rule |
+
+It is meaningful for a row whose observation has the window open. `scripts/athena/window-rule.py` measures the rule
+on played games (the shares of the games' declares at admitted offers, and of offers evaluated).
+
 ## 6. The information rules
 
 - **The actor's buffers hold nothing that `seatView(S_t, acting)` does not show.** They are `seat`, `obs`, `legal`,
@@ -265,6 +345,10 @@ fixed-width rows for a recurrent encoder, and fields an event lacks are NONE:
   test. The same leak planted in the Rust encoder fails the Rust test.
 - **`debug_permute_hidden` redraws** any permutation that changes whether the turn-holder could ask. Such a state
   has the same view but is unreachable, as the point on the decline explains.
+- **The facts row and the regimes keep the rule.** The facts are a function of the observer's view (its hand, the
+  counts, the resolved sets and the published log), and the regime bit is public. The Rust test re-deals hidden cards
+  with the facts off; `the_facts_buffer_is_sound_and_changes_nothing_else` checks that turning the facts on changes
+  no other byte.
 
 ## 7. Security (D12, ATHENA.md §5)
 
@@ -282,19 +366,37 @@ fixed-width rows for a recurrent encoder, and fields an event lacks are NONE:
 ## 8. Tests
 
 ```sh
-cargo test --release                          # in athena-env: the core, vecenv included
+cargo test --release                          # in athena-env: the core, vecenv and facts included
 python athena-env/py/tests/test_api.py        # the contract: codes, errors, threads, auto-reset, GIL, the stub
 python athena-env/py/tests/test_info_rule.py  # the information rules
 python athena-env/py/tests/test_corpus.py     # H4 and H5 reproduced through the API (needs the corpus)
 python athena-env/py/tests/test_harness.py    # the home harness and the opponent service (§11; needs node)
+python athena-env/py/tests/test_facts.py      # P1: the facts buffer, the regimes, the start seat, the window rule
 cargo test --release --features mutants       # in athena-env: the same, plus the batch's planted M1 (§10)
 ```
+
+P1's gates (ATHENA.md §8.1, §8.2) compare the port with the reference over the corpus and the bridge's records:
+
+```sh
+node scripts/athena/emit-facts.mjs home       # the reference: facts, rails, bridge-regime views (~3 min, 4 threads)
+node scripts/athena/emit-facts.mjs bridge     # the reference: the facts at every panel-SESTINA ask (~10 s)
+cargo run --release --bin facts-check -- home     # G1a checks 1, 3, 5 and G1b; the start-seat rate
+cargo run --release --bin facts-check -- bridge   # G1a check 2
+cargo run --release --features mutants --bin facts-check -- home --mutant M6   # check 4: must be CAUGHT (and M7)
+cargo run --release --features mutants --bin facts-check -- home --control full-reveal   # G1b's control
+python scripts/athena/window-rule.py --athena-env <build> --games <dir or files> [--population H1]   # G1c's shares
+```
+
+A divergence is located with `emit-facts.mjs dump home:<file>:<index>:<step>` beside
+`facts-check dump <file>:<index>:<step>`, which print both sides' facts in words.
 
 - The Python tests need only the venv (no pytest), and `python` means the venv's.
 - `test_corpus.py` reads `C:/Projects/FishAI-bench/athena/corpus/7d85c2e/`. Set `ATHENA_CORPUS` to read another
   corpus.
 - `test_harness.py` tests the venv's build, or the unpacked build that `ATHENA_ENV_PATH` names. With
   `ATHENA_ENV_MUTANTS` naming an unpacked mutants build (§10), it also checks that M1 is caught, in a child process.
+- `test_facts.py` likewise, with `ATHENA_ENV_MUTANTS`, plants M6, M7 and the full-reveal control in a child process:
+  the mutants change the facts row and no other byte, and the control changes only the bridge regime's games.
 
 ## 9. G0b
 
@@ -321,6 +423,9 @@ default:
   this with `--athena-env <dir>/mutants`, and checks which build it loaded. `scripts/athena/g0c-pin.py --build-envs`
   builds and unpacks both builds this way.
 - `set_mutant` plants the mutant in every slot, and every later deal (`reset`, `reset_deals`, auto-reset) keeps it.
+- P1 adds, in the same feature: `set_facts_mutant("M6" | "M7" | "none")`, G1a's check 4 (M6 skips count
+  exhaustion, M7 ignores the set-membership constraints), and `set_full_reveal_control(on)`, G1b's planted control.
+  Each applies from the next deal on, since a game's facts walk starts at its deal.
 
 ## 11. The home harness and the opponent service
 
